@@ -1,0 +1,14 @@
+{
+  "inventory": [10245, 10033],
+  "rolls": {
+    "rollA": 75,
+    "rollB": 85,
+    "rollC": 90,
+    "rollD": 55,
+    "rollE": 88
+  },
+  "selectedAction": {
+    "mode": "slot",
+    "slot": "C"
+  }
+}
