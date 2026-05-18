@@ -1,0 +1,320 @@
+<!-- 
+  ~ /***************************************************************************************
+  ~ Copyright (c) 2020 - 2023. 868 DOMINUS. All rights reserved.
+  ~  *
+  ~  * Unauthorized copying or redistribution of this file in source and binary forms via
+  ~  * any medium is strictly prohibited.
+  ~  *
+  ~  * Programmed by Frank Koenig
+  ~  *
+  ~  * For more information, please refer to <http://868dominus.com>
+  ~  ***************************************************************************************/
+  ~
+  -->
+
+<resources>
+    <string name="app_name">CBT Morkahja</string>
+    <string name="app_preference_key">com.dominus868.morkahja.680855</string>
+    <string name="app_loading">Loading</string>
+    <!-- Salutation -->
+    <string name="salute_version">%1$s #%2$d</string>
+    <string name="salute_loading">Loading</string>
+    <string name="salute_arcanite_brothers">Arcanite Brothers</string>
+    <string name="salute_868_dominus">868 Dominus</string>
+    <string name="salute_connection_error">The pathway is closed, fix your internet connection!</string>
+    <!-- Sing In -->
+    <string name="sign_in_header">Sign In with your account</string>
+    <string name="sign_in_e_mail">E-mail</string>
+    <string name="sign_in_password">Password</string>
+    <string name="sign_in_password_reset">Forgot your password?</string>
+    <string name="sign_in_error_email">Enter your email address</string>
+    <string name="sign_in_error_password">Enter your password</string>
+    <string name="sign_in_error_email_validity">It looks like the email is not correct</string>
+    <!-- Sing Up -->
+    <string name="sign_up_error_email">Enter your email address</string>
+    <string name="sign_up_sign_up">Create your account</string>
+    <string name="sign_up_username">Player-Name</string>
+    <string name="sign_up_email_address">Email Address</string>
+    <string name="sign_up_password">Password</string>
+    <string name="sign_up_confirm_password">Confirm Password</string>
+    <string name="sign_up_error_display_name">Enter your player-name</string>
+    <string name="sign_up_error_password">Enter your password</string>
+    <string name="sign_up_error_password_confirm">Repeat your password</string>
+    <string name="sign_up_error_password_mismatch">Your passwords are not the same</string>
+    <string name="sign_up_error_password_length">Your password is too short</string>
+    <string name="sign_up_error_email_validity">Your email seems incorrect.</string>
+    <string name="sign_up_error_display_name_validity">Your player-name should contain only letters.</string>
+    <string name="sign_up_error_display_name_short">Your player-name is too short.</string>
+    <string name="sign_up_error_display_name_long">Your player-name is too long.</string>
+    <string name="sign_up_referral_name">Your friends name#Hashtag</string>
+    <string name="sign_up_checkbox">My friend brought me here!</string>
+    <string name="sign_up_error_Referral">Help us to find your friend by giving us their player-name.</string>
+    <string name="sign_up_error_hashtag_empty">What is your friends hashtag?</string>
+    <!-- Password Reset Fragment -->
+    <string name="reset_header">Forgot your password?</string>
+    <string name="reset_information">Enter your email address, we\'ll email you to reset your password</string>
+    <string name="reset_email">Email</string>
+    <string name="reset_error_email">Please enter your email address</string>
+    <!-- Agreement -->
+    <string name="agreement_info">I declare that I am 18 years or older and that I have carefully read the Terms of Service and PRIVACY POLICY by pressing the button below and thereby proceeding into the game!</string>
+    <string name="agreement_privacy_policy">PRIVACY POLICY</string>
+    <string name="agreement_terms_of_service">Terms of Service</string>
+    <string name="agreement_i_agree">I agree</string>
+    <!-- Achievements -->
+    <string name="achievements_header">Achievements</string>
+    <string name="achievements_level">Level %1$d</string>
+    <string name="achievements_cbt_header">Alpha</string>
+    <string name="achievements_cbt_message">Member of the first arriver.</string>
+    <string name="achievements_multiplayer_header">Multiplayer</string>
+    <string name="achievements_multiplayer_message">You successfully referred a friend.</string>
+    <string name="achievements_donator_header">Donator</string>
+    <string name="achievements_donator_message">You donated gems in the credits.</string>
+    <string name="achievements_subscriber_header">Dragon Seal</string>
+    <string name="achievements_subscriber_message">You bore the Dragon Seal for a month.</string>
+    <string name="achievements_adventurer_header">Adventurer</string>
+    <string name="achievements_adventurer_message">You continued your adventure today.</string>
+    <string name="achievements_companion_header">Companion</string>
+    <string name="achievements_companion_message">You continued your adventure for 5 days last week.</string>
+    <string name="achievements_ardent_header">Ardent</string>
+    <string name="achievements_ardent_message">You continued your adventure for 5 days last week.</string>
+    <string name="achievements_firestarter_header">Firestarter</string>
+    <string name="achievements_firestarter_message">You created an avatar. Good luck, Adventurer!</string>
+    <string name="achievements_combatant_header">Combatant</string>
+    <string name="achievements_combatant_message">You succeded in combat.</string>
+    <string name="achievements_trickster_header">Trickster</string>
+    <string name="achievements_trickster_message">You successfully solved performed a trick.</string>
+    <string name="achievements_helper_header">Helper</string>
+    <string name="achievements_helper_message">You were able to help a brethren.</string>
+    <string name="achievements_blessed_header">Blessed</string>
+    <string name="achievements_blessed_message">You were lucky when rolling the dice!.</string>
+    <!-- Dashboard -->
+    <string name="dash_gems_more">Get more gems</string>
+    <string name="dash_morkahja_news">Morkahja News</string>
+    <string name="dash_edit_portrait">Edit your portrait</string>
+    <string name="dash_player_name">Player-Name</string>
+    <string name="dash_your_level">Your level</string>
+    <string name="dash_play_morkahja">Play Morkahja</string>
+    <string name="dash_get_help">Get Help</string>
+    <!-- Dialogs -->
+    <string name="dialog_reset_title">Email sent successfully!</string>
+    <string name="dialog_reset_message">Please check your inbox for our email with the link to reset your password.</string>
+    <string name="dialog_reset_okay">Okay!</string>
+    <string name="dialog_purchase_title">Great!</string>
+    <string name="dialog_purchase_message_gems">This action will remove %1$d gems from your treasury.</string>
+    <string name="dialog_purchase_ok">Yes!</string>
+    <string name="dialog_purchase_cancel">Not now.</string>
+    <string name="dialog_serf_title">Nope!</string>
+    <string name="dialog_serf_message">Get gems first, then come back and try again.</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_avatar_role_title">Which role?</string>
+    <string name="dialog_avatar_role_message">You should choose a role for your avatar!</string>
+    <string name="dialog_avatar_title">Your Avatar</string>
+    <string name="dialog_avatar_message">You haven\'t set up your avatar yet.</string>
+    <string name="dialog_avatar_positive">Set up now</string>
+    <string name="dialog_avatar_negative">Later</string>
+    <string name="dialog_octothorpe_title">Hashtag Error</string>
+    <string name="dialog_octothorpe_message">Apologies, fair seeker! The adventurer thou seekest appears to dwell not in these realms. Verify thy quest and give it another try. </string>
+    <string name="dialog_verify_success_title">By my quill, the message hath taken flight!</string>
+    <string name="dialog_verify_success_message">Instructions sent</string>
+    <string name="dialog_donation_success_title">Thank you, Adventurer!</string>
+    <string name="dialog_donation_success_message">Ah, thy generous offering is received with profound gratitude!</string>
+    <string name="dialog_donation_success_positive">close</string>
+    <string name="dialog_purchase_header">Thank you!</string>
+    <string name="dialog_purchase_message"> %1$d gems have just been added to your treasury. Amazing!</string>
+    <string name="dialog_profile_header">Your new profile</string>
+    <string name="dialog_profile_message">Choose your action:</string>
+    <string name="dialog_profile_ok">Set as main Avatar!</string>
+    <string name="dialog_profile_cancel">Just add it.</string>
+    <!-- Collection -->
+    <string name="collection_content_description">See your collection</string>
+    <string name="collection_header">Collection</string>
+    <string name="collection_store">Get more Gems</string>
+    <string name="collection_help">Need more help?</string>
+    <!-- Help -->
+    <string name="auxilium_morkahja_help">Morkahja Help</string>
+    <string name="auxilium_description">Hail, wanderer! Rumor hath reached mine ears that thou art in need of aid. Fear not, for thou art neither the first, nor shalt thou be the last. May I illuminate thy path and guide thee towards thine quests end! The most fruitful path to assistance oft lies in sharing thy trials with a fellow quester. Heed the runes inscribed below. </string>
+    <string name="auxilium_discord">Find help in our Discord</string>
+    <string name="auxilium_youtube">Watch our Videos on Youtube</string>
+    <string name="auxilium_website">Visit our Website</string>
+    <string name="auxilium_credits">Credits</string>
+    <!-- Friends -->
+    <string name="amicitia_header">Your friend-list</string>
+    <string name="amicitia_friends">Friends</string>
+    <string name="amicitia_player_name">Player-Name</string>
+    <string name="amicitia_player_level">Player-Level</string>
+    <string name="amicitia_player_status">Player-Status</string>
+    <string name="amicitia_awaiting_approval">Awaiting Approval</string>
+    <string name="amicitia_decline_request">Decline Request</string>
+    <string name="amicitia_block_player">Block Player</string>
+    <string name="amicitia_friends_add">Add Friend</string>
+    <string name="amicitia_invite_your_friends">Invite your friends</string>
+    <string name="amicitia_help">Help</string>
+    <string name="amicitia_empty_header">By the mighty anvil of Ferrumis, no companions in sight? Patience, dear wanderer! Our allies are surely en route!</string>
+    <string name="amicitia_empty_information">To enlist a comrade already journeying in these realms, or to summon a new one, heed the magical sigils below! Fortune favour thee, adventurer!</string>
+    <string name="amicitia_add_header">Add Friend</string>
+    <string name="amicitia_add_info">Add your friend by entering their Player-Name and Hashtag!</string>
+    <string name="amicitia_name_placeholder">Player-Name #0000</string>
+    <string name="amicitia_add_your_friend">Add your friend</string>
+    <string name="amicitia_add_player_name_error">To find your friend you have to help us and give us a name.</string>
+    <string name="amicitia_add_hash_tag_error">What is your friends hashtag?</string>
+    <string name="amicitia_add_hash_tag_error_own">You tried to use your own hashtag. Unfortunately that does not work.</string>
+    <!-- Friends / Referral -->
+    <string name="amicitia_referral_header">Refer Friend</string>
+    <string name="amicitia_referral_info">Send your Referral-Code and invite Friends to join your Adventure!</string>
+    <string name="amicitia_referral_link_hint">Referral Link</string>
+    <string name="amicitia_referral_link_submit">Send Referral Link</string>
+    <!-- Placeholder -->
+    <string name="placeholder_zero">0</string>
+    <string name="placeholder_player_name">Player-Name</string>
+    <string name="placeholder_hashtag">#000</string>
+    <string name="placeholder_player_level">Player Level</string>
+    <string name="placeholder_subscription_timer">28 Days left</string>
+    <string name="placeholder_10">10</string>
+    <string name="placeholder_20">20</string>
+    <string name="placeholder_50">50</string>
+    <!-- Buttons -->
+    <string name="button_sign_in">Sign In</string>
+    <string name="button_sign_up">Sign Up</string>
+    <string name="button_join_us">Join Us</string>
+    <string name="button_send">Send</string>
+    <string name="button_continue">Continue</string>
+    <string name="button_back">Back</string>
+    <!-- Scribes -->
+    <string name="scribes_header">Scribes</string>
+    <string name="scribes_message_friend_request">Sent you a friend-request, waiting for your approval!</string>
+    <string name="scribes_message_welcome_header">Welcome, Adventurer!</string>
+    <string name="scribes_message_welcome">Venture forth into the breathtaking marvels of Morkahja! </string>
+    <string name="scribes_description">Scribes Description</string>
+    <!-- Settings -->
+    <string name="settings_header">Settings</string>
+    <string name="settings_account">Edit your Account data</string>
+    <string name="settings_music">Music</string>
+    <string name="settings_effects">Effects</string>
+    <string name="settings_multiplayer_mode">Multiplayer Mode</string>
+    <string name="settings_enable_multiplayer_mode">Enable Multiplayer Mode</string>
+    <string name="settings_get_invited_to_other_games">Get invited to other games</string>
+    <string name="settings_allow_others_to_enter_your_game">Allow others to enter your game</string>
+    <!-- Account -->
+    <string name="account_header">Account</string>
+    <string name="account_help">Need help with your account?</string>
+    <string name="account_agree">Agree</string>
+    <string name="account_disagree">Disagree</string>
+    <string name="account_change_player_name_title">Change your Player Name</string>
+    <string name="account_change_player_name_message">Here you can change your player name. The first time is free, otherwise, you must sacrifice some Gems.</string>
+    <string name="account_change_player_name_hint">Enter your new Player Name</string>
+    <string name="account_subscription_title">Seal of Njaga</string>
+    <string name="account_subscription_info">As the chosen bearer of the Seal of the legendary Drakaina Njaga, you shall be granted entry to the entirety of the mystical realm of Morkahja. But beware, for this privilege comes at a cost. To obtain this rarity, you must offer up 42 precious gems. And remember, it will only remain in your possession if you continue to make this sacrifice every lunar cycle.</string>
+    <string name="account_update_your_player_name">update your player name</string>
+    <string name="account_verify_title">Verify your e-mail</string>
+    <string name="account_security_title">Security</string>
+    <string name="account_security_a">At <b>Morkahja</b>, the privacy and security of our users is our top priority. We understand the importance of keeping your personal information safe and secure, which is why we have implemented strict measures to ensure the protection of your data.</string>
+    <string name="account_security_b">Reset your password</string>
+    <string name="account_security_c">Sign Out</string>
+    <string name="account_security_d">Delete Account and Data</string>
+    <string name="account_subscription_a"><![CDATA[Yet, the rewards are boundless. With the Seal, you will gain unfettered rewards.<ul><li>Access to all expansions and rare encounters in Morkahja</li><li>Chance to find rare and powerful items that only a select few have ever laid eyes upon</li></ul>]]></string>
+    <string name="account_subscription_title_b">Seal of Norghor</string>
+    <string name="account_subscription_info_b">As the chosen one to hold the Seal of mighty Dragon Norghor, you shall be granted passage into the vast and mystical realm of Morkahja. But do not think this boon comes without a price. To attain this priceless artefact, you must part with 66 precious gems. And remember, to keep the Seal in your possession, you must offer up an equal sum every moon cycle.</string>
+    <string name="account_subscription_b"><![CDATA[The rewards shall be beyond your wildest dreams. With the Seal of Norghor in hand, you shall gain unhindered freedom..<ul><li>Access to all expansions and rare encounters in Morkahja.</li><li>Chance to find rare and powerful items that only a select few have ever laid eyes upon.</li><li>Unlocks all portraits and frames, eliminating all other costs entirely.</li></ul>]]><p>No longer will you be held back by the restrictions of mere mortals, for you shall have become something far greater.</p></string>
+    <string name="account_player_hashtag">#%1$s</string>
+    <string name="account_remaining_days">There are %1$d days left.</string>
+    <string name="account_remaining_days_last">Today will be renewed.</string>
+    <string name="account_verify_email">Verify Email</string>
+    <string name="account_reset_password">Reset Password</string>
+    <string name="account_logout">Log Out</string>
+    <string name="account_delete_your_account">Delete your account</string>
+    <string name="account_change_your_player_name">Change your player-name</string>
+    <string name="account_password_reset">Email send successfully!</string>
+    <string name="account_deleted">User account deleted.</string>
+    <!-- Credits -->
+    <string name="credits_title">Credits</string>
+    <string name="credits_game_design">Game Design</string>
+    <string name="alexander_ludwig">Alexander Ludwig</string>
+    <string name="credits_visual_design">Visual Design</string>
+    <string name="credits_development">Development</string>
+    <string name="frank_koenig">Frank König</string>
+    <string name="credits_music">Music</string>
+    <string name="nick_ripley">Nick Ripley</string>
+    <string name="credits_creative_assistant">Creative Assistant</string>
+    <string name="deimante_paulauskaite">Deimante Paulauskaite</string>
+    <string name="credits_868_dominus">868 Dominus</string>
+    <string name="credits_donate">Donate for the Team</string>
+    <!-- Donation -->
+    <string name="donation_header">Donations</string>
+    <string name="donations_store">Get more Gems!</string>
+    <string name="donations_info">Choose the amount of gems you wish to donate directly to the developers.</string>
+    <string name="donations_all">All %1$d gems I own</string>
+    <!-- Store -->
+    <string name="store_header">Store Header</string>
+    <string name="store_welcome_to_morkahja_store">Welcome to Morkahja Store</string>
+    <string name="store_visit_the_gems_store">Visit the Gems Store</string>
+    <string name="store_visit_expansion_store">Visit Expansion Store</string>
+    <string name="store_get_more_downloadable_content">Get more Downloadable Content</string>
+    <string name="store_get_more_portraits">Get more Portraits</string>
+    <string name="store_welcome_message">WWelcome, Adventurer! Delighted am I by your arrival. Dwell a while, survey thy surroundings. Only the choicest of treasures do I purvey here. </string>
+    <string name="store_collections">Visit your Collections</string>
+    <string name="store_more_gems"><![CDATA[Get more gems/> </androidx.constraintlayout.widget.ConstraintLayout>]]></string>
+    <string name="store_your_gems">Your Gems</string>
+    <string name="store_pile_of_gems">Pile of Gems</string>
+    <string name="store_benevolent_amount_of_gems">Benevolent amount of gems</string>
+    <string name="store_bountiful_bowl_of_gems">Bountiful bowl of gems</string>
+    <string name="store_ample_bag_of_gems">Ample bag of gems</string>
+    <string name="store_gems">Get more gems</string>
+    <!-- Vita -->
+    <string name="vita_header">Profile</string>
+    <string name="vita_back">See the avatar before</string>
+    <string name="vita_next">Next avatar</string>
+    <string name="vita_frame_back">See the frame before</string>
+    <string name="vita_frame_next">Next frame</string>
+    <string name="vita_change_avatar_name_hint">Enter your new avatar Name</string>
+    <string name="vita_avatar_name_hint">Your avatar name</string>
+    <string name="vita_avatar_race">Race</string>
+    <string name="vita_avatar_male">Male</string>
+    <string name="vita_avatar_female">Female</string>
+    <string name="vita_avatar_giant">Rokur</string>
+    <string name="vita_avatar_fae">Aevis</string>
+    <string name="vita_avatar_faun">Verdani</string>
+    <string name="vita_avatar_dworv">Grimnir</string>
+    <string name="race_description_dworv">The Grimnir, known as the Stonewrought, are a hardy and resilient race of beings with an innate connection to the earth.</string>
+    <string name="race_description_faun">The Verdani, also known as the Bloomkin, are a playful and mischievous race of creatures that dwell in the wilds of Morkahja's hills and valleys.</string>
+    <string name="race_description_fae">The Aevis, known as the Windweavers, are an ethereal race of beings whose origins are deeply intertwined with the element of air.</string>
+    <string name="race_description_giant">The Rokur, also known as the Embersworn, are an imposing and powerful race of beings whose essence is bound to the elements of fire.</string>
+    <string name="race_description_empty">Each lineage and calling bears its unique virtues and frailties, ready to aid thee in thy grand quest. </string>
+    <string name="vita_avatar_role">Role</string>
+    <string name="vita_avatar_role_rogue">Rogue</string>
+    <string name="vita_avatar_role_warrior">Warrior</string>
+    <string name="vita_avatar_role_mage">Mage</string>
+    <string name="avatar_role_rogue_desc">The Rogue is stealthy and cunning and excels at deception, infiltration, and surprise attacks.</string>
+    <string name="avatar_role_mage_desc">Mages are powerful spell casters who have mastered the arcane arts.</string>
+    <string name="avatar_role_warrior_desc">The warrior is a powerful and skilled combatant, trained in the art of battle.</string>
+    <string name="avatar_role_empty_desc">Choose with wisdom and consciousness, for each path bears its own boons and challenges, governed by thy chosen role.</string>
+
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="ludus_placeholder_header">Placeholder Header</string>
+    <string name="ludus_show_encounter_story">Show encounter story</string>
+    <string name="ludus_show_encounter_dice">Roll the dice</string>
+    <string name="ludus_show_encounter_help">Get help</string>
+    <string name="ludus_show_encounter_weapons">Choose your weapon</string>
+    <string name="ludus_your_inventory">Your inventory</string>
+    <string name="ludus_your_skills">Your skills</string>
+    <string name="ludus_avatar_name">Avatar Name</string>
+    <string name="ludus_your_avatar_level">Your Avatar Level</string>
+    <string name="ludus_your_avatar_mp_level">Your friends avatar level</string>
+    <string name="ludus_placeholder_for_text">Placeholder for Text</string>
+    <string name="ludus_your_friends_action">Your friends action</string>
+    <string name="ludus_weapons">Weapons</string>
+    <string name="ludus_items">Items</string>
+    <string name="ludus_treasure">Treasure</string>
+    <string name="ludus_weapons_desc">Your Weapons</string>
+    <string name="ludus_items_desc">Your Items</string>
+    <string name="ludus_treasure_desc">Your Treasure</string>
+    <string name="ludus_placeholder_solution">Solution</string>
+    <string name="ludus_continue">Continue</string>
+    <string name="ludus_prosperity">Prosperity!</string>
+    <string name="ludus_fortune">Fortune!</string>
+    <string name="ludus_disengage">Disengage!</string>
+    <string name="ludus_hardship">Hardship!</string>
+    <string name="ludus_misery">Misery!</string>
+    <string name="ludus_success">Success!</string>
+</resources>

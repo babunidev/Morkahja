@@ -1,0 +1,247 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import { fadeTransition } from '../../transitions/fade.js';
+
+const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
+const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
+const LORE_GEM_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
+const LORE_GEM_MIN_MS = 14_000;
+const LORE_GEM_MAX_MS = 28_000;
+const LORE_GEM_REVEAL_CHANCE = 1;
+const LORE_GEM_COLLECT_ANIMATION_MS = 700;
+const LORE_GEM_POPUP_MS = 330;
+
+type LoreGemState = 'waiting' | 'visible' | 'collecting' | 'collected';
+
+const loreBlockStyle: CSSProperties = {
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: -30,
+  zIndex: 19,
+  width: '100%',
+  display: 'grid',
+  gridTemplateRows: 'minmax(0, 1fr)',
+  backgroundColor: 'rgba(10, 7, 5, 0.94)',
+  backgroundImage: `url(${LORE_BACKGROUND})`,
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  backgroundSize: 'cover',
+  overflow: 'visible',
+  transition: fadeTransition,
+};
+
+const blockBottomSeamStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  bottom: 0,
+  width: '108%',
+  height: 10,
+  objectFit: 'cover',
+  transform: 'translate(-50%, 7px)',
+  zIndex: 20,
+  pointerEvents: 'none',
+};
+
+const textWrapStyle: CSSProperties = {
+  minHeight: 0,
+  padding: 'clamp(22px, 6vw, 34px) clamp(22px, 7vw, 42px)',
+  boxSizing: 'border-box',
+  overflow: 'auto',
+  msOverflowStyle: 'none',
+  scrollbarWidth: 'none',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.95rem, 3.6vw, 1.22rem)',
+  lineHeight: 1.42,
+  textAlign: 'center',
+  textShadow: '0 2px 8px rgba(0, 0, 0, 0.92)',
+};
+
+const textStyle: CSSProperties = {
+  margin: 0,
+  whiteSpace: 'pre-wrap',
+};
+
+const loreGemButtonStyle: CSSProperties = {
+  position: 'absolute',
+  right: 'clamp(20px, 7vw, 42px)',
+  bottom: 'clamp(22px, 7vw, 48px)',
+  zIndex: 30,
+  width: 'clamp(34px, 9vw, 52px)',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+  transition: 'opacity 420ms ease, transform 420ms ease',
+};
+
+const loreGemCollectingStyle: CSSProperties = {
+  animation: 'morkahja-lore-gem-collect 700ms ease-in forwards',
+};
+
+const loreGemImageStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  height: 'auto',
+  filter: 'drop-shadow(0 0 10px rgba(255, 204, 102, 0.75)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55))',
+};
+
+const loreGemPopupStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: 0,
+  zIndex: 31,
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.9rem, 4vw, 1.3rem)',
+  fontWeight: 700,
+  lineHeight: 1,
+  textShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 3px 8px rgba(0, 0, 0, 0.85)',
+  pointerEvents: 'none',
+  animation: 'morkahja-lore-gem-popup 330ms ease-out forwards',
+};
+
+function randomLoreGemDelay(): number {
+  return Math.floor(
+    LORE_GEM_MIN_MS + Math.random() * (LORE_GEM_MAX_MS - LORE_GEM_MIN_MS + 1),
+  );
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+export function LoreBlock({
+  encounterKey,
+  onLoreGemCollect,
+  text,
+  visible,
+}: {
+  encounterKey: string;
+  onLoreGemCollect: () => Promise<void>;
+  text: string;
+  visible: boolean;
+}) {
+  const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
+  const [loreGemDelay, setLoreGemDelay] = useState(randomLoreGemDelay);
+  const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
+
+  useEffect(() => {
+    setLoreGemState('waiting');
+    setLoreGemDelay(randomLoreGemDelay());
+    setLoreGemPopupVisible(false);
+  }, [encounterKey]);
+
+  useEffect(() => {
+    if (loreGemState !== 'waiting') {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setLoreGemState(Math.random() <= LORE_GEM_REVEAL_CHANCE ? 'visible' : 'collected');
+    }, loreGemDelay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loreGemDelay, loreGemState]);
+
+  async function handleLoreGemClick(): Promise<void> {
+    if (loreGemState !== 'visible') {
+      return;
+    }
+
+    setLoreGemState('collecting');
+    setLoreGemPopupVisible(true);
+    window.setTimeout(() => {
+      setLoreGemPopupVisible(false);
+    }, LORE_GEM_POPUP_MS);
+
+    try {
+      await Promise.all([
+        onLoreGemCollect(),
+        wait(LORE_GEM_COLLECT_ANIMATION_MS),
+      ]);
+      setLoreGemState('collected');
+    } catch (error) {
+      console.error('Lore gem collection failed', error);
+      await wait(LORE_GEM_COLLECT_ANIMATION_MS);
+      setLoreGemState('visible');
+    }
+  }
+
+  const loreGemVisible = loreGemState === 'visible' || loreGemState === 'collecting';
+
+  return (
+    <aside
+      aria-hidden={!visible}
+      aria-label="Lore"
+      style={{
+        ...loreBlockStyle,
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+    >
+      <style>
+        {`
+          [data-lore-scroll]::-webkit-scrollbar { display: none; }
+          @keyframes morkahja-lore-gem-collect {
+            0% { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
+            12% { transform: translateX(-4px) rotate(-9deg) scale(1.06); }
+            24% { transform: translateX(4px) rotate(9deg) scale(1.05); }
+            36% { transform: translateX(-3px) rotate(-7deg) scale(1.03); }
+            48% { transform: translateX(3px) rotate(7deg) scale(1.02); }
+            62% { opacity: 0.75; transform: translateX(-2px) rotate(-4deg) scale(0.96); }
+            100% { opacity: 0; transform: translateY(12px) rotate(0deg) scale(0.55); }
+          }
+          @keyframes morkahja-lore-gem-popup {
+            0% { opacity: 0; transform: translate(-50%, -2px) scale(0.9); }
+            18% { opacity: 1; transform: translate(-50%, -12px) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+          }
+        `}
+      </style>
+      <div data-lore-scroll style={textWrapStyle}>
+        <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
+      </div>
+      {loreGemVisible ? (
+        <button
+          aria-label="lore_gem"
+          data-lore-gem="true"
+          disabled={loreGemState === 'collecting'}
+          onClick={() => {
+            void handleLoreGemClick();
+          }}
+          style={{
+            ...loreGemButtonStyle,
+            ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
+            opacity: visible ? 1 : 0,
+            pointerEvents: visible && loreGemState === 'visible' ? 'auto' : 'none',
+          }}
+          type="button"
+        >
+          <img
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            src={LORE_GEM_ASSET}
+            style={loreGemImageStyle}
+          />
+          {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
+        </button>
+      ) : null}
+      <img
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        src={FRAME_MASK}
+        style={blockBottomSeamStyle}
+      />
+    </aside>
+  );
+}
+
+export default LoreBlock;

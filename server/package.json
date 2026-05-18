@@ -1,0 +1,23 @@
+{
+  "name": "@morkahja/server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts",
+    "test:encounter": "tsx src/runEncounterTest.ts",
+    "test:lifecycle": "tsx src/runEncounterLifecycle.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.16.0",
+    "tsx": "^4.22.0",
+    "typescript": "^5.8.3"
+  }
+}

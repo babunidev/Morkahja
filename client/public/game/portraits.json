@@ -1,0 +1,6134 @@
+{
+  "Avatar": [
+    null,
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 1,
+      "avatarName": "Dur",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 2,
+      "avatarName": "Stogro",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 3,
+      "avatarName": "Klatra",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 4,
+      "avatarName": "Trabra",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 5,
+      "avatarName": "Grodro",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 6,
+      "avatarName": "Gruska",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 7,
+      "avatarName": "Grofro",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 8,
+      "avatarName": "Brusko",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 9,
+      "avatarName": "Sylnyp",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 10,
+      "avatarName": "Maevae",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 11,
+      "avatarName": "Typlyr",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 12,
+      "avatarName": "Vaedae",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 13,
+      "avatarName": "Daelyr",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 14,
+      "avatarName": "Sylnyp",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 15,
+      "avatarName": "Sylmae",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 16,
+      "avatarName": "Lyrsyl",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 17,
+      "avatarName": "Raemyr",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 18,
+      "avatarName": "Thalyt",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 19,
+      "avatarName": "Aeltha",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 20,
+      "avatarName": "Raesyl",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 21,
+      "avatarName": "Sylcyr",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 22,
+      "avatarName": "Myrsyl",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 23,
+      "avatarName": "Aeltha",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 24,
+      "avatarName": "Thanyl",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 25,
+      "avatarName": "Gravra",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 26,
+      "avatarName": "Thrrok",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 27,
+      "avatarName": "Rokbru",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 2,
+      "avatarID": 28,
+      "avatarName": "Thrdra",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 29,
+      "avatarName": "Brakru",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 30,
+      "avatarName": "Krubla",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 31,
+      "avatarName": "Drathr",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 0,
+      "avatarGenderID": 1,
+      "avatarID": 32,
+      "avatarName": "Rokrok",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 0
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 33,
+      "avatarName": "Thruna",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 34,
+      "avatarName": "Bragera",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 35,
+      "avatarName": "Kromi",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 36,
+      "avatarName": "Grundir",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 37,
+      "avatarName": "Bronar",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 38,
+      "avatarName": "Trakia",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 39,
+      "avatarName": "Skarana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 40,
+      "avatarName": "Frothe",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 41,
+      "avatarName": "Gromar",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 42,
+      "avatarName": "Thrune",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 43,
+      "avatarName": "Durna",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 44,
+      "avatarName": "Bragan",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 45,
+      "avatarName": "Kromel",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 46,
+      "avatarName": "Storana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 47,
+      "avatarName": "Grixana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 48,
+      "avatarName": "Draga",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 49,
+      "avatarName": "Brontara",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 50,
+      "avatarName": "Krundara",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 51,
+      "avatarName": "Groxira",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 52,
+      "avatarName": "Bruntara",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 53,
+      "avatarName": "Dragana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 54,
+      "avatarName": "Skordana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 55,
+      "avatarName": "Throgana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 56,
+      "avatarName": "Griana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 57,
+      "avatarName": "Thronara",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 58,
+      "avatarName": "Krana",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 59,
+      "avatarName": "Duren",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 60,
+      "avatarName": "Bragod",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 61,
+      "avatarName": "Kromel",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 62,
+      "avatarName": "Grunde",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 63,
+      "avatarName": "Brond",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 64,
+      "avatarName": "Trakul",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 65,
+      "avatarName": "Skarne",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 66,
+      "avatarName": "Frothir",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 67,
+      "avatarName": "Gromur",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 68,
+      "avatarName": "Thrune",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 69,
+      "avatarName": "Durnel",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 70,
+      "avatarName": "Bragil",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 71,
+      "avatarName": "Kromar",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 72,
+      "avatarName": "Stori",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 73,
+      "avatarName": "Grixa",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 74,
+      "avatarName": "Draga",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 75,
+      "avatarName": "Bronti",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 76,
+      "avatarName": "Krundi",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 77,
+      "avatarName": "Groxi",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 78,
+      "avatarName": "Brunti",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 79,
+      "avatarName": "Draki",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 80,
+      "avatarName": "Skordi",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 81,
+      "avatarName": "Throki",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 82,
+      "avatarName": "Griki",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 83,
+      "avatarName": "Throni",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 84,
+      "avatarName": "Krani",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 85,
+      "avatarName": "Gromek",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 86,
+      "avatarName": "Thrune",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 87,
+      "avatarName": "Durend",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 88,
+      "avatarName": "Bragol",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 89,
+      "avatarName": "Krome",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 90,
+      "avatarName": "Grundar",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 91,
+      "avatarName": "Bronil",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 92,
+      "avatarName": "Trakar",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 93,
+      "avatarName": "Skarol",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 94,
+      "avatarName": "Frothur",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 95,
+      "avatarName": "Grome",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 96,
+      "avatarName": "Thrunel",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 97,
+      "avatarName": "Durnel",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 98,
+      "avatarName": "Stora",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 99,
+      "avatarName": "Grixa",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 100,
+      "avatarName": "Droga",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 101,
+      "avatarName": "Bronta",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 102,
+      "avatarName": "Krunda",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 103,
+      "avatarName": "Groxa",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 104,
+      "avatarName": "Brunti",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 105,
+      "avatarName": "Draka",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 106,
+      "avatarName": "Skorda",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 107,
+      "avatarName": "Throka",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 108,
+      "avatarName": "Grika",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 109,
+      "avatarName": "Throna",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 110,
+      "avatarName": "Kraka",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 111,
+      "avatarName": "Karika",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 112,
+      "avatarName": "Klarona",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 113,
+      "avatarName": "Gromep",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 114,
+      "avatarName": "Thrunix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 115,
+      "avatarName": "Durna",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 116,
+      "avatarName": "Bragix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 117,
+      "avatarName": "Kromix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 118,
+      "avatarName": "Grundix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 119,
+      "avatarName": "Bronix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 120,
+      "avatarName": "Trakix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 121,
+      "avatarName": "Skarnix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 122,
+      "avatarName": "Frothix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 123,
+      "avatarName": "Gromil",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 124,
+      "avatarName": "Thrunal",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 125,
+      "avatarName": "Durnix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 126,
+      "avatarName": "Storix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 127,
+      "avatarName": "Grivix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 128,
+      "avatarName": "Drogil",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 129,
+      "avatarName": "Brontix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 130,
+      "avatarName": "Krundix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 131,
+      "avatarName": "Groxil",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 132,
+      "avatarName": "Bruntix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 133,
+      "avatarName": "Dragix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 134,
+      "avatarName": "Skordix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 135,
+      "avatarName": "Throndix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 136,
+      "avatarName": "Grilix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 137,
+      "avatarName": "Throgix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 138,
+      "avatarName": "Kranix",
+      "avatarRace": 1,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 139,
+      "avatarName": "Gromk",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 140,
+      "avatarName": "Thruno",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 141,
+      "avatarName": "Durnd",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 142,
+      "avatarName": "Brago",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 143,
+      "avatarName": "Kromk",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 144,
+      "avatarName": "Grundo",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 145,
+      "avatarName": "Bronoto",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 146,
+      "avatarName": "Trakir",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 147,
+      "avatarName": "Skarnas",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 148,
+      "avatarName": "Frotho",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 149,
+      "avatarName": "Gromol",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 150,
+      "avatarName": "Thrunek",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 151,
+      "avatarName": "Durnor",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 152,
+      "avatarName": "Stork",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 153,
+      "avatarName": "Grix",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 154,
+      "avatarName": "Drogo",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 155,
+      "avatarName": "Bront",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 156,
+      "avatarName": "Krund",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 157,
+      "avatarName": "Groxo",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 158,
+      "avatarName": "Brunto",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 159,
+      "avatarName": "Drakor",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 160,
+      "avatarName": "Skordo",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 161,
+      "avatarName": "Throko",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 162,
+      "avatarName": "Grokor",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 163,
+      "avatarName": "Throk",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 164,
+      "avatarName": "Kror",
+      "avatarRace": 1,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 165,
+      "avatarName": "Grom",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 166,
+      "avatarName": "Thrun",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 167,
+      "avatarName": "Durenor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 168,
+      "avatarName": "Bragon",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 169,
+      "avatarName": "Kromo",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 170,
+      "avatarName": "Grundur",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 171,
+      "avatarName": "Bronok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 172,
+      "avatarName": "Trakor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 173,
+      "avatarName": "Skarnor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 174,
+      "avatarName": "Frothor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 175,
+      "avatarName": "Gromp",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 176,
+      "avatarName": "Thrunor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 177,
+      "avatarName": "Durnar",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 178,
+      "avatarName": "Storok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 179,
+      "avatarName": "Griko",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 180,
+      "avatarName": "Drog",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 181,
+      "avatarName": "Brontok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 182,
+      "avatarName": "Krundok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 183,
+      "avatarName": "Groxo",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 184,
+      "avatarName": "Brunto",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 185,
+      "avatarName": "Drak",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 186,
+      "avatarName": "Skordok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 187,
+      "avatarName": "Throk",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 188,
+      "avatarName": "Grikor",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 189,
+      "avatarName": "Thronok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 190,
+      "avatarName": "Krok",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 191,
+      "avatarName": "Koroko",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 192,
+      "avatarName": "Grikoror",
+      "avatarRace": 1,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 193,
+      "avatarName": "Aelis",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 194,
+      "avatarName": "Cyria",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 195,
+      "avatarName": "Syliel",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 196,
+      "avatarName": "Lythia",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 197,
+      "avatarName": "Myria",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 198,
+      "avatarName": "Thalis",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 199,
+      "avatarName": "Elyra",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 200,
+      "avatarName": "Nyliel",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 201,
+      "avatarName": "Raelia",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 202,
+      "avatarName": "Vyria",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 203,
+      "avatarName": "Aelan",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 204,
+      "avatarName": "Cyran",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 205,
+      "avatarName": "Sylia",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 206,
+      "avatarName": "Lythea",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 207,
+      "avatarName": "Myrela",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 208,
+      "avatarName": "Thalea",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 209,
+      "avatarName": "Elyria",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 210,
+      "avatarName": "Nylara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 211,
+      "avatarName": "Raelea",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 212,
+      "avatarName": "Vyrela",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 213,
+      "avatarName": "Aelara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 214,
+      "avatarName": "Cyrela",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 215,
+      "avatarName": "Sylara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 216,
+      "avatarName": "Lythara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 217,
+      "avatarName": "Myrara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 218,
+      "avatarName": "Thalara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 219,
+      "avatarName": "Thaleara",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 220,
+      "avatarName": "Aelyr",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 221,
+      "avatarName": "Cyrelar",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 222,
+      "avatarName": "Sylel",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 223,
+      "avatarName": "Lythelar",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 224,
+      "avatarName": "Myrelar",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 225,
+      "avatarName": "Thalel",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 226,
+      "avatarName": "Elyrel",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 227,
+      "avatarName": "Nylel",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 228,
+      "avatarName": "Raelel",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 229,
+      "avatarName": "Vyrelar",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 230,
+      "avatarName": "Aelula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 231,
+      "avatarName": "Cyrelia",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 232,
+      "avatarName": "Sylula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 233,
+      "avatarName": "Lythula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 234,
+      "avatarName": "Myrula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 235,
+      "avatarName": "Thalula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 236,
+      "avatarName": "Elyrula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 237,
+      "avatarName": "Nylula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 238,
+      "avatarName": "Raelula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 239,
+      "avatarName": "Vyrula",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 240,
+      "avatarName": "Aelyria",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 241,
+      "avatarName": "Cyriael",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 242,
+      "avatarName": "Sylriael",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 243,
+      "avatarName": "Lythriael",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 244,
+      "avatarName": "Myriael",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 245,
+      "avatarName": "Thaliael",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 246,
+      "avatarName": "Aelilisari",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 247,
+      "avatarName": "Aelisar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 248,
+      "avatarName": "Cyriar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 249,
+      "avatarName": "Sylielar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 250,
+      "avatarName": "Lythiar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 251,
+      "avatarName": "Myriar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 252,
+      "avatarName": "Thalisar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 253,
+      "avatarName": "Elyrar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 254,
+      "avatarName": "Nyliar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 255,
+      "avatarName": "Raeliar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 256,
+      "avatarName": "Vyriar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 257,
+      "avatarName": "Aelana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 258,
+      "avatarName": "Cyrana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 259,
+      "avatarName": "Sylana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 260,
+      "avatarName": "Lythana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 261,
+      "avatarName": "Myrana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 262,
+      "avatarName": "Thalana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 263,
+      "avatarName": "Elyrana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 264,
+      "avatarName": "Nylana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 265,
+      "avatarName": "Raelana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 266,
+      "avatarName": "Vyrana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 267,
+      "avatarName": "Aeliana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 268,
+      "avatarName": "Cyriana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 269,
+      "avatarName": "Sylia",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 270,
+      "avatarName": "Lythiana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 271,
+      "avatarName": "Myriana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 272,
+      "avatarName": "Thaliana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 273,
+      "avatarName": "Thalania",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 274,
+      "avatarName": "Myrania",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 275,
+      "avatarName": "Lytheana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 276,
+      "avatarName": "Syliara",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 277,
+      "avatarName": "Cyriane",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 278,
+      "avatarName": "Aleana",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 279,
+      "avatarName": "Elyrala",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 280,
+      "avatarName": "Aelar",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 281,
+      "avatarName": "Cyrion",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 282,
+      "avatarName": "Sylorix",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 283,
+      "avatarName": "Lythar",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 284,
+      "avatarName": "Myron",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 285,
+      "avatarName": "Thalon",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 1,
+      "avatarID": 286,
+      "avatarName": "Elyron",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 287,
+      "avatarName": "Nylar",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 288,
+      "avatarName": "Raelon",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 289,
+      "avatarName": "Vyron",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 290,
+      "avatarName": "Aelor",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 291,
+      "avatarName": "Cyror",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 1,
+      "avatarID": 292,
+      "avatarName": "Sylar",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 293,
+      "avatarName": "Lythor",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 294,
+      "avatarName": "Myrion",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 295,
+      "avatarName": "Thalo",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 296,
+      "avatarName": "Elyro",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 297,
+      "avatarName": "Nylo",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 298,
+      "avatarName": "Raelor",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 299,
+      "avatarName": "Vyrio",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 300,
+      "avatarName": "Aelix",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 301,
+      "avatarName": "Cyrix",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 302,
+      "avatarName": "Sylan",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 303,
+      "avatarName": "Lythion",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 304,
+      "avatarName": "Myrar",
+      "avatarRace": 3,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 305,
+      "avatarName": "Aelio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 306,
+      "avatarName": "Cyro",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 307,
+      "avatarName": "Sylor",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 308,
+      "avatarName": "Lythelio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 309,
+      "avatarName": "Myrio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 310,
+      "avatarName": "Thalio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 311,
+      "avatarName": "Elyrio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 312,
+      "avatarName": "Nylor",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 313,
+      "avatarName": "Raelio",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 314,
+      "avatarName": "Vyrion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 315,
+      "avatarName": "Aelur",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 316,
+      "avatarName": "Cyrorix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 317,
+      "avatarName": "Sylurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 318,
+      "avatarName": "Lythurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 319,
+      "avatarName": "Myrurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 320,
+      "avatarName": "Thalurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 321,
+      "avatarName": "Elyrurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 322,
+      "avatarName": "Nylurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 323,
+      "avatarName": "Raelurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 324,
+      "avatarName": "Vyrurix",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 325,
+      "avatarName": "Aelixion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 326,
+      "avatarName": "Cyrixion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 327,
+      "avatarName": "Syluxion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 328,
+      "avatarName": "Lythuxion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 329,
+      "avatarName": "Myruxion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 330,
+      "avatarName": "Thaluxion",
+      "avatarRace": 3,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 331,
+      "avatarName": "Aelyron",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 332,
+      "avatarName": "Cyrelion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 333,
+      "avatarName": "Sylorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 334,
+      "avatarName": "Lythorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 335,
+      "avatarName": "Myrorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 336,
+      "avatarName": "Thalorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 337,
+      "avatarName": "Elyrorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 338,
+      "avatarName": "Nylorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 339,
+      "avatarName": "Raelorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 1,
+      "avatarID": 340,
+      "avatarName": "Vyrorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 1,
+      "avatarID": 341,
+      "avatarName": "Aelion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 342,
+      "avatarName": "Cyrionar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 343,
+      "avatarName": "Sylion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 344,
+      "avatarName": "Lythionar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 345,
+      "avatarName": "Myrionar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 346,
+      "avatarName": "Thalion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 347,
+      "avatarName": "Elyrion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 348,
+      "avatarName": "Nylion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 349,
+      "avatarName": "Raelion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 350,
+      "avatarName": "Vyrionar",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 351,
+      "avatarName": "Aelurion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 352,
+      "avatarName": "Cyrorion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 353,
+      "avatarName": "Sylurion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 354,
+      "avatarName": "Lythurion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 355,
+      "avatarName": "Myrurion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 1,
+      "avatarID": 356,
+      "avatarName": "Thalurion",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 357,
+      "avatarName": "Syluron",
+      "avatarRace": 3,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 358,
+      "avatarName": "Sylvine",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 359,
+      "avatarName": "Lyrila",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 360,
+      "avatarName": "Maelia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 361,
+      "avatarName": "Vaelia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 362,
+      "avatarName": "Nyphia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 363,
+      "avatarName": "Daelia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 364,
+      "avatarName": "Rylia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 365,
+      "avatarName": "Typhia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 366,
+      "avatarName": "Caelia",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 367,
+      "avatarName": "Myria",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 368,
+      "avatarName": "Sylviel",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 369,
+      "avatarName": "Lyrela",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 370,
+      "avatarName": "Maeleli",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 371,
+      "avatarName": "Vaelela",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 372,
+      "avatarName": "Nypheli",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 373,
+      "avatarName": "Daeleli",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 374,
+      "avatarName": "Rylila",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 375,
+      "avatarName": "Typhela",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 2,
+      "avatarID": 376,
+      "avatarName": "Caeleli",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 377,
+      "avatarName": "Myrela",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 378,
+      "avatarName": "Sylvanila",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 379,
+      "avatarName": "Lyrulila",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 380,
+      "avatarName": "Maelilane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 381,
+      "avatarName": "Vaelilane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 382,
+      "avatarName": "Nyphelane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 383,
+      "avatarName": "Daelilane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 384,
+      "avatarName": "Sylvane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 385,
+      "avatarName": "Lyra",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 386,
+      "avatarName": "Maelane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 387,
+      "avatarName": "Vaelane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 388,
+      "avatarName": "Nyphane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 389,
+      "avatarName": "Daelane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 390,
+      "avatarName": "Rylane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 391,
+      "avatarName": "Typhane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 392,
+      "avatarName": "Caelane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 393,
+      "avatarName": "Myrane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 394,
+      "avatarName": "Sylvanix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 395,
+      "avatarName": "Lyraneor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 396,
+      "avatarName": "Maelaneix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 397,
+      "avatarName": "Vaelaneix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 398,
+      "avatarName": "Nyphaneix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 399,
+      "avatarName": "Daelaneor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 2,
+      "avatarID": 400,
+      "avatarName": "Rylanix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 401,
+      "avatarName": "Typhaneor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 402,
+      "avatarName": "Caelaneor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 403,
+      "avatarName": "Myraneix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 2,
+      "avatarID": 404,
+      "avatarName": "Sylanor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 405,
+      "avatarName": "Lyrulane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 406,
+      "avatarName": "Maelulane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 407,
+      "avatarName": "Vaelulane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 408,
+      "avatarName": "Nyphulane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 409,
+      "avatarName": "Daelulane",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 410,
+      "avatarName": "Daeluluna",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 411,
+      "avatarName": "Nyphela",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 412,
+      "avatarName": "Vaela",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 413,
+      "avatarName": "Syles",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 414,
+      "avatarName": "Lryire",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 415,
+      "avatarName": "Maeli",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 416,
+      "avatarName": "Vaeli",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 417,
+      "avatarName": "Nyphi",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 418,
+      "avatarName": "Daeli",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 419,
+      "avatarName": "Ryli",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 420,
+      "avatarName": "Typhi",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 421,
+      "avatarName": "Caeli",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 2,
+      "avatarID": 422,
+      "avatarName": "Myri",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 423,
+      "avatarName": "Sylvixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 424,
+      "avatarName": "Lyrelor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 425,
+      "avatarName": "Maelelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 426,
+      "avatarName": "Vaelelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 427,
+      "avatarName": "Nyphelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 428,
+      "avatarName": "Daelelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 429,
+      "avatarName": "Rylorixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 430,
+      "avatarName": "Typhelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 431,
+      "avatarName": "Caelorixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 432,
+      "avatarName": "Myrelori",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 433,
+      "avatarName": "Sylvanixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 434,
+      "avatarName": "Lyrulixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 2,
+      "avatarID": 435,
+      "avatarName": "Maelulixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 436,
+      "avatarName": "Vaelulixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 437,
+      "avatarName": "Nyphulixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 438,
+      "avatarName": "Daelulixe",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 439,
+      "avatarName": "Sylvixar",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 440,
+      "avatarName": "Lyrulane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 441,
+      "avatarName": "Maelixor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 442,
+      "avatarName": "Vaelorin",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 443,
+      "avatarName": "Nyphixal",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 444,
+      "avatarName": "Daelorix",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 445,
+      "avatarName": "Rylorixan",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 446,
+      "avatarName": "Typhorixal",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 447,
+      "avatarName": "Caelorin",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 448,
+      "avatarName": "Myrorixan",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 449,
+      "avatarName": "Sylorane",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 450,
+      "avatarName": "Lyrixal",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 451,
+      "avatarName": "Maelanor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 452,
+      "avatarName": "Vaelixan",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 453,
+      "avatarName": "Nyphelan",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 454,
+      "avatarName": "Daelixal",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 455,
+      "avatarName": "Rylaneor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 456,
+      "avatarName": "Typhelan",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 457,
+      "avatarName": "Caelanix",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 458,
+      "avatarName": "Myrelanor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 459,
+      "avatarName": "Sylvaneor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 460,
+      "avatarName": "Lyrorix",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 461,
+      "avatarName": "Maelelor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 462,
+      "avatarName": "Vaelanor",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 463,
+      "avatarName": "Nyphelix",
+      "avatarRace": 2,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 1,
+      "avatarID": 464,
+      "avatarName": "Sylvor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 465,
+      "avatarName": "Lyror",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 466,
+      "avatarName": "Maelor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 467,
+      "avatarName": "Vaelor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 468,
+      "avatarName": "Nyphor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 469,
+      "avatarName": "Daelor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 470,
+      "avatarName": "Rylor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 471,
+      "avatarName": "Typhor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 472,
+      "avatarName": "Caelor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 473,
+      "avatarName": "Myror",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 474,
+      "avatarName": "Sylvur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 475,
+      "avatarName": "Lyrorix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 476,
+      "avatarName": "Maelur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 477,
+      "avatarName": "Vaelur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 478,
+      "avatarName": "Nyphur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 479,
+      "avatarName": "Daelur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 480,
+      "avatarName": "Rylur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 481,
+      "avatarName": "Typhur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 482,
+      "avatarName": "Caelur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 483,
+      "avatarName": "Myrur",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 484,
+      "avatarName": "Sylvurix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 485,
+      "avatarName": "Lyranor",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 486,
+      "avatarName": "Maelurix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 487,
+      "avatarName": "Vaelurix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 488,
+      "avatarName": "Nyphurix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 489,
+      "avatarName": "Daelurix",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 490,
+      "avatarName": "Daeluro",
+      "avatarRace": 2,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 491,
+      "avatarName": "Sylvix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 492,
+      "avatarName": "Lyrix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 493,
+      "avatarName": "Maelix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 494,
+      "avatarName": "Vaelix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 495,
+      "avatarName": "Nyphix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 496,
+      "avatarName": "Daelix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 497,
+      "avatarName": "Rylorix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 498,
+      "avatarName": "Typhix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 499,
+      "avatarName": "Caelix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 500,
+      "avatarName": "Myrix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 501,
+      "avatarName": "Sylvixor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 502,
+      "avatarName": "Lyrixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 503,
+      "avatarName": "Maelixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 504,
+      "avatarName": "Vaelixor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 505,
+      "avatarName": "Nyphixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 1,
+      "avatarID": 506,
+      "avatarName": "Daelixor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 507,
+      "avatarName": "Rylorixor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 508,
+      "avatarName": "Typhixor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 509,
+      "avatarName": "Caelixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 510,
+      "avatarName": "Myrixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 511,
+      "avatarName": "Sylvixan",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 512,
+      "avatarName": "Lyrelor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 513,
+      "avatarName": "Maelelorix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 514,
+      "avatarName": "Vaelelorix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 515,
+      "avatarName": "Nyphelorix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 516,
+      "avatarName": "Daelelorix",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 517,
+      "avatarName": "Nyphelor",
+      "avatarRace": 2,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 518,
+      "avatarName": "Rokana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 519,
+      "avatarName": "Bragana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 520,
+      "avatarName": "Drakana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 521,
+      "avatarName": "Throgana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 522,
+      "avatarName": "Vrakana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 523,
+      "avatarName": "Krogana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 524,
+      "avatarName": "Blagana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 525,
+      "avatarName": "Grakana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 526,
+      "avatarName": "Brugana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 527,
+      "avatarName": "Krukana",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 528,
+      "avatarName": "Rokira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 529,
+      "avatarName": "Bragira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 530,
+      "avatarName": "Drakira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 531,
+      "avatarName": "Throgira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 532,
+      "avatarName": "Vrakira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 533,
+      "avatarName": "Krogira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 534,
+      "avatarName": "Blagira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 535,
+      "avatarName": "Grakira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 536,
+      "avatarName": "Brugira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 537,
+      "avatarName": "Krukira",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 538,
+      "avatarName": "Rokila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 539,
+      "avatarName": "Bragila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 540,
+      "avatarName": "Drakila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 541,
+      "avatarName": "Throgila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 542,
+      "avatarName": "Vrakila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 543,
+      "avatarName": "Krogila",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 544,
+      "avatarName": "Rokice",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 545,
+      "avatarName": "Bragigse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 546,
+      "avatarName": "Drakigse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 547,
+      "avatarName": "Throgikse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 2,
+      "avatarID": 548,
+      "avatarName": "Vrakikse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 549,
+      "avatarName": "Krogigse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 2,
+      "avatarID": 550,
+      "avatarName": "Blagice",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 551,
+      "avatarName": "Grakice",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 552,
+      "avatarName": "Brugise",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 553,
+      "avatarName": "Krukikse",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 554,
+      "avatarName": "Rokigsela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 555,
+      "avatarName": "Bragisela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 556,
+      "avatarName": "Drakisela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 557,
+      "avatarName": "Throgigsela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 558,
+      "avatarName": "Vrakiksela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 559,
+      "avatarName": "Krogigsela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 2,
+      "avatarID": 560,
+      "avatarName": "Blagigsela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 561,
+      "avatarName": "Grakicela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 562,
+      "avatarName": "Brugiela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 563,
+      "avatarName": "Krukicela",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 564,
+      "avatarName": "Rokisia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 2,
+      "avatarID": 565,
+      "avatarName": "Bragisia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 566,
+      "avatarName": "Drakisia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 567,
+      "avatarName": "Throgisia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 568,
+      "avatarName": "Vrakikia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 569,
+      "avatarName": "Krogikia",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 2,
+      "avatarID": 570,
+      "avatarName": "Krogona",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 571,
+      "avatarName": "Rokora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 2,
+      "avatarID": 572,
+      "avatarName": "Bragora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 2,
+      "avatarID": 573,
+      "avatarName": "Drakora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 2,
+      "avatarID": 574,
+      "avatarName": "Throgara",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 575,
+      "avatarName": "Vrakora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 2,
+      "avatarID": 576,
+      "avatarName": "Krogara",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 2,
+      "avatarID": 577,
+      "avatarName": "Blagora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 578,
+      "avatarName": "Grakora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 579,
+      "avatarName": "Brugora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 2,
+      "avatarID": 580,
+      "avatarName": "Krukora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 2,
+      "avatarID": 581,
+      "avatarName": "Rokorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 582,
+      "avatarName": "Bragorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 583,
+      "avatarName": "Drakorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 2,
+      "avatarID": 584,
+      "avatarName": "Throgorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 585,
+      "avatarName": "Vrakorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 35,
+      "avatarGenderID": 2,
+      "avatarID": 586,
+      "avatarName": "Krogorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 587,
+      "avatarName": "Blagorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 588,
+      "avatarName": "Grakorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 589,
+      "avatarName": "Brugorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 2,
+      "avatarID": 590,
+      "avatarName": "Krukorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 51,
+      "avatarGenderID": 2,
+      "avatarID": 591,
+      "avatarName": "Rokorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 2,
+      "avatarID": 592,
+      "avatarName": "Bragorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 593,
+      "avatarName": "Drakorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 594,
+      "avatarName": "Throgorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 45,
+      "avatarGenderID": 2,
+      "avatarID": 595,
+      "avatarName": "Vrakorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 2,
+      "avatarID": 596,
+      "avatarName": "Krogarina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 597,
+      "avatarName": "Zragora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 2,
+      "avatarID": 598,
+      "avatarName": "Frokor",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 2,
+      "avatarID": 599,
+      "avatarName": "Pragore",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 2,
+      "avatarID": 600,
+      "avatarName": "Xrogara",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 2,
+      "avatarID": 601,
+      "avatarName": "Snagore",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 2,
+      "avatarID": 602,
+      "avatarName": "Glakora",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 2,
+      "avatarID": 603,
+      "avatarName": "Splagorel",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 2,
+      "avatarID": 604,
+      "avatarName": "Quagorina",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 605,
+      "avatarName": "Rokanar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 606,
+      "avatarName": "Bragion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 607,
+      "avatarName": "Drakion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 608,
+      "avatarName": "Thrognir",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 609,
+      "avatarName": "Vrakion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 610,
+      "avatarName": "Krogion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 611,
+      "avatarName": "Blagion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 612,
+      "avatarName": "Grakion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 613,
+      "avatarName": "Brugion",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 614,
+      "avatarName": "Krukinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 615,
+      "avatarName": "Rokinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 616,
+      "avatarName": "Braginar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 617,
+      "avatarName": "Drakinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 618,
+      "avatarName": "Throginar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 619,
+      "avatarName": "Vrakinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 33,
+      "avatarGenderID": 1,
+      "avatarID": 620,
+      "avatarName": "Kroginar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 621,
+      "avatarName": "Blaginar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 622,
+      "avatarName": "Grakinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 29,
+      "avatarGenderID": 1,
+      "avatarID": 623,
+      "avatarName": "Bruginar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 624,
+      "avatarName": "Krukinar",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 625,
+      "avatarName": "Rokistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 53,
+      "avatarGenderID": 1,
+      "avatarID": 626,
+      "avatarName": "Bragistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 627,
+      "avatarName": "Drakistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 42,
+      "avatarGenderID": 1,
+      "avatarID": 628,
+      "avatarName": "Throgistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 629,
+      "avatarName": "Vrakistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 630,
+      "avatarName": "Krogistal",
+      "avatarRace": 4,
+      "avatarRole": 1,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 631,
+      "avatarName": "Rokiksar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 27,
+      "avatarGenderID": 1,
+      "avatarID": 632,
+      "avatarName": "Bragigsar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 633,
+      "avatarName": "Drakiksar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 634,
+      "avatarName": "Throgisar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 635,
+      "avatarName": "Vrakigsar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 34,
+      "avatarGenderID": 1,
+      "avatarID": 636,
+      "avatarName": "Krogisar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 637,
+      "avatarName": "Blagisar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 638,
+      "avatarName": "Grakigsar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 639,
+      "avatarName": "Brugisar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 640,
+      "avatarName": "Krukigar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 641,
+      "avatarName": "Rokigel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 642,
+      "avatarName": "Bragisel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 30,
+      "avatarGenderID": 1,
+      "avatarID": 643,
+      "avatarName": "Drakikel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 644,
+      "avatarName": "Throgicel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 645,
+      "avatarName": "Vrakicel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 646,
+      "avatarName": "Krogiell",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 46,
+      "avatarGenderID": 1,
+      "avatarID": 647,
+      "avatarName": "Blagigel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 648,
+      "avatarName": "Grakisel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 649,
+      "avatarName": "Brugicel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 650,
+      "avatarName": "Krukikel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 49,
+      "avatarGenderID": 1,
+      "avatarID": 651,
+      "avatarName": "Rokisio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 48,
+      "avatarGenderID": 1,
+      "avatarID": 652,
+      "avatarName": "Bragisio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 38,
+      "avatarGenderID": 1,
+      "avatarID": 653,
+      "avatarName": "Drakikio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 50,
+      "avatarGenderID": 1,
+      "avatarID": 654,
+      "avatarName": "Throgisio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 655,
+      "avatarName": "Vrakigio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 656,
+      "avatarName": "Krogisio",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 28,
+      "avatarGenderID": 1,
+      "avatarID": 657,
+      "avatarName": "Froliksel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 658,
+      "avatarName": "Trigisar",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 659,
+      "avatarName": "Glomisel",
+      "avatarRace": 4,
+      "avatarRole": 2,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 660,
+      "avatarName": "Rokorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 31,
+      "avatarGenderID": 1,
+      "avatarID": 661,
+      "avatarName": "Bragorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 662,
+      "avatarName": "Drakorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 663,
+      "avatarName": "Throgorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 41,
+      "avatarGenderID": 1,
+      "avatarID": 664,
+      "avatarName": "Vrakorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 665,
+      "avatarName": "Krogarion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 40,
+      "avatarGenderID": 1,
+      "avatarID": 666,
+      "avatarName": "Blagorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 52,
+      "avatarGenderID": 1,
+      "avatarID": 667,
+      "avatarName": "Grakorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 668,
+      "avatarName": "Brugorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 669,
+      "avatarName": "Krukorion",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 39,
+      "avatarGenderID": 1,
+      "avatarID": 670,
+      "avatarName": "Rokoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 671,
+      "avatarName": "Bragoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 32,
+      "avatarGenderID": 1,
+      "avatarID": 672,
+      "avatarName": "Drakoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 37,
+      "avatarGenderID": 1,
+      "avatarID": 673,
+      "avatarName": "Throgoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 674,
+      "avatarName": "Vrakoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 47,
+      "avatarGenderID": 1,
+      "avatarID": 675,
+      "avatarName": "Krogaran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 36,
+      "avatarGenderID": 1,
+      "avatarID": 676,
+      "avatarName": "Blagoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 43,
+      "avatarGenderID": 1,
+      "avatarID": 677,
+      "avatarName": "Grakoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 44,
+      "avatarGenderID": 1,
+      "avatarID": 678,
+      "avatarName": "Brugoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 54,
+      "avatarGenderID": 1,
+      "avatarID": 679,
+      "avatarName": "Krukoran",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 55,
+      "avatarGenderID": 1,
+      "avatarID": 680,
+      "avatarName": "Rokoriks",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    },
+    {
+      "avatarGems": 56,
+      "avatarGenderID": 1,
+      "avatarID": 681,
+      "avatarName": "Bragoriso",
+      "avatarRace": 4,
+      "avatarRole": 3,
+      "avatarType": 1
+    }
+  ]
+}

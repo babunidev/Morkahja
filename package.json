@@ -1,17 +1,21 @@
 {
   "name": "morkahja",
   "private": true,
-  "type": "module",
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
   "scripts": {
-    "test:encounter": "tsx src/runEncounterTest.ts",
-    "test:lifecycle": "tsx src/runEncounterLifecycle.ts",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "tsx": "^4.22.0",
-    "typescript": "^5.8.3"
+    "dev": "npm run dev --prefix server",
+    "dev:backend": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "start": "npm run start --prefix server",
+    "test:encounter": "npm run test:encounter --prefix server",
+    "test:lifecycle": "npm run test:lifecycle --prefix server",
+    "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client"
   },
   "dependencies": {
-    "firebase-admin": "^13.10.0"
+    "pg": "^8.20.0"
   }
 }

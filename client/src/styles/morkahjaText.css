@@ -1,0 +1,20 @@
+@font-face {
+  font-family: 'Breathe Fire';
+  src: url('/UI/font/Breathe Fire.otf') format('opentype');
+  font-display: swap;
+}
+
+.morkahja-title {
+  color: #330000;
+  font-family: 'Breathe Fire', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 1px #ffcc66;
+  paint-order: stroke fill;
+  text-shadow:
+    -1px -1px 0 #ffcc66,
+     1px -1px 0 #ffcc66,
+    -1px  1px 0 #ffcc66,
+     1px  1px 0 #ffcc66,
+     0 0 6px rgba(255, 204, 102, 0.25);
+}

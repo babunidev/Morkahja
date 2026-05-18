@@ -1,0 +1,19 @@
+import type { CSSProperties } from 'react';
+
+export const FADE_DURATION_MS = 420;
+export const FADE_DURATION_SECONDS = FADE_DURATION_MS / 1000;
+
+export const fadeTransition = `opacity ${FADE_DURATION_MS}ms ease`;
+
+export function fadeStyle(visible: boolean): CSSProperties {
+  return {
+    opacity: visible ? 1 : 0,
+    transition: fadeTransition,
+  };
+}
+
+export function waitForFade(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, FADE_DURATION_MS);
+  });
+}

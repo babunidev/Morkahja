@@ -1,0 +1,698 @@
+{
+  "Frames": [
+    null,
+    {
+      "frameGem": 42,
+      "frameID": 1,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 42,
+      "frameID": 2,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 27,
+      "frameID": 3,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 30,
+      "frameID": 4,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 5,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 6,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 29,
+      "frameID": 7,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 25,
+      "frameID": 8,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 31,
+      "frameID": 9,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 10,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 11,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 17,
+      "frameID": 12,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 13,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 14,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 15,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 16,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 17,
+      "frameID": 17,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 18,
+      "frameID": 18,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 24,
+      "frameID": 19,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 20,
+      "frameID": 20,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 21,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 22,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 24,
+      "frameID": 23,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 24,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 30,
+      "frameID": 25,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 26,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 27,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 28,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 31,
+      "frameID": 29,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 30,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 31,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1002
+    },
+    {
+      "frameGem": 28,
+      "frameID": 32,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 33,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 31,
+      "frameID": 34,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 35,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 29,
+      "frameID": 36,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 37,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 38,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 39,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 16,
+      "frameID": 40,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 41,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 42,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 43,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 32,
+      "frameID": 44,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 45,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 46,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 15,
+      "frameID": 47,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 48,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 15,
+      "frameID": 49,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 50,
+      "frameRace": 0,
+      "frameRole": 3,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 51,
+      "frameRace": 0,
+      "frameRole": 1,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 52,
+      "frameRace": 0,
+      "frameRole": 2,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 53,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 54,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 55,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 56,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 37,
+      "frameID": 57,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 58,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 31,
+      "frameID": 59,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 37,
+      "frameID": 60,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 34,
+      "frameID": 61,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 36,
+      "frameID": 62,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 63,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 42,
+      "frameID": 64,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 16,
+      "frameID": 65,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 19,
+      "frameID": 66,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 67,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 68,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 69,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 70,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 71,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 22,
+      "frameID": 72,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 34,
+      "frameID": 73,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 17,
+      "frameID": 74,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 25,
+      "frameID": 75,
+      "frameRace": 1,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 25,
+      "frameID": 76,
+      "frameRace": 1,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 37,
+      "frameID": 77,
+      "frameRace": 1,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 78,
+      "frameRace": 0,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 79,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 29,
+      "frameID": 80,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 26,
+      "frameID": 81,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 38,
+      "frameID": 82,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 34,
+      "frameID": 83,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 36,
+      "frameID": 84,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 27,
+      "frameID": 85,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 24,
+      "frameID": 86,
+      "frameRace": 3,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 87,
+      "frameRace": 4,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 88,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 23,
+      "frameID": 89,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 33,
+      "frameID": 90,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 36,
+      "frameID": 91,
+      "frameRace": 2,
+      "frameRole": 0,
+      "frameType": 1
+    },
+    {
+      "frameGem": 28,
+      "frameID": 92,
+      "frameRace": 0,
+      "frameRole": 3,
+      "frameType": 1
+    },
+    {
+      "frameGem": 24,
+      "frameID": 93,
+      "frameRace": 0,
+      "frameRole": 3,
+      "frameType": 1
+    },
+    {
+      "frameGem": 27,
+      "frameID": 94,
+      "frameRace": 0,
+      "frameRole": 3,
+      "frameType": 1
+    },
+    {
+      "frameGem": 31,
+      "frameID": 95,
+      "frameRace": 0,
+      "frameRole": 2,
+      "frameType": 1
+    },
+    {
+      "frameGem": 37,
+      "frameID": 96,
+      "frameRace": 0,
+      "frameRole": 2,
+      "frameType": 1
+    },
+    {
+      "frameGem": 39,
+      "frameID": 97,
+      "frameRace": 0,
+      "frameRole": 1,
+      "frameType": 1
+    },
+    {
+      "frameGem": 21,
+      "frameID": 98,
+      "frameRace": 0,
+      "frameRole": 1,
+      "frameType": 1
+    },
+    {
+      "frameGem": 27,
+      "frameID": 99,
+      "frameRace": 0,
+      "frameRole": 1,
+      "frameType": 1
+    }
+  ]
+}
