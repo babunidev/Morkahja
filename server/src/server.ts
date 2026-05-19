@@ -3,9 +3,16 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { encounterControllerErrorStatus } from './controllers/encounterController.js';
 import { validatePostgresConnection } from './db/postgresDocumentStore.js';
+import { authMiddleware, requireAuth } from './middleware/authMiddleware.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
+import {
+  bootstrapSession,
+  heartbeatSession,
+  logoutSession,
+  SessionError,
+} from './services/sessionService.js';
 import {
   getEncounters,
   getFramesData,
@@ -14,14 +21,13 @@ import {
   loadStaticGameEnvironment,
 } from './services/gameData.js';
 import {
-  addBabuniYellowRedGems,
-  BABUNI_PLAYER_ID,
-  deleteBabuniAvatar,
-  loadBabuniActiveAvatar,
-  loadBabuniAvatars,
+  addPlayerYellowRedGems,
+  deletePlayerAvatar,
+  loadPlayerActiveAvatar,
+  loadPlayerAvatars,
   loadPlayer,
-  saveBabuniAvatar,
-  selectBabuniAvatar,
+  savePlayerAvatar,
+  selectPlayerAvatar,
 } from './services/playerService.js';
 
 const app = express();
@@ -42,7 +48,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);
@@ -54,12 +60,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(express.json());
 
 // Future runtime hooks:
-// app.use(authMiddleware);
 // app.use(requestLogger);
 // app.use(multiplayerSessionHooks);
-
-// Mount encounter system API.
-app.use('/encounter', encounterRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok' });
@@ -80,8 +82,77 @@ app.get('/game-data/status', (_req: Request, res: Response) => {
   });
 });
 
-app.get('/player', async (_req: Request, res: Response) => {
-  const playerId = BABUNI_PLAYER_ID;
+app.post('/session/bootstrap', async (req: Request, res: Response) => {
+  const body = req.body as Record<string, unknown>;
+  const devicePublicKey = typeof body.devicePublicKey === 'string'
+    ? body.devicePublicKey
+    : '';
+  const identityPublicKey = typeof body.identityPublicKey === 'string'
+    ? body.identityPublicKey
+    : undefined;
+  const playerName = typeof body.playerName === 'string'
+    ? body.playerName
+    : undefined;
+  const signedIdentityChallenge = (
+    body.signedIdentityChallenge &&
+    typeof body.signedIdentityChallenge === 'object' &&
+    typeof (body.signedIdentityChallenge as Record<string, unknown>).challenge === 'string' &&
+    typeof (body.signedIdentityChallenge as Record<string, unknown>).signature === 'string'
+  )
+    ? body.signedIdentityChallenge as { challenge: string; signature: string }
+    : undefined;
+
+  if (!devicePublicKey) {
+    res.status(400).json({ error: 'devicePublicKey is required' });
+    return;
+  }
+
+  const session = await bootstrapSession({
+    devicePublicKey,
+    identityPublicKey,
+    playerName,
+    signedIdentityChallenge,
+  });
+
+  res.status(201).json(session);
+});
+
+app.post('/session/heartbeat', async (req: Request, res: Response) => {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : '';
+
+  if (!token) {
+    res.status(401).json({ error: 'SESSION_INVALID' });
+    return;
+  }
+
+  const session = await heartbeatSession(token);
+  res.json({
+    ok: true,
+    sessionId: session.sessionId,
+    expiresAt: session.expiresAt,
+  });
+});
+
+app.post('/session/logout', async (req: Request, res: Response) => {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : '';
+
+  if (!token) {
+    res.status(401).json({ error: 'SESSION_INVALID' });
+    return;
+  }
+
+  await logoutSession(token);
+  res.json({ ok: true });
+});
+
+// Mount authenticated game API.
+app.use(authMiddleware);
+app.use('/encounter', encounterRoutes);
+
+app.get('/player', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
   const player = await loadPlayer(playerId);
 
   if (!player) {
@@ -89,21 +160,22 @@ app.get('/player', async (_req: Request, res: Response) => {
     return;
   }
 
-  res.json({ playerId, ...player });
+  res.json({ ...player, playerId });
 });
 
 app.post('/player/currency/yellow_red_gem', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
   const body = req.body as Record<string, unknown>;
   const loreGemClaimKey = typeof body.encounterKey === 'string'
     ? body.encounterKey
     : undefined;
-  const { currencies, granted } = await addBabuniYellowRedGems(1, loreGemClaimKey);
+  const { currencies, granted } = await addPlayerYellowRedGems(playerId, 1, loreGemClaimKey);
 
-  res.json({ playerId: BABUNI_PLAYER_ID, currencies, granted });
+  res.json({ playerId, currencies, granted });
 });
 
 app.get('/avatar', async (req: Request, res: Response) => {
-  const playerId = BABUNI_PLAYER_ID;
+  const { playerId } = requireAuth(req);
   const avatarId = typeof req.query.avatarId === 'string'
     ? req.query.avatarId
     : null;
@@ -123,23 +195,26 @@ app.get('/avatar', async (req: Request, res: Response) => {
   res.json({ avatarId, ...avatar });
 });
 
-app.get('/avatars', async (_req: Request, res: Response) => {
-  const avatars = await loadBabuniAvatars();
-  res.json({ playerId: BABUNI_PLAYER_ID, avatars });
+app.get('/avatars', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatars = await loadPlayerAvatars(playerId);
+  res.json({ playerId, avatars });
 });
 
-app.get('/avatar/active', async (_req: Request, res: Response) => {
-  const avatar = await loadBabuniActiveAvatar();
+app.get('/avatar/active', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatar = await loadPlayerActiveAvatar(playerId);
 
   if (!avatar) {
     res.status(404).json({ error: 'No active avatar' });
     return;
   }
 
-  res.json({ playerId: BABUNI_PLAYER_ID, avatar });
+  res.json({ playerId, avatar });
 });
 
 app.post('/avatar', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
   const body = req.body as Record<string, unknown>;
   const required = ['id', 'name', 'race', 'role', 'portrait', 'frame'] as const;
 
@@ -150,7 +225,7 @@ app.post('/avatar', async (req: Request, res: Response) => {
     }
   }
 
-  const avatar = await saveBabuniAvatar({
+  const avatar = await savePlayerAvatar(playerId, {
     id: body.id as string,
     name: body.name as string,
     race: body.race as never,
@@ -164,10 +239,11 @@ app.post('/avatar', async (req: Request, res: Response) => {
     lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
   });
 
-  res.status(201).json({ playerId: BABUNI_PLAYER_ID, avatar });
+  res.status(201).json({ playerId, avatar });
 });
 
 app.delete('/avatar/:avatarId', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
   const avatarId = Array.isArray(req.params.avatarId)
     ? req.params.avatarId[0]
     : req.params.avatarId;
@@ -177,11 +253,12 @@ app.delete('/avatar/:avatarId', async (req: Request, res: Response) => {
     return;
   }
 
-  await deleteBabuniAvatar(avatarId);
+  await deletePlayerAvatar(playerId, avatarId);
   res.json({ ok: true });
 });
 
 app.post('/avatar/select', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
   const body = req.body as Record<string, unknown>;
   const required = ['id', 'name', 'race', 'role', 'portrait', 'frame'] as const;
 
@@ -192,7 +269,7 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
     }
   }
 
-  const avatar = await selectBabuniAvatar({
+  const avatar = await selectPlayerAvatar(playerId, {
     id: body.id as string,
     name: body.name as string,
     race: body.race as never,
@@ -205,14 +282,16 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
     createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,
     lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
   });
-  const encounter = await createEncounter(BABUNI_PLAYER_ID, avatar.id ?? (body.id as string));
+  const encounter = await createEncounter(playerId, avatar.id ?? (body.id as string));
 
-  res.json({ playerId: BABUNI_PLAYER_ID, avatar, encounter });
+  res.json({ playerId, avatar, encounter });
 });
 
 app.use(
   (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const status = encounterControllerErrorStatus(error);
+    const status = error instanceof SessionError
+      ? error.statusCode
+      : encounterControllerErrorStatus(error);
     const message = error instanceof Error ? error.message : 'Internal server error';
 
     res.status(status).json({ error: message });

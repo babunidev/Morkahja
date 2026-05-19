@@ -31,14 +31,40 @@ export type {
 };
 
 const DEFAULT_SESSION: ClientSession = {
-  playerId: 'Babuni',
+  playerId: '',
+  playerName: '',
+  sessionId: '',
+  accessToken: '',
 };
+const SESSION_STORAGE_KEY = 'morkahja.session';
+
+export function loadStoredSession(): ClientSession | null {
+  try {
+    const stored = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    return stored ? JSON.parse(stored) as ClientSession : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredSession(session: ClientSession): void {
+  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+export function clearStoredSession(): void {
+  window.localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+function accessToken(): string | null {
+  return loadStoredSession()?.accessToken ?? null;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(accessToken() ? { Authorization: `Bearer ${accessToken()}` } : {}),
       ...init?.headers,
     },
   });
@@ -54,7 +80,34 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function fetchSession(): Promise<ClientSession> {
   await request<{ status: string }>('/health');
-  return DEFAULT_SESSION;
+  return loadStoredSession() ?? DEFAULT_SESSION;
+}
+
+export async function bootstrapSession(input: {
+  devicePublicKey: string;
+  identityPublicKey: string;
+  playerName?: string;
+  signedIdentityChallenge?: {
+    challenge: string;
+    signature: string;
+  };
+}): Promise<ClientSession> {
+  const session = await request<ClientSession>('/session/bootstrap', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+  saveStoredSession(session);
+  return session;
+}
+
+export async function heartbeatSession(): Promise<void> {
+  await request<{ ok: true }>('/session/heartbeat', { method: 'POST' });
+}
+
+export async function logoutSession(): Promise<void> {
+  await request<{ ok: true }>('/session/logout', { method: 'POST' });
+  clearStoredSession();
 }
 
 export async function fetchStaticGameDataStatus(): Promise<StaticGameDataStatus> {
@@ -76,10 +129,9 @@ export async function fetchStaticGameDataStatus(): Promise<StaticGameDataStatus>
 export async function fetchPlayer(
   session: ClientSession | null,
 ): Promise<PlayerResponse> {
-  const playerId = session?.playerId ?? DEFAULT_SESSION.playerId;
-  const params = new URLSearchParams({ playerId });
+  void session;
 
-  return request<PlayerResponse>(`/player?${params.toString()}`);
+  return request<PlayerResponse>('/player');
 }
 
 export async function addYellowRedGem(
@@ -114,10 +166,7 @@ export async function fetchActiveEncounter(
     return null;
   }
 
-  const params = new URLSearchParams({
-    playerId: DEFAULT_SESSION.playerId,
-    avatarId: avatar.avatar.id,
-  });
+  const params = new URLSearchParams({ avatarId: avatar.avatar.id });
 
   try {
     return await request<EncounterSnapshot>(
@@ -172,10 +221,7 @@ export async function deleteAvatar(avatarId: string): Promise<void> {
 export async function fetchOrCreateActiveEncounter(
   avatar: PersistedAvatar,
 ): Promise<EncounterSnapshot> {
-  const params = new URLSearchParams({
-    playerId: DEFAULT_SESSION.playerId,
-    avatarId: avatar.id,
-  });
+  const params = new URLSearchParams({ avatarId: avatar.id });
 
   try {
     return await request<EncounterSnapshot>(`/encounter/active?${params.toString()}`);
@@ -188,7 +234,6 @@ export async function fetchOrCreateActiveEncounter(
   return request<EncounterSnapshot>('/encounter/create', {
     method: 'POST',
     body: JSON.stringify({
-      playerId: DEFAULT_SESSION.playerId,
       avatarId: avatar.id,
     }),
   });
@@ -201,7 +246,6 @@ export async function resolveEncounterAction(
   return request<ResolveEncounterResponse>('/encounter/continue', {
     method: 'POST',
     body: JSON.stringify({
-      playerId: DEFAULT_SESSION.playerId,
       avatarId,
       action,
     }),
@@ -212,7 +256,6 @@ export async function clearEncounter(avatarId: string): Promise<void> {
   await request<{ ok: true }>('/encounter/clear', {
     method: 'POST',
     body: JSON.stringify({
-      playerId: DEFAULT_SESSION.playerId,
       avatarId,
     }),
   });
@@ -224,7 +267,6 @@ export async function createNextEncounter(
   return request<EncounterSnapshot>('/encounter/create', {
     method: 'POST',
     body: JSON.stringify({
-      playerId: DEFAULT_SESSION.playerId,
       avatarId: avatar.id,
     }),
   });

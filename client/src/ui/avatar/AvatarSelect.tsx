@@ -36,9 +36,9 @@ const triangleGridStyle: CSSProperties = {
   ...gridStyle,
   gridTemplateColumns: 'repeat(3, minmax(120px, 190px))',
   gridTemplateAreas: '". top ." "left . right"',
-  width: 'min(68vw, 570px)',
-  columnGap: 'clamp(4px, 1vw, 10px)',
-  rowGap: 'clamp(0px, 0.8vw, 8px)',
+  width: 'min(62vw, 520px)',
+  columnGap: 'clamp(0px, 0.5vw, 5px)',
+  rowGap: 0,
 };
 
 const selectLayerStyle: CSSProperties = {
@@ -90,12 +90,13 @@ const createLabelStyle: CSSProperties = {
 
 const homeButtonStyle: CSSProperties = {
   position: 'fixed',
-  left: 'clamp(18px, 4vw, 42px)',
+  left: '50%',
   bottom: 'clamp(18px, 4vw, 42px)',
   width: 'min(28vw, 172px)',
   padding: 0,
   border: 0,
   background: 'transparent',
+  transform: 'translateX(-50%)',
 };
 
 const homeImageStyle: CSSProperties = {

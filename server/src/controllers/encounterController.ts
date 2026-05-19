@@ -7,7 +7,7 @@ import {
   getActiveEncounter,
   resolveEncounter,
 } from '../services/encounterGenerator.js';
-import { BABUNI_PLAYER_ID } from '../services/playerService.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 
 class RequestError extends Error {
@@ -25,7 +25,7 @@ function firstValue(value: RequestValue): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function requestValue(req: Request, key: 'playerId' | 'avatarId'): string | undefined {
+function requestValue(req: Request, key: 'avatarId'): string | undefined {
   const body = req.body as Record<string, unknown> | undefined;
   const bodyValue = body?.[key];
 
@@ -37,13 +37,14 @@ function requestValue(req: Request, key: 'playerId' | 'avatarId'): string | unde
 }
 
 function requireIdentity(req: Request): { playerId: string; avatarId: string } {
+  const auth = requireAuth(req);
   const avatarId = requestValue(req, 'avatarId');
 
   if (!avatarId) {
     throw new RequestError('avatarId is required');
   }
 
-  return { playerId: BABUNI_PLAYER_ID, avatarId };
+  return { playerId: auth.playerId, avatarId };
 }
 
 function toPlayerAction(action: unknown): PlayerEncounterAction {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { fadeTransition } from '../../transitions/fade.js';
 
 const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
@@ -64,16 +64,28 @@ const textStyle: CSSProperties = {
 };
 
 const loreGemButtonStyle: CSSProperties = {
-  position: 'absolute',
-  right: 'clamp(20px, 7vw, 42px)',
-  bottom: 'clamp(22px, 7vw, 48px)',
+  position: 'relative',
+  display: 'block',
   zIndex: 30,
   width: 'clamp(34px, 9vw, 52px)',
+  margin: 'clamp(14px, 4vw, 24px) auto 0',
   padding: 0,
   border: 0,
   background: 'transparent',
   cursor: 'pointer',
   transition: 'opacity 420ms ease, transform 420ms ease',
+};
+
+const loreGemStarStyle: CSSProperties = {
+  display: 'block',
+  width: 10,
+  height: 10,
+  margin: 'clamp(16px, 4vw, 24px) auto 0',
+  borderRadius: '50%',
+  background: '#ffcc66',
+  boxShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 0 16px rgba(255, 204, 102, 0.5)',
+  pointerEvents: 'none',
+  animation: 'morkahja-lore-gem-star-pulse 2200ms ease-in-out infinite',
 };
 
 const loreGemCollectingStyle: CSSProperties = {
@@ -126,28 +138,41 @@ export function LoreBlock({
   visible: boolean;
 }) {
   const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
-  const [loreGemDelay, setLoreGemDelay] = useState(randomLoreGemDelay);
   const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
+  const loreGemRemainingDelay = useRef(randomLoreGemDelay());
+  const loreGemTimerStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
+    loreGemRemainingDelay.current = randomLoreGemDelay();
+    loreGemTimerStartedAt.current = null;
     setLoreGemState('waiting');
-    setLoreGemDelay(randomLoreGemDelay());
     setLoreGemPopupVisible(false);
   }, [encounterKey]);
 
   useEffect(() => {
-    if (loreGemState !== 'waiting') {
+    if (!visible || loreGemState !== 'waiting') {
       return undefined;
     }
 
+    let completed = false;
+    loreGemTimerStartedAt.current = Date.now();
     const timer = window.setTimeout(() => {
+      completed = true;
+      loreGemTimerStartedAt.current = null;
+      loreGemRemainingDelay.current = 0;
       setLoreGemState(Math.random() <= LORE_GEM_REVEAL_CHANCE ? 'visible' : 'collected');
-    }, loreGemDelay);
+    }, loreGemRemainingDelay.current);
 
     return () => {
       window.clearTimeout(timer);
+
+      if (!completed && loreGemTimerStartedAt.current !== null) {
+        const elapsed = Date.now() - loreGemTimerStartedAt.current;
+        loreGemRemainingDelay.current = Math.max(0, loreGemRemainingDelay.current - elapsed);
+        loreGemTimerStartedAt.current = null;
+      }
     };
-  }, [loreGemDelay, loreGemState]);
+  }, [encounterKey, loreGemState, visible]);
 
   async function handleLoreGemClick(): Promise<void> {
     if (loreGemState !== 'visible') {
@@ -202,37 +227,44 @@ export function LoreBlock({
             18% { opacity: 1; transform: translate(-50%, -12px) scale(1.1); }
             100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
           }
+          @keyframes morkahja-lore-gem-star-pulse {
+            0%, 100% { opacity: 0.34; transform: scale(0.78); filter: brightness(0.88); }
+            50% { opacity: 1; transform: scale(1.12); filter: brightness(1.25); }
+          }
         `}
       </style>
       <div data-lore-scroll style={textWrapStyle}>
         <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
+        {visible && loreGemState === 'waiting' ? (
+          <span aria-hidden="true" style={loreGemStarStyle} />
+        ) : null}
+        {loreGemVisible ? (
+          <button
+            aria-label="lore_gem"
+            data-lore-gem="true"
+            disabled={loreGemState === 'collecting'}
+            onClick={() => {
+              void handleLoreGemClick();
+            }}
+            style={{
+              ...loreGemButtonStyle,
+              ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
+              opacity: visible ? 1 : 0,
+              pointerEvents: visible && loreGemState === 'visible' ? 'auto' : 'none',
+            }}
+            type="button"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={LORE_GEM_ASSET}
+              style={loreGemImageStyle}
+            />
+            {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
+          </button>
+        ) : null}
       </div>
-      {loreGemVisible ? (
-        <button
-          aria-label="lore_gem"
-          data-lore-gem="true"
-          disabled={loreGemState === 'collecting'}
-          onClick={() => {
-            void handleLoreGemClick();
-          }}
-          style={{
-            ...loreGemButtonStyle,
-            ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
-            opacity: visible ? 1 : 0,
-            pointerEvents: visible && loreGemState === 'visible' ? 'auto' : 'none',
-          }}
-          type="button"
-        >
-          <img
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            src={LORE_GEM_ASSET}
-            style={loreGemImageStyle}
-          />
-          {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
-        </button>
-      ) : null}
       <img
         alt=""
         aria-hidden="true"

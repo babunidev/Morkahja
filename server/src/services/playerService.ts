@@ -59,8 +59,17 @@ export async function loadPlayer(
     return null;
   }
 
+  const now = Date.now();
+
   return {
     ...data,
+    playerId: typeof data.playerId === 'string' ? data.playerId : playerId,
+    playerName: typeof data.playerName === 'string' ? data.playerName : playerId,
+    identityPublicKey: typeof data.identityPublicKey === 'string' ? data.identityPublicKey : '',
+    activeSessionId: typeof data.activeSessionId === 'string' ? data.activeSessionId : null,
+    activeSessionExpiresAt: typeof data.activeSessionExpiresAt === 'number' ? data.activeSessionExpiresAt : null,
+    createdAt: typeof data.createdAt === 'number' ? data.createdAt : now,
+    lastPlayedAt: typeof data.lastPlayedAt === 'number' ? data.lastPlayedAt : now,
     unlockedExpansions: normalizeUnlockedExpansions(data.unlockedExpansions),
   };
 }
@@ -95,11 +104,12 @@ export async function getPlayerUnlockedExpansions(
     : DEFAULT_UNLOCKED_EXPANSIONS;
 }
 
-export async function addBabuniYellowRedGems(
+export async function addPlayerYellowRedGems(
+  playerId: string,
   amount: number,
   loreGemClaimKey?: string,
 ): Promise<{ currencies: NonNullable<PlayerDocument['currencies']>; granted: boolean }> {
-  const player = await loadPlayer(BABUNI_PLAYER_ID);
+  const player = await loadPlayer(playerId);
   const currentCurrencies = player?.currencies ?? {};
   const loreGemClaims = player?.loreGemClaims ?? {};
   const alreadyClaimed = loreGemClaimKey ? loreGemClaims[loreGemClaimKey] === true : false;
@@ -112,7 +122,7 @@ export async function addBabuniYellowRedGems(
   };
 
   await setPlayer(
-    BABUNI_PLAYER_ID,
+    playerId,
     {
       currencies,
       ...(loreGemClaimKey ? {
@@ -166,8 +176,15 @@ function raceRewardType(race: AvatarRace): 40 | 41 | 42 | 43 {
 export async function saveBabuniAvatar(
   payload: PersistedAvatarPayload,
 ): Promise<AvatarDocument> {
+  return savePlayerAvatar(BABUNI_PLAYER_ID, payload);
+}
+
+export async function savePlayerAvatar(
+  playerId: string,
+  payload: PersistedAvatarPayload,
+): Promise<AvatarDocument> {
   const now = Date.now();
-  const existing = await loadAvatar(BABUNI_PLAYER_ID, payload.id);
+  const existing = await loadAvatar(playerId, payload.id);
   const profile: AvatarDocument['profile'] = {
     ...existing?.profile,
     raceRewardType: raceRewardType(payload.race),
@@ -197,10 +214,10 @@ export async function saveBabuniAvatar(
     avatar.inventory = inventory;
   }
 
-  await ensurePlayerUnlockedExpansions(BABUNI_PLAYER_ID);
-  await saveAvatar(BABUNI_PLAYER_ID, payload.id, avatar);
+  await ensurePlayerUnlockedExpansions(playerId);
+  await saveAvatar(playerId, payload.id, avatar);
   if (!existing) {
-    await initializeAvatarInventory(BABUNI_PLAYER_ID, payload.id, avatar.profile);
+    await initializeAvatarInventory(playerId, payload.id, avatar.profile);
   }
   return avatar;
 }
@@ -208,10 +225,17 @@ export async function saveBabuniAvatar(
 export async function selectBabuniAvatar(
   payload: PersistedAvatarPayload,
 ): Promise<AvatarDocument> {
-  const avatar = await saveBabuniAvatar(payload);
+  return selectPlayerAvatar(BABUNI_PLAYER_ID, payload);
+}
+
+export async function selectPlayerAvatar(
+  playerId: string,
+  payload: PersistedAvatarPayload,
+): Promise<AvatarDocument> {
+  const avatar = await savePlayerAvatar(playerId, payload);
 
   await setPlayer(
-    BABUNI_PLAYER_ID,
+    playerId,
     {
       activeAvatarId: payload.id,
       updatedAt: Date.now(),
@@ -223,7 +247,11 @@ export async function selectBabuniAvatar(
 }
 
 export async function loadBabuniAvatars(): Promise<AvatarDocument[]> {
-  const avatars = await listAvatars<AvatarDocument>(BABUNI_PLAYER_ID);
+  return loadPlayerAvatars(BABUNI_PLAYER_ID);
+}
+
+export async function loadPlayerAvatars(playerId: string): Promise<AvatarDocument[]> {
+  const avatars = await listAvatars<AvatarDocument>(playerId);
 
   return avatars.map((avatar) => ({
     ...avatar.data,
@@ -232,14 +260,18 @@ export async function loadBabuniAvatars(): Promise<AvatarDocument[]> {
 }
 
 export async function loadBabuniActiveAvatar(): Promise<AvatarDocument | null> {
-  const player = await loadPlayer(BABUNI_PLAYER_ID);
+  return loadPlayerActiveAvatar(BABUNI_PLAYER_ID);
+}
+
+export async function loadPlayerActiveAvatar(playerId: string): Promise<AvatarDocument | null> {
+  const player = await loadPlayer(playerId);
   const activeAvatarId = player?.activeAvatarId;
 
   if (typeof activeAvatarId !== 'string') {
     return null;
   }
 
-  const avatar = await loadAvatar(BABUNI_PLAYER_ID, activeAvatarId);
+  const avatar = await loadAvatar(playerId, activeAvatarId);
 
   if (!avatar) {
     return null;
@@ -248,17 +280,21 @@ export async function loadBabuniActiveAvatar(): Promise<AvatarDocument | null> {
   return {
     ...avatar,
     id: avatar.id ?? activeAvatarId,
-    inventory: avatar.inventory ?? await loadInventory(BABUNI_PLAYER_ID, activeAvatarId),
+    inventory: avatar.inventory ?? await loadInventory(playerId, activeAvatarId),
   };
 }
 
 export async function deleteBabuniAvatar(avatarId: string): Promise<void> {
-  await deleteActiveEncounter(BABUNI_PLAYER_ID, avatarId);
-  await deleteInventory(BABUNI_PLAYER_ID, avatarId);
-  await deleteProgression(BABUNI_PLAYER_ID, avatarId);
-  await deleteAvatar(BABUNI_PLAYER_ID, avatarId);
+  await deletePlayerAvatar(BABUNI_PLAYER_ID, avatarId);
+}
+
+export async function deletePlayerAvatar(playerId: string, avatarId: string): Promise<void> {
+  await deleteActiveEncounter(playerId, avatarId);
+  await deleteInventory(playerId, avatarId);
+  await deleteProgression(playerId, avatarId);
+  await deleteAvatar(playerId, avatarId);
   await setPlayer(
-    BABUNI_PLAYER_ID,
+    playerId,
     {
       activeAvatarId: null,
       updatedAt: Date.now(),

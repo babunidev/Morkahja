@@ -7,6 +7,9 @@ export type AvatarRole = 'Mage' | 'Warrior' | 'Rogue';
 
 export interface ClientSession {
   playerId: string;
+  playerName: string;
+  sessionId: string;
+  accessToken: string;
 }
 
 export interface PlayerResponse {

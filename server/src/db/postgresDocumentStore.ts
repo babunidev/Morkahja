@@ -25,6 +25,18 @@ async function ensureSchema(client: PgPool | PoolClient = pool): Promise<void> {
       data jsonb NOT NULL DEFAULT '{}'::jsonb
     );
 
+    CREATE TABLE IF NOT EXISTS devices (
+      id text PRIMARY KEY,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      id text PRIMARY KEY,
+      access_token text UNIQUE NOT NULL,
+      player_id text NOT NULL,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb
+    );
+
     CREATE TABLE IF NOT EXISTS avatars (
       player_id text NOT NULL,
       id text NOT NULL,
@@ -118,6 +130,73 @@ export async function setPlayer<T extends JsonObject>(
 export async function deletePlayer(playerId: string): Promise<void> {
   await ensureSchema();
   await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
+}
+
+export async function findPlayerByIdentityPublicKey<T>(
+  identityPublicKey: string,
+): Promise<{ id: string; data: T } | null> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string; data: T }>(
+    `SELECT id, data FROM players
+     WHERE data->>'identityPublicKey' = $1
+     LIMIT 1`,
+    [identityPublicKey],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function getDevice<T>(deviceId: string): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM devices WHERE id = $1', [deviceId]));
+}
+
+export async function setDevice<T extends JsonObject>(
+  deviceId: string,
+  data: T,
+  options: { merge?: boolean } = {},
+): Promise<void> {
+  await ensureSchema();
+  const existing = options.merge ? await getDevice<T>(deviceId) : null;
+  await pool.query(
+    `INSERT INTO devices (id, data)
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+    [deviceId, JSON.stringify(mergeData(existing, data, options.merge))],
+  );
+}
+
+export async function getSession<T>(sessionId: string): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM sessions WHERE id = $1', [sessionId]));
+}
+
+export async function findSessionByAccessToken<T>(
+  accessToken: string,
+): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM sessions WHERE access_token = $1', [accessToken]));
+}
+
+export async function setSession<T extends JsonObject & { accessToken: string; playerId: string }>(
+  sessionId: string,
+  data: T,
+): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO sessions (id, access_token, player_id, data)
+     VALUES ($1, $2, $3, $4::jsonb)
+     ON CONFLICT (id) DO UPDATE SET
+       access_token = EXCLUDED.access_token,
+       player_id = EXCLUDED.player_id,
+       data = EXCLUDED.data`,
+    [sessionId, data.accessToken, data.playerId, JSON.stringify(data)],
+  );
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  await ensureSchema();
+  await pool.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
 }
 
 export async function getAvatar<T>(playerId: string, avatarId: string): Promise<T | null> {

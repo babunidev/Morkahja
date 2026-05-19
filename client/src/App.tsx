@@ -3,7 +3,11 @@ import {
   fetchActiveEncounter,
   fetchAvatar,
   fetchAvatars,
+  heartbeatSession,
+  loadStoredSession,
+  logoutSession,
   deleteAvatar,
+  clearStoredSession,
   fetchPlayer,
   fetchSession,
   fetchStaticGameDataStatus,
@@ -16,10 +20,25 @@ import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
+import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
+import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
+import SettingsScreen from './ui/settings/SettingsScreen.js';
 
-type AppScreen = 'loading' | 'dashboard' | 'avatar-select' | 'game';
+type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'avatar-select' | 'game' | 'settings';
 const AVATAR_SELECTION_PREPARE_TIMEOUT_MS = 1800;
 const DEAD_AVATAR_IDS_STORAGE_KEY = 'morkahja.deadAvatarIds';
+
+function musicZoneForScreen(screen: AppScreen): MusicZone {
+  if (screen === 'dashboard' || screen === 'settings') {
+    return 'menu';
+  }
+
+  if (screen === 'avatar-select' || screen === 'game') {
+    return 'ambient';
+  }
+
+  return 'silent';
+}
 
 function timeout(ms: number): Promise<never> {
   return new Promise((_, reject) => {
@@ -90,6 +109,7 @@ export default function App() {
   const [excludedAvatarIds, setExcludedAvatarIds] = useState(loadDeadAvatarIds);
   const [avatarSelectionPreloading, setAvatarSelectionPreloading] = useState(false);
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
+  const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,
@@ -102,6 +122,26 @@ export default function App() {
     }),
     [],
   );
+
+  useEffect(() => {
+    if (screen === 'loading' || screen === 'gateway') {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      void heartbeatSession().catch((error: unknown) => {
+        console.error('Session heartbeat failed', error);
+        clearStoredSession();
+        setActiveAvatar(null);
+        setActiveEncounter(null);
+        setScreen('gateway');
+      });
+    }, 45_000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [screen]);
 
   useEffect(() => {
     if (screen !== 'dashboard' || avatarSelectionPrepared || avatarSelectionPreloading) {
@@ -179,76 +219,119 @@ export default function App() {
   return (
     <BackgroundProvider>
       <PersistentBackground />
-      {screen === 'loading' ? (
-        <LoadingScreen
-          hooks={loadingHooks}
-          onError={(error) => {
-            console.error('Loading bootstrap failed', error);
-          }}
-          onReady={() => {
-            setScreen('dashboard');
-          }}
-        />
-      ) : null}
-      {screen === 'dashboard' ? (
-        <Dashboard
-          isPreparingAvatars={avatarSelectionPreloading}
-          onPlay={async () => {
-            await syncAvatarSelectionForPlay();
-            setScreen('avatar-select');
-          }}
-        />
-      ) : null}
-      {screen === 'avatar-select' ? (
-        <AvatarSelect
-          avatars={avatarSelectionAvatars}
-          avatarsLoaded={avatarSelectionPrepared}
-          creationPreset={avatarCreationPreset}
-          excludedAvatarIds={excludedAvatarIds}
-          onCreationPresetConsumed={() => {
-            setAvatarCreationPreset(null);
-          }}
-          onBack={() => {
-            setScreen('dashboard');
-          }}
-          onEnterGame={(avatar, encounter) => {
-            setActiveAvatar(avatar);
-            setActiveEncounter(encounter);
-            setScreen('game');
-          }}
-        />
-      ) : null}
-      {screen === 'game' && activeAvatar && activeEncounter ? (
-        <GameEnvironment
-          initialAvatar={activeAvatar}
-          initialEncounter={activeEncounter}
-          onHome={() => {
-            setActiveAvatar(null);
-            setActiveEncounter(null);
-            setScreen('dashboard');
-          }}
-          onAvatarDeath={(presetAvatar) => {
-            setExcludedAvatarIds((currentIds) => (
-              (() => {
-                const nextIds = currentIds.includes(presetAvatar.id)
-                  ? currentIds
-                  : [...currentIds, presetAvatar.id];
-                saveDeadAvatarIds(nextIds);
-                return nextIds;
-              })()
-            ));
-            setAvatarSelectionAvatars((currentAvatars) => (
-              currentAvatars.filter((avatar) => avatar.id !== presetAvatar.id)
-            ));
-            setAvatarCreationPreset(presetAvatar);
-            setActiveAvatar(null);
-            setActiveEncounter(null);
-            setAvatarSelectionPrepared(true);
-            setAvatarSelectionPreloading(false);
-            setScreen('avatar-select');
-          }}
-        />
-      ) : null}
+      <MusicEngine
+        fadeOutSignal={musicFadeOutSignal}
+        zone={musicZoneForScreen(screen)}
+      >
+        {screen === 'loading' ? (
+          <LoadingScreen
+            hooks={loadingHooks}
+            onError={(error) => {
+              console.error('Loading bootstrap failed', error);
+            }}
+            onReady={() => {
+              setScreen(loadStoredSession()?.accessToken ? 'dashboard' : 'gateway');
+            }}
+          />
+        ) : null}
+        {screen === 'gateway' ? (
+          <OnboardingGateway
+            onSessionReady={() => {
+              setAvatarSelectionAvatars([]);
+              setAvatarSelectionPrepared(false);
+              setActiveAvatar(null);
+              setActiveEncounter(null);
+              setScreen('dashboard');
+            }}
+          />
+        ) : null}
+        {screen === 'dashboard' ? (
+          <Dashboard
+            isPreparingAvatars={avatarSelectionPreloading}
+            onPlay={async () => {
+              await syncAvatarSelectionForPlay();
+              setScreen('avatar-select');
+            }}
+            onPlayPressed={() => {
+              setMusicFadeOutSignal((signal) => signal + 1);
+            }}
+            onSettings={() => {
+              setScreen('settings');
+            }}
+          />
+        ) : null}
+        {screen === 'settings' ? (
+          <SettingsScreen
+            onBack={() => {
+              setScreen('dashboard');
+            }}
+            onLogout={() => {
+              void logoutSession()
+                .catch((error: unknown) => {
+                  console.error('Logout failed', error);
+                  clearStoredSession();
+                })
+                .finally(() => {
+                  setAvatarSelectionAvatars([]);
+                  setAvatarSelectionPrepared(false);
+                  setActiveAvatar(null);
+                  setActiveEncounter(null);
+                  setScreen('gateway');
+                });
+            }}
+          />
+        ) : null}
+        {screen === 'avatar-select' ? (
+          <AvatarSelect
+            avatars={avatarSelectionAvatars}
+            avatarsLoaded={avatarSelectionPrepared}
+            creationPreset={avatarCreationPreset}
+            excludedAvatarIds={excludedAvatarIds}
+            onCreationPresetConsumed={() => {
+              setAvatarCreationPreset(null);
+            }}
+            onBack={() => {
+              setScreen('dashboard');
+            }}
+            onEnterGame={(avatar, encounter) => {
+              setActiveAvatar(avatar);
+              setActiveEncounter(encounter);
+              setScreen('game');
+            }}
+          />
+        ) : null}
+        {screen === 'game' && activeAvatar && activeEncounter ? (
+          <GameEnvironment
+            initialAvatar={activeAvatar}
+            initialEncounter={activeEncounter}
+            onHome={() => {
+              setActiveAvatar(null);
+              setActiveEncounter(null);
+              setScreen('avatar-select');
+            }}
+            onAvatarDeath={(presetAvatar) => {
+              setExcludedAvatarIds((currentIds) => (
+                (() => {
+                  const nextIds = currentIds.includes(presetAvatar.id)
+                    ? currentIds
+                    : [...currentIds, presetAvatar.id];
+                  saveDeadAvatarIds(nextIds);
+                  return nextIds;
+                })()
+              ));
+              setAvatarSelectionAvatars((currentAvatars) => (
+                currentAvatars.filter((avatar) => avatar.id !== presetAvatar.id)
+              ));
+              setAvatarCreationPreset(presetAvatar);
+              setActiveAvatar(null);
+              setActiveEncounter(null);
+              setAvatarSelectionPrepared(true);
+              setAvatarSelectionPreloading(false);
+              setScreen('avatar-select');
+            }}
+          />
+        ) : null}
+      </MusicEngine>
     </BackgroundProvider>
   );
 }
