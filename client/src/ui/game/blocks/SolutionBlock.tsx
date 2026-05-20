@@ -76,24 +76,23 @@ const solutionSlotsStyle: CSSProperties = {
   columnGap: 10,
 };
 
-const solutionSlotStyle: CSSProperties = {
-  width: 62,
-  height: 62,
+const SOLUTION_ACTION_SIZE_PX = 83;
+
+const solutionIconShellStyle: CSSProperties = {
+  display: 'block',
+  width: SOLUTION_ACTION_SIZE_PX,
+  height: SOLUTION_ACTION_SIZE_PX,
   borderRadius: '50%',
-  border: '1px solid rgba(247, 239, 224, 0.42)',
-  background: 'radial-gradient(circle, rgba(42, 31, 22, 0.88), rgba(8, 8, 12, 0.82))',
-  color: '#f7efe0',
-  fontFamily: 'Georgia, serif',
-  fontSize: '1.2rem',
-  fontWeight: 700,
-  textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 5px 12px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(0, 0, 0, 0.5)',
-  cursor: 'pointer',
   overflow: 'hidden',
+  cursor: 'pointer',
+};
+
+const primarySolutionGlowStyle: CSSProperties = {
+  boxShadow: '0 0 16px rgba(255, 204, 102, 0.72), 0 0 24px rgba(255, 204, 102, 0.38)',
 };
 
 const diceButtonStyle: CSSProperties = {
-  width: 83,
+  width: SOLUTION_ACTION_SIZE_PX,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -103,7 +102,7 @@ const diceButtonStyle: CSSProperties = {
 
 const diceSlotStyle: CSSProperties = {
   position: 'relative',
-  width: 83,
+  width: SOLUTION_ACTION_SIZE_PX,
   display: 'grid',
   placeItems: 'center',
 };
@@ -111,7 +110,7 @@ const diceSlotStyle: CSSProperties = {
 const solutionButtonStyle: CSSProperties = {
   display: 'grid',
   placeItems: 'center',
-  width: '100%',
+  width: SOLUTION_ACTION_SIZE_PX,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -426,14 +425,9 @@ export function SolutionBlock({
               >
                 <span
                   style={{
-                    ...solutionSlotStyle,
+                    ...solutionIconShellStyle,
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
-                    ...(visibleSlot.isPrimary
-                      ? {
-                          borderColor: 'rgba(255, 204, 102, 0.92)',
-                          boxShadow: '0 0 16px rgba(255, 204, 102, 0.72), 0 5px 12px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 204, 102, 0.24)',
-                        }
-                      : {}),
+                    ...(visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
                   }}
                 >
                   <img

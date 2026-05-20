@@ -1,9 +1,8 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
+import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
-
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
+import AvatarPortraitStack from './AvatarPortraitStack.js';
 
 const panelStyle: CSSProperties = {
   width: 'min(42vw, 176px)',
@@ -16,15 +15,34 @@ const panelStyle: CSSProperties = {
   zIndex: 5,
 };
 
-const imageStackStyle: CSSProperties = {
+const imageStackButtonStyle: CSSProperties = {
   width: '100%',
-  aspectRatio: '1 / 1.15',
-  display: 'grid',
-  placeItems: 'center',
   padding: 0,
   border: 0,
   background: 'transparent',
   cursor: 'pointer',
+};
+
+const imageStackInnerStyle: CSSProperties = {
+  display: 'grid',
+  placeItems: 'center',
+  width: '100%',
+  aspectRatio: '1 / 1.15',
+};
+
+const portraitCellStyle: CSSProperties = {
+  gridArea: '1 / 1',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  height: '100%',
+};
+
+const portraitPressStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  transformOrigin: 'center center',
 };
 
 const detailsOverlayStyle: CSSProperties = {
@@ -38,22 +56,6 @@ const detailsOverlayStyle: CSSProperties = {
   padding: '8px 10px',
   borderRadius: 10,
   background: 'rgba(6, 6, 10, 0.62)',
-  pointerEvents: 'none',
-};
-
-const portraitStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  width: '86.1%',
-  height: '86.1%',
-  objectFit: 'contain',
-  pointerEvents: 'none',
-};
-
-const frameStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  width: '100%',
-  height: '100%',
-  objectFit: 'contain',
   pointerEvents: 'none',
 };
 
@@ -108,17 +110,24 @@ function experienceRequiredForNextLevel(level: number): number {
 
 export function AvatarPanel({
   avatar,
+  hidePortraitForHandoff = false,
   onDetailsVisibleChange,
 }: {
   avatar: PersistedAvatar;
+  hidePortraitForHandoff?: boolean;
   onDetailsVisibleChange?: (visible: boolean) => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
+  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const nextLevelExperience = experienceRequiredForNextLevel(avatar.level);
   const currentExperience = Math.max(0, Math.min(avatar.experience, nextLevelExperience));
   const experiencePercent = nextLevelExperience > 0
     ? (currentExperience / nextLevelExperience) * 100
     : 0;
+
+  useEffect(() => {
+    onDetailsVisibleChange?.(showDetails);
+  }, [onDetailsVisibleChange, showDetails]);
 
   return (
     <article aria-label={`${avatar.name}, level ${avatar.level}`} style={panelStyle}>
@@ -127,31 +136,42 @@ export function AvatarPanel({
         aria-label={`Show details for ${avatar.name}`}
         onClick={() => {
           playSfx(DEFAULT_BUTTON_SOUND);
-          setShowDetails((current) => {
-            const next = !current;
-            onDetailsVisibleChange?.(next);
-            return next;
-          });
+          setShowDetails((current) => !current);
         }}
-        style={imageStackStyle}
+        onPointerDown={() => {
+          pulse('avatar');
+        }}
+        style={imageStackButtonStyle}
         type="button"
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={`${AVATAR_ASSET_ROOT}/${avatar.portrait}`}
-          style={portraitStyle}
-        />
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={`${FRAME_ASSET_ROOT}/${avatar.frame}`}
-          style={frameStyle}
-        />
-        {showDetails ? (
-          <span style={detailsOverlayStyle}>
+        <div style={imageStackInnerStyle}>
+          <div
+            style={{
+              ...portraitCellStyle,
+              opacity: hidePortraitForHandoff ? 0 : 1,
+            }}
+          >
+            <div
+              style={{
+                ...portraitPressStyle,
+                animation: pressAnimation(isPressed('avatar')),
+              }}
+            >
+              <AvatarPortraitStack
+                enterTarget
+                frame={avatar.frame}
+                portrait={avatar.portrait}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          </div>
+          <span
+            style={{
+              ...detailsOverlayStyle,
+              opacity: showDetails ? 1 : 0,
+              visibility: showDetails ? 'visible' : 'hidden',
+            }}
+          >
             <span className="morkahja-title" style={nameStyle}>{avatar.name}</span>
             <span style={levelStyle}>
               Level {avatar.level} · {avatar.race} {avatar.role}
@@ -168,7 +188,7 @@ export function AvatarPanel({
               XP {currentExperience}/{nextLevelExperience}
             </span>
           </span>
-        ) : null}
+        </div>
       </button>
     </article>
   );

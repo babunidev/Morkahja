@@ -1,14 +1,14 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
-import { MusicControl } from '../music/MusicEngine.js';
+import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import { fadeStyle, waitForFade } from '../transitions/fade.js';
+import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 
 const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
 const NAV_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_nav_b.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const LOADING_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
 const PLAY_ANIMATION_MS = 3000;
-const NAV_PRESS_ANIMATION_MS = 240;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
@@ -141,7 +141,9 @@ export function Dashboard({
   const [clickable, setClickable] = useState(false);
   const [playAnimating, setPlayAnimating] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
-  const [pressedNavButton, setPressedNavButton] = useState<string | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
+    useNavButtonPress();
 
   useEffect(() => {
     const showTimer = window.setTimeout(() => {
@@ -175,13 +177,6 @@ export function Dashboard({
     await waitForFade();
   }
 
-  function pulseNavButton(button: string): void {
-    setPressedNavButton(button);
-    window.setTimeout(() => {
-      setPressedNavButton((currentButton) => (currentButton === button ? null : currentButton));
-    }, NAV_PRESS_ANIMATION_MS);
-  }
-
   return (
     <main aria-label="Dashboard" style={{ ...screenStyle, ...fadeStyle(visible) }}>
       <style>
@@ -198,24 +193,6 @@ export function Dashboard({
             66% { transform: scale(1.09); filter: brightness(1.12); }
             88% { transform: scale(1.22); filter: brightness(1.3); }
             100% { transform: scale(1.22); filter: brightness(1.34); }
-          }
-          @keyframes morkahja-speaker-vibrate {
-            0% { transform: scale(1) translateX(0); filter: brightness(1); }
-            35% {
-              transform: scale(var(--morkahja-music-pulse)) translateX(calc(var(--morkahja-music-shake) * -1));
-              filter: brightness(1.08);
-            }
-            70% {
-              transform: scale(1) translateX(var(--morkahja-music-shake));
-              filter: brightness(1.02);
-            }
-            100% { transform: scale(1) translateX(0); filter: brightness(1); }
-          }
-          @keyframes morkahja-nav-button-press {
-            0% { transform: scale(1); filter: brightness(1); }
-            38% { transform: scale(0.9); filter: brightness(0.92); }
-            72% { transform: scale(1.08); filter: brightness(1.22); }
-            100% { transform: scale(1); filter: brightness(1); }
           }
           @keyframes morkahja-nav-center-button-press {
             0% { transform: translateY(-50%) scale(1); filter: brightness(1); }
@@ -269,6 +246,9 @@ export function Dashboard({
             }}
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
+              if (button.label === 'News') {
+                setActivityOpen(true);
+              }
               if (button.label === 'Settings') {
                 onSettings();
               }
@@ -290,24 +270,11 @@ export function Dashboard({
               src={button.src}
               style={{
                 ...imageStyle,
-                animation:
-                  pressedNavButton === button.label
-                    ? `morkahja-nav-button-press ${NAV_PRESS_ANIMATION_MS}ms ease-out`
-                    : undefined,
+                animation: pressAnimation(isNavButtonPressed(button.label)),
               }}
             />
           </button>
         ))}
-        <MusicControl
-          style={{
-            ...radialButtonStyle,
-            opacity: navOpen ? 1 : 0,
-            pointerEvents: navOpen ? 'auto' : 'none',
-            transform: navOpen
-              ? 'translate(calc(-50% + 48px), calc(-50% + 86px)) scale(1)'
-              : 'translate(-50%, -50%) scale(0.35)',
-          }}
-        />
         <button
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
           disabled={!clickable}
@@ -333,8 +300,8 @@ export function Dashboard({
             style={{
               ...navButtonImageStyle,
               animation:
-                pressedNavButton === 'Navigation'
-                  ? `morkahja-nav-center-button-press ${NAV_PRESS_ANIMATION_MS}ms ease-out`
+                isNavButtonPressed('Navigation')
+                  ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
                   : undefined,
               opacity: navOpen ? 0 : 1,
               transform: navOpen ? 'translateY(-50%) scale(0.82)' : 'translateY(-50%) scale(1)',
@@ -348,8 +315,8 @@ export function Dashboard({
             style={{
               ...navButtonImageStyle,
               animation:
-                pressedNavButton === 'Navigation'
-                  ? `morkahja-nav-center-button-press ${NAV_PRESS_ANIMATION_MS}ms ease-out`
+                isNavButtonPressed('Navigation')
+                  ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
                   : undefined,
               opacity: navOpen ? 1 : 0,
               transform: navOpen ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.82)',
@@ -357,6 +324,12 @@ export function Dashboard({
           />
         </button>
       </nav>
+      <ActivityFeedOverlay
+        onClose={() => {
+          setActivityOpen(false);
+        }}
+        open={activityOpen}
+      />
     </main>
   );
 }

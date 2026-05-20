@@ -1,4 +1,5 @@
 import type {
+  ActivityFeedResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -13,7 +14,8 @@ import type {
   StaticGameDataStatus,
 } from '@shared/contracts';
 
-export const API_BASE_URL = 'http://localhost:3000';
+/** In dev, use same origin so Vite proxies API routes to the backend on :3000. */
+export const API_BASE_URL = import.meta.env.DEV ? '' : 'http://localhost:3000';
 
 export type AvatarInventory = AvatarInventoryDto;
 export type EncounterSnapshot = EncounterSnapshotDto;
@@ -270,4 +272,8 @@ export async function createNextEncounter(
       avatarId: avatar.id,
     }),
   });
+}
+
+export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {
+  return request<ActivityFeedResponse>('/activity/recent');
 }

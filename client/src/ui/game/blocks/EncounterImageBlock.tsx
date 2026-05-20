@@ -5,7 +5,9 @@ import type {
   EncounterSnapshot,
 } from '../../../api/http.js';
 import { addYellowRedGem } from '../../../api/http.js';
+import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
+import SkillbookBlock from './SkillbookBlock.js';
 import ResultBlock from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
 
@@ -71,15 +73,19 @@ export function EncounterImageBlock({
   encounter,
   imageSrc,
   inventory,
+  inventoryOpen,
   loreOpen,
   onContinue,
+  skillbookOpen,
   title,
 }: {
   continuePending: boolean;
   encounter: EncounterSnapshot;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
+  inventoryOpen: boolean;
   loreOpen: boolean;
+  skillbookOpen: boolean;
   onContinue: (
     action: EncounterAction,
     roll: number | null,
@@ -221,21 +227,25 @@ export function EncounterImageBlock({
       <ResultBlock
         disabled={continuePending}
         encounterId={encounter.encounterId}
-        hidden={loreOpen}
+        encounterDifficulty={encounter.encounterDifficulty ?? 1}
+        hidden={loreOpen || inventoryOpen || skillbookOpen}
+        inventory={inventory}
         onContinue={() => {
           void handleContinue();
         }}
-        encounterDifficulty={encounter.encounterDifficulty ?? 1}
         prosperityRewardId={encounter.prosperityRewardId}
         rewardIds={encounter.rewardIds}
         roll={revealedRoll}
+        usedSolutionId={selectedSolutionId}
       />
       <SolutionBlock
         encounter={encounter}
-        hidden={revealedRoll !== null || loreOpen}
+        hidden={revealedRoll !== null || loreOpen || inventoryOpen || skillbookOpen}
         inventory={inventory}
         onActionReveal={handleActionReveal}
       />
+      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
+      <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
       <LoreBlock
         encounterKey={encounter.snapshotId}
         onLoreGemCollect={async () => {

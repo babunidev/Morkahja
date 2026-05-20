@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
+import AvatarPortraitStack from './AvatarPortraitStack.js';
 
 interface AvatarCardData {
   name: string;
@@ -23,30 +22,6 @@ const compositionStyle: CSSProperties = {
   placeItems: 'center',
 };
 
-const portraitStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: '50%',
-  zIndex: 1,
-  width: '88.6%',
-  height: '88.6%',
-  objectFit: 'contain',
-  transform: 'translate(-50%, -50%)',
-  pointerEvents: 'none',
-};
-
-const frameStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: '50%',
-  zIndex: 2,
-  width: '100%',
-  height: '100%',
-  objectFit: 'contain',
-  transform: 'translate(-50%, -50%)',
-  pointerEvents: 'none',
-};
-
 const nameStyle: CSSProperties = {
   margin: '14px 0 4px',
   fontFamily: 'Georgia, serif',
@@ -62,23 +37,15 @@ const metaStyle: CSSProperties = {
   textShadow: '0 2px 12px rgba(0, 0, 0, 0.85)',
 };
 
-export function AvatarCard({ avatar }: { avatar: AvatarCardData }) {
+export function AvatarCard({ avatar, enterSource = false }: { avatar: AvatarCardData; enterSource?: boolean }) {
   return (
     <article style={cardStyle}>
       <div style={compositionStyle}>
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={`${AVATAR_ASSET_ROOT}/${avatar.portrait}`}
-          style={portraitStyle}
-        />
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={`${FRAME_ASSET_ROOT}/${avatar.frame}`}
-          style={frameStyle}
+        <AvatarPortraitStack
+          enterSource={enterSource}
+          frame={avatar.frame}
+          portrait={avatar.portrait}
+          style={{ width: '100%', height: '100%', aspectRatio: '1 / 1.25' }}
         />
       </div>
       <h2 className="morkahja-title" style={nameStyle}>{avatar.name}</h2>

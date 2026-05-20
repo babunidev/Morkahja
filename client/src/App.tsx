@@ -110,6 +110,7 @@ export default function App() {
   const [avatarSelectionPreloading, setAvatarSelectionPreloading] = useState(false);
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
   const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
+  const [gameEnterHandoff, setGameEnterHandoff] = useState(false);
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,
@@ -281,27 +282,10 @@ export default function App() {
             }}
           />
         ) : null}
-        {screen === 'avatar-select' ? (
-          <AvatarSelect
-            avatars={avatarSelectionAvatars}
-            avatarsLoaded={avatarSelectionPrepared}
-            creationPreset={avatarCreationPreset}
-            excludedAvatarIds={excludedAvatarIds}
-            onCreationPresetConsumed={() => {
-              setAvatarCreationPreset(null);
-            }}
-            onBack={() => {
-              setScreen('dashboard');
-            }}
-            onEnterGame={(avatar, encounter) => {
-              setActiveAvatar(avatar);
-              setActiveEncounter(encounter);
-              setScreen('game');
-            }}
-          />
-        ) : null}
         {screen === 'game' && activeAvatar && activeEncounter ? (
           <GameEnvironment
+            deferReveal={gameEnterHandoff}
+            hideAvatarPortraitForHandoff={gameEnterHandoff}
             initialAvatar={activeAvatar}
             initialEncounter={activeEncounter}
             onHome={() => {
@@ -328,6 +312,30 @@ export default function App() {
               setAvatarSelectionPrepared(true);
               setAvatarSelectionPreloading(false);
               setScreen('avatar-select');
+            }}
+          />
+        ) : null}
+        {screen === 'avatar-select' || gameEnterHandoff ? (
+          <AvatarSelect
+            avatars={avatarSelectionAvatars}
+            avatarsLoaded={avatarSelectionPrepared}
+            creationPreset={avatarCreationPreset}
+            excludedAvatarIds={excludedAvatarIds}
+            handoffOverlayOnly={gameEnterHandoff && screen === 'game'}
+            onCreationPresetConsumed={() => {
+              setAvatarCreationPreset(null);
+            }}
+            onBack={() => {
+              setScreen('dashboard');
+            }}
+            onPrepareGame={(avatar, encounter) => {
+              setActiveAvatar(avatar);
+              setActiveEncounter(encounter);
+              setGameEnterHandoff(true);
+              setScreen('game');
+            }}
+            onEnterGameComplete={() => {
+              setGameEnterHandoff(false);
             }}
           />
         ) : null}

@@ -123,3 +123,19 @@ export interface StaticGameDataStatus {
   frames: number;
   portraits: number;
 }
+
+export type ActivityFeedImportance = 'low' | 'medium' | 'high' | 'legendary';
+
+export interface ActivityFeedEntryDto {
+  eventId: string;
+  timestamp: number;
+  message: string;
+  importance: ActivityFeedImportance;
+  iconUrl?: string;
+}
+
+export interface ActivityFeedResponse {
+  playerId: string;
+  entries: ActivityFeedEntryDto[];
+  windowMs: number;
+}

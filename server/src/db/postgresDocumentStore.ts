@@ -81,6 +81,8 @@ export interface PostgresConnectionInfo {
 
 export async function validatePostgresConnection(): Promise<PostgresConnectionInfo> {
   await ensureSchema();
+  const { ensureGameEventsReady } = await import('./gameEventPersistence.js');
+  await ensureGameEventsReady();
 
   const result = await pool.query<{
     database_name: string;

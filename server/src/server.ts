@@ -4,6 +4,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { encounterControllerErrorStatus } from './controllers/encounterController.js';
 import { validatePostgresConnection } from './db/postgresDocumentStore.js';
 import { authMiddleware, requireAuth } from './middleware/authMiddleware.js';
+import { getRecentActivityController } from './controllers/activityController.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
@@ -64,7 +65,12 @@ app.use(express.json());
 // app.use(multiplayerSessionHooks);
 
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' });
+  res.json({
+    status: 'ok',
+    features: {
+      activityFeed: true,
+    },
+  });
 });
 
 app.get('/game-data/status', (_req: Request, res: Response) => {
@@ -150,6 +156,7 @@ app.post('/session/logout', async (req: Request, res: Response) => {
 // Mount authenticated game API.
 app.use(authMiddleware);
 app.use('/encounter', encounterRoutes);
+app.get('/activity/recent', getRecentActivityController);
 
 app.get('/player', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);

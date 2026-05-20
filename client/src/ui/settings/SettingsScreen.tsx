@@ -3,7 +3,10 @@ import EncounterFooter from '../game/blocks/EncounterFooter.js';
 import EncounterHeader from '../game/blocks/EncounterHeader.js';
 import PortraitStage from '../layout/PortraitStage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import MusicVolumeSlider from './MusicVolumeSlider.js';
+import SfxVolumeSlider from './SfxVolumeSlider.js';
 import { fadeStyle, waitForFade } from '../transitions/fade.js';
+import { useNavButtonPress } from '../transitions/navButtonPress.js';
 
 const BACKGROUND = '/UI/09_GAME/menuBGgame.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
@@ -102,6 +105,7 @@ export function SettingsScreen({
 }) {
   const [visible, setVisible] = useState(false);
   const [clickable, setClickable] = useState(false);
+  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
   useEffect(() => {
     const showTimer = window.setTimeout(() => {
@@ -135,6 +139,8 @@ export function SettingsScreen({
         <EncounterHeader title="Settings" />
         <section style={contentStyle}>
           <div style={panelStyle}>
+            <MusicVolumeSlider disabled={!clickable} />
+            <SfxVolumeSlider disabled={!clickable} />
             <div style={settingRowStyle}>
               <span>Logout</span>
               <button
@@ -162,10 +168,22 @@ export function SettingsScreen({
               void fadeOutThen(onBack);
             }}
             disabled={!clickable}
+            onPointerDown={() => {
+              pulse('home');
+            }}
             style={homeButtonStyle}
             type="button"
           >
-            <img alt="" aria-hidden="true" draggable={false} src={HOME_BUTTON_ASSET} style={homeImageStyle} />
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={HOME_BUTTON_ASSET}
+              style={{
+                ...homeImageStyle,
+                animation: pressAnimation(isPressed('home')),
+              }}
+            />
           </button>
         </footer>
       </main>

@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import type { AvatarInventory } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
+import {
+  interpretRoll,
+  isRollFavorable,
+  predictEncounterLosses,
+  scaledUses,
+  usedEncounterSolution,
+  type EncounterInventoryChange,
+} from '../encounterInventoryPreview.js';
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { fadeTransition } from '../../transitions/fade.js';
 
@@ -8,8 +17,6 @@ const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const LEVEL_UP_ENCOUNTER_ID = 2;
 const CONTINUE_ANIMATION_MS = 1000;
-
-type RollOutcome = 'Misery' | 'Hardship' | 'Disengage' | 'Fortune' | 'Prosperity';
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -22,6 +29,12 @@ interface VisibleReward {
   quantity: number;
   solution: SolutionRecord;
 }
+
+type ItemTooltipState = {
+  text: string;
+  x: number;
+  y: number;
+};
 
 const resultBlockStyle: CSSProperties = {
   position: 'absolute',
@@ -73,17 +86,30 @@ const continueAnimatingStyle: CSSProperties = {
   animation: 'morkahja-continue-bounce-right 1000ms ease-in-out',
 };
 
-const outcomeStyle: CSSProperties = {
+const outcomeClusterStyle: CSSProperties = {
   gridArea: '1 / 1',
   justifySelf: 'center',
   alignSelf: 'center',
-  fontFamily: 'Georgia, serif',
-  fontSize: '1.28rem',
-  letterSpacing: '0.08em',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 'clamp(8px, 2.4vw, 14px)',
+  maxWidth: '88%',
+  zIndex: 12,
+  pointerEvents: 'auto',
+};
+
+const outcomeButtonStyle: CSSProperties = {
+  margin: 0,
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  fontSize: 'clamp(1.15rem, 4.8vw, 1.55rem)',
   lineHeight: 1,
   textAlign: 'center',
   textTransform: 'uppercase',
-  zIndex: 2,
+  cursor: 'pointer',
+  flex: '0 0 auto',
 };
 
 const rewardRowStyle: CSSProperties = {
@@ -117,6 +143,32 @@ const rewardImageStyle: CSSProperties = {
   boxShadow: '0 0 12px rgba(255, 204, 102, 0.42), 0 5px 10px rgba(0, 0, 0, 0.46)',
 };
 
+const usedSolutionItemStyle: CSSProperties = {
+  ...rewardItemStyle,
+  flex: '0 0 auto',
+};
+
+const usedSolutionImageStyle: CSSProperties = {
+  ...rewardImageStyle,
+  width: 48,
+  height: 48,
+  border: '1px solid rgba(247, 239, 224, 0.72)',
+  boxShadow: '0 0 10px rgba(247, 239, 224, 0.28), 0 5px 10px rgba(0, 0, 0, 0.46)',
+};
+
+const lossRowStyle: CSSProperties = {
+  ...rewardRowStyle,
+  transform: 'translateY(42px)',
+  zIndex: 11,
+};
+
+const lossImageStyle: CSSProperties = {
+  ...rewardImageStyle,
+  border: '1px solid rgba(255, 96, 72, 0.9)',
+  boxShadow:
+    '0 0 14px rgba(255, 56, 40, 0.72), 0 0 26px rgba(180, 18, 8, 0.5), 0 5px 10px rgba(0, 0, 0, 0.46)',
+};
+
 const rewardTooltipStyle: CSSProperties = {
   position: 'absolute',
   zIndex: 50,
@@ -139,35 +191,8 @@ const rewardTooltipStyle: CSSProperties = {
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
-function interpretRoll(roll: number): RollOutcome | null {
-  if (roll >= 1 && roll <= 10) {
-    return 'Misery';
-  }
-  if (roll >= 11 && roll <= 39) {
-    return 'Hardship';
-  }
-  if (roll >= 40 && roll <= 60) {
-    return 'Disengage';
-  }
-  if (roll >= 61 && roll <= 95) {
-    return 'Fortune';
-  }
-  if (roll >= 96 && roll <= 100) {
-    return 'Prosperity';
-  }
-  return null;
-}
-
 function solutionImagePath(solution: SolutionRecord): string {
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
-}
-
-function scaledUses(baseUse: number, encounterDifficulty: number): number {
-  if (encounterDifficulty < 1) {
-    return 0;
-  }
-
-  return Math.max(1, baseUse * encounterDifficulty);
 }
 
 function visibleRewardIds({
@@ -179,16 +204,19 @@ function visibleRewardIds({
   encounterId: number;
   prosperityRewardId?: number | null;
   rewardIds: number[];
-  outcome: RollOutcome | null;
+  outcome: ReturnType<typeof interpretRoll>;
 }): number[] {
   if (outcome === null) {
     return [];
   }
 
-  const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
+  if (encounterId === LEVEL_UP_ENCOUNTER_ID) {
+    return rewardIds;
+  }
+
   const successful = outcome === 'Fortune' || outcome === 'Prosperity';
 
-  if (!isLevelUp && !successful) {
+  if (!successful) {
     return [];
   }
 
@@ -203,30 +231,45 @@ export function ResultBlock({
   encounterDifficulty,
   encounterId,
   hidden = false,
+  inventory,
   onContinue,
   prosperityRewardId,
   rewardIds = [],
   roll,
+  usedSolutionId = null,
 }: {
   disabled?: boolean;
   encounterDifficulty: number;
   encounterId: number;
   hidden?: boolean;
+  inventory?: AvatarInventory;
   onContinue: () => void;
   prosperityRewardId?: number | null;
   rewardIds?: number[];
   roll: number | null;
+  usedSolutionId?: number | null;
 }) {
   const [continueAnimating, setContinueAnimating] = useState(false);
-  const [rewardTooltip, setRewardTooltip] = useState<{
-    text: string;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
+  const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const continueTimer = useRef<number | null>(null);
   const outcome = roll === null ? null : interpretRoll(roll);
   const visible = roll !== null;
+  const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
+  const usedSolution = usedEncounterSolution({ inventory, solutionId: usedSolutionId });
+  const usedSolutionCost = usedSolutionId === null
+    ? 0
+    : scaledUses(1, encounterDifficulty);
+  const losses = isLevelUp
+    ? []
+    : predictEncounterLosses({
+      encounterDifficulty,
+      inventory,
+      outcome,
+      success: roll !== null && isRollFavorable(roll),
+      usedSolutionId,
+    });
   const rewards = visibleRewardIds({
     encounterId,
     prosperityRewardId,
@@ -251,6 +294,10 @@ export function ResultBlock({
     return visibleRewards;
   }, []);
 
+  useEffect(() => {
+    setOutcomeShowsRoll(false);
+  }, [roll]);
+
   useEffect(() => () => {
     if (continueTimer.current !== null) {
       window.clearTimeout(continueTimer.current);
@@ -271,24 +318,61 @@ export function ResultBlock({
     }, CONTINUE_ANIMATION_MS);
   }
 
-  function showRewardTooltip(
-    reward: VisibleReward,
+  function showItemTooltip(
+    change: EncounterInventoryChange | VisibleReward,
+    sign: '+' | '-' | 'used',
     event: { currentTarget: HTMLElement },
   ): void {
     const blockRect = blockRef.current?.getBoundingClientRect();
     const itemRect = event.currentTarget.getBoundingClientRect();
     const x = blockRect ? itemRect.left - blockRect.left + itemRect.width / 2 : itemRect.width / 2;
     const y = blockRect ? itemRect.top - blockRect.top : 0;
+    const quantityLabel = sign === 'used'
+      ? `Used (−${usedSolutionCost})`
+      : `${sign}${change.quantity}`;
 
-    setRewardTooltip({
-      text: `${reward.solution.mSolutionName}\n+${reward.quantity}`,
+    setItemTooltip({
+      text: `${change.solution.mSolutionName}\n${quantityLabel}`,
       x,
       y,
     });
   }
 
-  function hideRewardTooltip(): void {
-    setRewardTooltip(null);
+  function hideItemTooltip(): void {
+    setItemTooltip(null);
+  }
+
+  function renderSolutionIcon(
+    change: EncounterInventoryChange | VisibleReward,
+    sign: '+' | '-' | 'used',
+    imageStyle: CSSProperties,
+    buttonStyle: CSSProperties = rewardItemStyle,
+  ) {
+    return (
+      <button
+        aria-label={`${change.solution.mSolutionName}, ${sign === 'used' ? 'used' : `quantity ${change.quantity}`}`}
+        key={`${sign}-${change.solution.mSolutionID}`}
+        onBlur={hideItemTooltip}
+        onFocus={(event) => {
+          showItemTooltip(change, sign, event);
+        }}
+        onPointerCancel={hideItemTooltip}
+        onPointerEnter={(event) => {
+          showItemTooltip(change, sign, event);
+        }}
+        onPointerLeave={hideItemTooltip}
+        style={buttonStyle}
+        type="button"
+      >
+        <img
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          src={solutionImagePath(change.solution)}
+          style={imageStyle}
+        />
+      </button>
+    );
   }
 
   return (
@@ -333,45 +417,48 @@ export function ResultBlock({
       </button>
       {rewards.length > 0 ? (
         <div aria-label="Predetermined rewards" style={rewardRowStyle}>
-          {rewards.map((reward) => (
-            <button
-              aria-label={`${reward.solution.mSolutionName}, quantity ${reward.quantity}`}
-              key={reward.solution.mSolutionID}
-              onBlur={hideRewardTooltip}
-              onFocus={(event) => {
-                showRewardTooltip(reward, event);
-              }}
-              onPointerCancel={hideRewardTooltip}
-              onPointerEnter={(event) => {
-                showRewardTooltip(reward, event);
-              }}
-              onPointerLeave={hideRewardTooltip}
-              style={rewardItemStyle}
-              type="button"
-            >
-              <img
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                src={solutionImagePath(reward.solution)}
-                style={rewardImageStyle}
-              />
-            </button>
-          ))}
+          {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
       ) : null}
-      {rewardTooltip ? (
+      {outcome && roll !== null ? (
+        <div aria-label="Encounter outcome" style={outcomeClusterStyle}>
+          {usedSolution && usedSolutionCost > 0
+            ? renderSolutionIcon(
+              { ...usedSolution, quantity: usedSolutionCost },
+              'used',
+              usedSolutionImageStyle,
+              usedSolutionItemStyle,
+            )
+            : null}
+          <button
+            aria-label={outcomeShowsRoll ? `Roll ${roll}` : `${outcome}, show roll`}
+            className="morkahja-result-outcome"
+            onClick={() => {
+              setOutcomeShowsRoll((showingRoll) => !showingRoll);
+            }}
+            style={outcomeButtonStyle}
+            type="button"
+          >
+            {outcomeShowsRoll ? roll : outcome}
+          </button>
+        </div>
+      ) : null}
+      {losses.length > 0 ? (
+        <div aria-label="Encounter losses" style={lossRowStyle}>
+          {losses.map((loss) => renderSolutionIcon(loss, '-', lossImageStyle))}
+        </div>
+      ) : null}
+      {itemTooltip ? (
         <div
           style={{
             ...rewardTooltipStyle,
-            left: rewardTooltip.x,
-            top: rewardTooltip.y,
+            left: itemTooltip.x,
+            top: itemTooltip.y,
           }}
         >
-          {rewardTooltip.text}
+          {itemTooltip.text}
         </div>
       ) : null}
-      {outcome ? <span className="morkahja-title" style={outcomeStyle}>{outcome}</span> : null}
     </div>
   );
 }

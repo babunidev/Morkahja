@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type MouseEvent } from 'react';
 import type { PersistedAvatar } from '../../../api/http.js';
 import AvatarPanel from '../../avatar/AvatarPanel.js';
 import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
+import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import EncounterFooter from './EncounterFooter.js';
 
 const GAME_UI_ROOT = '/UI/09_GAME';
@@ -142,20 +143,27 @@ const homeImageStyle: CSSProperties = {
 export function PlayerHub({
   actionLog,
   avatar,
+  hideAvatarPortraitForHandoff = false,
   homeVisible,
   onAvatarDetailsVisibleChange,
   onHome,
+  onInventoryToggle,
   onLoreToggle,
+  onSkillbookToggle,
 }: {
   actionLog: string[];
   avatar: PersistedAvatar;
+  hideAvatarPortraitForHandoff?: boolean;
   homeVisible: boolean;
   onAvatarDetailsVisibleChange: (visible: boolean) => void;
   onHome: () => void;
+  onInventoryToggle: () => void;
   onLoreToggle: () => void;
+  onSkillbookToggle: () => void;
 }) {
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [actionLogPosition, setActionLogPosition] = useState({ x: 16, y: 16 });
+  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
   function handleActionLogClick(event: MouseEvent<HTMLButtonElement>): void {
     setActionLogPosition({
@@ -174,6 +182,7 @@ export function PlayerHub({
         <div style={avatarAnchorStyle}>
           <AvatarPanel
             avatar={avatar}
+            hidePortraitForHandoff={hideAvatarPortraitForHandoff}
             onDetailsVisibleChange={onAvatarDetailsVisibleChange}
           />
           <button
@@ -185,6 +194,12 @@ export function PlayerHub({
               playSfx(DEFAULT_BUTTON_SOUND);
               onHome();
             }}
+            onPointerDown={() => {
+              if (!homeVisible) {
+                return;
+              }
+              pulse('home');
+            }}
             style={{
               ...homeButtonStyle,
               cursor: homeVisible ? 'pointer' : 'default',
@@ -193,7 +208,16 @@ export function PlayerHub({
             }}
             type="button"
           >
-            <img alt="" aria-hidden="true" draggable={false} src={HOME_BUTTON_ASSET} style={homeImageStyle} />
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={HOME_BUTTON_ASSET}
+              style={{
+                ...homeImageStyle,
+                animation: pressAnimation(isPressed('home')),
+              }}
+            />
           </button>
         </div>
       </div>
@@ -208,18 +232,35 @@ export function PlayerHub({
                   playSfx(DEFAULT_BUTTON_SOUND);
                   handleActionLogClick(event);
                 }
-                if (index === 1 || index === 2) {
+                if (index === 1) {
                   playSfx(DEFAULT_BUTTON_SOUND);
+                  onSkillbookToggle();
+                }
+                if (index === 2) {
+                  playSfx(DEFAULT_BUTTON_SOUND);
+                  onInventoryToggle();
                 }
                 if (index === 3) {
                   playSfx(LORE_SOUND);
                   onLoreToggle();
                 }
               }}
+              onPointerDown={() => {
+                pulse(button.alt);
+              }}
               style={footerButtonStyle}
               type="button"
             >
-              <img alt="" aria-hidden="true" draggable={false} src={button.src} style={footerButtonImageStyle} />
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={button.src}
+                style={{
+                  ...footerButtonImageStyle,
+                  animation: pressAnimation(isPressed(button.alt)),
+                }}
+              />
             </button>
           ))}
         </div>

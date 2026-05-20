@@ -130,7 +130,6 @@ export type SolutionType =
   | 16
   | 17
   | 18
-  | 19
   | 20
   | 21
   | 22
@@ -177,6 +176,8 @@ export const SolutionType = {
   // Speak (trick)
   SpeechcraftSkill: 17,
   SpeechcraftItem: 18,
+  // Travel (trick)
+  TravelItem: 20,
   // Heal (aid)
   HealSkill: 21,
   HealItem: 22,
@@ -189,12 +190,17 @@ export const SolutionType = {
   // Hunt (combat)
   HuntingSkill: 29,
   HuntingItem: 30,
+  // Rare find (trick)
+  RareItem: 32,
   // Nurture (aid)
   NurtureSkill: 33,
   NurtureItem: 34,
   // Stealth (combat)
   StealthSkill: 35,
   StealthItem: 36,
+  // Warmth (aid)
+  WarmthSkill: 37,
+  WarmthItem: 38,
   // Inspire (aid)
   InspirationSkill: 39,
   InspirationItem: 40,

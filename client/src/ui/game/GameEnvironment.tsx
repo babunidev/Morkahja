@@ -48,6 +48,8 @@ function preloadImage(src: string): Promise<void> {
 }
 
 interface GameEnvironmentProps {
+  deferReveal?: boolean;
+  hideAvatarPortraitForHandoff?: boolean;
   initialAvatar: PersistedAvatar;
   initialEncounter: EncounterSnapshot;
   onAvatarDeath: (presetAvatar: PersistedAvatar) => void;
@@ -210,16 +212,20 @@ function isFatalAtranorRoll(encounter: EncounterSnapshot, encounterTitle: string
 }
 
 export function GameEnvironment({
+  deferReveal = false,
+  hideAvatarPortraitForHandoff = false,
   initialAvatar,
   initialEncounter,
   onAvatarDeath,
   onHome,
 }: GameEnvironmentProps) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(!deferReveal);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [encounter, setEncounter] = useState(initialEncounter);
   const [continuePending, setContinuePending] = useState(false);
   const [loreOpen, setLoreOpen] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [skillbookOpen, setSkillbookOpen] = useState(false);
   const [homeVisible, setHomeVisible] = useState(false);
   const [actionLog, setActionLog] = useState<string[]>([]);
   const encounterData = useMemo(
@@ -248,6 +254,10 @@ export function GameEnvironment({
   }, [nextEncounterImageSrc]);
 
   useEffect(() => {
+    if (deferReveal) {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       setVisible(true);
     }, 0);
@@ -255,7 +265,7 @@ export function GameEnvironment({
     return () => {
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [deferReveal]);
 
   async function handleContinueEncounter(
     action: EncounterAction,
@@ -318,6 +328,8 @@ export function GameEnvironment({
 
       setEncounter(result.snapshot);
       setLoreOpen(false);
+      setInventoryOpen(false);
+      setSkillbookOpen(false);
 
       if (result.avatar) {
         if (result.avatar.level > avatar.level) {
@@ -347,7 +359,16 @@ export function GameEnvironment({
         top={
           <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
             <div style={headerSlotStyle}>
-              <EncounterHeader title={title} />
+              <EncounterHeader
+                overlayTitle={
+                  inventoryOpen
+                    ? 'Inventory'
+                    : skillbookOpen
+                      ? 'Skillbook'
+                      : null
+                }
+                title={title}
+              />
             </div>
             <div style={{ ...encounterImageSlotStyle, ...delayStyle(visible, 1) }}>
               <EncounterImageBlock
@@ -355,8 +376,10 @@ export function GameEnvironment({
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
                 continuePending={continuePending}
+                inventoryOpen={inventoryOpen}
                 loreOpen={loreOpen}
                 onContinue={handleContinueEncounter}
+                skillbookOpen={skillbookOpen}
                 title={title}
               />
             </div>
@@ -367,13 +390,41 @@ export function GameEnvironment({
             <PlayerHub
               actionLog={actionLog}
               avatar={avatar}
+              hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
               onAvatarDetailsVisibleChange={setHomeVisible}
               onHome={() => {
                 void handleHome();
               }}
+              onInventoryToggle={() => {
+                setInventoryOpen((open) => {
+                  const next = !open;
+                  if (next) {
+                    setLoreOpen(false);
+                    setSkillbookOpen(false);
+                  }
+                  return next;
+                });
+              }}
+              onSkillbookToggle={() => {
+                setSkillbookOpen((open) => {
+                  const next = !open;
+                  if (next) {
+                    setLoreOpen(false);
+                    setInventoryOpen(false);
+                  }
+                  return next;
+                });
+              }}
               onLoreToggle={() => {
-                setLoreOpen((open) => !open);
+                setLoreOpen((open) => {
+                  const next = !open;
+                  if (next) {
+                    setInventoryOpen(false);
+                    setSkillbookOpen(false);
+                  }
+                  return next;
+                });
               }}
             />
           </div>

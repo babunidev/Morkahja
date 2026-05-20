@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { fadeTransition } from '../../transitions/fade.js';
+import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
 
 const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
@@ -12,6 +12,8 @@ const LORE_GEM_POPUP_MS = 330;
 
 type LoreGemState = 'waiting' | 'visible' | 'collecting' | 'collected';
 
+const LORE_BACKGROUND_OPACITY = 0.81;
+
 const loreBlockStyle: CSSProperties = {
   position: 'absolute',
   left: 0,
@@ -22,13 +24,21 @@ const loreBlockStyle: CSSProperties = {
   width: '100%',
   display: 'grid',
   gridTemplateRows: 'minmax(0, 1fr)',
+  overflow: 'visible',
+  transition: fadeTransition,
+};
+
+const loreBackgroundLayerStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 0,
   backgroundColor: 'rgba(10, 7, 5, 0.94)',
   backgroundImage: `url(${LORE_BACKGROUND})`,
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
-  overflow: 'visible',
-  transition: fadeTransition,
+  opacity: LORE_BACKGROUND_OPACITY,
+  pointerEvents: 'none',
 };
 
 const blockBottomSeamStyle: CSSProperties = {
@@ -44,6 +54,8 @@ const blockBottomSeamStyle: CSSProperties = {
 };
 
 const textWrapStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
   minHeight: 0,
   padding: 'clamp(22px, 6vw, 34px) clamp(22px, 7vw, 42px)',
   boxSizing: 'border-box',
@@ -86,6 +98,10 @@ const loreGemStarStyle: CSSProperties = {
   boxShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 0 16px rgba(255, 204, 102, 0.5)',
   pointerEvents: 'none',
   animation: 'morkahja-lore-gem-star-pulse 2200ms ease-in-out infinite',
+};
+
+const loreGemFadeInStyle: CSSProperties = {
+  animation: `morkahja-lore-gem-fade-in ${FADE_DURATION_MS}ms ease forwards`,
 };
 
 const loreGemCollectingStyle: CSSProperties = {
@@ -213,6 +229,10 @@ export function LoreBlock({
       <style>
         {`
           [data-lore-scroll]::-webkit-scrollbar { display: none; }
+          @keyframes morkahja-lore-gem-fade-in {
+            0% { opacity: 0; transform: scale(0.88); }
+            100% { opacity: 1; transform: scale(1); }
+          }
           @keyframes morkahja-lore-gem-collect {
             0% { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
             12% { transform: translateX(-4px) rotate(-9deg) scale(1.06); }
@@ -233,6 +253,7 @@ export function LoreBlock({
           }
         `}
       </style>
+      <div aria-hidden="true" style={loreBackgroundLayerStyle} />
       <div data-lore-scroll style={textWrapStyle}>
         <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
         {visible && loreGemState === 'waiting' ? (
@@ -248,8 +269,8 @@ export function LoreBlock({
             }}
             style={{
               ...loreGemButtonStyle,
+              ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
               ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
-              opacity: visible ? 1 : 0,
               pointerEvents: visible && loreGemState === 'visible' ? 'auto' : 'none',
             }}
             type="button"

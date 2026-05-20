@@ -15,6 +15,7 @@ import {
   listAvatars,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
+import { recordAvatarCreatedEvent } from './gameEventService.js';
 
 const DEFAULT_UNLOCKED_EXPANSIONS = [0];
 export const BABUNI_PLAYER_ID = 'Babuni';
@@ -218,6 +219,7 @@ export async function savePlayerAvatar(
   await saveAvatar(playerId, payload.id, avatar);
   if (!existing) {
     await initializeAvatarInventory(playerId, payload.id, avatar.profile);
+    await recordAvatarCreatedEvent(playerId, avatar);
   }
   return avatar;
 }

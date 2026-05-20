@@ -1,0 +1,75 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import type { PersistedAvatar } from '../../api/http.js';
+import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
+import { boundsToStyle, type Bounds } from './avatarEnterTransition.js';
+
+const motionStyle: CSSProperties = {
+  transitionProperty: 'left, top, width, height',
+  transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.45, 1)',
+  willChange: 'left, top, width, height',
+};
+
+const compositionFillStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  aspectRatio: '1 / 1.15',
+};
+
+export function AvatarEnterHandoff({
+  avatar,
+  bounds,
+  glowAtCenter = false,
+  moveDurationMs,
+}: {
+  avatar: PersistedAvatar;
+  bounds: Bounds;
+  glowAtCenter?: boolean;
+  moveDurationMs: number;
+}) {
+  const [animatedBounds, setAnimatedBounds] = useState(bounds);
+
+  useEffect(() => {
+    if (moveDurationMs === 0) {
+      setAnimatedBounds(bounds);
+      return;
+    }
+
+    let cancelled = false;
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (!cancelled) {
+          setAnimatedBounds(bounds);
+        }
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [bounds, moveDurationMs]);
+
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        ...boundsToStyle(animatedBounds),
+        ...motionStyle,
+        transitionDuration: `${moveDurationMs}ms`,
+      }}
+    >
+      <div
+        className={glowAtCenter ? 'morkahja-avatar-enter-handoff-glow' : undefined}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <AvatarPortraitStack
+          frame={avatar.frame}
+          portrait={avatar.portrait}
+          style={compositionFillStyle}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default AvatarEnterHandoff;

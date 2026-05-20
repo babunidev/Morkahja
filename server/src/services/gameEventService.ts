@@ -1,0 +1,264 @@
+import { randomUUID } from 'node:crypto';
+import type { AvatarDocument } from '../types/avatar.js';
+import type { EncounterResolution } from '../engine/encounterResolver.js';
+import type { RollOutcome } from '../engine/diceInterpreter.js';
+import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
+import { ACTIVITY_FEED_WINDOW_MS, type GameEvent, type GameEventImportance } from '../domain/events/GameEvent.js';
+import { gameEventBus } from '../domain/events/gameEventBus.js';
+import { getPlayer } from '../db/postgresDocumentStore.js';
+import { postgresEventStore } from '../db/gameEventPersistence.js';
+import { renderEventMessage } from '../domain/news/renderEventMessage.js';
+import { isVisibleInScribesFeed } from '../domain/news/scribesFeedFilter.js';
+import { resolveScribesIconUrl } from '../domain/news/scribesFeedPresentation.js';
+import type { PlayerDocument } from '../types/player.js';
+import { getEncounterById, getSolutionMap } from './gameData.js';
+
+async function readPlayer(playerId: string): Promise<PlayerDocument | null> {
+  const data = await getPlayer<Partial<PlayerDocument>>(playerId);
+  if (!data) {
+    return null;
+  }
+
+  return {
+    ...data,
+    playerId: typeof data.playerId === 'string' ? data.playerId : playerId,
+    playerName: typeof data.playerName === 'string' ? data.playerName : playerId,
+    identityPublicKey: typeof data.identityPublicKey === 'string' ? data.identityPublicKey : '',
+    activeSessionId: typeof data.activeSessionId === 'string' ? data.activeSessionId : null,
+    activeSessionExpiresAt: typeof data.activeSessionExpiresAt === 'number' ? data.activeSessionExpiresAt : null,
+    createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
+    lastPlayedAt: typeof data.lastPlayedAt === 'number' ? data.lastPlayedAt : Date.now(),
+    unlockedExpansions: Array.isArray(data.unlockedExpansions)
+      ? data.unlockedExpansions.filter((entry): entry is number => Number.isInteger(entry))
+      : [0],
+  };
+}
+
+type RecordGameEventInput = Omit<GameEvent, 'eventId' | 'timestamp'> & {
+  timestamp?: number;
+};
+
+export interface ActivityFeedEntry {
+  eventId: string;
+  timestamp: number;
+  message: string;
+  importance: GameEventImportance;
+  iconUrl?: string;
+}
+
+export interface EncounterContinuedEventContext {
+  resolvedEncounterId: number;
+  resolvedEncounterTitle?: string;
+  selectedRollOutcome: RollOutcome | null;
+  leveledUp: boolean;
+  deathTriggered: boolean;
+  isDeathEncounterResolution: boolean;
+}
+
+async function recordGameEvent(input: RecordGameEventInput): Promise<GameEvent> {
+  const event: GameEvent = {
+    eventId: randomUUID(),
+    timestamp: input.timestamp ?? Date.now(),
+    playerId: input.playerId,
+    avatarId: input.avatarId,
+    type: input.type,
+    visibility: input.visibility,
+    importance: input.importance,
+    payload: input.payload,
+  };
+
+  await postgresEventStore.appendEvent(event);
+  gameEventBus.emit(event);
+  return event;
+}
+
+function basePayload(
+  playerName: string | undefined,
+  avatar: Pick<AvatarDocument, 'id' | 'name' | 'race' | 'role'>,
+  encounterId?: number,
+  encounterTitle?: string,
+): Record<string, unknown> {
+  return {
+    playerName,
+    avatarName: avatar.name,
+    avatarId: avatar.id,
+    race: avatar.race,
+    role: avatar.role,
+    encounterId,
+    encounterTitle,
+  };
+}
+
+function solutionName(solutionId: number): string | undefined {
+  const solution = getSolutionMap()[String(solutionId)];
+  if (!solution) {
+    return undefined;
+  }
+
+  const title = solution.mSolutionName;
+  return typeof title === 'string' && title.length > 0 ? title : `Reward ${solutionId}`;
+}
+
+export async function recordAvatarCreatedEvent(
+  playerId: string,
+  avatar: AvatarDocument,
+): Promise<void> {
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    avatarId: avatar.id,
+    type: 'avatar_created',
+    visibility: 'global',
+    importance: 'medium',
+    payload: basePayload(player?.playerName, avatar),
+  });
+}
+
+export async function recordEncounterStartedEvent(
+  playerId: string,
+  avatar: AvatarDocument,
+  snapshot: EncounterSnapshot,
+): Promise<void> {
+  const player = await readPlayer(playerId);
+  const encounter = getEncounterById(snapshot.encounterId);
+
+  await recordGameEvent({
+    playerId,
+    avatarId: avatar.id ?? snapshot.avatarId,
+    type: 'encounter_started',
+    visibility: 'global',
+    importance: 'low',
+    payload: {
+      ...basePayload(
+        player?.playerName,
+        avatar,
+        snapshot.encounterId,
+        snapshot.encounterTitle ?? encounter?.mEncounterTitle,
+      ),
+    },
+  });
+}
+
+export async function recordEncounterContinuedEvents(
+  playerId: string,
+  avatar: AvatarDocument,
+  resolution: EncounterResolution,
+  context: EncounterContinuedEventContext,
+): Promise<void> {
+  const player = await readPlayer(playerId);
+  const avatarId = avatar.id;
+  if (!avatarId) {
+    return;
+  }
+
+  const encounterTitle = context.resolvedEncounterTitle
+    ?? getEncounterById(context.resolvedEncounterId)?.mEncounterTitle;
+  const payload = {
+    ...basePayload(
+      player?.playerName,
+      avatar,
+      context.resolvedEncounterId,
+      encounterTitle,
+    ),
+    outcome: context.selectedRollOutcome ?? undefined,
+    success: resolution.success,
+  };
+
+  if (
+    context.isDeathEncounterResolution &&
+    (context.selectedRollOutcome === 'Misery' || context.selectedRollOutcome === 'Hardship')
+  ) {
+    await recordGameEvent({
+      playerId,
+      avatarId,
+      type: 'avatar_died',
+      visibility: 'global',
+      importance: 'legendary',
+      payload,
+    });
+    return;
+  }
+
+  await recordGameEvent({
+    playerId,
+    avatarId,
+    type: resolution.success ? 'encounter_resolved' : 'encounter_failed',
+    visibility: 'global',
+    importance: resolution.success ? 'medium' : 'medium',
+    payload,
+  });
+
+  if (context.leveledUp) {
+    await recordGameEvent({
+      playerId,
+      avatarId,
+      type: 'level_up',
+      visibility: 'global',
+      importance: 'high',
+      payload: {
+        ...payload,
+        level: avatar.level,
+      },
+    });
+  }
+
+  if (context.deathTriggered) {
+    await recordGameEvent({
+      playerId,
+      avatarId,
+      type: 'avatar_died',
+      visibility: 'global',
+      importance: 'legendary',
+      payload: {
+        ...payload,
+        pendingDeathEncounter: true,
+      },
+    });
+  }
+
+  if (!resolution.success) {
+    return;
+  }
+
+  for (const rewardId of resolution.rewards) {
+    const solution = getSolutionMap()[String(rewardId)];
+    if (!solution) {
+      continue;
+    }
+
+    await recordGameEvent({
+      playerId,
+      avatarId,
+      type: 'item_obtained',
+      visibility: 'global',
+      importance: 'low',
+      payload: {
+        ...payload,
+        solutionId: rewardId,
+        solutionName: solutionName(rewardId),
+        rewardType: solution.mSolutionRewardType,
+        solutionIconName: solution.mSolutionIconName,
+      },
+    });
+  }
+}
+
+export async function queryActivityFeed(playerId: string): Promise<ActivityFeedEntry[]> {
+  const sinceTimestamp = Date.now() - ACTIVITY_FEED_WINDOW_MS;
+  const events = await postgresEventStore.queryRecentEvents({
+    playerId,
+    sinceTimestamp,
+    limit: 50,
+  });
+
+  return events
+    .filter(isVisibleInScribesFeed)
+    .map((event) => ({
+      eventId: event.eventId,
+      timestamp: event.timestamp,
+      message: renderEventMessage(event),
+      importance: event.importance,
+      iconUrl: resolveScribesIconUrl(event),
+    }));
+}
