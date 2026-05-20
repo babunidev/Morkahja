@@ -331,7 +331,7 @@
   },
   "10034": {
     "mSolutionID": 10034,
-    "mSolutionIconName": "skill_fight",
+    "mSolutionIconName": "skill_common_fight",
     "mSolutionInventoryType": 1,
     "mSolutionName": "Combat Skill",
     "mSolutionRewardType": 1,
@@ -436,7 +436,7 @@
     "mSolutionName": "Echoes of the Azure",
     "mSolutionRewardType": 42,
     "mSolutionText": "By recounting tales of the skies or performing their Skydance, Aevis can inspire those around them, boosting morale, creativity, and determination.",
-    "mSolutionType": 19,
+    "mSolutionType": 39,
     "mSolutionUses": 3
   },
   "10045": {
@@ -456,7 +456,7 @@
     "mSolutionName": "Ancestors Muse",
     "mSolutionRewardType": 43,
     "mSolutionText": "Summoning the age-old wisdom of Grimnir forebears, this skill ignites passion and vision as vast as underground caverns.",
-    "mSolutionType": 19,
+    "mSolutionType": 39,
     "mSolutionUses": 3
   },
   "10047": {
@@ -640,7 +640,7 @@
     "mSolutionUses": 3
   },
   "10065": {
-    "mSolutionID": 10061,
+    "mSolutionID": 10065,
     "mSolutionIconName": "skill_rogue_backstab",
     "mSolutionInventoryType": 1,
     "mSolutionName": "Backstab",
@@ -650,7 +650,7 @@
     "mSolutionUses": 3
   },
   "10066": {
-    "mSolutionID": 10062,
+    "mSolutionID": 10066,
     "mSolutionIconName": "skill_rogue_rougepick",
     "mSolutionInventoryType": 1,
     "mSolutionName": "Cunning Lockpicking",
@@ -660,7 +660,7 @@
     "mSolutionUses": 3
   },
   "10067": {
-    "mSolutionID": 10063,
+    "mSolutionID": 10067,
     "mSolutionIconName": "skill_rogue_liebetray",
     "mSolutionInventoryType": 1,
     "mSolutionName": "Lie & Betray",
@@ -670,7 +670,7 @@
     "mSolutionUses": 3
   },
   "10068": {
-    "mSolutionID": 10064,
+    "mSolutionID": 10068,
     "mSolutionIconName": "skill_rogue_acrobaticclimb",
     "mSolutionInventoryType": 1,
     "mSolutionName": "Acrobatic Climb",
