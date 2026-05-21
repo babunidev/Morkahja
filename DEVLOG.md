@@ -1,76 +1,84 @@
 # Morkahja devlog
 
-## 2026-05-21 — Adventurer achievements, daily reward, and dashboard attention dots
-
-Since `686c16c` (result continue transition + reward fly flicker fix).
-
-### First achievement chain: Adventurer
-
-- **Event-driven progression** — `achievementEngine` listens on `gameEventBus` for `encounter_resolved` and `encounter_failed` (each counts as one encounter played). No direct encounter-table scans.
-- **Adventurer ranks** — Rank 1–4 at 42 / 84 / 126 / 168 encounters (Adventurer → Explorer → Wayfarer → Trailblazer); rank 4 uses the gold overlay. Progress stops after rank 4.
-- **Persistence** — `player_achievements` table via `achievementPersistence`; progress model in `achievementProgress.ts`.
-- **World events** — Rank upgrades emit `achievement_unlocked`; Scribes renders lines like “Babuni became a Wayfarer.” (`renderEventMessage`, feed filter/presentation).
-- **API** — `GET /player/achievements`, `POST /player/daily-reward/claim`; shared DTOs in `contracts.ts`; client `fetchAchievements` / `claimDailyReward`.
-
-### Daily reward (UTC day)
-
-- **Threshold** — 21 encounters per UTC calendar day to unlock claim (not rolling 24h).
-- **Gems** — Yellow/red gem currency via `addPlayerYellowRedGems`; one claim per day (`daily-reward-{utcDay}` dedupe). Gem count = Adventurer rank + 1 (1–5 gems).
-- **Player state** — `dailyReward` on player document (`utcDay`, `encountersPlayed`, `claimedAt`).
-- **Events** — `daily_reward_claimed` recorded for Scribes; encounter play increments daily counter in the achievement handler path.
-
-### Achievement UI
-
-- **`AchievementPanel`** — Icon + rank overlay stack, rank title/text, progress bar within current 42-encounter band, daily reward card showing `encountersPlayed/21 encounters` only (no long description).
-- **`AchievementsOverlay`** — Loads gems and achievements separately so a missing achievements route does not zero the footer gem count; claim updates currencies in-panel.
-
-### Dashboard nav indicators
-
-- **Closed nav** — Scribes dot at **13:00** (News spoke), achievements dot at **17:00** (Achievements spoke), positioned past button anchors then scaled **70%** toward hub for final spacing.
-- **Open nav** — Dots center on News / Achievements buttons; icons **wiggle** like Scribes when there is unseen progress (`achievementsAttentionState` in `localStorage`, polled with activity feed).
-- **Independent glow** — `morkahja-nav-attention-glow-scribes` (~2.15s) and `morkahja-nav-attention-glow-achievements` (~3.45s + delay) so dots do not pulse in sync; radial closed-nav dots use `left`/`top` calc to avoid transform clashes with the hub.
-
-### Scribes and gems
-
-- **`gems_received` events** — Recording moved into `addPlayerYellowRedGems` so lore gem grants and daily reward claims appear in Scribes reliably.
-- **Feed overlay** — Scrollable list with hidden scrollbar (matches achievements panel pattern).
-
-### Encounter / game UI fixes
-
-- **Lore gem** — Hidden result layer no longer blocks the lore gem (`inert` when result hidden; Lore z-index when open).
-- **Result block** — `inert` when hidden to avoid stray `cursor: help` hit targets over Lore.
-
-### Tests and tooling
-
-- `npm run test:achievements` — Unit tests for Adventurer rank thresholds, progress bands, and daily gem scaling.
-
-### Assets
-
-- Updated `help_bread_verdani_child.webp` encounter image.
+Brief chronological overview of the web app from first commit to present. Newest work is at the bottom.
 
 ---
 
-## 2026-05-21 — Encounter results, reward flights, and reveal pacing
+## Development overview
 
-Since `d284bbe` (avatar asset cleanup + inventory bootstrap).
+### 2026-05-16 — Game data layout
 
-### Result screen and continue flow
+1. Add **LudusOccursus** / **LudusSolutio** structure for encounters and solutions.
+2. Rename datafiles; remove superseded JSON (`LudusOccursus`, `LudusSolutio`, `MorkahjaRules`).
 
-- **Reward fly-out on Continue** — Gained rewards animate from the result row to the footer skillbook or inventory button (by solution type), with a short footer wiggle on arrival. Shared flight helper in `rewardFlyAnimation.ts`; footer targets wired via `data-morkahja-footer-target` on `PlayerHub`.
-- **Loss fly-in on reveal** — When an encounter costs inventory or essence, loss icons fly from the avatar portrait (`data-morkahja-avatar-portrait`) into the slots under the outcome, then settle with a red glow. Essence losses use a slightly larger icon than item losses.
-- **Dice resolution cue** — Rolling the dice shows the dice button art beside the outcome text (alongside the used-solution icon when applicable).
-- **Continue pacing** — Disengage and other no-reward outcomes still play the full Continue button bounce (~1s) before resolving, so the beat matches rewarded continues.
+### 2026-05-17 — Repo bootstrap
 
-### Encounter and solution reveals
+3. **Initial commit** — encounter images and core game data assets land in the repo.
+4. Sync with remote; delete obsolete top-level `Game/` directory.
+5. Fix **TypeScript module resolution** for the client/server/shared workspace.
 
-- **Slower encounter image fade** — Crossfade between encounters and initial reveal use **720ms** (was 420ms), separate from general UI fades.
-- **Slower solution/dice fade** — Actions fade in over **1100ms** after a short delay; dice and solution buttons stay disabled until the fade finishes so nothing is clickable mid-animation.
-- **Spacer bar** — The bottom `im_spacer_line` mask stays fully visible; only the solution row and dice fade, not the bar.
+### 2026-05-18 — v0.1 playable (`3f71171`)
 
-### Solutions UI
+6. First **playable checkpoint**: Vite + React client, Express API, shared contracts.
+7. Sign-in / session flow, dashboard shell, avatar selection, encounter loop.
+8. Static game data (encounters, solutions, portraits, frames), PostgreSQL document store.
+9. UI asset tree (backgrounds, buttons, encounter art, welcome flow).
 
-- **All four slots visible** — Required solutions you do not own still appear at reduced opacity with a “not in your inventory” tooltip; owned solutions behave as before.
+### 2026-05-19 — Audio (`e8edbed`)
 
-### Assets
+10. **v0.12 music engine** — playlist wiring and playback controls for dashboard and in-game ambience.
 
-- Refreshed several encounter `.webp` images and added a few new ones; renamed `tool_heal_linen_bandage1.webp` → `tool_heal_linen_bandage.webp`.
+### 2026-05-20 — Rewards and Scribes (`03b715b`, `f0ca176`)
+
+11. Fix **duplicate solution IDs** (10065–10068) so warrior reward pool entries are unique.
+12. **Level-up encounters** — outcome-based race/role abilities without hardship penalties; `rewardIds` precomputed for result preview.
+13. **Game event pipeline** — persisted events in PostgreSQL, bus + renderer foundation.
+14. **SCRIBES** activity feed overlay on the dashboard; unread-style world log.
+15. **Atranor death** survival rules; music volume in settings; related gameplay UI fixes.
+
+### 2026-05-21 — Content and dashboard shell
+
+16. Fix high-impact **solution name/description typos**; sync client `solutiondata.json` mirrors (`3b9ab56`, `f0e6030`).
+17. Remove obsolete game ambient tracks; reclassify solution **10185** as PurgeSkill (`32d22af`, `f0b141d`).
+18. **Expand music playlists** for dashboard and in-game (`eaa2aa1`).
+19. Dashboard **overlays** — Scribes unread indicator, achievements entry point, ambient wiring (`6e4dc8e`).
+20. Remove legacy avatar portrait assets; **inventory bootstrap** on new avatars (`d284bbe`).
+
+### 2026-05-21 — Encounter UX (`85eeb3a`, `686c16c`)
+
+21. **Result screen** — reward icons fly to footer targets on Continue; losses fly from portrait into outcome slots; dice art beside outcome text.
+22. **Reveal pacing** — slower encounter crossfade (720ms); solution/dice fade-in (1100ms); spacer bar stays visible.
+23. All **four solution slots** shown (missing items dimmed + tooltip).
+24. Healing Elixir image renamed to match potion icon (`43c08a6`).
+25. Smoother **continue transition**; fix reward icon flicker when result layer hides (`686c16c`).
+26. **Lore gem** click fix (`inert` hidden result layer); scrollable Scribes feed.
+
+### 2026-05-21 — Adventurer achievements (`9ea2110`)
+
+27. First real **achievement chain** (Adventurer → Trailblazer): event-driven progress on `encounter_resolved` / `encounter_failed`, ranks every **42** encounters (max rank 4), `player_achievements` table.
+28. **`achievement_unlocked`** events → Scribes (“became a Wayfarer”, etc.).
+29. **Daily reward** — **21** encounters per **UTC day**; gem payout scales with rank (1–5); `daily_reward_claimed` events; deduped claims.
+30. **`AchievementPanel` / overlay** — rank overlays, progress bar, `N/N encounters` daily line, footer gem count.
+31. **Nav attention UX** — closed menu dots at **13:00** (Scribes) and **17:00** (Achievements); open menu wiggle + **independent glow rhythms**; `achievementsAttentionState` in localStorage.
+32. **`gems_received`** recorded inside `addPlayerYellowRedGems` so Scribes always sees gem grants.
+33. `npm run test:achievements` for rank/daily-reward math.
+
+---
+
+## Session notes (detail)
+
+### Adventurer achievements and nav dots (`9ea2110`)
+
+Since `686c16c`.
+
+- **Engine** — `achievementEngine` + `registerAchievementHandlers` on `gameEventBus`; no direct encounter-table scans.
+- **API** — `GET /player/achievements`, `POST /player/daily-reward/claim`; shared DTOs; client `fetchAchievements` / `claimDailyReward`.
+- **UI** — Overlay loads player gems before achievements so a 404 does not show zero gems; radial dot positioning uses spoke + 70% radius scale; separate CSS glow animations (~2.15s vs ~3.45s).
+
+### Encounter results and reveal pacing (`85eeb3a`, `686c16c`)
+
+Since `d284bbe`.
+
+- **Flights** — `rewardFlyAnimation.ts`; `data-morkahja-footer-target` / `data-morkahja-avatar-portrait`.
+- **Continue** — full bounce even for no-reward outcomes; fade-out without re-showing reward nodes (`inert`).
+- **Assets** — refreshed encounter `.webp` set; `tool_heal_linen_bandage` rename.
