@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import type { ActivityFeedEntryDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 
 const OVERLAY_FADE_MS = 300;
 const POLL_INTERVAL_MS = 10_000;
@@ -69,7 +70,10 @@ const listStyle: CSSProperties = {
   gap: 10,
 };
 
-function entryStyle(importance: ActivityFeedEntryDto['importance']): CSSProperties {
+function entryStyle(
+  importance: ActivityFeedEntryDto['importance'],
+  read: boolean,
+): CSSProperties {
   const glow = importance === 'legendary'
     ? '0 0 14px rgba(255, 204, 102, 0.45)'
     : importance === 'high'
@@ -79,13 +83,30 @@ function entryStyle(importance: ActivityFeedEntryDto['importance']): CSSProperti
   return {
     padding: '10px 12px',
     borderRadius: 10,
-    border: '1px solid rgba(255, 204, 102, 0.28)',
-    background: 'rgba(24, 12, 8, 0.72)',
-    boxShadow: glow,
+    border: read
+      ? '1px solid rgba(255, 204, 102, 0.18)'
+      : '1px solid rgba(255, 204, 102, 0.42)',
+    background: read ? 'rgba(24, 12, 8, 0.58)' : 'rgba(24, 12, 8, 0.82)',
+    boxShadow: read ? 'none' : glow,
     fontSize: '0.95rem',
     lineHeight: 1.45,
+    opacity: read ? 0.78 : 1,
+    transition: 'opacity 280ms ease, border-color 280ms ease, background 280ms ease',
   };
 }
+
+const unreadBadgeStyle: CSSProperties = {
+  display: 'inline-block',
+  marginLeft: 8,
+  padding: '1px 7px',
+  borderRadius: 999,
+  border: '1px solid rgba(255, 204, 102, 0.55)',
+  color: '#ffcc66',
+  fontSize: '0.68rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  verticalAlign: 'middle',
+};
 
 const entryBodyStyle: CSSProperties = {
   display: 'flex',
@@ -122,14 +143,19 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 export function ActivityFeedOverlay({
-  open,
   onClose,
+  onReadStateChange,
+  open,
+  playerId,
 }: {
-  open: boolean;
   onClose: () => void;
+  onReadStateChange?: () => void;
+  open: boolean;
+  playerId: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [entries, setEntries] = useState<ActivityFeedEntryDto[]>([]);
+  const [readIds, setReadIds] = useState(() => loadScribesReadIds(playerId));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,6 +194,25 @@ export function ActivityFeedOverlay({
       window.clearInterval(pollTimer);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || entries.length === 0) {
+      return;
+    }
+
+    markScribesEntriesRead(
+      playerId,
+      entries.map((entry) => entry.eventId),
+    );
+    setReadIds(loadScribesReadIds(playerId));
+    onReadStateChange?.();
+  }, [entries, onReadStateChange, open, playerId]);
+
+  useEffect(() => {
+    if (!open) {
+      setReadIds(loadScribesReadIds(playerId));
+    }
+  }, [open, playerId]);
 
   if (!open) {
     return null;
@@ -213,10 +258,14 @@ export function ActivityFeedOverlay({
           <p style={{ margin: 0, opacity: 0.8 }}>Nothing worth inscribing in the last 15 minutes.</p>
         ) : null}
         <ul style={listStyle}>
-          {entries.map((entry) => (
-            <li key={entry.eventId} style={entryStyle(entry.importance)}>
+          {entries.map((entry) => {
+            const read = readIds.has(entry.eventId);
+
+            return (
+            <li key={entry.eventId} style={entryStyle(entry.importance, read)}>
               <div style={{ opacity: 0.72, fontSize: '0.78rem', marginBottom: 4 }}>
                 {formatRelativeTime(entry.timestamp)}
+                {!read ? <span style={unreadBadgeStyle}>New</span> : null}
               </div>
               <div style={entryBodyStyle}>
                 <div style={entryTextStyle}>{entry.message}</div>
@@ -231,7 +280,8 @@ export function ActivityFeedOverlay({
                 ) : null}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
     </div>

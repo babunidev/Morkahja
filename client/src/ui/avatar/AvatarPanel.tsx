@@ -4,15 +4,23 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack from './AvatarPortraitStack.js';
 
+const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+
 const panelStyle: CSSProperties = {
-  width: 'min(42vw, 176px)',
+  width: 'fit-content',
+  maxWidth: 'min(88vw, 380px)',
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'center',
+  gap: 'clamp(10px, 2.4vw, 16px)',
   textAlign: 'center',
   position: 'relative',
   zIndex: 5,
+};
+
+const portraitWrapStyle: CSSProperties = {
+  flex: '0 0 auto',
+  width: 'min(42vw, 176px)',
 };
 
 const imageStackButtonStyle: CSSProperties = {
@@ -45,18 +53,44 @@ const portraitPressStyle: CSSProperties = {
   transformOrigin: 'center center',
 };
 
-const detailsOverlayStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  zIndex: 3,
+const detailsClusterStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 'clamp(8px, 2vw, 14px)',
+  flex: '0 1 auto',
+  minWidth: 0,
+};
+
+const detailsTooltipStyle: CSSProperties = {
+  flex: '0 1 auto',
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'center',
-  width: '82%',
+  minWidth: 'min(36vw, 148px)',
+  maxWidth: 'min(42vw, 180px)',
   padding: '8px 10px',
   borderRadius: 10,
   background: 'rgba(6, 6, 10, 0.62)',
   pointerEvents: 'none',
+  textAlign: 'left',
+};
+
+const homeButtonStyle: CSSProperties = {
+  flex: '0 0 auto',
+  width: 'clamp(42px, 11vw, 74px)',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  transition: 'opacity 420ms ease',
+};
+
+const homeImageStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  height: 'auto',
+  filter: 'drop-shadow(0 12px 20px rgba(0, 0, 0, 0.45))',
 };
 
 const nameStyle: CSSProperties = {
@@ -111,11 +145,15 @@ function experienceRequiredForNextLevel(level: number): number {
 export function AvatarPanel({
   avatar,
   hidePortraitForHandoff = false,
+  homeVisible = false,
   onDetailsVisibleChange,
+  onHome,
 }: {
   avatar: PersistedAvatar;
   hidePortraitForHandoff?: boolean;
+  homeVisible?: boolean;
   onDetailsVisibleChange?: (visible: boolean) => void;
+  onHome?: () => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
@@ -131,47 +169,47 @@ export function AvatarPanel({
 
   return (
     <article aria-label={`${avatar.name}, level ${avatar.level}`} style={panelStyle}>
-      <button
-        aria-expanded={showDetails}
-        aria-label={`Show details for ${avatar.name}`}
-        onClick={() => {
-          playSfx(DEFAULT_BUTTON_SOUND);
-          setShowDetails((current) => !current);
-        }}
-        onPointerDown={() => {
-          pulse('avatar');
-        }}
-        style={imageStackButtonStyle}
-        type="button"
-      >
-        <div style={imageStackInnerStyle}>
-          <div
-            style={{
-              ...portraitCellStyle,
-              opacity: hidePortraitForHandoff ? 0 : 1,
-            }}
-          >
+      <div style={portraitWrapStyle}>
+        <button
+          aria-expanded={showDetails}
+          aria-label={`Show details for ${avatar.name}`}
+          onClick={() => {
+            playSfx(DEFAULT_BUTTON_SOUND);
+            setShowDetails((current) => !current);
+          }}
+          onPointerDown={() => {
+            pulse('avatar');
+          }}
+          style={imageStackButtonStyle}
+          type="button"
+        >
+          <div style={imageStackInnerStyle}>
             <div
               style={{
-                ...portraitPressStyle,
-                animation: pressAnimation(isPressed('avatar')),
+                ...portraitCellStyle,
+                opacity: hidePortraitForHandoff ? 0 : 1,
               }}
             >
-              <AvatarPortraitStack
-                enterTarget
-                frame={avatar.frame}
-                portrait={avatar.portrait}
-                style={{ width: '100%', height: '100%' }}
-              />
+              <div
+                style={{
+                  ...portraitPressStyle,
+                  animation: pressAnimation(isPressed('avatar')),
+                }}
+              >
+                <AvatarPortraitStack
+                  enterTarget
+                  frame={avatar.frame}
+                  portrait={avatar.portrait}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </div>
             </div>
           </div>
-          <span
-            style={{
-              ...detailsOverlayStyle,
-              opacity: showDetails ? 1 : 0,
-              visibility: showDetails ? 'visible' : 'hidden',
-            }}
-          >
+        </button>
+      </div>
+      {showDetails ? (
+        <div style={detailsClusterStyle}>
+          <div role="tooltip" style={detailsTooltipStyle}>
             <span className="morkahja-title" style={nameStyle}>{avatar.name}</span>
             <span style={levelStyle}>
               Level {avatar.level} · {avatar.race} {avatar.role}
@@ -187,9 +225,47 @@ export function AvatarPanel({
             <span style={xpTextStyle}>
               XP {currentExperience}/{nextLevelExperience}
             </span>
-          </span>
+          </div>
+          {onHome ? (
+            <button
+              aria-label="Return home"
+              onClick={() => {
+                if (!homeVisible) {
+                  return;
+                }
+
+                playSfx(DEFAULT_BUTTON_SOUND);
+                onHome();
+              }}
+              onPointerDown={() => {
+                if (!homeVisible) {
+                  return;
+                }
+
+                pulse('home');
+              }}
+              style={{
+                ...homeButtonStyle,
+                cursor: homeVisible ? 'pointer' : 'default',
+                opacity: homeVisible ? 1 : 0,
+                pointerEvents: homeVisible ? 'auto' : 'none',
+              }}
+              type="button"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={HOME_BUTTON_ASSET}
+                style={{
+                  ...homeImageStyle,
+                  animation: pressAnimation(isPressed('home')),
+                }}
+              />
+            </button>
+          ) : null}
         </div>
-      </button>
+      ) : null}
     </article>
   );
 }

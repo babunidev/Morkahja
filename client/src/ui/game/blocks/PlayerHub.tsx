@@ -6,7 +6,6 @@ import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import EncounterFooter from './EncounterFooter.js';
 
 const GAME_UI_ROOT = '/UI/09_GAME';
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const FOOTER_BUTTONS = [
   { alt: 'Get help', src: `${GAME_UI_ROOT}/im_button_gethelp.webp` },
   { alt: 'Skillbook', src: `${GAME_UI_ROOT}/im_button_skillbook.webp` },
@@ -34,26 +33,49 @@ const footerLayerStyle: CSSProperties = {
 };
 
 const hubContentStyle: CSSProperties = {
-  gap: 4,
-  width: '50%',
+  position: 'relative',
+  width: '100%',
   height: '66%',
   minHeight: 0,
-  padding: '8px 14px',
   boxSizing: 'border-box',
   gridArea: '1 / 1',
   alignSelf: 'start',
-  justifySelf: 'start',
-  transform: 'translateY(57px)',
   zIndex: 5,
+  pointerEvents: 'none',
 };
 
-const avatarAnchorStyle: CSSProperties = {
-  position: 'relative',
-  width: 'fit-content',
+const PARTY_SLOT_TOP_OFFSET_PX = 57;
+
+const partyStripStyle: CSSProperties = {
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  top: PARTY_SLOT_TOP_OFFSET_PX,
+  height: `calc(100% - ${PARTY_SLOT_TOP_OFFSET_PX}px)`,
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  alignItems: 'center',
+  pointerEvents: 'none',
+};
+
+const partySlotStyle: CSSProperties = {
+  width: '100%',
   height: '100%',
   display: 'grid',
   placeItems: 'center',
-  margin: '0 auto',
+  minWidth: 0,
+};
+
+const mainPartySlotStyle: CSSProperties = {
+  ...partySlotStyle,
+  pointerEvents: 'auto',
+};
+
+const mainAvatarAnchorStyle: CSSProperties = {
+  position: 'relative',
+  width: 'min(100%, 176px)',
+  maxWidth: 'min(30vw, 176px)',
+  justifySelf: 'center',
 };
 
 const footerContentStyle: CSSProperties = {
@@ -120,25 +142,23 @@ const actionLogListStyle: CSSProperties = {
   paddingLeft: 16,
 };
 
-const homeButtonStyle: CSSProperties = {
-  position: 'absolute',
-  left: '100%',
-  top: '50%',
-  width: 'clamp(42px, 11vw, 74px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  transform: 'translate(-18%, -50%)',
-  transition: 'opacity 420ms ease',
-  zIndex: 120,
-};
-
-const homeImageStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 12px 20px rgba(0, 0, 0, 0.45))',
-};
+function PartySlotPlaceholder({
+  animationDelayMs = 0,
+  label,
+}: {
+  animationDelayMs?: number;
+  label: string;
+}) {
+  return (
+    <div aria-label={`${label} slot empty`} style={partySlotStyle}>
+      <span
+        aria-hidden="true"
+        className="morkahja-party-slot-dot"
+        style={animationDelayMs > 0 ? { animationDelay: `${animationDelayMs}ms` } : undefined}
+      />
+    </div>
+  );
+}
 
 export function PlayerHub({
   actionLog,
@@ -179,46 +199,20 @@ export function PlayerHub({
         <EncounterFooter />
       </div>
       <div style={hubContentStyle}>
-        <div style={avatarAnchorStyle}>
-          <AvatarPanel
-            avatar={avatar}
-            hidePortraitForHandoff={hideAvatarPortraitForHandoff}
-            onDetailsVisibleChange={onAvatarDetailsVisibleChange}
-          />
-          <button
-            aria-label="Return home"
-            onClick={() => {
-              if (!homeVisible) {
-                return;
-              }
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onHome();
-            }}
-            onPointerDown={() => {
-              if (!homeVisible) {
-                return;
-              }
-              pulse('home');
-            }}
-            style={{
-              ...homeButtonStyle,
-              cursor: homeVisible ? 'pointer' : 'default',
-              opacity: homeVisible ? 1 : 0,
-              pointerEvents: homeVisible ? 'auto' : 'none',
-            }}
-            type="button"
-          >
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={HOME_BUTTON_ASSET}
-              style={{
-                ...homeImageStyle,
-                animation: pressAnimation(isPressed('home')),
-              }}
-            />
-          </button>
+        <div aria-label="Party avatars" style={partyStripStyle}>
+          <div aria-label="Player 1 main slot" style={mainPartySlotStyle}>
+            <div style={mainAvatarAnchorStyle}>
+              <AvatarPanel
+                avatar={avatar}
+                hidePortraitForHandoff={hideAvatarPortraitForHandoff}
+                homeVisible={homeVisible}
+                onDetailsVisibleChange={onAvatarDetailsVisibleChange}
+                onHome={onHome}
+              />
+            </div>
+          </div>
+          <PartySlotPlaceholder animationDelayMs={420} label="Player 2" />
+          <PartySlotPlaceholder animationDelayMs={840} label="Player 3" />
         </div>
       </div>
       <div style={footerContentStyle}>

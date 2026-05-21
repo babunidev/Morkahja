@@ -37,7 +37,15 @@ const metaStyle: CSSProperties = {
   textShadow: '0 2px 12px rgba(0, 0, 0, 0.85)',
 };
 
-export function AvatarCard({ avatar, enterSource = false }: { avatar: AvatarCardData; enterSource?: boolean }) {
+export function AvatarCard({
+  avatar,
+  enterSource = false,
+  hideLabels = false,
+}: {
+  avatar: AvatarCardData;
+  enterSource?: boolean;
+  hideLabels?: boolean;
+}) {
   return (
     <article style={cardStyle}>
       <div style={compositionStyle}>
@@ -48,10 +56,14 @@ export function AvatarCard({ avatar, enterSource = false }: { avatar: AvatarCard
           style={{ width: '100%', height: '100%', aspectRatio: '1 / 1.25' }}
         />
       </div>
-      <h2 className="morkahja-title" style={nameStyle}>{avatar.name}</h2>
-      <p style={metaStyle}>
-        Level {avatar.level} · {avatar.race} {avatar.role}
-      </p>
+      {hideLabels ? null : (
+        <>
+          <h2 className="morkahja-title" style={nameStyle}>{avatar.name}</h2>
+          <p style={metaStyle}>
+            Level {avatar.level} · {avatar.race} {avatar.role}
+          </p>
+        </>
+      )}
     </article>
   );
 }

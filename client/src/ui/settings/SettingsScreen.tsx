@@ -1,47 +1,60 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import EncounterFooter from '../game/blocks/EncounterFooter.js';
-import EncounterHeader from '../game/blocks/EncounterHeader.js';
-import PortraitStage from '../layout/PortraitStage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
-import { fadeStyle, waitForFade } from '../transitions/fade.js';
-import { useNavButtonPress } from '../transitions/navButtonPress.js';
 
-const BACKGROUND = '/UI/09_GAME/menuBGgame.webp';
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const OVERLAY_FADE_MS = 300;
 
-const layoutStyle: CSSProperties = {
-  position: 'relative',
-  width: '100%',
-  height: '100%',
-  display: 'grid',
-  gridTemplateRows: '15% minmax(0, 1fr) 13%',
-  overflow: 'hidden',
-  color: '#ffcc66',
-  backgroundColor: '#120704',
-  backgroundImage: `url(${BACKGROUND})`,
-  backgroundPosition: 'center 50px',
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
-};
-
-const contentStyle: CSSProperties = {
+const backdropStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 6,
   display: 'grid',
   placeItems: 'center',
-  padding: '22px',
-  boxSizing: 'border-box',
+  padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
+  background: 'rgba(8, 4, 2, 0.72)',
+  transition: `opacity ${OVERLAY_FADE_MS}ms ease`,
+  pointerEvents: 'auto',
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(82%, 420px)',
+  width: 'min(92vw, 420px)',
   display: 'grid',
   gap: 16,
-  padding: '22px 20px',
+  padding: '20px 18px 16px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
   borderRadius: 14,
-  background: 'rgba(12, 7, 5, 0.72)',
-  boxShadow: '0 16px 34px rgba(0, 0, 0, 0.45)',
+  background: 'rgba(12, 7, 5, 0.92)',
+  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+};
+
+const headerStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+};
+
+const titleStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '1.45rem',
+  fontWeight: 400,
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  letterSpacing: '0.06em',
+};
+
+const closeButtonStyle: CSSProperties = {
+  minWidth: 72,
+  minHeight: 34,
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 9,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  cursor: 'pointer',
+  fontFamily: 'Georgia, serif',
 };
 
 const settingRowStyle: CSSProperties = {
@@ -66,128 +79,83 @@ const actionButtonStyle: CSSProperties = {
   fontSize: '0.95rem',
 };
 
-const footerSlotStyle: CSSProperties = {
-  position: 'relative',
-  minHeight: 0,
-};
-
-const footerLayerStyle: CSSProperties = {
-  position: 'absolute',
-  inset: 0,
-  zIndex: 1,
-};
-
-const homeButtonStyle: CSSProperties = {
-  position: 'absolute',
-  left: 'clamp(14px, 4vw, 28px)',
-  bottom: 'clamp(10px, 3vw, 18px)',
-  width: 'clamp(70px, 20vw, 120px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-  zIndex: 4,
-};
-
-const homeImageStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45))',
-};
-
 export function SettingsScreen({
-  onBack,
+  onClose,
   onLogout,
+  open,
 }: {
-  onBack: () => void;
+  onClose: () => void;
   onLogout: () => void;
+  open: boolean;
 }) {
   const [visible, setVisible] = useState(false);
-  const [clickable, setClickable] = useState(false);
-  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
   useEffect(() => {
+    if (!open) {
+      setVisible(false);
+      return;
+    }
+
     const showTimer = window.setTimeout(() => {
       setVisible(true);
-    }, 0);
-    const enableTimer = window.setTimeout(async () => {
-      await waitForFade();
-      setClickable(true);
     }, 0);
 
     return () => {
       window.clearTimeout(showTimer);
-      window.clearTimeout(enableTimer);
     };
-  }, []);
+  }, [open]);
 
-  async function fadeOutThen(action: () => void): Promise<void> {
-    if (!clickable) {
-      return;
-    }
-
-    setClickable(false);
-    setVisible(false);
-    await waitForFade();
-    action();
+  if (!open) {
+    return null;
   }
 
   return (
-    <PortraitStage>
-      <main aria-label="Settings" style={{ ...layoutStyle, ...fadeStyle(visible) }}>
-        <EncounterHeader title="Settings" />
-        <section style={contentStyle}>
-          <div style={panelStyle}>
-            <MusicVolumeSlider disabled={!clickable} />
-            <SfxVolumeSlider disabled={!clickable} />
-            <div style={settingRowStyle}>
-              <span>Logout</span>
-              <button
-                onClick={() => {
-                  playSfx(DEFAULT_BUTTON_SOUND);
-                  void fadeOutThen(onLogout);
-                }}
-                disabled={!clickable}
-                style={actionButtonStyle}
-                type="button"
-              >
-                End Session
-              </button>
-            </div>
-          </div>
-        </section>
-        <footer style={footerSlotStyle}>
-          <div style={footerLayerStyle}>
-            <EncounterFooter />
-          </div>
+    <div
+      aria-label="Settings"
+      onClick={onClose}
+      role="presentation"
+      style={{
+        ...backdropStyle,
+        opacity: visible ? 1 : 0,
+      }}
+    >
+      <section
+        aria-labelledby="settings-overlay-title"
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        style={panelStyle}
+      >
+        <header style={headerStyle}>
+          <h2 id="settings-overlay-title" style={titleStyle}>SETTINGS</h2>
           <button
-            aria-label="Back"
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
-              void fadeOutThen(onBack);
+              onClose();
             }}
-            disabled={!clickable}
-            onPointerDown={() => {
-              pulse('home');
-            }}
-            style={homeButtonStyle}
+            style={closeButtonStyle}
             type="button"
           >
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={HOME_BUTTON_ASSET}
-              style={{
-                ...homeImageStyle,
-                animation: pressAnimation(isPressed('home')),
-              }}
-            />
+            Close
           </button>
-        </footer>
-      </main>
-    </PortraitStage>
+        </header>
+        <MusicVolumeSlider />
+        <SfxVolumeSlider />
+        <div style={settingRowStyle}>
+          <span>Logout</span>
+          <button
+            onClick={() => {
+              playSfx(DEFAULT_BUTTON_SOUND);
+              onLogout();
+            }}
+            style={actionButtonStyle}
+            type="button"
+          >
+            End Session
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 

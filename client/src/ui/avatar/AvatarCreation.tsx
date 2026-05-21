@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import framesData from '../../data/game/frames.json';
 import portraitsData from '../../data/game/portraits.json';
 import type { PersistedAvatar } from '../../api/http.js';
@@ -67,7 +68,7 @@ interface FrameRecord {
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 12,
+  zIndex: 24,
   display: 'grid',
   placeItems: 'center',
   padding: 'min(4vw, 36px)',
@@ -427,15 +428,6 @@ export function AvatarCreation({
     setRoleTooltip('');
   }
 
-  function shouldSkipChoiceAfterTooltip(): boolean {
-    if (!tooltipWasShownRef.current) {
-      return false;
-    }
-
-    tooltipWasShownRef.current = false;
-    return true;
-  }
-
   function confirmAvatar(): void {
     const now = currentTimestamp();
     const confirmedName = avatarName.trim() || portrait.avatarName;
@@ -454,19 +446,41 @@ export function AvatarCreation({
     });
   }
 
-  return (
-    <div aria-label="Create Avatar" role="dialog" style={{ ...overlayStyle, ...fadeStyle(visible) }}>
-      <section style={menuStyle}>
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      aria-label="Create Avatar"
+      role="dialog"
+      style={{
+        ...overlayStyle,
+        ...fadeStyle(visible),
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+    >
+      <section
+        style={menuStyle}
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+        }}
+      >
         <div aria-label="Choose race" style={rowStyle}>
           {RACES.map((raceOption) => (
             <button
               aria-label={`Choose ${raceOption}`}
               key={raceOption}
               onClick={() => {
-                if (shouldSkipChoiceAfterTooltip()) {
-                  return;
-                }
-
                 chooseRandomPortrait(raceOption, role, gender);
               }}
               onPointerCancel={endTooltipHold}
@@ -495,10 +509,6 @@ export function AvatarCreation({
               aria-label={`Choose ${roleOption}`}
               key={roleOption}
               onClick={() => {
-                if (shouldSkipChoiceAfterTooltip()) {
-                  return;
-                }
-
                 chooseRandomPortrait(race, roleOption, gender);
               }}
               onPointerCancel={endTooltipHold}
@@ -587,7 +597,8 @@ export function AvatarCreation({
           </button>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

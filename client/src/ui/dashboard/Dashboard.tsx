@@ -1,8 +1,11 @@
-import { useEffect, useState, type CSSProperties } from 'react';
-import type { EncounterSnapshot, PersistedAvatar } from '../../api/http.js';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { fetchRecentActivity, loadStoredSession, type EncounterSnapshot, type PersistedAvatar } from '../../api/http.js';
 import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
+import { hasUnreadScribes } from './scribesReadState.js';
+import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 
@@ -10,6 +13,7 @@ const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
 const NAV_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_nav_b.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const LOADING_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
+const SCRIBES_POLL_MS = 10_000;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
@@ -34,6 +38,12 @@ const RADIAL_BUTTONS = [
     src: '/UI/03_DASHBOARD/im_button_credits_b.webp',
     x: -96,
     y: 0,
+  },
+  {
+    label: 'Achievements',
+    src: '/UI/03_DASHBOARD/im_achievements.webp',
+    x: 48,
+    y: 83,
   },
 ] as const;
 
@@ -149,7 +159,7 @@ export function Dashboard({
   onAvatarEnter,
   onPlay,
   onPrepareGame,
-  onSettings,
+  onLogout,
 }: {
   avatars?: PersistedAvatar[];
   creationPreset?: PersistedAvatar | null;
@@ -167,7 +177,7 @@ export function Dashboard({
   onAvatarEnter?: () => void;
   onPlay: () => Promise<void> | void;
   onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
-  onSettings: () => void;
+  onLogout: () => void;
 }) {
   const [visible, setVisible] = useState(false);
   const [clickable, setClickable] = useState(false);
@@ -175,8 +185,27 @@ export function Dashboard({
   const [enteringGame, setEnteringGame] = useState(false);
   const [avatarCreationOpen, setAvatarCreationOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [scribesUnread, setScribesUnread] = useState(false);
+  const playerId = loadStoredSession()?.playerId ?? '';
+  const showChrome = !hidden;
   const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
     useNavButtonPress();
+
+  const refreshScribesUnread = useCallback(async () => {
+    if (!playerId) {
+      setScribesUnread(false);
+      return;
+    }
+
+    try {
+      const response = await fetchRecentActivity();
+      setScribesUnread(hasUnreadScribes(playerId, response.entries));
+    } catch {
+      // Keep the previous indicator if the feed cannot be reached.
+    }
+  }, [playerId]);
 
   useEffect(() => {
     const showTimer = window.setTimeout(() => {
@@ -200,6 +229,22 @@ export function Dashboard({
 
     setNavOpen(false);
   }, [avatarSlotsVisible]);
+
+  useEffect(() => {
+    if (!showChrome) {
+      return;
+    }
+
+    void refreshScribesUnread();
+
+    const pollTimer = window.setInterval(() => {
+      void refreshScribesUnread();
+    }, SCRIBES_POLL_MS);
+
+    return () => {
+      window.clearInterval(pollTimer);
+    };
+  }, [refreshScribesUnread, showChrome]);
 
   async function handlePlayAsHome(): Promise<void> {
     if (!clickable || !avatarSlotsVisible || avatarCreationOpen) {
@@ -229,8 +274,6 @@ export function Dashboard({
       setClickable(true);
     }, FADE_DURATION_MS);
   }
-
-  const showChrome = !hidden;
 
   return (
     <main
@@ -339,9 +382,21 @@ export function Dashboard({
           aria-label="Dashboard navigation"
           style={navWrapStyle}
         >
-          {RADIAL_BUTTONS.map((button) => (
+          {RADIAL_BUTTONS.map((button) => {
+            const scribesButtonShake =
+              button.label === 'News' &&
+              scribesUnread &&
+              !activityOpen &&
+              navOpen &&
+              !isNavButtonPressed('News');
+
+            return (
             <button
-              aria-label={button.label}
+              aria-label={
+                button.label === 'News' && scribesUnread && !activityOpen
+                  ? 'Scribes, new entries'
+                  : button.label
+              }
               disabled={!clickable || !navOpen}
               key={button.label}
               onPointerDown={() => {
@@ -353,7 +408,10 @@ export function Dashboard({
                   setActivityOpen(true);
                 }
                 if (button.label === 'Settings') {
-                  onSettings();
+                  setSettingsOpen(true);
+                }
+                if (button.label === 'Achievements') {
+                  setAchievementsOpen(true);
                 }
               }}
               style={{
@@ -373,13 +431,22 @@ export function Dashboard({
                 src={button.src}
                 style={{
                   ...imageStyle,
-                  animation: pressAnimation(isNavButtonPressed(button.label)),
+                  animation: scribesButtonShake
+                    ? 'morkahja-scribes-button-shake 2.8s ease-in-out infinite'
+                    : pressAnimation(isNavButtonPressed(button.label)),
                 }}
               />
             </button>
-          ))}
+            );
+          })}
           <button
-            aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+            aria-label={
+              scribesUnread && !activityOpen
+                ? 'Open navigation, unread scribes'
+                : navOpen
+                  ? 'Close navigation'
+                  : 'Open navigation'
+            }
             disabled={!clickable}
             onPointerDown={() => {
               pulseNavButton('Navigation');
@@ -395,6 +462,9 @@ export function Dashboard({
             }}
             type="button"
           >
+            {scribesUnread && !activityOpen ? (
+              <span aria-hidden="true" className="morkahja-scribes-unread-dot morkahja-party-slot-dot" />
+            ) : null}
             <img
               alt=""
               aria-hidden="true"
@@ -433,7 +503,28 @@ export function Dashboard({
           onClose={() => {
             setActivityOpen(false);
           }}
+          onReadStateChange={() => {
+            void refreshScribesUnread();
+          }}
           open={activityOpen}
+          playerId={playerId}
+        />
+      ) : null}
+      {showChrome ? (
+        <SettingsScreen
+          onClose={() => {
+            setSettingsOpen(false);
+          }}
+          onLogout={onLogout}
+          open={settingsOpen}
+        />
+      ) : null}
+      {showChrome ? (
+        <AchievementsOverlay
+          onClose={() => {
+            setAchievementsOpen(false);
+          }}
+          open={achievementsOpen}
         />
       ) : null}
     </main>

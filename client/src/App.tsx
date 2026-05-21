@@ -15,25 +15,24 @@ import {
   type PersistedAvatar,
 } from './api/http.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
-import AvatarSelect from './ui/avatar/AvatarSelect.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
+import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
+import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
-import SettingsScreen from './ui/settings/SettingsScreen.js';
-
-type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'avatar-select' | 'game' | 'settings';
+type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 const AVATAR_SELECTION_PREPARE_TIMEOUT_MS = 1800;
 const DEAD_AVATAR_IDS_STORAGE_KEY = 'morkahja.deadAvatarIds';
 
 function musicZoneForScreen(screen: AppScreen): MusicZone {
-  if (screen === 'dashboard' || screen === 'settings') {
+  if (screen === 'dashboard') {
     return 'menu';
   }
 
-  if (screen === 'avatar-select' || screen === 'game') {
+  if (screen === 'game') {
     return 'ambient';
   }
 
@@ -64,6 +63,40 @@ function saveDeadAvatarIds(ids: string[]): void {
   window.localStorage.setItem(
     DEAD_AVATAR_IDS_STORAGE_KEY,
     JSON.stringify([...new Set(ids)]),
+  );
+}
+
+function resetEnterHandoffState(
+  setGameEnterHandoff: (value: boolean) => void,
+  setHandoffLanded: (value: boolean) => void,
+  setAvatarEnterHandoff: (value: AvatarEnterHandoffSnapshot | null) => void,
+): void {
+  setGameEnterHandoff(false);
+  setHandoffLanded(false);
+  setAvatarEnterHandoff(null);
+}
+
+function uniqueAvatars(avatars: PersistedAvatar[]): PersistedAvatar[] {
+  const seen = new Set<string>();
+
+  return avatars.filter((avatar) => {
+    if (seen.has(avatar.id)) {
+      return false;
+    }
+
+    seen.add(avatar.id);
+    return true;
+  });
+}
+
+async function loadAvatarSelectionList(): Promise<PersistedAvatar[]> {
+  const storedAvatars = await fetchAvatars();
+  const deadAvatarIds = loadDeadAvatarIds();
+
+  await Promise.allSettled(deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)));
+
+  return uniqueAvatars(
+    storedAvatars.filter((avatar) => !deadAvatarIds.includes(avatar.id)),
   );
 }
 
@@ -109,8 +142,12 @@ export default function App() {
   const [excludedAvatarIds, setExcludedAvatarIds] = useState(loadDeadAvatarIds);
   const [avatarSelectionPreloading, setAvatarSelectionPreloading] = useState(false);
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
+  const [avatarSlotsVisible, setAvatarSlotsVisible] = useState(false);
   const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
   const [gameEnterHandoff, setGameEnterHandoff] = useState(false);
+  const [avatarEnterHandoff, setAvatarEnterHandoff] =
+    useState<AvatarEnterHandoffSnapshot | null>(null);
+  const [handoffLanded, setHandoffLanded] = useState(false);
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,
@@ -156,14 +193,10 @@ export default function App() {
 
       try {
         const storedAvatars = await Promise.race([
-          fetchAvatars(),
+          loadAvatarSelectionList(),
           timeout(AVATAR_SELECTION_PREPARE_TIMEOUT_MS),
         ]);
-        const deadAvatarIds = loadDeadAvatarIds();
-
-        await Promise.allSettled(deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)));
-
-        const avatars = storedAvatars.filter((avatar) => !deadAvatarIds.includes(avatar.id));
+        const avatars = storedAvatars;
 
         if (!cancelled) {
           setAvatarSelectionAvatars(avatars);
@@ -196,12 +229,7 @@ export default function App() {
     setAvatarSelectionPreloading(true);
 
     try {
-      const storedAvatars = await fetchAvatars();
-      const deadAvatarIds = loadDeadAvatarIds();
-
-      await Promise.allSettled(deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)));
-
-      const avatars = storedAvatars.filter((avatar) => !deadAvatarIds.includes(avatar.id));
+      const avatars = await loadAvatarSelectionList();
       setAvatarSelectionAvatars(avatars);
 
       if (avatars.length > 0) {
@@ -217,10 +245,29 @@ export default function App() {
     }
   }
 
+  function refreshAvatarSelectionInBackground(): void {
+    void (async () => {
+      try {
+        const avatars = await loadAvatarSelectionList();
+        setAvatarSelectionAvatars(avatars);
+
+        if (avatars.length > 0) {
+          void preloadAvatarSelectionAssets(avatars);
+        }
+
+        setAvatarSelectionPrepared(true);
+      } catch (error) {
+        console.error('Avatar selection refresh failed', error);
+      }
+    })();
+  }
+
   return (
     <BackgroundProvider>
       <PersistentBackground />
       <MusicEngine
+        ambientRace={screen === 'game' ? activeAvatar?.race : null}
+        ambientRole={screen === 'game' ? activeAvatar?.role : null}
         fadeOutSignal={musicFadeOutSignal}
         zone={musicZoneForScreen(screen)}
       >
@@ -240,31 +287,56 @@ export default function App() {
             onSessionReady={() => {
               setAvatarSelectionAvatars([]);
               setAvatarSelectionPrepared(false);
+              setAvatarSlotsVisible(false);
               setActiveAvatar(null);
               setActiveEncounter(null);
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
             }}
           />
         ) : null}
-        {screen === 'dashboard' ? (
+        {screen === 'dashboard' || gameEnterHandoff ? (
           <Dashboard
-            isPreparingAvatars={avatarSelectionPreloading}
-            onPlay={async () => {
-              await syncAvatarSelectionForPlay();
-              setScreen('avatar-select');
+            avatars={avatarSelectionAvatars}
+            avatarSlotsVisible={avatarSlotsVisible}
+            creationPreset={avatarCreationPreset}
+            excludedAvatarIds={excludedAvatarIds}
+            hidden={gameEnterHandoff}
+            isPreparingAvatars={avatarSelectionPreloading && !avatarSelectionPrepared}
+            onAvatarSlotsVisibleChange={setAvatarSlotsVisible}
+            onAvatarsChanged={setAvatarSelectionAvatars}
+            onCreationPresetConsumed={() => {
+              setAvatarCreationPreset(null);
             }}
-            onPlayPressed={() => {
+            onEnterGameComplete={() => {
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+              setAvatarSlotsVisible(false);
+            }}
+            onEnterHandoffChange={setAvatarEnterHandoff}
+            onEnterWorldFailed={() => {
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+              setScreen('dashboard');
+            }}
+            onHandoffLand={() => {
+              setHandoffLanded(true);
+            }}
+            onPlay={async () => {
+              if (avatarSelectionPrepared) {
+                refreshAvatarSelectionInBackground();
+                return;
+              }
+
+              await syncAvatarSelectionForPlay();
+            }}
+            onAvatarEnter={() => {
               setMusicFadeOutSignal((signal) => signal + 1);
             }}
-            onSettings={() => {
-              setScreen('settings');
-            }}
-          />
-        ) : null}
-        {screen === 'settings' ? (
-          <SettingsScreen
-            onBack={() => {
-              setScreen('dashboard');
+            onPrepareGame={(avatar, encounter) => {
+              setActiveAvatar(avatar);
+              setActiveEncounter(encounter);
+              setHandoffLanded(false);
+              setGameEnterHandoff(true);
+              setScreen('game');
             }}
             onLogout={() => {
               void logoutSession()
@@ -275,6 +347,7 @@ export default function App() {
                 .finally(() => {
                   setAvatarSelectionAvatars([]);
                   setAvatarSelectionPrepared(false);
+                  setAvatarSlotsVisible(false);
                   setActiveAvatar(null);
                   setActiveEncounter(null);
                   setScreen('gateway');
@@ -284,14 +357,16 @@ export default function App() {
         ) : null}
         {screen === 'game' && activeAvatar && activeEncounter ? (
           <GameEnvironment
-            deferReveal={gameEnterHandoff}
-            hideAvatarPortraitForHandoff={gameEnterHandoff}
+            deferReveal={gameEnterHandoff && !handoffLanded}
+            hideAvatarPortraitForHandoff={gameEnterHandoff && !handoffLanded}
             initialAvatar={activeAvatar}
             initialEncounter={activeEncounter}
             onHome={() => {
               setActiveAvatar(null);
               setActiveEncounter(null);
-              setScreen('avatar-select');
+              setAvatarSlotsVisible(false);
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+              setScreen('dashboard');
             }}
             onAvatarDeath={(presetAvatar) => {
               setExcludedAvatarIds((currentIds) => (
@@ -311,32 +386,19 @@ export default function App() {
               setActiveEncounter(null);
               setAvatarSelectionPrepared(true);
               setAvatarSelectionPreloading(false);
-              setScreen('avatar-select');
+              setAvatarSlotsVisible(true);
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+              setScreen('dashboard');
             }}
           />
         ) : null}
-        {screen === 'avatar-select' || gameEnterHandoff ? (
-          <AvatarSelect
-            avatars={avatarSelectionAvatars}
-            avatarsLoaded={avatarSelectionPrepared}
-            creationPreset={avatarCreationPreset}
-            excludedAvatarIds={excludedAvatarIds}
-            handoffOverlayOnly={gameEnterHandoff && screen === 'game'}
-            onCreationPresetConsumed={() => {
-              setAvatarCreationPreset(null);
-            }}
-            onBack={() => {
-              setScreen('dashboard');
-            }}
-            onPrepareGame={(avatar, encounter) => {
-              setActiveAvatar(avatar);
-              setActiveEncounter(encounter);
-              setGameEnterHandoff(true);
-              setScreen('game');
-            }}
-            onEnterGameComplete={() => {
-              setGameEnterHandoff(false);
-            }}
+        {avatarEnterHandoff ? (
+          <AvatarEnterHandoff
+            avatar={avatarEnterHandoff.avatar}
+            bounds={avatarEnterHandoff.bounds}
+            fading={avatarEnterHandoff.fading}
+            glowAtCenter={avatarEnterHandoff.phase === 'at-center'}
+            moveDurationMs={avatarEnterHandoff.moveDurationMs}
           />
         ) : null}
       </MusicEngine>

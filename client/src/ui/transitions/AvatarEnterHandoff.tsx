@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
 import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
-import { boundsToStyle, type Bounds } from './avatarEnterTransition.js';
+import { AVATAR_ENTER_FADE_MS, boundsToStyle, type Bounds } from './avatarEnterTransition.js';
 
 const motionStyle: CSSProperties = {
   transitionProperty: 'left, top, width, height',
@@ -18,11 +18,13 @@ const compositionFillStyle: CSSProperties = {
 export function AvatarEnterHandoff({
   avatar,
   bounds,
+  fading = false,
   glowAtCenter = false,
   moveDurationMs,
 }: {
   avatar: PersistedAvatar;
   bounds: Bounds;
+  fading?: boolean;
   glowAtCenter?: boolean;
   moveDurationMs: number;
 }) {
@@ -55,7 +57,9 @@ export function AvatarEnterHandoff({
       style={{
         ...boundsToStyle(animatedBounds),
         ...motionStyle,
-        transitionDuration: `${moveDurationMs}ms`,
+        opacity: fading ? 0 : 1,
+        transitionProperty: fading ? 'opacity' : motionStyle.transitionProperty,
+        transitionDuration: fading ? `${AVATAR_ENTER_FADE_MS}ms` : `${moveDurationMs}ms`,
       }}
     >
       <div

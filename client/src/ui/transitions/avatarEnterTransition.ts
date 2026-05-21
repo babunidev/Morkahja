@@ -1,5 +1,8 @@
 import type { CSSProperties } from 'react';
+import type { EncounterSnapshot, PersistedAvatar } from '../../api/http.js';
+import { selectAvatar } from '../../api/http.js';
 import { AVATAR_ENTER_TARGET_ATTR } from '../avatar/AvatarPortraitStack.js';
+import { waitForFade } from './fade.js';
 
 export const AVATAR_ENTER_FADE_MS = 420;
 export const AVATAR_ENTER_TO_CENTER_MS = 580;
@@ -8,6 +11,14 @@ export const AVATAR_ENTER_TO_GAME_MS = 680;
 export const AVATAR_ENTER_CENTER_SCALE = 1.12;
 
 export type AvatarEnterHandoffPhase = 'to-center' | 'at-center' | 'to-game';
+
+export interface AvatarEnterHandoffSnapshot {
+  avatar: PersistedAvatar;
+  bounds: Bounds;
+  moveDurationMs: number;
+  phase: AvatarEnterHandoffPhase;
+  fading?: boolean;
+}
 
 export interface Bounds {
   left: number;
@@ -48,7 +59,7 @@ export function boundsToStyle(bounds: Bounds): CSSProperties {
     margin: 0,
     padding: 0,
     boxSizing: 'border-box',
-    zIndex: 60,
+    zIndex: 250,
     pointerEvents: 'none',
   };
 }
@@ -82,7 +93,7 @@ export async function animateBounds(
   await waitMs(durationMs);
 }
 
-export async function waitForEnterTargetBounds(maxAttempts = 40): Promise<Bounds | null> {
+export async function waitForEnterTargetBounds(maxAttempts = 80): Promise<Bounds | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const target = document.querySelector(`[${AVATAR_ENTER_TARGET_ATTR}]`);
     if (target) {
@@ -96,4 +107,72 @@ export async function waitForEnterTargetBounds(maxAttempts = 40): Promise<Bounds
   }
 
   return null;
+}
+
+export async function runAvatarEnterHandoff({
+  candidate,
+  onEnterHandoffChange,
+  onHandoffLand,
+  onPrepareGame,
+  sourceElement,
+}: {
+  candidate: PersistedAvatar;
+  onEnterHandoffChange: (snapshot: AvatarEnterHandoffSnapshot | null) => void;
+  onHandoffLand?: () => void;
+  onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
+  sourceElement: HTMLElement;
+}): Promise<void> {
+  const fromBounds = readBounds(sourceElement);
+  onEnterHandoffChange({
+    avatar: candidate,
+    bounds: fromBounds,
+    moveDurationMs: 0,
+    phase: 'to-center',
+  });
+
+  const { avatar: selectedAvatar, encounter } = await selectAvatar(candidate);
+  onPrepareGame(selectedAvatar, encounter);
+  await waitForNextPaint();
+  await waitMs(80);
+
+  const centerTarget = centerBounds(fromBounds);
+  await waitForNextPaint();
+  onEnterHandoffChange({
+    avatar: selectedAvatar,
+    bounds: centerTarget,
+    moveDurationMs: AVATAR_ENTER_TO_CENTER_MS,
+    phase: 'to-center',
+  });
+  await waitMs(AVATAR_ENTER_TO_CENTER_MS);
+
+  onEnterHandoffChange({
+    avatar: selectedAvatar,
+    bounds: centerTarget,
+    moveDurationMs: 0,
+    phase: 'at-center',
+  });
+  await waitMs(AVATAR_ENTER_CENTER_GLOW_MS);
+
+  const gameTarget = await waitForEnterTargetBounds();
+  if (gameTarget) {
+    await waitForNextPaint();
+    onEnterHandoffChange({
+      avatar: selectedAvatar,
+      bounds: gameTarget,
+      moveDurationMs: AVATAR_ENTER_TO_GAME_MS,
+      phase: 'to-game',
+    });
+    await waitMs(AVATAR_ENTER_TO_GAME_MS);
+  }
+
+  onHandoffLand?.();
+  onEnterHandoffChange({
+    avatar: selectedAvatar,
+    bounds: gameTarget ?? centerTarget,
+    moveDurationMs: AVATAR_ENTER_FADE_MS,
+    phase: 'to-game',
+    fading: true,
+  });
+  await waitForFade();
+  onEnterHandoffChange(null);
 }
