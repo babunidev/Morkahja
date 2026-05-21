@@ -1843,11 +1843,11 @@
     "mSolutionID": 10185,
     "mSolutionIconName": "10185_cleanse",
     "mSolutionInventoryType": 1,
-    "mSolutionName": "Luminous Gaze",
-    "mSolutionRewardType": 40,
-    "mSolutionText": "The Rokur draws from Solriel's radiant light, illuminating hidden paths, secrets, or treasures, even in the darkest of places.",
-    "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionName": "Purifying Cleanse",
+    "mSolutionRewardType": 1,
+    "mSolutionText": "Channels a purifying force to burn away impurities, curses, and harmful energies, cleansing objects or beings of corrupting influence.",
+    "mSolutionType": 27,
+    "mSolutionUses": 2
   },
   "10186": {
     "mSolutionID": 10186,
