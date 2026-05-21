@@ -7,7 +7,11 @@ import type {
   InventoryItem,
 } from '../../../api/http.js';
 import { DICE_SOUND, playSfx, SOLUTION_SOUND } from '../../sfx.js';
-import { fadeTransition } from '../../transitions/fade.js';
+import {
+  ENCOUNTER_ACTIONS_FADE_DURATION_MS,
+  ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
+  encounterActionsFadeTransition,
+} from '../../transitions/fade.js';
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const DICE_BUTTON = '/UI/09_GAME/im_button_dice_a.webp';
@@ -23,6 +27,7 @@ interface SolutionRecord {
 }
 
 interface VisibleSolutionSlot {
+  available: boolean;
   imageSrc: string;
   isPrimary: boolean;
   name: string;
@@ -31,11 +36,20 @@ interface VisibleSolutionSlot {
   uses: number;
 }
 
+const UNAVAILABLE_SOLUTION_OPACITY = 0.65;
+
 interface SolutionTooltipState {
-  text: string;
+  detail: string;
+  name: string;
+  unavailable: boolean;
   x: number;
   y: number;
 }
+
+const unavailableTooltipDetailStyle: CSSProperties = {
+  color: '#ff5c52',
+  opacity: 0.42,
+};
 
 const solutionBlockStyle: CSSProperties = {
   position: 'absolute',
@@ -51,7 +65,7 @@ const solutionBlockStyle: CSSProperties = {
   transform: 'translateX(-50%)',
   zIndex: 20,
   overflow: 'visible',
-  transition: fadeTransition,
+  pointerEvents: 'none',
 };
 
 const frameMaskStyle: CSSProperties = {
@@ -65,7 +79,7 @@ const frameMaskStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
-const solutionSlotsStyle: CSSProperties = {
+const solutionActionsLayerStyle: CSSProperties = {
   gridArea: '1 / 1',
   zIndex: 7,
   width: '82%',
@@ -74,6 +88,7 @@ const solutionSlotsStyle: CSSProperties = {
   alignItems: 'center',
   justifyItems: 'center',
   columnGap: 10,
+  transition: encounterActionsFadeTransition,
 };
 
 const SOLUTION_ACTION_SIZE_PX = 83;
@@ -97,7 +112,6 @@ const diceButtonStyle: CSSProperties = {
   border: 0,
   background: 'transparent',
   cursor: 'pointer',
-  transition: fadeTransition,
 };
 
 const diceSlotStyle: CSSProperties = {
@@ -205,6 +219,31 @@ function secondaryRequirement(
   }
 }
 
+function previewSolutionForRequirement(
+  primaryId: number,
+  secondaryType: number,
+): { isPrimary: boolean; solution: SolutionRecord } | null {
+  if (primaryId > 0) {
+    const solution = solutionsById[String(primaryId)];
+
+    if (solution) {
+      return { isPrimary: true, solution };
+    }
+  }
+
+  if (secondaryType > 0) {
+    const solution = Object.values(solutionsById).find(
+      (record) => record.mSolutionType === secondaryType,
+    );
+
+    if (solution) {
+      return { isPrimary: false, solution };
+    }
+  }
+
+  return null;
+}
+
 function solutionForSlot(
   encounter: EncounterSnapshot,
   inventory: AvatarInventory | undefined,
@@ -213,6 +252,11 @@ function solutionForSlot(
   const items = inventoryItems(inventory);
   const primaryId = primaryRequirement(encounter, slot);
   const secondaryType = secondaryRequirement(encounter, slot);
+
+  if (primaryId <= 0 && secondaryType <= 0) {
+    return null;
+  }
+
   const primaryMatch = primaryId > 0
     ? items.find((item) => item.solutionId === primaryId)
     : undefined;
@@ -223,23 +267,38 @@ function solutionForSlot(
     : undefined;
   const matchedItem = primaryMatch ?? secondaryMatch;
 
-  if (!matchedItem) {
-    return null;
+  if (matchedItem) {
+    const solution = solutionsById[String(matchedItem.solutionId)];
+
+    if (!solution) {
+      return null;
+    }
+
+    return {
+      available: true,
+      imageSrc: solutionImagePath(solution),
+      isPrimary: matchedItem.solutionId === primaryMatch?.solutionId,
+      name: solution.mSolutionName,
+      solutionId: matchedItem.solutionId,
+      slot,
+      uses: matchedItem.uses,
+    };
   }
 
-  const solution = solutionsById[String(matchedItem.solutionId)];
+  const preview = previewSolutionForRequirement(primaryId, secondaryType);
 
-  if (!solution) {
+  if (!preview) {
     return null;
   }
 
   return {
-    imageSrc: solutionImagePath(solution),
-    isPrimary: matchedItem.solutionId === primaryMatch?.solutionId,
-    name: solution.mSolutionName,
-    solutionId: matchedItem.solutionId,
+    available: false,
+    imageSrc: solutionImagePath(preview.solution),
+    isPrimary: preview.isPrimary,
+    name: preview.solution.mSolutionName,
+    solutionId: preview.solution.mSolutionID,
     slot,
-    uses: matchedItem.uses,
+    uses: 0,
   };
 }
 
@@ -265,11 +324,13 @@ function rollForSolutionSlot(
 }
 
 export function SolutionBlock({
+  encounterRevealKey,
   hidden = false,
   onActionReveal,
   encounter,
   inventory,
 }: {
+  encounterRevealKey: string;
   hidden?: boolean;
   onActionReveal?: (
     action: EncounterAction,
@@ -279,9 +340,29 @@ export function SolutionBlock({
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
 }) {
+  const [actionsVisible, setActionsVisible] = useState(false);
+  const [actionsInteractive, setActionsInteractive] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
   const [solutionTooltip, setSolutionTooltip] = useState<SolutionTooltipState | null>(null);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
+
+  useEffect(() => {
+    setActionsVisible(false);
+    setActionsInteractive(false);
+    setSolutionTooltip(null);
+
+    const revealTimer = window.setTimeout(() => {
+      setActionsVisible(true);
+    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
+    const interactiveTimer = window.setTimeout(() => {
+      setActionsInteractive(true);
+    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + ENCOUNTER_ACTIONS_FADE_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(revealTimer);
+      window.clearTimeout(interactiveTimer);
+    };
+  }, [encounterRevealKey]);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
   const solutionSlots = ['A', 'B', 'dice', 'C', 'D'] as const;
@@ -304,10 +385,16 @@ export function SolutionBlock({
     setActiveSolutionSlot(null);
   }
 
+  const actionsReady = actionsInteractive && !hidden;
+
   function showSolutionTooltip(
     solution: VisibleSolutionSlot,
     event: { currentTarget: HTMLButtonElement },
   ): void {
+    if (!actionsReady) {
+      return;
+    }
+
     const blockRect = blockRef.current?.getBoundingClientRect();
     const buttonRect = event.currentTarget.getBoundingClientRect();
     const x = blockRect
@@ -318,7 +405,11 @@ export function SolutionBlock({
       : 0;
 
     setSolutionTooltip({
-      text: `${solution.name}\nCharges: ${solution.uses}`,
+      detail: solution.available
+        ? `Charges: ${solution.uses}`
+        : 'Not in your inventory',
+      name: solution.name,
+      unavailable: !solution.available,
       x,
       y,
     });
@@ -329,6 +420,10 @@ export function SolutionBlock({
   }
 
   function handleDiceClick(): void {
+    if (!actionsReady) {
+      return;
+    }
+
     clearRollRevealTimer();
 
     onActionReveal?.('dice', null);
@@ -341,6 +436,10 @@ export function SolutionBlock({
   }
 
   function handleSolutionClick(solution: VisibleSolutionSlot): void {
+    if (!actionsReady) {
+      return;
+    }
+
     clearRollRevealTimer();
     hideSolutionTooltip();
 
@@ -358,11 +457,7 @@ export function SolutionBlock({
   return (
     <div
       ref={blockRef}
-      style={{
-        ...solutionBlockStyle,
-        opacity: hidden ? 0 : 1,
-        pointerEvents: hidden ? 'none' : 'auto',
-      }}
+      style={solutionBlockStyle}
     >
       <style>
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
@@ -374,16 +469,27 @@ export function SolutionBlock({
         src={FRAME_MASK}
         style={frameMaskStyle}
       />
-      <div aria-label="Solution actions" style={solutionSlotsStyle}>
+      <div
+        aria-label="Solution actions"
+        style={{
+          ...solutionActionsLayerStyle,
+          opacity: hidden || !actionsVisible ? 0 : 1,
+          pointerEvents: actionsReady ? 'auto' : 'none',
+          transition: hidden ? 'opacity 0ms' : solutionActionsLayerStyle.transition,
+        }}
+      >
         {solutionSlots.map((slot) => {
           if (slot === 'dice') {
             return (
             <div key={slot} style={diceSlotStyle}>
               <button
+                aria-disabled={!actionsReady}
                 aria-label="Roll dice"
+                disabled={!actionsReady}
                 onClick={handleDiceClick}
                 style={{
                   ...diceButtonStyle,
+                  cursor: actionsReady ? 'pointer' : 'default',
                 }}
                 type="button"
               >
@@ -404,9 +510,19 @@ export function SolutionBlock({
 
           const visibleSlot = visibleSlots[slot];
 
-          return visibleSlot ? (
+          if (!visibleSlot) {
+            return <span aria-hidden="true" key={slot} />;
+          }
+
+          return (
               <button
-                aria-label={`Use ${visibleSlot.name} in slot ${slot}`}
+                aria-disabled={!actionsReady || !visibleSlot.available}
+                aria-label={
+                  visibleSlot.available
+                    ? `Use ${visibleSlot.name} in slot ${slot}`
+                    : `${visibleSlot.name} required for slot ${slot}, not available`
+                }
+                disabled={!actionsReady || !visibleSlot.available}
                 key={slot}
                 onBlur={hideSolutionTooltip}
                 onFocus={(event) => {
@@ -418,16 +534,25 @@ export function SolutionBlock({
                 }}
                 onPointerLeave={hideSolutionTooltip}
                 onClick={() => {
+                  if (!actionsReady || !visibleSlot.available) {
+                    return;
+                  }
+
                   handleSolutionClick(visibleSlot);
                 }}
-                style={solutionButtonStyle}
+                style={{
+                  ...solutionButtonStyle,
+                  cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
+                  opacity: visibleSlot.available ? 1 : UNAVAILABLE_SOLUTION_OPACITY,
+                }}
                 type="button"
               >
                 <span
                   style={{
                     ...solutionIconShellStyle,
+                    cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
-                    ...(visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
+                    ...(visibleSlot.available && visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
                   }}
                 >
                   <img
@@ -439,7 +564,7 @@ export function SolutionBlock({
                   />
                 </span>
               </button>
-            ) : <span aria-hidden="true" key={slot} />;
+            );
         })}
       </div>
       {solutionTooltip ? (
@@ -449,10 +574,16 @@ export function SolutionBlock({
             ...solutionTooltipStyle,
             left: solutionTooltip.x,
             top: solutionTooltip.y,
-            whiteSpace: 'pre-line',
           }}
         >
-          {solutionTooltip.text}
+          <div>{solutionTooltip.name}</div>
+          <div
+            style={
+              solutionTooltip.unavailable ? unavailableTooltipDetailStyle : undefined
+            }
+          >
+            {solutionTooltip.detail}
+          </div>
         </div>
       ) : null}
     </div>

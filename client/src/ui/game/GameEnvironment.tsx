@@ -12,7 +12,12 @@ import {
 } from '../../api/http.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
-import { fadeStyle, waitForFade } from '../transitions/fade.js';
+import {
+  ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
+  encounterFadeTransition,
+  fadeStyle,
+  waitForFade,
+} from '../transitions/fade.js';
 import EncounterHeader from './blocks/EncounterHeader.js';
 import EncounterImageBlock from './blocks/EncounterImageBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
@@ -79,6 +84,14 @@ function delayStyle(visible: boolean, order: number): CSSProperties {
   return {
     ...fadeStyle(visible),
     transitionDelay: visible ? `${order * 120}ms` : '0ms',
+  };
+}
+
+function encounterRevealStyle(visible: boolean, delayMs = 120): CSSProperties {
+  return {
+    opacity: visible ? 1 : 0,
+    transition: encounterFadeTransition,
+    transitionDelay: visible ? `${delayMs}ms` : '0ms',
   };
 }
 
@@ -370,7 +383,11 @@ export function GameEnvironment({
                 title={title}
               />
             </div>
-            <div style={{ ...encounterImageSlotStyle, ...delayStyle(visible, 1) }}>
+            <div style={{
+              ...encounterImageSlotStyle,
+              ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
+            }}
+            >
               <EncounterImageBlock
                 encounter={encounter}
                 imageSrc={imagePath(encounterImageName)}

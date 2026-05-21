@@ -8,8 +8,11 @@ import { addYellowRedGem } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
+import { ENCOUNTER_FADE_DURATION_MS, encounterFadeTransition } from '../../transitions/fade.js';
 import ResultBlock from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
+
+const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
 
 const blockStyle: CSSProperties = {
   width: '100%',
@@ -32,7 +35,7 @@ const imageStyle: CSSProperties = {
   height: '100%',
   objectFit: 'cover',
   zIndex: 1,
-  transition: 'opacity 420ms ease',
+  transition: encounterFadeTransition,
 };
 
 const previousImageStyle: CSSProperties = {
@@ -61,7 +64,7 @@ const missingImageStyle: CSSProperties = {
   lineHeight: 1.35,
   textAlign: 'center',
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
-  transition: 'opacity 420ms ease',
+  transition: encounterFadeTransition,
 };
 
 function imageFileName(imageSrc: string): string {
@@ -131,12 +134,12 @@ export function EncounterImageBlock({
         setUnderlayHoldSrc(imageSrc);
         setTransitionImageSrc(null);
       }
-    }, 420);
+    }, ENCOUNTER_FADE_DURATION_MS);
     const releaseTimer = window.setTimeout(() => {
       if (!cancelled) {
         setUnderlayHoldSrc(null);
       }
-    }, 520);
+    }, ENCOUNTER_FADE_DURATION_MS + ENCOUNTER_IMAGE_RELEASE_BUFFER_MS);
 
     return () => {
       cancelled = true;
@@ -234,12 +237,14 @@ export function EncounterImageBlock({
           void handleContinue();
         }}
         prosperityRewardId={encounter.prosperityRewardId}
+        resolutionAction={revealedRoll !== null ? selectedAction : null}
         rewardIds={encounter.rewardIds}
         roll={revealedRoll}
         usedSolutionId={selectedSolutionId}
       />
       <SolutionBlock
         encounter={encounter}
+        encounterRevealKey={encounter.snapshotId}
         hidden={revealedRoll !== null || loreOpen || inventoryOpen || skillbookOpen}
         inventory={inventory}
         onActionReveal={handleActionReveal}

@@ -169,7 +169,7 @@ export function AvatarPanel({
 
   return (
     <article aria-label={`${avatar.name}, level ${avatar.level}`} style={panelStyle}>
-      <div style={portraitWrapStyle}>
+      <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
         <button
           aria-expanded={showDetails}
           aria-label={`Show details for ${avatar.name}`}

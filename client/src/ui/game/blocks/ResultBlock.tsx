@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { AvatarInventory } from '../../../api/http.js';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
 import {
   interpretRoll,
@@ -9,18 +9,26 @@ import {
   usedEncounterSolution,
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
+import {
+  playLossFlightsFromAvatar,
+  playRewardFlights,
+  rewardFlyTargetKind,
+  type LossFlightSpec,
+  type RewardFlightSpec,
+} from '../rewardFlyAnimation.js';
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { fadeTransition } from '../../transitions/fade.js';
 
 const RESULT_BACKGROUND = '/UI/09_GAME/im_bg_result.webp';
 const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
+const DICE_OUTCOME_ICON = '/UI/09_GAME/im_button_dice_a.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const ESSENCE_INVENTORY_TYPE = 3;
 const LEVEL_UP_ENCOUNTER_ID = 2;
-const CONTINUE_ANIMATION_MS = 1000;
-
 interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
+  mSolutionInventoryType: number;
   mSolutionName: string;
   mSolutionUses: number;
 }
@@ -82,9 +90,17 @@ const continueImageStyle: CSSProperties = {
   filter: 'drop-shadow(0 5px 9px rgba(0, 0, 0, 0.45))',
 };
 
+const CONTINUE_BOUNCE_MS = 1000;
+
 const continueAnimatingStyle: CSSProperties = {
-  animation: 'morkahja-continue-bounce-right 1000ms ease-in-out',
+  animation: `morkahja-continue-bounce-right ${CONTINUE_BOUNCE_MS}ms ease-in-out`,
 };
+
+function waitContinueBounce(): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, CONTINUE_BOUNCE_MS);
+  });
+}
 
 const outcomeClusterStyle: CSSProperties = {
   gridArea: '1 / 1',
@@ -95,6 +111,7 @@ const outcomeClusterStyle: CSSProperties = {
   justifyContent: 'center',
   gap: 'clamp(8px, 2.4vw, 14px)',
   maxWidth: '88%',
+  transform: 'translateX(-14px)',
   zIndex: 12,
   pointerEvents: 'auto',
 };
@@ -134,13 +151,18 @@ const rewardItemStyle: CSSProperties = {
   cursor: 'help',
 };
 
-const rewardImageStyle: CSSProperties = {
-  width: 52,
-  height: 52,
+const solutionIconImageBaseStyle: CSSProperties = {
   borderRadius: '50%',
   objectFit: 'cover',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  boxShadow: '0 0 12px rgba(255, 204, 102, 0.42), 0 5px 10px rgba(0, 0, 0, 0.46)',
+};
+
+const rewardImageStyle: CSSProperties = {
+  ...solutionIconImageBaseStyle,
+  width: 64,
+  height: 64,
+  boxShadow: '0 0 14px rgba(255, 204, 102, 0.38), 0 6px 12px rgba(0, 0, 0, 0.46)',
+  animation: 'morkahja-reward-shake 3.2s ease-in-out infinite',
+  transformOrigin: '50% 50%',
 };
 
 const usedSolutionItemStyle: CSSProperties = {
@@ -149,10 +171,9 @@ const usedSolutionItemStyle: CSSProperties = {
 };
 
 const usedSolutionImageStyle: CSSProperties = {
-  ...rewardImageStyle,
+  ...solutionIconImageBaseStyle,
   width: 48,
   height: 48,
-  border: '1px solid rgba(247, 239, 224, 0.72)',
   boxShadow: '0 0 10px rgba(247, 239, 224, 0.28), 0 5px 10px rgba(0, 0, 0, 0.46)',
 };
 
@@ -162,12 +183,37 @@ const lossRowStyle: CSSProperties = {
   zIndex: 11,
 };
 
-const lossImageStyle: CSSProperties = {
-  ...rewardImageStyle,
+const lossItemImageStyle: CSSProperties = {
+  ...solutionIconImageBaseStyle,
+  width: 52,
+  height: 52,
   border: '1px solid rgba(255, 96, 72, 0.9)',
   boxShadow:
     '0 0 14px rgba(255, 56, 40, 0.72), 0 0 26px rgba(180, 18, 8, 0.5), 0 5px 10px rgba(0, 0, 0, 0.46)',
 };
+
+const lossEssenceImageStyle: CSSProperties = {
+  ...lossItemImageStyle,
+  width: 60,
+  height: 60,
+};
+
+const diceOutcomeIconStyle: CSSProperties = {
+  width: 48,
+  height: 'auto',
+  flex: '0 0 auto',
+  filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5))',
+};
+
+function lossIconSize(inventoryType: number): number {
+  return inventoryType === ESSENCE_INVENTORY_TYPE ? 60 : 52;
+}
+
+function lossIconStyle(inventoryType: number): CSSProperties {
+  return inventoryType === ESSENCE_INVENTORY_TYPE
+    ? lossEssenceImageStyle
+    : lossItemImageStyle;
+}
 
 const rewardTooltipStyle: CSSProperties = {
   position: 'absolute',
@@ -234,6 +280,7 @@ export function ResultBlock({
   inventory,
   onContinue,
   prosperityRewardId,
+  resolutionAction = null,
   rewardIds = [],
   roll,
   usedSolutionId = null,
@@ -243,17 +290,21 @@ export function ResultBlock({
   encounterId: number;
   hidden?: boolean;
   inventory?: AvatarInventory;
-  onContinue: () => void;
+  onContinue: () => void | Promise<void>;
   prosperityRewardId?: number | null;
+  resolutionAction?: EncounterAction | null;
   rewardIds?: number[];
   roll: number | null;
   usedSolutionId?: number | null;
 }) {
-  const [continueAnimating, setContinueAnimating] = useState(false);
+  const [continueBusy, setContinueBusy] = useState(false);
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
+  const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
+  const [lossesRevealed, setLossesRevealed] = useState(true);
   const blockRef = useRef<HTMLDivElement | null>(null);
-  const continueTimer = useRef<number | null>(null);
+  const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
+  const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const outcome = roll === null ? null : interpretRoll(roll);
   const visible = roll !== null;
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
@@ -294,28 +345,129 @@ export function ResultBlock({
     return visibleRewards;
   }, []);
 
+  const lossesKey = useMemo(
+    () => losses.map((loss) => `${loss.solution.mSolutionID}:${loss.quantity}`).join('|'),
+    [losses],
+  );
+
   useEffect(() => {
     setOutcomeShowsRoll(false);
-  }, [roll]);
+    setRewardsFlyingAway(false);
+    setLossesRevealed(losses.length === 0);
+    rewardButtonRefs.current.clear();
+    lossButtonRefs.current.clear();
+  }, [roll, losses.length]);
 
-  useEffect(() => () => {
-    if (continueTimer.current !== null) {
-      window.clearTimeout(continueTimer.current);
+  useEffect(() => {
+    if (roll === null || losses.length === 0) {
+      return undefined;
     }
-  }, []);
 
-  function handleContinueClick(): void {
-    if (disabled || hidden || !visible || continueAnimating) {
+    let cancelled = false;
+    setLossesRevealed(false);
+
+    async function playLossRevealFlights(): Promise<void> {
+      await new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            resolve();
+          });
+        });
+      });
+
+      if (cancelled) {
+        return;
+      }
+
+      const flights: LossFlightSpec[] = [];
+
+      for (const loss of losses) {
+        const solutionId = loss.solution.mSolutionID;
+        const button = lossButtonRefs.current.get(solutionId)
+          ?? document.querySelector<HTMLButtonElement>(
+            `[data-loss-fly-target="${solutionId}"]`,
+          );
+        const targetRect = button?.getBoundingClientRect();
+
+        if (!targetRect || targetRect.width <= 0 || targetRect.height <= 0) {
+          continue;
+        }
+
+        flights.push({
+          id: `loss-fly-${solutionId}`,
+          imageSrc: solutionImagePath(loss.solution),
+          size: lossIconSize(loss.solution.mSolutionInventoryType),
+          targetRect,
+        });
+      }
+
+      if (flights.length > 0) {
+        await playLossFlightsFromAvatar(flights);
+      }
+
+      if (!cancelled) {
+        setLossesRevealed(true);
+      }
+    }
+
+    void playLossRevealFlights();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [roll, lossesKey]);
+
+  function buildRewardFlights(): RewardFlightSpec[] {
+    const flights: RewardFlightSpec[] = [];
+
+    for (const reward of rewards) {
+      const solutionId = reward.solution.mSolutionID;
+      const button = rewardButtonRefs.current.get(solutionId)
+        ?? document.querySelector<HTMLButtonElement>(
+          `[data-reward-fly-source="${solutionId}"]`,
+        );
+      const sourceRect = button?.getBoundingClientRect();
+
+      if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+        continue;
+      }
+
+      flights.push({
+        id: `reward-fly-${reward.solution.mSolutionID}`,
+        imageSrc: solutionImagePath(reward.solution),
+        size: 64,
+        sourceRect,
+        target: rewardFlyTargetKind(reward.solution.mSolutionInventoryType),
+      });
+    }
+
+    return flights;
+  }
+
+  async function handleContinueClick(): Promise<void> {
+    if (disabled || hidden || !visible || continueBusy) {
       return;
     }
 
+    setContinueBusy(true);
     playSfx(CONTINUE_SOUND);
-    setContinueAnimating(true);
-    continueTimer.current = window.setTimeout(() => {
-      continueTimer.current = null;
-      setContinueAnimating(false);
-      onContinue();
-    }, CONTINUE_ANIMATION_MS);
+    hideItemTooltip();
+
+    try {
+      const flights = buildRewardFlights();
+
+      if (flights.length > 0) {
+        setRewardsFlyingAway(true);
+        await playRewardFlights(flights);
+      } else {
+        await waitContinueBounce();
+      }
+
+      await Promise.resolve(onContinue());
+    } finally {
+      setRewardsFlyingAway(false);
+      setContinueBusy(false);
+    }
   }
 
   function showItemTooltip(
@@ -348,10 +500,25 @@ export function ResultBlock({
     imageStyle: CSSProperties,
     buttonStyle: CSSProperties = rewardItemStyle,
   ) {
+    const trackRewardRef = sign === '+';
+
     return (
       <button
         aria-label={`${change.solution.mSolutionName}, ${sign === 'used' ? 'used' : `quantity ${change.quantity}`}`}
+        data-reward-fly-source={trackRewardRef ? change.solution.mSolutionID : undefined}
         key={`${sign}-${change.solution.mSolutionID}`}
+        ref={(element) => {
+          if (!trackRewardRef) {
+            return;
+          }
+
+          if (element) {
+            rewardButtonRefs.current.set(change.solution.mSolutionID, element);
+            return;
+          }
+
+          rewardButtonRefs.current.delete(change.solution.mSolutionID);
+        }}
         onBlur={hideItemTooltip}
         onFocus={(event) => {
           showItemTooltip(change, sign, event);
@@ -375,6 +542,49 @@ export function ResultBlock({
     );
   }
 
+  function renderLossIcon(loss: EncounterInventoryChange) {
+    const imageStyle = {
+      ...lossIconStyle(loss.solution.mSolutionInventoryType),
+      opacity: lossesRevealed ? 1 : 0,
+      transition: lossesRevealed ? 'opacity 180ms ease' : 'none',
+    };
+
+    return (
+      <button
+        aria-label={`${loss.solution.mSolutionName}, quantity ${loss.quantity}`}
+        data-loss-fly-target={loss.solution.mSolutionID}
+        key={`loss-${loss.solution.mSolutionID}`}
+        ref={(element) => {
+          if (element) {
+            lossButtonRefs.current.set(loss.solution.mSolutionID, element);
+            return;
+          }
+
+          lossButtonRefs.current.delete(loss.solution.mSolutionID);
+        }}
+        onBlur={hideItemTooltip}
+        onFocus={(event) => {
+          showItemTooltip(loss, '-', event);
+        }}
+        onPointerCancel={hideItemTooltip}
+        onPointerEnter={(event) => {
+          showItemTooltip(loss, '-', event);
+        }}
+        onPointerLeave={hideItemTooltip}
+        style={rewardItemStyle}
+        type="button"
+      >
+        <img
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          src={solutionImagePath(loss.solution)}
+          style={imageStyle}
+        />
+      </button>
+    );
+  }
+
   return (
     <div
       aria-hidden={roll === null}
@@ -385,7 +595,14 @@ export function ResultBlock({
       }}
     >
       <style>
-        {'@keyframes morkahja-continue-bounce-right { 0% { transform: translateX(0) scale(1); filter: brightness(1); } 14% { transform: translateX(10px) scale(1.035); filter: brightness(1.12); } 28% { transform: translateX(2px) scale(0.995); } 42% { transform: translateX(13px) scale(1.04); filter: brightness(1.18); } 58% { transform: translateX(3px) scale(0.998); } 74% { transform: translateX(16px) scale(1.045); filter: brightness(1.24); } 88% { transform: translateX(6px) scale(1.01); } 100% { transform: translateX(0) scale(1); filter: brightness(1); } }'}
+        {`@keyframes morkahja-continue-bounce-right { 0% { transform: translateX(0) scale(1); filter: brightness(1); } 14% { transform: translateX(10px) scale(1.035); filter: brightness(1.12); } 28% { transform: translateX(2px) scale(0.995); } 42% { transform: translateX(13px) scale(1.04); filter: brightness(1.18); } 58% { transform: translateX(3px) scale(0.998); } 74% { transform: translateX(16px) scale(1.045); filter: brightness(1.24); } 88% { transform: translateX(6px) scale(1.01); } 100% { transform: translateX(0) scale(1); filter: brightness(1); } }
+@keyframes morkahja-reward-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-1.4deg); }
+  40% { transform: rotate(1.2deg); }
+  60% { transform: rotate(-0.9deg); }
+  80% { transform: rotate(0.8deg); }
+}`}
       </style>
       <img
         alt=""
@@ -396,14 +613,16 @@ export function ResultBlock({
       />
       <button
         aria-label="Continue"
-        disabled={disabled || continueAnimating}
-        onClick={handleContinueClick}
+        disabled={disabled || continueBusy}
+        onClick={() => {
+          void handleContinueClick();
+        }}
         style={{
           ...continueButtonStyle,
-          ...(continueAnimating ? continueAnimatingStyle : {}),
-          cursor: disabled || continueAnimating ? 'default' : 'pointer',
+          ...(continueBusy ? continueAnimatingStyle : {}),
+          cursor: disabled || continueBusy ? 'default' : 'pointer',
           opacity: disabled ? 0.64 : 1,
-          pointerEvents: visible && !hidden ? 'auto' : 'none',
+          pointerEvents: visible && !hidden && !continueBusy ? 'auto' : 'none',
         }}
         type="button"
       >
@@ -415,7 +634,7 @@ export function ResultBlock({
           style={continueImageStyle}
         />
       </button>
-      {rewards.length > 0 ? (
+      {rewards.length > 0 && !rewardsFlyingAway ? (
         <div aria-label="Predetermined rewards" style={rewardRowStyle}>
           {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
@@ -430,6 +649,15 @@ export function ResultBlock({
               usedSolutionItemStyle,
             )
             : null}
+          {resolutionAction === 'dice' ? (
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={DICE_OUTCOME_ICON}
+              style={diceOutcomeIconStyle}
+            />
+          ) : null}
           <button
             aria-label={outcomeShowsRoll ? `Roll ${roll}` : `${outcome}, show roll`}
             className="morkahja-result-outcome"
@@ -445,7 +673,7 @@ export function ResultBlock({
       ) : null}
       {losses.length > 0 ? (
         <div aria-label="Encounter losses" style={lossRowStyle}>
-          {losses.map((loss) => renderSolutionIcon(loss, '-', lossImageStyle))}
+          {losses.map((loss) => renderLossIcon(loss))}
         </div>
       ) : null}
       {itemTooltip ? (

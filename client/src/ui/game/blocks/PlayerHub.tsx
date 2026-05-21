@@ -220,6 +220,9 @@ export function PlayerHub({
           {FOOTER_BUTTONS.map((button, index) => (
             <button
               aria-label={index === 0 ? 'Action log' : button.alt}
+              data-morkahja-footer-target={
+                index === 1 ? 'skillbook' : index === 2 ? 'inventory' : undefined
+              }
               key={button.alt}
               onClick={(event) => {
                 if (index === 0) {
