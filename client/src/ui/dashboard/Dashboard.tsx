@@ -1,14 +1,15 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import type { EncounterSnapshot, PersistedAvatar } from '../../api/http.js';
+import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
+import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
-import { fadeStyle, waitForFade } from '../transitions/fade.js';
+import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 
 const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
 const NAV_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_nav_b.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const LOADING_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
-const PLAY_ANIMATION_MS = 3000;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
@@ -47,6 +48,14 @@ const screenStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+const dashboardColumnStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+};
+
 const buttonStyle: CSSProperties = {
   width: 'min(58vw, 360px)',
   padding: 0,
@@ -54,10 +63,6 @@ const buttonStyle: CSSProperties = {
   background: 'transparent',
   cursor: 'pointer',
   pointerEvents: 'auto',
-};
-
-const buttonAnimatingStyle: CSSProperties = {
-  animation: 'morkahja-play-grow 3000ms ease-in-out forwards',
 };
 
 const playWrapStyle: CSSProperties = {
@@ -92,6 +97,7 @@ const navWrapStyle: CSSProperties = {
   display: 'grid',
   placeItems: 'center',
   pointerEvents: 'auto',
+  transition: 'opacity 420ms ease, transform 420ms ease',
 };
 
 const navButtonStyle: CSSProperties = {
@@ -127,20 +133,47 @@ const radialButtonStyle: CSSProperties = {
 };
 
 export function Dashboard({
+  avatars = [],
+  creationPreset = null,
+  excludedAvatarIds = [],
+  hidden = false,
   isPreparingAvatars = false,
+  avatarSlotsVisible = false,
+  onAvatarSlotsVisibleChange,
+  onAvatarsChanged,
+  onCreationPresetConsumed,
+  onEnterGameComplete,
+  onEnterHandoffChange,
+  onEnterWorldFailed,
+  onHandoffLand,
+  onAvatarEnter,
   onPlay,
-  onPlayPressed,
+  onPrepareGame,
   onSettings,
 }: {
+  avatars?: PersistedAvatar[];
+  creationPreset?: PersistedAvatar | null;
+  excludedAvatarIds?: string[];
+  hidden?: boolean;
   isPreparingAvatars?: boolean;
+  avatarSlotsVisible?: boolean;
+  onAvatarSlotsVisibleChange?: (visible: boolean) => void;
+  onAvatarsChanged?: (avatars: PersistedAvatar[]) => void;
+  onCreationPresetConsumed?: () => void;
+  onEnterGameComplete?: () => void;
+  onEnterHandoffChange?: (snapshot: import('../transitions/avatarEnterTransition.js').AvatarEnterHandoffSnapshot | null) => void;
+  onEnterWorldFailed?: () => void;
+  onHandoffLand?: () => void;
+  onAvatarEnter?: () => void;
   onPlay: () => Promise<void> | void;
-  onPlayPressed?: () => void;
+  onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
   onSettings: () => void;
 }) {
   const [visible, setVisible] = useState(false);
   const [clickable, setClickable] = useState(false);
-  const [playAnimating, setPlayAnimating] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [enteringGame, setEnteringGame] = useState(false);
+  const [avatarCreationOpen, setAvatarCreationOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
     useNavButtonPress();
@@ -160,39 +193,60 @@ export function Dashboard({
     };
   }, []);
 
+  useEffect(() => {
+    if (!avatarSlotsVisible) {
+      return;
+    }
+
+    setNavOpen(false);
+  }, [avatarSlotsVisible]);
+
+  async function handlePlayAsHome(): Promise<void> {
+    if (!clickable || !avatarSlotsVisible || avatarCreationOpen) {
+      return;
+    }
+
+    playSfx(DEFAULT_BUTTON_SOUND);
+    setClickable(false);
+    onAvatarSlotsVisibleChange?.(false);
+    await waitForFade();
+    setClickable(true);
+  }
+
   async function handlePlay(): Promise<void> {
-    if (!clickable) {
+    if (!clickable || avatarSlotsVisible) {
       return;
     }
 
     setClickable(false);
-    playSfx(LEVEL_UP_SOUND);
-    onPlayPressed?.();
-    setPlayAnimating(true);
-    await new Promise((resolve) => {
-      window.setTimeout(resolve, PLAY_ANIMATION_MS);
-    });
-    await onPlay();
-    setVisible(false);
-    await waitForFade();
+    setNavOpen(false);
+    playSfx(DEFAULT_BUTTON_SOUND);
+
+    await Promise.resolve(onPlay?.());
+
+    onAvatarSlotsVisibleChange?.(true);
+    window.setTimeout(() => {
+      setClickable(true);
+    }, FADE_DURATION_MS);
   }
 
+  const showChrome = !hidden;
+
   return (
-    <main aria-label="Dashboard" style={{ ...screenStyle, ...fadeStyle(visible) }}>
+    <main
+      aria-hidden={hidden}
+      aria-label="Dashboard"
+      style={{
+        ...screenStyle,
+        ...fadeStyle(visible),
+        pointerEvents: hidden ? 'none' : 'none',
+      }}
+    >
       <style>
         {`
           @keyframes morkahja-dashboard-preload-spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
-          }
-          @keyframes morkahja-play-grow {
-            0% { transform: scale(1); filter: brightness(1); }
-            24% { transform: scale(1.07); filter: brightness(1.1); }
-            34% { transform: scale(1.04); filter: brightness(1.06); }
-            56% { transform: scale(1.14); filter: brightness(1.18); }
-            66% { transform: scale(1.09); filter: brightness(1.12); }
-            88% { transform: scale(1.22); filter: brightness(1.3); }
-            100% { transform: scale(1.22); filter: brightness(1.34); }
           }
           @keyframes morkahja-nav-center-button-press {
             0% { transform: translateY(-50%) scale(1); filter: brightness(1); }
@@ -202,7 +256,7 @@ export function Dashboard({
           }
         `}
       </style>
-      {isPreparingAvatars ? (
+      {isPreparingAvatars && showChrome ? (
         <img
           alt=""
           aria-hidden="true"
@@ -211,55 +265,133 @@ export function Dashboard({
           style={preloadWheelStyle}
         />
       ) : null}
-      <div
-        style={{
-          ...playWrapStyle,
-          opacity: navOpen ? 0 : 1,
-          transform: navOpen ? 'translateY(-10px) scale(0.96)' : 'translateY(0) scale(1)',
-          pointerEvents: navOpen ? 'none' : 'auto',
-        }}
-      >
-        <button
-          aria-label="Play"
-          disabled={!clickable || navOpen}
-          onClick={() => {
-            void handlePlay();
-          }}
-          style={{
-            ...buttonStyle,
-            ...(playAnimating ? buttonAnimatingStyle : {}),
-            cursor: clickable && !playAnimating && !navOpen ? 'pointer' : 'default',
-          }}
-          type="button"
-        >
-          <img alt="" aria-hidden="true" draggable={false} src={PLAY_BUTTON_ASSET} style={imageStyle} />
-        </button>
+      <div style={dashboardColumnStyle}>
+        {showChrome ? (
+          <div
+            style={{
+              ...playWrapStyle,
+              opacity: navOpen || avatarCreationOpen ? 0 : 1,
+              transform: navOpen || avatarCreationOpen
+                ? 'translateY(-10px) scale(0.96)'
+                : 'translateY(0) scale(1)',
+              pointerEvents: navOpen || avatarCreationOpen ? 'none' : 'auto',
+            }}
+          >
+            <button
+              aria-label={avatarSlotsVisible ? 'Close avatar selection' : 'Play'}
+              disabled={!clickable || navOpen || avatarCreationOpen}
+              onClick={() => {
+                if (avatarSlotsVisible) {
+                  void handlePlayAsHome();
+                  return;
+                }
+
+                void handlePlay();
+              }}
+              onPointerDown={() => {
+                pulseNavButton('Play');
+              }}
+              style={{
+                ...buttonStyle,
+                cursor: clickable && !navOpen ? 'pointer' : 'default',
+              }}
+              type="button"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={PLAY_BUTTON_ASSET}
+                style={{
+                  ...imageStyle,
+                  animation: pressAnimation(isNavButtonPressed('Play')),
+                }}
+              />
+            </button>
+          </div>
+        ) : null}
+        {showChrome || enteringGame ? (
+          <AvatarSelectionPanel
+            avatars={avatars}
+            creationPreset={creationPreset}
+            excludedAvatarIds={excludedAvatarIds}
+            onAvatarsChanged={onAvatarsChanged}
+            onCreationPresetConsumed={onCreationPresetConsumed}
+            onEnterGameComplete={() => {
+              onEnterGameComplete?.();
+            }}
+            onEnterHandoffChange={onEnterHandoffChange}
+            onEnterWorldFailed={onEnterWorldFailed}
+            onHandoffLand={onHandoffLand}
+            onAvatarEnter={onAvatarEnter}
+            onCreationOpenChange={setAvatarCreationOpen}
+            onEnteringGameChange={setEnteringGame}
+            onPrepareGame={(avatar, encounter) => {
+              onAvatarSlotsVisibleChange?.(false);
+              onPrepareGame(avatar, encounter);
+            }}
+            visible={avatarSlotsVisible}
+          />
+        ) : null}
       </div>
-      <nav aria-label="Dashboard navigation" style={navWrapStyle}>
-        {RADIAL_BUTTONS.map((button) => (
+      {showChrome ? (
+        <nav
+          aria-label="Dashboard navigation"
+          style={navWrapStyle}
+        >
+          {RADIAL_BUTTONS.map((button) => (
+            <button
+              aria-label={button.label}
+              disabled={!clickable || !navOpen}
+              key={button.label}
+              onPointerDown={() => {
+                pulseNavButton(button.label);
+              }}
+              onClick={() => {
+                playSfx(DEFAULT_BUTTON_SOUND);
+                if (button.label === 'News') {
+                  setActivityOpen(true);
+                }
+                if (button.label === 'Settings') {
+                  onSettings();
+                }
+              }}
+              style={{
+                ...radialButtonStyle,
+                opacity: navOpen ? 1 : 0,
+                pointerEvents: navOpen ? 'auto' : 'none',
+                transform: navOpen
+                  ? `translate(calc(-50% + ${button.x}px), calc(-50% + ${button.y}px)) scale(1)`
+                  : 'translate(-50%, -50%) scale(0.35)',
+              }}
+              type="button"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={button.src}
+                style={{
+                  ...imageStyle,
+                  animation: pressAnimation(isNavButtonPressed(button.label)),
+                }}
+              />
+            </button>
+          ))}
           <button
-            aria-label={button.label}
-            disabled={!clickable || !navOpen}
-            key={button.label}
+            aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+            disabled={!clickable}
             onPointerDown={() => {
-              pulseNavButton(button.label);
+              pulseNavButton('Navigation');
             }}
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
-              if (button.label === 'News') {
-                setActivityOpen(true);
-              }
-              if (button.label === 'Settings') {
-                onSettings();
-              }
+              setNavOpen((open) => !open);
             }}
             style={{
-              ...radialButtonStyle,
-              opacity: navOpen ? 1 : 0,
-              pointerEvents: navOpen ? 'auto' : 'none',
-              transform: navOpen
-                ? `translate(calc(-50% + ${button.x}px), calc(-50% + ${button.y}px)) scale(1)`
-                : 'translate(-50%, -50%) scale(0.35)',
+              ...navButtonStyle,
+              cursor: clickable ? 'pointer' : 'default',
+              transform: navOpen ? 'scale(0.92)' : 'scale(1)',
             }}
             type="button"
           >
@@ -267,69 +399,43 @@ export function Dashboard({
               alt=""
               aria-hidden="true"
               draggable={false}
-              src={button.src}
+              src={NAV_BUTTON_ASSET}
               style={{
-                ...imageStyle,
-                animation: pressAnimation(isNavButtonPressed(button.label)),
+                ...navButtonImageStyle,
+                animation:
+                  isNavButtonPressed('Navigation')
+                    ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
+                    : undefined,
+                opacity: navOpen ? 0 : 1,
+                transform: navOpen ? 'translateY(-50%) scale(0.82)' : 'translateY(-50%) scale(1)',
+              }}
+            />
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={HOME_BUTTON_ASSET}
+              style={{
+                ...navButtonImageStyle,
+                animation:
+                  isNavButtonPressed('Navigation')
+                    ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
+                    : undefined,
+                opacity: navOpen ? 1 : 0,
+                transform: navOpen ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.82)',
               }}
             />
           </button>
-        ))}
-        <button
-          aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-          disabled={!clickable}
-          onPointerDown={() => {
-            pulseNavButton('Navigation');
+        </nav>
+      ) : null}
+      {showChrome ? (
+        <ActivityFeedOverlay
+          onClose={() => {
+            setActivityOpen(false);
           }}
-          onClick={() => {
-            playSfx(DEFAULT_BUTTON_SOUND);
-            setNavOpen((open) => !open);
-          }}
-          style={{
-            ...navButtonStyle,
-            cursor: clickable ? 'pointer' : 'default',
-            transform: navOpen ? 'scale(0.92)' : 'scale(1)',
-          }}
-          type="button"
-        >
-          <img
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            src={NAV_BUTTON_ASSET}
-            style={{
-              ...navButtonImageStyle,
-              animation:
-                isNavButtonPressed('Navigation')
-                  ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
-                  : undefined,
-              opacity: navOpen ? 0 : 1,
-              transform: navOpen ? 'translateY(-50%) scale(0.82)' : 'translateY(-50%) scale(1)',
-            }}
-          />
-          <img
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            src={HOME_BUTTON_ASSET}
-            style={{
-              ...navButtonImageStyle,
-              animation:
-                isNavButtonPressed('Navigation')
-                  ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
-                  : undefined,
-              opacity: navOpen ? 1 : 0,
-              transform: navOpen ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.82)',
-            }}
-          />
-        </button>
-      </nav>
-      <ActivityFeedOverlay
-        onClose={() => {
-          setActivityOpen(false);
-        }}
-        open={activityOpen}
-      />
+          open={activityOpen}
+        />
+      ) : null}
     </main>
   );
 }

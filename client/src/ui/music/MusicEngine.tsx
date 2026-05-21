@@ -6,6 +6,11 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import type { AvatarRace, AvatarRole } from '@shared/contracts';
+import {
+  ambientPlaylistForAvatar,
+  DEFAULT_AMBIENT_TRACKS,
+} from './ambientTracks.js';
 import {
   MUSIC_ENABLED_STORAGE_KEY,
   MUSIC_VOLUME_STORAGE_KEY,
@@ -13,12 +18,14 @@ import {
   storedMusicEnabled,
   storedMusicVolume,
 } from '../audioVolume.js';
-const MENU_TRACK = '/UI/Music/menu/menu_full_intro.mp3';
-const AMBIENT_TRACKS = 'abcdefghijklmnopqrstuvwxyz'
-  .split('')
-  .map((suffix) => `/UI/Music/menu/menu_ambient_${suffix}.mp3`);
+const MORKAHJA_MAIN_TRACKS = [
+  '/UI/Music/Morkahja_main_full_intro.wav',
+  '/UI/Music/Morkahja_main_intro.wav',
+  '/UI/Music/Morkahja_main_track.wav',
+];
 const DASHBOARD_MUSIC_DELAY_MS = 3000;
 const MUSIC_FADE_MS = 420;
+const MUSIC_MENU_EXIT_FADE_MS = 1400;
 const MUSIC_TOGGLE_OFF_FADE_MS = 1400;
 const MENU_LOOP_BREAK_MIN_MS = 6000;
 const MENU_LOOP_BREAK_MAX_MS = 14000;
@@ -48,10 +55,14 @@ export function useMusic(): MusicContextValue {
 }
 
 export function MusicEngine({
+  ambientRace,
+  ambientRole,
   children,
   fadeOutSignal,
   zone,
 }: {
+  ambientRace?: AvatarRace | null;
+  ambientRole?: AvatarRole | null;
   children: ReactNode;
   fadeOutSignal: number;
   zone: MusicZone;
@@ -61,16 +72,19 @@ export function MusicEngine({
   const enabledRef = useRef(storedMusicEnabled());
   const fadeRunRef = useRef(0);
   const lastAmbientTrackRef = useRef<string | null>(null);
+  const ambientTracksRef = useRef<string[]>(DEFAULT_AMBIENT_TRACKS);
+  const lastMenuTrackRef = useRef<string | null>(null);
   const blockedUntilInactiveRef = useRef(false);
   const restartTimerRef = useRef<number | null>(null);
   const volumeRef = useRef(storedMusicVolume());
   const zoneRef = useRef<MusicZone>(zone);
   const audioUnlockedRef = useRef(false);
   const pendingPlaybackRef = useRef(false);
+  const menuExitFadeRef = useRef<Promise<void> | null>(null);
   const [enabled, setEnabled] = useState(storedMusicEnabled);
   const [volume, setVolume] = useState(storedMusicVolume);
   useEffect(() => {
-    const audio = new Audio(MENU_TRACK);
+    const audio = new Audio(MORKAHJA_MAIN_TRACKS[0]);
     audio.loop = false;
     audio.volume = 0;
     const handleEnded = () => {
@@ -104,6 +118,45 @@ export function MusicEngine({
   useEffect(() => {
     zoneRef.current = zone;
   }, [zone]);
+
+  const ambientProfileKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const nextProfileKey =
+      ambientRace && ambientRole ? `${ambientRace}:${ambientRole}` : null;
+    const previousProfileKey = ambientProfileKeyRef.current;
+    ambientProfileKeyRef.current = nextProfileKey;
+    ambientTracksRef.current = ambientPlaylistForAvatar(ambientRace, ambientRole);
+    lastAmbientTrackRef.current = null;
+
+    const profileChanged =
+      previousProfileKey !== null &&
+      nextProfileKey !== null &&
+      previousProfileKey !== nextProfileKey;
+
+    if (
+      !profileChanged ||
+      zoneRef.current !== 'ambient' ||
+      !enabledRef.current ||
+      blockedUntilInactiveRef.current
+    ) {
+      return;
+    }
+
+    clearRestartTimer();
+    currentTrackRef.current = null;
+
+    void (async () => {
+      await fadeTo(0, MUSIC_FADE_MS);
+      audioRef.current?.pause();
+
+      if (zoneRef.current !== 'ambient' || !enabledRef.current || blockedUntilInactiveRef.current) {
+        return;
+      }
+
+      schedulePlayback(0);
+    })();
+  }, [ambientRace, ambientRole]);
 
   useEffect(() => {
     enabledRef.current = enabled;
@@ -139,28 +192,64 @@ export function MusicEngine({
     }
   }, [enabled, volume]);
 
+  async function fadeOutMenuMusic(durationMs = MUSIC_MENU_EXIT_FADE_MS): Promise<void> {
+    blockedUntilInactiveRef.current = true;
+    clearRestartTimer();
+    pendingPlaybackRef.current = false;
+
+    const exitFade = fadeTo(0, durationMs).then(() => {
+      audioRef.current?.pause();
+    });
+
+    menuExitFadeRef.current = exitFade;
+
+    try {
+      await exitFade;
+    } finally {
+      if (menuExitFadeRef.current === exitFade) {
+        menuExitFadeRef.current = null;
+      }
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
+    const previousZone = zoneRef.current;
     zoneRef.current = zone;
-    blockedUntilInactiveRef.current = false;
     clearRestartTimer();
 
     if (zone === 'silent' || !enabled) {
+      blockedUntilInactiveRef.current = false;
       pendingPlaybackRef.current = false;
-      void fadeTo(0).then(() => audioRef.current?.pause());
+      void fadeTo(0, MUSIC_FADE_MS).then(() => audioRef.current?.pause());
       return () => {
         cancelled = true;
       };
     }
 
     async function transitionZone(): Promise<void> {
-      await fadeTo(0);
+      const leavingMenu = previousZone === 'menu' && zone !== 'menu';
+
+      if (zone === 'menu') {
+        blockedUntilInactiveRef.current = false;
+      }
+
+      if (leavingMenu) {
+        if (menuExitFadeRef.current) {
+          await menuExitFadeRef.current;
+        } else {
+          await fadeOutMenuMusic();
+        }
+      } else {
+        await fadeTo(0, MUSIC_FADE_MS);
+        audioRef.current?.pause();
+      }
 
       if (cancelled || zoneRef.current !== zone || !enabledRef.current) {
         return;
       }
 
-      audioRef.current?.pause();
+      blockedUntilInactiveRef.current = false;
       schedulePlayback(zone === 'menu' ? DASHBOARD_MUSIC_DELAY_MS : 0);
     }
 
@@ -176,11 +265,7 @@ export function MusicEngine({
       return;
     }
 
-    blockedUntilInactiveRef.current = true;
-    clearRestartTimer();
-    void fadeTo(0).then(() => {
-      audioRef.current?.pause();
-    });
+    void fadeOutMenuMusic();
   }, [fadeOutSignal]);
 
   function randomLoopBreak(): number {
@@ -189,20 +274,36 @@ export function MusicEngine({
     );
   }
 
-  function randomAmbientTrack(): string {
-    if (AMBIENT_TRACKS.length === 1) {
-      return AMBIENT_TRACKS[0] ?? MENU_TRACK;
+  function randomTrackFromPool(
+    tracks: string[],
+    lastTrackRef: { current: string | null },
+  ): string {
+    if (tracks.length === 0) {
+      return '';
     }
 
-    const availableTracks = AMBIENT_TRACKS.filter((track) => track !== lastAmbientTrackRef.current);
-    const selectedTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)] ?? AMBIENT_TRACKS[0] ?? MENU_TRACK;
-    lastAmbientTrackRef.current = selectedTrack;
+    if (tracks.length === 1) {
+      return tracks[0] ?? '';
+    }
+
+    const availableTracks = tracks.filter((track) => track !== lastTrackRef.current);
+    const selectedTrack =
+      availableTracks[Math.floor(Math.random() * availableTracks.length)] ?? tracks[0] ?? '';
+    lastTrackRef.current = selectedTrack;
     return selectedTrack;
+  }
+
+  function randomMenuTrack(): string {
+    return randomTrackFromPool(MORKAHJA_MAIN_TRACKS, lastMenuTrackRef);
+  }
+
+  function randomAmbientTrack(): string {
+    return randomTrackFromPool(ambientTracksRef.current, lastAmbientTrackRef);
   }
 
   function trackForZone(currentZone: MusicZone): string | null {
     if (currentZone === 'menu') {
-      return MENU_TRACK;
+      return randomMenuTrack();
     }
 
     if (currentZone === 'ambient') {
