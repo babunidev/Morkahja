@@ -15,7 +15,7 @@ import {
   listAvatars,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
-import { recordAvatarCreatedEvent } from './gameEventService.js';
+import { recordAvatarCreatedEvent, recordGemsReceivedEvent } from './gameEventService.js';
 
 const DEFAULT_UNLOCKED_EXPANSIONS = [0];
 export const BABUNI_PLAYER_ID = 'Babuni';
@@ -122,6 +122,8 @@ export async function addPlayerYellowRedGems(
     yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
   };
 
+  const granted = !alreadyClaimed && amount > 0;
+
   await setPlayer(
     playerId,
     {
@@ -137,7 +139,14 @@ export async function addPlayerYellowRedGems(
     { merge: true },
   );
 
-  return { currencies, granted: !alreadyClaimed };
+  if (granted) {
+    await recordGemsReceivedEvent(playerId, amount, {
+      encounterKey: loreGemClaimKey,
+      source: loreGemClaimKey ? 'lore_gem' : 'general',
+    });
+  }
+
+  return { currencies, granted };
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(

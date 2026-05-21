@@ -244,6 +244,79 @@ export async function recordEncounterContinuedEvents(
   }
 }
 
+export async function recordAchievementUnlockedEvent(
+  playerId: string,
+  payload: {
+    achievementId: string;
+    rank: number;
+    rankTitle: string;
+  },
+): Promise<void> {
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'achievement_unlocked',
+    visibility: 'global',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      achievementId: payload.achievementId,
+      rank: payload.rank,
+      rankTitle: payload.rankTitle,
+    },
+  });
+}
+
+export async function recordDailyRewardClaimedEvent(
+  playerId: string,
+  gemAmount: number,
+  utcDay: string,
+): Promise<void> {
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'daily_reward_claimed',
+    visibility: 'global',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      gemAmount,
+      utcDay,
+    },
+  });
+}
+
+export async function recordGemsReceivedEvent(
+  playerId: string,
+  amount: number,
+  options?: {
+    encounterKey?: string;
+    source?: 'lore_gem' | 'general';
+  },
+): Promise<void> {
+  if (amount <= 0) {
+    return;
+  }
+
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'gems_received',
+    visibility: 'global',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      amount,
+      currencyType: 'yellow_red_gem',
+      source: options?.source ?? 'general',
+      encounterKey: options?.encounterKey,
+    },
+  });
+}
+
 export async function queryActivityFeed(playerId: string): Promise<ActivityFeedEntry[]> {
   const sinceTimestamp = Date.now() - ACTIVITY_FEED_WINDOW_MS;
   const events = await postgresEventStore.queryRecentEvents({
@@ -253,7 +326,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
   });
 
   return events
-    .filter(isVisibleInScribesFeed)
+    .filter((event) => isVisibleInScribesFeed(event, playerId))
     .map((event) => ({
       eventId: event.eventId,
       timestamp: event.timestamp,

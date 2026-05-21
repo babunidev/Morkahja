@@ -139,3 +139,51 @@ export interface ActivityFeedResponse {
   entries: ActivityFeedEntryDto[];
   windowMs: number;
 }
+
+export interface AchievementRankDto {
+  rank: number;
+  title: string;
+  text: string;
+  rankOverlayUrl?: string;
+}
+
+export interface AchievementProgressDto {
+  achievementId: string;
+  rank: number;
+  progress: number;
+  bandStart: number;
+  bandEnd: number | null;
+  progressInBand: number;
+  baseIconUrl: string;
+  rankOverlayUrl?: string;
+  title: string;
+  text: string;
+  ranks: AchievementRankDto[];
+}
+
+export interface DailyRewardStatusDto {
+  utcDay: string;
+  encountersPlayed: number;
+  encountersRequired: number;
+  claimable: boolean;
+  claimedToday: boolean;
+  gemReward: number;
+  achievementRank: number;
+}
+
+export interface AchievementsResponse {
+  playerId: string;
+  achievements: AchievementProgressDto[];
+  dailyReward: DailyRewardStatusDto;
+}
+
+export interface ClaimDailyRewardResponse {
+  playerId: string;
+  granted: boolean;
+  currencies: {
+    yellow_red_gem: number;
+    [key: string]: number | undefined;
+  };
+  achievements: AchievementProgressDto[];
+  dailyReward: DailyRewardStatusDto;
+}

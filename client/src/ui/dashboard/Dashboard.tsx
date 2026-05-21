@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
-import { fetchRecentActivity, loadStoredSession, type EncounterSnapshot, type PersistedAvatar } from '../../api/http.js';
+import {
+  fetchAchievements,
+  fetchRecentActivity,
+  loadStoredSession,
+  type EncounterSnapshot,
+  type PersistedAvatar,
+} from '../../api/http.js';
+import {
+  hasUnseenAchievements,
+  markAchievementsSeen,
+} from './achievementsAttentionState.js';
 import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementsOverlay from './AchievementsOverlay.js';
@@ -46,6 +56,29 @@ const RADIAL_BUTTONS = [
     y: 83,
   },
 ] as const;
+
+/** Closed-nav dot anchors match radial pop positions (24h clock: 13:00, 17:00). */
+const SCRIBES_RADIAL_OFFSET = RADIAL_BUTTONS.find((button) => button.label === 'News')!;
+const ACHIEVEMENTS_RADIAL_OFFSET = RADIAL_BUTTONS.find(
+  (button) => button.label === 'Achievements',
+)!;
+
+/** Extra distance past the radial button anchor (closed nav). */
+const NAV_ATTENTION_DOT_OUTSET_PX = 30;
+/** Pull closed-nav dots toward the hub (1 = anchor only, lower = closer). */
+const NAV_ATTENTION_DOT_RADIUS_SCALE = 0.7;
+
+function radialAttentionDotStyle(x: number, y: number): CSSProperties {
+  const spokeLength = Math.hypot(x, y) || 1;
+  const radialDistance = (spokeLength + NAV_ATTENTION_DOT_OUTSET_PX) * NAV_ATTENTION_DOT_RADIUS_SCALE;
+  const offsetX = Math.round((x / spokeLength) * radialDistance);
+  const offsetY = Math.round((y / spokeLength) * radialDistance);
+
+  return {
+    left: `calc(50% + ${offsetX}px)`,
+    top: `calc(50% + ${offsetY}px)`,
+  };
+}
 
 const screenStyle: CSSProperties = {
   position: 'fixed',
@@ -106,6 +139,7 @@ const navWrapStyle: CSSProperties = {
   marginTop: 'clamp(18px, 4vh, 42px)',
   display: 'grid',
   placeItems: 'center',
+  overflow: 'visible',
   pointerEvents: 'auto',
   transition: 'opacity 420ms ease, transform 420ms ease',
 };
@@ -188,6 +222,7 @@ export function Dashboard({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
+  const [achievementsAttention, setAchievementsAttention] = useState(false);
   const playerId = loadStoredSession()?.playerId ?? '';
   const showChrome = !hidden;
   const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
@@ -204,6 +239,20 @@ export function Dashboard({
       setScribesUnread(hasUnreadScribes(playerId, response.entries));
     } catch {
       // Keep the previous indicator if the feed cannot be reached.
+    }
+  }, [playerId]);
+
+  const refreshAchievementsAttention = useCallback(async () => {
+    if (!playerId) {
+      setAchievementsAttention(false);
+      return;
+    }
+
+    try {
+      const response = await fetchAchievements();
+      setAchievementsAttention(hasUnseenAchievements(playerId, response));
+    } catch {
+      // Keep the previous indicator if achievements cannot be reached.
     }
   }, [playerId]);
 
@@ -236,15 +285,17 @@ export function Dashboard({
     }
 
     void refreshScribesUnread();
+    void refreshAchievementsAttention();
 
     const pollTimer = window.setInterval(() => {
       void refreshScribesUnread();
+      void refreshAchievementsAttention();
     }, SCRIBES_POLL_MS);
 
     return () => {
       window.clearInterval(pollTimer);
     };
-  }, [refreshScribesUnread, showChrome]);
+  }, [refreshAchievementsAttention, refreshScribesUnread, showChrome]);
 
   async function handlePlayAsHome(): Promise<void> {
     if (!clickable || !avatarSlotsVisible || avatarCreationOpen) {
@@ -389,13 +440,31 @@ export function Dashboard({
               !activityOpen &&
               navOpen &&
               !isNavButtonPressed('News');
+            const achievementsButtonShake =
+              button.label === 'Achievements' &&
+              achievementsAttention &&
+              !achievementsOpen &&
+              navOpen &&
+              !isNavButtonPressed('Achievements');
+            const showScribesDot =
+              button.label === 'News' &&
+              scribesUnread &&
+              !activityOpen &&
+              navOpen;
+            const showAchievementsDot =
+              button.label === 'Achievements' &&
+              achievementsAttention &&
+              !achievementsOpen &&
+              navOpen;
 
             return (
             <button
               aria-label={
                 button.label === 'News' && scribesUnread && !activityOpen
                   ? 'Scribes, new entries'
-                  : button.label
+                  : button.label === 'Achievements' && achievementsAttention && !achievementsOpen
+                    ? 'Achievements, new progress'
+                    : button.label
               }
               disabled={!clickable || !navOpen}
               key={button.label}
@@ -424,6 +493,18 @@ export function Dashboard({
               }}
               type="button"
             >
+              {showScribesDot ? (
+                <span
+                  aria-hidden="true"
+                  className="morkahja-nav-attention-dot morkahja-party-slot-dot morkahja-nav-attention-glow-scribes"
+                />
+              ) : null}
+              {showAchievementsDot ? (
+                <span
+                  aria-hidden="true"
+                  className="morkahja-nav-attention-dot morkahja-party-slot-dot morkahja-nav-attention-glow-achievements"
+                />
+              ) : null}
               <img
                 alt=""
                 aria-hidden="true"
@@ -431,7 +512,7 @@ export function Dashboard({
                 src={button.src}
                 style={{
                   ...imageStyle,
-                  animation: scribesButtonShake
+                  animation: scribesButtonShake || achievementsButtonShake
                     ? 'morkahja-scribes-button-shake 2.8s ease-in-out infinite'
                     : pressAnimation(isNavButtonPressed(button.label)),
                 }}
@@ -443,9 +524,11 @@ export function Dashboard({
             aria-label={
               scribesUnread && !activityOpen
                 ? 'Open navigation, unread scribes'
-                : navOpen
-                  ? 'Close navigation'
-                  : 'Open navigation'
+                : achievementsAttention && !achievementsOpen
+                  ? 'Open navigation, achievements progress'
+                  : navOpen
+                    ? 'Close navigation'
+                    : 'Open navigation'
             }
             disabled={!clickable}
             onPointerDown={() => {
@@ -462,9 +545,6 @@ export function Dashboard({
             }}
             type="button"
           >
-            {scribesUnread && !activityOpen ? (
-              <span aria-hidden="true" className="morkahja-scribes-unread-dot morkahja-party-slot-dot" />
-            ) : null}
             <img
               alt=""
               aria-hidden="true"
@@ -496,6 +576,26 @@ export function Dashboard({
               }}
             />
           </button>
+          {!navOpen && scribesUnread && !activityOpen ? (
+            <span
+              aria-hidden="true"
+              className="morkahja-nav-radial-attention-dot morkahja-party-slot-dot morkahja-nav-attention-glow-scribes"
+              style={radialAttentionDotStyle(
+                SCRIBES_RADIAL_OFFSET.x,
+                SCRIBES_RADIAL_OFFSET.y,
+              )}
+            />
+          ) : null}
+          {!navOpen && achievementsAttention && !achievementsOpen ? (
+            <span
+              aria-hidden="true"
+              className="morkahja-nav-radial-attention-dot morkahja-party-slot-dot morkahja-nav-attention-glow-achievements"
+              style={radialAttentionDotStyle(
+                ACHIEVEMENTS_RADIAL_OFFSET.x,
+                ACHIEVEMENTS_RADIAL_OFFSET.y,
+              )}
+            />
+          ) : null}
         </nav>
       ) : null}
       {showChrome ? (
@@ -524,7 +624,13 @@ export function Dashboard({
           onClose={() => {
             setAchievementsOpen(false);
           }}
+          onSnapshotViewed={(snapshot) => {
+            markAchievementsSeen(playerId, snapshot);
+            setAchievementsAttention(false);
+            void refreshAchievementsAttention();
+          }}
           open={achievementsOpen}
+          playerId={playerId}
         />
       ) : null}
     </main>

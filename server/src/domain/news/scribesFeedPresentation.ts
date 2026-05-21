@@ -3,6 +3,8 @@ import type { GameEvent } from '../events/GameEvent.js';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const DEATH_ICON = '/UI/09_GAME/im_overlay_death.webp';
 const LEVEL_UP_ICON = '/UI/09_GAME/im_button_resurrect.webp';
+const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_daily_reward.webp';
 
 function readString(payload: Record<string, unknown>, key: string): string | undefined {
   const value = payload[key];
@@ -17,6 +19,11 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
       return DEATH_ICON;
     case 'level_up':
       return LEVEL_UP_ICON;
+    case 'gems_received':
+    case 'daily_reward_claimed':
+      return GEMS_ICON;
+    case 'achievement_unlocked':
+      return ACHIEVEMENT_ICON;
     case 'item_obtained':
     case 'spell_obtained': {
       const iconName = readString(payload, 'solutionIconName');

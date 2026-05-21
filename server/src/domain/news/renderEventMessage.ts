@@ -14,6 +14,20 @@ function avatarLabel(payload: Record<string, unknown>): string {
   return readString(payload, 'avatarName') ?? 'An adventurer';
 }
 
+function playerLabel(payload: Record<string, unknown>): string {
+  return readString(payload, 'playerName') ?? 'Player';
+}
+
+function formatArticle(title: string): string {
+  const normalized = title.trim();
+  if (!normalized) {
+    return 'a new rank';
+  }
+
+  const article = /^[aeiou]/i.test(normalized) ? 'an' : 'a';
+  return `${article} ${normalized}`;
+}
+
 function encounterLabel(payload: Record<string, unknown>): string {
   const title = readString(payload, 'encounterTitle');
   const encounterId = readNumber(payload, 'encounterId');
@@ -80,6 +94,20 @@ export function renderEventMessage(event: GameEvent): string {
     case 'spell_obtained': {
       const spellName = readString(payload, 'solutionName') ?? 'a spell';
       return `${avatarLabel(payload)} learned ${spellName}.`;
+    }
+    case 'gems_received': {
+      const amount = readNumber(payload, 'amount') ?? 1;
+      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
+      return `${playerLabel(payload)} received ${amount} ${gemLabel}.`;
+    }
+    case 'achievement_unlocked': {
+      const rankTitle = readString(payload, 'rankTitle') ?? 'a new rank';
+      return `${playerLabel(payload)} became ${formatArticle(rankTitle)}.`;
+    }
+    case 'daily_reward_claimed': {
+      const amount = readNumber(payload, 'gemAmount') ?? 1;
+      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
+      return `${playerLabel(payload)} claimed the daily reward (${amount} ${gemLabel}).`;
     }
     default:
       return `${avatarLabel(payload)} made their mark on the world.`;

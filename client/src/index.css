@@ -104,13 +104,20 @@ img {
   }
 }
 
-.morkahja-scribes-unread-dot {
+.morkahja-nav-attention-dot {
   position: absolute;
-  left: 74%;
-  top: 9%;
+  left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
   z-index: 3;
   pointer-events: none;
+}
+
+.morkahja-nav-radial-attention-dot {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 .morkahja-party-slot-dot {
@@ -128,6 +135,47 @@ img {
     0 0 10px rgba(255, 204, 102, 0.42),
     0 0 18px rgba(255, 170, 70, 0.18);
   animation: morkahja-party-slot-shimmer 2.6s ease-in-out infinite;
+}
+
+@keyframes morkahja-nav-attention-glow-scribes {
+  0%,
+  100% {
+    opacity: 0.32;
+    box-shadow:
+      0 0 6px rgba(255, 204, 102, 0.28),
+      0 0 12px rgba(255, 170, 70, 0.12);
+  }
+  50% {
+    opacity: 0.88;
+    box-shadow:
+      0 0 14px rgba(255, 220, 140, 0.72),
+      0 0 26px rgba(255, 170, 70, 0.38);
+  }
+}
+
+@keyframes morkahja-nav-attention-glow-achievements {
+  0%,
+  100% {
+    opacity: 0.38;
+    box-shadow:
+      0 0 8px rgba(255, 190, 120, 0.32),
+      0 0 14px rgba(255, 140, 72, 0.14);
+  }
+  42% {
+    opacity: 0.92;
+    box-shadow:
+      0 0 16px rgba(255, 210, 150, 0.78),
+      0 0 30px rgba(255, 153, 51, 0.42);
+  }
+}
+
+.morkahja-nav-attention-glow-scribes {
+  animation: morkahja-nav-attention-glow-scribes 2.15s ease-in-out infinite;
+}
+
+.morkahja-nav-attention-glow-achievements {
+  animation: morkahja-nav-attention-glow-achievements 3.45s ease-in-out infinite;
+  animation-delay: 0.85s;
 }
 
 @keyframes morkahja-avatar-enter-center-glow {

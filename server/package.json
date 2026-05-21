@@ -8,6 +8,7 @@
     "start": "tsx src/server.ts",
     "test:encounter": "tsx src/runEncounterTest.ts",
     "test:inventory": "tsx src/tests/initialInventory.test.ts",
+    "test:achievements": "tsx src/domain/achievements/adventurerAchievement.test.ts",
     "test:lifecycle": "tsx src/runEncounterLifecycle.ts",
     "typecheck": "tsc --noEmit"
   },

@@ -1,5 +1,7 @@
 import type {
+  AchievementsResponse,
   ActivityFeedResponse,
+  ClaimDailyRewardResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -276,4 +278,15 @@ export async function createNextEncounter(
 
 export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {
   return request<ActivityFeedResponse>('/activity/recent');
+}
+
+export async function fetchAchievements(): Promise<AchievementsResponse> {
+  return request<AchievementsResponse>('/player/achievements');
+}
+
+export async function claimDailyReward(): Promise<ClaimDailyRewardResponse> {
+  return request<ClaimDailyRewardResponse>('/player/daily-reward/claim', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
 }

@@ -28,6 +28,10 @@ const loreBlockStyle: CSSProperties = {
   transition: fadeTransition,
 };
 
+const loreBlockVisibleStyle: CSSProperties = {
+  zIndex: 25,
+};
+
 const loreBackgroundLayerStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
@@ -222,6 +226,7 @@ export function LoreBlock({
       aria-label="Lore"
       style={{
         ...loreBlockStyle,
+        ...(visible ? loreBlockVisibleStyle : {}),
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',
       }}
@@ -271,7 +276,7 @@ export function LoreBlock({
               ...loreGemButtonStyle,
               ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
               ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
-              pointerEvents: visible && loreGemState === 'visible' ? 'auto' : 'none',
+              cursor: loreGemState === 'visible' ? 'pointer' : 'default',
             }}
             type="button"
           >

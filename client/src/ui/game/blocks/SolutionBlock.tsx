@@ -456,6 +456,7 @@ export function SolutionBlock({
 
   return (
     <div
+      inert={hidden ? true : undefined}
       ref={blockRef}
       style={solutionBlockStyle}
     >

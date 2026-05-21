@@ -593,13 +593,16 @@ export function ResultBlock({
     );
   }
 
+  const resultInteractive = visible && !hidden;
+
   return (
     <div
       aria-hidden={roll === null}
+      inert={resultInteractive ? undefined : true}
       ref={blockRef}
       style={{
         ...resultBlockStyle,
-        opacity: visible && !hidden ? 1 : 0,
+        opacity: resultInteractive ? 1 : 0,
       }}
     >
       <style>
@@ -634,7 +637,7 @@ export function ResultBlock({
           ...(continueBusy ? continueAnimatingStyle : {}),
           cursor: disabled || continueBusy ? 'default' : 'pointer',
           opacity: disabled ? 0.64 : 1,
-          pointerEvents: visible && !hidden && !continueBusy ? 'auto' : 'none',
+          pointerEvents: resultInteractive && !continueBusy ? 'auto' : 'none',
         }}
         type="button"
       >

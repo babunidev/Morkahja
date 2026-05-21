@@ -14,5 +14,10 @@ export interface PlayerDocument {
     [key: string]: number | undefined;
   };
   loreGemClaims?: Record<string, boolean>;
+  dailyReward?: {
+    utcDay: string;
+    encountersPlayed: number;
+    claimedAt?: number;
+  };
   [key: string]: unknown;
 }

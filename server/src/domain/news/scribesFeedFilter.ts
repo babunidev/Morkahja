@@ -22,7 +22,7 @@ function isLootVisible(payload: Record<string, unknown>): boolean {
 }
 
 /** Which persisted events appear in the Scribes overlay (all events are still stored). */
-export function isVisibleInScribesFeed(event: GameEvent): boolean {
+export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: string): boolean {
   switch (event.type) {
     case 'avatar_created':
     case 'level_up':
@@ -34,6 +34,11 @@ export function isVisibleInScribesFeed(event: GameEvent): boolean {
     case 'item_obtained':
     case 'spell_obtained':
       return isLootVisible(event.payload);
+    case 'gems_received':
+      return !viewingPlayerId || event.playerId === viewingPlayerId;
+    case 'achievement_unlocked':
+    case 'daily_reward_claimed':
+      return !viewingPlayerId || event.playerId === viewingPlayerId;
     default:
       return false;
   }

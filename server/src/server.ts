@@ -5,6 +5,11 @@ import { encounterControllerErrorStatus } from './controllers/encounterControlle
 import { validatePostgresConnection } from './db/postgresDocumentStore.js';
 import { authMiddleware, requireAuth } from './middleware/authMiddleware.js';
 import { getRecentActivityController } from './controllers/activityController.js';
+import {
+  claimPlayerDailyRewardController,
+  getPlayerAchievementsController,
+} from './controllers/achievementController.js';
+import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
@@ -157,6 +162,8 @@ app.post('/session/logout', async (req: Request, res: Response) => {
 app.use(authMiddleware);
 app.use('/encounter', encounterRoutes);
 app.get('/activity/recent', getRecentActivityController);
+app.get('/player/achievements', getPlayerAchievementsController);
+app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);
 
 app.get('/player', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);
@@ -317,6 +324,8 @@ try {
       `usingDefaultConnection=${connectionInfo.usingDefaultConnection}`,
     ].join(' '),
   );
+
+  registerAchievementHandlers();
 
   app.listen(PORT, () => {
     console.log(`Morkahja server running on port ${PORT}`);

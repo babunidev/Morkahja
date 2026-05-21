@@ -61,13 +61,24 @@ const closeButtonStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
 };
 
+const scrollBodyStyle: CSSProperties = {
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  overflow: 'hidden',
+};
+
 const listStyle: CSSProperties = {
   margin: 0,
   padding: 0,
   listStyle: 'none',
+  flex: 1,
+  minHeight: 0,
   overflowY: 'auto',
   display: 'grid',
   gap: 10,
+  scrollbarWidth: 'none',
 };
 
 function entryStyle(
@@ -248,41 +259,46 @@ export function ActivityFeedOverlay({
             Close
           </button>
         </header>
-        {loading && entries.length === 0 ? (
-          <p style={{ margin: 0, opacity: 0.8 }}>The scribes are listening…</p>
-        ) : null}
-        {error ? (
-          <p style={{ margin: 0, color: '#ffb0a8' }}>{error}</p>
-        ) : null}
-        {!error && entries.length === 0 && !loading ? (
-          <p style={{ margin: 0, opacity: 0.8 }}>Nothing worth inscribing in the last 15 minutes.</p>
-        ) : null}
-        <ul style={listStyle}>
-          {entries.map((entry) => {
-            const read = readIds.has(entry.eventId);
+        <div style={scrollBodyStyle}>
+          {loading && entries.length === 0 ? (
+            <p style={{ margin: 0, opacity: 0.8 }}>The scribes are listening…</p>
+          ) : null}
+          {error ? (
+            <p style={{ margin: 0, color: '#ffb0a8' }}>{error}</p>
+          ) : null}
+          {!error && entries.length === 0 && !loading ? (
+            <p style={{ margin: 0, opacity: 0.8 }}>Nothing worth inscribing in the last 15 minutes.</p>
+          ) : null}
+          <ul data-scribes-feed-scroll="" style={listStyle}>
+            {entries.map((entry) => {
+              const read = readIds.has(entry.eventId);
 
-            return (
-            <li key={entry.eventId} style={entryStyle(entry.importance, read)}>
-              <div style={{ opacity: 0.72, fontSize: '0.78rem', marginBottom: 4 }}>
-                {formatRelativeTime(entry.timestamp)}
-                {!read ? <span style={unreadBadgeStyle}>New</span> : null}
-              </div>
-              <div style={entryBodyStyle}>
-                <div style={entryTextStyle}>{entry.message}</div>
-                {entry.iconUrl ? (
-                  <img
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    src={entry.iconUrl}
-                    style={entryIconStyle}
-                  />
-                ) : null}
-              </div>
-            </li>
-            );
-          })}
-        </ul>
+              return (
+              <li key={entry.eventId} style={entryStyle(entry.importance, read)}>
+                <div style={{ opacity: 0.72, fontSize: '0.78rem', marginBottom: 4 }}>
+                  {formatRelativeTime(entry.timestamp)}
+                  {!read ? <span style={unreadBadgeStyle}>New</span> : null}
+                </div>
+                <div style={entryBodyStyle}>
+                  <div style={entryTextStyle}>{entry.message}</div>
+                  {entry.iconUrl ? (
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      src={entry.iconUrl}
+                      style={entryIconStyle}
+                    />
+                  ) : null}
+                </div>
+              </li>
+              );
+            })}
+          </ul>
+        </div>
+        <style>
+          {'[data-scribes-feed-scroll]::-webkit-scrollbar { display: none; }'}
+        </style>
       </section>
     </div>
   );

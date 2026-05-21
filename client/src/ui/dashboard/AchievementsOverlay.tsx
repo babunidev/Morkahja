@@ -1,5 +1,18 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import type {
+  AchievementProgressDto,
+  AchievementsResponse,
+  DailyRewardStatusDto,
+} from '@shared/contracts';
+import {
+  claimDailyReward,
+  fetchAchievements,
+  fetchPlayer,
+} from '../../api/http.js';
+import { AchievementPanel } from './AchievementPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+
+const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -18,8 +31,9 @@ const backdropStyle: CSSProperties = {
 const panelStyle: CSSProperties = {
   width: 'min(92vw, 420px)',
   display: 'grid',
-  gap: 14,
-  padding: '20px 18px 16px',
+  gridTemplateRows: 'auto minmax(0, 1fr) auto',
+  gap: 10,
+  padding: '20px 18px 8px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
   borderRadius: 14,
   background: 'rgba(12, 7, 5, 0.92)',
@@ -55,14 +69,55 @@ const closeButtonStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
 };
 
+const gemsFooterStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 12,
+  marginTop: 'auto',
+  paddingTop: 8,
+  paddingBottom: 0,
+  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+};
+
+const gemsIconStyle: CSSProperties = {
+  width: 44,
+  height: 44,
+  objectFit: 'contain',
+  filter: 'drop-shadow(0 0 10px rgba(255, 204, 102, 0.55)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45))',
+};
+
+const gemsCountStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '1.1rem',
+  fontWeight: 700,
+  lineHeight: 1.25,
+  letterSpacing: '0.03em',
+  textShadow: '0 0 8px rgba(255, 204, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.85)',
+};
+
+function formatGemCount(count: number): string {
+  return count === 1 ? '1 yellow red gem' : `${count} yellow red gems`;
+}
+
 export function AchievementsOverlay({
   onClose,
+  onSnapshotViewed,
   open,
+  playerId,
 }: {
   onClose: () => void;
+  onSnapshotViewed?: (snapshot: AchievementsResponse) => void;
   open: boolean;
+  playerId: string;
 }) {
   const [visible, setVisible] = useState(false);
+  const [yellowRedGems, setYellowRedGems] = useState(0);
+  const [achievements, setAchievements] = useState<AchievementProgressDto[]>([]);
+  const [dailyReward, setDailyReward] = useState<DailyRewardStatusDto | null>(null);
+  const [claimPending, setClaimPending] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -78,6 +133,76 @@ export function AchievementsOverlay({
       window.clearTimeout(showTimer);
     };
   }, [open]);
+
+  async function refreshAchievements(): Promise<void> {
+    const playerPromise = fetchPlayer(null);
+    let achievementsError: string | null = null;
+
+    try {
+      const player = await playerPromise;
+      setYellowRedGems(player.currencies?.yellow_red_gem ?? 0);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load player');
+      return;
+    }
+
+    try {
+      const snapshot = await fetchAchievements();
+      setAchievements(snapshot.achievements);
+      setDailyReward(snapshot.dailyReward);
+      setLoadError(null);
+      if (open) {
+        onSnapshotViewed?.(snapshot);
+      }
+    } catch (error) {
+      achievementsError = error instanceof Error
+        ? error.message
+        : 'Could not load achievements';
+      setLoadError(achievementsError);
+    }
+  }
+
+  useEffect(() => {
+    if (!open || !playerId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void refreshAchievements().catch((error) => {
+      if (!cancelled) {
+        setLoadError(error instanceof Error ? error.message : 'Could not load achievements');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, playerId]);
+
+  async function handleClaimDailyReward(): Promise<void> {
+    if (claimPending) {
+      return;
+    }
+
+    setClaimPending(true);
+
+    try {
+      const result = await claimDailyReward();
+      setAchievements(result.achievements);
+      setDailyReward(result.dailyReward);
+      setYellowRedGems(result.currencies.yellow_red_gem ?? 0);
+      onSnapshotViewed?.({
+        playerId,
+        achievements: result.achievements,
+        dailyReward: result.dailyReward,
+      });
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not claim daily reward');
+    } finally {
+      setClaimPending(false);
+    }
+  }
 
   if (!open) {
     return null;
@@ -113,6 +238,27 @@ export function AchievementsOverlay({
             Close
           </button>
         </header>
+        {loadError ? (
+          <p style={{ margin: 0, color: '#ffb0a8' }}>{loadError}</p>
+        ) : null}
+        <AchievementPanel
+          achievements={achievements}
+          claimPending={claimPending}
+          dailyReward={dailyReward}
+          onClaimDailyReward={() => {
+            void handleClaimDailyReward();
+          }}
+        />
+        <footer aria-label="Yellow red gems" style={gemsFooterStyle}>
+          <img
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            src={GEMS_ICON}
+            style={gemsIconStyle}
+          />
+          <p style={gemsCountStyle}>{formatGemCount(yellowRedGems)}</p>
+        </footer>
       </section>
     </div>
   );
