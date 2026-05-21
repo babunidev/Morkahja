@@ -1,3 +1,4 @@
+import { randomInt as cryptoRandomInt } from 'node:crypto';
 import type {
   AvatarInventory,
   AvatarProfile,
@@ -6,6 +7,15 @@ import type {
 import type { SolutionData } from '../engine/types.js';
 import { getSolutionMap } from './gameData.js';
 import { getInventory, setAvatar, setInventory } from '../db/postgresDocumentStore.js';
+
+export const WARRIOR_IMPROVISED_WEAPON_ID = 10062;
+const WARRIOR_ROLE_REWARD_TYPE = 38;
+
+export type RandomIntFn = (min: number, max: number) => number;
+
+function defaultRandomInt(min: number, max: number): number {
+  return min + cryptoRandomInt(max - min + 1);
+}
 
 export type InventoryContainerName = 'spellbook' | 'items' | 'essences';
 export type InventoryPenaltyOutcome =
@@ -112,15 +122,93 @@ export async function resetInventory(
   return inventory;
 }
 
-function deterministicSolutions(
+function isWarriorProfile(profile: AvatarProfile): boolean {
+  return profile.roleRewardType === WARRIOR_ROLE_REWARD_TYPE;
+}
+
+/** Inclusive [min, max] integer sampler for starter-pack randomization. */
+export function randomSampleSolutionIds(
   predicate: (solution: SolutionData) => boolean,
   count: number,
+  options: {
+    randomInt?: RandomIntFn;
+    reservedIds?: number[];
+  } = {},
 ): number[] {
-  return Object.values(getSolutionMap())
+  const randomInt = options.randomInt ?? defaultRandomInt;
+  const reservedIds = options.reservedIds ?? [];
+  const pool = Object.values(getSolutionMap())
     .filter(predicate)
-    .sort((a, b) => a.mSolutionID - b.mSolutionID)
-    .slice(0, count)
-    .map((solution) => solution.mSolutionID);
+    .sort((left, right) => left.mSolutionID - right.mSolutionID);
+  const picks: number[] = [];
+
+  for (const solutionId of reservedIds) {
+    if (picks.length >= count) {
+      break;
+    }
+
+    if (pool.some((solution) => solution.mSolutionID === solutionId)) {
+      picks.push(solutionId);
+    }
+  }
+
+  const available = pool.filter((solution) => !picks.includes(solution.mSolutionID));
+
+  while (picks.length < count && available.length > 0) {
+    const index = randomInt(0, available.length - 1);
+    const [picked] = available.splice(index, 1);
+    picks.push(picked.mSolutionID);
+  }
+
+  return picks;
+}
+
+export function buildInitialAvatarSeedIds(
+  profile: AvatarProfile,
+  options: { randomInt?: RandomIntFn } = {},
+): number[] {
+  const roleRewardType = profile.roleRewardType ?? 37;
+  const raceRewardType = profile.raceRewardType ?? 40;
+  const roleSpellbookIds = randomSampleSolutionIds(
+    (solution) =>
+      solution.mSolutionRewardType === roleRewardType &&
+      solution.mSolutionInventoryType === 1,
+    2,
+    options,
+  );
+  const raceSpellbookIds = randomSampleSolutionIds(
+    (solution) =>
+      solution.mSolutionRewardType === raceRewardType &&
+      solution.mSolutionInventoryType === 1,
+    3,
+    options,
+  );
+  const itemIds = randomSampleSolutionIds(
+    (solution) =>
+      solution.mSolutionRewardType === 2 &&
+      solution.mSolutionInventoryType === 2,
+    5,
+    options,
+  );
+  const essenceIds = randomSampleSolutionIds(
+    (solution) =>
+      solution.mSolutionType === 15 &&
+      solution.mSolutionInventoryType === 3,
+    3,
+    options,
+  );
+  const seedIds = [
+    ...roleSpellbookIds,
+    ...raceSpellbookIds,
+    ...itemIds,
+    ...essenceIds,
+  ];
+
+  if (isWarriorProfile(profile) && !seedIds.includes(WARRIOR_IMPROVISED_WEAPON_ID)) {
+    seedIds.push(WARRIOR_IMPROVISED_WEAPON_ID);
+  }
+
+  return seedIds;
 }
 
 export function addRewardToInventoryState(
@@ -245,35 +333,11 @@ export function applyEncounterInventoryChanges(
     : next;
 }
 
-export function createInitialAvatarInventory(profile: AvatarProfile): AvatarInventory {
-  const roleRewardType = profile.roleRewardType ?? 37;
-  const raceRewardType = profile.raceRewardType ?? 40;
-  const seedIds = [
-    ...deterministicSolutions(
-      (solution) =>
-        solution.mSolutionRewardType === roleRewardType &&
-        solution.mSolutionInventoryType === 1,
-      2,
-    ),
-    ...deterministicSolutions(
-      (solution) =>
-        solution.mSolutionRewardType === raceRewardType &&
-        solution.mSolutionInventoryType === 1,
-      3,
-    ),
-    ...deterministicSolutions(
-      (solution) =>
-        solution.mSolutionRewardType === 2 &&
-        solution.mSolutionInventoryType === 2,
-      5,
-    ),
-    ...deterministicSolutions(
-      (solution) =>
-        solution.mSolutionType === 15 &&
-        solution.mSolutionInventoryType === 3,
-      3,
-    ),
-  ];
+export function createInitialAvatarInventory(
+  profile: AvatarProfile,
+  options: { randomInt?: RandomIntFn } = {},
+): AvatarInventory {
+  const seedIds = buildInitialAvatarSeedIds(profile, options);
 
   return seedIds.reduce(
     (inventory, solutionId) => addRewardToInventoryState(inventory, solutionId),
