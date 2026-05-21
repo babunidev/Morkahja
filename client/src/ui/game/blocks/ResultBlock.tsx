@@ -102,6 +102,14 @@ function waitContinueBounce(): Promise<void> {
   });
 }
 
+function continueDismissLayerStyle(continueBusy: boolean): CSSProperties {
+  return {
+    opacity: continueBusy ? 0 : 1,
+    transition: `opacity ${CONTINUE_BOUNCE_MS}ms ease-in-out`,
+    pointerEvents: continueBusy ? 'none' : 'auto',
+  };
+}
+
 const outcomeClusterStyle: CSSProperties = {
   gridArea: '1 / 1',
   justifySelf: 'center',
@@ -465,7 +473,7 @@ export function ResultBlock({
 
       await Promise.resolve(onContinue());
     } finally {
-      setRewardsFlyingAway(false);
+      // Keep rewards hidden after fly-out; roll reset in useEffect clears rewardsFlyingAway.
       setContinueBusy(false);
     }
   }
@@ -609,7 +617,11 @@ export function ResultBlock({
         aria-hidden="true"
         draggable={false}
         src={RESULT_BACKGROUND}
-        style={resultImageStyle}
+        style={{
+          ...resultImageStyle,
+          ...continueDismissLayerStyle(continueBusy),
+          pointerEvents: 'none',
+        }}
       />
       <button
         aria-label="Continue"
@@ -634,13 +646,19 @@ export function ResultBlock({
           style={continueImageStyle}
         />
       </button>
-      {rewards.length > 0 && !rewardsFlyingAway ? (
+      {rewards.length > 0 && !rewardsFlyingAway && !continueBusy ? (
         <div aria-label="Predetermined rewards" style={rewardRowStyle}>
           {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
       ) : null}
       {outcome && roll !== null ? (
-        <div aria-label="Encounter outcome" style={outcomeClusterStyle}>
+        <div
+          aria-label="Encounter outcome"
+          style={{
+            ...outcomeClusterStyle,
+            ...continueDismissLayerStyle(continueBusy),
+          }}
+        >
           {usedSolution && usedSolutionCost > 0
             ? renderSolutionIcon(
               { ...usedSolution, quantity: usedSolutionCost },
