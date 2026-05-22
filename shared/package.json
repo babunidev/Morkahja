@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    "./contracts": "./src/contracts.ts"
+    "./contracts": "./src/contracts.ts",
+    "./diceInterpreter": "./src/diceInterpreter.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

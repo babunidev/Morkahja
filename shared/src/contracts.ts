@@ -114,6 +114,10 @@ export interface EncounterResultResponse {
   usedInventorySolutions?: number[];
   snapshot: EncounterSnapshotDto;
   avatar?: PersistedAvatarDto;
+  /** True when a failed encounter triggers the death-encounter chain (e.g. Atranor essence death). */
+  deathTriggered?: boolean;
+  /** True when the client should show the avatar death overlay (death chain or death encounter failure). */
+  avatarDied?: boolean;
 }
 
 export interface StaticGameDataStatus {
@@ -159,6 +163,8 @@ export interface AchievementProgressDto {
   title: string;
   text: string;
   ranks: AchievementRankDto[];
+  chainTitle?: string;
+  globallyLocked?: boolean;
 }
 
 export interface DailyRewardStatusDto {
