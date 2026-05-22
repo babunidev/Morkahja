@@ -55,7 +55,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 
 ### 2026-05-21 — Adventurer achievements (`9ea2110`)
 
-27. First real **achievement chain** (Adventurer → Trailblazer): event-driven progress on `encounter_resolved` / `encounter_failed`, ranks every **42** encounters (max rank 4), `player_achievements` table.
+27. First real **achievement chain** (Adventurer → Trailblazer): event-driven progress on `encounter_resolved` / `encounter_failed`, rank thresholds **100 / 200 / 400 / 800** encounters (max rank 4), `player_achievements` table.
 28. **`achievement_unlocked`** events → Scribes (“became a Wayfarer”, etc.).
 29. **Daily reward** — **21** encounters per **UTC day**; gem payout scales with rank (1–5); `daily_reward_claimed` events; deduped claims.
 30. **`AchievementPanel` / overlay** — rank overlays, progress bar, `N/N encounters` daily line, footer gem count.
@@ -86,6 +86,10 @@ Brief chronological overview of the web app from first commit to present. Newest
 49. **Layout tweak** — solution block lowered **3px** (`translateY`) for seam alignment (`dc18f7b`).
 50. **Asset hygiene** — prune duplicate `10_Shop` portrait tree and archived UI; move settings `PORTRAITS.webp`; add dashboard expansion header/unlock `.webp` set.
 51. **Friends list** — Social nav opens overlay; add by player name; shows last-played avatar, online status, and read-only achievements on tap.
+52. **Friends polish** (`135779f`) — friend detail lists all avatars (last-played highlighted); read-only achievement snapshot; strip self from stored `friendIds`; defensive API parsing.
+53. **About Us** — credits accordion; **Donation** opens gem donate overlay via Close-style text button (replaces donate image asset).
+54. **Scribes** — `avatar_created` entries show portrait + frame in the feed (`avatarPortrait` / `avatarFrame` on event payload).
+55. **Encounter art** — refreshed `combat_nagar_berserk.webp`.
 
 ---
 
@@ -109,14 +113,14 @@ Since `9ea2110`.
 - **Progress** — `alphaPlayerAchievement.ts`; engine listens for `level_up` and `avatar_died`; ranks at **20 / 40 / 80 / 160** activity.
 - **Global cap** — `alphaPlayerGlobalLock.ts` + Postgres readiness on boot; rank 4 (Legendborn) limited to **100** players worldwide; others stall at rank 3 with `globallyLocked` in API/UI.
 - **UI** — `AchievementPanel` shows chain title at rank 0, sealed copy when locked; attention state unchanged pattern.
-- **Daily reward** — `DAILY_REWARD_ENCOUNTERS_REQUIRED` **42** (was 21); Adventurer rank bands unchanged at 42 encounters per rank.
+- **Daily reward** — `DAILY_REWARD_ENCOUNTERS_REQUIRED` **42** (was 21); Adventurer rank thresholds **100 / 200 / 400 / 800** (`22fa897`).
 - **Tests** — `alphaPlayerAchievement.test.ts` included in `npm run test:achievements`.
 
-### Avatar selection, death overlay, About Us (`0ea459e`, `a58ac44`)
+### Avatar selection, death overlay, About Us (`0ea459e`, `a58ac44`, `135779f`)
 
 - **`avatarSelectionPrepare.ts`** — `prepareAvatarSelection`, `purgeDeadAvatarsOnServer`, dead-ID localStorage key.
 - **`AvatarDeathOverlay`** — async `onHandoffStart` (purge + preload) before dashboard recreate flow.
-- **`AboutUsOverlay`** — dashboard nav “About Us” credits panel.
+- **`AboutUsOverlay`** — dashboard nav “About Us” credits panel; expandable credit cards; footer **Donation** button (same style as Close) opens `DonationOverlay`.
 
 ### Encounter images and solution UX (`e6d4dd0`, `953e348`)
 
@@ -149,8 +153,15 @@ Since `3d01551`.
 - **Nav** — `RADIAL_BUTTONS` entry at clock **19:00**; CSS `.morkahja-nav-tooltip` + hover on `.morkahja-nav-radial-button-visual` / center hub.
 - **Tests** — `expansionUnlock.test.ts` smoke for catalog ids and active flags.
 
-### Friends overlay (`friendService`)
+### Friends overlay (`6d21670`, `135779f`)
 
-- **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`.
-- **Avatar** — friend row uses the avatar with the latest `lastPlayedAt` (not merely the active selection).
-- **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view reuses `AchievementPanel` without daily claim.
+- **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`; `CannotAddSelfError` on add.
+- **Sanitize** — `sanitizeStoredFriendIds` removes the viewer’s own id from `friendIds` on load (case-insensitive) and persists the cleaned list; list API also filters self by id/name match.
+- **Avatar** — friend row uses the avatar with the latest `lastPlayedAt`; detail response includes all friend avatars with `lastPlayed` flag.
+- **Achievements** — `getAchievementsSnapshotReadOnly` for friend profile (no Firestarter side effects); shared `FriendAvatarDto` on achievements response.
+- **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view shows avatar grid + `AchievementPanel` (no daily claim); null-safe achievement cards.
+
+### Scribes avatar on create (`3d01551`)
+
+- **Payload** — `basePayload` stores `avatarPortrait` and `avatarFrame` on avatar-bearing events.
+- **Feed** — `resolveScribesAvatarVisual` for `avatar_created`; `ActivityFeedOverlay` renders `AvatarPortraitStack` when both fields are present.
