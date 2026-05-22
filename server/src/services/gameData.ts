@@ -35,12 +35,30 @@ export interface PortraitsDataFile {
   Avatar: Array<PortraitData | null>;
 }
 
+export interface ExpansionData {
+  mExtensioActive: boolean;
+  mExtensioCollectionImage: string;
+  mExtensioCost: number;
+  mExtensioHeaderImage: string;
+  mExtensioID: number;
+  mExtensioName: string;
+  mExtensioReward: number;
+  mExtensioSummaryText: string;
+  mExtensioText: string;
+  mExtensioUnlockButton: string;
+}
+
+interface ExpansionDataFile {
+  expansions: Record<string, ExpansionData>;
+}
+
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
 let encounterCache: EncounterDataMap | null = null;
 let solutionCache: SolutionDataMap | null = null;
 let framesCache: FramesDataFile | null = null;
 let portraitsCache: PortraitsDataFile | null = null;
+let expansionCache: ExpansionDataFile | null = null;
 
 function loadJson<T>(relativePath: string): T {
   const path = join(projectRoot, relativePath);
@@ -103,9 +121,22 @@ export function getPortraitsData(): PortraitsDataFile {
   return portraitsCache;
 }
 
+export function getExpansions(): ExpansionData[] {
+  if (!expansionCache) {
+    expansionCache = loadJson<ExpansionDataFile>('game/expansiondata.json');
+  }
+
+  return Object.values(expansionCache.expansions);
+}
+
+export function getExpansionById(expansionId: number): ExpansionData | undefined {
+  return getExpansions().find((entry) => entry.mExtensioID === expansionId);
+}
+
 export function loadStaticGameEnvironment(): void {
   getEncounters();
   getSolutionMap();
   getFramesData();
   getPortraitsData();
+  getExpansions();
 }

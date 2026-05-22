@@ -3,6 +3,7 @@ import type {
   ActivityFeedResponse,
   ClaimDailyRewardResponse,
   DonateGemsResponse,
+  UnlockExpansionResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -152,6 +153,15 @@ export async function donateGems(amount: number): Promise<DonateGemsResponse> {
   return request<DonateGemsResponse>('/player/donate', {
     method: 'POST',
     body: JSON.stringify({ amount }),
+  });
+}
+
+export async function unlockExpansion(
+  expansionId: number,
+): Promise<UnlockExpansionResponse> {
+  return request<UnlockExpansionResponse>('/player/expansions/unlock', {
+    method: 'POST',
+    body: JSON.stringify({ expansionId }),
   });
 }
 

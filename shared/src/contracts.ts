@@ -18,6 +18,18 @@ export interface PlayerResponse {
     yellow_red_gem?: number;
     [key: string]: number | undefined;
   };
+  unlockedExpansions?: number[];
+}
+
+export interface UnlockExpansionResponse {
+  playerId: string;
+  expansionId: number;
+  spent: number;
+  currencies: {
+    yellow_red_gem?: number;
+    [key: string]: number | undefined;
+  };
+  unlockedExpansions: number[];
 }
 
 export interface PlayerCurrencyResponse {

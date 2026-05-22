@@ -15,6 +15,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import AboutUsOverlay from './AboutUsOverlay.js';
+import ExpansionsOverlay from './ExpansionsOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
@@ -28,35 +29,61 @@ const SCRIBES_POLL_MS = 10_000;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
+    tooltip: 'Scribes',
     src: '/UI/03_DASHBOARD/im_button_news_a.webp',
     x: 48,
     y: -86,
   },
   {
     label: 'Settings',
+    tooltip: 'Settings',
     src: '/UI/03_DASHBOARD/im_button_setting_b.webp',
     x: -48,
     y: -86,
   },
   {
     label: 'Social',
+    tooltip: 'Social',
     src: '/UI/03_DASHBOARD/im_button_social_a.webp',
     x: 96,
     y: 0,
   },
   {
     label: 'About Us',
+    tooltip: 'About Us',
     src: '/UI/03_DASHBOARD/im_button_credits_b.webp',
     x: -96,
     y: 0,
   },
   {
     label: 'Achievements',
+    tooltip: 'Achievements',
     src: '/UI/03_DASHBOARD/im_achievements.webp',
     x: 48,
     y: 83,
   },
+  {
+    label: 'Expansions',
+    tooltip: 'Expansions',
+    src: '/UI/03_DASHBOARD/im_button_expansions.webp',
+    x: -48,
+    y: 83,
+  },
 ] as const;
+
+const NAV_CENTER_HOVER_ID = 'Navigation';
+
+function navRadialTooltipStyle(x: number, y: number): CSSProperties {
+  const spokeLength = Math.hypot(x, y) || 1;
+  const outward = 38;
+  const offsetX = Math.round((x / spokeLength) * outward);
+  const offsetY = Math.round((y / spokeLength) * outward);
+
+  return {
+    left: `calc(50% + ${offsetX}px)`,
+    top: `calc(50% + ${offsetY}px)`,
+  };
+}
 
 /** Closed-nav dot anchors match radial pop positions (24h clock: 13:00, 17:00). */
 const SCRIBES_RADIAL_OFFSET = RADIAL_BUTTONS.find((button) => button.label === 'News')!;
@@ -230,8 +257,10 @@ export function Dashboard({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [aboutUsOpen, setAboutUsOpen] = useState(false);
+  const [expansionsOpen, setExpansionsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
+  const [hoveredNavId, setHoveredNavId] = useState<string | null>(null);
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
   const playerName = session?.playerName?.trim() ?? '';
@@ -494,6 +523,8 @@ export function Dashboard({
               !achievementsOpen &&
               navOpen;
 
+            const showTooltip = hoveredNavId === button.label && navOpen && clickable;
+
             return (
             <button
               aria-label={
@@ -503,8 +534,25 @@ export function Dashboard({
                     ? 'Achievements, new progress'
                     : button.label
               }
+              className="morkahja-nav-radial-button"
               disabled={!clickable || !navOpen}
               key={button.label}
+              onBlur={() => {
+                setHoveredNavId((current) => (current === button.label ? null : current));
+              }}
+              onFocus={() => {
+                if (navOpen && clickable) {
+                  setHoveredNavId(button.label);
+                }
+              }}
+              onMouseEnter={() => {
+                if (navOpen && clickable) {
+                  setHoveredNavId(button.label);
+                }
+              }}
+              onMouseLeave={() => {
+                setHoveredNavId((current) => (current === button.label ? null : current));
+              }}
               onPointerDown={() => {
                 pulseNavButton(button.label);
               }}
@@ -521,6 +569,9 @@ export function Dashboard({
                 }
                 if (button.label === 'About Us') {
                   setAboutUsOpen(true);
+                }
+                if (button.label === 'Expansions') {
+                  setExpansionsOpen(true);
                 }
               }}
               style={{
@@ -545,18 +596,27 @@ export function Dashboard({
                   className="morkahja-nav-attention-dot morkahja-party-slot-dot morkahja-nav-attention-glow-achievements"
                 />
               ) : null}
-              <img
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                src={button.src}
-                style={{
-                  ...imageStyle,
-                  animation: scribesButtonShake || achievementsButtonShake
-                    ? 'morkahja-scribes-button-shake 2.8s ease-in-out infinite'
-                    : pressAnimation(isNavButtonPressed(button.label)),
-                }}
-              />
+              <span
+                className={`morkahja-nav-tooltip${showTooltip ? ' morkahja-nav-tooltip--visible' : ''}`}
+                role="tooltip"
+                style={navRadialTooltipStyle(button.x, button.y)}
+              >
+                {button.tooltip}
+              </span>
+              <span className="morkahja-nav-radial-button-visual">
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  src={button.src}
+                  style={{
+                    ...imageStyle,
+                    animation: scribesButtonShake || achievementsButtonShake
+                      ? 'morkahja-scribes-button-shake 2.8s ease-in-out infinite'
+                      : pressAnimation(isNavButtonPressed(button.label)),
+                  }}
+                />
+              </span>
             </button>
             );
           })}
@@ -570,7 +630,24 @@ export function Dashboard({
                     ? 'Close navigation'
                     : 'Open navigation'
             }
+            className="morkahja-nav-center-button"
             disabled={!clickable}
+            onBlur={() => {
+              setHoveredNavId((current) => (current === NAV_CENTER_HOVER_ID ? null : current));
+            }}
+            onFocus={() => {
+              if (clickable) {
+                setHoveredNavId(NAV_CENTER_HOVER_ID);
+              }
+            }}
+            onMouseEnter={() => {
+              if (clickable) {
+                setHoveredNavId(NAV_CENTER_HOVER_ID);
+              }
+            }}
+            onMouseLeave={() => {
+              setHoveredNavId((current) => (current === NAV_CENTER_HOVER_ID ? null : current));
+            }}
             onPointerDown={() => {
               pulseNavButton('Navigation');
             }}
@@ -593,36 +670,48 @@ export function Dashboard({
             }}
             type="button"
           >
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={NAV_BUTTON_ASSET}
-              style={{
-                ...navButtonImageStyle,
-                animation:
-                  isNavButtonPressed('Navigation')
-                    ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
-                    : undefined,
-                opacity: navOpen ? 0 : 1,
-                transform: navOpen ? 'translateY(-50%) scale(0.82)' : 'translateY(-50%) scale(1)',
-              }}
-            />
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={HOME_BUTTON_ASSET}
-              style={{
-                ...navButtonImageStyle,
-                animation:
-                  isNavButtonPressed('Navigation')
-                    ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
-                    : undefined,
-                opacity: navOpen ? 1 : 0,
-                transform: navOpen ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.82)',
-              }}
-            />
+            <span
+              className={`morkahja-nav-tooltip morkahja-nav-tooltip--center${
+                hoveredNavId === NAV_CENTER_HOVER_ID && clickable
+                  ? ' morkahja-nav-tooltip--visible'
+                  : ''
+              }`}
+              role="tooltip"
+            >
+              {navOpen ? 'Home' : 'Menu'}
+            </span>
+            <span className="morkahja-nav-center-button-visual">
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={NAV_BUTTON_ASSET}
+                style={{
+                  ...navButtonImageStyle,
+                  animation:
+                    isNavButtonPressed('Navigation')
+                      ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
+                      : undefined,
+                  opacity: navOpen ? 0 : 1,
+                  transform: navOpen ? 'translateY(-50%) scale(0.82)' : 'translateY(-50%) scale(1)',
+                }}
+              />
+              <img
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                src={HOME_BUTTON_ASSET}
+                style={{
+                  ...navButtonImageStyle,
+                  animation:
+                    isNavButtonPressed('Navigation')
+                      ? `morkahja-nav-center-button-press ${NAV_BUTTON_PRESS_MS}ms ease-out`
+                      : undefined,
+                  opacity: navOpen ? 1 : 0,
+                  transform: navOpen ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.82)',
+                }}
+              />
+            </span>
           </button>
           {!navOpen && scribesUnread && !activityOpen ? (
             <span
@@ -688,6 +777,15 @@ export function Dashboard({
             setAboutUsOpen(false);
           }}
           open={aboutUsOpen}
+        />
+      ) : null}
+      {showChrome ? (
+        <ExpansionsOverlay
+          onClose={() => {
+            setExpansionsOpen(false);
+          }}
+          open={expansionsOpen}
+          playerId={playerId}
         />
       ) : null}
     </main>

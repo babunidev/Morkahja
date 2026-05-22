@@ -15,6 +15,7 @@ import {
   listAvatars,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
+import { getExpansionById } from './gameData.js';
 import {
   recordAvatarCreatedEvent,
   recordGemsDonatedEvent,
@@ -25,6 +26,34 @@ export class InsufficientGemsForDonationError extends Error {
   constructor() {
     super('Insufficient yellow red gems for donation');
     this.name = 'InsufficientGemsForDonationError';
+  }
+}
+
+export class ExpansionNotFoundError extends Error {
+  constructor() {
+    super('Expansion not found');
+    this.name = 'ExpansionNotFoundError';
+  }
+}
+
+export class ExpansionInactiveError extends Error {
+  constructor() {
+    super('Expansion is not available');
+    this.name = 'ExpansionInactiveError';
+  }
+}
+
+export class ExpansionAlreadyUnlockedError extends Error {
+  constructor() {
+    super('Expansion already unlocked');
+    this.name = 'ExpansionAlreadyUnlockedError';
+  }
+}
+
+export class InsufficientGemsForExpansionError extends Error {
+  constructor() {
+    super('Insufficient yellow red gems for expansion unlock');
+    this.name = 'InsufficientGemsForExpansionError';
   }
 }
 
@@ -207,6 +236,75 @@ export async function donatePlayerYellowRedGems(
   await recordGemsDonatedEvent(playerId, donated);
 
   return { currencies, donated };
+}
+
+export async function unlockPlayerExpansion(
+  playerId: string,
+  expansionId: number,
+): Promise<{
+  currencies: NonNullable<PlayerDocument['currencies']>;
+  unlockedExpansions: number[];
+  expansionId: number;
+  spent: number;
+}> {
+  if (!Number.isInteger(expansionId) || expansionId <= 0) {
+    throw new Error(`Invalid expansion id: ${expansionId}`);
+  }
+
+  const expansion = getExpansionById(expansionId);
+
+  if (!expansion) {
+    throw new ExpansionNotFoundError();
+  }
+
+  if (!expansion.mExtensioActive) {
+    throw new ExpansionInactiveError();
+  }
+
+  const player = await loadPlayer(playerId);
+
+  if (!player) {
+    throw new Error(`Player not found: ${playerId}`);
+  }
+
+  const unlockedExpansions = await getPlayerUnlockedExpansions(playerId);
+
+  if (unlockedExpansions.includes(expansionId)) {
+    throw new ExpansionAlreadyUnlockedError();
+  }
+
+  const cost = expansion.mExtensioCost;
+  const currentCurrencies = player.currencies ?? {};
+  const currentGems = typeof currentCurrencies.yellow_red_gem === 'number'
+    ? currentCurrencies.yellow_red_gem
+    : 0;
+
+  if (currentGems < cost) {
+    throw new InsufficientGemsForExpansionError();
+  }
+
+  const currencies = {
+    ...currentCurrencies,
+    yellow_red_gem: currentGems - cost,
+  };
+  const nextUnlockedExpansions = uniqueSorted([...unlockedExpansions, expansionId]);
+
+  await setPlayer(
+    playerId,
+    {
+      currencies,
+      unlockedExpansions: nextUnlockedExpansions,
+      updatedAt: Date.now(),
+    },
+    { merge: true },
+  );
+
+  return {
+    currencies,
+    unlockedExpansions: nextUnlockedExpansions,
+    expansionId,
+    spent: cost,
+  };
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(

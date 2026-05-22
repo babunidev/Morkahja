@@ -178,6 +178,72 @@ img {
   animation-delay: 0.85s;
 }
 
+.morkahja-nav-radial-button,
+.morkahja-nav-center-button {
+  cursor: pointer;
+}
+
+.morkahja-nav-radial-button:disabled,
+.morkahja-nav-center-button:disabled {
+  cursor: default;
+}
+
+.morkahja-nav-radial-button-visual,
+.morkahja-nav-center-button-visual {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+}
+
+.morkahja-nav-radial-button:hover:not(:disabled) .morkahja-nav-radial-button-visual,
+.morkahja-nav-radial-button:focus-visible:not(:disabled) .morkahja-nav-radial-button-visual,
+.morkahja-nav-center-button:hover:not(:disabled) .morkahja-nav-center-button-visual,
+.morkahja-nav-center-button:focus-visible:not(:disabled) .morkahja-nav-center-button-visual {
+  transform: scale(1.06) translateY(-2px);
+  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-nav-tooltip {
+  position: absolute;
+  z-index: 6;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 204, 102, 0.34);
+  border-radius: 8px;
+  background: rgba(12, 8, 6, 0.88);
+  color: rgba(247, 239, 224, 0.94);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.94);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.morkahja-nav-tooltip--visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.morkahja-nav-tooltip--center {
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 10px)) scale(0.94);
+}
+
+.morkahja-nav-tooltip--center.morkahja-nav-tooltip--visible {
+  transform: translate(-50%, calc(-100% - 10px)) scale(1);
+}
+
 @keyframes morkahja-avatar-enter-center-glow {
   0%,
   100% {
