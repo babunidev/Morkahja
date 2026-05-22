@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
+import { interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
 import {
-  interpretRoll,
-  isRollFavorable,
   predictEncounterLosses,
   scaledUses,
   usedEncounterSolution,

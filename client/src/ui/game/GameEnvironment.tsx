@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import encountersData from '../../data/game/encountersdata.json';
 import solutionData from '../../data/game/solutiondata.json';
 import {
-  deleteAvatar,
   resolveEncounterAction,
   type AvatarInventory,
   type EncounterAction,
@@ -12,6 +11,7 @@ import {
 } from '../../api/http.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { interpretRoll } from './encounterInventoryPreview.js';
 import {
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   encounterFadeTransition,
@@ -35,8 +35,6 @@ interface SolutionDataRecord {
   mSolutionName: string;
 }
 
-type RollOutcome = 'Misery' | 'Hardship' | 'Disengage' | 'Fortune' | 'Prosperity';
-
 const solutionsById = solutionData as Record<string, SolutionDataRecord>;
 
 function preloadImage(src: string): Promise<void> {
@@ -52,7 +50,10 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
+// Atranor (id 1) is queued server-side when essence runs out; death overlay only on avatarDied
+// (Atranor Misery/Hardship). deathTriggered alone must not skip playing Atranor.
 interface GameEnvironmentProps {
+  deathPending?: boolean;
   deferReveal?: boolean;
   hideAvatarPortraitForHandoff?: boolean;
   initialAvatar: PersistedAvatar;
@@ -105,25 +106,6 @@ function encounterLookup(encounterId: number): EncounterDataRecord | null {
 function imagePath(imageName: string): string {
   const fileName = imageName.endsWith('.webp') ? imageName : `${imageName}.webp`;
   return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
-}
-
-function interpretRoll(roll: number): RollOutcome | null {
-  if (roll >= 1 && roll <= 10) {
-    return 'Misery';
-  }
-  if (roll >= 11 && roll <= 39) {
-    return 'Hardship';
-  }
-  if (roll >= 40 && roll <= 60) {
-    return 'Disengage';
-  }
-  if (roll >= 61 && roll <= 95) {
-    return 'Fortune';
-  }
-  if (roll >= 96 && roll <= 100) {
-    return 'Prosperity';
-  }
-  return null;
 }
 
 function rewardName(rewardId: number): string {
@@ -217,18 +199,12 @@ function actionLogEntries({
   ].filter((entry) => entry.length > 0);
 }
 
-function isFatalAtranorRoll(encounter: EncounterSnapshot, encounterTitle: string, roll: number | null): boolean {
-  const outcome = roll === null ? null : interpretRoll(roll);
-  const isAtranor = encounter.encounterId === 1 || encounterTitle.toLowerCase() === 'atranor';
-
-  return isAtranor && (outcome === 'Misery' || outcome === 'Hardship');
-}
-
 export function GameEnvironment({
   deferReveal = false,
   hideAvatarPortraitForHandoff = false,
   initialAvatar,
   initialEncounter,
+  deathPending = false,
   onAvatarDeath,
   onHome,
 }: GameEnvironmentProps) {
@@ -285,7 +261,7 @@ export function GameEnvironment({
     selectedRoll: number | null,
     selectedSolutionId: number | null,
   ): Promise<void> {
-    if (continuePending) {
+    if (continuePending || deathPending) {
       return;
     }
 
@@ -294,29 +270,6 @@ export function GameEnvironment({
     try {
       const resolvedEncounterTitle = title;
       const resolvedRoll = selectedRoll;
-      const fatalAtranorRoll = isFatalAtranorRoll(encounter, resolvedEncounterTitle, resolvedRoll);
-
-      if (fatalAtranorRoll) {
-        setActionLog((currentLog) => [
-          ...currentLog,
-          ...actionLogEntries({
-            encounterTitle: resolvedEncounterTitle,
-            inventoryEntries: [],
-            message: 'Atranor claimed your avatar.',
-            rewards: [],
-            roll: resolvedRoll,
-            solutionIds: [],
-          }),
-        ].slice(-24));
-        try {
-          await deleteAvatar(avatar.id);
-        } catch (error) {
-          console.error('Failed to delete dead avatar', error);
-        }
-        onAvatarDeath(avatar);
-        return;
-      }
-
       const inventoryBefore = avatar.inventory;
       const result = await resolveEncounterAction(action, avatar.id);
       const inventoryAfter = result.avatar?.inventory;
@@ -349,6 +302,11 @@ export function GameEnvironment({
           playSfx(LEVEL_UP_SOUND);
         }
         setAvatar(result.avatar);
+      }
+
+      // Server-authoritative death (Atranor / encounter 1 chain); do not infer death locally.
+      if (result.avatarDied) {
+        onAvatarDeath(result.avatar ?? avatar);
       }
     } finally {
       setContinuePending(false);
@@ -392,7 +350,7 @@ export function GameEnvironment({
                 encounter={encounter}
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
-                continuePending={continuePending}
+                continuePending={continuePending || deathPending}
                 inventoryOpen={inventoryOpen}
                 loreOpen={loreOpen}
                 onContinue={handleContinueEncounter}

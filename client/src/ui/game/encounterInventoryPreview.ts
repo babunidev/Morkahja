@@ -1,7 +1,7 @@
 import solutionData from '../../data/game/solutiondata.json';
 import type { AvatarInventory, InventoryItem } from '../../api/http.js';
-
-type RollOutcome = 'Misery' | 'Hardship' | 'Disengage' | 'Fortune' | 'Prosperity';
+import type { RollOutcome } from '@shared/diceInterpreter';
+export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -24,30 +24,6 @@ export function scaledUses(baseUse: number, encounterDifficulty: number): number
   }
 
   return Math.max(1, baseUse * encounterDifficulty);
-}
-
-export function isRollFavorable(roll: number): boolean {
-  const outcome = interpretRoll(roll);
-  return outcome === 'Fortune' || outcome === 'Prosperity';
-}
-
-export function interpretRoll(roll: number): RollOutcome | null {
-  if (roll >= 1 && roll <= 10) {
-    return 'Misery';
-  }
-  if (roll >= 11 && roll <= 39) {
-    return 'Hardship';
-  }
-  if (roll >= 40 && roll <= 60) {
-    return 'Disengage';
-  }
-  if (roll >= 61 && roll <= 95) {
-    return 'Fortune';
-  }
-  if (roll >= 96 && roll <= 100) {
-    return 'Prosperity';
-  }
-  return null;
 }
 
 function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[] {
