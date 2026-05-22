@@ -20,7 +20,10 @@ import {
   adventurerRankDefinition,
   adventurerRankFromProgress,
 } from '../domain/achievements/adventurerAchievement.js';
-import { loadAchievementProgress } from '../domain/achievements/achievementPersistence.js';
+import {
+  loadAchievementProgress,
+  reconcileAchievementProgress,
+} from '../domain/achievements/achievementPersistence.js';
 import {
   claimDailyReward,
   getDailyRewardStatus,
@@ -123,16 +126,28 @@ function buildAlphaPlayerView(
   };
 }
 
+async function loadSyncedAchievementProgress(
+  playerId: string,
+  achievementId: string,
+): Promise<number> {
+  const stored = await loadAchievementProgress(playerId, achievementId);
+
+  if (!stored) {
+    return 0;
+  }
+
+  const synced = await reconcileAchievementProgress(stored);
+  return synced.progress;
+}
+
 export async function getAchievementsSnapshot(
   playerId: string,
 ): Promise<AchievementsSnapshot> {
-  const [adventurerStored, alphaStored, alphaGlobal] = await Promise.all([
-    loadAchievementProgress(playerId, ADVENTURER_ACHIEVEMENT_ID),
-    loadAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
+  const [adventurerProgress, alphaProgress, alphaGlobal] = await Promise.all([
+    loadSyncedAchievementProgress(playerId, ADVENTURER_ACHIEVEMENT_ID),
+    loadSyncedAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
-  const adventurerProgress = adventurerStored?.progress ?? 0;
-  const alphaProgress = alphaStored?.progress ?? 0;
   const alphaLocked = isAlphaPlayerGloballyLocked(alphaGlobal);
 
   return {

@@ -1,6 +1,6 @@
 export const ADVENTURER_ACHIEVEMENT_ID = 'adventurer';
 
-export const ADVENTURER_ENCOUNTERS_PER_RANK = 42;
+export const ADVENTURER_RANK_THRESHOLDS = [100, 200, 400, 800] as const;
 export const ADVENTURER_MAX_RANK = 4;
 
 export interface AchievementRankDefinition {
@@ -39,19 +39,19 @@ export const ADVENTURER_RANKS: AchievementRankDefinition[] = [
 ];
 
 export function adventurerRankFromProgress(progress: number): number {
-  if (progress >= ADVENTURER_ENCOUNTERS_PER_RANK * 4) {
+  if (progress >= ADVENTURER_RANK_THRESHOLDS[3]) {
     return ADVENTURER_MAX_RANK;
   }
 
-  if (progress >= ADVENTURER_ENCOUNTERS_PER_RANK * 3) {
+  if (progress >= ADVENTURER_RANK_THRESHOLDS[2]) {
     return 3;
   }
 
-  if (progress >= ADVENTURER_ENCOUNTERS_PER_RANK * 2) {
+  if (progress >= ADVENTURER_RANK_THRESHOLDS[1]) {
     return 2;
   }
 
-  if (progress >= ADVENTURER_ENCOUNTERS_PER_RANK) {
+  if (progress >= ADVENTURER_RANK_THRESHOLDS[0]) {
     return 1;
   }
 
@@ -79,16 +79,15 @@ export function adventurerProgressBand(progress: number): {
   const rank = adventurerRankFromProgress(progress);
 
   if (rank >= ADVENTURER_MAX_RANK) {
-    const bandStart = ADVENTURER_ENCOUNTERS_PER_RANK * ADVENTURER_MAX_RANK;
     return {
-      bandStart,
+      bandStart: ADVENTURER_RANK_THRESHOLDS[3],
       bandEnd: null,
       progressInBand: 1,
     };
   }
 
-  const bandStart = rank * ADVENTURER_ENCOUNTERS_PER_RANK;
-  const bandEnd = bandStart + ADVENTURER_ENCOUNTERS_PER_RANK;
+  const bandStart = rank === 0 ? 0 : ADVENTURER_RANK_THRESHOLDS[rank - 1];
+  const bandEnd = ADVENTURER_RANK_THRESHOLDS[rank];
   const span = bandEnd - bandStart;
 
   return {

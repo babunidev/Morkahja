@@ -1,5 +1,45 @@
 import { pool } from '../../db/postgresDocumentStore.js';
+import {
+  ADVENTURER_ACHIEVEMENT_ID,
+  adventurerRankFromProgress,
+} from './adventurerAchievement.js';
+import {
+  ALPHA_PLAYER_ACHIEVEMENT_ID,
+  alphaPlayerRankFromProgress,
+} from './alphaPlayerAchievement.js';
 import type { AchievementProgress } from './achievementProgress.js';
+
+function rankFromProgress(achievementId: string, progress: number): number {
+  if (achievementId === ADVENTURER_ACHIEVEMENT_ID) {
+    return adventurerRankFromProgress(progress);
+  }
+
+  if (achievementId === ALPHA_PLAYER_ACHIEVEMENT_ID) {
+    return alphaPlayerRankFromProgress(progress);
+  }
+
+  return 0;
+}
+
+/** Re-apply rank thresholds to stored progress (e.g. after threshold changes). */
+export async function reconcileAchievementProgress(
+  record: AchievementProgress,
+): Promise<AchievementProgress> {
+  const rank = rankFromProgress(record.achievementId, record.progress);
+
+  if (record.rank === rank) {
+    return record;
+  }
+
+  const updated: AchievementProgress = {
+    ...record,
+    rank,
+    updatedAt: Date.now(),
+  };
+
+  await saveAchievementProgress(updated);
+  return updated;
+}
 
 let schemaReady: Promise<void> | null = null;
 
