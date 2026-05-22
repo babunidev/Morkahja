@@ -980,7 +980,7 @@
     "mEncounterType": 2
   },
   "20044": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20044,
@@ -1340,7 +1340,7 @@
     "mEncounterType": 5
   },
   "20062": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1004,
     "mEncounterFollow": 0,
     "mEncounterID": 20062,
@@ -1660,7 +1660,7 @@
     "mEncounterType": 4
   },
   "20078": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20078,
@@ -1680,7 +1680,7 @@
     "mEncounterType": 1
   },
   "20079": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20079,
@@ -2340,7 +2340,7 @@
     "mEncounterType": 1
   },
   "20112": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20112,
@@ -2360,7 +2360,7 @@
     "mEncounterType": 1
   },
   "20113": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20113,
@@ -2460,7 +2460,7 @@
     "mEncounterType": 1
   },
   "20118": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20118,
@@ -2560,7 +2560,7 @@
     "mEncounterType": 2
   },
   "20123": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20123,
@@ -2580,7 +2580,7 @@
     "mEncounterType": 5
   },
   "20124": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20124,
@@ -2680,7 +2680,7 @@
     "mEncounterType": 3
   },
   "20129": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20129,
@@ -2700,7 +2700,7 @@
     "mEncounterType": 2
   },
   "20130": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 20131,
     "mEncounterID": 20130,
@@ -2720,7 +2720,7 @@
     "mEncounterType": 2
   },
   "20131": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20131,
@@ -2740,7 +2740,7 @@
     "mEncounterType": 2
   },
   "20132": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20132,
@@ -2760,7 +2760,7 @@
     "mEncounterType": 3
   },
   "20133": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20133,
@@ -2780,7 +2780,7 @@
     "mEncounterType": 1
   },
   "20134": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20134,
@@ -2800,7 +2800,7 @@
     "mEncounterType": 4
   },
   "20135": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20135,
@@ -2820,7 +2820,7 @@
     "mEncounterType": 1
   },
   "20136": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20136,
@@ -2840,7 +2840,7 @@
     "mEncounterType": 3
   },
   "20137": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20137,
@@ -2860,7 +2860,7 @@
     "mEncounterType": 3
   },
   "20138": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20138,
@@ -2880,7 +2880,7 @@
     "mEncounterType": 2
   },
   "20139": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20139,
@@ -2900,7 +2900,7 @@
     "mEncounterType": 1
   },
   "20140": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20140,
@@ -2920,7 +2920,7 @@
     "mEncounterType": 1
   },
   "20141": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20141,
@@ -2940,7 +2940,7 @@
     "mEncounterType": 1
   },
   "20142": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20142,
@@ -2960,7 +2960,7 @@
     "mEncounterType": 2
   },
   "20143": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20143,
@@ -2980,7 +2980,7 @@
     "mEncounterType": 2
   },
   "20144": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20144,
@@ -3000,7 +3000,7 @@
     "mEncounterType": 2
   },
   "20145": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20145,
@@ -3020,7 +3020,7 @@
     "mEncounterType": 3
   },
   "20146": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20146,
@@ -3040,7 +3040,7 @@
     "mEncounterType": 2
   },
   "20147": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20147,
@@ -3060,7 +3060,7 @@
     "mEncounterType": 2
   },
   "20148": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20148,
@@ -3080,7 +3080,7 @@
     "mEncounterType": 5
   },
   "20149": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20149,
@@ -3100,7 +3100,7 @@
     "mEncounterType": 1
   },
   "20150": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20150,
@@ -3120,7 +3120,7 @@
     "mEncounterType": 1
   },
   "20151": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20151,
@@ -3140,7 +3140,7 @@
     "mEncounterType": 1
   },
   "20152": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20152,
@@ -3160,7 +3160,7 @@
     "mEncounterType": 1
   },
   "20153": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20153,
@@ -3180,7 +3180,7 @@
     "mEncounterType": 1
   },
   "20155": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20155,
@@ -3200,7 +3200,7 @@
     "mEncounterType": 1
   },
   "20156": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20156,
@@ -3220,7 +3220,7 @@
     "mEncounterType": 2
   },
   "20157": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20157,
@@ -3240,7 +3240,7 @@
     "mEncounterType": 2
   },
   "20158": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20158,
@@ -3260,7 +3260,7 @@
     "mEncounterType": 2
   },
   "20159": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20159,
@@ -3280,7 +3280,7 @@
     "mEncounterType": 2
   },
   "20160": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20160,
@@ -3300,7 +3300,7 @@
     "mEncounterType": 2
   },
   "20161": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20161,
@@ -3320,7 +3320,7 @@
     "mEncounterType": 2
   },
   "20162": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20162,
@@ -3340,7 +3340,7 @@
     "mEncounterType": 4
   },
   "20163": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20163,
@@ -3360,7 +3360,7 @@
     "mEncounterType": 1
   },
   "20164": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20164,
@@ -3380,7 +3380,7 @@
     "mEncounterType": 1
   },
   "20165": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20165,
@@ -3400,7 +3400,7 @@
     "mEncounterType": 1
   },
   "20166": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20166,
@@ -3420,7 +3420,7 @@
     "mEncounterType": 1
   },
   "20167": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20167,
@@ -3440,7 +3440,7 @@
     "mEncounterType": 3
   },
   "20168": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20168,
@@ -3460,7 +3460,7 @@
     "mEncounterType": 3
   },
   "20169": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20169,
@@ -3480,7 +3480,7 @@
     "mEncounterType": 3
   },
   "20170": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20170,
@@ -3500,7 +3500,7 @@
     "mEncounterType": 3
   },
   "20171": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20171,
@@ -3520,7 +3520,7 @@
     "mEncounterType": 3
   },
   "20172": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20172,
@@ -3540,7 +3540,7 @@
     "mEncounterType": 3
   },
   "20173": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20173,
@@ -3560,7 +3560,7 @@
     "mEncounterType": 3
   },
   "20174": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20174,
@@ -3580,7 +3580,7 @@
     "mEncounterType": 3
   },
   "20175": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20175,
@@ -3600,7 +3600,7 @@
     "mEncounterType": 3
   },
   "20176": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20176,
@@ -3620,7 +3620,7 @@
     "mEncounterType": 1
   },
   "20177": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20177,
@@ -3640,7 +3640,7 @@
     "mEncounterType": 5
   },
   "20178": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20178,
@@ -3660,7 +3660,7 @@
     "mEncounterType": 2
   },
   "20179": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20179,
