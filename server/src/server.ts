@@ -32,6 +32,7 @@ import {
   loadPlayerActiveAvatar,
   loadPlayerAvatars,
   loadPlayer,
+  AvatarLimitReachedError,
   savePlayerAvatar,
   selectPlayerAvatar,
 } from './services/playerService.js';
@@ -239,21 +240,30 @@ app.post('/avatar', async (req: Request, res: Response) => {
     }
   }
 
-  const avatar = await savePlayerAvatar(playerId, {
-    id: body.id as string,
-    name: body.name as string,
-    race: body.race as never,
-    role: body.role as never,
-    level: typeof body.level === 'number' ? body.level : 1,
-    experience: typeof body.experience === 'number' ? body.experience : 0,
-    inventory: body.inventory,
-    portrait: body.portrait as string,
-    frame: body.frame as string,
-    createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,
-    lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
-  });
+  try {
+    const avatar = await savePlayerAvatar(playerId, {
+      id: body.id as string,
+      name: body.name as string,
+      race: body.race as never,
+      role: body.role as never,
+      level: typeof body.level === 'number' ? body.level : 1,
+      experience: typeof body.experience === 'number' ? body.experience : 0,
+      inventory: body.inventory,
+      portrait: body.portrait as string,
+      frame: body.frame as string,
+      createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,
+      lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
+    });
 
-  res.status(201).json({ playerId, avatar });
+    res.status(201).json({ playerId, avatar });
+  } catch (error) {
+    if (error instanceof AvatarLimitReachedError) {
+      res.status(409).json({ error: 'AVATAR_LIMIT_REACHED', message: error.message });
+      return;
+    }
+
+    throw error;
+  }
 });
 
 app.delete('/avatar/:avatarId', async (req: Request, res: Response) => {

@@ -73,10 +73,15 @@ import {
 
 const RANDOM_ENCOUNTER_MIN_ID = 20001;
 const MAX_EXPANSION_REROLLS = 200;
+/** System death encounter — same id as tutorial Atranor in encountersdata (mEncounterID 1). */
 export const DEATH_ENCOUNTER_ID = '00001';
 export const LEVEL_UP_ENCOUNTER_ID = '00002';
 const DEATH_ENCOUNTER_NUMERIC_ID = Number(DEATH_ENCOUNTER_ID);
 const LEVEL_UP_ENCOUNTER_NUMERIC_ID = Number(LEVEL_UP_ENCOUNTER_ID);
+
+// Atranor (encounter id 1) = DEATH_ENCOUNTER_ID: queued after essence depletion on a normal encounter.
+// Random pool still starts at 20001. avatarDied is true only after Atranor Misery/Hardship — not when
+// deathTriggered queues Atranor. Client must not infer death locally.
 
 export interface EncounterSelectionContext {
   unlockedExpansions: number[];
@@ -92,6 +97,8 @@ export interface ContinueEncounterResult {
   avatar: AvatarDocument;
   snapshot: EncounterSnapshot;
   resolution: EncounterResolution;
+  deathTriggered: boolean;
+  avatarDied: boolean;
 }
 
 /** Inclusive integer in [min, max]. Server-only randomness at creation time. */
@@ -843,6 +850,8 @@ export async function continueEncounter(
   acquireLock(activeSnapshot.snapshotId);
 
   let eventContext: EncounterContinuedEventContext | null = null;
+  let encounterDeathTriggered = false;
+  let encounterAvatarDied = false;
 
   try {
     const result = await withDocumentTransaction(async (transaction) => {
@@ -1024,6 +1033,11 @@ export async function continueEncounter(
         deathTriggered,
         isDeathEncounterResolution: encounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID,
       };
+      encounterDeathTriggered = deathTriggered;
+      // deathTriggered only queues Atranor; actual death is decided on that encounter's roll.
+      encounterAvatarDied =
+        eventContext.isDeathEncounterResolution &&
+        isDeathEncounterFailureOutcome(selectedRollOutcome);
 
       return {
         avatar: updatedAvatar,
@@ -1041,7 +1055,11 @@ export async function continueEncounter(
       );
     }
 
-    return result;
+    return {
+      ...result,
+      deathTriggered: encounterDeathTriggered,
+      avatarDied: encounterAvatarDied,
+    };
   } finally {
     releaseLock(activeSnapshot.snapshotId);
   }

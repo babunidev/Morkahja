@@ -142,11 +142,12 @@ export async function continueEncounterController(
     const { playerId, avatarId } = requireIdentity(req);
     const body = req.body as Record<string, unknown> | undefined;
     const action = toPlayerAction(body?.action);
-    const { avatar, snapshot, resolution } = await continueEncounter(
+    const result = await continueEncounter(
       playerId,
       avatarId,
       action,
     );
+    const { avatar, snapshot, resolution } = result;
 
     res.json({
       avatar,
@@ -158,6 +159,8 @@ export async function continueEncounterController(
       message: resolution.message,
       failurePenalty: resolution.failurePenalty,
       usedInventorySolutions: resolution.usedInventorySolutions,
+      deathTriggered: result.deathTriggered,
+      avatarDied: result.avatarDied,
     });
   } catch (error) {
     handleControllerError(error, next);

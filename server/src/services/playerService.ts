@@ -19,6 +19,14 @@ import { recordAvatarCreatedEvent, recordGemsReceivedEvent } from './gameEventSe
 
 const DEFAULT_UNLOCKED_EXPANSIONS = [0];
 export const BABUNI_PLAYER_ID = 'Babuni';
+export const MAX_PLAYER_AVATARS = 3;
+
+export class AvatarLimitReachedError extends Error {
+  constructor() {
+    super(`Players may have at most ${MAX_PLAYER_AVATARS} avatars`);
+    this.name = 'AvatarLimitReachedError';
+  }
+}
 
 export type AvatarRace = 'Rokur' | 'Verdani' | 'Aevis' | 'Grimnir';
 export type AvatarRole = 'Mage' | 'Warrior' | 'Rogue';
@@ -195,6 +203,13 @@ export async function savePlayerAvatar(
 ): Promise<AvatarDocument> {
   const now = Date.now();
   const existing = await loadAvatar(playerId, payload.id);
+
+  if (!existing) {
+    const avatarCount = (await listAvatars(playerId)).length;
+    if (avatarCount >= MAX_PLAYER_AVATARS) {
+      throw new AvatarLimitReachedError();
+    }
+  }
   const profile: AvatarDocument['profile'] = {
     ...existing?.profile,
     raceRewardType: raceRewardType(payload.race),
