@@ -14,15 +14,16 @@ import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
+import AboutUsOverlay from './AboutUsOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 
 const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
+const PLAY_PREPARE_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
 const NAV_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_nav_b.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
-const LOADING_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
 const SCRIBES_POLL_MS = 10_000;
 const RADIAL_BUTTONS = [
   {
@@ -44,7 +45,7 @@ const RADIAL_BUTTONS = [
     y: 0,
   },
   {
-    label: 'Credits',
+    label: 'About Us',
     src: '/UI/03_DASHBOARD/im_button_credits_b.webp',
     x: -96,
     y: 0,
@@ -109,7 +110,21 @@ const buttonStyle: CSSProperties = {
 };
 
 const playWrapStyle: CSSProperties = {
+  position: 'relative',
   transition: 'opacity 420ms ease, transform 420ms ease',
+};
+
+const playPrepareWheelStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  width: 'min(18vw, 72px)',
+  height: 'min(18vw, 72px)',
+  transform: 'translate(-50%, -50%)',
+  objectFit: 'contain',
+  pointerEvents: 'none',
+  animation: 'morkahja-loading-wheel-spin 2s linear infinite',
+  filter: 'drop-shadow(0 0 12px rgba(244, 232, 190, 0.42))',
 };
 
 const imageStyle: CSSProperties = {
@@ -117,19 +132,6 @@ const imageStyle: CSSProperties = {
   width: '100%',
   height: 'auto',
   filter: 'drop-shadow(0 16px 24px rgba(0, 0, 0, 0.48))',
-};
-
-const preloadWheelStyle: CSSProperties = {
-  position: 'fixed',
-  top: 'max(18px, calc(env(safe-area-inset-top) + 14px))',
-  right: 'max(18px, calc(env(safe-area-inset-right) + 14px))',
-  zIndex: 4,
-  width: 'clamp(34px, 7vw, 58px)',
-  height: 'clamp(34px, 7vw, 58px)',
-  objectFit: 'contain',
-  animation: 'morkahja-dashboard-preload-spin 1.2s linear infinite',
-  filter: 'drop-shadow(0 0 10px rgba(244, 232, 190, 0.42))',
-  pointerEvents: 'none',
 };
 
 const navWrapStyle: CSSProperties = {
@@ -179,11 +181,14 @@ const radialButtonStyle: CSSProperties = {
 export function Dashboard({
   avatars = [],
   creationPreset = null,
+  creationRevealDelayMs = 0,
   excludedAvatarIds = [],
   hidden = false,
-  isPreparingAvatars = false,
+  selectionNotice = null,
   avatarSlotsVisible = false,
+  playPreparePending = false,
   onAvatarSlotsVisibleChange,
+  onAvatarSelectionHome,
   onAvatarsChanged,
   onCreationPresetConsumed,
   onEnterGameComplete,
@@ -197,11 +202,14 @@ export function Dashboard({
 }: {
   avatars?: PersistedAvatar[];
   creationPreset?: PersistedAvatar | null;
+  creationRevealDelayMs?: number;
   excludedAvatarIds?: string[];
   hidden?: boolean;
-  isPreparingAvatars?: boolean;
+  selectionNotice?: string | null;
   avatarSlotsVisible?: boolean;
+  playPreparePending?: boolean;
   onAvatarSlotsVisibleChange?: (visible: boolean) => void;
+  onAvatarSelectionHome?: () => void;
   onAvatarsChanged?: (avatars: PersistedAvatar[]) => void;
   onCreationPresetConsumed?: () => void;
   onEnterGameComplete?: () => void;
@@ -209,7 +217,7 @@ export function Dashboard({
   onEnterWorldFailed?: () => void;
   onHandoffLand?: () => void;
   onAvatarEnter?: () => void;
-  onPlay: () => Promise<void> | void;
+  onPlay?: () => Promise<boolean> | boolean;
   onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
   onLogout: () => void;
 }) {
@@ -221,6 +229,7 @@ export function Dashboard({
   const [activityOpen, setActivityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [aboutUsOpen, setAboutUsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
   const playerId = loadStoredSession()?.playerId ?? '';
@@ -297,20 +306,29 @@ export function Dashboard({
     };
   }, [refreshAchievementsAttention, refreshScribesUnread, showChrome]);
 
+  async function closeAvatarSelection(): Promise<void> {
+    if (!avatarSlotsVisible) {
+      return;
+    }
+
+    setClickable(false);
+    onAvatarSlotsVisibleChange?.(false);
+    onAvatarSelectionHome?.();
+    await waitForFade();
+    setClickable(true);
+  }
+
   async function handlePlayAsHome(): Promise<void> {
     if (!clickable || !avatarSlotsVisible || avatarCreationOpen) {
       return;
     }
 
     playSfx(DEFAULT_BUTTON_SOUND);
-    setClickable(false);
-    onAvatarSlotsVisibleChange?.(false);
-    await waitForFade();
-    setClickable(true);
+    await closeAvatarSelection();
   }
 
   async function handlePlay(): Promise<void> {
-    if (!clickable || avatarSlotsVisible) {
+    if (!clickable || avatarSlotsVisible || playPreparePending) {
       return;
     }
 
@@ -318,7 +336,12 @@ export function Dashboard({
     setNavOpen(false);
     playSfx(DEFAULT_BUTTON_SOUND);
 
-    await Promise.resolve(onPlay?.());
+    const ready = await Promise.resolve(onPlay?.() ?? true);
+
+    if (!ready) {
+      setClickable(true);
+      return;
+    }
 
     onAvatarSlotsVisibleChange?.(true);
     window.setTimeout(() => {
@@ -338,27 +361,18 @@ export function Dashboard({
     >
       <style>
         {`
-          @keyframes morkahja-dashboard-preload-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
           @keyframes morkahja-nav-center-button-press {
             0% { transform: translateY(-50%) scale(1); filter: brightness(1); }
             38% { transform: translateY(-50%) scale(0.9); filter: brightness(0.92); }
             72% { transform: translateY(-50%) scale(1.08); filter: brightness(1.22); }
             100% { transform: translateY(-50%) scale(1); filter: brightness(1); }
           }
+          @keyframes morkahja-loading-wheel-spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+          }
         `}
       </style>
-      {isPreparingAvatars && showChrome ? (
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={LOADING_WHEEL_ASSET}
-          style={preloadWheelStyle}
-        />
-      ) : null}
       <div style={dashboardColumnStyle}>
         {showChrome ? (
           <div
@@ -372,8 +386,15 @@ export function Dashboard({
             }}
           >
             <button
-              aria-label={avatarSlotsVisible ? 'Close avatar selection' : 'Play'}
-              disabled={!clickable || navOpen || avatarCreationOpen}
+              aria-busy={playPreparePending}
+              aria-label={
+                playPreparePending
+                  ? 'Preparing avatars'
+                  : avatarSlotsVisible
+                    ? 'Close avatar selection'
+                    : 'Play'
+              }
+              disabled={!clickable || navOpen || avatarCreationOpen || playPreparePending}
               onClick={() => {
                 if (avatarSlotsVisible) {
                   void handlePlayAsHome();
@@ -398,9 +419,21 @@ export function Dashboard({
                 src={PLAY_BUTTON_ASSET}
                 style={{
                   ...imageStyle,
-                  animation: pressAnimation(isNavButtonPressed('Play')),
+                  opacity: playPreparePending ? 0.35 : 1,
+                  animation: playPreparePending
+                    ? undefined
+                    : pressAnimation(isNavButtonPressed('Play')),
                 }}
               />
+              {playPreparePending ? (
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  src={PLAY_PREPARE_WHEEL_ASSET}
+                  style={playPrepareWheelStyle}
+                />
+              ) : null}
             </button>
           </div>
         ) : null}
@@ -408,7 +441,9 @@ export function Dashboard({
           <AvatarSelectionPanel
             avatars={avatars}
             creationPreset={creationPreset}
+            creationRevealDelayMs={creationRevealDelayMs}
             excludedAvatarIds={excludedAvatarIds}
+            selectionNotice={selectionNotice}
             onAvatarsChanged={onAvatarsChanged}
             onCreationPresetConsumed={onCreationPresetConsumed}
             onEnterGameComplete={() => {
@@ -482,6 +517,9 @@ export function Dashboard({
                 if (button.label === 'Achievements') {
                   setAchievementsOpen(true);
                 }
+                if (button.label === 'About Us') {
+                  setAboutUsOpen(true);
+                }
               }}
               style={{
                 ...radialButtonStyle,
@@ -536,6 +574,14 @@ export function Dashboard({
             }}
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
+              if (avatarSlotsVisible) {
+                void (async () => {
+                  await closeAvatarSelection();
+                  setNavOpen(true);
+                })();
+                return;
+              }
+
               setNavOpen((open) => !open);
             }}
             style={{
@@ -631,6 +677,14 @@ export function Dashboard({
           }}
           open={achievementsOpen}
           playerId={playerId}
+        />
+      ) : null}
+      {showChrome ? (
+        <AboutUsOverlay
+          onClose={() => {
+            setAboutUsOpen(false);
+          }}
+          open={aboutUsOpen}
         />
       ) : null}
     </main>

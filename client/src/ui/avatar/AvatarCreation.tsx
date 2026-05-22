@@ -3,12 +3,13 @@ import { createPortal } from 'react-dom';
 import framesData from '../../data/game/frames.json';
 import portraitsData from '../../data/game/portraits.json';
 import type { PersistedAvatar } from '../../api/http.js';
-import { fadeStyle } from '../transitions/fade.js';
+import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
+import { useNavButtonPress } from '../transitions/navButtonPress.js';
+import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
 const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
 const UI_ROOT = '/UI/02_AvatarCreation';
-const MENU_BACKGROUND = '/UI/01_1_SignIn/menuBG.webp';
 const TOOLTIP_HOLD_MS = 420;
 
 const RACES = ['Grimnir', 'Verdani', 'Aevis', 'Rokur'] as const;
@@ -71,24 +72,59 @@ const overlayStyle: CSSProperties = {
   zIndex: 24,
   display: 'grid',
   placeItems: 'center',
-  padding: 'min(4vw, 36px)',
+  padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
   boxSizing: 'border-box',
-  background: 'rgba(0, 0, 0, 0.38)',
+  background: 'rgba(8, 4, 2, 0.72)',
+  transition: `opacity ${FADE_DURATION_MS}ms ease`,
 };
 
-const menuStyle: CSSProperties = {
-  width: 'min(92vw, 620px)',
-  maxHeight: '92vh',
-  overflow: 'auto',
+const panelStyle: CSSProperties = {
+  width: 'min(92vw, 520px)',
+  maxHeight: 'min(88vh, 680px)',
   display: 'grid',
+  gridTemplateRows: 'auto minmax(0, 1fr)',
+  gap: 12,
+  padding: '20px 18px 16px',
+  border: '1px solid rgba(255, 204, 102, 0.62)',
+  borderRadius: 14,
+  background: 'rgba(12, 7, 5, 0.92)',
+  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+};
+
+const headerStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const titleStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '1.45rem',
+  fontWeight: 400,
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  letterSpacing: '0.06em',
+};
+
+const acceptButtonStyle: CSSProperties = {
+  width: 'clamp(52px, 11vw, 76px)',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+};
+
+const panelBodyStyle: CSSProperties = {
+  minHeight: 0,
+  overflowY: 'auto',
+  display: 'grid',
+  gap: 16,
   justifyItems: 'center',
-  gap: 14,
-  padding: 'clamp(18px, 4vw, 34px) 0',
-  boxSizing: 'border-box',
-  backgroundImage: `url(${MENU_BACKGROUND})`,
-  backgroundSize: '100% 100%',
-  backgroundRepeat: 'no-repeat',
-  filter: 'drop-shadow(0 18px 34px rgba(0, 0, 0, 0.65))',
+  padding: '2px 4px 0',
+  scrollbarWidth: 'none',
+  msOverflowStyle: 'none',
 };
 
 const previewStyle: CSSProperties = {
@@ -129,16 +165,71 @@ const rowStyle: CSSProperties = {
   flexWrap: 'wrap',
 };
 
-const avatarConfirmRowStyle: CSSProperties = {
-  ...rowStyle,
-  alignItems: 'center',
-  gap: 'clamp(10px, 3vw, 22px)',
+const sectionLabelStyle: CSSProperties = {
+  minWidth: 'clamp(78px, 18vw, 118px)',
+  margin: 0,
+  color: '#ffcc66',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  fontSize: '1.15rem',
+  fontWeight: 400,
+  letterSpacing: '0.04em',
+  textAlign: 'center',
 };
 
-const avatarCenterStyle: CSSProperties = {
+const frameLabelStyle: CSSProperties = {
+  ...sectionLabelStyle,
+  minWidth: 0,
+};
+
+const frameControlsStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 4,
+};
+
+const avatarWorkbenchStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+  gridTemplateRows: 'auto auto',
+  alignItems: 'center',
+  justifyItems: 'center',
+  columnGap: 'clamp(10px, 2.5vw, 18px)',
+  rowGap: 6,
+  width: '100%',
+  marginTop: -22,
+};
+
+const frameColumnStyle: CSSProperties = {
+  gridColumn: 1,
+  gridRow: 1,
+  alignSelf: 'center',
+  justifySelf: 'start',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 4,
+};
+
+const avatarCenterColumnStyle: CSSProperties = {
+  gridColumn: 2,
+  gridRow: '1 / 3',
+  alignSelf: 'start',
   display: 'grid',
   justifyItems: 'center',
-  gap: 6,
+  gap: 2,
+  width: '100%',
+};
+
+const genderColumnStyle: CSSProperties = {
+  gridColumn: 3,
+  gridRow: 1,
+  alignSelf: 'start',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 5,
+  paddingTop: 14,
 };
 
 const buttonImageStyle: CSSProperties = {
@@ -148,7 +239,7 @@ const buttonImageStyle: CSSProperties = {
 };
 
 const arrowButtonStyle: CSSProperties = {
-  width: 58,
+  width: 48,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -169,41 +260,8 @@ const selectedOptionStyle: CSSProperties = {
   outline: '2px solid #ffcc66',
 };
 
-const labelStyle: CSSProperties = {
-  minWidth: 'clamp(78px, 18vw, 118px)',
-  color: '#330000',
-  fontFamily: 'Breathe Fire, Georgia, serif',
-  fontSize: 'clamp(22px, 5vw, 36px)',
-  fontWeight: 700,
-  letterSpacing: '0.02em',
-  textAlign: 'center',
-  WebkitTextStroke: '1px #ffcc66',
-  paintOrder: 'stroke fill',
-  textShadow: [
-    '-1px -1px 0 #ffcc66',
-    '1px -1px 0 #ffcc66',
-    '-1px 1px 0 #ffcc66',
-    '1px 1px 0 #ffcc66',
-    '0 0 6px rgba(255, 204, 102, 0.25)',
-  ].join(', '),
-};
-
-const spacerStyle: CSSProperties = {
-  width: '100%',
-  height: 10,
-  objectFit: 'cover',
-};
-
-const yesButtonStyle: CSSProperties = {
-  width: 'clamp(76px, 18vw, 132px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
-
 const confirmSideButtonStyle: CSSProperties = {
-  width: 'clamp(70px, 16vw, 112px)',
+  width: 'clamp(56px, 13vw, 88px)',
   padding: 0,
   border: 0,
   borderRadius: 10,
@@ -212,7 +270,7 @@ const confirmSideButtonStyle: CSSProperties = {
 };
 
 const genderButtonStyle: CSSProperties = {
-  width: 'clamp(62px, 14vw, 92px)',
+  width: 'clamp(48px, 11vw, 72px)',
   padding: 0,
   border: 0,
   borderRadius: 10,
@@ -221,8 +279,9 @@ const genderButtonStyle: CSSProperties = {
 };
 
 const nameInputStyle: CSSProperties = {
-  width: 'clamp(140px, 34vw, 240px)',
-  padding: '8px 12px',
+  width: 'min(100%, clamp(140px, 34vw, 230px))',
+  marginTop: -2,
+  padding: '6px 10px',
   border: '1px solid #ffcc66',
   borderRadius: 8,
   boxSizing: 'border-box',
@@ -237,18 +296,17 @@ const nameInputStyle: CSSProperties = {
 };
 
 const tooltipStyle: CSSProperties = {
-  width: 'min(88%, 560px)',
-  margin: '-4px 0 0',
-  padding: '8px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
+  width: 'min(100%, 480px)',
+  margin: 0,
+  padding: '10px 12px',
+  border: '1px solid rgba(255, 204, 102, 0.38)',
   borderRadius: 8,
-  background: 'rgba(31, 12, 6, 0.86)',
-  color: '#ffcc66',
+  background: 'rgba(18, 10, 7, 0.72)',
+  color: 'rgba(247, 239, 224, 0.9)',
   fontFamily: 'Georgia, serif',
-  fontSize: 'clamp(12px, 2.2vw, 15px)',
-  lineHeight: 1.32,
+  fontSize: '0.9rem',
+  lineHeight: 1.4,
   textAlign: 'center',
-  textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)',
 };
 
 function wrapIndex(index: number, length: number): number {
@@ -354,6 +412,7 @@ export function AvatarCreation({
   const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
   const [raceTooltip, setRaceTooltip] = useState('');
   const [roleTooltip, setRoleTooltip] = useState('');
+  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const tooltipTimerRef = useRef<number | null>(null);
   const tooltipWasShownRef = useRef(false);
   const portrait = portraits[portraitIndex];
@@ -453,28 +512,31 @@ export function AvatarCreation({
   return createPortal(
     <div
       aria-label="Create Avatar"
-      role="dialog"
+      role="presentation"
       style={{
         ...overlayStyle,
         ...fadeStyle(visible),
         pointerEvents: visible ? 'auto' : 'none',
       }}
-      onClick={(event) => {
-        event.stopPropagation();
-      }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-      }}
     >
       <section
-        style={menuStyle}
+        aria-labelledby="avatar-creation-title"
         onClick={(event) => {
           event.stopPropagation();
         }}
         onPointerDown={(event) => {
           event.stopPropagation();
         }}
+        role="dialog"
+        style={panelStyle}
       >
+        <header style={headerStyle}>
+          <h2 id="avatar-creation-title" style={titleStyle}>CREATE AVATAR</h2>
+        </header>
+        <div data-avatar-creation-scroll="" style={panelBodyStyle}>
+          <style>
+            {'[data-avatar-creation-scroll]::-webkit-scrollbar { display: none; }'}
+          </style>
         <div aria-label="Choose race" style={rowStyle}>
           {RACES.map((raceOption) => (
             <button
@@ -500,8 +562,6 @@ export function AvatarCreation({
           ))}
         </div>
         {raceTooltip ? <p role="tooltip" style={tooltipStyle}>{raceTooltip}</p> : null}
-
-        <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_spacer_line.webp`} style={spacerStyle} />
 
         <div aria-label="Choose role" style={rowStyle}>
           {ROLES.map((roleOption) => (
@@ -529,55 +589,33 @@ export function AvatarCreation({
         </div>
         {roleTooltip ? <p role="tooltip" style={tooltipStyle}>{roleTooltip}</p> : null}
 
-        <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_spacer_line.webp`} style={spacerStyle} />
-
-        <div style={rowStyle}>
-          <button
-            aria-label="Previous frame"
-            onClick={() => {
-              setFrameIndex((current) => wrapIndex(current - 1, frames.length));
-            }}
-            style={arrowButtonStyle}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_left.webp`} style={buttonImageStyle} />
-          </button>
-          <span style={labelStyle}>Frame</span>
-          <button
-            aria-label="Next frame"
-            onClick={() => {
-              setFrameIndex((current) => wrapIndex(current + 1, frames.length));
-            }}
-            style={arrowButtonStyle}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_right.webp`} style={buttonImageStyle} />
-          </button>
-          {GENDERS.map((genderOption) => (
-            <button
-              aria-label={`Choose ${genderOption}`}
-              key={genderOption}
-              onClick={() => {
-                chooseRandomPortrait(race, role, genderOption);
-              }}
-              style={{
-                ...genderButtonStyle,
-                ...(gender === genderOption ? selectedOptionStyle : {}),
-              }}
-              type="button"
-            >
-              <img alt="" aria-hidden="true" draggable={false} src={genderAsset(genderOption)} style={buttonImageStyle} />
-            </button>
-          ))}
-        </div>
-
-        <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_spacer_line.webp`} style={spacerStyle} />
-
-        <div style={avatarConfirmRowStyle}>
-          <button aria-label="Cancel avatar creation" onClick={onCancel} style={confirmSideButtonStyle} type="button">
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_delete.webp`} style={buttonImageStyle} />
-          </button>
-          <div style={avatarCenterStyle}>
+        <div style={avatarWorkbenchStyle}>
+          <div aria-label="Choose frame" style={frameColumnStyle}>
+            <span style={frameLabelStyle}>Frame</span>
+            <div style={frameControlsStyle}>
+              <button
+                aria-label="Previous frame"
+                onClick={() => {
+                  setFrameIndex((current) => wrapIndex(current - 1, frames.length));
+                }}
+                style={arrowButtonStyle}
+                type="button"
+              >
+                <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_left.webp`} style={buttonImageStyle} />
+              </button>
+              <button
+                aria-label="Next frame"
+                onClick={() => {
+                  setFrameIndex((current) => wrapIndex(current + 1, frames.length));
+                }}
+                style={arrowButtonStyle}
+                type="button"
+              >
+                <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_right.webp`} style={buttonImageStyle} />
+              </button>
+            </div>
+          </div>
+          <div style={avatarCenterColumnStyle}>
             <button aria-label="Randomize portrait" onClick={chooseRandomDifferentPortrait} style={previewButtonStyle} type="button">
               <img alt="" aria-hidden="true" draggable={false} src={`${AVATAR_ASSET_ROOT}/avatar_${portrait.avatarID}.webp`} style={previewImageStyle} />
               <img alt="" aria-hidden="true" draggable={false} src={`${FRAME_ASSET_ROOT}/frame_${frame.frameID}.webp`} style={previewFrameStyle} />
@@ -592,9 +630,78 @@ export function AvatarCreation({
               value={avatarName}
             />
           </div>
-          <button aria-label="Create avatar" onClick={confirmAvatar} style={yesButtonStyle} type="button">
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_yes.webp`} style={buttonImageStyle} />
+          <div aria-label="Choose gender" style={genderColumnStyle}>
+            <button
+              aria-label="Choose Male"
+              onClick={() => {
+                chooseRandomPortrait(race, role, 'Male');
+              }}
+              style={{
+                ...genderButtonStyle,
+                ...(gender === 'Male' ? selectedOptionStyle : {}),
+              }}
+              type="button"
+            >
+              <img alt="" aria-hidden="true" draggable={false} src={genderAsset('Male')} style={buttonImageStyle} />
+            </button>
+            <button
+              aria-label="Choose Female"
+              onClick={() => {
+                chooseRandomPortrait(race, role, 'Female');
+              }}
+              style={{
+                ...genderButtonStyle,
+                ...(gender === 'Female' ? selectedOptionStyle : {}),
+              }}
+              type="button"
+            >
+              <img alt="" aria-hidden="true" draggable={false} src={genderAsset('Female')} style={buttonImageStyle} />
+            </button>
+          </div>
+          <button
+            aria-label="Cancel avatar creation"
+            onClick={onCancel}
+            onPointerDown={() => {
+              pulse('avatar-cancel');
+            }}
+            style={{ ...confirmSideButtonStyle, gridColumn: 1, gridRow: 2, justifySelf: 'start', alignSelf: 'end' }}
+            type="button"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={`${UI_ROOT}/im_button_delete.webp`}
+              style={{
+                ...buttonImageStyle,
+                animation: pressAnimation(isPressed('avatar-cancel')),
+              }}
+            />
           </button>
+          <button
+            aria-label="Accept avatar creation"
+            onClick={() => {
+              playSfx(DEFAULT_BUTTON_SOUND);
+              confirmAvatar();
+            }}
+            onPointerDown={() => {
+              pulse('avatar-ok');
+            }}
+            style={{ ...acceptButtonStyle, gridColumn: 3, gridRow: 2, alignSelf: 'end' }}
+            type="button"
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              src={`${UI_ROOT}/im_button_yes.webp`}
+              style={{
+                ...buttonImageStyle,
+                animation: pressAnimation(isPressed('avatar-ok')),
+              }}
+            />
+          </button>
+        </div>
         </div>
       </section>
     </div>,

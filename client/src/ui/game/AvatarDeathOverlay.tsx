@@ -81,7 +81,7 @@ export function AvatarDeathOverlay({
   open,
 }: {
   avatarName: string;
-  onHandoffStart: () => void;
+  onHandoffStart: () => void | Promise<void>;
   onHandoffComplete: () => void;
   open: boolean;
 }) {
@@ -119,8 +119,15 @@ export function AvatarDeathOverlay({
       window.setTimeout(resolve, NAV_BUTTON_PRESS_MS);
     });
 
+    try {
+      await onHandoffStart();
+    } catch (error) {
+      console.error('Death overlay home failed', error);
+      setHomePending(false);
+      return;
+    }
+
     setExiting(true);
-    onHandoffStart();
     await waitForFade();
     onHandoffComplete();
     setHomePending(false);

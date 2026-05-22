@@ -196,7 +196,9 @@ function AvatarSlot({
 export function AvatarSelectionPanel({
   avatars,
   creationPreset = null,
+  creationRevealDelayMs = 0,
   excludedAvatarIds = [],
+  selectionNotice = null,
   onAvatarsChanged,
   onAvatarEnter,
   onCreationPresetConsumed,
@@ -211,7 +213,9 @@ export function AvatarSelectionPanel({
 }: {
   avatars?: PersistedAvatar[];
   creationPreset?: PersistedAvatar | null;
+  creationRevealDelayMs?: number;
   excludedAvatarIds?: string[];
+  selectionNotice?: string | null;
   onAvatarsChanged?: (avatars: PersistedAvatar[]) => void;
   onAvatarEnter?: () => void;
   onCreationPresetConsumed?: () => void;
@@ -275,7 +279,7 @@ export function AvatarSelectionPanel({
   }, [visible]);
 
   useEffect(() => {
-    if (!creationPreset) {
+    if (!creationPreset || !visible) {
       return;
     }
 
@@ -288,6 +292,12 @@ export function AvatarSelectionPanel({
       setCreatingSlotIndex(0);
       await waitForNextPaint();
 
+      if (creationRevealDelayMs > 0) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, creationRevealDelayMs);
+        });
+      }
+
       if (!cancelled) {
         setCreationVisible(true);
         onCreationPresetConsumed?.();
@@ -299,7 +309,7 @@ export function AvatarSelectionPanel({
     return () => {
       cancelled = true;
     };
-  }, [creationPreset, onCreationPresetConsumed]);
+  }, [creationPreset, creationRevealDelayMs, onCreationPresetConsumed, visible]);
 
   async function handleSelect(
     candidate: PersistedAvatar | null,
@@ -405,7 +415,9 @@ export function AvatarSelectionPanel({
             />
           ))}
         </section>
-        {message && !enteringGame ? <p style={messageStyle}>{message}</p> : null}
+        {(selectionNotice || message) && !enteringGame ? (
+          <p style={messageStyle}>{selectionNotice || message}</p>
+        ) : null}
       </div>
       {creatingSlotIndex !== null ? (
         <AvatarCreation

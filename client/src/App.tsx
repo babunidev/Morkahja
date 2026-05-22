@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   fetchActiveEncounter,
   fetchAvatar,
-  fetchAvatars,
   heartbeatSession,
   loadStoredSession,
   logoutSession,
-  deleteAvatar,
   clearStoredSession,
   fetchPlayer,
   fetchSession,
@@ -16,16 +14,23 @@ import {
 } from './api/http.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
+import {
+  loadDeadAvatarIds,
+  prepareAvatarSelection,
+  refreshAvatarSelectionAfterHome,
+  saveDeadAvatarIds,
+} from './ui/avatar/avatarSelectionPrepare.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
+import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
+import { FADE_DURATION_MS } from './ui/transitions/fade.js';
+
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
-const AVATAR_SELECTION_PREPARE_TIMEOUT_MS = 1800;
-const DEAD_AVATAR_IDS_STORAGE_KEY = 'morkahja.deadAvatarIds';
 
 function musicZoneForScreen(screen: AppScreen): MusicZone {
   if (screen === 'dashboard') {
@@ -39,33 +44,6 @@ function musicZoneForScreen(screen: AppScreen): MusicZone {
   return 'silent';
 }
 
-function timeout(ms: number): Promise<never> {
-  return new Promise((_, reject) => {
-    window.setTimeout(() => {
-      reject(new Error(`Timed out after ${ms}ms`));
-    }, ms);
-  });
-}
-
-function loadDeadAvatarIds(): string[] {
-  try {
-    const value = window.localStorage.getItem(DEAD_AVATAR_IDS_STORAGE_KEY);
-    const parsed = value ? JSON.parse(value) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((entry): entry is string => typeof entry === 'string')
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveDeadAvatarIds(ids: string[]): void {
-  window.localStorage.setItem(
-    DEAD_AVATAR_IDS_STORAGE_KEY,
-    JSON.stringify([...new Set(ids)]),
-  );
-}
-
 function resetEnterHandoffState(
   setGameEnterHandoff: (value: boolean) => void,
   setHandoffLanded: (value: boolean) => void,
@@ -74,30 +52,6 @@ function resetEnterHandoffState(
   setGameEnterHandoff(false);
   setHandoffLanded(false);
   setAvatarEnterHandoff(null);
-}
-
-function uniqueAvatars(avatars: PersistedAvatar[]): PersistedAvatar[] {
-  const seen = new Set<string>();
-
-  return avatars.filter((avatar) => {
-    if (seen.has(avatar.id)) {
-      return false;
-    }
-
-    seen.add(avatar.id);
-    return true;
-  });
-}
-
-async function loadAvatarSelectionList(): Promise<PersistedAvatar[]> {
-  const storedAvatars = await fetchAvatars();
-  const deadAvatarIds = loadDeadAvatarIds();
-
-  await Promise.allSettled(deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)));
-
-  return uniqueAvatars(
-    storedAvatars.filter((avatar) => !deadAvatarIds.includes(avatar.id)),
-  );
 }
 
 async function loadPlayerForBootstrap(
@@ -140,7 +94,6 @@ export default function App() {
   const [avatarSelectionAvatars, setAvatarSelectionAvatars] = useState<PersistedAvatar[]>([]);
   const [avatarCreationPreset, setAvatarCreationPreset] = useState<PersistedAvatar | null>(null);
   const [excludedAvatarIds, setExcludedAvatarIds] = useState(loadDeadAvatarIds);
-  const [avatarSelectionPreloading, setAvatarSelectionPreloading] = useState(false);
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
   const [avatarSlotsVisible, setAvatarSlotsVisible] = useState(false);
   const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
@@ -148,9 +101,21 @@ export default function App() {
   const [avatarEnterHandoff, setAvatarEnterHandoff] =
     useState<AvatarEnterHandoffSnapshot | null>(null);
   const [handoffLanded, setHandoffLanded] = useState(false);
+  const [deathOverlayAvatar, setDeathOverlayAvatar] = useState<PersistedAvatar | null>(null);
+  const [deathCreationHandoff, setDeathCreationHandoff] = useState(false);
+  const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
+  const [playPreparePending, setPlayPreparePending] = useState(false);
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,
+      loadAvatarSelection: async () => {
+        try {
+          return await prepareAvatarSelection();
+        } catch (error) {
+          console.error('Avatar selection prepare during loading failed', error);
+          return null;
+        }
+      },
       loadPlayer: loadPlayerForBootstrap,
       loadAvatar: loadAvatarForBootstrap,
       loadEncounter: loadEncounterForBootstrap,
@@ -160,6 +125,49 @@ export default function App() {
     }),
     [],
   );
+
+  async function ensureAvatarSelectionPrepared(): Promise<boolean> {
+    if (avatarSelectionPrepared) {
+      return true;
+    }
+
+    setPlayPreparePending(true);
+
+    try {
+      const avatars = await prepareAvatarSelection();
+      setAvatarSelectionAvatars(avatars);
+      setAvatarSelectionPrepared(true);
+      return true;
+    } catch (error) {
+      console.error('Avatar selection prepare failed', error);
+      setAvatarSelectionPrepared(false);
+      return false;
+    } finally {
+      setPlayPreparePending(false);
+    }
+  }
+
+  async function syncAvatarSelectionAfterHomeState(): Promise<void> {
+    const { avatars, purge } = await refreshAvatarSelectionAfterHome();
+    setAvatarSelectionAvatars(avatars);
+    setExcludedAvatarIds(purge.failedIds);
+    setAvatarSelectionPrepared(true);
+    setAvatarSelectionNotice(
+      purge.failedIds.length > 0
+        ? 'Could not remove fallen avatar; try Home again.'
+        : null,
+    );
+  }
+
+  async function applyAvatarSelectionFromHome(): Promise<void> {
+    try {
+      await syncAvatarSelectionAfterHomeState();
+    } catch (error) {
+      console.error('Avatar selection refresh after home failed', error);
+      setAvatarSelectionPrepared(false);
+      setAvatarSelectionNotice(null);
+    }
+  }
 
   useEffect(() => {
     if (screen === 'loading' || screen === 'gateway') {
@@ -181,87 +189,6 @@ export default function App() {
     };
   }, [screen]);
 
-  useEffect(() => {
-    if (screen !== 'dashboard' || avatarSelectionPrepared || avatarSelectionPreloading) {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function prepareAvatarSelection(): Promise<void> {
-      setAvatarSelectionPreloading(true);
-
-      try {
-        const storedAvatars = await Promise.race([
-          loadAvatarSelectionList(),
-          timeout(AVATAR_SELECTION_PREPARE_TIMEOUT_MS),
-        ]);
-        const avatars = storedAvatars;
-
-        if (!cancelled) {
-          setAvatarSelectionAvatars(avatars);
-        }
-
-        if (avatars.length > 0) {
-          await preloadAvatarSelectionAssets(avatars);
-        }
-      } catch (error) {
-        console.error('Avatar selection preload failed', error);
-        if (!cancelled) {
-          setAvatarSelectionAvatars([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setAvatarSelectionPrepared(true);
-          setAvatarSelectionPreloading(false);
-        }
-      }
-    }
-
-    void prepareAvatarSelection();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [avatarSelectionPrepared, avatarSelectionPreloading, screen]);
-
-  async function syncAvatarSelectionForPlay(): Promise<void> {
-    setAvatarSelectionPreloading(true);
-
-    try {
-      const avatars = await loadAvatarSelectionList();
-      setAvatarSelectionAvatars(avatars);
-
-      if (avatars.length > 0) {
-        await preloadAvatarSelectionAssets(avatars);
-      }
-
-      setAvatarSelectionPrepared(true);
-    } catch (error) {
-      console.error('Avatar selection play sync failed', error);
-      setAvatarSelectionPrepared(false);
-    } finally {
-      setAvatarSelectionPreloading(false);
-    }
-  }
-
-  function refreshAvatarSelectionInBackground(): void {
-    void (async () => {
-      try {
-        const avatars = await loadAvatarSelectionList();
-        setAvatarSelectionAvatars(avatars);
-
-        if (avatars.length > 0) {
-          void preloadAvatarSelectionAssets(avatars);
-        }
-
-        setAvatarSelectionPrepared(true);
-      } catch (error) {
-        console.error('Avatar selection refresh failed', error);
-      }
-    })();
-  }
-
   return (
     <BackgroundProvider>
       <PersistentBackground />
@@ -277,7 +204,16 @@ export default function App() {
             onError={(error) => {
               console.error('Loading bootstrap failed', error);
             }}
-            onReady={() => {
+            onReady={(_route, context) => {
+              const selection = context.avatarSelection as PersistedAvatar[] | null;
+
+              if (selection) {
+                setAvatarSelectionAvatars(selection);
+                setAvatarSelectionPrepared(true);
+              } else {
+                setAvatarSelectionPrepared(false);
+              }
+
               setScreen(loadStoredSession()?.accessToken ? 'dashboard' : 'gateway');
             }}
           />
@@ -285,13 +221,24 @@ export default function App() {
         {screen === 'gateway' ? (
           <OnboardingGateway
             onSessionReady={() => {
-              setAvatarSelectionAvatars([]);
-              setAvatarSelectionPrepared(false);
               setAvatarSlotsVisible(false);
               setActiveAvatar(null);
               setActiveEncounter(null);
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
-              setScreen('dashboard');
+
+              void (async () => {
+                try {
+                  const avatars = await prepareAvatarSelection();
+                  setAvatarSelectionAvatars(avatars);
+                  setAvatarSelectionPrepared(true);
+                } catch (error) {
+                  console.error('Avatar selection prepare after login failed', error);
+                  setAvatarSelectionAvatars([]);
+                  setAvatarSelectionPrepared(false);
+                } finally {
+                  setScreen('dashboard');
+                }
+              })();
             }}
           />
         ) : null}
@@ -300,13 +247,23 @@ export default function App() {
             avatars={avatarSelectionAvatars}
             avatarSlotsVisible={avatarSlotsVisible}
             creationPreset={avatarCreationPreset}
+            creationRevealDelayMs={deathCreationHandoff ? FADE_DURATION_MS : 0}
             excludedAvatarIds={excludedAvatarIds}
             hidden={gameEnterHandoff}
-            isPreparingAvatars={avatarSelectionPreloading && !avatarSelectionPrepared}
+            selectionNotice={avatarSelectionNotice}
             onAvatarSlotsVisibleChange={setAvatarSlotsVisible}
-            onAvatarsChanged={setAvatarSelectionAvatars}
+            onAvatarsChanged={(avatars) => {
+              setAvatarSelectionAvatars(avatars);
+              void preloadAvatarSelectionAssets(avatars).catch((error: unknown) => {
+                console.error('Avatar selection preload after change failed', error);
+              });
+            }}
+            onAvatarSelectionHome={() => {
+              void applyAvatarSelectionFromHome();
+            }}
             onCreationPresetConsumed={() => {
               setAvatarCreationPreset(null);
+              setDeathCreationHandoff(false);
             }}
             onEnterGameComplete={() => {
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
@@ -320,14 +277,8 @@ export default function App() {
             onHandoffLand={() => {
               setHandoffLanded(true);
             }}
-            onPlay={async () => {
-              if (avatarSelectionPrepared) {
-                refreshAvatarSelectionInBackground();
-                return;
-              }
-
-              await syncAvatarSelectionForPlay();
-            }}
+            playPreparePending={playPreparePending}
+            onPlay={ensureAvatarSelectionPrepared}
             onAvatarEnter={() => {
               setMusicFadeOutSignal((signal) => signal + 1);
             }}
@@ -357,6 +308,7 @@ export default function App() {
         ) : null}
         {screen === 'game' && activeAvatar && activeEncounter ? (
           <GameEnvironment
+            deathPending={deathOverlayAvatar !== null}
             deferReveal={gameEnterHandoff && !handoffLanded}
             hideAvatarPortraitForHandoff={gameEnterHandoff && !handoffLanded}
             initialAvatar={activeAvatar}
@@ -367,29 +319,56 @@ export default function App() {
               setAvatarSlotsVisible(false);
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
+              void applyAvatarSelectionFromHome();
             }}
             onAvatarDeath={(presetAvatar) => {
-              setExcludedAvatarIds((currentIds) => (
-                (() => {
-                  const nextIds = currentIds.includes(presetAvatar.id)
-                    ? currentIds
-                    : [...currentIds, presetAvatar.id];
-                  saveDeadAvatarIds(nextIds);
-                  return nextIds;
-                })()
-              ));
+              setExcludedAvatarIds((currentIds) => {
+                const nextIds = currentIds.includes(presetAvatar.id)
+                  ? currentIds
+                  : [...currentIds, presetAvatar.id];
+                saveDeadAvatarIds(nextIds);
+                return nextIds;
+              });
               setAvatarSelectionAvatars((currentAvatars) => (
                 currentAvatars.filter((avatar) => avatar.id !== presetAvatar.id)
               ));
-              setAvatarCreationPreset(presetAvatar);
+              setDeathOverlayAvatar(presetAvatar);
+            }}
+          />
+        ) : null}
+        {deathOverlayAvatar ? (
+          <AvatarDeathOverlay
+            avatarName={deathOverlayAvatar.name}
+            onHandoffComplete={() => {
+              setDeathOverlayAvatar(null);
+            }}
+            onHandoffStart={async () => {
+              const preset = deathOverlayAvatar;
+              if (!preset) {
+                return;
+              }
+
+              try {
+                await syncAvatarSelectionAfterHomeState();
+              } catch (error) {
+                console.error('Death overlay home prepare failed', error);
+                setAvatarSelectionPrepared(false);
+                setAvatarSelectionNotice('Could not refresh avatars; try Home again.');
+                throw error;
+              }
+
+              setDeathCreationHandoff(true);
               setActiveAvatar(null);
               setActiveEncounter(null);
-              setAvatarSelectionPrepared(true);
-              setAvatarSelectionPreloading(false);
-              setAvatarSlotsVisible(true);
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
+              setAvatarSlotsVisible(true);
+              setAvatarCreationPreset(null);
+              window.requestAnimationFrame(() => {
+                setAvatarCreationPreset(preset);
+              });
             }}
+            open
           />
         ) : null}
         {avatarEnterHandoff ? (
