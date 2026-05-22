@@ -68,7 +68,7 @@ const solutionBlockStyle: CSSProperties = {
   gridTemplateColumns: '1fr',
   alignItems: 'center',
   justifyItems: 'center',
-  transform: 'translateX(-50%)',
+  transform: 'translateX(-50%) translateY(3px)',
   zIndex: 20,
   overflow: 'visible',
   pointerEvents: 'none',
