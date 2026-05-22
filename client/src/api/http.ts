@@ -4,6 +4,9 @@ import type {
   ClaimDailyRewardResponse,
   DonateGemsResponse,
   UnlockExpansionResponse,
+  AddFriendResponse,
+  FriendAchievementsResponse,
+  FriendsListResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -163,6 +166,25 @@ export async function unlockExpansion(
     method: 'POST',
     body: JSON.stringify({ expansionId }),
   });
+}
+
+export async function fetchFriends(): Promise<FriendsListResponse> {
+  return request<FriendsListResponse>('/player/friends');
+}
+
+export async function addFriend(query: string): Promise<AddFriendResponse> {
+  return request<AddFriendResponse>('/player/friends', {
+    method: 'POST',
+    body: JSON.stringify({ query }),
+  });
+}
+
+export async function fetchFriendAchievements(
+  friendId: string,
+): Promise<FriendAchievementsResponse> {
+  return request<FriendAchievementsResponse>(
+    `/player/friends/${encodeURIComponent(friendId)}/achievements`,
+  );
 }
 
 export async function fetchAvatar(

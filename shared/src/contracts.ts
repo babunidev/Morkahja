@@ -218,3 +218,29 @@ export interface ClaimDailyRewardResponse {
   achievements: AchievementProgressDto[];
   dailyReward: DailyRewardStatusDto;
 }
+
+export interface FriendSummaryDto {
+  playerId: string;
+  playerName: string;
+  online: boolean;
+  portrait: string;
+  frame: string;
+  avatarName: string | null;
+}
+
+export interface FriendsListResponse {
+  playerId: string;
+  friends: FriendSummaryDto[];
+}
+
+export interface AddFriendResponse {
+  playerId: string;
+  friend: FriendSummaryDto;
+  friendIds: string[];
+}
+
+export interface FriendAchievementsResponse {
+  playerId: string;
+  playerName: string;
+  achievements: AchievementProgressDto[];
+}

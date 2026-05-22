@@ -8,6 +8,8 @@ export interface PlayerDocument {
   lastPlayedAt: number;
   /** Account-wide expansion ids unlocked for all avatars. */
   unlockedExpansions: number[];
+  /** Player ids added as friends (account-wide). */
+  friendIds?: string[];
   activeAvatarId?: string;
   currencies?: {
     yellow_red_gem?: number;

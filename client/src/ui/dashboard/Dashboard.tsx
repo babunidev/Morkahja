@@ -16,6 +16,7 @@ import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import AboutUsOverlay from './AboutUsOverlay.js';
 import ExpansionsOverlay from './ExpansionsOverlay.js';
+import FriendsOverlay from './FriendsOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
@@ -43,7 +44,7 @@ const RADIAL_BUTTONS = [
   },
   {
     label: 'Social',
-    tooltip: 'Social',
+    tooltip: 'Friends',
     src: '/UI/03_DASHBOARD/im_button_social_a.webp',
     x: 96,
     y: 0,
@@ -258,6 +259,7 @@ export function Dashboard({
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [aboutUsOpen, setAboutUsOpen] = useState(false);
   const [expansionsOpen, setExpansionsOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
   const [hoveredNavId, setHoveredNavId] = useState<string | null>(null);
@@ -573,6 +575,9 @@ export function Dashboard({
                 if (button.label === 'Expansions') {
                   setExpansionsOpen(true);
                 }
+                if (button.label === 'Social') {
+                  setFriendsOpen(true);
+                }
               }}
               style={{
                 ...radialButtonStyle,
@@ -786,6 +791,14 @@ export function Dashboard({
           }}
           open={expansionsOpen}
           playerId={playerId}
+        />
+      ) : null}
+      {showChrome ? (
+        <FriendsOverlay
+          onClose={() => {
+            setFriendsOpen(false);
+          }}
+          open={friendsOpen}
         />
       ) : null}
     </main>

@@ -73,6 +73,20 @@ Brief chronological overview of the web app from first commit to present. Newest
 39. **Encounter art** — refreshed `death_atranor`, Tempest fight, and Verdani heal `.webp` assets.
 40. **Solution affordance** — dimmer disabled slots; rattle animation when dice/solutions unlock; slightly wider hub footer buttons.
 
+### 2026-05-22 — Achievement chains, donations, expansions (`3d01551`…`216fdcb`)
+
+41. **Achievement chains** — Firestarter, Contributor (gems donated), Blessed (Fortune/Prosperity), Combatant / Trickster / Helper (encounter-type solves); hide chains with zero progress unless rank > 0.
+42. **Daily reward** — base **1** gem plus sum of achievement ranks across all chains (`dailyRewardService`).
+43. **Scribes polish** — Prosperity lines show reward names/icons; activity feed window **1 hour** (was 15 min).
+44. **Donations** — gem donate flow from About Us; contributor achievement progress on `gems_donated`.
+45. **Settings** — player name beside SETTINGS title.
+46. **Expansion catalog** — `expansiondata.json` on client and server; `GET /player` exposes `unlockedExpansions`; encounters gate on expansion id (`includes`, not cumulative level).
+47. **Expansions overlay** — dashboard nav at **19:00** (`im_button_expansions`); expandable cards (header art from `UI/03_DASHBOARD/expansions/`); **`POST /player/expansions/unlock`** spends gems and appends expansion id to the player profile.
+48. **Nav UX** — radial menu tooltips (e.g. News → “Scribes”) and subtle hover scale/glow on open-menu buttons.
+49. **Layout tweak** — solution block lowered **3px** (`translateY`) for seam alignment (`dc18f7b`).
+50. **Asset hygiene** — prune duplicate `10_Shop` portrait tree and archived UI; move settings `PORTRAITS.webp`; add dashboard expansion header/unlock `.webp` set.
+51. **Friends list** — Social nav opens overlay; add by player name; shows last-played avatar, online status, and read-only achievements on tap.
+
 ---
 
 ## Session notes (detail)
@@ -124,3 +138,19 @@ Since `d284bbe`.
 - **Flights** — `rewardFlyAnimation.ts`; `data-morkahja-footer-target` / `data-morkahja-avatar-portrait`.
 - **Continue** — full bounce even for no-reward outcomes; fade-out without re-showing reward nodes (`inert`).
 - **Assets** — refreshed encounter `.webp` set; `tool_heal_linen_bandage` rename.
+
+### Expansions overlay and gem unlock (`216fdcb`)
+
+Since `3d01551`.
+
+- **Data** — `game/expansiondata.json` (LudusExtensio catalog); `mExtensioID` matches `mEncounterExpansion` on gated encounters.
+- **Server** — `getExpansionById` in `gameData.ts`; `unlockPlayerExpansion` in `playerService.ts` (active flag, duplicate check, gem debit, `unlockedExpansions` merge); `expansionController.ts` → `POST /player/expansions/unlock`; errors `INSUFFICIENT_GEMS`, `EXPANSION_ALREADY_UNLOCKED`, `EXPANSION_INACTIVE`, `EXPANSION_NOT_FOUND`.
+- **Client** — `ExpansionsOverlay.tsx` loads player gems + unlock list; expandable summary/lore per card; unlock button uses dashboard expansion `.webp` assets; footer gem count; `unlockExpansion()` in `http.ts`.
+- **Nav** — `RADIAL_BUTTONS` entry at clock **19:00**; CSS `.morkahja-nav-tooltip` + hover on `.morkahja-nav-radial-button-visual` / center hub.
+- **Tests** — `expansionUnlock.test.ts` smoke for catalog ids and active flags.
+
+### Friends overlay (`friendService`)
+
+- **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`.
+- **Avatar** — friend row uses the avatar with the latest `lastPlayedAt` (not merely the active selection).
+- **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view reuses `AchievementPanel` without daily claim.

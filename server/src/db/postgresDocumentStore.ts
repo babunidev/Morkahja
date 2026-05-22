@@ -152,6 +152,26 @@ export async function findPlayerByIdentityPublicKey<T>(
   return result.rows[0] ?? null;
 }
 
+export async function findPlayerByNameOrId<T>(
+  query: string,
+): Promise<{ id: string; data: T } | null> {
+  await ensureSchema();
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const result = await pool.query<{ id: string; data: T }>(
+    `SELECT id, data FROM players
+     WHERE id = $1 OR lower(data->>'playerName') = lower($2)
+     LIMIT 1`,
+    [trimmed, trimmed],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function getDevice<T>(deviceId: string): Promise<T | null> {
   await ensureSchema();
   return one(pool.query('SELECT data FROM devices WHERE id = $1', [deviceId]));
