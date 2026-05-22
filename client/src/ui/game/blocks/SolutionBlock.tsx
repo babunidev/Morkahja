@@ -36,7 +36,13 @@ interface VisibleSolutionSlot {
   uses: number;
 }
 
-const UNAVAILABLE_SOLUTION_OPACITY = 0.65;
+const UNAVAILABLE_SOLUTION_OPACITY = 0.37;
+const SOLUTION_ENABLE_RATTLE_MS = 480;
+
+const enableRattleAnimationStyle: CSSProperties = {
+  animation: `morkahja-solution-enable-rattle ${SOLUTION_ENABLE_RATTLE_MS}ms ease-out`,
+  transformOrigin: '50% 50%',
+};
 
 interface SolutionTooltipState {
   detail: string;
@@ -140,6 +146,11 @@ const solutionImageStyle: CSSProperties = {
 const lockpickAnimationStyle: CSSProperties = {
   animation: 'morkahja-solution-lockpick 1500ms cubic-bezier(0.2, 0.8, 0.2, 1)',
   transformOrigin: '50% 50%',
+};
+
+const diceImageWrapStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
 };
 
 const diceImageStyle: CSSProperties = {
@@ -342,6 +353,10 @@ export function SolutionBlock({
 }) {
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsInteractive, setActionsInteractive] = useState(false);
+  const [enableRattleSlots, setEnableRattleSlots] = useState<Set<SlotLetter>>(
+    () => new Set(),
+  );
+  const [diceEnableRattle, setDiceEnableRattle] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
   const [solutionTooltip, setSolutionTooltip] = useState<SolutionTooltipState | null>(null);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
@@ -349,6 +364,8 @@ export function SolutionBlock({
   useEffect(() => {
     setActionsVisible(false);
     setActionsInteractive(false);
+    setEnableRattleSlots(new Set());
+    setDiceEnableRattle(false);
     setSolutionTooltip(null);
 
     const revealTimer = window.setTimeout(() => {
@@ -356,13 +373,28 @@ export function SolutionBlock({
     }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
     const interactiveTimer = window.setTimeout(() => {
       setActionsInteractive(true);
+      setDiceEnableRattle(true);
+
+      const slotsToRattle = (['A', 'B', 'C', 'D'] as const).filter((slot) => {
+        const solution = solutionForSlot(encounter, inventory, slot);
+        return solution?.available ?? false;
+      });
+
+      if (slotsToRattle.length > 0) {
+        setEnableRattleSlots(new Set(slotsToRattle));
+      }
     }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + ENCOUNTER_ACTIONS_FADE_DURATION_MS);
+    const rattleClearTimer = window.setTimeout(() => {
+      setEnableRattleSlots(new Set());
+      setDiceEnableRattle(false);
+    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + ENCOUNTER_ACTIONS_FADE_DURATION_MS + SOLUTION_ENABLE_RATTLE_MS);
 
     return () => {
       window.clearTimeout(revealTimer);
       window.clearTimeout(interactiveTimer);
+      window.clearTimeout(rattleClearTimer);
     };
-  }, [encounterRevealKey]);
+  }, [encounter, encounterRevealKey, inventory]);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
   const solutionSlots = ['A', 'B', 'dice', 'C', 'D'] as const;
@@ -387,8 +419,10 @@ export function SolutionBlock({
 
   const actionsReady = actionsInteractive && !hidden;
 
-  function showSolutionTooltip(
-    solution: VisibleSolutionSlot,
+  function showActionTooltip(
+    name: string,
+    detail: string,
+    unavailable: boolean,
     event: { currentTarget: HTMLButtonElement },
   ): void {
     if (!actionsReady) {
@@ -405,14 +439,30 @@ export function SolutionBlock({
       : 0;
 
     setSolutionTooltip({
-      detail: solution.available
-        ? `Charges: ${solution.uses}`
-        : 'Not in your inventory',
-      name: solution.name,
-      unavailable: !solution.available,
+      detail,
+      name,
+      unavailable,
       x,
       y,
     });
+  }
+
+  function showSolutionTooltip(
+    solution: VisibleSolutionSlot,
+    event: { currentTarget: HTMLButtonElement },
+  ): void {
+    showActionTooltip(
+      solution.name,
+      solution.available
+        ? `Charges: ${solution.uses}`
+        : 'Not in your inventory',
+      !solution.available,
+      event,
+    );
+  }
+
+  function showDiceTooltip(event: { currentTarget: HTMLButtonElement }): void {
+    showActionTooltip('Dice', 'Roll for encounter outcome', false, event);
   }
 
   function hideSolutionTooltip(): void {
@@ -425,6 +475,7 @@ export function SolutionBlock({
     }
 
     clearRollRevealTimer();
+    hideSolutionTooltip();
 
     onActionReveal?.('dice', null);
     playSfx(DICE_SOUND);
@@ -462,6 +513,7 @@ export function SolutionBlock({
     >
       <style>
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
+        {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
       </style>
       <img
         alt=""
@@ -487,23 +539,35 @@ export function SolutionBlock({
                 aria-disabled={!actionsReady}
                 aria-label="Roll dice"
                 disabled={!actionsReady}
+                onBlur={hideSolutionTooltip}
                 onClick={handleDiceClick}
+                onFocus={showDiceTooltip}
+                onPointerCancel={hideSolutionTooltip}
+                onPointerEnter={showDiceTooltip}
+                onPointerLeave={hideSolutionTooltip}
                 style={{
                   ...diceButtonStyle,
                   cursor: actionsReady ? 'pointer' : 'default',
                 }}
                 type="button"
               >
-                <img
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  src={DICE_BUTTON}
+                <span
                   style={{
-                    ...diceImageStyle,
-                    transform: `rotate(${diceRollCount * 720}deg)`,
+                    ...diceImageWrapStyle,
+                    ...(diceEnableRattle ? enableRattleAnimationStyle : {}),
                   }}
-                />
+                >
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    src={DICE_BUTTON}
+                    style={{
+                      ...diceImageStyle,
+                      transform: `rotate(${diceRollCount * 720}deg)`,
+                    }}
+                  />
+                </span>
               </button>
             </div>
             );
@@ -552,6 +616,7 @@ export function SolutionBlock({
                   style={{
                     ...solutionIconShellStyle,
                     cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
+                    ...(enableRattleSlots.has(slot) ? enableRattleAnimationStyle : {}),
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
                     ...(visibleSlot.available && visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
                   }}

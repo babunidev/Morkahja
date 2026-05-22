@@ -103,7 +103,7 @@ const footerButtonRowStyle: CSSProperties = {
 
 const footerButtonStyle: CSSProperties = {
   width: '100%',
-  maxWidth: 70,
+  maxWidth: 84,
   padding: 0,
   border: 0,
   background: 'transparent',
