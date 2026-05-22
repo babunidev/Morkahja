@@ -67,6 +67,10 @@ Brief chronological overview of the web app from first commit to present. Newest
 
 ## Session notes (detail)
 
+### Atranor = system death encounter (id 1)
+
+**Atranor** (`mEncounterID` **1** / `DEATH_ENCOUNTER_ID`) is queued when essence runs out on a normal encounter; random pool still starts at **20001**. Only Atranor **Misery/Hardship** sets `avatarDied` (death overlay). `deathTriggered` means “Atranor is next,” not dead yet. Client shows overlay from `avatarDied` on `/encounter/continue` only.
+
 ### Adventurer achievements and nav dots (`9ea2110`)
 
 Since `686c16c`.
