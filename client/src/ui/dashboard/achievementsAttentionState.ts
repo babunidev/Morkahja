@@ -14,12 +14,13 @@ function storageKey(playerId: string): string {
 }
 
 function snapshotFromResponse(response: AchievementsResponse): AchievementsSeenSnapshot {
-  const adventurer = response.achievements.find(
-    (entry) => entry.achievementId === 'adventurer',
-  ) ?? response.achievements[0];
+  const progress = response.achievements.reduce(
+    (max, entry) => Math.max(max, entry.progress),
+    0,
+  );
 
   return {
-    progress: adventurer?.progress ?? 0,
+    progress,
     dailyEncountersPlayed: response.dailyReward.encountersPlayed,
     utcDay: response.dailyReward.utcDay,
     claimable: response.dailyReward.claimable,

@@ -1,4 +1,18 @@
 import {
+  ALPHA_PLAYER_ACHIEVEMENT_ID,
+  ALPHA_PLAYER_BASE_ICON,
+  ALPHA_PLAYER_CHAIN_TEXT,
+  ALPHA_PLAYER_CHAIN_TITLE,
+  ALPHA_PLAYER_RANKS,
+  alphaPlayerProgressBand,
+  alphaPlayerRankDefinition,
+  alphaPlayerRankFromProgress,
+} from '../domain/achievements/alphaPlayerAchievement.js';
+import {
+  isAlphaPlayerGloballyLocked,
+  loadAlphaPlayerGlobalState,
+} from '../domain/achievements/alphaPlayerGlobalLock.js';
+import {
   ADVENTURER_ACHIEVEMENT_ID,
   ADVENTURER_BASE_ICON,
   ADVENTURER_RANKS,
@@ -32,6 +46,8 @@ export interface AchievementProgressView {
   title: string;
   text: string;
   ranks: AchievementRankView[];
+  chainTitle?: string;
+  globallyLocked?: boolean;
 }
 
 export interface AchievementsSnapshot {
@@ -73,14 +89,57 @@ function buildAdventurerView(progress: number): AchievementProgressView {
   };
 }
 
+function buildAlphaPlayerView(
+  progress: number,
+  globallyLocked: boolean,
+): AchievementProgressView {
+  const rank = alphaPlayerRankFromProgress(progress);
+  const rankDefinition = alphaPlayerRankDefinition(rank);
+  const band = alphaPlayerProgressBand(progress);
+
+  return {
+    achievementId: ALPHA_PLAYER_ACHIEVEMENT_ID,
+    rank,
+    progress,
+    bandStart: band.bandStart,
+    bandEnd: band.bandEnd,
+    progressInBand: band.progressInBand,
+    baseIconUrl: toPublicPath(ALPHA_PLAYER_BASE_ICON),
+    rankOverlayUrl: rankDefinition?.rankOverlayPath
+      ? toPublicPath(rankDefinition.rankOverlayPath)
+      : undefined,
+    chainTitle: ALPHA_PLAYER_CHAIN_TITLE,
+    globallyLocked,
+    title: rankDefinition?.title ?? ALPHA_PLAYER_CHAIN_TITLE,
+    text: rankDefinition?.text ?? ALPHA_PLAYER_CHAIN_TEXT,
+    ranks: ALPHA_PLAYER_RANKS.map((entry) => ({
+      rank: entry.rank,
+      title: entry.title,
+      text: entry.text,
+      rankOverlayUrl: entry.rankOverlayPath
+        ? toPublicPath(entry.rankOverlayPath)
+        : undefined,
+    })),
+  };
+}
+
 export async function getAchievementsSnapshot(
   playerId: string,
 ): Promise<AchievementsSnapshot> {
-  const stored = await loadAchievementProgress(playerId, ADVENTURER_ACHIEVEMENT_ID);
-  const progress = stored?.progress ?? 0;
+  const [adventurerStored, alphaStored, alphaGlobal] = await Promise.all([
+    loadAchievementProgress(playerId, ADVENTURER_ACHIEVEMENT_ID),
+    loadAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
+    loadAlphaPlayerGlobalState(),
+  ]);
+  const adventurerProgress = adventurerStored?.progress ?? 0;
+  const alphaProgress = alphaStored?.progress ?? 0;
+  const alphaLocked = isAlphaPlayerGloballyLocked(alphaGlobal);
 
   return {
-    achievements: [buildAdventurerView(progress)],
+    achievements: [
+      buildAdventurerView(adventurerProgress),
+      buildAlphaPlayerView(alphaProgress, alphaLocked),
+    ],
     dailyReward: await getDailyRewardStatus(playerId),
   };
 }

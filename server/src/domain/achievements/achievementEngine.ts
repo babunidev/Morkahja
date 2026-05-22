@@ -3,6 +3,16 @@ import {
   recordAchievementUnlockedEvent,
 } from '../../services/gameEventService.js';
 import {
+  ALPHA_PLAYER_ACHIEVEMENT_ID,
+  alphaPlayerRankDefinition,
+  alphaPlayerRankFromProgress,
+} from './alphaPlayerAchievement.js';
+import {
+  isAlphaPlayerGloballyLocked,
+  loadAlphaPlayerGlobalState,
+  tryClaimAlphaPlayerRank4Slot,
+} from './alphaPlayerGlobalLock.js';
+import {
   ADVENTURER_ACHIEVEMENT_ID,
   adventurerRankDefinition,
   adventurerRankFromProgress,
@@ -18,13 +28,24 @@ const ENCOUNTER_PLAYED_EVENT_TYPES = new Set([
   'encounter_failed',
 ]);
 
+const ALPHA_PLAYER_ACTIVITY_EVENT_TYPES = new Set([
+  'level_up',
+  'avatar_died',
+]);
+
 export async function handleGameEvent(event: GameEvent): Promise<void> {
-  if (!event.playerId || !ENCOUNTER_PLAYED_EVENT_TYPES.has(event.type)) {
+  if (!event.playerId) {
     return;
   }
 
-  await recordDailyEncounterPlayed(event.playerId, event.timestamp);
-  await processAdventurerEncounterPlayed(event.playerId, event.timestamp);
+  if (ENCOUNTER_PLAYED_EVENT_TYPES.has(event.type)) {
+    await recordDailyEncounterPlayed(event.playerId, event.timestamp);
+    await processAdventurerEncounterPlayed(event.playerId, event.timestamp);
+  }
+
+  if (ALPHA_PLAYER_ACTIVITY_EVENT_TYPES.has(event.type)) {
+    await processAlphaPlayerActivity(event.playerId, event.timestamp);
+  }
 }
 
 async function processAdventurerEncounterPlayed(
@@ -52,6 +73,49 @@ async function processAdventurerEncounterPlayed(
     const rankDefinition = adventurerRankDefinition(nextRank);
     await recordAchievementUnlockedEvent(playerId, {
       achievementId: ADVENTURER_ACHIEVEMENT_ID,
+      rank: nextRank,
+      rankTitle: rankDefinition?.title ?? `Rank ${nextRank}`,
+    });
+  }
+}
+
+async function processAlphaPlayerActivity(
+  playerId: string,
+  timestamp: number,
+): Promise<void> {
+  const globalState = await loadAlphaPlayerGlobalState();
+  if (isAlphaPlayerGloballyLocked(globalState)) {
+    return;
+  }
+
+  const existing = await loadAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID);
+  const previousProgress = existing?.progress ?? 0;
+  const previousRank = alphaPlayerRankFromProgress(previousProgress);
+  const nextProgress = previousProgress + 1;
+  let nextRank = alphaPlayerRankFromProgress(nextProgress);
+
+  if (nextRank === 4 && previousRank < 4) {
+    const claim = await tryClaimAlphaPlayerRank4Slot(timestamp);
+    if (!claim.claimed) {
+      nextRank = 3;
+    }
+  }
+
+  const updated = {
+    achievementId: ALPHA_PLAYER_ACHIEVEMENT_ID,
+    playerId,
+    rank: nextRank,
+    progress: nextProgress,
+    updatedAt: timestamp,
+    unlockedAt: existing?.unlockedAt ?? (nextRank >= 1 ? timestamp : undefined),
+  };
+
+  await saveAchievementProgress(updated);
+
+  if (nextRank > previousRank) {
+    const rankDefinition = alphaPlayerRankDefinition(nextRank);
+    await recordAchievementUnlockedEvent(playerId, {
+      achievementId: ALPHA_PLAYER_ACHIEVEMENT_ID,
       rank: nextRank,
       rankTitle: rankDefinition?.title ?? `Rank ${nextRank}`,
     });

@@ -111,6 +111,19 @@ const claimButtonDisabledStyle: CSSProperties = {
 };
 
 function progressLabel(achievement: AchievementProgressDto): string {
+  if (achievement.achievementId === 'alpha_player') {
+    if (achievement.globallyLocked && achievement.rank < 4) {
+      return `${achievement.progress} activity — sealed (100 Legendborn claimed)`;
+    }
+
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} activity — max rank reached`;
+    }
+
+    const remaining = Math.max(0, achievement.bandEnd - achievement.progress);
+    return `${achievement.progress} / ${achievement.bandEnd} activity (${remaining} to next rank)`;
+  }
+
   if (achievement.bandEnd === null) {
     return `${achievement.progress} encounters — max rank reached`;
   }
@@ -140,8 +153,16 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
           />
         ) : null}
       </div>
-      <h3 style={achievementTitleStyle}>{achievement.title}</h3>
-      <p style={achievementTextStyle}>{achievement.text}</p>
+      <h3 style={achievementTitleStyle}>
+        {achievement.chainTitle && achievement.rank <= 0
+          ? achievement.chainTitle
+          : achievement.title}
+      </h3>
+      <p style={achievementTextStyle}>
+        {achievement.globallyLocked && achievement.rank < 4
+          ? `${achievement.text} This limited achievement has been permanently sealed.`
+          : achievement.text}
+      </p>
       <div
         aria-label="Progress toward next rank"
         aria-valuemax={100}

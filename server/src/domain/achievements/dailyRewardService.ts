@@ -9,7 +9,7 @@ import {
 } from './adventurerAchievement.js';
 import { loadAchievementProgress } from './achievementPersistence.js';
 
-export const DAILY_REWARD_ENCOUNTERS_REQUIRED = 21;
+export const DAILY_REWARD_ENCOUNTERS_REQUIRED = 42;
 
 export interface PlayerDailyRewardState {
   utcDay: string;

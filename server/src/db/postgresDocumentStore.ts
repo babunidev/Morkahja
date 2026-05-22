@@ -83,8 +83,10 @@ export async function validatePostgresConnection(): Promise<PostgresConnectionIn
   await ensureSchema();
   const { ensureGameEventsReady } = await import('./gameEventPersistence.js');
   const { ensurePlayerAchievementsReady } = await import('../domain/achievements/achievementPersistence.js');
+  const { ensureAlphaPlayerGlobalStateReady } = await import('../domain/achievements/alphaPlayerGlobalLock.js');
   await ensureGameEventsReady();
   await ensurePlayerAchievementsReady();
+  await ensureAlphaPlayerGlobalStateReady();
 
   const result = await pool.query<{
     database_name: string;
