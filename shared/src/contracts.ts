@@ -239,8 +239,25 @@ export interface AddFriendResponse {
   friendIds: string[];
 }
 
+export interface FriendAvatarDto {
+  id: string;
+  name: string;
+  race: AvatarRace;
+  role: AvatarRole;
+  level: number;
+  portrait: string;
+  frame: string;
+  lastPlayedAt: number;
+  lastPlayed: boolean;
+}
+
 export interface FriendAchievementsResponse {
   playerId: string;
   playerName: string;
+  online: boolean;
+  portrait: string;
+  frame: string;
+  avatarName: string | null;
+  avatars: FriendAvatarDto[];
   achievements: AchievementProgressDto[];
 }

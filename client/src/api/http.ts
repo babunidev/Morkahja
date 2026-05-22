@@ -182,9 +182,15 @@ export async function addFriend(query: string): Promise<AddFriendResponse> {
 export async function fetchFriendAchievements(
   friendId: string,
 ): Promise<FriendAchievementsResponse> {
-  return request<FriendAchievementsResponse>(
+  const response = await request<FriendAchievementsResponse>(
     `/player/friends/${encodeURIComponent(friendId)}/achievements`,
   );
+
+  return {
+    ...response,
+    avatars: Array.isArray(response.avatars) ? response.avatars : [],
+    achievements: Array.isArray(response.achievements) ? response.achievements : [],
+  };
 }
 
 export async function fetchAvatar(

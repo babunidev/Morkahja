@@ -36,7 +36,10 @@ import {
   firestarterProgressBand,
   firestarterRankDefinition,
 } from '../domain/achievements/firestarterAchievement.js';
-import { syncFirestarterAchievementProgress } from '../domain/achievements/firestarterProgress.js';
+import {
+  loadFirestarterState,
+  syncFirestarterAchievementProgress,
+} from '../domain/achievements/firestarterProgress.js';
 import {
   CONTRIBUTOR_ACHIEVEMENT_ID,
   CONTRIBUTOR_BASE_ICON,
@@ -303,6 +306,83 @@ async function loadSyncedAchievementProgress(
   return synced.progress;
 }
 
+async function readAchievementProgressValue(
+  playerId: string,
+  achievementId: string,
+): Promise<number> {
+  const stored = await loadAchievementProgress(playerId, achievementId);
+  return stored?.progress ?? 0;
+}
+
+function buildAchievementsViews(input: {
+  adventurerProgress: number;
+  firestarterState: Awaited<ReturnType<typeof loadFirestarterState>>;
+  blessedProgress: number;
+  combatantProgress: number;
+  tricksterProgress: number;
+  helperProgress: number;
+  contributorProgress: number;
+  alphaProgress: number;
+  alphaLocked: boolean;
+}): AchievementProgressView[] {
+  const allAchievements = [
+    buildAdventurerView(input.adventurerProgress),
+    buildFirestarterView(
+      input.firestarterState.avatarCount,
+      input.firestarterState.totalLevels,
+      input.firestarterState.rank,
+    ),
+    buildBlessedView(input.blessedProgress),
+    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[0], input.combatantProgress),
+    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[1], input.tricksterProgress),
+    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[2], input.helperProgress),
+    buildContributorView(input.contributorProgress),
+    buildAlphaPlayerView(input.alphaProgress, input.alphaLocked),
+  ];
+
+  return allAchievements.filter(isAchievementVisible);
+}
+
+/** Read-only snapshot for viewing another player (no progress writes or unlock events). */
+export async function getAchievementsSnapshotReadOnly(
+  playerId: string,
+): Promise<AchievementProgressView[]> {
+  const [
+    adventurerProgress,
+    firestarterState,
+    blessedProgress,
+    combatantProgress,
+    tricksterProgress,
+    helperProgress,
+    contributorProgress,
+    alphaProgress,
+    alphaGlobal,
+  ] = await Promise.all([
+    readAchievementProgressValue(playerId, ADVENTURER_ACHIEVEMENT_ID),
+    loadFirestarterState(playerId),
+    readAchievementProgressValue(playerId, BLESSED_ACHIEVEMENT_ID),
+    readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[0].achievementId),
+    readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[1].achievementId),
+    readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
+    readAchievementProgressValue(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
+    readAchievementProgressValue(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
+    loadAlphaPlayerGlobalState(),
+  ]);
+  const alphaLocked = isAlphaPlayerGloballyLocked(alphaGlobal);
+
+  return buildAchievementsViews({
+    adventurerProgress,
+    firestarterState,
+    blessedProgress,
+    combatantProgress,
+    tricksterProgress,
+    helperProgress,
+    contributorProgress,
+    alphaProgress,
+    alphaLocked,
+  });
+}
+
 export async function getAchievementsSnapshot(
   playerId: string,
 ): Promise<AchievementsSnapshot> {
@@ -329,23 +409,18 @@ export async function getAchievementsSnapshot(
   ]);
   const alphaLocked = isAlphaPlayerGloballyLocked(alphaGlobal);
 
-  const allAchievements = [
-    buildAdventurerView(adventurerProgress),
-    buildFirestarterView(
-      firestarterState.avatarCount,
-      firestarterState.totalLevels,
-      firestarterState.rank,
-    ),
-    buildBlessedView(blessedProgress),
-    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[0], combatantProgress),
-    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[1], tricksterProgress),
-    buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[2], helperProgress),
-    buildContributorView(contributorProgress),
-    buildAlphaPlayerView(alphaProgress, alphaLocked),
-  ];
-
   return {
-    achievements: allAchievements.filter(isAchievementVisible),
+    achievements: buildAchievementsViews({
+      adventurerProgress,
+      firestarterState,
+      blessedProgress,
+      combatantProgress,
+      tricksterProgress,
+      helperProgress,
+      contributorProgress,
+      alphaProgress,
+      alphaLocked,
+    }),
     dailyReward: await getDailyRewardStatus(playerId),
   };
 }

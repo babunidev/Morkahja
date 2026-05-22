@@ -173,6 +173,8 @@ function progressLabel(achievement: AchievementProgressDto): string {
 }
 
 function AchievementCard({ achievement }: { achievement: AchievementProgressDto }) {
+  const progressPercent = Math.round((achievement.progressInBand ?? 0) * 100);
+
   return (
     <article style={achievementCardStyle}>
       <div style={iconStackStyle}>
@@ -207,14 +209,14 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
         aria-label="Progress toward next rank"
         aria-valuemax={100}
         aria-valuemin={0}
-        aria-valuenow={Math.round(achievement.progressInBand * 100)}
+        aria-valuenow={progressPercent}
         role="progressbar"
         style={progressTrackStyle}
       >
         <div
           style={{
             ...progressFillStyle,
-            width: `${Math.round(achievement.progressInBand * 100)}%`,
+            width: `${progressPercent}%`,
           }}
         />
       </div>
@@ -266,6 +268,16 @@ function DailyRewardCard({
   );
 }
 
+function isRenderableAchievement(
+  achievement: AchievementProgressDto | null | undefined,
+): achievement is AchievementProgressDto {
+  return Boolean(
+    achievement
+    && typeof achievement.achievementId === 'string'
+    && typeof achievement.baseIconUrl === 'string',
+  );
+}
+
 export function AchievementPanel({
   achievements,
   claimPending,
@@ -277,9 +289,13 @@ export function AchievementPanel({
   dailyReward: DailyRewardStatusDto | null;
   onClaimDailyReward: () => void;
 }) {
+  const visibleAchievements = Array.isArray(achievements)
+    ? achievements.filter(isRenderableAchievement)
+    : [];
+
   return (
     <div style={panelBodyStyle}>
-      {achievements.map((achievement) => (
+      {visibleAchievements.map((achievement) => (
         <AchievementCard achievement={achievement} key={achievement.achievementId} />
       ))}
       {dailyReward ? (

@@ -799,6 +799,8 @@ export function Dashboard({
             setFriendsOpen(false);
           }}
           open={friendsOpen}
+          playerId={playerId}
+          playerName={playerName}
         />
       ) : null}
     </main>

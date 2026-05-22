@@ -2,8 +2,6 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import DonationOverlay from './DonationOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
-const DONATE_BUTTON_ASSET = '/UI/05_CreditsMenu/DonateButt.webp';
-
 const OVERLAY_FADE_MS = 300;
 
 interface CreditEntry {
@@ -108,23 +106,8 @@ const creditListStyle: CSSProperties = {
 const donateFooterStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
-  paddingTop: 4,
+  paddingTop: 8,
   borderTop: '1px solid rgba(255, 204, 102, 0.32)',
-};
-
-const donateButtonStyle: CSSProperties = {
-  width: 'min(100%, 84px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
-
-const donateButtonImageStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5))',
 };
 
 const creditCardStyle: CSSProperties = {
@@ -328,20 +311,14 @@ export function AboutUsOverlay({
         </div>
         <footer style={donateFooterStyle}>
           <button
-            aria-label="Donate gems to the team"
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
               setDonationOpen(true);
             }}
-            style={donateButtonStyle}
+            style={closeButtonStyle}
             type="button"
           >
-            <img
-              alt="Donate"
-              draggable={false}
-              src={DONATE_BUTTON_ASSET}
-              style={donateButtonImageStyle}
-            />
+            Donation
           </button>
         </footer>
       </section>

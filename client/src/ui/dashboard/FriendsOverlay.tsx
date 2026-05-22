@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
-import type { AchievementProgressDto, FriendSummaryDto } from '@shared/contracts';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import type {
+  AchievementProgressDto,
+  FriendAvatarDto,
+  FriendSummaryDto,
+} from '@shared/contracts';
 import { addFriend, fetchFriendAchievements, fetchFriends } from '../../api/http.js';
 import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
@@ -11,6 +15,23 @@ const ONLINE_ICON = `${FRIENDS_UI_ROOT}/im_button_friend_online.webp`;
 const OFFLINE_ICON = `${FRIENDS_UI_ROOT}/im_button_friend_offline.webp`;
 const FRIENDS_POLL_MS = 15_000;
 const OVERLAY_FADE_MS = 300;
+
+function isSelfFriendQuery(
+  query: string,
+  playerId: string,
+  playerName: string,
+): boolean {
+  const normalized = query.trim().toLowerCase();
+
+  if (!normalized) {
+    return false;
+  }
+
+  return (
+    normalized === playerId.toLowerCase()
+    || normalized === playerName.trim().toLowerCase()
+  );
+}
 
 function addFriendErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : 'Could not add friend';
@@ -213,6 +234,80 @@ const detailPortraitStyle: CSSProperties = {
   height: 82,
 };
 
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 204, 102, 0.82)',
+  fontSize: '0.82rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+};
+
+const avatarGridStyle: CSSProperties = {
+  display: 'grid',
+  gap: 10,
+};
+
+const avatarCardStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '56px minmax(0, 1fr)',
+  gap: 10,
+  alignItems: 'center',
+  padding: '10px 12px',
+  border: '1px solid rgba(255, 204, 102, 0.28)',
+  borderRadius: 10,
+  background: 'rgba(8, 5, 4, 0.55)',
+};
+
+const avatarCardLastPlayedStyle: CSSProperties = {
+  ...avatarCardStyle,
+  borderColor: 'rgba(140, 230, 160, 0.45)',
+  boxShadow: 'inset 0 0 0 1px rgba(140, 230, 160, 0.18)',
+};
+
+const avatarCardPortraitStyle: CSSProperties = {
+  width: 56,
+  height: 64,
+};
+
+const avatarCardNameStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '0.98rem',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+};
+
+const avatarCardMetaStyle: CSSProperties = {
+  margin: '4px 0 0',
+  color: 'rgba(247, 239, 224, 0.82)',
+  fontSize: '0.84rem',
+  lineHeight: 1.4,
+};
+
+const avatarCardTagStyle: CSSProperties = {
+  margin: '6px 0 0',
+  color: 'rgba(140, 230, 160, 0.9)',
+  fontSize: '0.74rem',
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+};
+
+function FriendAvatarCard({ avatar }: { avatar: FriendAvatarDto }) {
+  return (
+    <article style={avatar.lastPlayed ? avatarCardLastPlayedStyle : avatarCardStyle}>
+      <div style={avatarCardPortraitStyle}>
+        <AvatarPortraitStack frame={avatar.frame} portrait={avatar.portrait} />
+      </div>
+      <div>
+        <p style={avatarCardNameStyle}>{avatar.name}</p>
+        <p style={avatarCardMetaStyle}>
+          Level {avatar.level} · {avatar.race} {avatar.role}
+        </p>
+        {avatar.lastPlayed ? <p style={avatarCardTagStyle}>Last played</p> : null}
+      </div>
+    </article>
+  );
+}
+
 function FriendRow({
   friend,
   onSelect,
@@ -253,20 +348,26 @@ function FriendRow({
 export function FriendsOverlay({
   onClose,
   open,
+  playerId,
+  playerName,
 }: {
   onClose: () => void;
   open: boolean;
+  playerId: string;
+  playerName: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [friends, setFriends] = useState<FriendSummaryDto[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<FriendSummaryDto | null>(null);
   const [friendAchievements, setFriendAchievements] = useState<AchievementProgressDto[]>([]);
+  const [friendAvatars, setFriendAvatars] = useState<FriendAvatarDto[]>([]);
   const [addQuery, setAddQuery] = useState('');
   const [addPending, setAddPending] = useState(false);
   const [loadPending, setLoadPending] = useState(false);
   const [achievementsPending, setAchievementsPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const friendDetailRequestRef = useRef(0);
 
   const refreshFriends = useCallback(async (): Promise<void> => {
     setLoadPending(true);
@@ -290,29 +391,52 @@ export function FriendsOverlay({
   }, []);
 
   const loadFriendAchievements = useCallback(async (friend: FriendSummaryDto): Promise<void> => {
+    const requestId = ++friendDetailRequestRef.current;
     setAchievementsPending(true);
     setLoadError(null);
+    setFriendAchievements([]);
+    setFriendAvatars([]);
 
     try {
       const response = await fetchFriendAchievements(friend.playerId);
-      setFriendAchievements(response.achievements);
+
+      if (friendDetailRequestRef.current !== requestId) {
+        return;
+      }
+
       setSelectedFriend({
         ...friend,
-        playerName: response.playerName,
+        playerName: response.playerName ?? friend.playerName,
+        online: Boolean(response.online),
+        portrait: response.portrait ?? friend.portrait,
+        frame: response.frame ?? friend.frame,
+        avatarName: response.avatarName ?? friend.avatarName,
       });
+      setFriendAchievements(response.achievements);
+      setFriendAvatars(response.avatars);
     } catch (error) {
+      if (friendDetailRequestRef.current !== requestId) {
+        return;
+      }
+
       setLoadError(error instanceof Error ? error.message : 'Could not load achievements');
       setFriendAchievements([]);
+      setFriendAvatars([]);
     } finally {
-      setAchievementsPending(false);
+      if (friendDetailRequestRef.current === requestId) {
+        setAchievementsPending(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
+      friendDetailRequestRef.current += 1;
       setSelectedFriend(null);
       setFriendAchievements([]);
+      setFriendAvatars([]);
+      setAchievementsPending(false);
       setAddQuery('');
       setStatusMessage(null);
       setLoadError(null);
@@ -348,6 +472,11 @@ export function FriendsOverlay({
     const query = addQuery.trim();
 
     if (!query || addPending) {
+      return;
+    }
+
+    if (isSelfFriendQuery(query, playerId, playerName)) {
+      setStatusMessage('You cannot add yourself.');
       return;
     }
 
@@ -405,8 +534,11 @@ export function FriendsOverlay({
             <button
               onClick={() => {
                 playSfx(DEFAULT_BUTTON_SOUND);
+                friendDetailRequestRef.current += 1;
                 setSelectedFriend(null);
                 setFriendAchievements([]);
+                setFriendAvatars([]);
+                setAchievementsPending(false);
                 setLoadError(null);
               }}
               style={backButtonStyle}
@@ -453,14 +585,27 @@ export function FriendsOverlay({
               </div>
               {loadError ? <p style={errorMessageStyle}>{loadError}</p> : null}
               {achievementsPending ? (
-                <p style={messageStyle}>Loading achievements…</p>
+                <p style={messageStyle}>Loading friend profile…</p>
               ) : (
-                <AchievementPanel
-                  achievements={friendAchievements}
-                  claimPending={false}
-                  dailyReward={null}
-                  onClaimDailyReward={() => {}}
-                />
+                <>
+                  <h3 style={sectionTitleStyle}>Avatars</h3>
+                  {(friendAvatars ?? []).length === 0 ? (
+                    <p style={messageStyle}>No avatars yet.</p>
+                  ) : (
+                    <div style={avatarGridStyle}>
+                      {(friendAvatars ?? []).map((avatar) => (
+                        <FriendAvatarCard avatar={avatar} key={avatar.id || avatar.name} />
+                      ))}
+                    </div>
+                  )}
+                  <h3 style={sectionTitleStyle}>Achievements</h3>
+                  <AchievementPanel
+                    achievements={friendAchievements}
+                    claimPending={false}
+                    dailyReward={null}
+                    onClaimDailyReward={() => {}}
+                  />
+                </>
               )}
             </>
           ) : (
@@ -483,12 +628,18 @@ export function FriendsOverlay({
                 />
                 <button
                   aria-label="Add friend"
-                  disabled={addPending || !addQuery.trim()}
+                  disabled={
+                    addPending
+                    || !addQuery.trim()
+                    || isSelfFriendQuery(addQuery, playerId, playerName)
+                  }
                   onClick={() => {
                     void handleAddFriend();
                   }}
                   style={
-                    addPending || !addQuery.trim()
+                    addPending
+                    || !addQuery.trim()
+                    || isSelfFriendQuery(addQuery, playerId, playerName)
                       ? addButtonDisabledStyle
                       : addButtonStyle
                   }
@@ -502,6 +653,9 @@ export function FriendsOverlay({
                   />
                 </button>
               </div>
+              {isSelfFriendQuery(addQuery, playerId, playerName) ? (
+                <p style={errorMessageStyle}>You cannot add yourself.</p>
+              ) : null}
               {statusMessage ? (
                 <p
                   style={
@@ -527,6 +681,10 @@ export function FriendsOverlay({
                     key={friend.playerId}
                     onSelect={() => {
                       setSelectedFriend(friend);
+                      setAchievementsPending(true);
+                      setFriendAchievements([]);
+                      setFriendAvatars([]);
+                      setLoadError(null);
                       void loadFriendAchievements(friend);
                     }}
                   />
