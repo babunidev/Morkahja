@@ -1,7 +1,42 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import DonationOverlay from './DonationOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
+const DONATE_BUTTON_ASSET = '/UI/05_CreditsMenu/DonateButt.webp';
+
 const OVERLAY_FADE_MS = 300;
+
+interface CreditEntry {
+  id: string;
+  name: string;
+  roles: string;
+  paragraphs: string[];
+}
+
+const CREDITS: CreditEntry[] = [
+  {
+    id: 'alexander-ludwig',
+    name: 'Alexander Ludwig',
+    roles: 'Game Design · Visual Design · Worldbuilding · Software Development',
+    paragraphs: [
+      'This project is created out of a deep love for worldbuilding, game design, and creative expression. It is a way of bringing ideas to life and shaping imagined worlds into something playable and real. Every part of the process — from visuals to systems to narrative to implementation — is driven by a clear personal vision and a strong desire to explore and realize those ideas fully.',
+      'The game is made first and foremost for myself, guided by a defined creative direction, with the hope that others can find joy in it as well. Nothing means more than knowing that players enjoy it, even if only a fraction as much as the enjoyment that goes into creating it.',
+      'Deep gratitude to everyone who has supported the project — those who gave feedback, tested, played, and continue to engage with it. That support shapes the work in ways that cannot be measured, and it is sincerely appreciated.',
+      'Tools used: Midjourney (image generation), Photoshop (curation and refinement), Cursor (programming assistance), ChatGPT (storytelling and worldbuilding)',
+    ],
+  },
+  {
+    id: 'nikita-malko',
+    name: 'Nikita Malko',
+    roles: 'Video Game Composer · Music & Sound Design',
+    paragraphs: [
+      'Every world carries a hidden pulse, and music is what lets it breathe. It is what turns landscapes into memory, silence into emotion, and moments into something that stays with the player long after they\'ve stopped playing.',
+      'Working with Nikita Malko has been a deeply inspiring part of this project. His approach to composition — treating music as an emotional architecture of a game world — aligns naturally with the vision behind Morkahja. Every track feels like it belongs, not added on top, but grown from within the world itself.',
+      'From subtle atmospheric textures to strong thematic identities, his work shapes presence, mood, and meaning without ever forcing attention. It supports the experience in a way that feels both careful and alive.',
+      'There is a sincere hope to continue working together in the future, especially as the project grows and begins to support further expansion of its music systems. The intention is to evolve the audio layer of the game into something even more dynamic and expressive, and his contribution forms a strong foundation for that direction.',
+    ],
+  },
+];
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',
@@ -19,7 +54,7 @@ const panelStyle: CSSProperties = {
   width: 'min(92vw, 420px)',
   maxHeight: 'min(86vh, 620px)',
   display: 'grid',
-  gridTemplateRows: 'auto minmax(0, 1fr)',
+  gridTemplateRows: 'auto minmax(0, 1fr) auto',
   gap: 12,
   padding: '20px 18px 16px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
@@ -60,16 +95,56 @@ const closeButtonStyle: CSSProperties = {
 const bodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
-  textAlign: 'center',
-  padding: '4px 6px 2px',
+  padding: '4px 2px 2px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
 };
 
-const creditBlockStyle: CSSProperties = {
+const creditListStyle: CSSProperties = {
   display: 'grid',
-  gap: 10,
-  justifyItems: 'center',
+  gap: 12,
+};
+
+const donateFooterStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  paddingTop: 4,
+  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+};
+
+const donateButtonStyle: CSSProperties = {
+  width: 'min(100%, 84px)',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+};
+
+const donateButtonImageStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  height: 'auto',
+  filter: 'drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5))',
+};
+
+const creditCardStyle: CSSProperties = {
+  border: '1px solid rgba(255, 204, 102, 0.38)',
+  borderRadius: 10,
+  background: 'rgba(8, 5, 4, 0.55)',
+  overflow: 'hidden',
+};
+
+const creditHeaderButtonStyle: CSSProperties = {
+  width: '100%',
+  display: 'grid',
+  gap: 6,
+  padding: '14px 14px 12px',
+  border: 0,
+  background: 'transparent',
+  color: 'inherit',
+  cursor: 'pointer',
+  textAlign: 'center',
+  fontFamily: 'inherit',
 };
 
 const nameStyle: CSSProperties = {
@@ -88,21 +163,75 @@ const roleLineStyle: CSSProperties = {
   lineHeight: 1.45,
 };
 
+const expandHintStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 204, 102, 0.72)',
+  fontSize: '0.78rem',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+};
+
+const creditBodyStyle: CSSProperties = {
+  display: 'grid',
+  gap: 12,
+  padding: '0 14px 14px',
+  textAlign: 'center',
+};
+
 const bodyTextStyle: CSSProperties = {
   margin: 0,
   color: 'rgba(247, 239, 224, 0.82)',
   fontSize: '0.88rem',
   lineHeight: 1.55,
   maxWidth: '40ch',
+  justifySelf: 'center',
 };
 
-const dividerStyle: CSSProperties = {
-  width: 'min(72%, 220px)',
-  height: 1,
-  margin: '18px auto',
-  border: 'none',
-  background: 'rgba(255, 204, 102, 0.32)',
-};
+function CreditCard({
+  credit,
+  expanded,
+  onToggle,
+}: {
+  credit: CreditEntry;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const headerId = `${credit.id}-header`;
+  const bodyId = `${credit.id}-body`;
+
+  return (
+    <article style={creditCardStyle}>
+      <button
+        aria-controls={bodyId}
+        aria-expanded={expanded}
+        id={headerId}
+        onClick={() => {
+          playSfx(DEFAULT_BUTTON_SOUND);
+          onToggle();
+        }}
+        style={creditHeaderButtonStyle}
+        type="button"
+      >
+        <h3 style={nameStyle}>{credit.name}</h3>
+        <p style={roleLineStyle}>{credit.roles}</p>
+        <p style={expandHintStyle}>{expanded ? 'Show less' : 'Read more'}</p>
+      </button>
+      {expanded ? (
+        <div
+          aria-labelledby={headerId}
+          id={bodyId}
+          style={creditBodyStyle}
+        >
+          {credit.paragraphs.map((paragraph) => (
+            <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  );
+}
 
 export function AboutUsOverlay({
   onClose,
@@ -112,10 +241,14 @@ export function AboutUsOverlay({
   open: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+  const [donationOpen, setDonationOpen] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
+      setDonationOpen(false);
+      setExpandedIds(new Set());
       return;
     }
 
@@ -127,6 +260,20 @@ export function AboutUsOverlay({
       window.clearTimeout(showTimer);
     };
   }, [open]);
+
+  function toggleCredit(id: string): void {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
+  }
 
   if (!open) {
     return null;
@@ -166,70 +313,44 @@ export function AboutUsOverlay({
           <style>
             {'[data-about-us-scroll]::-webkit-scrollbar { display: none; }'}
           </style>
-          <article style={creditBlockStyle}>
-            <h3 style={nameStyle}>Alexander Ludwig</h3>
-            <p style={roleLineStyle}>
-              Game Design · Visual Design · Worldbuilding · Software Development
-            </p>
-            <p style={bodyTextStyle}>
-              This project is created out of a deep love for worldbuilding, game design,
-              and creative expression. It is a way of bringing ideas to life and shaping
-              imagined worlds into something playable and real. Every part of the
-              process — from visuals to systems to narrative to implementation — is
-              driven by a clear personal vision and a strong desire to explore and
-              realize those ideas fully.
-            </p>
-            <p style={bodyTextStyle}>
-              The game is made first and foremost for myself, guided by a defined
-              creative direction, with the hope that others can find joy in it as well.
-              Nothing means more than knowing that players enjoy it, even if only a
-              fraction as much as the enjoyment that goes into creating it.
-            </p>
-            <p style={bodyTextStyle}>
-              Deep gratitude to everyone who has supported the project — those who gave
-              feedback, tested, played, and continue to engage with it. That support
-              shapes the work in ways that cannot be measured, and it is sincerely
-              appreciated.
-            </p>
-            <p style={bodyTextStyle}>
-              Tools used: Midjourney (image generation), Photoshop (curation and
-              refinement), Cursor (programming assistance), ChatGPT (storytelling and
-              worldbuilding)
-            </p>
-          </article>
-          <hr aria-hidden="true" style={dividerStyle} />
-          <article style={creditBlockStyle}>
-            <h3 style={nameStyle}>Nikita Malko</h3>
-            <p style={roleLineStyle}>
-              Video Game Composer · Music &amp; Sound Design
-            </p>
-            <p style={bodyTextStyle}>
-              Every world carries a hidden pulse, and music is what lets it breathe. It
-              is what turns landscapes into memory, silence into emotion, and moments into
-              something that stays with the player long after they&apos;ve stopped playing.
-            </p>
-            <p style={bodyTextStyle}>
-              Working with Nikita Malko has been a deeply inspiring part of this project.
-              His approach to composition — treating music as an emotional architecture
-              of a game world — aligns naturally with the vision behind Morkahja. Every
-              track feels like it belongs, not added on top, but grown from within the
-              world itself.
-            </p>
-            <p style={bodyTextStyle}>
-              From subtle atmospheric textures to strong thematic identities, his work
-              shapes presence, mood, and meaning without ever forcing attention. It
-              supports the experience in a way that feels both careful and alive.
-            </p>
-            <p style={bodyTextStyle}>
-              There is a sincere hope to continue working together in the future,
-              especially as the project grows and begins to support further expansion of
-              its music systems. The intention is to evolve the audio layer of the game
-              into something even more dynamic and expressive, and his contribution forms
-              a strong foundation for that direction.
-            </p>
-          </article>
+          <div style={creditListStyle}>
+            {CREDITS.map((credit) => (
+              <CreditCard
+                key={credit.id}
+                credit={credit}
+                expanded={expandedIds.has(credit.id)}
+                onToggle={() => {
+                  toggleCredit(credit.id);
+                }}
+              />
+            ))}
+          </div>
         </div>
+        <footer style={donateFooterStyle}>
+          <button
+            aria-label="Donate gems to the team"
+            onClick={() => {
+              playSfx(DEFAULT_BUTTON_SOUND);
+              setDonationOpen(true);
+            }}
+            style={donateButtonStyle}
+            type="button"
+          >
+            <img
+              alt="Donate"
+              draggable={false}
+              src={DONATE_BUTTON_ASSET}
+              style={donateButtonImageStyle}
+            />
+          </button>
+        </footer>
       </section>
+      <DonationOverlay
+        onClose={() => {
+          setDonationOpen(false);
+        }}
+        open={donationOpen}
+      />
     </div>
   );
 }

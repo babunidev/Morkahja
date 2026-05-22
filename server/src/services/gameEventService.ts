@@ -9,7 +9,10 @@ import { getPlayer } from '../db/postgresDocumentStore.js';
 import { postgresEventStore } from '../db/gameEventPersistence.js';
 import { renderEventMessage } from '../domain/news/renderEventMessage.js';
 import { isVisibleInScribesFeed } from '../domain/news/scribesFeedFilter.js';
-import { resolveScribesIconUrl } from '../domain/news/scribesFeedPresentation.js';
+import {
+  resolveScribesAvatarVisual,
+  resolveScribesIconUrl,
+} from '../domain/news/scribesFeedPresentation.js';
 import type { PlayerDocument } from '../types/player.js';
 import { getEncounterById, getSolutionMap } from './gameData.js';
 
@@ -44,6 +47,8 @@ export interface ActivityFeedEntry {
   message: string;
   importance: GameEventImportance;
   iconUrl?: string;
+  avatarPortrait?: string;
+  avatarFrame?: string;
 }
 
 export interface EncounterContinuedEventContext {
@@ -68,13 +73,13 @@ async function recordGameEvent(input: RecordGameEventInput): Promise<GameEvent> 
   };
 
   await postgresEventStore.appendEvent(event);
-  gameEventBus.emit(event);
+  await gameEventBus.emit(event);
   return event;
 }
 
 function basePayload(
   playerName: string | undefined,
-  avatar: Pick<AvatarDocument, 'id' | 'name' | 'race' | 'role'>,
+  avatar: Pick<AvatarDocument, 'id' | 'name' | 'race' | 'role' | 'portrait' | 'frame'>,
   encounterId?: number,
   encounterTitle?: string,
 ): Record<string, unknown> {
@@ -84,6 +89,8 @@ function basePayload(
     avatarId: avatar.id,
     race: avatar.race,
     role: avatar.role,
+    ...(avatar.portrait ? { avatarPortrait: avatar.portrait } : {}),
+    ...(avatar.frame ? { avatarFrame: avatar.frame } : {}),
     encounterId,
     encounterTitle,
   };
@@ -97,6 +104,34 @@ function solutionName(solutionId: number): string | undefined {
 
   const title = solution.mSolutionName;
   return typeof title === 'string' && title.length > 0 ? title : `Reward ${solutionId}`;
+}
+
+function resolveEncounterRewardDetails(rewardIds: number[]): {
+  rewardNames: string[];
+  rewardIconName?: string;
+} {
+  const rewardNames: string[] = [];
+  let rewardIconName: string | undefined;
+
+  for (const rewardId of rewardIds) {
+    const solution = getSolutionMap()[String(rewardId)];
+    const name = solutionName(rewardId);
+    if (name) {
+      rewardNames.push(name);
+    }
+
+    if (!rewardIconName && solution) {
+      const icon = solution.mSolutionIconName;
+      if (typeof icon === 'string' && icon.length > 0) {
+        rewardIconName = icon;
+      }
+    }
+  }
+
+  return {
+    rewardNames,
+    ...(rewardIconName ? { rewardIconName } : {}),
+  };
 }
 
 export async function recordAvatarCreatedEvent(
@@ -152,8 +187,9 @@ export async function recordEncounterContinuedEvents(
     return;
   }
 
+  const encounter = getEncounterById(context.resolvedEncounterId);
   const encounterTitle = context.resolvedEncounterTitle
-    ?? getEncounterById(context.resolvedEncounterId)?.mEncounterTitle;
+    ?? encounter?.mEncounterTitle;
   const payload = {
     ...basePayload(
       player?.playerName,
@@ -163,6 +199,9 @@ export async function recordEncounterContinuedEvents(
     ),
     outcome: context.selectedRollOutcome ?? undefined,
     success: resolution.success,
+    ...(typeof encounter?.mEncounterType === 'number'
+      ? { encounterType: encounter.mEncounterType }
+      : {}),
   };
 
   if (
@@ -180,13 +219,20 @@ export async function recordEncounterContinuedEvents(
     return;
   }
 
+  const resolvedPayload = resolution.success && resolution.rewards.length > 0
+    ? {
+      ...payload,
+      ...resolveEncounterRewardDetails(resolution.rewards),
+    }
+    : payload;
+
   await recordGameEvent({
     playerId,
     avatarId,
     type: resolution.success ? 'encounter_resolved' : 'encounter_failed',
     visibility: 'global',
     importance: resolution.success ? 'medium' : 'medium',
-    payload,
+    payload: resolvedPayload,
   });
 
   if (context.leveledUp) {
@@ -288,6 +334,30 @@ export async function recordDailyRewardClaimedEvent(
   });
 }
 
+export async function recordGemsDonatedEvent(
+  playerId: string,
+  amount: number,
+): Promise<void> {
+  if (amount <= 0) {
+    return;
+  }
+
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'gems_donated',
+    visibility: 'global',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      amount,
+      currencyType: 'yellow_red_gem',
+      source: 'credits_donate',
+    },
+  });
+}
+
 export async function recordGemsReceivedEvent(
   playerId: string,
   amount: number,
@@ -327,11 +397,17 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
 
   return events
     .filter((event) => isVisibleInScribesFeed(event, playerId))
-    .map((event) => ({
-      eventId: event.eventId,
-      timestamp: event.timestamp,
-      message: renderEventMessage(event),
-      importance: event.importance,
-      iconUrl: resolveScribesIconUrl(event),
-    }));
+    .map((event) => {
+      const avatarVisual = resolveScribesAvatarVisual(event);
+
+      return {
+        eventId: event.eventId,
+        timestamp: event.timestamp,
+        message: renderEventMessage(event),
+        importance: event.importance,
+        iconUrl: resolveScribesIconUrl(event),
+        avatarPortrait: avatarVisual?.portrait,
+        avatarFrame: avatarVisual?.frame,
+      };
+    });
 }

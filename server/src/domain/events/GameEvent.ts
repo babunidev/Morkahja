@@ -20,4 +20,4 @@ export interface GameEvent {
   payload: Record<string, unknown>;
 }
 
-export const ACTIVITY_FEED_WINDOW_MS = 15 * 60 * 1000;
+export const ACTIVITY_FEED_WINDOW_MS = 60 * 60 * 1000;

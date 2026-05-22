@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { ActivityFeedEntryDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
+import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 
@@ -138,6 +139,39 @@ const entryIconStyle: CSSProperties = {
   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45))',
 };
 
+const entryAvatarStackStyle: CSSProperties = {
+  width: 52,
+  height: 64,
+  flexShrink: 0,
+  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45))',
+};
+
+function scribesEntryVisual(entry: ActivityFeedEntryDto) {
+  if (entry.avatarPortrait && entry.avatarFrame) {
+    return (
+      <AvatarPortraitStack
+        frame={entry.avatarFrame}
+        portrait={entry.avatarPortrait}
+        style={entryAvatarStackStyle}
+      />
+    );
+  }
+
+  if (entry.iconUrl) {
+    return (
+      <img
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        src={entry.iconUrl}
+        style={entryIconStyle}
+      />
+    );
+  }
+
+  return null;
+}
+
 function formatRelativeTime(timestamp: number): string {
   const deltaMs = Math.max(0, Date.now() - timestamp);
   const minutes = Math.floor(deltaMs / 60_000);
@@ -146,11 +180,12 @@ function formatRelativeTime(timestamp: number): string {
     return 'just now';
   }
 
-  if (minutes === 1) {
-    return '1 min ago';
+  if (minutes < 60) {
+    return minutes === 1 ? '1 min ago' : `${minutes} min ago`;
   }
 
-  return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  return hours === 1 ? '1 hr ago' : `${hours} hr ago`;
 }
 
 export function ActivityFeedOverlay({
@@ -267,7 +302,7 @@ export function ActivityFeedOverlay({
             <p style={{ margin: 0, color: '#ffb0a8' }}>{error}</p>
           ) : null}
           {!error && entries.length === 0 && !loading ? (
-            <p style={{ margin: 0, opacity: 0.8 }}>Nothing worth inscribing in the last 15 minutes.</p>
+            <p style={{ margin: 0, opacity: 0.8 }}>Nothing worth inscribing in the last hour.</p>
           ) : null}
           <ul data-scribes-feed-scroll="" style={listStyle}>
             {entries.map((entry) => {
@@ -281,15 +316,7 @@ export function ActivityFeedOverlay({
                 </div>
                 <div style={entryBodyStyle}>
                   <div style={entryTextStyle}>{entry.message}</div>
-                  {entry.iconUrl ? (
-                    <img
-                      alt=""
-                      aria-hidden="true"
-                      draggable={false}
-                      src={entry.iconUrl}
-                      style={entryIconStyle}
-                    />
-                  ) : null}
+                  {scribesEntryVisual(entry)}
                 </div>
               </li>
               );

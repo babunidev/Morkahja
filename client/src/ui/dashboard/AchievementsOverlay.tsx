@@ -30,6 +30,7 @@ const backdropStyle: CSSProperties = {
 
 const panelStyle: CSSProperties = {
   width: 'min(92vw, 420px)',
+  maxHeight: 'min(86vh, 620px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
   gap: 10,
@@ -40,6 +41,17 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
+  overflow: 'hidden',
+};
+
+const scrollBodyStyle: CSSProperties = {
+  minHeight: 0,
+  overflowY: 'auto',
+  display: 'grid',
+  gap: 10,
+  alignContent: 'start',
+  scrollbarWidth: 'none',
+  msOverflowStyle: 'none',
 };
 
 const headerStyle: CSSProperties = {
@@ -238,17 +250,22 @@ export function AchievementsOverlay({
             Close
           </button>
         </header>
-        {loadError ? (
-          <p style={{ margin: 0, color: '#ffb0a8' }}>{loadError}</p>
-        ) : null}
-        <AchievementPanel
-          achievements={achievements}
-          claimPending={claimPending}
-          dailyReward={dailyReward}
-          onClaimDailyReward={() => {
-            void handleClaimDailyReward();
-          }}
-        />
+        <div data-achievements-scroll="" style={scrollBodyStyle}>
+          <style>
+            {'[data-achievements-scroll]::-webkit-scrollbar { display: none; }'}
+          </style>
+          {loadError ? (
+            <p style={{ margin: 0, color: '#ffb0a8' }}>{loadError}</p>
+          ) : null}
+          <AchievementPanel
+            achievements={achievements}
+            claimPending={claimPending}
+            dailyReward={dailyReward}
+            onClaimDailyReward={() => {
+              void handleClaimDailyReward();
+            }}
+          />
+        </div>
         <footer aria-label="Yellow red gems" style={gemsFooterStyle}>
           <img
             alt=""

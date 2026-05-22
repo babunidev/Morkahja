@@ -10,9 +10,9 @@ export function registerAchievementHandlers(): void {
   }
 
   registered = true;
-  gameEventBus.subscribe((event: GameEvent) => {
-    void handleGameEvent(event).catch((error) => {
+  gameEventBus.subscribe((event: GameEvent) => (
+    handleGameEvent(event).catch((error) => {
       console.error('Achievement event handler failed', error);
-    });
-  });
+    })
+  ));
 }

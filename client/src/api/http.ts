@@ -2,6 +2,7 @@ import type {
   AchievementsResponse,
   ActivityFeedResponse,
   ClaimDailyRewardResponse,
+  DonateGemsResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -144,6 +145,13 @@ export async function addYellowRedGem(
   return request<PlayerCurrencyResponse>('/player/currency/yellow_red_gem', {
     method: 'POST',
     body: JSON.stringify({ encounterKey }),
+  });
+}
+
+export async function donateGems(amount: number): Promise<DonateGemsResponse> {
+  return request<DonateGemsResponse>('/player/donate', {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
   });
 }
 

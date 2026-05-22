@@ -6,12 +6,8 @@ import type {
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const panelBodyStyle: CSSProperties = {
-  minHeight: 0,
-  overflowY: 'auto',
   display: 'grid',
   gap: 14,
-  scrollbarWidth: 'none',
-  msOverflowStyle: 'none',
 };
 
 const achievementCardStyle: CSSProperties = {
@@ -111,6 +107,52 @@ const claimButtonDisabledStyle: CSSProperties = {
 };
 
 function progressLabel(achievement: AchievementProgressDto): string {
+  if (achievement.achievementId === 'firestarter') {
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} combined levels — max rank reached`;
+    }
+
+    if (achievement.rank >= 3) {
+      return `${achievement.progress} / ${achievement.bandEnd} combined levels`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} avatars`;
+  }
+
+  if (
+    achievement.achievementId === 'combatant'
+    || achievement.achievementId === 'trickster'
+    || achievement.achievementId === 'helper'
+  ) {
+    const label = achievement.achievementId === 'combatant'
+      ? 'combat encounters'
+      : achievement.achievementId === 'trickster'
+        ? 'trick encounters'
+        : 'help encounters';
+
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} ${label} — max rank reached`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} ${label}`;
+  }
+
+  if (achievement.achievementId === 'blessed') {
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} lucky rolls — max rank reached`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} lucky rolls`;
+  }
+
+  if (achievement.achievementId === 'contributor') {
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} gems donated — max rank reached`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} gems donated`;
+  }
+
   if (achievement.achievementId === 'alpha_player') {
     if (achievement.globallyLocked && achievement.rank < 4) {
       return `${achievement.progress} activity — sealed (100 Legendborn claimed)`;
@@ -120,16 +162,14 @@ function progressLabel(achievement: AchievementProgressDto): string {
       return `${achievement.progress} activity — max rank reached`;
     }
 
-    const remaining = Math.max(0, achievement.bandEnd - achievement.progress);
-    return `${achievement.progress} / ${achievement.bandEnd} activity (${remaining} to next rank)`;
+    return `${achievement.progress} / ${achievement.bandEnd} activity`;
   }
 
   if (achievement.bandEnd === null) {
     return `${achievement.progress} encounters — max rank reached`;
   }
 
-  const remaining = Math.max(0, achievement.bandEnd - achievement.progress);
-  return `${achievement.progress} / ${achievement.bandEnd} encounters (${remaining} to next rank)`;
+  return `${achievement.progress} / ${achievement.bandEnd} encounters`;
 }
 
 function AchievementCard({ achievement }: { achievement: AchievementProgressDto }) {
@@ -238,10 +278,7 @@ export function AchievementPanel({
   onClaimDailyReward: () => void;
 }) {
   return (
-    <div data-achievements-scroll="" style={panelBodyStyle}>
-      <style>
-        {'[data-achievements-scroll]::-webkit-scrollbar { display: none; }'}
-      </style>
+    <div style={panelBodyStyle}>
       {achievements.map((achievement) => (
         <AchievementCard achievement={achievement} key={achievement.achievementId} />
       ))}

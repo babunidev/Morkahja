@@ -10,6 +10,28 @@ function readNumber(payload: Record<string, unknown>, key: string): number | und
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+function readStringArray(payload: Record<string, unknown>, key: string): string[] {
+  const value = payload[key];
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0);
+}
+
+function formatEncounterRewardSuffix(payload: Record<string, unknown>): string {
+  const rewardNames = readStringArray(payload, 'rewardNames');
+  if (rewardNames.length === 0) {
+    return '';
+  }
+
+  if (rewardNames.length === 1) {
+    return ` Reward: ${rewardNames[0]}.`;
+  }
+
+  return ` Rewards: ${rewardNames.join(', ')}.`;
+}
+
 function avatarLabel(payload: Record<string, unknown>): string {
   return readString(payload, 'avatarName') ?? 'An adventurer';
 }
@@ -75,7 +97,11 @@ export function renderEventMessage(event: GameEvent): string {
     case 'encounter_resolved': {
       const outcome = readString(payload, 'outcome');
       const success = payload.success === true;
-      return `${avatarLabel(payload)} ${outcomeVerb(outcome, success)} ${encounterLabel(payload)}.`;
+      const base = `${avatarLabel(payload)} ${outcomeVerb(outcome, success)} ${encounterLabel(payload)}.`;
+      if (outcome?.toLowerCase() === 'prosperity') {
+        return `${base}${formatEncounterRewardSuffix(payload)}`;
+      }
+      return base;
     }
     case 'encounter_failed':
       return `${avatarLabel(payload)} failed against ${encounterLabel(payload)}.`;
@@ -99,6 +125,11 @@ export function renderEventMessage(event: GameEvent): string {
       const amount = readNumber(payload, 'amount') ?? 1;
       const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
       return `${playerLabel(payload)} received ${amount} ${gemLabel}.`;
+    }
+    case 'gems_donated': {
+      const amount = readNumber(payload, 'amount') ?? 1;
+      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
+      return `${playerLabel(payload)} donated ${amount} ${gemLabel} to the team.`;
     }
     case 'achievement_unlocked': {
       const rankTitle = readString(payload, 'rankTitle') ?? 'a new rank';

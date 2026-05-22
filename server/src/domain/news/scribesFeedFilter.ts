@@ -35,6 +35,7 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'spell_obtained':
       return isLootVisible(event.payload);
     case 'gems_received':
+    case 'gems_donated':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'achievement_unlocked':
     case 'daily_reward_claimed':

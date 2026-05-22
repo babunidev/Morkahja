@@ -9,6 +9,7 @@ import {
   claimPlayerDailyRewardController,
   getPlayerAchievementsController,
 } from './controllers/achievementController.js';
+import { donatePlayerGemsController } from './controllers/donateController.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
@@ -165,6 +166,7 @@ app.use('/encounter', encounterRoutes);
 app.get('/activity/recent', getRecentActivityController);
 app.get('/player/achievements', getPlayerAchievementsController);
 app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);
+app.post('/player/donate', donatePlayerGemsController);
 
 app.get('/player', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);

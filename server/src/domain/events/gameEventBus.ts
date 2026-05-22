@@ -1,14 +1,16 @@
 import type { GameEvent } from './GameEvent.js';
 
-export type GameEventListener = (event: GameEvent) => void;
+export type GameEventListener = (event: GameEvent) => void | Promise<void>;
 
 class GameEventBus {
   private readonly listeners = new Set<GameEventListener>();
 
-  emit(event: GameEvent): void {
-    for (const listener of this.listeners) {
-      listener(event);
-    }
+  async emit(event: GameEvent): Promise<void> {
+    await Promise.all(
+      [...this.listeners].map(async (listener) => {
+        await listener(event);
+      }),
+    );
   }
 
   subscribe(listener: GameEventListener): void {

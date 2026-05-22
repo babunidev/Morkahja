@@ -29,6 +29,15 @@ export interface PlayerCurrencyResponse {
   granted: boolean;
 }
 
+export interface DonateGemsResponse {
+  playerId: string;
+  donated: number;
+  currencies: {
+    yellow_red_gem: number;
+    [key: string]: number | undefined;
+  };
+}
+
 export interface PreparedEncounterDto {
   encounterId: number;
   followMode: EncounterFollowMode;
@@ -136,6 +145,10 @@ export interface ActivityFeedEntryDto {
   message: string;
   importance: ActivityFeedImportance;
   iconUrl?: string;
+  /** Portrait asset filename (under Avatare/) when the entry shows an avatar likeness. */
+  avatarPortrait?: string;
+  /** Frame asset filename (under Frames/) when the entry shows an avatar likeness. */
+  avatarFrame?: string;
 }
 
 export interface ActivityFeedResponse {

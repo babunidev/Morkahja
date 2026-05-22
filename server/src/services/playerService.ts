@@ -15,7 +15,18 @@ import {
   listAvatars,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
-import { recordAvatarCreatedEvent, recordGemsReceivedEvent } from './gameEventService.js';
+import {
+  recordAvatarCreatedEvent,
+  recordGemsDonatedEvent,
+  recordGemsReceivedEvent,
+} from './gameEventService.js';
+
+export class InsufficientGemsForDonationError extends Error {
+  constructor() {
+    super('Insufficient yellow red gems for donation');
+    this.name = 'InsufficientGemsForDonationError';
+  }
+}
 
 const DEFAULT_UNLOCKED_EXPANSIONS = [0];
 export const BABUNI_PLAYER_ID = 'Babuni';
@@ -155,6 +166,47 @@ export async function addPlayerYellowRedGems(
   }
 
   return { currencies, granted };
+}
+
+export async function donatePlayerYellowRedGems(
+  playerId: string,
+  amount: number,
+): Promise<{
+  currencies: NonNullable<PlayerDocument['currencies']>;
+  donated: number;
+}> {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error(`Invalid donation amount: ${amount}`);
+  }
+
+  const player = await loadPlayer(playerId);
+  const currentCurrencies = player?.currencies ?? {};
+  const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
+    ? currentCurrencies.yellow_red_gem
+    : 0;
+  const donated = Math.min(amount, currentAmount);
+
+  if (donated <= 0) {
+    throw new InsufficientGemsForDonationError();
+  }
+
+  const currencies = {
+    ...currentCurrencies,
+    yellow_red_gem: currentAmount - donated,
+  };
+
+  await setPlayer(
+    playerId,
+    {
+      currencies,
+      updatedAt: Date.now(),
+    },
+    { merge: true },
+  );
+
+  await recordGemsDonatedEvent(playerId, donated);
+
+  return { currencies, donated };
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(

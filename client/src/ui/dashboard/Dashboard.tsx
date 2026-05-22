@@ -232,7 +232,9 @@ export function Dashboard({
   const [aboutUsOpen, setAboutUsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
-  const playerId = loadStoredSession()?.playerId ?? '';
+  const session = loadStoredSession();
+  const playerId = session?.playerId ?? '';
+  const playerName = session?.playerName?.trim() ?? '';
   const showChrome = !hidden;
   const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
     useNavButtonPress();
@@ -663,6 +665,7 @@ export function Dashboard({
           }}
           onLogout={onLogout}
           open={settingsOpen}
+          playerName={playerName}
         />
       ) : null}
       {showChrome ? (

@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
-import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
+import AvatarPortraitStack, { INGAME_FRAME_SCALE } from '../avatar/AvatarPortraitStack.js';
 import { AVATAR_ENTER_FADE_MS, boundsToStyle, type Bounds } from './avatarEnterTransition.js';
 
 const motionStyle: CSSProperties = {
@@ -68,6 +68,7 @@ export function AvatarEnterHandoff({
       >
         <AvatarPortraitStack
           frame={avatar.frame}
+          frameScale={INGAME_FRAME_SCALE}
           portrait={avatar.portrait}
           style={compositionFillStyle}
         />

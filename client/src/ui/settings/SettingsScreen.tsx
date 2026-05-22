@@ -37,6 +37,14 @@ const headerStyle: CSSProperties = {
   gap: 12,
 };
 
+const titleGroupStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'baseline',
+  gap: '0.45rem 0.65rem',
+  minWidth: 0,
+};
+
 const titleStyle: CSSProperties = {
   margin: 0,
   color: '#ffcc66',
@@ -44,6 +52,19 @@ const titleStyle: CSSProperties = {
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.06em',
+};
+
+const playerNameStyle: CSSProperties = {
+  margin: 0,
+  color: '#f7efe0',
+  fontSize: '1.05rem',
+  fontWeight: 400,
+  fontFamily: 'Georgia, serif',
+  letterSpacing: '0.02em',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  maxWidth: 'min(52vw, 220px)',
 };
 
 const closeButtonStyle: CSSProperties = {
@@ -83,11 +104,14 @@ export function SettingsScreen({
   onClose,
   onLogout,
   open,
+  playerName = '',
 }: {
   onClose: () => void;
   onLogout: () => void;
   open: boolean;
+  playerName?: string;
 }) {
+  const displayName = playerName.trim();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -127,7 +151,14 @@ export function SettingsScreen({
         style={panelStyle}
       >
         <header style={headerStyle}>
-          <h2 id="settings-overlay-title" style={titleStyle}>SETTINGS</h2>
+          <div style={titleGroupStyle}>
+            <h2 id="settings-overlay-title" style={titleStyle}>SETTINGS</h2>
+            {displayName ? (
+              <p aria-label={`Player name: ${displayName}`} style={playerNameStyle}>
+                {displayName}
+              </p>
+            ) : null}
+          </div>
           <button
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);

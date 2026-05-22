@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
-import AvatarPortraitStack from './AvatarPortraitStack.js';
+import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
 
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 
@@ -199,6 +199,7 @@ export function AvatarPanel({
                 <AvatarPortraitStack
                   enterTarget
                   frame={avatar.frame}
+                  frameScale={INGAME_FRAME_SCALE}
                   portrait={avatar.portrait}
                   style={{ width: '100%', height: '100%' }}
                 />

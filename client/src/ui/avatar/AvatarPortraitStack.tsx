@@ -3,6 +3,9 @@ import type { CSSProperties } from 'react';
 const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
 const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
 
+/** Portrait frame scale in the in-game avatar block (100% + 1%). */
+export const INGAME_FRAME_SCALE = 1.01;
+
 export const AVATAR_ENTER_SOURCE_ATTR = 'data-avatar-enter-source';
 export const AVATAR_ENTER_TARGET_ATTR = 'data-avatar-enter-target';
 
@@ -26,13 +29,11 @@ const portraitStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
-const frameStyle: CSSProperties = {
+const frameBaseStyle: CSSProperties = {
   position: 'absolute',
   left: '50%',
   top: '50%',
   zIndex: 2,
-  width: '100%',
-  height: '100%',
   objectFit: 'contain',
   transform: 'translate(-50%, -50%)',
   pointerEvents: 'none',
@@ -41,16 +42,19 @@ const frameStyle: CSSProperties = {
 export function AvatarPortraitStack({
   portrait,
   frame,
+  frameScale = 1,
   enterSource = false,
   enterTarget = false,
   style,
 }: {
   portrait: string;
   frame: string;
+  frameScale?: number;
   enterSource?: boolean;
   enterTarget?: boolean;
   style?: CSSProperties;
 }) {
+  const frameSizePercent = frameScale * 100;
   return (
     <div
       {...(enterSource ? { [AVATAR_ENTER_SOURCE_ATTR]: '' } : {})}
@@ -69,7 +73,11 @@ export function AvatarPortraitStack({
         aria-hidden="true"
         draggable={false}
         src={`${FRAME_ASSET_ROOT}/${frame}`}
-        style={frameStyle}
+        style={{
+          ...frameBaseStyle,
+          width: `${frameSizePercent}%`,
+          height: `${frameSizePercent}%`,
+        }}
       />
     </div>
   );

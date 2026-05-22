@@ -7,6 +7,18 @@ import {
   ALPHA_PLAYER_ACHIEVEMENT_ID,
   alphaPlayerRankFromProgress,
 } from './alphaPlayerAchievement.js';
+import {
+  CONTRIBUTOR_ACHIEVEMENT_ID,
+  contributorRankFromProgress,
+} from './contributorAchievement.js';
+import {
+  BLESSED_ACHIEVEMENT_ID,
+  blessedRankFromProgress,
+} from './blessedAchievement.js';
+import {
+  encounterSolveRankFromProgress,
+  getEncounterSolveAchievementById,
+} from './encounterSolveAchievements.js';
 import type { AchievementProgress } from './achievementProgress.js';
 
 function rankFromProgress(achievementId: string, progress: number): number {
@@ -16,6 +28,19 @@ function rankFromProgress(achievementId: string, progress: number): number {
 
   if (achievementId === ALPHA_PLAYER_ACHIEVEMENT_ID) {
     return alphaPlayerRankFromProgress(progress);
+  }
+
+  if (achievementId === CONTRIBUTOR_ACHIEVEMENT_ID) {
+    return contributorRankFromProgress(progress);
+  }
+
+  if (achievementId === BLESSED_ACHIEVEMENT_ID) {
+    return blessedRankFromProgress(progress);
+  }
+
+  const encounterSolve = getEncounterSolveAchievementById(achievementId);
+  if (encounterSolve) {
+    return encounterSolveRankFromProgress(encounterSolve, progress);
   }
 
   return 0;
