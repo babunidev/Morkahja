@@ -43,15 +43,42 @@ export async function fetchAvatarSelectionList(): Promise<PersistedAvatar[]> {
   return uniqueAvatars(await fetchAvatars());
 }
 
-export async function purgeDeadAvatarsOnServer(): Promise<void> {
+export interface PurgeDeadAvatarsResult {
+  purgedIds: string[];
+  failedIds: string[];
+}
+
+export async function purgeDeadAvatarsOnServer(): Promise<PurgeDeadAvatarsResult> {
   const deadAvatarIds = loadDeadAvatarIds();
 
   if (deadAvatarIds.length === 0) {
-    return;
+    return { purgedIds: [], failedIds: [] };
   }
 
-  await Promise.allSettled(deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)));
-  clearDeadAvatarIds();
+  const results = await Promise.allSettled(
+    deadAvatarIds.map((avatarId) => deleteAvatar(avatarId)),
+  );
+  const purgedIds: string[] = [];
+  const failedIds: string[] = [];
+
+  results.forEach((result, index) => {
+    const avatarId = deadAvatarIds[index];
+
+    if (result.status === 'fulfilled') {
+      purgedIds.push(avatarId);
+      return;
+    }
+
+    failedIds.push(avatarId);
+  });
+
+  if (failedIds.length === 0) {
+    clearDeadAvatarIds();
+  } else {
+    saveDeadAvatarIds(failedIds);
+  }
+
+  return { purgedIds, failedIds };
 }
 
 /** Fetch list + warm portrait/frame and dashboard chrome assets. */
@@ -61,8 +88,15 @@ export async function prepareAvatarSelection(): Promise<PersistedAvatar[]> {
   return avatars;
 }
 
+export interface RefreshAvatarSelectionAfterHomeResult {
+  avatars: PersistedAvatar[];
+  purge: PurgeDeadAvatarsResult;
+}
+
 /** Home / leave-game: delete dead avatars server-side, then refresh selection cache. */
-export async function refreshAvatarSelectionAfterHome(): Promise<PersistedAvatar[]> {
-  await purgeDeadAvatarsOnServer();
-  return prepareAvatarSelection();
+export async function refreshAvatarSelectionAfterHome(): Promise<RefreshAvatarSelectionAfterHomeResult> {
+  const purge = await purgeDeadAvatarsOnServer();
+  const avatars = await prepareAvatarSelection();
+
+  return { avatars, purge };
 }

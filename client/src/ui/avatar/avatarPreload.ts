@@ -28,6 +28,13 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
+export async function preloadAvatarPortraitAssets(avatar: PersistedAvatar): Promise<void> {
+  await Promise.all([
+    preloadImage(`${AVATAR_ASSET_ROOT}/${avatar.portrait}`),
+    preloadImage(`${FRAME_ASSET_ROOT}/${avatar.frame}`),
+  ]);
+}
+
 export async function preloadAvatarSelectionAssets(avatars: PersistedAvatar[]): Promise<void> {
   const avatarAssetPaths = avatars.flatMap((avatar) => [
     `${AVATAR_ASSET_ROOT}/${avatar.portrait}`,
