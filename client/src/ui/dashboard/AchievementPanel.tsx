@@ -41,11 +41,11 @@ const rankOverlayStyle: CSSProperties = {
   position: 'absolute',
   left: '50%',
   top: '50%',
-  width: '62%',
-  height: '62%',
+  width: 'calc(100% + 10px)',
+  height: 'calc(100% + 10px)',
   transform: 'translate(-50%, -50%)',
   objectFit: 'contain',
-  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65))',
+  filter: 'drop-shadow(0 0 12px rgba(255, 204, 102, 0.45)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65))',
 };
 
 const achievementTitleStyle: CSSProperties = {
