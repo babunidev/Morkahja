@@ -73,7 +73,7 @@ import {
 
 const RANDOM_ENCOUNTER_MIN_ID = 20001;
 const MAX_EXPANSION_REROLLS = 200;
-/** System death encounter — same id as tutorial Atranor in encountersdata (mEncounterID 1). */
+/** Atranor death encounter (mEncounterID 1) — queued when essence is depleted. */
 export const DEATH_ENCOUNTER_ID = '00001';
 export const LEVEL_UP_ENCOUNTER_ID = '00002';
 const DEATH_ENCOUNTER_NUMERIC_ID = Number(DEATH_ENCOUNTER_ID);

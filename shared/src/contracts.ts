@@ -114,9 +114,9 @@ export interface EncounterResultResponse {
   usedInventorySolutions?: number[];
   snapshot: EncounterSnapshotDto;
   avatar?: PersistedAvatarDto;
-  /** True when a failed encounter triggers the death-encounter chain (e.g. Atranor essence death). */
+  /** True when essence depletion queues the Atranor encounter (player still plays it). */
   deathTriggered?: boolean;
-  /** True when the client should show the avatar death overlay (death chain or death encounter failure). */
+  /** True when Atranor resolves Misery/Hardship — show the avatar death overlay. */
   avatarDied?: boolean;
 }
 
