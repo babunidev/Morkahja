@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-23 10:30 (+0200) |
+| **Last updated** | 2026-05-23 20:53 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -98,6 +98,12 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 54. **Scribes** — `avatar_created` entries show portrait + frame in the feed (`avatarPortrait` / `avatarFrame` on event payload).
 55. **Encounter art** — refreshed `combat_nagar_berserk.webp`.
 
+### 2026-05-23 20:32–20:53 (+0200) — Tab branding, link previews, image protection (`dd17e2f`, `5b2d423`)
+
+56. **Browser tab** — title **Morkahja**; favicon and `apple-touch-icon` use `iconforplaystoreFG.png` (removed default Vite `favicon.svg`).
+57. **Link previews** — Open Graph and Twitter Card meta tags injected at production build (`socialPreview.ts`, Vite `transformIndexHtml` plugin); `og:image` points at the app icon on the public origin; default site URL `https://arcanitebrothers.com`, override with `VITE_SITE_URL` at build time (Telegram and other sharers read static HTML only).
+58. **Image protection** — `protectedImage.ts` + `useProtectedImages()`; block drag and casual selection on backgrounds, encounter art, and hub/footer surfaces; form fields stay selectable.
+
 ---
 
 ## Session notes (detail)
@@ -172,3 +178,17 @@ Since `3d01551`.
 
 - **Payload** — `basePayload` stores `avatarPortrait` and `avatarFrame` on avatar-bearing events.
 - **Feed** — `resolveScribesAvatarVisual` for `avatar_created`; `ActivityFeedOverlay` renders `AvatarPortraitStack` when both fields are present.
+
+### Link previews (Open Graph) (`5b2d423`) · 2026-05-23 20:53 (+0200)
+
+Since `dd17e2f`.
+
+- **Problem** — sharing the game URL in Telegram showed no preview; crawlers do not run the React bundle.
+- **Build** — `<!-- social-preview -->` placeholder in `client/index.html`; `morkahja-social-preview` Vite plugin writes `og:title`, `og:description`, `og:url`, `og:image`, and Twitter Card tags into `dist/index.html`.
+- **Config** — `SOCIAL_SITE_URL_FALLBACK` in `client/socialPreview.ts`; set `VITE_SITE_URL` when the public origin differs. Rebuild and redeploy client static files after changing; Telegram may cache — refresh via [@WebpageBot](https://t.me/WebpageBot) or a cache-busting query param.
+
+### Image drag and selection (`5b2d423`) · 2026-05-23 20:53 (+0200)
+
+- **Hook** — `useProtectedImages()` in `App.tsx` listens for `dragstart` / `contextmenu` on `[data-morkahja-protected-background]` and `[data-morkahja-protected-surface]`.
+- **CSS** — global `user-select: none` and `-webkit-user-drag: none` on `img`; exceptions for `input`, `textarea`, `select`, and `[contenteditable]`.
+- **Surfaces** — `PersistentBackground`, `EncounterFooter`, `PlayerHub` party/footer layers, and encounter image block marked with data attributes; background/footer layers use `pointer-events: auto` so the guard can intercept events.
