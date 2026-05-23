@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-23 22:15 (+0200) |
+| **Last updated** | 2026-05-24 01:11 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -119,7 +119,7 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 66. **Link previews** — Open Graph and Twitter Card meta tags injected at production build (`socialPreview.ts`, Vite `transformIndexHtml` plugin); `og:image` points at the app icon on the public origin; default site URL `https://arcanitebrothers.com`, override with `VITE_SITE_URL` at build time (Telegram and other sharers read static HTML only).
 67. **Image protection** — `protectedImage.ts` + `useProtectedImages()`; block drag and casual selection on backgrounds, encounter art, and hub/footer surfaces; form fields stay selectable.
 
-### 2026-05-23 21:50–22:15 (+0200) — Production go-live and overlay protection (uncommitted code)
+### 2026-05-23 21:50–22:15 (+0200) — Production go-live and overlay protection (`bb226dd`, `18d0d1b`)
 
 68. **First public alpha host** — Hetzner VPS; game served at **https://arcanitebrothers.com** (and `www`); DNS A record → server IP.
 69. **Stack on server** — Ubuntu; **nginx** serves `client/dist` from `/var/www/morkahja` (rsync after each `npm run build`); API paths proxied to **PM2** → Node on `127.0.0.1:3000`; **PostgreSQL** on localhost (`morkahjadbadmin` + `morkahja` DB).
@@ -127,10 +127,19 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 71. **Deploy wiring** (since `ef92dd4`) — `ecosystem.config.cjs` (PM2 from repo root, `cwd: server`, `tsx` on `src/server.ts`); `PORT` + `CLIENT_ORIGINS` via `server/src/config/corsOrigins.ts`; client `API_BASE_URL` defaults to **same-origin** (`VITE_API_BASE_URL` optional) so production does not call `localhost:3000`.
 72. **Ops lessons** — `.env` only on server (never git): one `KEY=value` per line; URL-encode `+` / `*` in `DATABASE_URL`; `source .env` before `pm2 restart --update-env`; Postgres 15+ needs `GRANT` on `public` for app user; home-dir `root` needs `chmod o+x` or use `/var/www/…`; nginx `root` line must be exactly `root /var/www/morkahja;` (not `root root …`).
 73. **Workflow** — develop on PC → `git push` → on VPS `git pull`, `npm run build --prefix client`, `sudo rsync -a client/dist/ /var/www/morkahja/`, `pm2 restart` when server changes.
-74. **Image protection (extended)** — `protectedOverlaySurfaceProps`, `protectedOverlayTextStyle`, `preventImageContextMenu`; Lore / Result / PlayerHub / SolutionBlock / dashboard overlays / Settings marked; document-level `selectstart` guard (inputs still selectable); blocks “Open image in new tab” on CSS backgrounds via computed `background-image` check.
+74. **Image protection (extended)** (`bb226dd`) — `protectedOverlaySurfaceProps`, `protectedOverlayTextStyle`, `preventImageContextMenu`; Lore / Result / PlayerHub / SolutionBlock / dashboard overlays / Settings marked; document-level `selectstart` guard (inputs still selectable); blocks “Open image in new tab” on CSS backgrounds via computed `background-image` check.
 75. **Pre-invite security review** — OK for small trusted alpha on HTTPS; before wide launch: rate-limit `/session/bootstrap`, cap JSON body size, Postgres backups, firewall (only 22/80/443).
-77. **Production error responses** — `server/src/http/errorResponse.ts`: in `NODE_ENV=production`, 5xx and unexpected 4xx return generic messages; intentional API errors (`SessionError`, `LoreGemError`, encounter conflicts, etc.) still expose safe messages; full details logged server-side.
-76. **Lore gem exploit fix** — Removed `POST /player/currency/yellow_red_gem`. Lore gems are server-authoritative: `POST /encounter/lore-gem/offer` rolls eligibility + delay on the active encounter snapshot; `POST /encounter/lore-gem/claim` requires matching `encounterKey`, active encounter, offer timing, and one claim per snapshot via `loreGemClaims`. `addPlayerYellowRedGems` now requires a claim key when granting.
+76. **Lore gem exploit fix** (`18d0d1b`) — Removed `POST /player/currency/yellow_red_gem`. Lore gems are server-authoritative: `POST /encounter/lore-gem/offer` rolls eligibility + delay on the active encounter snapshot; `POST /encounter/lore-gem/claim` requires matching `encounterKey`, active encounter, offer timing, and one claim per snapshot via `loreGemClaims`. `addPlayerYellowRedGems` now requires a claim key when granting.
+77. **Production error responses** (`72beac6`) — `server/src/http/errorResponse.ts`: in `NODE_ENV=production`, 5xx and unexpected 4xx return generic messages; intentional API errors (`SessionError`, `LoreGemError`, encounter conflicts, etc.) still expose safe messages; full details logged server-side.
+
+### 2026-05-24 00:34–01:11 (+0200) — Admin API, PWA shell, live presence (`72beac6`, `aa778fa`)
+
+78. **Admin moderation API** — `ADMIN_API_KEY` Bearer auth on `/admin/*`; player list with status (online / offline / timed_out / banned), dashboard summary, recent activity feed, online-only list; `POST /admin/players/timeout`, `/ban`, `/unban` with session disconnect.
+79. **Admin content API** — read/write hooks for encounters, solutions, expansions, portraits, and frames (`adminController`, `gameData` helpers); intended for ops tooling, not exposed to game clients.
+80. **PWA install shell** — `manifest.webmanifest` (`display: standalone`, portrait, app icon); linked from `index.html`; `useMobileFullscreen` respects installed standalone / fullscreen display modes.
+81. **Encounter art** — refreshed dice button (`im_button_dice_a.webp`), downed Aevis heal, Frostwind junk trade encounter; added `posterRaceSkills2.png` promo asset.
+82. **Live online presence** (`aa778fa`) — `listPlayerIdsWithLiveSessions()` queries non-expired session rows; friends list and admin player status use live sessions (not stale `activeSessionExpiresAt` on the player doc); banned/timed-out players never show online.
+83. **Session revocation on moderation** — `deleteAllSessionsForPlayer` clears all session rows; ban/timeout and blocked bootstrap/auth paths wipe sessions and null `activeSessionId` on the player profile.
 
 ---
 
@@ -196,7 +205,7 @@ Since `3d01551`.
 
 ### Friends overlay (`6d21670`, `135779f`, `ef92dd4`) · 2026-05-22 08:00–08:12 (+0200); hardened 2026-05-23 18:56
 
-- **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`; `CannotAddSelfError` on add.
+- **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via live session rows (`listPlayerIdsWithLiveSessions`, since `aa778fa`); `CannotAddSelfError` on add.
 - **Sanitize** — `sanitizeStoredFriendIds` removes the viewer’s own id from `friendIds` on load (case-insensitive) and persists the cleaned list; list API also filters self by id/name match.
 - **Canonical ids** (since `ef92dd4`) — `findPlayerByNameOrId` orders `playerName` match before raw id so legacy stub rows (e.g. id `Babuni` with zero avatars) lose to the real account; `resolveCanonicalFriendId` rewrites stored `friendIds` on list/add/detail.
 - **Avatar** — friend row uses the avatar with the latest `lastPlayedAt`; detail response includes all friend avatars with `lastPlayed` flag.
@@ -242,7 +251,7 @@ Since `dd17e2f`.
 - **Static** — build on VPS under `~/arcanitebrothers/client/dist`, publish to `/var/www/morkahja` (avoids nginx `www-data` traversing `/home/morkahja`).
 - **Smoke** — `curl https://arcanitebrothers.com/health`; browser hard refresh; Create journey + recovery key download verified on HTTPS.
 
-### Extended image protection (pending commit) · 2026-05-23 22:15 (+0200)
+### Extended image protection (`bb226dd`) · 2026-05-23 21:51 (+0200)
 
 Since `5b2d423`.
 
@@ -251,3 +260,30 @@ Since `5b2d423`.
 - **Dashboard** — `AboutUsOverlay`, `AchievementsOverlay`, `AchievementPanel`, `ActivityFeedOverlay`, `DonationOverlay`, `ExpansionsOverlay`, `FriendsOverlay` apply overlay surface + protected `<img>`.
 - **Settings** — `SettingsScreen` panel surface protected; `morkahjaText.css` reinforces non-selectable overlay copy where needed.
 - **Global** — `selectstart` prevented except on text inputs (friend name field, etc.).
+
+### Lore gem server authority (`18d0d1b`) · 2026-05-23 22:02 (+0200)
+
+- **Removed** — client-callable `POST /player/currency/yellow_red_gem`.
+- **Offer** — `loreGemService.offerLoreGem` rolls on the active encounter snapshot; stores eligibility + reveal delay server-side.
+- **Claim** — `POST /encounter/lore-gem/claim` validates `encounterKey`, timing window, and one claim per snapshot (`loreGemClaims` on player).
+- **Client** — `LoreBlock` polls offer state; gem click disabled until server says eligible; no local mint path.
+
+### Admin moderation and content API (`72beac6`) · 2026-05-24 00:34 (+0200)
+
+- **Auth** — `requireAdminAuth` reads `Authorization: Bearer <ADMIN_API_KEY>`; returns `503 ADMIN_NOT_CONFIGURED` when env key is missing.
+- **Players** — `GET /admin/players`, `/players/online`, `/dashboard`, `/activity`; moderation posts clear sessions before persisting ban/timeout flags on `player.moderation`.
+- **Content** — list + upsert endpoints for encounters, solutions, expansions, portraits, frames (backed by Postgres document store + `gameData` loaders).
+- **Errors** — centralized `sendErrorResponse` / `errorResponse.test.ts`; production hides stack traces and unexpected 4xx/5xx bodies.
+
+### PWA install shell (`72beac6`) · 2026-05-24 00:34 (+0200)
+
+- **Manifest** — `client/public/manifest.webmanifest` with standalone display, portrait lock, theme/background `#090b12`, 512×512 icon.
+- **HTML** — `<link rel="manifest">` in `client/index.html`.
+- **Fullscreen** — `useMobileFullscreen` treats `display-mode: standalone` / `fullscreen` and iOS `navigator.standalone` as already installed (skips redundant viewport hacks).
+
+### Live session presence (`aa778fa`) · 2026-05-24 01:11 (+0200)
+
+- **Store** — `deleteAllSessionsForPlayer`, `listPlayerIdsWithLiveSessions` in `postgresDocumentStore.ts`.
+- **Friends** — `isPlayerOnline` checks session set + not banned/timed out.
+- **Admin** — player DTO `status: online` only when a live session exists and moderation allows play.
+- **Auth** — bootstrap and access-token refresh revoke all sessions when `assertPlayerCanPlay` fails (ban/timeout mid-session).
