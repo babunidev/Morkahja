@@ -14,7 +14,7 @@ import {
   type ExpansionData,
   type FrameData,
   type PortraitData,
-} from './gameData.js';
+} from '../services/gameData.js';
 import type { EncounterData, SolutionData } from '../engine/types.js';
 import {
   banAdminPlayer,
@@ -24,7 +24,7 @@ import {
   listOnlineAdminPlayers,
   timeoutAdminPlayer,
   unbanAdminPlayer,
-} from './adminPlayerService.js';
+} from '../services/adminPlayerService.js';
 
 function readBodyRecord(req: Request): Record<string, unknown> {
   return req.body && typeof req.body === 'object'

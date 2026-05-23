@@ -348,7 +348,8 @@ export async function addPlayerFriend(
     { merge: true },
   );
 
-  const friend = await buildFriendSummary(friendId);
+  const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions();
+  const friend = await buildFriendSummary(friendId, liveSessionPlayerIds);
 
   if (!friend) {
     throw new FriendLookupNotFoundError();
