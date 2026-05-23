@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-23 20:53 (+0200) |
+| **Last updated** | 2026-05-23 21:45 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -98,11 +98,26 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 54. **Scribes** — `avatar_created` entries show portrait + frame in the feed (`avatarPortrait` / `avatarFrame` on event payload).
 55. **Encounter art** — refreshed `combat_nagar_berserk.webp`.
 
+### 2026-05-23 12:50–18:56 (+0200) — Content, loading, friends, deploy (`b6a7500`, `b74c43e`, `ef92dd4`)
+
+56. **The Guardian** encounter lore updated to describe a wolf (`b6a7500`).
+57. **Seal of Norghor** — dashboard subscription UI assets (`b74c43e`).
+58. **Welcome loading** — seasonal logos (`logo_winter.webp` spring/winter, `logo_summer.webp` summer/autumn); larger logo; fade/slide enter; gentle sway while loading (spinner removed); `resolveLoadingLogoPath()` in `backgroundResolver.ts`.
+59. **Encounter persistence** refactor (`encounterPersistence.ts`, state machine/controller wiring); refreshed encounter art (Grimnir heal, Lianiguard, razorback, hidden market).
+60. **Friends hardening** — `findPlayerByNameOrId` prefers `playerName` over legacy stub ids; `resolveCanonicalFriendId` rewrites stored friend ids; client null-safe friend profile (`avatars` / `achievements`); result-screen reward tooltips with `mSolutionText`.
+61. **Deploy** — `ecosystem.config.cjs` (PM2); configurable `PORT` and `corsOrigins`; welcome/error/no-connection WebP assets.
+
+### 2026-05-23 20:23 (+0200) — Scribes authors, audio defaults, UI polish (`595100b`)
+
+62. **Scribes** — `authorName` on activity feed entries (`gameEventService`, shared `ActivityFeedEntryDto`); overlay meta row (author left, time ago + “New” right).
+63. **Audio** — default **30%** music/SFX for new accounts; `readStoredVolume` treats null/empty `localStorage` as default (not 0%); `seedDefaultAudioVolumesIfUnset()` on app mount and onboarding.
+64. **Dashboard/game UI** — nav-style hover on Play and avatar slots (`useTooltipReveal`); solution-slot reward tooltips; `useMobileFullscreen` + viewport helpers in `index.html`.
+
 ### 2026-05-23 20:32–20:53 (+0200) — Tab branding, link previews, image protection (`dd17e2f`, `5b2d423`)
 
-56. **Browser tab** — title **Morkahja**; favicon and `apple-touch-icon` use `iconforplaystoreFG.png` (removed default Vite `favicon.svg`).
-57. **Link previews** — Open Graph and Twitter Card meta tags injected at production build (`socialPreview.ts`, Vite `transformIndexHtml` plugin); `og:image` points at the app icon on the public origin; default site URL `https://arcanitebrothers.com`, override with `VITE_SITE_URL` at build time (Telegram and other sharers read static HTML only).
-58. **Image protection** — `protectedImage.ts` + `useProtectedImages()`; block drag and casual selection on backgrounds, encounter art, and hub/footer surfaces; form fields stay selectable.
+65. **Browser tab** — title **Morkahja**; favicon and `apple-touch-icon` use `iconforplaystoreFG.png` (removed default Vite `favicon.svg`).
+66. **Link previews** — Open Graph and Twitter Card meta tags injected at production build (`socialPreview.ts`, Vite `transformIndexHtml` plugin); `og:image` points at the app icon on the public origin; default site URL `https://arcanitebrothers.com`, override with `VITE_SITE_URL` at build time (Telegram and other sharers read static HTML only).
+67. **Image protection** — `protectedImage.ts` + `useProtectedImages()`; block drag and casual selection on backgrounds, encounter art, and hub/footer surfaces; form fields stay selectable.
 
 ---
 
@@ -166,18 +181,31 @@ Since `3d01551`.
 - **Nav** — `RADIAL_BUTTONS` entry at clock **19:00**; CSS `.morkahja-nav-tooltip` + hover on `.morkahja-nav-radial-button-visual` / center hub.
 - **Tests** — `expansionUnlock.test.ts` smoke for catalog ids and active flags.
 
-### Friends overlay (`6d21670`, `135779f`) · 2026-05-22 08:00–08:12 (+0200)
+### Friends overlay (`6d21670`, `135779f`, `ef92dd4`) · 2026-05-22 08:00–08:12 (+0200); hardened 2026-05-23 18:56
 
 - **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`; `CannotAddSelfError` on add.
 - **Sanitize** — `sanitizeStoredFriendIds` removes the viewer’s own id from `friendIds` on load (case-insensitive) and persists the cleaned list; list API also filters self by id/name match.
+- **Canonical ids** (since `ef92dd4`) — `findPlayerByNameOrId` orders `playerName` match before raw id so legacy stub rows (e.g. id `Babuni` with zero avatars) lose to the real account; `resolveCanonicalFriendId` rewrites stored `friendIds` on list/add/detail.
 - **Avatar** — friend row uses the avatar with the latest `lastPlayedAt`; detail response includes all friend avatars with `lastPlayed` flag.
 - **Achievements** — `getAchievementsSnapshotReadOnly` for friend profile (no Firestarter side effects); shared `FriendAvatarDto` on achievements response.
-- **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view shows avatar grid + `AchievementPanel` (no daily claim); null-safe achievement cards.
+- **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view shows avatar grid + `AchievementPanel` (no daily claim); normalizes missing `avatars` / `achievements` arrays; request-id guard avoids stale detail after rapid friend switches.
 
 ### Scribes avatar on create (`3d01551`) · 2026-05-22 05:50 (+0200)
 
 - **Payload** — `basePayload` stores `avatarPortrait` and `avatarFrame` on avatar-bearing events.
 - **Feed** — `resolveScribesAvatarVisual` for `avatar_created`; `ActivityFeedOverlay` renders `AvatarPortraitStack` when both fields are present.
+
+### Welcome loading UX (`ef92dd4`) · 2026-05-23 18:56 (+0200)
+
+- **Logo** — `resolveLoadingLogoPath()` picks winter or summer WebP by season; inner `<img>` handles enter animation, wrapper handles sway so transforms do not fight.
+- **Motion** — logo scales up (~2×), fades/slides from top; gentle idle sway after enter; loading spinner removed.
+- **Assets** — `logo_winter.webp`, `logo_summer.webp`, refreshed welcome/error/no-connection backgrounds.
+
+### Scribes author and audio defaults (`595100b`) · 2026-05-23 20:23 (+0200)
+
+- **Author** — `queryActivityFeed` resolves `authorName` from event player id + name map; `ActivityFeedOverlay` shows author on the left of the meta row (larger type), relative time and “New” on the right.
+- **Audio** — `DEFAULT_MUSIC_VOLUME` / `DEFAULT_SFX_VOLUME` **0.3**; `seedDefaultAudioVolumesIfUnset()` in `App.tsx` and `OnboardingGateway.tsx`; missing keys no longer parse as `Number(null) === 0`.
+- **Tooltips** — `useTooltipReveal` / `useTooltipRevealGroup` for Play, nav, avatar slots, and solution grid; `SolutionBlock` / `SolutionGridOverlay` show item title, quantity, and description on hover.
 
 ### Link previews (Open Graph) (`5b2d423`) · 2026-05-23 20:53 (+0200)
 
