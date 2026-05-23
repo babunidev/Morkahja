@@ -6,7 +6,8 @@ module.exports = {
       cwd: './server',
       script: 'src/server.ts',
       interpreter: '../node_modules/.bin/tsx',
-      env_file: '.env',
+      /** Repo-root .env (PM2 cwd is ./server). */
+      env_file: '../.env',
     },
   ],
 };
