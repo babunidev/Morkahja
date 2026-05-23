@@ -2,6 +2,7 @@ import {
   findPlayerByNameOrId,
   getPlayer,
   listAvatars,
+  listPlayerIdsWithLiveSessions,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
 import type { AvatarDocument } from '../types/avatar.js';
@@ -144,9 +145,20 @@ async function sanitizeStoredFriendIds(playerId: string): Promise<string[]> {
   return sanitized;
 }
 
-function isPlayerOnline(player: PlayerDocument): boolean {
-  return typeof player.activeSessionExpiresAt === 'number'
-    && player.activeSessionExpiresAt > Date.now();
+function isPlayerOnline(
+  player: PlayerDocument,
+  liveSessionPlayerIds: Set<string>,
+): boolean {
+  if (player.moderation?.banned === true) {
+    return false;
+  }
+
+  const timeoutUntil = player.moderation?.timeoutUntil;
+  if (typeof timeoutUntil === 'number' && timeoutUntil > Date.now()) {
+    return false;
+  }
+
+  return liveSessionPlayerIds.has(player.playerId);
 }
 
 function avatarLastPlayedTimestamp(avatar: AvatarDocument): number {
@@ -238,6 +250,7 @@ async function resolveFriendAvatar(
 
 async function buildFriendSummary(
   friendId: string,
+  liveSessionPlayerIds: Set<string>,
 ): Promise<FriendSummary | null> {
   const canonicalFriendId = await resolveCanonicalFriendId(friendId);
   const record = await getPlayer<Partial<PlayerDocument>>(canonicalFriendId);
@@ -256,7 +269,7 @@ async function buildFriendSummary(
   return {
     playerId: canonicalFriendId,
     playerName: player.playerName,
-    online: isPlayerOnline(player),
+    online: isPlayerOnline(player, liveSessionPlayerIds),
     ...avatar,
   };
 }
@@ -266,10 +279,13 @@ export async function getPlayerFriendIds(playerId: string): Promise<string[]> {
 }
 
 export async function listPlayerFriends(playerId: string): Promise<FriendSummary[]> {
+  const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions();
   const viewer = await getPlayer<Partial<PlayerDocument>>(playerId);
   const viewerName = typeof viewer?.playerName === 'string' ? viewer.playerName : playerId;
   const friendIds = await getPlayerFriendIds(playerId);
-  const summaries = await Promise.all(friendIds.map((friendId) => buildFriendSummary(friendId)));
+  const summaries = await Promise.all(
+    friendIds.map((friendId) => buildFriendSummary(friendId, liveSessionPlayerIds)),
+  );
 
   return summaries
     .filter((entry): entry is FriendSummary => entry !== null)
@@ -380,11 +396,12 @@ export async function getFriendAchievements(
   const avatarViews = toFriendAvatarViews(avatars);
   const lastPlayed = pickLastPlayedAvatar(avatars);
   const achievements = await getAchievementsSnapshotReadOnly(canonicalFriendId);
+  const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions();
 
   return {
     playerId: canonicalFriendId,
     playerName: player.playerName,
-    online: isPlayerOnline(player),
+    online: isPlayerOnline(player, liveSessionPlayerIds),
     portrait: lastPlayed?.portrait ?? avatarViews[0]?.portrait ?? 'avatar_verdani_female_mage_a.webp',
     frame: lastPlayed?.frame ?? avatarViews[0]?.frame ?? 'frame_1.webp',
     avatarName: lastPlayed?.name ?? avatarViews[0]?.name ?? null,

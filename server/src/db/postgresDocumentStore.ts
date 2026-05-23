@@ -234,6 +234,25 @@ export async function deleteSession(sessionId: string): Promise<void> {
   await pool.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
 }
 
+/** Drop every session row for a player (ban, timeout, forced logout). */
+export async function deleteAllSessionsForPlayer(playerId: string): Promise<void> {
+  await ensureSchema();
+  await pool.query('DELETE FROM sessions WHERE player_id = $1', [playerId]);
+}
+
+/** Player IDs that currently have a non-expired session in the database. */
+export async function listPlayerIdsWithLiveSessions(
+  now = Date.now(),
+): Promise<Set<string>> {
+  await ensureSchema();
+  const result = await pool.query<{ player_id: string }>(
+    `SELECT DISTINCT player_id FROM sessions
+     WHERE COALESCE((data->>'expiresAt')::bigint, 0) > $1`,
+    [now],
+  );
+  return new Set(result.rows.map((row) => row.player_id));
+}
+
 export async function getAvatar<T>(playerId: string, avatarId: string): Promise<T | null> {
   await ensureSchema();
   return one(pool.query(

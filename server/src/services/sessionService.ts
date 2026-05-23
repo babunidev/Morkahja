@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID, verify } from 'node:crypto';
 
 import {
+  deleteAllSessionsForPlayer,
   deleteSession,
   findPlayerByIdentityPublicKey,
   findSessionByAccessToken,
@@ -127,13 +128,19 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
       throw new SessionError('Player identity not found', 404);
     }
 
-    return existing.data;
+    return {
+      ...existing.data,
+      playerId: existing.data.playerId ?? existing.id,
+    };
   }
 
   const existing = await findPlayerByIdentityPublicKey<PlayerDocument>(input.identityPublicKey);
 
   if (existing) {
-    return existing.data;
+    return {
+      ...existing.data,
+      playerId: existing.data.playerId ?? existing.id,
+    };
   }
 
   const playerName = input.playerName?.trim();
@@ -145,16 +152,39 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
   return createPlayer(playerName, input.identityPublicKey, now);
 }
 
+async function loadPlayerForSession(playerId: string): Promise<PlayerDocument> {
+  const player = await getPlayer<PlayerDocument>(playerId);
+
+  if (!player) {
+    throw new SessionError('Player not found', 404);
+  }
+
+  return {
+    ...player,
+    playerId: player.playerId ?? playerId,
+  };
+}
+
 export async function bootstrapSession(
   input: BootstrapSessionInput,
 ): Promise<BootstrapSessionResult> {
   const now = Date.now();
   const device = await resolveDevice(input.devicePublicKey, now);
-  const player = await resolvePlayer(input, now);
+  const resolved = await resolvePlayer(input, now);
+  const player = await loadPlayerForSession(resolved.playerId);
 
   try {
     assertPlayerCanPlay(player);
   } catch (error) {
+    await deleteAllSessionsForPlayer(player.playerId);
+    await setPlayer(
+      player.playerId,
+      {
+        activeSessionId: null,
+        activeSessionExpiresAt: null,
+      },
+      { merge: true },
+    );
     const message = error instanceof Error ? error.message : 'SESSION_INVALID';
     throw new SessionError(message, 403);
   }
@@ -206,15 +236,24 @@ export async function authenticateAccessToken(accessToken: string): Promise<{
     throw new SessionError();
   }
 
-  const player = await getPlayer<PlayerDocument>(session.playerId);
+  const player = await loadPlayerForSession(session.playerId);
 
-  if (!player || player.activeSessionId !== session.sessionId) {
+  if (player.activeSessionId !== session.sessionId) {
     throw new SessionError();
   }
 
   try {
     assertPlayerCanPlay(player);
   } catch (error) {
+    await deleteAllSessionsForPlayer(player.playerId);
+    await setPlayer(
+      player.playerId,
+      {
+        activeSessionId: null,
+        activeSessionExpiresAt: null,
+      },
+      { merge: true },
+    );
     const message = error instanceof Error ? error.message : 'SESSION_INVALID';
     throw new SessionError(message, 403);
   }

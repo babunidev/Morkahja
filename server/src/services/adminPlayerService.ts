@@ -1,8 +1,9 @@
 import {
   countAvatarsByPlayerIds,
-  deleteSession,
+  deleteAllSessionsForPlayer,
   listActiveAvatarsForPlayers,
   listAllPlayers,
+  listPlayerIdsWithLiveSessions,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
 import { ACTIVITY_FEED_WINDOW_MS } from '../domain/events/GameEvent.js';
@@ -54,17 +55,26 @@ function isBanned(player: PlayerDocument): boolean {
   return player.moderation?.banned === true;
 }
 
-function isOnline(player: PlayerDocument, now: number): boolean {
-  return typeof player.activeSessionExpiresAt === 'number'
-    && player.activeSessionExpiresAt > now
-    && !isBanned(player)
-    && !isTimedOut(player, now);
+function isOnline(
+  player: PlayerDocument,
+  now: number,
+  liveSessionPlayerIds: Set<string>,
+): boolean {
+  if (!liveSessionPlayerIds.has(player.playerId)) {
+    return false;
+  }
+
+  return !isBanned(player) && !isTimedOut(player, now);
 }
 
-function resolveStatus(player: PlayerDocument, now: number): AdminPlayerDto['status'] {
+function resolveStatus(
+  player: PlayerDocument,
+  now: number,
+  liveSessionPlayerIds: Set<string>,
+): AdminPlayerDto['status'] {
   if (isBanned(player)) return 'banned';
   if (isTimedOut(player, now)) return 'timed_out';
-  if (isOnline(player, now)) return 'online';
+  if (isOnline(player, now, liveSessionPlayerIds)) return 'online';
   return 'offline';
 }
 
@@ -77,11 +87,12 @@ function formatRealm(avatar?: AvatarDocument): string {
 
 function toAdminPlayer(
   player: PlayerDocument,
-  activeAvatar?: AvatarDocument,
-  avatarCount = 0,
+  activeAvatar: AvatarDocument | undefined,
+  avatarCount: number,
+  liveSessionPlayerIds: Set<string>,
 ): AdminPlayerDto {
   const now = Date.now();
-  const status = resolveStatus(player, now);
+  const status = resolveStatus(player, now, liveSessionPlayerIds);
 
   return {
     id: player.playerId,
@@ -103,11 +114,13 @@ function toAdminPlayer(
 }
 
 export async function listAdminPlayers(): Promise<AdminPlayerDto[]> {
+  const now = Date.now();
   const rows = await listAllPlayers<PlayerDocument>();
   const playerIds = rows.map((row) => row.id);
-  const [activeAvatars, avatarCounts] = await Promise.all([
+  const [activeAvatars, avatarCounts, liveSessionPlayerIds] = await Promise.all([
     listActiveAvatarsForPlayers<AvatarDocument>(playerIds),
     countAvatarsByPlayerIds(playerIds),
+    listPlayerIdsWithLiveSessions(now),
   ]);
 
   const players = rows.map((row) => {
@@ -116,6 +129,7 @@ export async function listAdminPlayers(): Promise<AdminPlayerDto[]> {
       { ...row.data, playerId: row.id },
       active?.data,
       avatarCounts.get(row.id) ?? 0,
+      liveSessionPlayerIds,
     );
   });
 
@@ -196,13 +210,10 @@ export async function listAdminActivity(): Promise<AdminActivityDto[]> {
   }));
 }
 
-async function disconnectPlayer(player: PlayerDocument): Promise<void> {
-  if (player.activeSessionId) {
-    await deleteSession(player.activeSessionId);
-  }
-
+async function disconnectPlayer(playerId: string): Promise<void> {
+  await deleteAllSessionsForPlayer(playerId);
   await setPlayer(
-    player.playerId,
+    playerId,
     {
       activeSessionId: null,
       activeSessionExpiresAt: null,
@@ -223,7 +234,7 @@ export async function timeoutAdminPlayer(
   const player = row.data;
   const timeoutUntil = Date.now() + durationMinutes * 60_000;
 
-  await disconnectPlayer(player);
+  await disconnectPlayer(playerId);
   await setPlayer(
     playerId,
     {
@@ -250,7 +261,7 @@ export async function banAdminPlayer(
   if (!row) return null;
 
   const player = row.data;
-  await disconnectPlayer(player);
+  await disconnectPlayer(playerId);
   await setPlayer(
     playerId,
     {
