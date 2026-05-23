@@ -2,33 +2,40 @@
 
 Brief chronological overview of the web app from first commit to present. Newest work is at the bottom.
 
+| | |
+|---|---|
+| **Started** | 2026-05-16 22:21 (+0200) |
+| **Last updated** | 2026-05-23 10:30 (+0200) |
+
+Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
+
 ---
 
 ## Development overview
 
-### 2026-05-16 — Game data layout
+### 2026-05-16 22:21–22:27 (+0200) — Game data layout
 
 1. Add **LudusOccursus** / **LudusSolutio** structure for encounters and solutions.
 2. Rename datafiles; remove superseded JSON (`LudusOccursus`, `LudusSolutio`, `MorkahjaRules`).
 
-### 2026-05-17 — Repo bootstrap
+### 2026-05-17 12:26–13:37 (+0200) — Repo bootstrap
 
 3. **Initial commit** — encounter images and core game data assets land in the repo.
 4. Sync with remote; delete obsolete top-level `Game/` directory.
 5. Fix **TypeScript module resolution** for the client/server/shared workspace.
 
-### 2026-05-18 — v0.1 playable (`3f71171`)
+### 2026-05-18 15:14 (+0200) — v0.1 playable (`3f71171`)
 
 6. First **playable checkpoint**: Vite + React client, Express API, shared contracts.
 7. Sign-in / session flow, dashboard shell, avatar selection, encounter loop.
 8. Static game data (encounters, solutions, portraits, frames), PostgreSQL document store.
 9. UI asset tree (backgrounds, buttons, encounter art, welcome flow).
 
-### 2026-05-19 — Audio (`e8edbed`)
+### 2026-05-19 04:37 (+0200) — Audio (`e8edbed`)
 
 10. **v0.12 music engine** — playlist wiring and playback controls for dashboard and in-game ambience.
 
-### 2026-05-20 — Rewards and Scribes (`03b715b`, `f0ca176`)
+### 2026-05-20 04:54–05:30 (+0200) — Rewards and Scribes (`03b715b`, `f0ca176`)
 
 11. Fix **duplicate solution IDs** (10065–10068) so warrior reward pool entries are unique.
 12. **Level-up encounters** — outcome-based race/role abilities without hardship penalties; `rewardIds` precomputed for result preview.
@@ -36,7 +43,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 14. **SCRIBES** activity feed overlay on the dashboard; unread-style world log.
 15. **Atranor death** survival rules; music volume in settings; related gameplay UI fixes.
 
-### 2026-05-21 — Content and dashboard shell
+### 2026-05-21 02:01–04:10 (+0200) — Content and dashboard shell
 
 16. Fix high-impact **solution name/description typos**; sync client `solutiondata.json` mirrors (`3b9ab56`, `f0e6030`).
 17. Remove obsolete game ambient tracks; reclassify solution **10185** as PurgeSkill (`32d22af`, `f0b141d`).
@@ -44,7 +51,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 19. Dashboard **overlays** — Scribes unread indicator, achievements entry point, ambient wiring (`6e4dc8e`).
 20. Remove legacy avatar portrait assets; **inventory bootstrap** on new avatars (`d284bbe`).
 
-### 2026-05-21 — Encounter UX (`85eeb3a`, `686c16c`)
+### 2026-05-21 05:44–14:18 (+0200) — Encounter UX (`85eeb3a`, `686c16c`)
 
 21. **Result screen** — reward icons fly to footer targets on Continue; losses fly from portrait into outcome slots; dice art beside outcome text.
 22. **Reveal pacing** — slower encounter crossfade (720ms); solution/dice fade-in (1100ms); spacer bar stays visible.
@@ -53,7 +60,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 25. Smoother **continue transition**; fix reward icon flicker when result layer hides (`686c16c`).
 26. **Lore gem** click fix (`inert` hidden result layer); scrollable Scribes feed.
 
-### 2026-05-21 — Adventurer achievements (`9ea2110`)
+### 2026-05-21 15:33 (+0200) — Adventurer achievements (`9ea2110`)
 
 27. First real **achievement chain** (Adventurer → Trailblazer): event-driven progress on `encounter_resolved` / `encounter_failed`, rank thresholds **100 / 200 / 400 / 800** encounters (max rank 4), `player_achievements` table.
 28. **`achievement_unlocked`** events → Scribes (“became a Wayfarer”, etc.).
@@ -63,7 +70,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 32. **`gems_received`** recorded inside `addPlayerYellowRedGems` so Scribes always sees gem grants.
 33. `npm run test:achievements` for rank/daily-reward math.
 
-### 2026-05-22 — Server death, avatar flow, Alpha Player (`904bfed`…`953e348`)
+### 2026-05-22 02:37–04:26 (+0200) — Server death, avatar flow, Alpha Player (`904bfed`…`953e348`)
 
 34. **Shared dice** — `interpretRoll` / `isRollFavorable` in `@morkahja/shared`; server re-exports; client imports via `@shared` Vite alias; `npm run test:dice` parity test.
 35. **Server-authoritative Atranor death** — removed client `isFatalAtranorRoll` shortcut; all Misery/Hardship on encounter **1** go through `POST /encounter/continue`; `avatarDied` / `deathTriggered` on response; max **3** avatars per player (`AvatarLimitReachedError`).
@@ -73,7 +80,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 39. **Encounter art** — refreshed `death_atranor`, Tempest fight, and Verdani heal `.webp` assets.
 40. **Solution affordance** — dimmer disabled slots; rattle animation when dice/solutions unlock; slightly wider hub footer buttons.
 
-### 2026-05-22 — Achievement chains, donations, expansions (`3d01551`…`216fdcb`)
+### 2026-05-22 04:42–08:12 (+0200) — Achievement chains, donations, expansions, friends (`3d01551`…`135779f`)
 
 41. **Achievement chains** — Firestarter, Contributor (gems donated), Blessed (Fortune/Prosperity), Combatant / Trickster / Helper (encounter-type solves); hide chains with zero progress unless rank > 0.
 42. **Daily reward** — base **1** gem plus sum of achievement ranks across all chains (`dailyRewardService`).
@@ -95,7 +102,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 
 ## Session notes (detail)
 
-### Atranor = system death encounter (id 1)
+### Atranor = system death encounter (id 1) · 2026-05-22 04:17 (+0200)
 
 **Atranor** (`mEncounterID` **1** / `DEATH_ENCOUNTER_ID`) is queued when essence runs out on a normal encounter; random pool still starts at **20001**. Only Atranor **Misery/Hardship** sets `avatarDied` (death overlay). `deathTriggered` means “Atranor is next,” not dead yet. Client shows overlay from `avatarDied` on `/encounter/continue` only.
 
@@ -106,7 +113,7 @@ Since `7023633`, `2eebf99`, `a58ac44`.
 - **Purge** — `refreshAvatarSelectionAfterHome` / death Home handoff only clear `excludedAvatarIds` for successfully deleted avatars; partial failure keeps IDs and shows “Could not remove fallen avatar; try Home again.”
 - **Prepare** — `loadAvatarSelection` during loading bootstrap; Play toggles slots only when `avatarSelectionPrepared`; fallback `ensureAvatarSelectionPrepared()` with button spinner (not top-right wheel).
 
-### Alpha Player limited achievement (`15c95c5`)
+### Alpha Player limited achievement (`15c95c5`) · 2026-05-22 04:25 (+0200)
 
 Since `9ea2110`.
 
@@ -116,18 +123,18 @@ Since `9ea2110`.
 - **Daily reward** — `DAILY_REWARD_ENCOUNTERS_REQUIRED` **42** (was 21); Adventurer rank thresholds **100 / 200 / 400 / 800** (`22fa897`).
 - **Tests** — `alphaPlayerAchievement.test.ts` included in `npm run test:achievements`.
 
-### Avatar selection, death overlay, About Us (`0ea459e`, `a58ac44`, `135779f`)
+### Avatar selection, death overlay, About Us (`0ea459e`, `a58ac44`, `135779f`) · 2026-05-22 03:37–08:12 (+0200)
 
 - **`avatarSelectionPrepare.ts`** — `prepareAvatarSelection`, `purgeDeadAvatarsOnServer`, dead-ID localStorage key.
 - **`AvatarDeathOverlay`** — async `onHandoffStart` (purge + preload) before dashboard recreate flow.
 - **`AboutUsOverlay`** — dashboard nav “About Us” credits panel; expandable credit cards; footer **Donation** button (same style as Close) opens `DonationOverlay`.
 
-### Encounter images and solution UX (`e6d4dd0`, `953e348`)
+### Encounter images and solution UX (`e6d4dd0`, `953e348`) · 2026-05-22 04:26 (+0200)
 
 - **Images** — higher-resolution encounter art for Atranor death, Corrupted Tempest (seductress + wildheart), exhausted Verdani heal.
 - **SolutionBlock** — `morkahja-solution-enable-rattle` when slots become interactive; unavailable opacity **0.37**.
 
-### Adventurer achievements and nav dots (`9ea2110`)
+### Adventurer achievements and nav dots (`9ea2110`) · 2026-05-21 15:33 (+0200)
 
 Since `686c16c`.
 
@@ -135,7 +142,7 @@ Since `686c16c`.
 - **API** — `GET /player/achievements`, `POST /player/daily-reward/claim`; shared DTOs; client `fetchAchievements` / `claimDailyReward`.
 - **UI** — Overlay loads player gems before achievements so a 404 does not show zero gems; radial dot positioning uses spoke + 70% radius scale; separate CSS glow animations (~2.15s vs ~3.45s).
 
-### Encounter results and reveal pacing (`85eeb3a`, `686c16c`)
+### Encounter results and reveal pacing (`85eeb3a`, `686c16c`) · 2026-05-21 05:44–14:18 (+0200)
 
 Since `d284bbe`.
 
@@ -143,7 +150,7 @@ Since `d284bbe`.
 - **Continue** — full bounce even for no-reward outcomes; fade-out without re-showing reward nodes (`inert`).
 - **Assets** — refreshed encounter `.webp` set; `tool_heal_linen_bandage` rename.
 
-### Expansions overlay and gem unlock (`216fdcb`)
+### Expansions overlay and gem unlock (`216fdcb`) · 2026-05-22 05:50–07:46 (+0200)
 
 Since `3d01551`.
 
@@ -153,7 +160,7 @@ Since `3d01551`.
 - **Nav** — `RADIAL_BUTTONS` entry at clock **19:00**; CSS `.morkahja-nav-tooltip` + hover on `.morkahja-nav-radial-button-visual` / center hub.
 - **Tests** — `expansionUnlock.test.ts` smoke for catalog ids and active flags.
 
-### Friends overlay (`6d21670`, `135779f`)
+### Friends overlay (`6d21670`, `135779f`) · 2026-05-22 08:00–08:12 (+0200)
 
 - **Server** — `friendIds` on player; `GET/POST /player/friends`, `GET /player/friends/:friendId/achievements`; lookup by name or id; online via `activeSessionExpiresAt`; `CannotAddSelfError` on add.
 - **Sanitize** — `sanitizeStoredFriendIds` removes the viewer’s own id from `friendIds` on load (case-insensitive) and persists the cleaned list; list API also filters self by id/name match.
@@ -161,7 +168,7 @@ Since `3d01551`.
 - **Achievements** — `getAchievementsSnapshotReadOnly` for friend profile (no Firestarter side effects); shared `FriendAvatarDto` on achievements response.
 - **Client** — `FriendsOverlay.tsx` from Social nav; add-friend field; list polls every 15s; detail view shows avatar grid + `AchievementPanel` (no daily claim); null-safe achievement cards.
 
-### Scribes avatar on create (`3d01551`)
+### Scribes avatar on create (`3d01551`) · 2026-05-22 05:50 (+0200)
 
 - **Payload** — `basePayload` stores `avatarPortrait` and `avatarFrame` on avatar-bearing events.
 - **Feed** — `resolveScribesAvatarVisual` for `avatar_created`; `ActivityFeedOverlay` renders `AvatarPortraitStack` when both fields are present.
