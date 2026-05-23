@@ -41,6 +41,21 @@ export interface PlayerCurrencyResponse {
   granted: boolean;
 }
 
+export interface LoreGemOfferResponse {
+  eligible: boolean;
+  claimableAt: number | null;
+  encounterKey: string;
+}
+
+export interface LoreGemClaimResponse {
+  playerId: string;
+  currencies: {
+    yellow_red_gem: number;
+    [key: string]: number | undefined;
+  };
+  granted: boolean;
+}
+
 export interface DonateGemsResponse {
   playerId: string;
   donated: number;

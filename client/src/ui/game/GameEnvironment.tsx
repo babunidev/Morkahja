@@ -347,6 +347,7 @@ export function GameEnvironment({
             }}
             >
               <EncounterImageBlock
+                avatarId={avatar.id}
                 encounter={encounter}
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}

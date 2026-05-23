@@ -8,6 +8,11 @@ import {
   resolveEncounter,
 } from '../services/encounterGenerator.js';
 import { EncounterConflictError } from '../services/encounterPersistence.js';
+import {
+  claimLoreGem,
+  LoreGemError,
+  offerLoreGem,
+} from '../services/loreGemService.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 
@@ -183,8 +188,57 @@ export async function clearEncounterController(
   }
 }
 
+function requestEncounterKey(req: Request): string | undefined {
+  const body = req.body as Record<string, unknown> | undefined;
+  const bodyValue = body?.encounterKey;
+
+  if (typeof bodyValue === 'string') {
+    return bodyValue;
+  }
+
+  return firstValue(req.query.encounterKey as RequestValue);
+}
+
+export async function offerLoreGemController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId, avatarId } = requireIdentity(req);
+    const result = await offerLoreGem(playerId, avatarId);
+    res.json(result);
+  } catch (error) {
+    handleControllerError(error, next);
+  }
+}
+
+export async function claimLoreGemController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId, avatarId } = requireIdentity(req);
+    const encounterKey = requestEncounterKey(req);
+
+    if (!encounterKey) {
+      throw new RequestError('encounterKey is required');
+    }
+
+    const result = await claimLoreGem(playerId, avatarId, encounterKey);
+    res.json(result);
+  } catch (error) {
+    handleControllerError(error, next);
+  }
+}
+
 export function encounterControllerErrorStatus(error: unknown): number {
   if (error instanceof RequestError) {
+    return error.statusCode;
+  }
+
+  if (error instanceof LoreGemError) {
     return error.statusCode;
   }
 

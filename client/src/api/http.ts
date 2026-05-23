@@ -15,7 +15,8 @@ import type {
   EncounterResultResponse,
   EncounterSnapshotDto,
   InventoryItemDto,
-  PlayerCurrencyResponse,
+  LoreGemClaimResponse,
+  LoreGemOfferResponse,
   PersistedAvatarDto,
   PlayerResponse,
   StaticGameDataStatus,
@@ -39,7 +40,6 @@ export type {
   AvatarsResponse,
   ClientSession,
   EncounterAction,
-  PlayerCurrencyResponse,
   PlayerResponse,
   StaticGameDataStatus,
 };
@@ -148,12 +148,20 @@ export async function fetchPlayer(
   return request<PlayerResponse>('/player');
 }
 
-export async function addYellowRedGem(
-  encounterKey: string,
-): Promise<PlayerCurrencyResponse> {
-  return request<PlayerCurrencyResponse>('/player/currency/yellow_red_gem', {
+export async function offerLoreGem(avatarId: string): Promise<LoreGemOfferResponse> {
+  return request<LoreGemOfferResponse>('/encounter/lore-gem/offer', {
     method: 'POST',
-    body: JSON.stringify({ encounterKey }),
+    body: JSON.stringify({ avatarId }),
+  });
+}
+
+export async function claimLoreGem(
+  avatarId: string,
+  encounterKey: string,
+): Promise<LoreGemClaimResponse> {
+  return request<LoreGemClaimResponse>('/encounter/lore-gem/claim', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, encounterKey }),
   });
 }
 

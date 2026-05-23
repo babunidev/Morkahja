@@ -34,7 +34,6 @@ import {
   loadStaticGameEnvironment,
 } from './services/gameData.js';
 import {
-  addPlayerYellowRedGems,
   deletePlayerAvatar,
   loadPlayerActiveAvatar,
   loadPlayerAvatars,
@@ -186,17 +185,6 @@ app.get('/player', async (req: Request, res: Response) => {
   }
 
   res.json({ ...player, playerId });
-});
-
-app.post('/player/currency/yellow_red_gem', async (req: Request, res: Response) => {
-  const { playerId } = requireAuth(req);
-  const body = req.body as Record<string, unknown>;
-  const loreGemClaimKey = typeof body.encounterKey === 'string'
-    ? body.encounterKey
-    : undefined;
-  const { currencies, granted } = await addPlayerYellowRedGems(playerId, 1, loreGemClaimKey);
-
-  res.json({ playerId, currencies, granted });
 });
 
 app.get('/avatar', async (req: Request, res: Response) => {

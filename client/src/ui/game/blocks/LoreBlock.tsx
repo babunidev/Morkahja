@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import type { LoreGemOfferResponse } from '@shared/contracts';
 import {
   preventImageContextMenu,
   PROTECTED_BACKGROUND_ATTR,
@@ -10,9 +11,6 @@ import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
 const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const LORE_GEM_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
-const LORE_GEM_MIN_MS = 14_000;
-const LORE_GEM_MAX_MS = 28_000;
-const LORE_GEM_REVEAL_CHANCE = 1;
 const LORE_GEM_COLLECT_ANIMATION_MS = 700;
 const LORE_GEM_POPUP_MS = 330;
 
@@ -142,12 +140,6 @@ const loreGemPopupStyle: CSSProperties = {
   animation: 'morkahja-lore-gem-popup 330ms ease-out forwards',
 };
 
-function randomLoreGemDelay(): number {
-  return Math.floor(
-    LORE_GEM_MIN_MS + Math.random() * (LORE_GEM_MAX_MS - LORE_GEM_MIN_MS + 1),
-  );
-}
-
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -157,22 +149,24 @@ function wait(ms: number): Promise<void> {
 export function LoreBlock({
   encounterKey,
   onLoreGemCollect,
+  onLoreGemOffer,
   text,
   visible,
 }: {
   encounterKey: string;
   onLoreGemCollect: () => Promise<void>;
+  onLoreGemOffer: () => Promise<LoreGemOfferResponse>;
   text: string;
   visible: boolean;
 }) {
   const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
   const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
-  const loreGemRemainingDelay = useRef(randomLoreGemDelay());
-  const loreGemTimerStartedAt = useRef<number | null>(null);
+  const loreGemClaimableAt = useRef<number | null>(null);
+  const loreGemOfferLoaded = useRef(false);
 
   useEffect(() => {
-    loreGemRemainingDelay.current = randomLoreGemDelay();
-    loreGemTimerStartedAt.current = null;
+    loreGemClaimableAt.current = null;
+    loreGemOfferLoaded.current = false;
     setLoreGemState('waiting');
     setLoreGemPopupVisible(false);
   }, [encounterKey]);
@@ -182,25 +176,60 @@ export function LoreBlock({
       return undefined;
     }
 
-    let completed = false;
-    loreGemTimerStartedAt.current = Date.now();
-    const timer = window.setTimeout(() => {
-      completed = true;
-      loreGemTimerStartedAt.current = null;
-      loreGemRemainingDelay.current = 0;
-      setLoreGemState(Math.random() <= LORE_GEM_REVEAL_CHANCE ? 'visible' : 'collected');
-    }, loreGemRemainingDelay.current);
+    let timer: number | undefined;
+    let cancelled = false;
+
+    async function scheduleGem(): Promise<void> {
+      try {
+        if (!loreGemOfferLoaded.current) {
+          const offer = await onLoreGemOffer();
+          if (cancelled) {
+            return;
+          }
+
+          loreGemOfferLoaded.current = true;
+
+          if (offer.encounterKey !== encounterKey) {
+            return;
+          }
+
+          if (!offer.eligible || offer.claimableAt === null) {
+            setLoreGemState('collected');
+            return;
+          }
+
+          loreGemClaimableAt.current = offer.claimableAt;
+        }
+
+        const claimableAt = loreGemClaimableAt.current;
+        if (claimableAt === null) {
+          setLoreGemState('collected');
+          return;
+        }
+
+        const delay = Math.max(0, claimableAt - Date.now());
+        timer = window.setTimeout(() => {
+          if (!cancelled) {
+            setLoreGemState('visible');
+          }
+        }, delay);
+      } catch (error) {
+        console.error('Lore gem offer failed', error);
+        if (!cancelled) {
+          setLoreGemState('collected');
+        }
+      }
+    }
+
+    void scheduleGem();
 
     return () => {
-      window.clearTimeout(timer);
-
-      if (!completed && loreGemTimerStartedAt.current !== null) {
-        const elapsed = Date.now() - loreGemTimerStartedAt.current;
-        loreGemRemainingDelay.current = Math.max(0, loreGemRemainingDelay.current - elapsed);
-        loreGemTimerStartedAt.current = null;
+      cancelled = true;
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
       }
     };
-  }, [encounterKey, loreGemState, visible]);
+  }, [encounterKey, loreGemState, onLoreGemOffer, visible]);
 
   async function handleLoreGemClick(): Promise<void> {
     if (loreGemState !== 'visible') {

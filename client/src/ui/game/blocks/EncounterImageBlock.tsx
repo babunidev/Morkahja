@@ -4,7 +4,7 @@ import type {
   EncounterAction,
   EncounterSnapshot,
 } from '../../../api/http.js';
-import { addYellowRedGem } from '../../../api/http.js';
+import { claimLoreGem, offerLoreGem } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
@@ -73,6 +73,7 @@ function imageFileName(imageSrc: string): string {
 }
 
 export function EncounterImageBlock({
+  avatarId,
   continuePending,
   encounter,
   imageSrc,
@@ -83,6 +84,7 @@ export function EncounterImageBlock({
   skillbookOpen,
   title,
 }: {
+  avatarId: string;
   continuePending: boolean;
   encounter: EncounterSnapshot;
   imageSrc: string;
@@ -255,8 +257,9 @@ export function EncounterImageBlock({
       <LoreBlock
         encounterKey={encounter.snapshotId}
         onLoreGemCollect={async () => {
-          await addYellowRedGem(encounter.snapshotId);
+          await claimLoreGem(avatarId, encounter.snapshotId);
         }}
+        onLoreGemOffer={async () => offerLoreGem(avatarId)}
         text={encounter.encounterText ?? ''}
         visible={loreOpen}
       />

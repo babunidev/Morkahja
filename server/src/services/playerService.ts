@@ -158,6 +158,10 @@ export async function addPlayerYellowRedGems(
   amount: number,
   loreGemClaimKey?: string,
 ): Promise<{ currencies: NonNullable<PlayerDocument['currencies']>; granted: boolean }> {
+  if (amount > 0 && !loreGemClaimKey?.trim()) {
+    throw new Error('loreGemClaimKey is required when granting yellow_red_gem');
+  }
+
   const player = await loadPlayer(playerId);
   const currentCurrencies = player?.currencies ?? {};
   const loreGemClaims = player?.loreGemClaims ?? {};

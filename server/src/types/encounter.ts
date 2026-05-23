@@ -72,6 +72,13 @@ export interface EncounterSnapshot {
   state: EncounterSnapshotState;
   createdAt: number;
   preparedEncounter: PreparedEncounter;
+
+  /** Server-authoritative lore gem roll; set when the player opens lore. */
+  loreGemOffer?: {
+    eligible: boolean;
+    claimableAt: number | null;
+    offeredAt: number;
+  };
 }
 
 /** Client-submitted action; server maps to resolver input. */
