@@ -1,4 +1,9 @@
-import { findPlayerByNameOrId, getPlayer, setPlayer } from '../db/postgresDocumentStore.js';
+import {
+  findPlayerByNameOrId,
+  getPlayer,
+  listAvatars,
+  setPlayer,
+} from '../db/postgresDocumentStore.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { PlayerDocument } from '../types/player.js';
 import { getAchievementsSnapshotReadOnly } from './achievementService.js';
@@ -74,13 +79,58 @@ function friendIdMatchesPlayer(playerId: string, friendId: string): boolean {
   return friendId.trim().toLowerCase() === playerId.trim().toLowerCase();
 }
 
+/**
+ * Legacy bootstrap used id "Babuni" while real accounts use generated ids + playerName.
+ * Friend lists may still reference the empty stub — resolve to the populated player row.
+ */
+async function resolveCanonicalFriendId(friendId: string): Promise<string> {
+  const record = await getPlayer<Partial<PlayerDocument>>(friendId);
+
+  if (!record) {
+    return friendId;
+  }
+
+  const playerName = typeof record.playerName === 'string' ? record.playerName.trim() : '';
+  const avatars = await listAvatars<AvatarDocument>(friendId);
+
+  if (playerName.length > 0 && avatars.length > 0) {
+    return friendId;
+  }
+
+  const lookupName = playerName.length > 0 ? playerName : friendId;
+  const match = await findPlayerByNameOrId<Partial<PlayerDocument>>(lookupName);
+
+  if (!match || match.id === friendId) {
+    return friendId;
+  }
+
+  const matchName = typeof match.data.playerName === 'string' ? match.data.playerName.trim() : '';
+  const matchAvatars = await listAvatars<AvatarDocument>(match.id);
+
+  if (matchName.length > 0 || matchAvatars.length > 0) {
+    return match.id;
+  }
+
+  return friendId;
+}
+
+function friendIdsChanged(before: string[], after: string[]): boolean {
+  if (before.length !== after.length) {
+    return true;
+  }
+
+  return before.some((id, index) => id !== after[index]);
+}
+
 /** Drop self entries and persist when the stored list was dirty. */
 async function sanitizeStoredFriendIds(playerId: string): Promise<string[]> {
   const player = await getPlayer<Partial<PlayerDocument>>(playerId);
   const stored = uniqueFriendIds(player?.friendIds);
-  const sanitized = stored.filter((friendId) => !friendIdMatchesPlayer(playerId, friendId));
+  const withoutSelf = stored.filter((friendId) => !friendIdMatchesPlayer(playerId, friendId));
+  const canonical = await Promise.all(withoutSelf.map((friendId) => resolveCanonicalFriendId(friendId)));
+  const sanitized = [...new Set(canonical)];
 
-  if (sanitized.length !== stored.length) {
+  if (friendIdsChanged(stored, sanitized) || friendIdsChanged(withoutSelf, canonical)) {
     await setPlayer(
       playerId,
       {
@@ -189,7 +239,8 @@ async function resolveFriendAvatar(
 async function buildFriendSummary(
   friendId: string,
 ): Promise<FriendSummary | null> {
-  const record = await getPlayer<Partial<PlayerDocument>>(friendId);
+  const canonicalFriendId = await resolveCanonicalFriendId(friendId);
+  const record = await getPlayer<Partial<PlayerDocument>>(canonicalFriendId);
 
   if (!record) {
     return null;
@@ -197,13 +248,13 @@ async function buildFriendSummary(
 
   const player = {
     ...record,
-    playerId: typeof record.playerId === 'string' ? record.playerId : friendId,
-    playerName: typeof record.playerName === 'string' ? record.playerName : friendId,
+    playerId: typeof record.playerId === 'string' ? record.playerId : canonicalFriendId,
+    playerName: typeof record.playerName === 'string' ? record.playerName : canonicalFriendId,
   } as PlayerDocument;
-  const avatar = await resolveFriendAvatar(friendId);
+  const avatar = await resolveFriendAvatar(canonicalFriendId);
 
   return {
-    playerId: friendId,
+    playerId: canonicalFriendId,
     playerName: player.playerName,
     online: isPlayerOnline(player),
     ...avatar,
@@ -295,8 +346,10 @@ export async function assertPlayerFriendship(
   friendId: string,
 ): Promise<void> {
   const friendIds = await getPlayerFriendIds(playerId);
+  const canonicalFriendId = await resolveCanonicalFriendId(friendId);
+  const allowed = friendIds.some((id) => friendIdMatchesPlayer(id, canonicalFriendId));
 
-  if (!friendIds.includes(friendId)) {
+  if (!allowed) {
     throw new FriendAccessDeniedError();
   }
 }
@@ -311,7 +364,8 @@ export async function getFriendAchievements(
 
   await assertPlayerFriendship(playerId, friendId);
 
-  const friend = await getPlayer<Partial<PlayerDocument>>(friendId);
+  const canonicalFriendId = await resolveCanonicalFriendId(friendId);
+  const friend = await getPlayer<Partial<PlayerDocument>>(canonicalFriendId);
 
   if (!friend) {
     throw new FriendNotFoundError();
@@ -319,16 +373,16 @@ export async function getFriendAchievements(
 
   const player = {
     ...friend,
-    playerId: typeof friend.playerId === 'string' ? friend.playerId : friendId,
-    playerName: typeof friend.playerName === 'string' ? friend.playerName : friendId,
+    playerId: typeof friend.playerId === 'string' ? friend.playerId : canonicalFriendId,
+    playerName: typeof friend.playerName === 'string' ? friend.playerName : canonicalFriendId,
   } as PlayerDocument;
-  const avatars = await loadPlayerAvatars(friendId);
+  const avatars = await loadPlayerAvatars(canonicalFriendId);
   const avatarViews = toFriendAvatarViews(avatars);
   const lastPlayed = pickLastPlayedAvatar(avatars);
-  const achievements = await getAchievementsSnapshotReadOnly(friendId);
+  const achievements = await getAchievementsSnapshotReadOnly(canonicalFriendId);
 
   return {
-    playerId: friendId,
+    playerId: canonicalFriendId,
     playerName: player.playerName,
     online: isPlayerOnline(player),
     portrait: lastPlayed?.portrait ?? avatarViews[0]?.portrait ?? 'avatar_verdani_female_mage_a.webp',

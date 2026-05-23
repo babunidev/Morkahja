@@ -12,7 +12,70 @@ import {
   setActiveEncounter,
   setAvatar,
   withDocumentTransaction,
+  type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
+
+/** Concurrent continue or stale client — map to HTTP 409 in encounterControllerErrorStatus. */
+export class EncounterConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EncounterConflictError';
+  }
+}
+
+function toResolvingEncounterSnapshot(snapshot: EncounterSnapshot): EncounterSnapshot {
+  return {
+    ...snapshot,
+    state: transitionState('active', 'resolving'),
+    resolved: false,
+  };
+}
+
+export function assertEncounterClaimable(
+  snapshot: EncounterSnapshot,
+  expectedSnapshotId?: string,
+): void {
+  if (expectedSnapshotId && snapshot.snapshotId !== expectedSnapshotId) {
+    throw new EncounterConflictError(
+      `Encounter snapshot mismatch: expected ${expectedSnapshotId}, got ${snapshot.snapshotId}`,
+    );
+  }
+
+  if (snapshot.resolved || snapshot.state === 'resolved') {
+    throw new EncounterConflictError(`Encounter already resolved: ${snapshot.snapshotId}`);
+  }
+
+  if (snapshot.state === 'resolving') {
+    throw new EncounterConflictError('Encounter already resolving');
+  }
+
+  if (snapshot.state !== 'active') {
+    throw new EncounterConflictError(
+      `Invalid encounter state: expected active, got ${snapshot.state}`,
+    );
+  }
+}
+
+/**
+ * Claim encounter under row lock (FOR UPDATE). Safe across multiple server instances.
+ */
+export async function claimActiveEncounterInTransaction(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  expectedSnapshotId?: string,
+): Promise<EncounterSnapshot> {
+  const snapshot = await transaction.getActiveEncounter<EncounterSnapshot>(playerId, avatarId);
+
+  if (!snapshot) {
+    throw new Error('No active encounter snapshot');
+  }
+
+  assertEncounterClaimable(snapshot, expectedSnapshotId);
+  const resolvingSnapshot = toResolvingEncounterSnapshot(snapshot);
+  await transaction.setActiveEncounter(playerId, avatarId, resolvingSnapshot);
+  return resolvingSnapshot;
+}
 
 export async function loadAvatar(
   playerId: string,
@@ -43,32 +106,9 @@ export async function claimActiveEncounterForResolution(
   playerId: string,
   avatarId: string,
 ): Promise<EncounterSnapshot> {
-  return withDocumentTransaction(async (transaction) => {
-    const snapshot = await transaction.getActiveEncounter<EncounterSnapshot>(playerId, avatarId);
-
-    if (!snapshot) {
-      throw new Error('No active encounter snapshot');
-    }
-
-    if (snapshot.resolved || snapshot.state === 'resolved') {
-      throw new Error(`Encounter already resolved: ${snapshot.snapshotId}`);
-    }
-
-    if (snapshot.state !== 'active') {
-      throw new Error(
-        `Invalid encounter state transition: expected active, got ${snapshot.state}`,
-      );
-    }
-
-    const resolvingSnapshot: EncounterSnapshot = {
-      ...snapshot,
-      state: transitionState(snapshot.state, 'resolving'),
-      resolved: false,
-    };
-
-    await transaction.setActiveEncounter(playerId, avatarId, resolvingSnapshot);
-    return resolvingSnapshot;
-  });
+  return withDocumentTransaction(async (transaction) => (
+    claimActiveEncounterInTransaction(transaction, playerId, avatarId)
+  ));
 }
 
 export async function clearActiveEncounter(

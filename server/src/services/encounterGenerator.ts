@@ -7,11 +7,6 @@
  */
 import { resolveEncounter as runDeterministicResolver } from '../engine/encounterResolver.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
-import {
-  acquireLock,
-  releaseLock,
-  transitionState,
-} from '../domain/encounter/EncounterStateMachine.js';
 import { interpretRoll, type RollOutcome } from '../engine/diceInterpreter.js';
 import { createInitialProgression } from '../domain/avatar/AvatarProgression.js';
 import type { EncounterData, EncounterDataMap } from '../engine/types.js';
@@ -31,7 +26,7 @@ import {
 } from '../types/encounterSnapshot.js';
 import { getEncounterById, getEncounters, getSolutionMap } from './gameData.js';
 import {
-  claimActiveEncounterForResolution,
+  claimActiveEncounterInTransaction,
   clearActiveEncounter as deleteActiveEncounter,
   loadActiveEncounter,
   loadAvatar,
@@ -847,39 +842,39 @@ export async function continueEncounter(
     );
   }
 
-  acquireLock(activeSnapshot.snapshotId);
+  const expectedSnapshotId = activeSnapshot.snapshotId;
 
   let eventContext: EncounterContinuedEventContext | null = null;
   let encounterDeathTriggered = false;
   let encounterAvatarDied = false;
 
-  try {
-    const result = await withDocumentTransaction(async (transaction) => {
+  const result = await withDocumentTransaction(async (transaction) => {
+      const claimedSnapshot = await claimActiveEncounterInTransaction(
+        transaction,
+        playerId,
+        avatarId,
+        expectedSnapshotId,
+      );
+
       const [
-        snapshot,
         avatar,
         inventoryDocument,
         progressionDocument,
         playerData,
       ] = await Promise.all([
-        transaction.getActiveEncounter<EncounterSnapshot>(playerId, avatarId),
         transaction.getAvatar<AvatarDocument>(playerId, avatarId),
         transaction.getInventory<AvatarInventory>(playerId, avatarId),
         transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
         transaction.getPlayer<{ unlockedExpansions?: number[] }>(playerId),
       ]);
 
-      if (!snapshot) {
-        throw new Error('No active encounter snapshot');
-      }
-
       if (!avatar) {
         throw new Error(`Avatar not found: ${avatarId}`);
       }
 
-      const encounterSnapshot = withPrecomputedSnapshotRewards(snapshot, avatar);
+      let encounterSnapshot = withPrecomputedSnapshotRewards(claimedSnapshot, avatar);
 
-      if (encounterSnapshot !== snapshot) {
+      if (encounterSnapshot !== claimedSnapshot) {
         await transaction.setActiveEncounter(playerId, avatarId, encounterSnapshot);
       }
 
@@ -888,16 +883,6 @@ export async function continueEncounter(
         ?? createInitialAvatarInventory(avatar.profile);
       const progression = progressionDocument
         ?? createInitialProgression(avatar.createdAt ?? Date.now());
-
-      if (encounterSnapshot.resolved || encounterSnapshot.state === 'resolved') {
-        throw new Error(`Encounter already resolved: ${encounterSnapshot.snapshotId}`);
-      }
-
-      if (encounterSnapshot.state !== 'active') {
-        throw new Error(
-          `Invalid encounter state transition: expected active, got ${encounterSnapshot.state}`,
-        );
-      }
 
       const actionForResolution = selectedActionForSnapshot(encounterSnapshot, action);
       const encounter = snapshotToEncounterData(encounterSnapshot);
@@ -1046,23 +1031,20 @@ export async function continueEncounter(
       };
     });
 
-    if (eventContext) {
-      await recordEncounterContinuedEvents(
-        playerId,
-        result.avatar,
-        result.resolution,
-        eventContext,
-      );
-    }
-
-    return {
-      ...result,
-      deathTriggered: encounterDeathTriggered,
-      avatarDied: encounterAvatarDied,
-    };
-  } finally {
-    releaseLock(activeSnapshot.snapshotId);
+  if (eventContext) {
+    await recordEncounterContinuedEvents(
+      playerId,
+      result.avatar,
+      result.resolution,
+      eventContext,
+    );
   }
+
+  return {
+    ...result,
+    deathTriggered: encounterDeathTriggered,
+    avatarDied: encounterAvatarDied,
+  };
 }
 
 /** Remove active encounter document after completion. */

@@ -7,6 +7,7 @@ import {
   getActiveEncounter,
   resolveEncounter,
 } from '../services/encounterGenerator.js';
+import { EncounterConflictError } from '../services/encounterPersistence.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 
@@ -183,5 +184,27 @@ export async function clearEncounterController(
 }
 
 export function encounterControllerErrorStatus(error: unknown): number {
-  return error instanceof RequestError ? error.statusCode : 500;
+  if (error instanceof RequestError) {
+    return error.statusCode;
+  }
+
+  if (error instanceof EncounterConflictError) {
+    return 409;
+  }
+
+  if (error instanceof Error) {
+    if (error.message.includes('Encounter already resolving')) {
+      return 409;
+    }
+
+    if (error.message.includes('Encounter already resolved')) {
+      return 409;
+    }
+
+    if (error.message.includes('Encounter snapshot mismatch')) {
+      return 409;
+    }
+  }
+
+  return 500;
 }

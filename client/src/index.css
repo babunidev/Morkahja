@@ -244,6 +244,94 @@ img {
   transform: translate(-50%, calc(-100% - 10px)) scale(1);
 }
 
+.morkahja-play-button {
+  cursor: pointer;
+}
+
+.morkahja-play-button:disabled {
+  cursor: default;
+}
+
+.morkahja-play-button-visual {
+  display: block;
+  position: relative;
+  width: 100%;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+}
+
+.morkahja-play-button:hover:not(:disabled) .morkahja-play-button-visual,
+.morkahja-play-button:focus-visible:not(:disabled) .morkahja-play-button-visual {
+  transform: scale(1.06) translateY(-2px);
+  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-avatar-slot-button {
+  position: relative;
+}
+
+.morkahja-avatar-slot-visual {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+}
+
+.morkahja-avatar-slot-button:hover:not(:disabled) .morkahja-avatar-slot-visual,
+.morkahja-avatar-slot-button:focus-visible:not(:disabled) .morkahja-avatar-slot-visual {
+  transform: scale(1.06) translateY(-2px);
+  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-avatar-slot-tooltip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  display: grid;
+  gap: 3px;
+  min-width: min(92%, 168px);
+  margin: 0;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 204, 102, 0.34);
+  border-radius: 8px;
+  background: rgba(12, 8, 6, 0.9);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  color: rgba(247, 239, 224, 0.94);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.94);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.morkahja-avatar-slot-tooltip--visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.morkahja-avatar-slot-tooltip-title {
+  color: #ffcc66;
+  font-family: 'Breathe Fire', Georgia, serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.morkahja-avatar-slot-tooltip-meta {
+  color: rgba(247, 239, 224, 0.88);
+  font-size: 0.74rem;
+}
+
 @keyframes morkahja-avatar-enter-center-glow {
   0%,
   100% {

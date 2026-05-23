@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   createAvatar,
   fetchAvatars,
@@ -52,6 +52,7 @@ function avatarSlotsRevealStyle(visible: boolean): CSSProperties {
     transform: visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
     pointerEvents: visible ? 'auto' : 'none',
     visibility: visible ? 'visible' : 'hidden',
+    overflow: visible ? 'visible' : 'hidden',
     maxHeight: visible ? 'min(42vh, 360px)' : 0,
     marginTop: visible ? 'clamp(8px, 2vh, 20px)' : 0,
   };
@@ -101,6 +102,17 @@ const messageStyle: CSSProperties = {
   textShadow: '0 2px 10px rgba(0, 0, 0, 0.9)',
 };
 
+function avatarSlotTooltipContent(avatar: PersistedAvatar): ReactNode {
+  return (
+    <>
+      <span className="morkahja-avatar-slot-tooltip-title">{avatar.name}</span>
+      <span className="morkahja-avatar-slot-tooltip-meta">
+        Level {avatar.level} · {avatar.race} {avatar.role}
+      </span>
+    </>
+  );
+}
+
 function AvatarSlot({
   avatar,
   clickable,
@@ -118,48 +130,82 @@ function AvatarSlot({
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const pressKey = `avatar-slot-${index}`;
+  const [hovered, setHovered] = useState(false);
+  const showTooltip = hovered && clickable && !hiddenDuringEnter;
+
+  const slotButtonProps = {
+    className: 'morkahja-avatar-slot-button',
+    disabled: !clickable,
+    onBlur: () => {
+      setHovered(false);
+    },
+    onFocus: () => {
+      if (clickable && !hiddenDuringEnter) {
+        setHovered(true);
+      }
+    },
+    onMouseEnter: () => {
+      if (clickable && !hiddenDuringEnter) {
+        setHovered(true);
+      }
+    },
+    onMouseLeave: () => {
+      setHovered(false);
+    },
+    onPointerDown: () => {
+      pulse(pressKey);
+    },
+    style: {
+      ...slotButtonStyle,
+      ...style,
+      cursor: clickable ? 'pointer' : 'default',
+      opacity: hiddenDuringEnter ? 0 : 1,
+      transition: `opacity ${AVATAR_ENTER_FADE_MS}ms ease`,
+    },
+    type: 'button' as const,
+  };
 
   if (!avatar) {
     return (
       <button
+        {...slotButtonProps}
         aria-label={`Create avatar in slot ${index + 1}`}
-        disabled={!clickable}
         onClick={(event) => {
           onSelect(null, index, event.currentTarget);
         }}
-        onPointerDown={() => {
-          pulse(pressKey);
-        }}
-        style={{
-          ...slotButtonStyle,
-          ...style,
-          cursor: clickable ? 'pointer' : 'default',
-          opacity: hiddenDuringEnter ? 0 : 1,
-          transition: `opacity ${AVATAR_ENTER_FADE_MS}ms ease`,
-        }}
-        type="button"
       >
-        <div
-          style={{
-            ...slotArtboardStyle,
-            animation: pressAnimation(isPressed(pressKey)),
-          }}
-        >
-          <img
-            alt="Create Avatar"
-            draggable={false}
-            src={CREATE_AVATAR_ASSET}
-            style={createImageStyle}
-          />
-        </div>
+        <span className="morkahja-avatar-slot-visual">
+          <span
+            className={`morkahja-avatar-slot-tooltip${
+              showTooltip ? ' morkahja-avatar-slot-tooltip--visible' : ''
+            }`}
+            role="tooltip"
+          >
+            <span className="morkahja-avatar-slot-tooltip-title">Create avatar</span>
+            <span className="morkahja-avatar-slot-tooltip-meta">Empty slot</span>
+          </span>
+          <div
+            style={{
+              ...slotArtboardStyle,
+              animation: pressAnimation(isPressed(pressKey)),
+            }}
+          >
+            <img
+              alt="Create Avatar"
+              draggable={false}
+              src={CREATE_AVATAR_ASSET}
+              style={createImageStyle}
+            />
+          </div>
+        </span>
       </button>
     );
   }
 
   return (
     <button
-      aria-label={`Select ${avatar.name}`}
-      disabled={!clickable}
+      {...slotButtonProps}
+      aria-label={`Select ${avatar.name}, level ${avatar.level}, ${avatar.race} ${avatar.role}`}
       onClick={(event) => {
         const source = event.currentTarget.querySelector(`[${AVATAR_ENTER_SOURCE_ATTR}]`);
         onSelect(
@@ -168,27 +214,25 @@ function AvatarSlot({
           source instanceof HTMLElement ? source : event.currentTarget,
         );
       }}
-      onPointerDown={() => {
-        pulse(pressKey);
-      }}
-      style={{
-        ...slotButtonStyle,
-        ...style,
-        cursor: clickable ? 'pointer' : 'default',
-        opacity: hiddenDuringEnter ? 0 : 1,
-        transition: `opacity ${AVATAR_ENTER_FADE_MS}ms ease`,
-      }}
-      title={`Portrait ${avatar.portrait}, Frame ${avatar.frame}`}
-      type="button"
     >
-      <div
-        style={{
-          ...slotArtboardStyle,
-          animation: pressAnimation(isPressed(pressKey)),
-        }}
-      >
-        <AvatarCard avatar={avatar} enterSource hideLabels />
-      </div>
+      <span className="morkahja-avatar-slot-visual">
+        <span
+          className={`morkahja-avatar-slot-tooltip${
+            showTooltip ? ' morkahja-avatar-slot-tooltip--visible' : ''
+          }`}
+          role="tooltip"
+        >
+          {avatarSlotTooltipContent(avatar)}
+        </span>
+        <div
+          style={{
+            ...slotArtboardStyle,
+            animation: pressAnimation(isPressed(pressKey)),
+          }}
+        >
+          <AvatarCard avatar={avatar} enterSource hideLabels />
+        </div>
+      </span>
     </button>
   );
 }

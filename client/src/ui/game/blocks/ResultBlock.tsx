@@ -29,6 +29,7 @@ interface SolutionRecord {
   mSolutionID: number;
   mSolutionInventoryType: number;
   mSolutionName: string;
+  mSolutionText?: string;
   mSolutionUses: number;
 }
 
@@ -38,7 +39,9 @@ interface VisibleReward {
 }
 
 type ItemTooltipState = {
-  text: string;
+  name: string;
+  quantityLabel: string;
+  description?: string;
   x: number;
   y: number;
 };
@@ -225,21 +228,45 @@ function lossIconStyle(inventoryType: number): CSSProperties {
 const rewardTooltipStyle: CSSProperties = {
   position: 'absolute',
   zIndex: 50,
-  maxWidth: 180,
-  padding: '7px 10px',
+  display: 'grid',
+  gap: 4,
+  minWidth: 148,
+  maxWidth: 'min(280px, 72vw)',
+  padding: '8px 12px',
   border: '1px solid rgba(255, 204, 102, 0.78)',
   borderRadius: 8,
   background: 'rgba(12, 9, 8, 0.94)',
-  color: '#ffcc66',
   fontFamily: 'Georgia, serif',
-  fontSize: '0.78rem',
-  lineHeight: 1.25,
-  textAlign: 'center',
   textShadow: '0 2px 5px rgba(0, 0, 0, 0.9)',
   boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   pointerEvents: 'none',
-  whiteSpace: 'pre-line',
   transform: 'translate(-50%, calc(-100% - 12px))',
+};
+
+const rewardTooltipTitleStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '0.82rem',
+  lineHeight: 1.2,
+  textAlign: 'center',
+};
+
+const rewardTooltipMetaStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 220, 150, 0.92)',
+  fontSize: '0.74rem',
+  lineHeight: 1.2,
+  textAlign: 'center',
+};
+
+const rewardTooltipTextStyle: CSSProperties = {
+  margin: '2px 0 0',
+  paddingTop: 4,
+  borderTop: '1px solid rgba(255, 204, 102, 0.22)',
+  color: 'rgba(247, 239, 224, 0.9)',
+  fontSize: '0.72rem',
+  lineHeight: 1.35,
+  textAlign: 'left',
 };
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
@@ -490,8 +517,12 @@ export function ResultBlock({
       ? `Used (−${usedSolutionCost})`
       : `${sign}${change.quantity}`;
 
+    const description = change.solution.mSolutionText?.trim();
+
     setItemTooltip({
-      text: `${change.solution.mSolutionName}\n${quantityLabel}`,
+      name: change.solution.mSolutionName,
+      quantityLabel,
+      description: description || undefined,
       x,
       y,
     });
@@ -698,13 +729,18 @@ export function ResultBlock({
       ) : null}
       {itemTooltip ? (
         <div
+          role="tooltip"
           style={{
             ...rewardTooltipStyle,
             left: itemTooltip.x,
             top: itemTooltip.y,
           }}
         >
-          {itemTooltip.text}
+          <p style={rewardTooltipTitleStyle}>{itemTooltip.name}</p>
+          <p style={rewardTooltipMetaStyle}>{itemTooltip.quantityLabel}</p>
+          {itemTooltip.description ? (
+            <p style={rewardTooltipTextStyle}>{itemTooltip.description}</p>
+          ) : null}
         </div>
       ) : null}
     </div>

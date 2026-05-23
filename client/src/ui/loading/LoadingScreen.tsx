@@ -3,6 +3,7 @@ import {
   fadeStyle,
   waitForFade,
 } from '../transitions/fade.js';
+import { resolveLoadingLogoPath } from './backgroundResolver.js';
 import {
   getLoadingStateView,
   runLoadingBootstrap,
@@ -12,8 +13,10 @@ import {
   type LoadingStateView,
 } from './loadingStateMachine.js';
 
-const LOGO_ASSET_PATH = '/UI/01_WelcomeScreen/LogoWinter2.svg';
-const LOADING_WHEEL_ASSET_PATH = '/UI/01_WelcomeScreen/LoadingWheel.webp';
+const LOGO_ENTER_MS = 1100;
+const LOGO_SWAY_MS = 5600;
+/** Start sway before enter finishes so the motion blends together. */
+const LOGO_SWAY_DELAY_MS = 720;
 
 export interface LoadingScreenProps<TSession = unknown, TPlayer = unknown, TAvatar = unknown, TEncounter = unknown> {
   hooks?: LoadingBootstrapHooks<TSession, TPlayer, TAvatar, TEncounter>;
@@ -37,26 +40,15 @@ const screenStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
-const logoStyle: CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  zIndex: 2,
-  width: 'min(77.5vw, 525px)',
-  maxHeight: '22.5vh',
-  transform: 'translate(-50%, -50%)',
-  objectFit: 'contain',
-  pointerEvents: 'none',
-};
-
-const wheelContainerStyle: CSSProperties = {
+const statusContainerStyle: CSSProperties = {
   position: 'fixed',
   left: '50%',
   bottom: 'max(32px, calc(env(safe-area-inset-bottom) + 28px))',
   zIndex: 3,
   display: 'grid',
   justifyItems: 'center',
-  gap: 12,
+  gap: 8,
+  width: 'min(92vw, 520px)',
   transform: 'translateX(-50%)',
   pointerEvents: 'none',
 };
@@ -71,18 +63,40 @@ const statusTextStyle: CSSProperties = {
   textTransform: 'uppercase',
 };
 
-function wheelStyle(view: LoadingStateView): CSSProperties {
-  const isLoading = view.wheelDurationSeconds !== null;
+const logoStageStyle: CSSProperties = {
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  zIndex: 2,
+  width: 'min(155vw, 1050px)',
+  maxHeight: '45vh',
+  transform: 'translate(-50%, -50%)',
+  pointerEvents: 'none',
+};
+
+const logoImageStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  maxHeight: '45vh',
+  objectFit: 'contain',
+  opacity: 0,
+  willChange: 'transform, opacity',
+};
+
+function logoStageAnimationStyle(swaying: boolean): CSSProperties {
+  if (!swaying) {
+    return {};
+  }
 
   return {
-    width: 'clamp(72px, 16vw, 132px)',
-    height: 'clamp(72px, 16vw, 132px)',
-    objectFit: 'contain',
-    animationName: isLoading ? 'morkahja-loading-wheel-spin' : 'none',
-    animationDuration: isLoading ? `${view.wheelDurationSeconds}s` : undefined,
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
-    filter: 'drop-shadow(0 0 14px rgba(244, 232, 190, 0.42))',
+    animation: `morkahja-loading-logo-sway ${LOGO_SWAY_MS}ms cubic-bezier(0.45, 0.05, 0.55, 0.95) ${LOGO_SWAY_DELAY_MS}ms infinite`,
+    willChange: 'transform',
+  };
+}
+
+function logoEnterAnimationStyle(): CSSProperties {
+  return {
+    animation: `morkahja-loading-logo-enter ${LOGO_ENTER_MS}ms cubic-bezier(0.22, 1, 0.36, 1) forwards`,
   };
 }
 
@@ -95,8 +109,10 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
 }: LoadingScreenProps<TSession, TPlayer, TAvatar, TEncounter>) {
   const [view, setView] = useState<LoadingStateView>(getLoadingStateView('INIT'));
   const [foregroundVisible, setForegroundVisible] = useState(false);
-  const [wheelAssetAvailable, setWheelAssetAvailable] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const logoPath = useMemo(() => resolveLoadingLogoPath(), []);
+  const logoSwaying = !errorMessage && view.state !== 'READY';
 
   const foregroundStyle = useMemo<CSSProperties>(
     () => ({
@@ -166,58 +182,79 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
     >
       <style>
         {`
-          @keyframes morkahja-loading-wheel-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+          @keyframes morkahja-loading-logo-enter {
+            from {
+              opacity: 0;
+              transform: translateY(-18vh);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          @keyframes morkahja-loading-logo-sway {
+            0%,
+            100% {
+              transform: translate(-50%, -50%) rotate(0deg);
+            }
+            12% {
+              transform: translate(-50%, calc(-50% - 2px)) rotate(-0.3deg);
+            }
+            32% {
+              transform: translate(-50%, calc(-50% - 4px)) rotate(-0.55deg);
+            }
+            50% {
+              transform: translate(-50%, calc(-50% + 4px)) rotate(0.55deg);
+            }
+            68% {
+              transform: translate(-50%, calc(-50% - 4px)) rotate(-0.55deg);
+            }
+            88% {
+              transform: translate(-50%, calc(-50% - 2px)) rotate(-0.3deg);
+            }
           }
         `}
       </style>
 
-      <img alt="Morkahja" draggable={false} src={LOGO_ASSET_PATH} style={logoStyle} />
+      <div
+        style={{
+          ...logoStageStyle,
+          ...logoStageAnimationStyle(logoSwaying),
+        }}
+      >
+        <img
+          alt="Morkahja"
+          draggable={false}
+          src={logoPath}
+          style={{
+            ...logoImageStyle,
+            ...logoEnterAnimationStyle(),
+          }}
+        />
+      </div>
 
-      <section aria-live="polite" style={wheelContainerStyle}>
-        {wheelAssetAvailable ? (
-          <img
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            onError={() => {
-              setWheelAssetAvailable(false);
-            }}
-            src={LOADING_WHEEL_ASSET_PATH}
-            style={wheelStyle(view)}
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            style={{
-              ...wheelStyle(view),
-              border: '3px solid rgba(245, 241, 232, 0.2)',
-              borderTopColor: 'rgba(245, 241, 232, 0.92)',
-              borderRadius: '50%',
-            }}
-          />
-        )}
-        {showStatusText ? (
-          <p style={statusTextStyle}>
-            {errorMessage ? 'Connection unavailable' : view.label}
-          </p>
-        ) : null}
-        {errorMessage ? (
-          <p
-            style={{
-              ...statusTextStyle,
-              maxWidth: 'min(78vw, 520px)',
-              fontSize: 'clamp(0.72rem, 1.7vw, 0.9rem)',
-              letterSpacing: '0.04em',
-              opacity: 0.76,
-              textTransform: 'none',
-            }}
-          >
-            {errorMessage}
-          </p>
-        ) : null}
-      </section>
+      {showStatusText || errorMessage ? (
+        <section aria-live="polite" style={statusContainerStyle}>
+          {showStatusText ? (
+            <p style={statusTextStyle}>
+              {errorMessage ? 'Connection unavailable' : view.label}
+            </p>
+          ) : null}
+          {errorMessage ? (
+            <p
+              style={{
+                ...statusTextStyle,
+                fontSize: 'clamp(0.72rem, 1.7vw, 0.9rem)',
+                letterSpacing: '0.04em',
+                opacity: 0.76,
+                textTransform: 'none',
+              }}
+            >
+              {errorMessage}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
     </main>
   );
 }

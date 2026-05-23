@@ -164,7 +164,8 @@ export async function findPlayerByNameOrId<T>(
 
   const result = await pool.query<{ id: string; data: T }>(
     `SELECT id, data FROM players
-     WHERE id = $1 OR lower(data->>'playerName') = lower($2)
+     WHERE lower(data->>'playerName') = lower($1) OR id = $2
+     ORDER BY CASE WHEN lower(data->>'playerName') = lower($1) THEN 0 ELSE 1 END
      LIMIT 1`,
     [trimmed, trimmed],
   );

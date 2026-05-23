@@ -43,13 +43,11 @@ import {
   savePlayerAvatar,
   selectPlayerAvatar,
 } from './services/playerService.js';
+import { loadAllowedClientOrigins } from './config/corsOrigins.js';
 
 const app = express();
-const PORT = 3000;
-const CLIENT_ORIGINS = new Set([
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-]);
+const PORT = Number(process.env.PORT) || 3000;
+const CLIENT_ORIGINS = loadAllowedClientOrigins();
 
 loadStaticGameEnvironment();
 
@@ -351,6 +349,9 @@ try {
 
   app.listen(PORT, () => {
     console.log(`Morkahja server running on port ${PORT}`);
+    console.log(
+      `CORS allowed origins: ${[...CLIENT_ORIGINS].join(', ') || '(none — set CLIENT_ORIGINS)'}`,
+    );
   });
 } catch (error) {
   console.error('PostgreSQL startup validation failed');

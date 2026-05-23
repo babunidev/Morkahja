@@ -427,6 +427,7 @@ export function Dashboard({
                     ? 'Close avatar selection'
                     : 'Play'
               }
+              className="morkahja-play-button"
               disabled={!clickable || navOpen || avatarCreationOpen || playPreparePending}
               onClick={() => {
                 if (avatarSlotsVisible) {
@@ -445,28 +446,30 @@ export function Dashboard({
               }}
               type="button"
             >
-              <img
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                src={PLAY_BUTTON_ASSET}
-                style={{
-                  ...imageStyle,
-                  opacity: playPreparePending ? 0.35 : 1,
-                  animation: playPreparePending
-                    ? undefined
-                    : pressAnimation(isNavButtonPressed('Play')),
-                }}
-              />
-              {playPreparePending ? (
+              <span className="morkahja-play-button-visual">
                 <img
                   alt=""
                   aria-hidden="true"
                   draggable={false}
-                  src={PLAY_PREPARE_WHEEL_ASSET}
-                  style={playPrepareWheelStyle}
+                  src={PLAY_BUTTON_ASSET}
+                  style={{
+                    ...imageStyle,
+                    opacity: playPreparePending ? 0.35 : 1,
+                    animation: playPreparePending
+                      ? undefined
+                      : pressAnimation(isNavButtonPressed('Play')),
+                  }}
                 />
-              ) : null}
+                {playPreparePending ? (
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    src={PLAY_PREPARE_WHEEL_ASSET}
+                    style={playPrepareWheelStyle}
+                  />
+                ) : null}
+              </span>
             </button>
           </div>
         ) : null}

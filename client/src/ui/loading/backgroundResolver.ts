@@ -8,6 +8,17 @@ export interface LoadingBackground {
 }
 
 const BACKGROUND_ROOT = '/UI/01_WelcomeScreen/BackgroundPaintings';
+const LOADING_LOGO_ROOT = '/UI/01_WelcomeScreen';
+
+export function resolveLoadingLogoPath(now = new Date()): string {
+  const season = resolveSeason(now);
+
+  if (season === 'winter' || season === 'spring') {
+    return `${LOADING_LOGO_ROOT}/logo_winter.webp`;
+  }
+
+  return `${LOADING_LOGO_ROOT}/logo_summer.webp`;
+}
 
 export function resolveSeason(date: Date): LoadingSeason {
   const month = date.getMonth();

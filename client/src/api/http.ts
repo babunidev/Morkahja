@@ -21,8 +21,13 @@ import type {
   StaticGameDataStatus,
 } from '@shared/contracts';
 
-/** In dev, use same origin so Vite proxies API routes to the backend on :3000. */
-export const API_BASE_URL = import.meta.env.DEV ? '' : 'http://localhost:3000';
+/**
+ * API base URL. Defaults to same-origin (empty string):
+ * - dev: Vite proxies /session, /player, … to the backend on :3000
+ * - prod: nginx proxies those paths to Node on the same host
+ * Override at build time: VITE_API_BASE_URL=https://api.example.com
+ */
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export type AvatarInventory = AvatarInventoryDto;
 export type EncounterSnapshot = EncounterSnapshotDto;

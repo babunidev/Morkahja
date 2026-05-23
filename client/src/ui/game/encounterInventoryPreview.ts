@@ -8,6 +8,7 @@ interface SolutionRecord {
   mSolutionID: number;
   mSolutionInventoryType: number;
   mSolutionName: string;
+  mSolutionText?: string;
   mSolutionUses: number;
 }
 
