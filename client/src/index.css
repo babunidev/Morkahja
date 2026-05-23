@@ -16,6 +16,16 @@ body,
   height: 100%;
   min-height: 100vh;
   margin: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body {
@@ -23,6 +33,13 @@ body {
 }
 
 img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+[data-morkahja-protected-background],
+[data-morkahja-protected-surface] {
+  -webkit-user-select: none;
   user-select: none;
 }
 

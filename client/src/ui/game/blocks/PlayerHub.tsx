@@ -3,6 +3,7 @@ import type { PersistedAvatar } from '../../../api/http.js';
 import AvatarPanel from '../../avatar/AvatarPanel.js';
 import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
+import { PROTECTED_SURFACE_ATTR } from '../../protectedImage.js';
 import EncounterFooter from './EncounterFooter.js';
 
 const GAME_UI_ROOT = '/UI/09_GAME';
@@ -150,7 +151,11 @@ function PartySlotPlaceholder({
   label: string;
 }) {
   return (
-    <div aria-label={`${label} slot empty`} style={partySlotStyle}>
+    <div
+      aria-label={`${label} slot empty`}
+      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+      style={partySlotStyle}
+    >
       <span
         aria-hidden="true"
         className="morkahja-party-slot-dot"
@@ -195,12 +200,16 @@ export function PlayerHub({
 
   return (
     <section aria-label="Player Hub" style={hubStyle}>
-      <div style={footerLayerStyle}>
+      <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={footerLayerStyle}>
         <EncounterFooter />
       </div>
       <div style={hubContentStyle}>
-        <div aria-label="Party avatars" style={partyStripStyle}>
-          <div aria-label="Player 1 main slot" style={mainPartySlotStyle}>
+        <div aria-label="Party avatars" {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={partyStripStyle}>
+          <div
+            aria-label="Player 1 main slot"
+            {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+            style={mainPartySlotStyle}
+          >
             <div style={mainAvatarAnchorStyle}>
               <AvatarPanel
                 avatar={avatar}
@@ -215,7 +224,7 @@ export function PlayerHub({
           <PartySlotPlaceholder animationDelayMs={840} label="Player 3" />
         </div>
       </div>
-      <div style={footerContentStyle}>
+      <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={footerContentStyle}>
         <div aria-label="Footer actions" style={footerButtonRowStyle}>
           {FOOTER_BUTTONS.map((button, index) => (
             <button

@@ -1,4 +1,9 @@
 import type { CSSProperties } from 'react';
+import {
+  PROTECTED_BACKGROUND_ATTR,
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../../protectedImage.js';
 
 const FOOTER_BACKGROUND = '/UI/09_GAME/im_foot_background.webp';
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
@@ -14,7 +19,7 @@ const footerStyle: CSSProperties = {
   backgroundRepeat: 'repeat-x',
   backgroundSize: 'auto 100%',
   zIndex: 1,
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const topSeamStyle: CSSProperties = {
@@ -31,11 +36,15 @@ const topSeamStyle: CSSProperties = {
 
 export function EncounterFooter() {
   return (
-    <div aria-hidden="true" style={footerStyle}>
+    <div
+      aria-hidden="true"
+      {...{ [PROTECTED_BACKGROUND_ATTR]: '', [PROTECTED_SURFACE_ATTR]: '' }}
+      style={footerStyle}
+    >
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={FRAME_MASK}
         style={topSeamStyle}
       />

@@ -3,6 +3,7 @@ import {
   resolveLoadingBackground,
   type LoadingBackground,
 } from '../loading/backgroundResolver.js';
+import { PROTECTED_BACKGROUND_ATTR } from '../protectedImage.js';
 import {
   BackgroundContext,
   useSessionBackground,
@@ -33,7 +34,7 @@ export function PersistentBackground() {
       position: 'fixed',
       inset: 0,
       zIndex: 0,
-      pointerEvents: 'none',
+      pointerEvents: 'auto',
       backgroundColor: '#090b12',
       backgroundImage: [
         'linear-gradient(180deg, rgba(7, 8, 12, 0.08), rgba(7, 8, 12, 0.58))',
@@ -49,6 +50,7 @@ export function PersistentBackground() {
   return (
     <div
       aria-hidden="true"
+      {...{ [PROTECTED_BACKGROUND_ATTR]: '' }}
       data-background-season={background.season}
       data-background-time-of-day={background.timeOfDay}
       style={style}

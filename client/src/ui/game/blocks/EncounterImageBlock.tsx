@@ -36,6 +36,7 @@ const imageStyle: CSSProperties = {
   objectFit: 'cover',
   zIndex: 1,
   transition: encounterFadeTransition,
+  userSelect: 'none',
 };
 
 const previousImageStyle: CSSProperties = {

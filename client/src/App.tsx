@@ -30,6 +30,7 @@ import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
 import { useMobileFullscreen } from './ui/layout/useMobileFullscreen.js';
+import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
@@ -108,6 +109,7 @@ export default function App() {
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
   useMobileFullscreen();
+  useProtectedImages();
 
   useEffect(() => {
     seedDefaultAudioVolumesIfUnset();
