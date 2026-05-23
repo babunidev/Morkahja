@@ -20,6 +20,7 @@ import FriendsOverlay from './FriendsOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
+import { useTooltipRevealGroup } from '../hooks/useTooltipReveal.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 
 const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
@@ -262,7 +263,7 @@ export function Dashboard({
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
-  const [hoveredNavId, setHoveredNavId] = useState<string | null>(null);
+  const { bind: bindNavTooltip, isVisible: isNavTooltipVisible } = useTooltipRevealGroup();
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
   const playerName = session?.playerName?.trim() ?? '';
@@ -381,6 +382,8 @@ export function Dashboard({
       setClickable(true);
     }, FADE_DURATION_MS);
   }
+
+  const centerNavTooltipHandlers = bindNavTooltip(NAV_CENTER_HOVER_ID, clickable);
 
   return (
     <main
@@ -528,7 +531,9 @@ export function Dashboard({
               !achievementsOpen &&
               navOpen;
 
-            const showTooltip = hoveredNavId === button.label && navOpen && clickable;
+            const navTooltipEnabled = navOpen && clickable;
+            const navTooltipHandlers = bindNavTooltip(button.label, navTooltipEnabled);
+            const showTooltip = isNavTooltipVisible(button.label, navTooltipEnabled);
 
             return (
             <button
@@ -542,23 +547,9 @@ export function Dashboard({
               className="morkahja-nav-radial-button"
               disabled={!clickable || !navOpen}
               key={button.label}
-              onBlur={() => {
-                setHoveredNavId((current) => (current === button.label ? null : current));
-              }}
-              onFocus={() => {
-                if (navOpen && clickable) {
-                  setHoveredNavId(button.label);
-                }
-              }}
-              onMouseEnter={() => {
-                if (navOpen && clickable) {
-                  setHoveredNavId(button.label);
-                }
-              }}
-              onMouseLeave={() => {
-                setHoveredNavId((current) => (current === button.label ? null : current));
-              }}
-              onPointerDown={() => {
+              {...navTooltipHandlers}
+              onPointerDown={(event) => {
+                navTooltipHandlers.onPointerDown?.(event);
                 pulseNavButton(button.label);
               }}
               onClick={() => {
@@ -640,23 +631,9 @@ export function Dashboard({
             }
             className="morkahja-nav-center-button"
             disabled={!clickable}
-            onBlur={() => {
-              setHoveredNavId((current) => (current === NAV_CENTER_HOVER_ID ? null : current));
-            }}
-            onFocus={() => {
-              if (clickable) {
-                setHoveredNavId(NAV_CENTER_HOVER_ID);
-              }
-            }}
-            onMouseEnter={() => {
-              if (clickable) {
-                setHoveredNavId(NAV_CENTER_HOVER_ID);
-              }
-            }}
-            onMouseLeave={() => {
-              setHoveredNavId((current) => (current === NAV_CENTER_HOVER_ID ? null : current));
-            }}
-            onPointerDown={() => {
+            {...centerNavTooltipHandlers}
+            onPointerDown={(event) => {
+              centerNavTooltipHandlers.onPointerDown?.(event);
               pulseNavButton('Navigation');
             }}
             onClick={() => {
@@ -680,7 +657,7 @@ export function Dashboard({
           >
             <span
               className={`morkahja-nav-tooltip morkahja-nav-tooltip--center${
-                hoveredNavId === NAV_CENTER_HOVER_ID && clickable
+                isNavTooltipVisible(NAV_CENTER_HOVER_ID, clickable)
                   ? ' morkahja-nav-tooltip--visible'
                   : ''
               }`}

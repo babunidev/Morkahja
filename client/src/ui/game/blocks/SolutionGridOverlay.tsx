@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import solutionData from '../../../data/game/solutiondata.json';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
+import { useTooltipRevealBinding } from '../../hooks/useTooltipReveal.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 
@@ -254,6 +255,7 @@ export function SolutionGridOverlay({
 }) {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [tooltipItem, setTooltipItem] = useState<SolutionGridEntry | null>(null);
+  const bindTooltipReveal = useTooltipRevealBinding(visible);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const items = useMemo(
     () => inventoryEntries(inventory, sourceContainer, inventoryType),
@@ -273,14 +275,9 @@ export function SolutionGridOverlay({
   }, [inventory]);
 
   function handleItemClick(item: SolutionGridEntry): void {
-    if (selectedItemId === item.solutionId) {
-      setSelectedItemId(null);
-      setTooltipItem(null);
-      return;
-    }
-
-    setSelectedItemId(item.solutionId);
-    setTooltipItem(item);
+    setSelectedItemId((current) => (
+      current === item.solutionId ? null : item.solutionId
+    ));
   }
 
   return (
@@ -301,6 +298,14 @@ export function SolutionGridOverlay({
           <div style={itemGridStyle}>
             {items.map((item) => {
               const itemKey = String(item.solutionId);
+              const itemTooltipHandlers = bindTooltipReveal({
+                onShow: () => {
+                  setTooltipItem(item);
+                },
+                onHide: () => {
+                  setTooltipItem(null);
+                },
+              });
 
               return (
                 <button
@@ -310,8 +315,10 @@ export function SolutionGridOverlay({
                   onClick={() => {
                     handleItemClick(item);
                   }}
-                  onPointerDown={() => {
+                  {...itemTooltipHandlers}
+                  onPointerDown={(event) => {
                     pulse(itemKey);
+                    itemTooltipHandlers.onPointerDown?.(event);
                   }}
                   style={{
                     ...itemButtonStyle,

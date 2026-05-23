@@ -8,6 +8,10 @@ import type {
 } from '../../../api/http.js';
 import { DICE_SOUND, playSfx, SOLUTION_SOUND } from '../../sfx.js';
 import {
+  useTooltipRevealBinding,
+  type TooltipRevealCallbacks,
+} from '../../hooks/useTooltipReveal.js';
+import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   encounterActionsFadeTransition,
@@ -18,6 +22,7 @@ const DICE_BUTTON = '/UI/09_GAME/im_button_dice_a.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
 type SlotLetter = 'A' | 'B' | 'C' | 'D';
+type SolutionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -418,19 +423,25 @@ export function SolutionBlock({
   }
 
   const actionsReady = actionsInteractive && !hidden;
+  const bindTooltipReveal = useTooltipRevealBinding(actionsReady);
 
   function showActionTooltip(
     name: string,
     detail: string,
     unavailable: boolean,
-    event: { currentTarget: HTMLButtonElement },
+    event: SolutionTooltipTriggerEvent,
   ): void {
     if (!actionsReady) {
       return;
     }
 
+    const trigger = event.currentTarget;
+    if (!(trigger instanceof HTMLButtonElement)) {
+      return;
+    }
+
     const blockRect = blockRef.current?.getBoundingClientRect();
-    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const buttonRect = trigger.getBoundingClientRect();
     const x = blockRect
       ? buttonRect.left - blockRect.left + buttonRect.width / 2
       : buttonRect.width / 2;
@@ -449,7 +460,7 @@ export function SolutionBlock({
 
   function showSolutionTooltip(
     solution: VisibleSolutionSlot,
-    event: { currentTarget: HTMLButtonElement },
+    event: SolutionTooltipTriggerEvent,
   ): void {
     showActionTooltip(
       solution.name,
@@ -461,7 +472,7 @@ export function SolutionBlock({
     );
   }
 
-  function showDiceTooltip(event: { currentTarget: HTMLButtonElement }): void {
+  function showDiceTooltip(event: SolutionTooltipTriggerEvent): void {
     showActionTooltip('Dice', 'Roll for encounter outcome', false, event);
   }
 
@@ -539,12 +550,11 @@ export function SolutionBlock({
                 aria-disabled={!actionsReady}
                 aria-label="Roll dice"
                 disabled={!actionsReady}
-                onBlur={hideSolutionTooltip}
                 onClick={handleDiceClick}
-                onFocus={showDiceTooltip}
-                onPointerCancel={hideSolutionTooltip}
-                onPointerEnter={showDiceTooltip}
-                onPointerLeave={hideSolutionTooltip}
+                {...bindTooltipReveal({
+                  onShow: showDiceTooltip,
+                  onHide: hideSolutionTooltip,
+                })}
                 style={{
                   ...diceButtonStyle,
                   cursor: actionsReady ? 'pointer' : 'default',
@@ -589,15 +599,12 @@ export function SolutionBlock({
                 }
                 disabled={!actionsReady || !visibleSlot.available}
                 key={slot}
-                onBlur={hideSolutionTooltip}
-                onFocus={(event) => {
-                  showSolutionTooltip(visibleSlot, event);
-                }}
-                onPointerCancel={hideSolutionTooltip}
-                onPointerEnter={(event) => {
-                  showSolutionTooltip(visibleSlot, event);
-                }}
-                onPointerLeave={hideSolutionTooltip}
+                {...bindTooltipReveal({
+                  onShow: (event) => {
+                    showSolutionTooltip(visibleSlot, event);
+                  },
+                  onHide: hideSolutionTooltip,
+                })}
                 onClick={() => {
                   if (!actionsReady || !visibleSlot.available) {
                     return;

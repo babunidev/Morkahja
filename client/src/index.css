@@ -26,6 +26,25 @@ img {
   user-select: none;
 }
 
+button,
+[role='button'],
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(255, 204, 102, 0.82);
+  outline-offset: 2px;
+}
+
 @keyframes morkahja-nav-button-press {
   0% {
     transform: scale(1);

@@ -25,9 +25,11 @@ import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
+import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
+import { useMobileFullscreen } from './ui/layout/useMobileFullscreen.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
@@ -105,6 +107,12 @@ export default function App() {
   const [deathCreationHandoff, setDeathCreationHandoff] = useState(false);
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
+  useMobileFullscreen();
+
+  useEffect(() => {
+    seedDefaultAudioVolumesIfUnset();
+  }, []);
+
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,

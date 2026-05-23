@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { ACTIVITY_FEED_WINDOW_MS } from '../domain/events/GameEvent.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { queryActivityFeed } from '../services/gameEventService.js';
 
@@ -12,6 +13,6 @@ export async function getRecentActivityController(
   res.json({
     playerId,
     entries,
-    windowMs: 15 * 60 * 1000,
+    windowMs: ACTIVITY_FEED_WINDOW_MS,
   });
 }

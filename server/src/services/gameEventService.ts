@@ -44,11 +44,35 @@ type RecordGameEventInput = Omit<GameEvent, 'eventId' | 'timestamp'> & {
 export interface ActivityFeedEntry {
   eventId: string;
   timestamp: number;
+  authorName: string;
   message: string;
   importance: GameEventImportance;
   iconUrl?: string;
   avatarPortrait?: string;
   avatarFrame?: string;
+}
+
+function payloadString(payload: Record<string, unknown>, key: string): string | undefined {
+  const value = payload[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+async function buildPlayerNameLookup(playerIds: string[]): Promise<Map<string, string>> {
+  const uniqueIds = [...new Set(playerIds)];
+  const pairs = await Promise.all(uniqueIds.map(async (playerId) => {
+    const player = await readPlayer(playerId);
+    const name = player?.playerName?.trim();
+
+    return [playerId, name && name.length > 0 ? name : playerId] as const;
+  }));
+
+  return new Map(pairs);
+}
+
+function resolveEventAuthorName(event: GameEvent, playerNames: Map<string, string>): string {
+  return payloadString(event.payload, 'playerName')
+    ?? playerNames.get(event.playerId)
+    ?? event.playerId;
 }
 
 export interface EncounterContinuedEventContext {
@@ -395,19 +419,21 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
     limit: 50,
   });
 
-  return events
-    .filter((event) => isVisibleInScribesFeed(event, playerId))
-    .map((event) => {
-      const avatarVisual = resolveScribesAvatarVisual(event);
+  const visibleEvents = events.filter((event) => isVisibleInScribesFeed(event, playerId));
+  const playerNames = await buildPlayerNameLookup(visibleEvents.map((event) => event.playerId));
 
-      return {
-        eventId: event.eventId,
-        timestamp: event.timestamp,
-        message: renderEventMessage(event),
-        importance: event.importance,
-        iconUrl: resolveScribesIconUrl(event),
-        avatarPortrait: avatarVisual?.portrait,
-        avatarFrame: avatarVisual?.frame,
-      };
-    });
+  return visibleEvents.map((event) => {
+    const avatarVisual = resolveScribesAvatarVisual(event);
+
+    return {
+      eventId: event.eventId,
+      timestamp: event.timestamp,
+      authorName: resolveEventAuthorName(event, playerNames),
+      message: renderEventMessage(event),
+      importance: event.importance,
+      iconUrl: resolveScribesIconUrl(event),
+      avatarPortrait: avatarVisual?.portrait,
+      avatarFrame: avatarVisual?.frame,
+    };
+  });
 }

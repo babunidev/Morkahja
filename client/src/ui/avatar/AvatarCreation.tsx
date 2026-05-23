@@ -1,17 +1,16 @@
-import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import framesData from '../../data/game/frames.json';
 import portraitsData from '../../data/game/portraits.json';
 import type { PersistedAvatar } from '../../api/http.js';
 import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
+import { useTooltipRevealBinding } from '../hooks/useTooltipReveal.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
 const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
 const UI_ROOT = '/UI/02_AvatarCreation';
-const TOOLTIP_HOLD_MS = 420;
-
 const RACES = ['Grimnir', 'Verdani', 'Aevis', 'Rokur'] as const;
 const ROLES = ['Mage', 'Rogue', 'Warrior'] as const;
 const GENDERS = ['Male', 'Female'] as const;
@@ -413,8 +412,7 @@ export function AvatarCreation({
   const [raceTooltip, setRaceTooltip] = useState('');
   const [roleTooltip, setRoleTooltip] = useState('');
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
-  const tooltipTimerRef = useRef<number | null>(null);
-  const tooltipWasShownRef = useRef(false);
+  const bindTooltipReveal = useTooltipRevealBinding();
   const portrait = portraits[portraitIndex];
   const frame = frames[frameIndex];
   const race = raceFromPortrait(portrait);
@@ -459,30 +457,17 @@ export function AvatarCreation({
     setFrameIndex(randomIndex(frames.length));
   }
 
-  function clearTooltipTimer(): void {
-    if (tooltipTimerRef.current !== null) {
-      window.clearTimeout(tooltipTimerRef.current);
-      tooltipTimerRef.current = null;
-    }
+  function showRaceTooltip(description: string): void {
+    setRaceTooltip(description);
+    setRoleTooltip('');
   }
 
-  function startTooltipHold(kind: 'race' | 'role', description: string): void {
-    clearTooltipTimer();
-    tooltipWasShownRef.current = false;
-    tooltipTimerRef.current = window.setTimeout(() => {
-      tooltipWasShownRef.current = true;
-      if (kind === 'race') {
-        setRaceTooltip(description);
-        setRoleTooltip('');
-      } else {
-        setRoleTooltip(description);
-        setRaceTooltip('');
-      }
-    }, TOOLTIP_HOLD_MS);
+  function showRoleTooltip(description: string): void {
+    setRoleTooltip(description);
+    setRaceTooltip('');
   }
 
-  function endTooltipHold(): void {
-    clearTooltipTimer();
+  function hideOptionTooltips(): void {
     setRaceTooltip('');
     setRoleTooltip('');
   }
@@ -545,12 +530,12 @@ export function AvatarCreation({
               onClick={() => {
                 chooseRandomPortrait(raceOption, role, gender);
               }}
-              onPointerCancel={endTooltipHold}
-              onPointerDown={() => {
-                startTooltipHold('race', RACE_DESCRIPTIONS[raceOption]);
-              }}
-              onPointerLeave={endTooltipHold}
-              onPointerUp={endTooltipHold}
+              {...bindTooltipReveal({
+                onShow: () => {
+                  showRaceTooltip(RACE_DESCRIPTIONS[raceOption]);
+                },
+                onHide: hideOptionTooltips,
+              })}
               style={{
                 ...optionButtonStyle,
                 ...(race === raceOption ? selectedOptionStyle : {}),
@@ -571,12 +556,12 @@ export function AvatarCreation({
               onClick={() => {
                 chooseRandomPortrait(race, roleOption, gender);
               }}
-              onPointerCancel={endTooltipHold}
-              onPointerDown={() => {
-                startTooltipHold('role', ROLE_DESCRIPTIONS[roleOption]);
-              }}
-              onPointerLeave={endTooltipHold}
-              onPointerUp={endTooltipHold}
+              {...bindTooltipReveal({
+                onShow: () => {
+                  showRoleTooltip(ROLE_DESCRIPTIONS[roleOption]);
+                },
+                onHide: hideOptionTooltips,
+              })}
               style={{
                 ...optionButtonStyle,
                 ...(role === roleOption ? selectedOptionStyle : {}),

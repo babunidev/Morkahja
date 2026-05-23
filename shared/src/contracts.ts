@@ -154,6 +154,8 @@ export type ActivityFeedImportance = 'low' | 'medium' | 'high' | 'legendary';
 export interface ActivityFeedEntryDto {
   eventId: string;
   timestamp: number;
+  /** Display name of the player who triggered this scribe entry. */
+  authorName: string;
   message: string;
   importance: ActivityFeedImportance;
   iconUrl?: string;

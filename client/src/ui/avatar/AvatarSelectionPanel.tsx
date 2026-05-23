@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import {
   createAvatar,
   fetchAvatars,
@@ -26,6 +33,7 @@ import {
 } from '../transitions/avatarEnterTransition.js';
 import { FADE_DURATION_MS, waitForFade } from '../transitions/fade.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { useTooltipReveal } from '../hooks/useTooltipReveal.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
 import AvatarCreation from './AvatarCreation.js';
@@ -130,30 +138,16 @@ function AvatarSlot({
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const pressKey = `avatar-slot-${index}`;
-  const [hovered, setHovered] = useState(false);
-  const showTooltip = hovered && clickable && !hiddenDuringEnter;
+  const tooltipEnabled = clickable && !hiddenDuringEnter;
+  const { visible: showTooltip, handlers: tooltipHandlers } = useTooltipReveal(tooltipEnabled);
 
   const slotButtonProps = {
     className: 'morkahja-avatar-slot-button',
     disabled: !clickable,
-    onBlur: () => {
-      setHovered(false);
-    },
-    onFocus: () => {
-      if (clickable && !hiddenDuringEnter) {
-        setHovered(true);
-      }
-    },
-    onMouseEnter: () => {
-      if (clickable && !hiddenDuringEnter) {
-        setHovered(true);
-      }
-    },
-    onMouseLeave: () => {
-      setHovered(false);
-    },
-    onPointerDown: () => {
+    ...tooltipHandlers,
+    onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
       pulse(pressKey);
+      tooltipHandlers.onPointerDown?.(event);
     },
     style: {
       ...slotButtonStyle,

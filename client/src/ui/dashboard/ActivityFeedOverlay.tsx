@@ -131,6 +131,37 @@ const entryTextStyle: CSSProperties = {
   minWidth: 0,
 };
 
+const entryMetaRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  justifyContent: 'space-between',
+  gap: 12,
+  marginBottom: 6,
+};
+
+const authorStyle: CSSProperties = {
+  margin: 0,
+  flex: '1 1 auto',
+  minWidth: 0,
+  color: '#ffcc66',
+  fontSize: '1.02rem',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  letterSpacing: '0.04em',
+};
+
+const entryMetaRightStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  flexShrink: 0,
+};
+
+const timeStyle: CSSProperties = {
+  color: 'rgba(247, 239, 224, 0.72)',
+  fontSize: '0.78rem',
+  whiteSpace: 'nowrap',
+};
+
 const entryIconStyle: CSSProperties = {
   width: 48,
   height: 48,
@@ -310,9 +341,12 @@ export function ActivityFeedOverlay({
 
               return (
               <li key={entry.eventId} style={entryStyle(entry.importance, read)}>
-                <div style={{ opacity: 0.72, fontSize: '0.78rem', marginBottom: 4 }}>
-                  {formatRelativeTime(entry.timestamp)}
-                  {!read ? <span style={unreadBadgeStyle}>New</span> : null}
+                <div style={entryMetaRowStyle}>
+                  <span style={authorStyle}>{entry.authorName || 'Unknown'}</span>
+                  <span style={entryMetaRightStyle}>
+                    <span style={timeStyle}>{formatRelativeTime(entry.timestamp)}</span>
+                    {!read ? <span style={unreadBadgeStyle}>New</span> : null}
+                  </span>
                 </div>
                 <div style={entryBodyStyle}>
                   <div style={entryTextStyle}>{entry.message}</div>

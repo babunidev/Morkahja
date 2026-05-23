@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { bootstrapSession, type ClientSession } from '../../api/http.js';
+import { seedDefaultAudioVolumesIfUnset } from '../audioVolume.js';
 import {
   deviceKeypair,
   downloadRecoveryKey,
@@ -155,6 +156,7 @@ export function OnboardingGateway({
       });
 
       downloadRecoveryKey(identity);
+      seedDefaultAudioVolumesIfUnset();
       setMessage('Losing morkahja.key means permanent loss of access.');
       onSessionReady(session);
     } catch (error) {
@@ -184,6 +186,7 @@ export function OnboardingGateway({
         signedIdentityChallenge: { challenge, signature },
       });
 
+      seedDefaultAudioVolumesIfUnset();
       onSessionReady(session);
     } catch (error) {
       console.error('Restore journey failed', error);
