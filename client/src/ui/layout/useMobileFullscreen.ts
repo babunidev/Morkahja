@@ -5,8 +5,18 @@ type FullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
+function isInstalledStandalone(): boolean {
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    return true;
+  }
+  if (window.matchMedia('(display-mode: fullscreen)').matches) {
+    return true;
+  }
+  return (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+}
+
 function requestAppFullscreen(): Promise<void> {
-  if (document.fullscreenElement) {
+  if (document.fullscreenElement || isInstalledStandalone()) {
     return Promise.resolve();
   }
 
@@ -20,28 +30,31 @@ function requestAppFullscreen(): Promise<void> {
   return Promise.resolve(request()).catch(() => undefined);
 }
 
-/** Request browser fullscreen on mobile portrait (retries on first user gesture). */
+/** Request browser fullscreen on mobile portrait (retries on user gestures). */
 export function useMobileFullscreen(): void {
   const { mode } = useLayoutMode();
   const mobilePortrait = mode === 'mobile-portrait';
 
   useEffect(() => {
-    if (!mobilePortrait) {
+    if (!mobilePortrait || isInstalledStandalone()) {
       return undefined;
     }
 
     void requestAppFullscreen();
 
-    function onFirstGesture(): void {
+    function onGesture(): void {
+      if (document.fullscreenElement) {
+        return;
+      }
       void requestAppFullscreen();
     }
 
-    document.addEventListener('pointerdown', onFirstGesture, { once: true });
-    document.addEventListener('touchstart', onFirstGesture, { once: true, passive: true });
+    document.addEventListener('pointerdown', onGesture);
+    document.addEventListener('touchstart', onGesture, { passive: true });
 
     return () => {
-      document.removeEventListener('pointerdown', onFirstGesture);
-      document.removeEventListener('touchstart', onFirstGesture);
+      document.removeEventListener('pointerdown', onGesture);
+      document.removeEventListener('touchstart', onGesture);
     };
   }, [mobilePortrait]);
 }

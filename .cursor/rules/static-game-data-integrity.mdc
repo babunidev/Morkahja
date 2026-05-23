@@ -1,0 +1,15 @@
+---
+description: Validate and load static frame and portrait game data
+globs: src/services/gameData.ts,src/server.ts,game/*.json
+alwaysApply: false
+---
+
+# Static Game Data Integrity
+
+When working with static game data, environment bootstrap, or `game/*.json`:
+
+- Check `game/frames.json` and `game/portraits.json` parse as valid JSON.
+- Fix wrapper issues before continuing, such as Markdown fences, missing outer braces, or trailing commas.
+- Preserve the indexed-array convention where index `0` is `null`.
+- Ensure both files are loaded through `src/services/gameData.ts` and included in environment bootstrap.
+- Do not silently skip frames or portraits when adding new static game-data loaders.

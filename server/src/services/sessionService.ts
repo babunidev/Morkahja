@@ -11,6 +11,7 @@ import {
   setPlayer,
   setSession,
 } from '../db/postgresDocumentStore.js';
+import { assertPlayerCanPlay } from './adminPlayerService.js';
 import type { PlayerDocument } from '../types/player.js';
 import type { DeviceDocument, SessionDocument, SignedIdentityChallenge } from '../types/session.js';
 
@@ -150,6 +151,13 @@ export async function bootstrapSession(
   const now = Date.now();
   const device = await resolveDevice(input.devicePublicKey, now);
   const player = await resolvePlayer(input, now);
+
+  try {
+    assertPlayerCanPlay(player);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'SESSION_INVALID';
+    throw new SessionError(message, 403);
+  }
   const sessionId = randomUUID();
   const accessToken = randomBytes(32).toString('base64url');
   const expiresAt = now + SESSION_DURATION_MS;
@@ -202,6 +210,13 @@ export async function authenticateAccessToken(accessToken: string): Promise<{
 
   if (!player || player.activeSessionId !== session.sessionId) {
     throw new SessionError();
+  }
+
+  try {
+    assertPlayerCanPlay(player);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'SESSION_INVALID';
+    throw new SessionError(message, 403);
   }
 
   return {

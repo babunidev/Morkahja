@@ -1,7 +1,6 @@
-﻿import express from 'express';
+import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 
-import { encounterControllerErrorStatus } from './controllers/encounterController.js';
 import { validatePostgresConnection } from './db/postgresDocumentStore.js';
 import { authMiddleware, requireAuth } from './middleware/authMiddleware.js';
 import { getRecentActivityController } from './controllers/activityController.js';
@@ -17,6 +16,7 @@ import {
   listPlayerFriendsController,
 } from './controllers/friendController.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
+import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
@@ -24,7 +24,6 @@ import {
   bootstrapSession,
   heartbeatSession,
   logoutSession,
-  SessionError,
 } from './services/sessionService.js';
 import {
   getEncounters,
@@ -43,6 +42,7 @@ import {
   selectPlayerAvatar,
 } from './services/playerService.js';
 import { loadAllowedClientOrigins } from './config/corsOrigins.js';
+import { logAndFormatRequestError } from './http/errorResponse.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -73,6 +73,9 @@ app.use(express.json());
 // Future runtime hooks:
 // app.use(requestLogger);
 // app.use(multiplayerSessionHooks);
+
+/** Uses existing nginx proxy for `/game-data` — no extra nginx rules needed */
+app.use('/game-data/admin', adminRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
@@ -256,7 +259,7 @@ app.post('/avatar', async (req: Request, res: Response) => {
     res.status(201).json({ playerId, avatar });
   } catch (error) {
     if (error instanceof AvatarLimitReachedError) {
-      res.status(409).json({ error: 'AVATAR_LIMIT_REACHED', message: error.message });
+      res.status(409).json({ error: 'AVATAR_LIMIT_REACHED' });
       return;
     }
 
@@ -310,13 +313,13 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
 });
 
 app.use(
-  (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const status = error instanceof SessionError
-      ? error.statusCode
-      : encounterControllerErrorStatus(error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
+  (error: unknown, req: Request, res: Response, _next: NextFunction) => {
+    if (res.headersSent) {
+      return;
+    }
 
-    res.status(status).json({ error: message });
+    const { status, body } = logAndFormatRequestError(error, req);
+    res.status(status).json(body);
   },
 );
 

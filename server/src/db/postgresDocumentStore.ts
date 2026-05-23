@@ -118,6 +118,14 @@ export async function getPlayer<T>(playerId: string): Promise<T | null> {
   return one(pool.query('SELECT data FROM players WHERE id = $1', [playerId]));
 }
 
+export async function listAllPlayers<T>(): Promise<Array<{ id: string; data: T }>> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string; data: T }>(
+    'SELECT id, data FROM players ORDER BY (data->>\'lastPlayedAt\')::bigint DESC NULLS LAST',
+  );
+  return result.rows;
+}
+
 export async function setPlayer<T extends JsonObject>(
   playerId: string,
   data: T,
@@ -241,6 +249,48 @@ export async function listAvatars<T>(playerId: string): Promise<Array<{ id: stri
     [playerId],
   );
   return result.rows;
+}
+
+/** Active avatars for many players (one row per player when activeAvatarId is set). */
+export async function listActiveAvatarsForPlayers<T>(
+  playerIds: string[],
+): Promise<Map<string, { id: string; data: T }>> {
+  await ensureSchema();
+  if (playerIds.length === 0) {
+    return new Map();
+  }
+
+  const result = await pool.query<{ player_id: string; id: string; data: T }>(
+    `SELECT a.player_id, a.id, a.data
+     FROM avatars a
+     INNER JOIN players p ON p.id = a.player_id
+       AND COALESCE(p.data->>'activeAvatarId', '') = a.id
+     WHERE a.player_id = ANY($1::text[])`,
+    [playerIds],
+  );
+
+  return new Map(
+    result.rows.map((row) => [row.player_id, { id: row.id, data: row.data }]),
+  );
+}
+
+export async function countAvatarsByPlayerIds(
+  playerIds: string[],
+): Promise<Map<string, number>> {
+  await ensureSchema();
+  if (playerIds.length === 0) {
+    return new Map();
+  }
+
+  const result = await pool.query<{ player_id: string; count: string }>(
+    `SELECT player_id, COUNT(*)::int AS count
+     FROM avatars
+     WHERE player_id = ANY($1::text[])
+     GROUP BY player_id`,
+    [playerIds],
+  );
+
+  return new Map(result.rows.map((row) => [row.player_id, Number(row.count)]));
 }
 
 export async function setAvatar<T extends JsonObject>(

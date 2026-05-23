@@ -1,0 +1,19 @@
+{
+  "name": "Morkahja",
+  "short_name": "Morkahja",
+  "description": "Morkahja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/iconforplaystoreFG.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

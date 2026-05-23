@@ -1,9 +1,17 @@
+export interface PlayerModeration {
+  banned?: boolean;
+  banReason?: string;
+  /** Epoch ms — player cannot play until this time */
+  timeoutUntil?: number | null;
+}
+
 export interface PlayerDocument {
   playerId: string;
   playerName: string;
   identityPublicKey: string;
   activeSessionId: string | null;
   activeSessionExpiresAt: number | null;
+  moderation?: PlayerModeration;
   createdAt: number;
   lastPlayedAt: number;
   /** Account-wide expansion ids unlocked for all avatars. */
