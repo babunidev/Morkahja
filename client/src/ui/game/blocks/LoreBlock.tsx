@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  preventImageContextMenu,
+  PROTECTED_BACKGROUND_ATTR,
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../../protectedImage.js';
 import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
 
 const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
@@ -42,7 +48,7 @@ const loreBackgroundLayerStyle: CSSProperties = {
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   opacity: LORE_BACKGROUND_OPACITY,
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const blockBottomSeamStyle: CSSProperties = {
@@ -54,7 +60,7 @@ const blockBottomSeamStyle: CSSProperties = {
   objectFit: 'cover',
   transform: 'translate(-50%, 7px)',
   zIndex: 20,
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const textWrapStyle: CSSProperties = {
@@ -72,11 +78,13 @@ const textWrapStyle: CSSProperties = {
   lineHeight: 1.42,
   textAlign: 'center',
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.92)',
+  userSelect: 'none',
 };
 
 const textStyle: CSSProperties = {
   margin: 0,
   whiteSpace: 'pre-wrap',
+  userSelect: 'none',
 };
 
 const loreGemButtonStyle: CSSProperties = {
@@ -224,6 +232,8 @@ export function LoreBlock({
     <aside
       aria-hidden={!visible}
       aria-label="Lore"
+      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+      onContextMenu={preventImageContextMenu}
       style={{
         ...loreBlockStyle,
         ...(visible ? loreBlockVisibleStyle : {}),
@@ -258,8 +268,17 @@ export function LoreBlock({
           }
         `}
       </style>
-      <div aria-hidden="true" style={loreBackgroundLayerStyle} />
-      <div data-lore-scroll style={textWrapStyle}>
+      <div
+        aria-hidden="true"
+        {...{ [PROTECTED_BACKGROUND_ATTR]: '', [PROTECTED_SURFACE_ATTR]: '' }}
+        style={loreBackgroundLayerStyle}
+      />
+      <div
+        data-lore-scroll
+        {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+        onContextMenu={preventImageContextMenu}
+        style={textWrapStyle}
+      >
         <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
         {visible && loreGemState === 'waiting' ? (
           <span aria-hidden="true" style={loreGemStarStyle} />
@@ -272,6 +291,7 @@ export function LoreBlock({
             onClick={() => {
               void handleLoreGemClick();
             }}
+            onContextMenu={preventImageContextMenu}
             style={{
               ...loreGemButtonStyle,
               ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
@@ -283,7 +303,7 @@ export function LoreBlock({
             <img
               alt=""
               aria-hidden="true"
-              draggable={false}
+              {...protectedImageProps}
               src={LORE_GEM_ASSET}
               style={loreGemImageStyle}
             />
@@ -294,7 +314,7 @@ export function LoreBlock({
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={FRAME_MASK}
         style={blockBottomSeamStyle}
       />

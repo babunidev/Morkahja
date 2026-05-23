@@ -1,4 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import {
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
@@ -28,6 +32,7 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -138,6 +143,7 @@ export function SettingsScreen({
       aria-label="Settings"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -148,6 +154,7 @@ export function SettingsScreen({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>

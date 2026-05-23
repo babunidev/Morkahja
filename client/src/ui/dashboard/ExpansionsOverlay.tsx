@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { fetchPlayer, unlockExpansion } from '../../api/http.js';
 import expansionData from '../../data/game/expansiondata.json';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
@@ -88,6 +93,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -123,6 +129,7 @@ const bodyStyle: CSSProperties = {
   padding: '4px 2px 2px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
+  ...protectedOverlayTextStyle,
 };
 
 const listStyle: CSSProperties = {
@@ -355,7 +362,7 @@ function ExpansionCard({
         <img
           alt=""
           aria-hidden="true"
-          draggable={false}
+          {...protectedImageProps}
           src={expansionAsset(expansion.mExtensioHeaderImage)}
           style={bannerImageStyle}
         />
@@ -369,7 +376,7 @@ function ExpansionCard({
               <p style={unlockedLabelStyle}>Unlocked</p>
             ) : (
               <p style={costStyle}>
-                <img alt="" aria-hidden="true" draggable={false} src={GEMS_ICON} style={gemsIconSmallStyle} />
+                <img alt="" aria-hidden="true" {...protectedImageProps} src={GEMS_ICON} style={gemsIconSmallStyle} />
                 <span>{expansion.mExtensioCost} gems</span>
               </p>
             )}
@@ -398,7 +405,8 @@ function ExpansionCard({
             >
               <img
                 alt=""
-                draggable={false}
+                aria-hidden="true"
+                {...protectedImageProps}
                 src={expansionAsset(expansion.mExtensioUnlockButton)}
                 style={unlockButtonImageStyle}
               />
@@ -526,6 +534,7 @@ export function ExpansionsOverlay({
       aria-label="Expansions"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -536,6 +545,7 @@ export function ExpansionsOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>
@@ -586,7 +596,7 @@ export function ExpansionsOverlay({
           <img
             alt=""
             aria-hidden="true"
-            draggable={false}
+            {...protectedImageProps}
             src={GEMS_ICON}
             style={gemsIconStyle}
           />

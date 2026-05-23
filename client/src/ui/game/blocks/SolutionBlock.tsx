@@ -12,6 +12,10 @@ import {
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import {
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../../protectedImage.js';
+import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   encounterActionsFadeTransition,
@@ -76,7 +80,7 @@ const solutionBlockStyle: CSSProperties = {
   transform: 'translateX(-50%) translateY(3px)',
   zIndex: 20,
   overflow: 'visible',
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const frameMaskStyle: CSSProperties = {
@@ -87,7 +91,7 @@ const frameMaskStyle: CSSProperties = {
   height: 10,
   objectFit: 'cover',
   zIndex: 6,
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const solutionActionsLayerStyle: CSSProperties = {
@@ -520,6 +524,7 @@ export function SolutionBlock({
     <div
       inert={hidden ? true : undefined}
       ref={blockRef}
+      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       style={solutionBlockStyle}
     >
       <style>
@@ -529,7 +534,7 @@ export function SolutionBlock({
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={FRAME_MASK}
         style={frameMaskStyle}
       />

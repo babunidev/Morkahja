@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { ImgHTMLAttributes, MouseEvent } from 'react';
+import type { CSSProperties, ImgHTMLAttributes, MouseEvent } from 'react';
 
 export const PROTECTED_BACKGROUND_ATTR = 'data-morkahja-protected-background';
 export const PROTECTED_SURFACE_ATTR = 'data-morkahja-protected-surface';
@@ -15,6 +15,16 @@ export const protectedImageProps = {
   draggable: false,
   onContextMenu: preventImageContextMenu,
 } satisfies Pick<ImgHTMLAttributes<HTMLImageElement>, 'draggable' | 'onContextMenu'>;
+
+/** Dashboard / settings overlays: block browser menu on backdrop and panel chrome. */
+export const protectedOverlaySurfaceProps = {
+  [PROTECTED_SURFACE_ATTR]: '',
+  onContextMenu: preventImageContextMenu,
+};
+
+export const protectedOverlayTextStyle: CSSProperties = {
+  userSelect: 'none',
+};
 
 function hasProtectedBackgroundImage(element: HTMLElement): boolean {
   if (element.hasAttribute(PROTECTED_BACKGROUND_ATTR)) {

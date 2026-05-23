@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-23 21:45 (+0200) |
+| **Last updated** | 2026-05-23 22:15 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -119,6 +119,17 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 66. **Link previews** — Open Graph and Twitter Card meta tags injected at production build (`socialPreview.ts`, Vite `transformIndexHtml` plugin); `og:image` points at the app icon on the public origin; default site URL `https://arcanitebrothers.com`, override with `VITE_SITE_URL` at build time (Telegram and other sharers read static HTML only).
 67. **Image protection** — `protectedImage.ts` + `useProtectedImages()`; block drag and casual selection on backgrounds, encounter art, and hub/footer surfaces; form fields stay selectable.
 
+### 2026-05-23 21:50–22:15 (+0200) — Production go-live and overlay protection (uncommitted code)
+
+68. **First public alpha host** — Hetzner VPS; game served at **https://arcanitebrothers.com** (and `www`); DNS A record → server IP.
+69. **Stack on server** — Ubuntu; **nginx** serves `client/dist` from `/var/www/morkahja` (rsync after each `npm run build`); API paths proxied to **PM2** → Node on `127.0.0.1:3000`; **PostgreSQL** on localhost (`morkahjadbadmin` + `morkahja` DB).
+70. **HTTPS** — Let’s Encrypt via `certbot --nginx`; required for Web Crypto (`crypto.subtle`) so **Create journey** / recovery keys work in the browser (plain `http://` on a public IP is not a secure context).
+71. **Deploy wiring** (since `ef92dd4`) — `ecosystem.config.cjs` (PM2 from repo root, `cwd: server`, `tsx` on `src/server.ts`); `PORT` + `CLIENT_ORIGINS` via `server/src/config/corsOrigins.ts`; client `API_BASE_URL` defaults to **same-origin** (`VITE_API_BASE_URL` optional) so production does not call `localhost:3000`.
+72. **Ops lessons** — `.env` only on server (never git): one `KEY=value` per line; URL-encode `+` / `*` in `DATABASE_URL`; `source .env` before `pm2 restart --update-env`; Postgres 15+ needs `GRANT` on `public` for app user; home-dir `root` needs `chmod o+x` or use `/var/www/…`; nginx `root` line must be exactly `root /var/www/morkahja;` (not `root root …`).
+73. **Workflow** — develop on PC → `git push` → on VPS `git pull`, `npm run build --prefix client`, `sudo rsync -a client/dist/ /var/www/morkahja/`, `pm2 restart` when server changes.
+74. **Image protection (extended)** — `protectedOverlaySurfaceProps`, `protectedOverlayTextStyle`, `preventImageContextMenu`; Lore / Result / PlayerHub / SolutionBlock / dashboard overlays / Settings marked; document-level `selectstart` guard (inputs still selectable); blocks “Open image in new tab” on CSS backgrounds via computed `background-image` check.
+75. **Pre-invite security review** — OK for small trusted alpha on HTTPS; before wide launch: validate lore-gem `POST /player/currency/yellow_red_gem` server-side, rate-limit `/session/bootstrap`, cap JSON body size, generic production errors, Postgres backups, firewall (only 22/80/443).
+
 ---
 
 ## Session notes (detail)
@@ -220,3 +231,21 @@ Since `dd17e2f`.
 - **Hook** — `useProtectedImages()` in `App.tsx` listens for `dragstart` / `contextmenu` on `[data-morkahja-protected-background]` and `[data-morkahja-protected-surface]`.
 - **CSS** — global `user-select: none` and `-webkit-user-drag: none` on `img`; exceptions for `input`, `textarea`, `select`, and `[contenteditable]`.
 - **Surfaces** — `PersistentBackground`, `EncounterFooter`, `PlayerHub` party/footer layers, and encounter image block marked with data attributes; background/footer layers use `pointer-events: auto` so the guard can intercept events.
+
+### Production deploy on Hetzner (`ef92dd4` + ops) · 2026-05-23 21:50 (+0200)
+
+- **Domain** — `arcanitebrothers.com` / `www` → VPS; certbot installs TLS into nginx `sites-enabled/morkahja`.
+- **PM2** — start from repo root: `cd server && pm2 start src/server.ts --interpreter ../node_modules/.bin/tsx` (or `ecosystem.config.cjs` after pull); always load `.env` in the same shell before start/restart.
+- **nginx** — `location ~ ^/(health|game-data|session|player|avatar|avatars|encounter|activity)` → `proxy_pass http://127.0.0.1:3000`; `try_files` → `index.html` for SPA; disable default site so “Welcome to nginx!” does not win.
+- **Static** — build on VPS under `~/arcanitebrothers/client/dist`, publish to `/var/www/morkahja` (avoids nginx `www-data` traversing `/home/morkahja`).
+- **Smoke** — `curl https://arcanitebrothers.com/health`; browser hard refresh; Create journey + recovery key download verified on HTTPS.
+
+### Extended image protection (pending commit) · 2026-05-23 22:15 (+0200)
+
+Since `5b2d423`.
+
+- **Helpers** — `protectedImageProps`, `protectedOverlaySurfaceProps`, `protectedOverlayTextStyle`, `preventImageContextMenu`; `findProtectedMediaTarget` treats elements with CSS `background-image: url(...)` like images for context-menu blocking.
+- **Game** — `LoreBlock` (background + scroll area + gem), `ResultBlock`, `PlayerHub`, `SolutionBlock` use attrs + `userSelect: 'none'` on lore text.
+- **Dashboard** — `AboutUsOverlay`, `AchievementsOverlay`, `AchievementPanel`, `ActivityFeedOverlay`, `DonationOverlay`, `ExpansionsOverlay`, `FriendsOverlay` apply overlay surface + protected `<img>`.
+- **Settings** — `SettingsScreen` panel surface protected; `morkahjaText.css` reinforces non-selectable overlay copy where needed.
+- **Global** — `selectstart` prevented except on text inputs (friend name field, etc.).

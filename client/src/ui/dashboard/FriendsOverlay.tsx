@@ -6,6 +6,11 @@ import type {
 } from '@shared/contracts';
 import { addFriend, fetchFriendAchievements, fetchFriends } from '../../api/http.js';
 import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementPanel from './AchievementPanel.js';
 
@@ -77,6 +82,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -337,7 +343,7 @@ function FriendRow({
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={friend.online ? ONLINE_ICON : OFFLINE_ICON}
         style={statusIconStyle}
       />
@@ -517,6 +523,7 @@ export function FriendsOverlay({
       aria-label="Friends"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -527,6 +534,7 @@ export function FriendsOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>
@@ -647,7 +655,8 @@ export function FriendsOverlay({
                 >
                   <img
                     alt=""
-                    draggable={false}
+                    aria-hidden="true"
+                    {...protectedImageProps}
                     src={ADD_FRIEND_BUTTON}
                     style={addButtonImageStyle}
                   />

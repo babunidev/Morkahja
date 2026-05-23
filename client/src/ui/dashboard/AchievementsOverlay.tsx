@@ -10,6 +10,11 @@ import {
   fetchPlayer,
 } from '../../api/http.js';
 import { AchievementPanel } from './AchievementPanel.js';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
@@ -42,6 +47,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
+  ...protectedOverlayTextStyle,
 };
 
 const scrollBodyStyle: CSSProperties = {
@@ -225,6 +231,7 @@ export function AchievementsOverlay({
       aria-label="Achievements"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -235,6 +242,7 @@ export function AchievementsOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>
@@ -270,7 +278,7 @@ export function AchievementsOverlay({
           <img
             alt=""
             aria-hidden="true"
-            draggable={false}
+            {...protectedImageProps}
             src={GEMS_ICON}
             style={gemsIconStyle}
           />

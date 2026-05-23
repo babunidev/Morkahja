@@ -3,7 +3,11 @@ import type { PersistedAvatar } from '../../../api/http.js';
 import AvatarPanel from '../../avatar/AvatarPanel.js';
 import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
-import { PROTECTED_SURFACE_ATTR } from '../../protectedImage.js';
+import {
+  preventImageContextMenu,
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../../protectedImage.js';
 import EncounterFooter from './EncounterFooter.js';
 
 const GAME_UI_ROOT = '/UI/09_GAME';
@@ -56,7 +60,7 @@ const partyStripStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   alignItems: 'center',
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const partySlotStyle: CSSProperties = {
@@ -65,11 +69,11 @@ const partySlotStyle: CSSProperties = {
   display: 'grid',
   placeItems: 'center',
   minWidth: 0,
+  pointerEvents: 'auto',
 };
 
 const mainPartySlotStyle: CSSProperties = {
   ...partySlotStyle,
-  pointerEvents: 'auto',
 };
 
 const mainAvatarAnchorStyle: CSSProperties = {
@@ -136,11 +140,13 @@ const actionLogStyle: CSSProperties = {
   textAlign: 'left',
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
   pointerEvents: 'auto',
+  userSelect: 'none',
 };
 
 const actionLogListStyle: CSSProperties = {
   margin: 0,
   paddingLeft: 16,
+  userSelect: 'none',
 };
 
 function PartySlotPlaceholder({
@@ -154,6 +160,7 @@ function PartySlotPlaceholder({
     <div
       aria-label={`${label} slot empty`}
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+      onContextMenu={preventImageContextMenu}
       style={partySlotStyle}
     >
       <span
@@ -260,7 +267,7 @@ export function PlayerHub({
               <img
                 alt=""
                 aria-hidden="true"
-                draggable={false}
+                {...protectedImageProps}
                 src={button.src}
                 style={{
                   ...footerButtonImageStyle,
@@ -274,6 +281,8 @@ export function PlayerHub({
       {actionLogVisible ? (
         <div
           role="tooltip"
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+          onContextMenu={preventImageContextMenu}
           style={{
             ...actionLogStyle,
             left: Math.max(8, actionLogPosition.x),

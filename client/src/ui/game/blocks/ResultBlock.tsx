@@ -15,6 +15,11 @@ import {
   type LossFlightSpec,
   type RewardFlightSpec,
 } from '../rewardFlyAnimation.js';
+import {
+  preventImageContextMenu,
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../../protectedImage.js';
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { fadeTransition } from '../../transitions/fade.js';
 
@@ -61,7 +66,7 @@ const resultBlockStyle: CSSProperties = {
   zIndex: 21,
   overflow: 'visible',
   transition: fadeTransition,
-  pointerEvents: 'none',
+  pointerEvents: 'auto',
 };
 
 const resultImageStyle: CSSProperties = {
@@ -137,6 +142,7 @@ const outcomeButtonStyle: CSSProperties = {
   textTransform: 'uppercase',
   cursor: 'pointer',
   flex: '0 0 auto',
+  userSelect: 'none',
 };
 
 const rewardRowStyle: CSSProperties = {
@@ -565,6 +571,7 @@ export function ResultBlock({
         onPointerEnter={(event) => {
           showItemTooltip(change, sign, event);
         }}
+        onContextMenu={preventImageContextMenu}
         onPointerLeave={hideItemTooltip}
         style={buttonStyle}
         type="button"
@@ -572,7 +579,7 @@ export function ResultBlock({
         <img
           alt=""
           aria-hidden="true"
-          draggable={false}
+          {...protectedImageProps}
           src={solutionImagePath(change.solution)}
           style={imageStyle}
         />
@@ -608,6 +615,7 @@ export function ResultBlock({
         onPointerEnter={(event) => {
           showItemTooltip(loss, '-', event);
         }}
+        onContextMenu={preventImageContextMenu}
         onPointerLeave={hideItemTooltip}
         style={rewardItemStyle}
         type="button"
@@ -615,7 +623,7 @@ export function ResultBlock({
         <img
           alt=""
           aria-hidden="true"
-          draggable={false}
+          {...protectedImageProps}
           src={solutionImagePath(loss.solution)}
           style={imageStyle}
         />
@@ -630,9 +638,11 @@ export function ResultBlock({
       aria-hidden={roll === null}
       inert={resultInteractive ? undefined : true}
       ref={blockRef}
+      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       style={{
         ...resultBlockStyle,
         opacity: resultInteractive ? 1 : 0,
+        pointerEvents: resultInteractive ? 'auto' : 'none',
       }}
     >
       <style>
@@ -648,12 +658,12 @@ export function ResultBlock({
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={RESULT_BACKGROUND}
         style={{
           ...resultImageStyle,
           ...continueDismissLayerStyle(continueBusy),
-          pointerEvents: 'none',
+          pointerEvents: resultInteractive ? 'auto' : 'none',
         }}
       />
       <button
@@ -662,6 +672,7 @@ export function ResultBlock({
         onClick={() => {
           void handleContinueClick();
         }}
+        onContextMenu={preventImageContextMenu}
         style={{
           ...continueButtonStyle,
           ...(continueBusy ? continueAnimatingStyle : {}),
@@ -674,19 +685,24 @@ export function ResultBlock({
         <img
           alt=""
           aria-hidden="true"
-          draggable={false}
+          {...protectedImageProps}
           src={CONTINUE_BUTTON}
           style={continueImageStyle}
         />
       </button>
       {rewards.length > 0 && !rewardsFlyingAway && !continueBusy ? (
-        <div aria-label="Predetermined rewards" style={rewardRowStyle}>
+        <div
+          aria-label="Predetermined rewards"
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+          style={rewardRowStyle}
+        >
           {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
       ) : null}
       {outcome && roll !== null ? (
         <div
           aria-label="Encounter outcome"
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
           style={{
             ...outcomeClusterStyle,
             ...continueDismissLayerStyle(continueBusy),
@@ -704,7 +720,7 @@ export function ResultBlock({
             <img
               alt=""
               aria-hidden="true"
-              draggable={false}
+              {...protectedImageProps}
               src={DICE_OUTCOME_ICON}
               style={diceOutcomeIconStyle}
             />
@@ -715,6 +731,7 @@ export function ResultBlock({
             onClick={() => {
               setOutcomeShowsRoll((showingRoll) => !showingRoll);
             }}
+            onContextMenu={preventImageContextMenu}
             style={outcomeButtonStyle}
             type="button"
           >
@@ -723,7 +740,11 @@ export function ResultBlock({
         </div>
       ) : null}
       {losses.length > 0 ? (
-        <div aria-label="Encounter losses" style={lossRowStyle}>
+        <div
+          aria-label="Encounter losses"
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+          style={lossRowStyle}
+        >
           {losses.map((loss) => renderLossIcon(loss))}
         </div>
       ) : null}

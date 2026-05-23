@@ -1,5 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { donateGems, fetchPlayer } from '../../api/http.js';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -35,6 +40,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   textAlign: 'center',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -217,6 +223,7 @@ export function DonationOverlay({
       aria-label="Donate gems"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -227,6 +234,7 @@ export function DonationOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>
@@ -251,7 +259,7 @@ export function DonationOverlay({
               <img
                 alt=""
                 aria-hidden="true"
-                draggable={false}
+                {...protectedImageProps}
                 src={GEMS_ICON}
                 style={gemsIconStyle}
               />

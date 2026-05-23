@@ -3,11 +3,17 @@ import type {
   AchievementProgressDto,
   DailyRewardStatusDto,
 } from '@shared/contracts';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const panelBodyStyle: CSSProperties = {
   display: 'grid',
   gap: 14,
+  ...protectedOverlayTextStyle,
 };
 
 const achievementCardStyle: CSSProperties = {
@@ -17,6 +23,7 @@ const achievementCardStyle: CSSProperties = {
   border: '1px solid rgba(255, 204, 102, 0.28)',
   borderRadius: 12,
   background: 'rgba(18, 10, 7, 0.72)',
+  ...protectedOverlayTextStyle,
 };
 
 const iconStackStyle: CSSProperties = {
@@ -176,12 +183,12 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
   const progressPercent = Math.round((achievement.progressInBand ?? 0) * 100);
 
   return (
-    <article style={achievementCardStyle}>
+    <article {...protectedOverlaySurfaceProps} style={achievementCardStyle}>
       <div style={iconStackStyle}>
         <img
           alt=""
           aria-hidden="true"
-          draggable={false}
+          {...protectedImageProps}
           src={achievement.baseIconUrl}
           style={baseIconStyle}
         />
@@ -189,7 +196,7 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
           <img
             alt=""
             aria-hidden="true"
-            draggable={false}
+            {...protectedImageProps}
             src={achievement.rankOverlayUrl}
             style={rankOverlayStyle}
           />
@@ -294,7 +301,7 @@ export function AchievementPanel({
     : [];
 
   return (
-    <div style={panelBodyStyle}>
+    <div {...protectedOverlaySurfaceProps} style={panelBodyStyle}>
       {visibleAchievements.map((achievement) => (
         <AchievementCard achievement={achievement} key={achievement.achievementId} />
       ))}

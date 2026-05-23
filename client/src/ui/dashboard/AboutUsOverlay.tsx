@@ -1,5 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import DonationOverlay from './DonationOverlay.js';
+import {
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -61,6 +65,7 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -96,6 +101,7 @@ const bodyStyle: CSSProperties = {
   padding: '4px 2px 2px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
+  ...protectedOverlayTextStyle,
 };
 
 const creditListStyle: CSSProperties = {
@@ -267,6 +273,7 @@ export function AboutUsOverlay({
       aria-label="About us"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -277,6 +284,7 @@ export function AboutUsOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>

@@ -2,6 +2,11 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import type { ActivityFeedEntryDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
 import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
+import {
+  protectedImageProps,
+  protectedOverlaySurfaceProps,
+  protectedOverlayTextStyle,
+} from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 
@@ -33,6 +38,7 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
+  ...protectedOverlayTextStyle,
 };
 
 const headerStyle: CSSProperties = {
@@ -193,7 +199,7 @@ function scribesEntryVisual(entry: ActivityFeedEntryDto) {
       <img
         alt=""
         aria-hidden="true"
-        draggable={false}
+        {...protectedImageProps}
         src={entry.iconUrl}
         style={entryIconStyle}
       />
@@ -300,6 +306,7 @@ export function ActivityFeedOverlay({
       aria-label="Scribes"
       onClick={onClose}
       role="presentation"
+      {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
@@ -310,6 +317,7 @@ export function ActivityFeedOverlay({
         onClick={(event) => {
           event.stopPropagation();
         }}
+        {...protectedOverlaySurfaceProps}
         style={panelStyle}
       >
         <header style={headerStyle}>
