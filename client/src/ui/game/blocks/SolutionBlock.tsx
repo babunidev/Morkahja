@@ -186,6 +186,7 @@ const solutionImageStyle: CSSProperties = {
   width: '100%',
   height: '100%',
   objectFit: 'cover',
+  pointerEvents: 'none',
 };
 
 const lockpickAnimationStyle: CSSProperties = {
@@ -203,6 +204,7 @@ const diceImageStyle: CSSProperties = {
   width: '100%',
   height: 'auto',
   filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))',
+  pointerEvents: 'none',
 };
 
 const diceRollAnimationStyle: CSSProperties = {
@@ -696,7 +698,7 @@ export function SolutionBlock({
                     ? `Use ${visibleSlot.name} in slot ${slot}`
                     : `${visibleSlot.name} required for slot ${slot}, not available`
                 }
-                disabled={!actionsReady || !visibleSlot.available}
+                disabled={!actionsReady}
                 key={slot}
                 {...bindTooltipReveal({
                   onShow: (event) => {

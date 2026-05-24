@@ -7,9 +7,11 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react';
+
 export const TOOLTIP_LONG_PRESS_MS = 420;
 
-const HOVER_TOOLTIP_QUERY = '(hover: hover) and (pointer: fine)';
+/** Touch-primary devices; desktop mice report hover even on hybrid hardware. */
+const HOVER_TOOLTIP_QUERY = '(hover: hover)';
 
 type TooltipTarget = HTMLElement;
 type TooltipPointerEvent = PointerEvent<TooltipTarget>;
@@ -29,7 +31,26 @@ function readHoverCapable(): boolean {
   return window.matchMedia(HOVER_TOOLTIP_QUERY).matches;
 }
 
-/** Long-press when the device cannot hover (touch / coarse pointer), not only mobile layout. */
+function eventTargetNode(target: TooltipMouseEvent['relatedTarget']): Node | null {
+  return target instanceof Node ? target : null;
+}
+
+function isNodeInside(container: Node, node: Node | null): boolean {
+  return node !== null && container.contains(node);
+}
+
+export type TooltipRevealHandlerProps = {
+  onPointerDown?: (event: TooltipPointerEvent) => void;
+  onPointerUp?: (event: TooltipPointerEvent) => void;
+  onPointerCancel?: (event: TooltipPointerEvent) => void;
+  onPointerLeave?: (event: TooltipPointerEvent) => void;
+  onMouseOver?: (event: TooltipMouseEvent) => void;
+  onMouseOut?: (event: TooltipMouseEvent) => void;
+  onFocus?: (event: TooltipFocusEvent) => void;
+  onBlur?: (event: TooltipFocusEvent) => void;
+};
+
+/** Long-press when the device cannot hover (typical phones). */
 function useTooltipLongPressMode(): boolean {
   const [hoverCapable, setHoverCapable] = useState(readHoverCapable);
 
@@ -51,7 +72,24 @@ function useTooltipLongPressMode(): boolean {
   return !hoverCapable;
 }
 
-/** Hover/focus tooltips on desktop; long-press on mobile portrait. */
+function hoverHandlers(callbacks: TooltipRevealCallbacks): TooltipRevealHandlerProps {
+  return {
+    onMouseOver: (event: TooltipMouseEvent) => {
+      if (!isNodeInside(event.currentTarget, eventTargetNode(event.relatedTarget))) {
+        callbacks.onShow(event);
+      }
+    },
+    onMouseOut: (event: TooltipMouseEvent) => {
+      if (!isNodeInside(event.currentTarget, eventTargetNode(event.relatedTarget))) {
+        callbacks.onHide();
+      }
+    },
+    onFocus: callbacks.onShow,
+    onBlur: callbacks.onHide,
+  };
+}
+
+/** Hover/focus tooltips on desktop; long-press on touch-primary devices. */
 export function useTooltipReveal(enabled = true) {
   const useLongPress = useTooltipLongPressMode();
   const [visible, setVisible] = useState(false);
@@ -69,12 +107,13 @@ export function useTooltipReveal(enabled = true) {
     setVisible(false);
   }, [clearTimer]);
 
-  const show = useCallback(() => {
+  const show = useCallback((event: TooltipMouseEvent | TooltipFocusEvent) => {
     if (!enabled) {
       return;
     }
 
     setVisible(true);
+    void event;
   }, [enabled]);
 
   const onPointerDown = useCallback((_event: TooltipPointerEvent) => {
@@ -83,8 +122,10 @@ export function useTooltipReveal(enabled = true) {
     }
 
     clearTimer();
-    timerRef.current = window.setTimeout(show, TOOLTIP_LONG_PRESS_MS);
-  }, [clearTimer, enabled, show, useLongPress]);
+    timerRef.current = window.setTimeout(() => {
+      setVisible(true);
+    }, TOOLTIP_LONG_PRESS_MS);
+  }, [clearTimer, enabled, useLongPress]);
 
   useEffect(() => () => clearTimer(), [clearTimer]);
 
@@ -102,19 +143,21 @@ export function useTooltipReveal(enabled = true) {
           onPointerCancel: hide,
           onPointerLeave: hide,
         }
-      : {
-          onMouseEnter: show,
-          onMouseLeave: hide,
-          onFocus: show,
-          onBlur: hide,
-        }
+      : hoverHandlers({
+          onShow: show,
+          onHide: hide,
+        })
     : {};
 
   return {
     visible: enabled && visible,
     handlers,
     hide,
-    show,
+    show: () => {
+      if (enabled) {
+        setVisible(true);
+      }
+    },
   };
 }
 
@@ -159,16 +202,12 @@ export function useTooltipRevealGroup() {
       };
     }
 
-    return {
-      onMouseEnter: () => {
+    return hoverHandlers({
+      onShow: () => {
         show(id);
       },
-      onMouseLeave: hide,
-      onFocus: () => {
-        show(id);
-      },
-      onBlur: hide,
-    };
+      onHide: hide,
+    });
   }, [clearTimer, hide, show, useLongPress]);
 
   const isVisible = useCallback((id: string, enabled: boolean) => (
@@ -192,7 +231,7 @@ export function useTooltipRevealBinding(enabled = true) {
     }
   }, []);
 
-  const bind = useCallback((callbacks: TooltipRevealCallbacks) => {
+  const bind = useCallback((callbacks: TooltipRevealCallbacks): TooltipRevealHandlerProps => {
     if (!enabled) {
       return {};
     }
@@ -220,12 +259,7 @@ export function useTooltipRevealBinding(enabled = true) {
       };
     }
 
-    return {
-      onMouseEnter: callbacks.onShow,
-      onMouseLeave: callbacks.onHide,
-      onFocus: callbacks.onShow,
-      onBlur: callbacks.onHide,
-    };
+    return hoverHandlers(callbacks);
   }, [clearTimer, enabled, useLongPress]);
 
   useEffect(() => () => clearTimer(), [clearTimer]);

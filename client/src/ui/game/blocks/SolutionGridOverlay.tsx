@@ -79,14 +79,14 @@ const overlayBlockStyle: CSSProperties = {
   bottom: -30,
   zIndex: 19,
   width: '100%',
-  display: 'grid',
-  gridTemplateRows: 'minmax(0, 1fr)',
+  display: 'flex',
+  flexDirection: 'column',
   backgroundColor: 'rgba(10, 7, 5, 0.94)',
   backgroundImage: `url(${OVERLAY_BACKGROUND})`,
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
-  overflow: 'visible',
+  overflow: 'hidden',
   transition: fadeTransition,
 };
 
@@ -104,12 +104,15 @@ const blockBottomSeamStyle: CSSProperties = {
 
 const scrollWrapStyle: CSSProperties = {
   position: 'relative',
+  zIndex: 1,
+  flex: 1,
   minHeight: 0,
   padding: 'clamp(18px, 5vw, 30px) clamp(14px, 4vw, 28px)',
   boxSizing: 'border-box',
   overflow: 'auto',
   msOverflowStyle: 'none',
   scrollbarWidth: 'none',
+  pointerEvents: 'auto',
 };
 
 const itemGridStyle: CSSProperties = {
@@ -141,15 +144,22 @@ const itemImageStyle: CSSProperties = {
   height: '100%',
   objectFit: 'contain',
   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55))',
+  pointerEvents: 'none',
+};
+
+const itemTooltipDockStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 24,
+  flexShrink: 0,
+  width: '100%',
+  padding: `0 clamp(14px, 4vw, 28px) ${TOOLTIP_SEAM_BOTTOM_PX}px`,
+  boxSizing: 'border-box',
+  pointerEvents: 'none',
 };
 
 const itemTooltipStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: TOOLTIP_SEAM_BOTTOM_PX,
-  zIndex: 25,
-  width: 'min(88%, 320px)',
-  maxHeight: 'min(42vh, 220px)',
+  width: '100%',
+  maxHeight: 'min(28vh, 180px)',
   overflow: 'auto',
   padding: '10px 12px',
   border: '1px solid rgba(255, 204, 102, 0.78)',
@@ -162,8 +172,6 @@ const itemTooltipStyle: CSSProperties = {
   textAlign: 'left',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
   boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  pointerEvents: 'none',
-  transform: 'translateX(-50%)',
   boxSizing: 'border-box',
 };
 
@@ -274,10 +282,23 @@ export function SolutionGridOverlay({
     setTooltipItem(null);
   }, [inventory]);
 
+  function showItemTooltip(item: SolutionGridEntry): void {
+    setSelectedItemId(item.solutionId);
+    setTooltipItem(item);
+  }
+
+  function hideItemTooltip(): void {
+    setTooltipItem(null);
+  }
+
   function handleItemClick(item: SolutionGridEntry): void {
-    setSelectedItemId((current) => (
-      current === item.solutionId ? null : item.solutionId
-    ));
+    if (selectedItemId === item.solutionId && tooltipItem !== null) {
+      setSelectedItemId(null);
+      hideItemTooltip();
+      return;
+    }
+
+    showItemTooltip(item);
   }
 
   return (
@@ -300,17 +321,10 @@ export function SolutionGridOverlay({
               const itemKey = String(item.solutionId);
               const itemTooltipHandlers = bindTooltipReveal({
                 onShow: () => {
-                  setTooltipItem(item);
+                  showItemTooltip(item);
                 },
-                onHide: () => {
-                  setTooltipItem(null);
-                },
+                onHide: hideItemTooltip,
               });
-              const {
-                onPointerDown: tooltipPointerDown,
-                ...itemTooltipHoverHandlers
-              } = itemTooltipHandlers;
-
               return (
                 <button
                   aria-label={item.name}
@@ -319,10 +333,10 @@ export function SolutionGridOverlay({
                   onClick={() => {
                     handleItemClick(item);
                   }}
-                  {...itemTooltipHoverHandlers}
+                  {...itemTooltipHandlers}
                   onPointerDown={(event) => {
                     pulse(itemKey);
-                    tooltipPointerDown?.(event);
+                    itemTooltipHandlers.onPointerDown?.(event);
                   }}
                   style={{
                     ...itemButtonStyle,
@@ -349,11 +363,13 @@ export function SolutionGridOverlay({
         )}
       </div>
       {tooltipItem ? (
-        <div role="tooltip" style={itemTooltipStyle}>
-          <p style={tooltipTitleStyle}>{tooltipItem.name}</p>
-          <p style={tooltipTextStyle}>{tooltipItem.text}</p>
-          <p style={tooltipMetaStyle}>Charges: {tooltipItem.uses}</p>
-          <p style={tooltipMetaStyle}>Type: {tooltipItem.typeLabel}</p>
+        <div style={itemTooltipDockStyle}>
+          <div role="tooltip" style={itemTooltipStyle}>
+            <p style={tooltipTitleStyle}>{tooltipItem.name}</p>
+            <p style={tooltipTextStyle}>{tooltipItem.text}</p>
+            <p style={tooltipMetaStyle}>Charges: {tooltipItem.uses}</p>
+            <p style={tooltipMetaStyle}>Type: {tooltipItem.typeLabel}</p>
+          </div>
         </div>
       ) : null}
       <img
