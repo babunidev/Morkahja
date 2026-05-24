@@ -4,7 +4,9 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import {
   SOCIAL_DESCRIPTION,
+  SOCIAL_IMAGE_HEIGHT,
   SOCIAL_IMAGE_PATH,
+  SOCIAL_IMAGE_WIDTH,
   SOCIAL_SITE_URL_FALLBACK,
   SOCIAL_TITLE,
 } from './socialPreview'
@@ -32,8 +34,11 @@ function socialPreviewPlugin(siteUrl: string, mode: string): Plugin {
         `<meta property="og:description" content="${escapeHtmlAttr(SOCIAL_DESCRIPTION)}" />`,
         `<meta property="og:url" content="${base}/" />`,
         `<meta property="og:image" content="${image}" />`,
+        `<meta property="og:image:type" content="image/png" />`,
+        `<meta property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}" />`,
+        `<meta property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}" />`,
         `<meta property="og:image:alt" content="${escapeHtmlAttr(SOCIAL_TITLE)}" />`,
-        `<meta name="twitter:card" content="summary" />`,
+        `<meta name="twitter:card" content="summary_large_image" />`,
         `<meta name="twitter:title" content="${escapeHtmlAttr(SOCIAL_TITLE)}" />`,
         `<meta name="twitter:description" content="${escapeHtmlAttr(SOCIAL_DESCRIPTION)}" />`,
         `<meta name="twitter:image" content="${image}" />`,
