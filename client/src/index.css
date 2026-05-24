@@ -215,17 +215,20 @@ button:focus-visible {
 }
 
 .morkahja-nav-radial-button,
-.morkahja-nav-center-button {
+.morkahja-nav-center-button,
+.morkahja-footer-button {
   cursor: pointer;
 }
 
 .morkahja-nav-radial-button:disabled,
-.morkahja-nav-center-button:disabled {
+.morkahja-nav-center-button:disabled,
+.morkahja-footer-button:disabled {
   cursor: default;
 }
 
 .morkahja-nav-radial-button-visual,
-.morkahja-nav-center-button-visual {
+.morkahja-nav-center-button-visual,
+.morkahja-footer-button-visual {
   display: block;
   position: relative;
   width: 100%;
@@ -238,9 +241,70 @@ button:focus-visible {
 .morkahja-nav-radial-button:hover:not(:disabled) .morkahja-nav-radial-button-visual,
 .morkahja-nav-radial-button:focus-visible:not(:disabled) .morkahja-nav-radial-button-visual,
 .morkahja-nav-center-button:hover:not(:disabled) .morkahja-nav-center-button-visual,
-.morkahja-nav-center-button:focus-visible:not(:disabled) .morkahja-nav-center-button-visual {
+.morkahja-nav-center-button:focus-visible:not(:disabled) .morkahja-nav-center-button-visual,
+.morkahja-footer-button:hover:not(:disabled) .morkahja-footer-button-visual,
+.morkahja-footer-button:focus-visible:not(:disabled) .morkahja-footer-button-visual {
   transform: scale(1.06) translateY(-2px);
   filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-footer-button--unavailable:hover:not(:disabled) .morkahja-footer-button-visual,
+.morkahja-footer-button--unavailable:focus-visible:not(:disabled) .morkahja-footer-button-visual {
+  transform: none;
+  filter: none;
+}
+
+.morkahja-grid-item-button {
+  cursor: pointer;
+}
+
+.morkahja-grid-item-button-visual {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+}
+
+.morkahja-grid-item-button:hover:not(:disabled) .morkahja-grid-item-button-visual,
+.morkahja-grid-item-button:focus-visible:not(:disabled) .morkahja-grid-item-button-visual,
+.morkahja-grid-item-button--selected:hover:not(:disabled) .morkahja-grid-item-button-visual,
+.morkahja-grid-item-button--selected:focus-visible:not(:disabled) .morkahja-grid-item-button-visual {
+  transform: scale(1.06) translateY(-2px);
+  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-grid-item-button--selected:not(:hover):not(:focus-visible) .morkahja-grid-item-button-visual {
+  filter: drop-shadow(0 0 6px rgba(255, 204, 102, 0.85));
+}
+
+.morkahja-grid-item-button:hover:not(:disabled) .morkahja-grid-item-button-visual img,
+.morkahja-grid-item-button:focus-visible:not(:disabled) .morkahja-grid-item-button-visual img {
+  filter: brightness(1.12) drop-shadow(0 0 12px rgba(255, 204, 102, 0.42))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+}
+
+.morkahja-solution-grid-overlay .morkahja-footer-button {
+  width: 100%;
+  max-width: 72px;
+}
+
+.morkahja-solution-grid-overlay .morkahja-footer-button-visual {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+}
+
+.morkahja-solution-grid-overlay .morkahja-footer-button--selected:not(:hover):not(:focus-visible)
+  .morkahja-footer-button-visual {
+  filter: drop-shadow(0 0 6px rgba(255, 204, 102, 0.85));
+}
+
+.morkahja-solution-grid-overlay[aria-hidden='true'],
+.morkahja-solution-grid-overlay[aria-hidden='true'] * {
+  pointer-events: none !important;
 }
 
 .morkahja-nav-tooltip {

@@ -1,7 +1,19 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type Dispatch,
+  type FocusEvent,
+  type MouseEvent,
+  type SetStateAction,
+} from 'react';
 import solutionData from '../../../data/game/solutiondata.json';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
-import { useTooltipRevealBinding } from '../../hooks/useTooltipReveal.js';
+import {
+  useTooltipRevealBinding,
+  type TooltipRevealHandlerProps,
+} from '../../hooks/useTooltipReveal.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 
@@ -71,13 +83,15 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
+const OVERLAY_Z_INDEX = 22;
+
 const overlayBlockStyle: CSSProperties = {
   position: 'absolute',
   left: 0,
   right: 0,
   top: 0,
   bottom: -30,
-  zIndex: 19,
+  zIndex: OVERLAY_Z_INDEX,
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
@@ -112,7 +126,6 @@ const scrollWrapStyle: CSSProperties = {
   overflow: 'auto',
   msOverflowStyle: 'none',
   scrollbarWidth: 'none',
-  pointerEvents: 'auto',
 };
 
 const itemGridStyle: CSSProperties = {
@@ -125,17 +138,9 @@ const itemGridStyle: CSSProperties = {
 const itemButtonStyle: CSSProperties = {
   width: '100%',
   maxWidth: 72,
-  aspectRatio: '1',
   padding: 0,
   border: 0,
   background: 'transparent',
-  cursor: 'pointer',
-  display: 'grid',
-  placeItems: 'center',
-};
-
-const itemButtonSelectedStyle: CSSProperties = {
-  filter: 'drop-shadow(0 0 6px rgba(255, 204, 102, 0.85))',
 };
 
 const itemImageStyle: CSSProperties = {
@@ -146,6 +151,41 @@ const itemImageStyle: CSSProperties = {
   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55))',
   pointerEvents: 'none',
 };
+
+const gridItemHoverVisualStyle: CSSProperties = {
+  transform: 'scale(1.06) translateY(-2px)',
+  filter: 'brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38))',
+};
+
+const gridItemHoverImageStyle: CSSProperties = {
+  filter: 'brightness(1.12) drop-shadow(0 0 12px rgba(255, 204, 102, 0.42)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55))',
+};
+
+function mergeGridItemPointerHandlers(
+  itemId: number,
+  tooltipHandlers: TooltipRevealHandlerProps,
+  setHoveredItemId: Dispatch<SetStateAction<number | null>>,
+): TooltipRevealHandlerProps {
+  return {
+    ...tooltipHandlers,
+    onMouseOver: (event: MouseEvent<HTMLButtonElement>) => {
+      setHoveredItemId(itemId);
+      tooltipHandlers.onMouseOver?.(event);
+    },
+    onMouseOut: (event: MouseEvent<HTMLButtonElement>) => {
+      setHoveredItemId((current) => (current === itemId ? null : current));
+      tooltipHandlers.onMouseOut?.(event);
+    },
+    onFocus: (event: FocusEvent<HTMLButtonElement>) => {
+      setHoveredItemId(itemId);
+      tooltipHandlers.onFocus?.(event);
+    },
+    onBlur: (event: FocusEvent<HTMLButtonElement>) => {
+      setHoveredItemId((current) => (current === itemId ? null : current));
+      tooltipHandlers.onBlur?.(event);
+    },
+  };
+}
 
 const itemTooltipDockStyle: CSSProperties = {
   position: 'relative',
@@ -217,31 +257,40 @@ function inventoryEntries(
   container: 'spellbook' | 'items',
   inventoryType: 1 | 2,
 ): SolutionGridEntry[] {
-  const entries: SolutionGridEntry[] = [];
-  const containerItems: InventoryItem[] = inventory?.[container] ?? [];
+  const entriesById = new Map<number, SolutionGridEntry>();
+  const inventoryContainers: Array<'spellbook' | 'items' | 'essences'> = container === 'items'
+    ? ['items', 'essences']
+    : [container];
+  const acceptedInventoryTypes = container === 'items'
+    ? new Set<number>([2, 3])
+    : new Set<number>([inventoryType]);
 
-  for (const item of containerItems) {
-    if (item.uses <= 0) {
-      continue;
+  for (const inventoryContainer of inventoryContainers) {
+    const containerItems: InventoryItem[] = inventory?.[inventoryContainer] ?? [];
+
+    for (const item of containerItems) {
+      if (item.uses <= 0) {
+        continue;
+      }
+
+      const solution = solutionsById[String(item.solutionId)];
+
+      if (!solution || !acceptedInventoryTypes.has(solution.mSolutionInventoryType)) {
+        continue;
+      }
+
+      entriesById.set(item.solutionId, {
+        solutionId: item.solutionId,
+        name: solution.mSolutionName,
+        text: solution.mSolutionText,
+        typeLabel: solutionTypeLabel(solution.mSolutionType),
+        uses: item.uses,
+        imageSrc: solutionImagePath(solution.mSolutionIconName),
+      });
     }
-
-    const solution = solutionsById[String(item.solutionId)];
-
-    if (!solution || solution.mSolutionInventoryType !== inventoryType) {
-      continue;
-    }
-
-    entries.push({
-      solutionId: item.solutionId,
-      name: solution.mSolutionName,
-      text: solution.mSolutionText,
-      typeLabel: solutionTypeLabel(solution.mSolutionType),
-      uses: item.uses,
-      imageSrc: solutionImagePath(solution.mSolutionIconName),
-    });
   }
 
-  return entries.sort((left, right) => left.name.localeCompare(right.name));
+  return [...entriesById.values()].sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function SolutionGridOverlay({
@@ -262,6 +311,7 @@ export function SolutionGridOverlay({
   visible: boolean;
 }) {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
   const [tooltipItem, setTooltipItem] = useState<SolutionGridEntry | null>(null);
   const bindTooltipReveal = useTooltipRevealBinding(visible);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
@@ -273,12 +323,14 @@ export function SolutionGridOverlay({
   useEffect(() => {
     if (!visible) {
       setSelectedItemId(null);
+      setHoveredItemId(null);
       setTooltipItem(null);
     }
   }, [visible]);
 
   useEffect(() => {
     setSelectedItemId(null);
+    setHoveredItemId(null);
     setTooltipItem(null);
   }, [inventory]);
 
@@ -305,30 +357,49 @@ export function SolutionGridOverlay({
     <aside
       aria-hidden={!visible}
       aria-label={ariaLabel}
+      className="morkahja-solution-grid-overlay"
+      inert={visible ? undefined : true}
       style={{
         ...overlayBlockStyle,
         opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
         pointerEvents: visible ? 'auto' : 'none',
+        zIndex: visible ? OVERLAY_Z_INDEX : 0,
       }}
     >
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
       </style>
-      <div {...{ [`data-${scrollDataAttribute}`]: '' }} style={scrollWrapStyle}>
+      <div
+        {...{ [`data-${scrollDataAttribute}`]: '' }}
+        style={{
+          ...scrollWrapStyle,
+          pointerEvents: visible ? 'auto' : 'none',
+        }}
+      >
         {items.length > 0 ? (
           <div style={itemGridStyle}>
             {items.map((item) => {
               const itemKey = String(item.solutionId);
-              const itemTooltipHandlers = bindTooltipReveal({
-                onShow: () => {
-                  showItemTooltip(item);
-                },
-                onHide: hideItemTooltip,
-              });
+              const isSelected = selectedItemId === item.solutionId;
+              const isHovered = hoveredItemId === item.solutionId;
+              const itemTooltipHandlers = mergeGridItemPointerHandlers(
+                item.solutionId,
+                bindTooltipReveal({
+                  onShow: () => {
+                    showItemTooltip(item);
+                  },
+                  onHide: hideItemTooltip,
+                }),
+                setHoveredItemId,
+              );
               return (
                 <button
                   aria-label={item.name}
-                  aria-pressed={selectedItemId === item.solutionId}
+                  aria-pressed={isSelected}
+                  className={`morkahja-footer-button${
+                    isSelected ? ' morkahja-footer-button--selected' : ''
+                  }`}
                   key={item.solutionId}
                   onClick={() => {
                     handleItemClick(item);
@@ -338,22 +409,25 @@ export function SolutionGridOverlay({
                     pulse(itemKey);
                     itemTooltipHandlers.onPointerDown?.(event);
                   }}
-                  style={{
-                    ...itemButtonStyle,
-                    ...(selectedItemId === item.solutionId ? itemButtonSelectedStyle : {}),
-                  }}
+                  style={itemButtonStyle}
                   type="button"
                 >
-                  <img
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    src={item.imageSrc}
-                    style={{
-                      ...itemImageStyle,
-                      animation: pressAnimation(isPressed(itemKey)),
-                    }}
-                  />
+                  <span
+                    className="morkahja-footer-button-visual"
+                    style={isHovered ? gridItemHoverVisualStyle : undefined}
+                  >
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      src={item.imageSrc}
+                      style={{
+                        ...itemImageStyle,
+                        ...(isHovered ? gridItemHoverImageStyle : {}),
+                        animation: pressAnimation(isPressed(itemKey)),
+                      }}
+                    />
+                  </span>
                 </button>
               );
             })}

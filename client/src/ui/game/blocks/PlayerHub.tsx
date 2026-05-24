@@ -236,6 +236,7 @@ export function PlayerHub({
           {FOOTER_BUTTONS.map((button, index) => (
             <button
               aria-label={index === 0 ? 'Action log' : button.alt}
+              className="morkahja-footer-button"
               data-morkahja-footer-target={
                 index === 1 ? 'skillbook' : index === 2 ? 'inventory' : undefined
               }
@@ -264,16 +265,18 @@ export function PlayerHub({
               style={footerButtonStyle}
               type="button"
             >
-              <img
-                alt=""
-                aria-hidden="true"
-                {...protectedImageProps}
-                src={button.src}
-                style={{
-                  ...footerButtonImageStyle,
-                  animation: pressAnimation(isPressed(button.alt)),
-                }}
-              />
+              <span className="morkahja-footer-button-visual">
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  {...protectedImageProps}
+                  src={button.src}
+                  style={{
+                    ...footerButtonImageStyle,
+                    animation: pressAnimation(isPressed(button.alt)),
+                  }}
+                />
+              </span>
             </button>
           ))}
         </div>

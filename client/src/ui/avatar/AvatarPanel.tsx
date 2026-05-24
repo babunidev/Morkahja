@@ -173,6 +173,7 @@ export function AvatarPanel({
         <button
           aria-expanded={showDetails}
           aria-label={`Show details for ${avatar.name}`}
+          className="morkahja-avatar-slot-button"
           onClick={() => {
             playSfx(DEFAULT_BUTTON_SOUND);
             setShowDetails((current) => !current);
@@ -183,29 +184,31 @@ export function AvatarPanel({
           style={imageStackButtonStyle}
           type="button"
         >
-          <div style={imageStackInnerStyle}>
-            <div
-              style={{
-                ...portraitCellStyle,
-                opacity: hidePortraitForHandoff ? 0 : 1,
-              }}
-            >
+          <span className="morkahja-avatar-slot-visual">
+            <div style={imageStackInnerStyle}>
               <div
                 style={{
-                  ...portraitPressStyle,
-                  animation: pressAnimation(isPressed('avatar')),
+                  ...portraitCellStyle,
+                  opacity: hidePortraitForHandoff ? 0 : 1,
                 }}
               >
-                <AvatarPortraitStack
-                  enterTarget
-                  frame={avatar.frame}
-                  frameScale={INGAME_FRAME_SCALE}
-                  portrait={avatar.portrait}
-                  style={{ width: '100%', height: '100%' }}
-                />
+                <div
+                  style={{
+                    ...portraitPressStyle,
+                    animation: pressAnimation(isPressed('avatar')),
+                  }}
+                >
+                  <AvatarPortraitStack
+                    enterTarget
+                    frame={avatar.frame}
+                    frameScale={INGAME_FRAME_SCALE}
+                    portrait={avatar.portrait}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </span>
         </button>
       </div>
       {showDetails ? (
@@ -230,6 +233,8 @@ export function AvatarPanel({
           {onHome ? (
             <button
               aria-label="Return home"
+              className="morkahja-footer-button"
+              disabled={!homeVisible}
               onClick={() => {
                 if (!homeVisible) {
                   return;
@@ -247,22 +252,23 @@ export function AvatarPanel({
               }}
               style={{
                 ...homeButtonStyle,
-                cursor: homeVisible ? 'pointer' : 'default',
                 opacity: homeVisible ? 1 : 0,
                 pointerEvents: homeVisible ? 'auto' : 'none',
               }}
               type="button"
             >
-              <img
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                src={HOME_BUTTON_ASSET}
-                style={{
-                  ...homeImageStyle,
-                  animation: pressAnimation(isPressed('home')),
-                }}
-              />
+              <span className="morkahja-footer-button-visual">
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  src={HOME_BUTTON_ASSET}
+                  style={{
+                    ...homeImageStyle,
+                    animation: pressAnimation(isPressed('home')),
+                  }}
+                />
+              </span>
             </button>
           ) : null}
         </div>

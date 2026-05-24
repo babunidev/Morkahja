@@ -227,6 +227,8 @@ export function EncounterImageBlock({
           style={{
             ...currentImageStyle,
             opacity: currentImageFading ? 0 : 1,
+            pointerEvents:
+              inventoryOpen || skillbookOpen || loreOpen ? 'none' : 'auto',
           }}
         />
       )}
@@ -252,8 +254,8 @@ export function EncounterImageBlock({
         inventory={inventory}
         onActionReveal={handleActionReveal}
       />
-      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
       <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
+      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
       <LoreBlock
         encounterKey={encounter.snapshotId}
         onLoreGemCollect={async () => {

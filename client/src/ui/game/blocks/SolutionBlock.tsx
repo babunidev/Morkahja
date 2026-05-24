@@ -98,9 +98,25 @@ interface SolutionTooltipState {
   y: number;
 }
 
+const unavailableSolutionTooltipStyle: CSSProperties = {
+  maxWidth: 160,
+  padding: '6px 9px',
+  textAlign: 'center',
+};
+
+const unavailableTooltipTitleStyle: CSSProperties = {
+  margin: '0 0 3px',
+  color: '#ffcc66',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  lineHeight: 1.15,
+};
+
 const unavailableTooltipDetailStyle: CSSProperties = {
-  color: '#ff5c52',
-  opacity: 0.42,
+  margin: 0,
+  color: '#ff9a92',
+  fontSize: '0.7rem',
+  lineHeight: 1.15,
 };
 
 const solutionBlockStyle: CSSProperties = {
@@ -145,12 +161,10 @@ const solutionActionsLayerStyle: CSSProperties = {
 const SOLUTION_ACTION_SIZE_PX = 83;
 
 const solutionIconShellStyle: CSSProperties = {
-  display: 'block',
   width: SOLUTION_ACTION_SIZE_PX,
   height: SOLUTION_ACTION_SIZE_PX,
   borderRadius: '50%',
   overflow: 'hidden',
-  cursor: 'pointer',
 };
 
 const primarySolutionGlowStyle: CSSProperties = {
@@ -162,7 +176,6 @@ const diceButtonStyle: CSSProperties = {
   padding: 0,
   border: 0,
   background: 'transparent',
-  cursor: 'pointer',
 };
 
 const diceSlotStyle: CSSProperties = {
@@ -192,11 +205,6 @@ const solutionImageStyle: CSSProperties = {
 const lockpickAnimationStyle: CSSProperties = {
   animation: 'morkahja-solution-lockpick 1500ms cubic-bezier(0.2, 0.8, 0.2, 1)',
   transformOrigin: '50% 50%',
-};
-
-const diceImageWrapStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
 };
 
 const diceImageStyle: CSSProperties = {
@@ -532,10 +540,10 @@ export function SolutionBlock({
   ): void {
     showActionTooltip(
       solution.name,
-      solution.description,
+      solution.available ? solution.description : '',
       solution.available
         ? `Charges: ${solution.uses}`
-        : 'Not in your inventory',
+        : 'Not in inventory',
       !solution.available,
       event,
     );
@@ -590,7 +598,10 @@ export function SolutionBlock({
       inert={hidden ? true : undefined}
       ref={blockRef}
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-      style={solutionBlockStyle}
+      style={{
+        ...solutionBlockStyle,
+        pointerEvents: hidden ? 'none' : 'auto',
+      }}
     >
       <style>
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
@@ -609,7 +620,7 @@ export function SolutionBlock({
         style={{
           ...solutionActionsLayerStyle,
           opacity: hidden ? 0 : 1,
-          pointerEvents: actionsReady ? 'auto' : 'none',
+          pointerEvents: hidden || !actionsReady ? 'none' : 'auto',
           transition: hidden ? 'opacity 0ms' : undefined,
         }}
       >
@@ -626,19 +637,17 @@ export function SolutionBlock({
               <button
                 aria-disabled={!actionsReady}
                 aria-label="Roll dice"
+                className="morkahja-footer-button"
                 disabled={!actionsReady}
                 onClick={handleDiceClick}
                 {...bindTooltipReveal({
                   onShow: showDiceTooltip,
                   onHide: hideSolutionTooltip,
                 })}
-                style={{
-                  ...diceButtonStyle,
-                  cursor: actionsReady ? 'pointer' : 'default',
-                }}
+                style={diceButtonStyle}
                 type="button"
               >
-                <span style={diceImageWrapStyle}>
+                <span className="morkahja-footer-button-visual">
                   <span
                     key={`${encounterRevealKey}-dice-rattle`}
                     style={{
@@ -698,6 +707,9 @@ export function SolutionBlock({
                     ? `Use ${visibleSlot.name} in slot ${slot}`
                     : `${visibleSlot.name} required for slot ${slot}, not available`
                 }
+                className={`morkahja-footer-button${
+                  visibleSlot.available ? '' : ' morkahja-footer-button--unavailable'
+                }`}
                 disabled={!actionsReady}
                 key={slot}
                 {...bindTooltipReveal({
@@ -719,14 +731,13 @@ export function SolutionBlock({
                   ...(actionsVisible && !hidden && !visibleSlot.available
                     ? { opacity: UNAVAILABLE_SOLUTION_OPACITY }
                     : {}),
-                  cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
                 }}
                 type="button"
               >
                 <span
+                  className="morkahja-footer-button-visual"
                   style={{
                     ...solutionIconShellStyle,
-                    cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
                     ...(enableRattleSlots.has(slot) ? enableRattleAnimationStyle : {}),
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
                     ...(visibleSlot.available && visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
@@ -749,21 +760,25 @@ export function SolutionBlock({
           role="tooltip"
           style={{
             ...solutionTooltipStyle,
+            ...(solutionTooltip.unavailable ? unavailableSolutionTooltipStyle : {}),
             left: solutionTooltip.x,
             top: solutionTooltip.y,
           }}
         >
-          <div style={solutionTooltipTitleStyle}>{solutionTooltip.name}</div>
-          {solutionTooltip.description ? (
-            <div style={solutionTooltipDescriptionStyle}>{solutionTooltip.description}</div>
-          ) : null}
-          <div
-            style={
-              solutionTooltip.unavailable ? unavailableTooltipDetailStyle : undefined
-            }
-          >
-            {solutionTooltip.detail}
-          </div>
+          {solutionTooltip.unavailable ? (
+            <>
+              <div style={unavailableTooltipTitleStyle}>{solutionTooltip.name}</div>
+              <div style={unavailableTooltipDetailStyle}>{solutionTooltip.detail}</div>
+            </>
+          ) : (
+            <>
+              <div style={solutionTooltipTitleStyle}>{solutionTooltip.name}</div>
+              {solutionTooltip.description ? (
+                <div style={solutionTooltipDescriptionStyle}>{solutionTooltip.description}</div>
+              ) : null}
+              <div>{solutionTooltip.detail}</div>
+            </>
+          )}
         </div>
       ) : null}
     </div>
