@@ -44,7 +44,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 19667,
     "mEncounterID": 19666,
-    "mEncounterImageName": "dungeon_blackwood_tangelddepths",
+    "mEncounterImageName": "tangled_depths",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -55,7 +55,7 @@
     "mEncounterSolutiuonTypeB": 26,
     "mEncounterSolutiuonTypeC": 25,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "Deep in the Blackwood Abyss lies a place where the gnarled and twisted roots of ancient trees have grown so large that they have nearly consumed the entire area. Here, the darkness is absolute, and the only sound is the eerie creaking of the branches as they shift and sway in the unseen wind. The roots are so thick and tangled that they seem to form a maze, making it easy to get lost in the blackness. As the roots reach up to the surface, they form natural arches and tunnels that add to the mystique of the place. Only the most skilled of travelers can navigate this treacherous landscape, for one misstep can lead to a plunge into the abyss below. Those who do brave the roots often tell tales of strange creatures lurking in the darkness, waiting for their next unsuspecting victim.",
+    "mEncounterText": "Deep in the Blackwood Abyss lies a place where the gnarled and twisted roots of ancient trees have grown so large that they have nearly consumed the entire area. Here, the darkness is more a feeling, and the only sound is the eerie creaking of the branches as they shift and sway in the unseen wind. The roots are so thick and tangled that they seem to form a maze, making it easy to get lost in the blackness. As the roots reach up to the surface, they form natural arches and tunnels that add to the mystique of the place. Only the most skilled of travelers can navigate this treacherous landscape, for one misstep can lead to a plunge into the abyss below. Those who do brave the roots often tell tales of strange creatures lurking in the darkness, waiting for their next unsuspecting victim.",
     "mEncounterTitle": "Tangled Depths",
     "mEncounterType": 2
   },
