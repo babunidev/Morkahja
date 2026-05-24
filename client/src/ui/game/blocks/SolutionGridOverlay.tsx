@@ -4,8 +4,6 @@ import {
   useState,
   type CSSProperties,
   type Dispatch,
-  type FocusEvent,
-  type MouseEvent,
   type SetStateAction,
 } from 'react';
 import solutionData from '../../../data/game/solutiondata.json';
@@ -168,19 +166,19 @@ function mergeGridItemPointerHandlers(
 ): TooltipRevealHandlerProps {
   return {
     ...tooltipHandlers,
-    onMouseOver: (event: MouseEvent<HTMLButtonElement>) => {
+    onMouseOver: (event) => {
       setHoveredItemId(itemId);
       tooltipHandlers.onMouseOver?.(event);
     },
-    onMouseOut: (event: MouseEvent<HTMLButtonElement>) => {
+    onMouseOut: (event) => {
       setHoveredItemId((current) => (current === itemId ? null : current));
       tooltipHandlers.onMouseOut?.(event);
     },
-    onFocus: (event: FocusEvent<HTMLButtonElement>) => {
+    onFocus: (event) => {
       setHoveredItemId(itemId);
       tooltipHandlers.onFocus?.(event);
     },
-    onBlur: (event: FocusEvent<HTMLButtonElement>) => {
+    onBlur: (event) => {
       setHoveredItemId((current) => (current === itemId ? null : current));
       tooltipHandlers.onBlur?.(event);
     },
