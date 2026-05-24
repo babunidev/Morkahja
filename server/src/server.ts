@@ -15,12 +15,17 @@ import {
   getFriendAchievementsController,
   listPlayerFriendsController,
 } from './controllers/friendController.js';
-import { getPlayerProfileController } from './controllers/playerProfileController.js';
+import {
+  getPlayerProfileController,
+  setAvatarDisplayTitleController,
+} from './controllers/playerProfileController.js';
+import { toPersistedAvatarDto } from './services/avatarPresentation.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
+import { loadInventory } from './services/inventoryService.js';
 import {
   bootstrapSession,
   heartbeatSession,
@@ -179,6 +184,7 @@ app.get('/player/friends', listPlayerFriendsController);
 app.post('/player/friends', addPlayerFriendController);
 app.get('/player/friends/:friendId/achievements', getFriendAchievementsController);
 app.get('/player/profile', getPlayerProfileController);
+app.patch('/avatar/:avatarId/display-title', setAvatarDisplayTitleController);
 
 app.get('/player', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);
@@ -210,12 +216,18 @@ app.get('/avatar', async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({ avatarId, ...avatar });
+  res.json({
+    avatarId,
+    ...avatar,
+    inventory: avatar.inventory ?? await loadInventory(playerId, avatarId),
+  });
 });
 
 app.get('/avatars', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);
-  const avatars = await loadPlayerAvatars(playerId);
+  const avatars = (await loadPlayerAvatars(playerId))
+    .map(toPersistedAvatarDto)
+    .filter((avatar): avatar is NonNullable<ReturnType<typeof toPersistedAvatarDto>> => avatar !== null);
   res.json({ playerId, avatars });
 });
 
@@ -258,7 +270,8 @@ app.post('/avatar', async (req: Request, res: Response) => {
       lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
     });
 
-    res.status(201).json({ playerId, avatar });
+    const avatarDto = toPersistedAvatarDto(avatar);
+    res.status(201).json({ playerId, avatar: avatarDto ?? avatar });
   } catch (error) {
     if (error instanceof AvatarLimitReachedError) {
       res.status(409).json({ error: 'AVATAR_LIMIT_REACHED' });
@@ -311,7 +324,8 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
   });
   const encounter = await createEncounter(playerId, avatar.id ?? (body.id as string));
 
-  res.json({ playerId, avatar, encounter });
+  const avatarDto = toPersistedAvatarDto(avatar);
+  res.json({ playerId, avatar: avatarDto ?? avatar, encounter });
 });
 
 app.use(

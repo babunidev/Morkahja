@@ -16,6 +16,7 @@ import {
   setPlayer,
 } from '../db/postgresDocumentStore.js';
 import { getExpansionById } from './gameData.js';
+import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import {
   recordAvatarCreatedEvent,
   recordGemsDonatedEvent,
@@ -83,6 +84,7 @@ export interface PersistedAvatarPayload {
   frame: string;
   createdAt?: number;
   lastPlayedAt?: number;
+  displayTitle?: string | null;
 }
 
 function uniqueSorted(values: number[]): number[] {
@@ -368,9 +370,16 @@ export async function savePlayerAvatar(
     ...existing?.profile,
     raceRewardType: raceRewardType(payload.race),
     roleRewardType: roleRewardType(payload.role),
+    displayTitle: Object.prototype.hasOwnProperty.call(payload, 'displayTitle')
+      ? (typeof payload.displayTitle === 'string'
+        ? payload.displayTitle.trim() || null
+        : null)
+      : readAvatarDisplayTitle(existing ?? {}),
   };
+  const storedInventory = await loadInventory(playerId, payload.id);
   const inventory = (payload.inventory as AvatarDocument['inventory'] | undefined)
     ?? existing?.inventory
+    ?? storedInventory
     ?? createInitialAvatarInventory(profile);
   const avatar: AvatarDocument = {
     ...existing,
@@ -433,9 +442,14 @@ export async function loadBabuniAvatars(): Promise<AvatarDocument[]> {
 export async function loadPlayerAvatars(playerId: string): Promise<AvatarDocument[]> {
   const avatars = await listAvatars<AvatarDocument>(playerId);
 
-  return avatars.map((avatar) => ({
-    ...avatar.data,
-    id: avatar.data.id ?? avatar.id,
+  return Promise.all(avatars.map(async (avatar) => {
+    const avatarId = avatar.data.id ?? avatar.id;
+
+    return {
+      ...avatar.data,
+      id: avatarId,
+      inventory: avatar.data.inventory ?? await loadInventory(playerId, avatarId),
+    };
   }));
 }
 

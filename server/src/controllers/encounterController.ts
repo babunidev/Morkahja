@@ -14,6 +14,7 @@ import {
   offerLoreGem,
 } from '../services/loreGemService.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
+import { toPersistedAvatarDto } from '../services/avatarPresentation.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 
 class RequestError extends Error {
@@ -154,9 +155,10 @@ export async function continueEncounterController(
       action,
     );
     const { avatar, snapshot, resolution } = result;
+    const avatarDto = avatar ? toPersistedAvatarDto(avatar) : null;
 
     res.json({
-      avatar,
+      avatar: avatarDto ?? undefined,
       snapshot,
       success: resolution.success,
       selectedRoll: resolution.selectedRoll,

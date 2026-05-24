@@ -9,6 +9,7 @@ import {
   type InventoryItem,
   type PersistedAvatar,
 } from '../../api/http.js';
+import { normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import { interpretRoll } from './encounterInventoryPreview.js';
@@ -301,7 +302,11 @@ export function GameEnvironment({
         if (result.avatar.level > avatar.level) {
           playSfx(LEVEL_UP_SOUND);
         }
-        setAvatar(result.avatar);
+        setAvatar(normalizePersistedAvatar({
+          ...avatar,
+          ...result.avatar,
+          inventory: result.avatar.inventory ?? avatar.inventory,
+        }));
       }
 
       // Server-authoritative death (Atranor / encounter 1 chain); do not infer death locally.
