@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { donateGems, fetchPlayer } from '../../api/http.js';
+import { useTooltipReveal } from '../hooks/useTooltipReveal.js';
 import {
   protectedImageProps,
   protectedOverlaySurfaceProps,
@@ -9,6 +10,12 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const PAYPAL_DEVELOPER_URL = 'https://www.paypal.com/paypalme/babunigaming';
+const DEVELOPER_DONATION_TOOLTIP = (
+  'All donations go directly into the ongoing maintenance, development, and improvement '
+  + 'of Morkahja. Funds are used to support server costs, new features, system stability, '
+  + 'and continuous expansion of the game world.'
+);
 
 const DONATION_PRESETS = [
   { label: '10 gems', amount: 10 },
@@ -130,8 +137,76 @@ const messageStyle: CSSProperties = {
   lineHeight: 1.45,
 };
 
+const directDonateSectionStyle: CSSProperties = {
+  display: 'grid',
+  gap: 10,
+  paddingTop: 12,
+  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+};
+
+const directDonateButtonWrapStyle: CSSProperties = {
+  position: 'relative',
+  display: 'grid',
+};
+
+const directDonateTooltipStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  bottom: 'calc(100% + 10px)',
+  transform: 'translateX(-50%)',
+  width: 'min(300px, 92vw)',
+  padding: '10px 12px',
+  border: '1px solid rgba(255, 204, 102, 0.45)',
+  borderRadius: 9,
+  background: 'rgba(8, 5, 4, 0.96)',
+  color: 'rgba(247, 239, 224, 0.9)',
+  fontSize: '0.82rem',
+  lineHeight: 1.45,
+  textAlign: 'center',
+  pointerEvents: 'none',
+  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
+  boxSizing: 'border-box',
+  zIndex: 10,
+};
+
 function formatGemCount(count: number): string {
   return count === 1 ? '1 yellow red gem' : `${count} yellow red gems`;
+}
+
+function openDeveloperPaypalDonation(): void {
+  playSfx(DEFAULT_BUTTON_SOUND);
+  window.open(PAYPAL_DEVELOPER_URL, '_blank', 'noopener,noreferrer');
+}
+
+function DirectDeveloperDonateSection() {
+  const { visible: showTooltip, handlers: tooltipHandlers } = useTooltipReveal(true);
+
+  return (
+    <div style={directDonateSectionStyle}>
+      <div style={directDonateButtonWrapStyle}>
+        <span
+          id="direct-developer-donate-tooltip"
+          role="tooltip"
+          style={{
+            ...directDonateTooltipStyle,
+            opacity: showTooltip ? 1 : 0,
+            visibility: showTooltip ? 'visible' : 'hidden',
+          }}
+        >
+          {DEVELOPER_DONATION_TOOLTIP}
+        </span>
+        <button
+          aria-describedby="direct-developer-donate-tooltip"
+          onClick={openDeveloperPaypalDonation}
+          style={donateButtonStyle}
+          type="button"
+          {...tooltipHandlers}
+        >
+          Donate directly to the developers
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function DonationOverlay({
@@ -305,6 +380,7 @@ export function DonationOverlay({
             </div>
           </>
         )}
+        <DirectDeveloperDonateSection />
         {statusMessage ? (
           <p
             style={{
