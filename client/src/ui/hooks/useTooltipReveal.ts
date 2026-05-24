@@ -7,9 +7,9 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react';
-import { useLayoutMode } from '../layout/useLayoutMode.js';
-
 export const TOOLTIP_LONG_PRESS_MS = 420;
+
+const HOVER_TOOLTIP_QUERY = '(hover: hover) and (pointer: fine)';
 
 type TooltipTarget = HTMLElement;
 type TooltipPointerEvent = PointerEvent<TooltipTarget>;
@@ -21,18 +21,39 @@ export interface TooltipRevealCallbacks {
   onHide: () => void;
 }
 
-function isMobilePortraitLayout(mode: string): boolean {
-  return mode === 'mobile-portrait';
+function readHoverCapable(): boolean {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  return window.matchMedia(HOVER_TOOLTIP_QUERY).matches;
 }
 
-function useTooltipRevealMode() {
-  const { mode } = useLayoutMode();
-  return isMobilePortraitLayout(mode);
+/** Long-press when the device cannot hover (touch / coarse pointer), not only mobile layout. */
+function useTooltipLongPressMode(): boolean {
+  const [hoverCapable, setHoverCapable] = useState(readHoverCapable);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(HOVER_TOOLTIP_QUERY);
+
+    function update(): void {
+      setHoverCapable(mediaQuery.matches);
+    }
+
+    update();
+    mediaQuery.addEventListener('change', update);
+
+    return () => {
+      mediaQuery.removeEventListener('change', update);
+    };
+  }, []);
+
+  return !hoverCapable;
 }
 
 /** Hover/focus tooltips on desktop; long-press on mobile portrait. */
 export function useTooltipReveal(enabled = true) {
-  const mobile = useTooltipRevealMode();
+  const useLongPress = useTooltipLongPressMode();
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<number | null>(null);
 
@@ -57,13 +78,13 @@ export function useTooltipReveal(enabled = true) {
   }, [enabled]);
 
   const onPointerDown = useCallback((_event: TooltipPointerEvent) => {
-    if (!enabled || !mobile) {
+    if (!enabled || !useLongPress) {
       return;
     }
 
     clearTimer();
     timerRef.current = window.setTimeout(show, TOOLTIP_LONG_PRESS_MS);
-  }, [clearTimer, enabled, mobile, show]);
+  }, [clearTimer, enabled, show, useLongPress]);
 
   useEffect(() => () => clearTimer(), [clearTimer]);
 
@@ -74,7 +95,7 @@ export function useTooltipReveal(enabled = true) {
   }, [enabled, hide]);
 
   const handlers = enabled
-    ? mobile
+    ? useLongPress
       ? {
           onPointerDown,
           onPointerUp: hide,
@@ -99,7 +120,7 @@ export function useTooltipReveal(enabled = true) {
 
 /** Named targets (e.g. dashboard nav buttons). */
 export function useTooltipRevealGroup() {
-  const mobile = useTooltipRevealMode();
+  const useLongPress = useTooltipLongPressMode();
   const [activeId, setActiveId] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
 
@@ -124,7 +145,7 @@ export function useTooltipRevealGroup() {
       return {};
     }
 
-    if (mobile) {
+    if (useLongPress) {
       return {
         onPointerDown: (_event: TooltipPointerEvent) => {
           clearTimer();
@@ -148,7 +169,7 @@ export function useTooltipRevealGroup() {
       },
       onBlur: hide,
     };
-  }, [clearTimer, hide, mobile, show]);
+  }, [clearTimer, hide, show, useLongPress]);
 
   const isVisible = useCallback((id: string, enabled: boolean) => (
     enabled && activeId === id
@@ -161,7 +182,7 @@ export function useTooltipRevealGroup() {
 
 /** Per-control bindings with show/hide side effects (solutions, avatar creation). */
 export function useTooltipRevealBinding(enabled = true) {
-  const mobile = useTooltipRevealMode();
+  const useLongPress = useTooltipLongPressMode();
   const timerRef = useRef<number | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -176,7 +197,7 @@ export function useTooltipRevealBinding(enabled = true) {
       return {};
     }
 
-    if (mobile) {
+    if (useLongPress) {
       return {
         onPointerDown: (event: TooltipPointerEvent) => {
           clearTimer();
@@ -200,12 +221,12 @@ export function useTooltipRevealBinding(enabled = true) {
     }
 
     return {
-      onPointerEnter: callbacks.onShow,
-      onPointerLeave: callbacks.onHide,
+      onMouseEnter: callbacks.onShow,
+      onMouseLeave: callbacks.onHide,
       onFocus: callbacks.onShow,
       onBlur: callbacks.onHide,
     };
-  }, [clearTimer, enabled, mobile]);
+  }, [clearTimer, enabled, useLongPress]);
 
   useEffect(() => () => clearTimer(), [clearTimer]);
 

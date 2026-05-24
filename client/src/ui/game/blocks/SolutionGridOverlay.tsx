@@ -306,6 +306,10 @@ export function SolutionGridOverlay({
                   setTooltipItem(null);
                 },
               });
+              const {
+                onPointerDown: tooltipPointerDown,
+                ...itemTooltipHoverHandlers
+              } = itemTooltipHandlers;
 
               return (
                 <button
@@ -315,10 +319,10 @@ export function SolutionGridOverlay({
                   onClick={() => {
                     handleItemClick(item);
                   }}
-                  {...itemTooltipHandlers}
+                  {...itemTooltipHoverHandlers}
                   onPointerDown={(event) => {
                     pulse(itemKey);
-                    itemTooltipHandlers.onPointerDown?.(event);
+                    tooltipPointerDown?.(event);
                   }}
                   style={{
                     ...itemButtonStyle,

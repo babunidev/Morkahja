@@ -31,11 +31,13 @@ interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
   mSolutionName: string;
+  mSolutionText: string;
   mSolutionType: number;
 }
 
 interface VisibleSolutionSlot {
   available: boolean;
+  description: string;
   imageSrc: string;
   isPrimary: boolean;
   name: string;
@@ -88,6 +90,7 @@ const enableRattleAnimationStyle: CSSProperties = {
 };
 
 interface SolutionTooltipState {
+  description: string;
   detail: string;
   name: string;
   unavailable: boolean;
@@ -125,7 +128,7 @@ const frameMaskStyle: CSSProperties = {
   height: 10,
   objectFit: 'cover',
   zIndex: 6,
-  pointerEvents: 'auto',
+  pointerEvents: 'none',
 };
 
 const solutionActionsLayerStyle: CSSProperties = {
@@ -211,7 +214,9 @@ const diceRollAnimationStyle: CSSProperties = {
 const solutionTooltipStyle: CSSProperties = {
   position: 'absolute',
   zIndex: 50,
-  maxWidth: 180,
+  maxWidth: 220,
+  maxHeight: 'min(42vh, 200px)',
+  overflow: 'auto',
   padding: '7px 10px',
   border: '1px solid rgba(255, 204, 102, 0.78)',
   borderRadius: 8,
@@ -220,11 +225,25 @@ const solutionTooltipStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   fontSize: '0.78rem',
   lineHeight: 1.25,
-  textAlign: 'center',
+  textAlign: 'left',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
   boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   pointerEvents: 'none',
   transform: 'translate(-50%, calc(-100% - 12px))',
+  boxSizing: 'border-box',
+};
+
+const solutionTooltipTitleStyle: CSSProperties = {
+  margin: '0 0 4px',
+  color: '#ffcc66',
+  fontSize: '0.86rem',
+  fontWeight: 700,
+  textAlign: 'center',
+};
+
+const solutionTooltipDescriptionStyle: CSSProperties = {
+  margin: '0 0 6px',
+  whiteSpace: 'pre-wrap',
 };
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
@@ -334,6 +353,7 @@ function solutionForSlot(
 
     return {
       available: true,
+      description: solution.mSolutionText,
       imageSrc: solutionImagePath(solution),
       isPrimary: matchedItem.solutionId === primaryMatch?.solutionId,
       name: solution.mSolutionName,
@@ -351,6 +371,7 @@ function solutionForSlot(
 
   return {
     available: false,
+    description: preview.solution.mSolutionText,
     imageSrc: solutionImagePath(preview.solution),
     isPrimary: preview.isPrimary,
     name: preview.solution.mSolutionName,
@@ -470,6 +491,7 @@ export function SolutionBlock({
 
   function showActionTooltip(
     name: string,
+    description: string,
     detail: string,
     unavailable: boolean,
     event: SolutionTooltipTriggerEvent,
@@ -493,6 +515,7 @@ export function SolutionBlock({
       : 0;
 
     setSolutionTooltip({
+      description,
       detail,
       name,
       unavailable,
@@ -507,6 +530,7 @@ export function SolutionBlock({
   ): void {
     showActionTooltip(
       solution.name,
+      solution.description,
       solution.available
         ? `Charges: ${solution.uses}`
         : 'Not in your inventory',
@@ -516,7 +540,7 @@ export function SolutionBlock({
   }
 
   function showDiceTooltip(event: SolutionTooltipTriggerEvent): void {
-    showActionTooltip('Dice', 'try your luck', false, event);
+    showActionTooltip('Dice', '', 'try your luck', false, event);
   }
 
   function hideSolutionTooltip(): void {
@@ -727,7 +751,10 @@ export function SolutionBlock({
             top: solutionTooltip.y,
           }}
         >
-          <div>{solutionTooltip.name}</div>
+          <div style={solutionTooltipTitleStyle}>{solutionTooltip.name}</div>
+          {solutionTooltip.description ? (
+            <div style={solutionTooltipDescriptionStyle}>{solutionTooltip.description}</div>
+          ) : null}
           <div
             style={
               solutionTooltip.unavailable ? unavailableTooltipDetailStyle : undefined
