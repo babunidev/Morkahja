@@ -2344,7 +2344,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 20114,
-    "mEncounterImageName": "20114_lianiguard",
+    "mEncounterImageName": "liani_guardian",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -2355,8 +2355,8 @@
     "mEncounterSolutiuonTypeB": 18,
     "mEncounterSolutiuonTypeC": 17,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "As the sun dips below the horizon, a figure emerges from the Forest of Liani, the Guardian, a majestic wolf. This ethereal being is wrapped in a cascade of emerald fur that gleams with an inner radiance in the moonlight. The Guardian stands tall and noble, its physique exhibiting the raw power of nature itself. It possesses eyes of vivid jade, piercing and intense, radiating wisdom, they see through deception, peering into the very soul of any who dare enter its realm. Each movement the Guardian makes is a testament to the harmony between it and the natural world, a silent dance of coexistence. The sight of the Liani Forest Guardian is indeed a marvel, a spectacle of mystical beauty, a rare vision of the raw essence of magic incarnate.",
-    "mEncounterTitle": "The Guardian",
+    "mEncounterText": "As the sun dips below the horizon, a figure emerges from the Forest of Liani, a majestic wolf. This ethereal being is wrapped in a cascade of emerald fur that gleams with an inner radiance in the moonlight. The wolf stands tall and noble, its physique exhibiting the raw power of nature itself. It possesses eyes of vivid jade, piercing and intense, radiating wisdom, they see through deception, peering into the very soul of any who dare enter its realm. Each movement the Guardian makes is a testament to the harmony between it and the natural world, a silent dance of coexistence. The sight of the Liani Guardian is indeed a marvel, a spectacle of mystical beauty, a rare vision of the raw essence of magic incarnate.",
+    "mEncounterTitle": "Liani Guardian",
     "mEncounterType": 2
   },
   "20115": {
