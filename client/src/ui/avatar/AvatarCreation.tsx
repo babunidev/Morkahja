@@ -1,10 +1,20 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
 import { createPortal } from 'react-dom';
 import framesData from '../../data/game/frames.json';
 import portraitsData from '../../data/game/portraits.json';
 import type { PersistedAvatar } from '../../api/http.js';
 import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
-import { useTooltipRevealBinding } from '../hooks/useTooltipReveal.js';
+import {
+  useTooltipRevealBinding,
+  type TooltipRevealCallbacks,
+} from '../hooks/useTooltipReveal.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
@@ -294,19 +304,69 @@ const nameInputStyle: CSSProperties = {
   outline: 'none',
 };
 
-const tooltipStyle: CSSProperties = {
-  width: 'min(100%, 480px)',
+const CURSOR_TOOLTIP_OFFSET_PX = 14;
+const CURSOR_TOOLTIP_MAX_WIDTH_PX = 320;
+const CURSOR_TOOLTIP_ESTIMATED_HEIGHT_PX = 160;
+const CURSOR_TOOLTIP_Z_INDEX = 26;
+
+interface CursorTooltipState {
+  text: string;
+  x: number;
+  y: number;
+}
+
+type OptionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
+
+const cursorTooltipStyle: CSSProperties = {
+  position: 'fixed',
+  zIndex: CURSOR_TOOLTIP_Z_INDEX,
+  width: `min(${CURSOR_TOOLTIP_MAX_WIDTH_PX}px, calc(100vw - ${CURSOR_TOOLTIP_OFFSET_PX * 2}px))`,
   margin: 0,
   padding: '10px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.38)',
+  border: '1px solid rgba(255, 204, 102, 0.78)',
   borderRadius: 8,
-  background: 'rgba(18, 10, 7, 0.72)',
-  color: 'rgba(247, 239, 224, 0.9)',
+  background: 'rgba(12, 9, 8, 0.96)',
+  color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.9rem',
   lineHeight: 1.4,
-  textAlign: 'center',
+  textAlign: 'left',
+  textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
+  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
+  pointerEvents: 'none',
+  boxSizing: 'border-box',
 };
+
+function tooltipPositionFromPointer(clientX: number, clientY: number): Pick<CursorTooltipState, 'x' | 'y'> {
+  const x = Math.min(
+    clientX + CURSOR_TOOLTIP_OFFSET_PX,
+    window.innerWidth - CURSOR_TOOLTIP_MAX_WIDTH_PX - CURSOR_TOOLTIP_OFFSET_PX,
+  );
+  const y = Math.min(
+    clientY + CURSOR_TOOLTIP_OFFSET_PX,
+    window.innerHeight - CURSOR_TOOLTIP_ESTIMATED_HEIGHT_PX - CURSOR_TOOLTIP_OFFSET_PX,
+  );
+
+  return {
+    x: Math.max(CURSOR_TOOLTIP_OFFSET_PX, x),
+    y: Math.max(CURSOR_TOOLTIP_OFFSET_PX, y),
+  };
+}
+
+function tooltipPositionFromTarget(target: HTMLElement): Pick<CursorTooltipState, 'x' | 'y'> {
+  const rect = target.getBoundingClientRect();
+
+  return tooltipPositionFromPointer(
+    rect.left + rect.width / 2,
+    rect.bottom,
+  );
+}
+
+function hasPointerCoordinates(
+  event: OptionTooltipTriggerEvent,
+): event is PointerEvent<HTMLButtonElement> | MouseEvent<HTMLButtonElement> {
+  return 'clientX' in event && typeof event.clientX === 'number';
+}
 
 function wrapIndex(index: number, length: number): number {
   return (index + length) % length;
@@ -409,10 +469,15 @@ export function AvatarCreation({
   const [portraitIndex, setPortraitIndex] = useState(initialPortraitIndex);
   const [frameIndex, setFrameIndex] = useState(initialFrameIndex);
   const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
-  const [raceTooltip, setRaceTooltip] = useState('');
-  const [roleTooltip, setRoleTooltip] = useState('');
+  const [optionTooltip, setOptionTooltip] = useState<CursorTooltipState | null>(null);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
-  const bindTooltipReveal = useTooltipRevealBinding();
+  const bindTooltipReveal = useTooltipRevealBinding(visible);
+
+  useEffect(() => {
+    if (!visible) {
+      setOptionTooltip(null);
+    }
+  }, [visible]);
   const portrait = portraits[portraitIndex];
   const frame = frames[frameIndex];
   const race = raceFromPortrait(portrait);
@@ -457,19 +522,60 @@ export function AvatarCreation({
     setFrameIndex(randomIndex(frames.length));
   }
 
-  function showRaceTooltip(description: string): void {
-    setRaceTooltip(description);
-    setRoleTooltip('');
+  function showOptionTooltip(
+    text: string,
+    event: OptionTooltipTriggerEvent,
+  ): void {
+    if (hasPointerCoordinates(event)) {
+      setOptionTooltip({
+        text,
+        ...tooltipPositionFromPointer(event.clientX, event.clientY),
+      });
+      return;
+    }
+
+    const target = event.currentTarget;
+
+    if (target instanceof HTMLElement) {
+      setOptionTooltip({
+        text,
+        ...tooltipPositionFromTarget(target),
+      });
+    }
   }
 
-  function showRoleTooltip(description: string): void {
-    setRoleTooltip(description);
-    setRaceTooltip('');
+  function moveOptionTooltip(
+    text: string,
+    event: PointerEvent<HTMLButtonElement>,
+  ): void {
+    setOptionTooltip((current) => (
+      current?.text === text
+        ? {
+            text,
+            ...tooltipPositionFromPointer(event.clientX, event.clientY),
+          }
+        : current
+    ));
   }
 
   function hideOptionTooltips(): void {
-    setRaceTooltip('');
-    setRoleTooltip('');
+    setOptionTooltip(null);
+  }
+
+  function bindOptionTooltip(description: string) {
+    const handlers = bindTooltipReveal({
+      onShow: (event) => {
+        showOptionTooltip(description, event);
+      },
+      onHide: hideOptionTooltips,
+    });
+
+    return {
+      ...handlers,
+      onPointerMove: (event: PointerEvent<HTMLButtonElement>) => {
+        moveOptionTooltip(description, event);
+      },
+    };
   }
 
   function confirmAvatar(): void {
@@ -495,6 +601,7 @@ export function AvatarCreation({
   }
 
   return createPortal(
+    <>
     <div
       aria-label="Create Avatar"
       role="presentation"
@@ -530,12 +637,7 @@ export function AvatarCreation({
               onClick={() => {
                 chooseRandomPortrait(raceOption, role, gender);
               }}
-              {...bindTooltipReveal({
-                onShow: () => {
-                  showRaceTooltip(RACE_DESCRIPTIONS[raceOption]);
-                },
-                onHide: hideOptionTooltips,
-              })}
+              {...bindOptionTooltip(RACE_DESCRIPTIONS[raceOption])}
               style={{
                 ...optionButtonStyle,
                 ...(race === raceOption ? selectedOptionStyle : {}),
@@ -546,7 +648,6 @@ export function AvatarCreation({
             </button>
           ))}
         </div>
-        {raceTooltip ? <p role="tooltip" style={tooltipStyle}>{raceTooltip}</p> : null}
 
         <div aria-label="Choose role" style={rowStyle}>
           {ROLES.map((roleOption) => (
@@ -556,12 +657,7 @@ export function AvatarCreation({
               onClick={() => {
                 chooseRandomPortrait(race, roleOption, gender);
               }}
-              {...bindTooltipReveal({
-                onShow: () => {
-                  showRoleTooltip(ROLE_DESCRIPTIONS[roleOption]);
-                },
-                onHide: hideOptionTooltips,
-              })}
+              {...bindOptionTooltip(ROLE_DESCRIPTIONS[roleOption])}
               style={{
                 ...optionButtonStyle,
                 ...(role === roleOption ? selectedOptionStyle : {}),
@@ -572,7 +668,6 @@ export function AvatarCreation({
             </button>
           ))}
         </div>
-        {roleTooltip ? <p role="tooltip" style={tooltipStyle}>{roleTooltip}</p> : null}
 
         <div style={avatarWorkbenchStyle}>
           <div aria-label="Choose frame" style={frameColumnStyle}>
@@ -689,7 +784,20 @@ export function AvatarCreation({
         </div>
         </div>
       </section>
-    </div>,
+    </div>
+    {optionTooltip ? (
+      <p
+        role="tooltip"
+        style={{
+          ...cursorTooltipStyle,
+          left: optionTooltip.x,
+          top: optionTooltip.y,
+        }}
+      >
+        {optionTooltip.text}
+      </p>
+    ) : null}
+    </>,
     document.body,
   );
 }
