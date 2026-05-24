@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-24 01:11 (+0200) |
+| **Last updated** | 2026-05-24 04:22 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -140,6 +140,15 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 81. **Encounter art** — refreshed dice button (`im_button_dice_a.webp`), downed Aevis heal, Frostwind junk trade encounter; added `posterRaceSkills2.png` promo asset.
 82. **Live online presence** (`aa778fa`) — `listPlayerIdsWithLiveSessions()` queries non-expired session rows; friends list and admin player status use live sessions (not stale `activeSessionExpiresAt` on the player doc); banned/timed-out players never show online.
 83. **Session revocation on moderation** — `deleteAllSessionsForPlayer` clears all session rows; ban/timeout and blocked bootstrap/auth paths wipe sessions and null `activeSessionId` on the player profile.
+
+### 2026-05-24 01:50–04:22 (+0200) — PM2 fixes, dice reveal UX, Scribes Atranor feed (`942be4b`…`11f84af`)
+
+84. **API startup fix** (`942be4b`) — `adminController` import paths corrected (`gameData` / `adminPlayerService` live under `services/`); friend summary after add passes live session ids.
+85. **PM2 production wiring** (`70a7d70`, `7905205`, `2fcfd6c`) — `ecosystem.config.cjs` reads repo-root `.env`; absolute `tsx` path from repo root; `tsx` promoted to server production dependency; PM2 runs `tsx src/server.ts` with `interpreter: 'none'`.
+86. **Dice and solution reveal** (`e5b5e86`, `8d032dd`) — directional fade-in for solution slots (A/B from sides, C/D from bottom); dice scale-in + 720° bounce roll on tap; dice tooltip; `morkahja-dice-roll` keyframes.
+87. **Avatar creation tooltips** (`22fe987`, `11f84af`) — race/role option tooltips follow cursor on desktop; skipped on mobile portrait (`useLayoutMode`).
+88. **Encounter image keys** (`11f84af`) — `mEncounterImageName` aligned with new `.webp` assets (rare treasure chest, Liani shadowwolf, ferocious silvermane, disheartened rokur).
+89. **Scribes Atranor death feed** (`11f84af`) — death copy reads “entered Atranor with an Atranor item as symbol”; icon from solution **10015** (`tool_epic_atranor_potion`); `encounter_failed` uses fail icon (`No.webp`).
 
 ---
 
@@ -287,3 +296,31 @@ Since `5b2d423`.
 - **Friends** — `isPlayerOnline` checks session set + not banned/timed out.
 - **Admin** — player DTO `status: online` only when a live session exists and moderation allows play.
 - **Auth** — bootstrap and access-token refresh revoke all sessions when `assertPlayerCanPlay` fails (ban/timeout mid-session).
+
+### PM2 production fixes (`942be4b`, `70a7d70`, `7905205`, `2fcfd6c`) · 2026-05-24 01:50–02:01 (+0200)
+
+- **Problem** — after admin API landed, wrong import paths crashed the API on boot; PM2 could not find `tsx` or `.env` when `cwd` was `server/`.
+- **Imports** — `adminController.ts` pulls `gameData` and `adminPlayerService` from `services/`; `friendService` passes live session ids when building a friend row after add.
+- **ecosystem.config.cjs** — `env_file` → repo-root `.env`; `script` → absolute `node_modules/.bin/tsx`; `args` → `src/server.ts`; `interpreter: 'none'`.
+- **Dependencies** — `tsx` moved from devDependency to production dependency in `server/package.json` so `npm install --omit=dev` on the VPS still starts the API.
+- **Deploy** — on VPS after pull: `npm install`, `pm2 restart morkahja-api` (or `pm2 start ecosystem.config.cjs` on first boot); smoke with `curl https://arcanitebrothers.com/health`.
+
+### Dice and solution reveal UX (`e5b5e86`, `8d032dd`) · 2026-05-24 02:13–03:51 (+0200)
+
+- **SolutionBlock** — solution slots A/B reveal from left/right with slight rotation; C/D from bottom; shared cubic-bezier fade (`ENCOUNTER_ACTIONS_FADE_DURATION_MS` from `fade.ts`).
+- **Dice** — center slot scales in; tap triggers `morkahja-dice-roll` (720° rotation + vertical bounce over **1350ms**); `sfx_dice_press` on roll; roll value revealed after animation via `onActionReveal`.
+- **Tooltips** — dice button gets hover tooltip like solution slots; rattle animation still fires when actions become interactive.
+- **Timing** — solution roll reveal delay **1800ms**; existing enable-rattle window unchanged.
+
+### Avatar creation cursor tooltips (`22fe987`, `11f84af`) · 2026-05-24 03:02–04:22 (+0200)
+
+- **Desktop** — race/role picker tooltips follow pointer via `onPointerMove` on option buttons.
+- **Mobile portrait** — `useLayoutMode()` skips cursor tracking; tooltips use tap-to-show only (no follow-the-finger jitter).
+
+### Encounter images and Scribes Atranor copy (`11f84af`) · 2026-05-24 04:22 (+0200)
+
+- **encountersdata.json** — image keys renamed to match shipped art: `rare_treasurechest`, `liani_shadowwolf`, `ferocious_silvermane`, `disheartened_rokur`; Atranor / level-up entries kept at ids **1** / **2**.
+- **Assets** — added matching `.webp` files under `client/public/game/encounterimages/`.
+- **Scribes copy** — `avatar_died` message for Atranor reads “entered Atranor with an Atranor item as symbol” (not “fell in …”).
+- **Scribes icons** — `gameEventService.withAtranorDeathSymbol` attaches `symbolIconName` from solution **10015**; `resolveScribesIconUrl` prefers payload icon, falls back to Atranor encounter id/title, else death overlay; `encounter_failed` uses `/UI/06_SettingsMenu/No.webp`.
+- **Tests** — `achievementScribes.test.ts` covers Atranor death and encounter-failed presentation.

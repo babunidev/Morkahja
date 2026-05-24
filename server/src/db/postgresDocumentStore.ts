@@ -1,3 +1,5 @@
+import './loadDatabaseConfig.js';
+
 import pg from 'pg';
 import type { Pool as PgPool, PoolClient, QueryResult } from 'pg';
 
