@@ -1624,7 +1624,7 @@
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20078,
-    "mEncounterImageName": "combat_cursed_i_goreththeunhinged",
+    "mEncounterImageName": "unhinged_gobbl",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -1635,7 +1635,7 @@
     "mEncounterSolutiuonTypeB": 28,
     "mEncounterSolutiuonTypeC": 27,
     "mEncounterSolutiuonTypeD": 9,
-    "mEncounterText": "An eerie green glow emanates from the eyes of the unhinged Gobbl, illuminating the hideous scars that mar his gnarled face. Distorted by the curse, his body is hunched and contorted, cloaked in threadbare rags. The snarl that perpetually curls his lips reveals a row of jagged, yellowed teeth. His long, clawed fingers are constantly twitching, as if itching to rend and tear.",
+    "mEncounterText": "An eerie green glow emanates from the eyes of the unhinged Gobbl, illuminating the hideous scars that mark his gnarled face. Distorted by the curse, his body is hunched and contorted, cloaked in threadbare rags. The snarl that perpetually curls his lips reveals a row of jagged, yellowed teeth. His long, clawed fingers are constantly twitching, as if itching to rend and tear.",
     "mEncounterTitle": "Unhinged Gobbl",
     "mEncounterType": 1
   },
