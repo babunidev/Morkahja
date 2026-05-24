@@ -18,7 +18,6 @@ import {
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
-  encounterActionsFadeTransition,
 } from '../../transitions/fade.js';
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
@@ -47,6 +46,29 @@ interface VisibleSolutionSlot {
 
 const UNAVAILABLE_SOLUTION_OPACITY = 0.37;
 const SOLUTION_ENABLE_RATTLE_MS = 480;
+const SOLUTION_REVEAL_OFFSET_PX = 30;
+const DICE_ROLL_ANIMATION_MS = 1500;
+
+const encounterActionsRevealTransition = `opacity ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms ease, transform ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms ease`;
+
+type SolutionRevealDirection = 'left' | 'right' | 'bottom';
+
+function solutionRevealStyle(
+  visible: boolean,
+  direction: SolutionRevealDirection,
+): CSSProperties {
+  const hiddenOffset = direction === 'left'
+    ? `translateX(-${SOLUTION_REVEAL_OFFSET_PX}px)`
+    : direction === 'right'
+      ? `translateX(${SOLUTION_REVEAL_OFFSET_PX}px)`
+      : `translateY(${SOLUTION_REVEAL_OFFSET_PX}px)`;
+
+  return {
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'translate(0, 0)' : hiddenOffset,
+    transition: encounterActionsRevealTransition,
+  };
+}
 
 const enableRattleAnimationStyle: CSSProperties = {
   animation: `morkahja-solution-enable-rattle ${SOLUTION_ENABLE_RATTLE_MS}ms ease-out`,
@@ -103,7 +125,6 @@ const solutionActionsLayerStyle: CSSProperties = {
   alignItems: 'center',
   justifyItems: 'center',
   columnGap: 10,
-  transition: encounterActionsFadeTransition,
 };
 
 const SOLUTION_ACTION_SIZE_PX = 83;
@@ -167,7 +188,12 @@ const diceImageStyle: CSSProperties = {
   width: '100%',
   height: 'auto',
   filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))',
-  transition: 'transform 1500ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+  transition: `transform ${DICE_ROLL_ANIMATION_MS}ms cubic-bezier(0.34, 1.45, 0.64, 1)`,
+};
+
+const diceRollBounceAnimationStyle: CSSProperties = {
+  animation: `morkahja-dice-roll-bounce ${DICE_ROLL_ANIMATION_MS}ms cubic-bezier(0.34, 1.45, 0.64, 1)`,
+  transformOrigin: '50% 50%',
 };
 
 const solutionTooltipStyle: CSSProperties = {
@@ -477,7 +503,7 @@ export function SolutionBlock({
   }
 
   function showDiceTooltip(event: SolutionTooltipTriggerEvent): void {
-    showActionTooltip('Dice', 'Roll for encounter outcome', false, event);
+    showActionTooltip('Dice', 'try your luck', false, event);
   }
 
   function hideSolutionTooltip(): void {
@@ -498,7 +524,7 @@ export function SolutionBlock({
     rollRevealTimer.current = window.setTimeout(() => {
       onActionReveal?.('dice', encounter.rollE ?? null);
       rollRevealTimer.current = null;
-    }, 1500);
+    }, DICE_ROLL_ANIMATION_MS);
   }
 
   function handleSolutionClick(solution: VisibleSolutionSlot): void {
@@ -517,7 +543,7 @@ export function SolutionBlock({
       onActionReveal?.(solution.slot, roll, solution.solutionId);
       setActiveSolutionSlot(null);
       rollRevealTimer.current = null;
-    }, 1500);
+    }, DICE_ROLL_ANIMATION_MS);
   }
 
   return (
@@ -530,6 +556,7 @@ export function SolutionBlock({
       <style>
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
         {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
+        {'@keyframes morkahja-dice-roll-bounce { 0% { transform: scale(1); } 38% { transform: scale(1.16); } 58% { transform: scale(0.9); } 74% { transform: scale(1.08); } 88% { transform: scale(0.97); } 100% { transform: scale(1); } }'}
       </style>
       <img
         alt=""
@@ -542,15 +569,21 @@ export function SolutionBlock({
         aria-label="Solution actions"
         style={{
           ...solutionActionsLayerStyle,
-          opacity: hidden || !actionsVisible ? 0 : 1,
+          opacity: hidden ? 0 : 1,
           pointerEvents: actionsReady ? 'auto' : 'none',
-          transition: hidden ? 'opacity 0ms' : solutionActionsLayerStyle.transition,
+          transition: hidden ? 'opacity 0ms' : undefined,
         }}
       >
         {solutionSlots.map((slot) => {
           if (slot === 'dice') {
             return (
-            <div key={slot} style={diceSlotStyle}>
+            <div
+              key={slot}
+              style={{
+                ...diceSlotStyle,
+                ...solutionRevealStyle(actionsVisible && !hidden, 'bottom'),
+              }}
+            >
               <button
                 aria-disabled={!actionsReady}
                 aria-label="Roll dice"
@@ -567,8 +600,10 @@ export function SolutionBlock({
                 type="button"
               >
                 <span
+                  key={diceRollCount}
                   style={{
                     ...diceImageWrapStyle,
+                    ...(diceRollCount > 0 ? diceRollBounceAnimationStyle : {}),
                     ...(diceEnableRattle ? enableRattleAnimationStyle : {}),
                   }}
                 >
@@ -591,8 +626,18 @@ export function SolutionBlock({
           const visibleSlot = visibleSlots[slot];
 
           if (!visibleSlot) {
-            return <span aria-hidden="true" key={slot} />;
+            return (
+              <span
+                aria-hidden="true"
+                key={slot}
+                style={solutionRevealStyle(actionsVisible && !hidden, slot === 'A' || slot === 'B' ? 'left' : 'right')}
+              />
+            );
           }
+
+          const revealDirection: SolutionRevealDirection = slot === 'A' || slot === 'B'
+            ? 'left'
+            : 'right';
 
           return (
               <button
@@ -619,8 +664,11 @@ export function SolutionBlock({
                 }}
                 style={{
                   ...solutionButtonStyle,
+                  ...solutionRevealStyle(actionsVisible && !hidden, revealDirection),
+                  ...(actionsVisible && !hidden && !visibleSlot.available
+                    ? { opacity: UNAVAILABLE_SOLUTION_OPACITY }
+                    : {}),
                   cursor: actionsReady && visibleSlot.available ? 'pointer' : 'default',
-                  opacity: visibleSlot.available ? 1 : UNAVAILABLE_SOLUTION_OPACITY,
                 }}
                 type="button"
               >
