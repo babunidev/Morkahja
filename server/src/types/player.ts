@@ -1,3 +1,15 @@
+export interface WallOfFameEntry {
+  id: string;
+  name: string;
+  race: 'Rokur' | 'Verdani' | 'Aevis' | 'Grimnir';
+  role: 'Mage' | 'Warrior' | 'Rogue';
+  level: number;
+  portrait: string;
+  frame: string;
+  encountersPlayed: number;
+  diedAt: number;
+}
+
 export interface PlayerModeration {
   banned?: boolean;
   banReason?: string;
@@ -18,6 +30,8 @@ export interface PlayerDocument {
   unlockedExpansions: number[];
   /** Player ids added as friends (account-wide). */
   friendIds?: string[];
+  /** Fallen avatars preserved for the player profile wall of fame. */
+  wallOfFame?: WallOfFameEntry[];
   activeAvatarId?: string;
   currencies?: {
     yellow_red_gem?: number;

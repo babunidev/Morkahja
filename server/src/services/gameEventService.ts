@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { AvatarDocument } from '../types/avatar.js';
+import { recordWallOfFameEntry } from './playerProfileService.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
@@ -253,6 +254,7 @@ export async function recordEncounterContinuedEvents(
       importance: 'legendary',
       payload: withAtranorDeathSymbol(payload),
     });
+    await recordWallOfFameEntry(playerId, avatar);
     return;
   }
 

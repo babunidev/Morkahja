@@ -19,6 +19,7 @@ import type {
   LoreGemClaimResponse,
   LoreGemOfferResponse,
   PersistedAvatarDto,
+  PlayerProfileResponse,
   PlayerResponse,
   StaticGameDataStatus,
 } from '@shared/contracts';
@@ -146,6 +147,10 @@ export async function fetchPlayer(
   void session;
 
   return request<PlayerResponse>('/player');
+}
+
+export async function fetchPlayerProfile(): Promise<PlayerProfileResponse> {
+  return request<PlayerProfileResponse>('/player/profile');
 }
 
 export async function offerLoreGem(avatarId: string): Promise<LoreGemOfferResponse> {

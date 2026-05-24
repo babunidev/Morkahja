@@ -4,6 +4,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
 
@@ -105,6 +106,12 @@ const actionButtonStyle: CSSProperties = {
   fontSize: '0.95rem',
 };
 
+const footerButtonStyle: CSSProperties = {
+  ...actionButtonStyle,
+  width: '100%',
+  minWidth: 0,
+};
+
 export function SettingsScreen({
   onClose,
   onLogout,
@@ -118,10 +125,12 @@ export function SettingsScreen({
 }) {
   const displayName = playerName.trim();
   const [visible, setVisible] = useState(false);
+  const [aboutUsOpen, setAboutUsOpen] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
+      setAboutUsOpen(false);
       return;
     }
 
@@ -192,7 +201,23 @@ export function SettingsScreen({
             End Session
           </button>
         </div>
+        <button
+          onClick={() => {
+            playSfx(DEFAULT_BUTTON_SOUND);
+            setAboutUsOpen(true);
+          }}
+          style={footerButtonStyle}
+          type="button"
+        >
+          About Us
+        </button>
       </section>
+      <AboutUsOverlay
+        onClose={() => {
+          setAboutUsOpen(false);
+        }}
+        open={aboutUsOpen}
+      />
     </div>
   );
 }

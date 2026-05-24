@@ -14,9 +14,9 @@ import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
-import AboutUsOverlay from './AboutUsOverlay.js';
 import ExpansionsOverlay from './ExpansionsOverlay.js';
 import FriendsOverlay from './FriendsOverlay.js';
+import PlayerProfileOverlay from './PlayerProfileOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
@@ -51,8 +51,8 @@ const RADIAL_BUTTONS = [
     y: 0,
   },
   {
-    label: 'About Us',
-    tooltip: 'About Us',
+    label: 'Profile',
+    tooltip: 'Profile',
     src: '/UI/03_DASHBOARD/im_button_credits_b.webp',
     x: -96,
     y: 0,
@@ -258,9 +258,9 @@ export function Dashboard({
   const [activityOpen, setActivityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
-  const [aboutUsOpen, setAboutUsOpen] = useState(false);
   const [expansionsOpen, setExpansionsOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
   const { bind: bindNavTooltip, isVisible: isNavTooltipVisible } = useTooltipRevealGroup();
@@ -563,14 +563,14 @@ export function Dashboard({
                 if (button.label === 'Achievements') {
                   setAchievementsOpen(true);
                 }
-                if (button.label === 'About Us') {
-                  setAboutUsOpen(true);
-                }
                 if (button.label === 'Expansions') {
                   setExpansionsOpen(true);
                 }
                 if (button.label === 'Social') {
                   setFriendsOpen(true);
+                }
+                if (button.label === 'Profile') {
+                  setProfileOpen(true);
                 }
               }}
               style={{
@@ -757,14 +757,6 @@ export function Dashboard({
         />
       ) : null}
       {showChrome ? (
-        <AboutUsOverlay
-          onClose={() => {
-            setAboutUsOpen(false);
-          }}
-          open={aboutUsOpen}
-        />
-      ) : null}
-      {showChrome ? (
         <ExpansionsOverlay
           onClose={() => {
             setExpansionsOpen(false);
@@ -781,6 +773,15 @@ export function Dashboard({
           open={friendsOpen}
           playerId={playerId}
           playerName={playerName}
+        />
+      ) : null}
+      {showChrome ? (
+        <PlayerProfileOverlay
+          fallbackPlayerName={playerName}
+          onClose={() => {
+            setProfileOpen(false);
+          }}
+          open={profileOpen}
         />
       ) : null}
     </main>

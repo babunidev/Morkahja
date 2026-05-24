@@ -43,7 +43,7 @@ const CREDITS: CreditEntry[] = [
 const backdropStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 6,
+  zIndex: 7,
   display: 'grid',
   placeItems: 'center',
   padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',

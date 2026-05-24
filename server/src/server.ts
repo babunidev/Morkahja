@@ -15,6 +15,7 @@ import {
   getFriendAchievementsController,
   listPlayerFriendsController,
 } from './controllers/friendController.js';
+import { getPlayerProfileController } from './controllers/playerProfileController.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
@@ -177,6 +178,7 @@ app.post('/player/expansions/unlock', unlockPlayerExpansionController);
 app.get('/player/friends', listPlayerFriendsController);
 app.post('/player/friends', addPlayerFriendController);
 app.get('/player/friends/:friendId/achievements', getFriendAchievementsController);
+app.get('/player/profile', getPlayerProfileController);
 
 app.get('/player', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);

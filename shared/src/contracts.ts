@@ -21,6 +21,37 @@ export interface PlayerResponse {
   unlockedExpansions?: number[];
 }
 
+export interface WallOfFameEntryDto {
+  id: string;
+  name: string;
+  race: AvatarRace;
+  role: AvatarRole;
+  level: number;
+  portrait: string;
+  frame: string;
+  encountersPlayed: number;
+  diedAt: number;
+}
+
+export interface PlayerProfileAvatarDto {
+  id: string;
+  name: string;
+  race: AvatarRace;
+  role: AvatarRole;
+  level: number;
+  portrait: string;
+  frame: string;
+  createdAt: number;
+}
+
+export interface PlayerProfileResponse {
+  playerId: string;
+  playerName: string;
+  joinedAt: number;
+  avatars: PlayerProfileAvatarDto[];
+  wallOfFame: WallOfFameEntryDto[];
+}
+
 export interface UnlockExpansionResponse {
   playerId: string;
   expansionId: number;
