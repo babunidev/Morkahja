@@ -155,7 +155,7 @@ const atranorDeath = {
 
 assert.equal(
   renderEventMessage(atranorDeath),
-  'Lyra entered Atranor with an Atranor item as symbol.',
+  'Lyra entered Atranor. The gods decide their fate',
 );
 assert.equal(
   resolveScribesIconUrl(atranorDeath),
