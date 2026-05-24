@@ -1,3 +1,4 @@
+import { ApiRequestError } from './httpErrorMessage.js';
 import type {
   AchievementsResponse,
   ActivityFeedResponse,
@@ -84,9 +85,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `HTTP ${response.status} ${response.statusText}: ${await response.text()}`,
-    );
+    const body = await response.text();
+    throw new ApiRequestError(response.status, response.statusText, body);
   }
 
   return (await response.json()) as T;
@@ -214,7 +214,7 @@ export async function fetchAvatar(
   try {
     return await request<AvatarResponse>('/avatar/active');
   } catch (error) {
-    if (error instanceof Error && error.message.includes('HTTP 404')) {
+    if (error instanceof ApiRequestError && error.status === 404) {
       return {};
     }
 
@@ -236,7 +236,7 @@ export async function fetchActiveEncounter(
       `/encounter/active?${params.toString()}`,
     );
   } catch (error) {
-    if (error instanceof Error && error.message.includes('HTTP 404')) {
+    if (error instanceof ApiRequestError && error.status === 404) {
       return null;
     }
 
@@ -289,7 +289,7 @@ export async function fetchOrCreateActiveEncounter(
   try {
     return await request<EncounterSnapshot>(`/encounter/active?${params.toString()}`);
   } catch (error) {
-    if (!(error instanceof Error) || !error.message.includes('HTTP 404')) {
+    if (!(error instanceof ApiRequestError) || error.status !== 404) {
       throw error;
     }
   }
