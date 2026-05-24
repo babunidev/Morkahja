@@ -16,6 +16,19 @@ import {
 import type { PlayerDocument } from '../types/player.js';
 import { getEncounterById, getSolutionMap } from './gameData.js';
 
+const ATRANOR_DEATH_SYMBOL_SOLUTION_ID = 10015;
+
+function atranorDeathSymbolIconName(): string | undefined {
+  const solution = getSolutionMap()[String(ATRANOR_DEATH_SYMBOL_SOLUTION_ID)];
+  const icon = solution?.mSolutionIconName;
+  return typeof icon === 'string' && icon.length > 0 ? icon : undefined;
+}
+
+function withAtranorDeathSymbol(payload: Record<string, unknown>): Record<string, unknown> {
+  const symbolIconName = atranorDeathSymbolIconName();
+  return symbolIconName ? { ...payload, symbolIconName } : payload;
+}
+
 async function readPlayer(playerId: string): Promise<PlayerDocument | null> {
   const data = await getPlayer<Partial<PlayerDocument>>(playerId);
   if (!data) {
@@ -238,7 +251,7 @@ export async function recordEncounterContinuedEvents(
       type: 'avatar_died',
       visibility: 'global',
       importance: 'legendary',
-      payload,
+      payload: withAtranorDeathSymbol(payload),
     });
     return;
   }
@@ -280,10 +293,10 @@ export async function recordEncounterContinuedEvents(
       type: 'avatar_died',
       visibility: 'global',
       importance: 'legendary',
-      payload: {
+      payload: withAtranorDeathSymbol({
         ...payload,
         pendingDeathEncounter: true,
-      },
+      }),
     });
   }
 

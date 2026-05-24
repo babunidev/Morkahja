@@ -2,6 +2,8 @@ import type { GameEvent } from '../events/GameEvent.js';
 
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const DEATH_ICON = '/UI/09_GAME/im_overlay_death.webp';
+const SCRIBES_FAIL_ICON = '/UI/06_SettingsMenu/No.webp';
+const ATRANOR_SYMBOL_ICON = `${SOLUTION_IMAGE_ROOT}/tool_epic_atranor_potion.webp`;
 const LEVEL_UP_ICON = '/UI/09_GAME/im_button_resurrect.webp';
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
 const ADVENTURER_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_daily_reward.webp';
@@ -15,6 +17,11 @@ const HELPER_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_helper.webp';
 function readString(payload: Record<string, unknown>, key: string): string | undefined {
   const value = payload[key];
   return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function readNumber(payload: Record<string, unknown>, key: string): number | undefined {
+  const value = payload[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
 export function resolveScribesAvatarVisual(
@@ -39,8 +46,22 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
   const payload = event.payload;
 
   switch (event.type) {
-    case 'avatar_died':
+    case 'avatar_died': {
+      const symbolIconName = readString(payload, 'symbolIconName');
+      if (symbolIconName) {
+        return `${SOLUTION_IMAGE_ROOT}/${symbolIconName}.webp`;
+      }
+
+      const encounterId = readNumber(payload, 'encounterId');
+      const encounterTitle = readString(payload, 'encounterTitle')?.toLowerCase();
+      if (encounterId === 1 || encounterTitle === 'atranor') {
+        return ATRANOR_SYMBOL_ICON;
+      }
+
       return DEATH_ICON;
+    }
+    case 'encounter_failed':
+      return SCRIBES_FAIL_ICON;
     case 'level_up':
       return LEVEL_UP_ICON;
     case 'gems_received':

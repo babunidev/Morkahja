@@ -137,4 +137,54 @@ assert.equal(
   '/game/solutionimages/im_solution_iron_blade.webp',
 );
 
+const atranorDeath = {
+  eventId: 'death-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'avatar_died',
+  visibility: 'global' as const,
+  importance: 'legendary' as const,
+  payload: {
+    avatarName: 'Lyra',
+    encounterId: 1,
+    encounterTitle: 'Atranor',
+    symbolIconName: 'tool_epic_atranor_potion',
+  },
+};
+
+assert.equal(
+  renderEventMessage(atranorDeath),
+  'Lyra entered Atranor with an Atranor item as symbol.',
+);
+assert.equal(
+  resolveScribesIconUrl(atranorDeath),
+  '/game/solutionimages/tool_epic_atranor_potion.webp',
+);
+
+const encounterFailed = {
+  eventId: 'fail-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'encounter_failed',
+  visibility: 'global' as const,
+  importance: 'medium' as const,
+  payload: {
+    avatarName: 'Lyra',
+    encounterTitle: 'Frozen Pass',
+    outcome: 'Misery',
+    success: false,
+  },
+};
+
+assert.equal(
+  renderEventMessage(encounterFailed),
+  'Lyra failed against Frozen Pass.',
+);
+assert.equal(
+  resolveScribesIconUrl(encounterFailed),
+  '/UI/06_SettingsMenu/No.webp',
+);
+
 console.log('achievementScribes.test.ts passed');

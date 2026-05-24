@@ -112,7 +112,7 @@ export function renderEventMessage(event: GameEvent): string {
         : `${avatarLabel(payload)} reached a new level.`;
     }
     case 'avatar_died':
-      return `${avatarLabel(payload)} fell in ${encounterLabel(payload)}.`;
+      return `${avatarLabel(payload)} entered Atranor with an Atranor item as symbol.`;
     case 'item_obtained': {
       const itemName = readString(payload, 'solutionName') ?? 'a treasure';
       return `${avatarLabel(payload)} claimed ${itemName}.`;

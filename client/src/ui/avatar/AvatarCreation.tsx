@@ -15,6 +15,7 @@ import {
   useTooltipRevealBinding,
   type TooltipRevealCallbacks,
 } from '../hooks/useTooltipReveal.js';
+import { useLayoutMode } from '../layout/useLayoutMode.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
@@ -471,6 +472,8 @@ export function AvatarCreation({
   const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
   const [optionTooltip, setOptionTooltip] = useState<CursorTooltipState | null>(null);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const { mode } = useLayoutMode();
+  const mobilePortrait = mode === 'mobile-portrait';
   const bindTooltipReveal = useTooltipRevealBinding(visible);
 
   useEffect(() => {
@@ -569,6 +572,10 @@ export function AvatarCreation({
       },
       onHide: hideOptionTooltips,
     });
+
+    if (mobilePortrait) {
+      return handlers;
+    }
 
     return {
       ...handlers,
