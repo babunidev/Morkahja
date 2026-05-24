@@ -124,7 +124,7 @@ function buildRandomPool(
 ): EncounterData[] {
   return Object.values(encounters).filter(
     (encounter) =>
-      encounter.mEncounterID > RANDOM_ENCOUNTER_MIN_ID &&
+      encounter.mEncounterID >= RANDOM_ENCOUNTER_MIN_ID &&
       !isSystemEncounterId(encounter.mEncounterID) &&
       isEncounterAllowed(encounter, unlockedExpansions),
   );
@@ -198,7 +198,7 @@ function selectRandomPreparedEncounter(
   while (attempts < MAX_EXPANSION_REROLLS) {
     const candidates = Object.values(encounters).filter(
       (encounter) =>
-        encounter.mEncounterID > RANDOM_ENCOUNTER_MIN_ID &&
+        encounter.mEncounterID >= RANDOM_ENCOUNTER_MIN_ID &&
         !isSystemEncounterId(encounter.mEncounterID),
     );
 
