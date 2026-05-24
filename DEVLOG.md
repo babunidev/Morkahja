@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-24 04:22 (+0200) |
+| **Last updated** | 2026-05-24 23:18 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -148,7 +148,51 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 86. **Dice and solution reveal** (`e5b5e86`, `8d032dd`) — directional fade-in for solution slots (A/B from sides, C/D from bottom); dice scale-in + 720° bounce roll on tap; dice tooltip; `morkahja-dice-roll` keyframes.
 87. **Avatar creation tooltips** (`22fe987`, `11f84af`) — race/role option tooltips follow cursor on desktop; skipped on mobile portrait (`useLayoutMode`).
 88. **Encounter image keys** (`11f84af`) — `mEncounterImageName` aligned with new `.webp` assets (rare treasure chest, Liani shadowwolf, ferocious silvermane, disheartened rokur).
-89. **Scribes Atranor death feed** (`11f84af`) — death copy reads “entered Atranor with an Atranor item as symbol”; icon from solution **10015** (`tool_epic_atranor_potion`); `encounter_failed` uses fail icon (`No.webp`).
+89. **Scribes Atranor death feed** (`11f84af`, `52c792d`) — death copy “entered Atranor. The gods decide their fate”; icon from solution **10015**; `encounter_failed` uses fail icon (`No.webp`).
+
+### 2026-05-24 05:45–05:58 (+0200) — Encounter art batch and DB config (`8e3e093`, `e5079c3`)
+
+90. **Encounter assets** — Grimnir heal, blightwraith huntress/occultist, crumblegheist barbarian, nagar humpback; refreshed dice button WebPs (`im_button_dice_a` / `_b`); `encountersdata.json` image keys synced.
+91. **Database** — `loadDatabaseConfig.ts` for clearer Postgres URL/env handling; small `postgresDocumentStore` tweak.
+92. Restore missing **crumblegheist_barbarian** portrait asset (`e5079c3`).
+
+### 2026-05-24 05:49–05:54 (+0200) — Loading errors and social preview (`44498fb`, `c63d8f7`)
+
+93. **Welcome / loading** — bootstrap and health failures show short API messages instead of raw nginx HTML bodies on the loading screen.
+94. **Link previews** — Open Graph / Twitter `og:image` uses `posterRaceSkills2.png` (race-skills promo) instead of the square app icon.
+
+### 2026-05-24 19:06–21:06 (+0200) — Tooltips, profile, donations, encounter pool (`3501dde`…`c81db96`)
+
+95. **Game tooltips** — touch tap-to-toggle; solution descriptions restored on hover/tap (`3501dde`).
+96. **Inventory and skillbook** — item tooltips on hover and click; grid overlay hit targets fixed (`37ca8de`).
+97. **In-game hover** — nav-style press pulse and hover glow on avatar slots, solution actions, and related game chrome; inventory overlay `pointer-events` so tooltips receive clicks (`b55e261`).
+98. **Player profile** — `GET /player/profile`; **Profile** on dashboard radial (credits button, “Profile” tooltip) opens `PlayerProfileOverlay` (join date, up to three avatars, scrollable **wall of fame**); **About Us** moved to Settings footer (`417e49e`).
+99. **Wall of fame** — on `avatar_died`, `recordWallOfFameEntry` stores portrait, frame, level, encounters played, and `diedAt` (max **48** entries, newest first) on the player doc.
+100. **Solution tooltips** — anchored beside slot edges (A left, B right, C/D above); refreshed flytrap grotto, thunderfly, thunderhoof encounter art (`ef63f2a`).
+101. **Donations** — **Donate directly to Babunigaming** opens PayPal (`paypal.me/babunigaming`) with maintenance/dev tooltip; gem copy uses “treasury” (`53b274b`).
+102. **Encounter pool** — random selection uses `mEncounterID >= 20001` so **Lovely Meadows** (**20001**) can appear; bulk encounter image key renames and replacement `.webp` set (`1bf097a`).
+103. **Production build** — `SolutionGridOverlay` tooltip handler props typed for strict TS (`c81db96`).
+
+### 2026-05-24 21:48 (+0200) — Scribes Atranor copy refresh (`52c792d`)
+
+104. **Scribes** — Atranor death line now reads “entered Atranor. The gods decide their fate” (supersedes earlier “Atranor item as symbol” wording).
+
+### 2026-05-24 22:45 (+0200) — Inventory persistence fix (`c958fe2`)
+
+105. **`avatarPresentation.ts`** — `toPersistedAvatarDto` carries `displayTitle` and `inventory` when present; list/create/select avatar endpoints return normalized DTOs.
+106. **API / client** — `GET /avatar` falls back to `loadInventory` when the avatar doc lacks inventory; `GameEnvironment` keeps inventory across encounter continues so skillbook/inventory overlays stay populated.
+
+### 2026-05-24 23:18 (+0200) — Profile titles, Seal of Norghor, overlay buttons, settings UX (`32bf3e7`)
+
+107. **Achievement titles** — unlocked rank titles from achievement chains exposed on profile; per-avatar `displayTitle` stored on avatar profile; `PATCH /avatar/:avatarId/display-title`; title `<select>` on each live avatar in **Player profile**; UI shows “Title Name” via `formatAvatarDisplayName`.
+108. **Seal of Norghor** — gem subscription (**67** yellow red gems / **28** days); `GET /player/seal-of-norghor`, `POST /player/seal-of-norghor/activate`; while active, `mergeUnlockedExpansionsWithSeal` merges all active expansion ids into effective unlocks; `SealOfNorghorSection` in Settings with lore art and activate CTA.
+109. **`PanelButton` / `ClosePanelButton`** — shared overlay press/hover (nav-style pulse + gold glow); adopted on Settings, About Us, Donation, achievements, friends, expansions, Scribes, and solution grid overlays.
+110. **Settings refresh** — scrollable panel (header / body / footer); bottom gradient **scroll hint** when content overflows; **Recovery key** download row; player name beside SETTINGS title; About Us remains in footer.
+111. **`GET /player`** — includes `sealOfNorghor` status DTO (active, expiry, cost, `canActivate`) alongside gems and expansions.
+
+### 2026-05-24 (uncommitted) — Encounter art keys
+
+112. Local rename/sync: `drained_aevis`, `common_chest`, `embersnout`, `young_redeye`, `veilwalker`; Embersnout lore trim; common chest reward amount **2** (was **1**).
 
 ---
 
@@ -321,6 +365,84 @@ Since `5b2d423`.
 
 - **encountersdata.json** — image keys renamed to match shipped art: `rare_treasurechest`, `liani_shadowwolf`, `ferocious_silvermane`, `disheartened_rokur`; Atranor / level-up entries kept at ids **1** / **2**.
 - **Assets** — added matching `.webp` files under `client/public/game/encounterimages/`.
-- **Scribes copy** — `avatar_died` message for Atranor reads “entered Atranor with an Atranor item as symbol” (not “fell in …”).
+- **Scribes copy** — `avatar_died` message for Atranor reads “entered Atranor. The gods decide their fate” (since `52c792d`; was “entered Atranor with an Atranor item as symbol” in `11f84af`).
 - **Scribes icons** — `gameEventService.withAtranorDeathSymbol` attaches `symbolIconName` from solution **10015**; `resolveScribesIconUrl` prefers payload icon, falls back to Atranor encounter id/title, else death overlay; `encounter_failed` uses `/UI/06_SettingsMenu/No.webp`.
 - **Tests** — `achievementScribes.test.ts` covers Atranor death and encounter-failed presentation.
+
+### Player profile and wall of fame (`417e49e`, `32bf3e7`) · 2026-05-24 20:18–23:18 (+0200)
+
+- **API** — `GET /player/profile` → `PlayerProfileResponse` (shared contracts); `playerProfileController` + `playerProfileService.ts`.
+- **Wall of fame** — `player.wallOfFame[]` on player document; `recordWallOfFameEntry` called from `gameEventService` on `avatar_died` with progression snapshot (encounters completed, level, portrait, frame).
+- **UI** — `PlayerProfileOverlay` on dashboard **Profile** nav (`im_button_credits_b`); shows join date, current avatar slots (max 3), fallen-avatar cards with died date and encounter count.
+- **Titles** (since `32bf3e7`) — `unlockedTitles` from achievement ranks; per-avatar title select; `PATCH /avatar/:avatarId/display-title`; formatted names across avatar UI.
+- **About Us** — removed from dashboard radial; **Settings** footer button opens `AboutUsOverlay` (credits + Donation entry unchanged).
+
+### Game and inventory tooltips (`3501dde`, `37ca8de`, `b55e261`, `ef63f2a`, `c81db96`) · 2026-05-24 19:06–21:06 (+0200)
+
+- **`useTooltipReveal`** — touch devices use tap to show/hide; desktop keeps hover + optional cursor follow; descriptions restored for solution items.
+- **`SolutionGridOverlay`** — inventory/skillbook grids use separate tooltip anchors; overlay layers fixed so clicks reach grid cells under the dimmer.
+- **`SolutionBlock`** — edge-anchored tooltips per slot letter; shares fade timing with encounter actions.
+- **In-game chrome** — `.morkahja-game-interactive-button` press/hover parity with dashboard nav buttons on avatar slots and solution/dice controls.
+
+### Donations PayPal link (`53b274b`) · 2026-05-24 20:51 (+0200)
+
+- **`DonationOverlay`** — `DirectDeveloperDonateSection` below gem presets; external PayPal link with tooltip explaining server/dev use.
+- **In-game gems** — `POST` donate presets (10 / 50 / 100 / all) unchanged; contributor achievement still driven by `gems_donated` events.
+
+### Encounter pool and art rename (`1bf097a`, `8e3e093`) · 2026-05-24 05:45–21:01 (+0200)
+
+- **Pool** — `buildRandomPool` / `selectRandomPreparedEncounter` include id **20001** (Lovely Meadows); system ids **1** / **2** / death encounter still excluded via `isSystemEncounterId`.
+- **Keys** — legacy `combat_*` / `fight_*` filenames replaced with shorter keys (`nagar_boar`, `blackwood_guardian`, `wild_bloodfang`, etc.) across client + server `encountersdata.json`.
+
+### Loading screen API errors (`44498fb`) · 2026-05-24 05:32 (+0200)
+
+- **Problem** — API down or nginx 502 returned HTML; loading UI showed unreadable markup.
+- **Fix** — client parses JSON error bodies when `Content-Type` allows; falls back to status text for display on welcome/loading paths.
+
+### Social preview image (`c63d8f7`) · 2026-05-24 05:35 (+0200)
+
+- **`socialPreview.ts`** — `SOCIAL_IMAGE_PATH` → `/posterRaceSkills2.png` with native dimensions **2133×2846** for richer Telegram/link cards.
+
+### Overlay panel buttons (`32bf3e7`) · 2026-05-24 23:18 (+0200)
+
+- **`PanelButton.tsx`** — reusable overlay `<button>` with per-control `pressKey` and `visualStyle` on an inner span (same pattern as nav radial buttons).
+- **`ClosePanelButton.tsx`** — shared Close control with SFX + default visual style.
+- **CSS** — `.morkahja-panel-button` / `-visual` hover scale + gold glow in `index.css`.
+- **Adoption** — Settings, About Us, Donation, achievements, friends, expansions, Scribes, solution grid overlays.
+
+### Inventory API persistence (`c958fe2`) · 2026-05-24 22:45 (+0200)
+
+- **Problem** — inventory/skillbook grids opened empty after encounter continues because avatar responses omitted `inventory`.
+- **Server** — `toPersistedAvatarDto` in `avatarPresentation.ts`; `/avatars` maps through DTO; `/avatar` loads from inventories table when doc field is missing; create/select return DTO shape.
+- **Client** — `GameEnvironment` merges `result.avatar.inventory ?? avatar.inventory` on continue so local state does not reset.
+
+### Scribes Atranor copy refresh (`52c792d`) · 2026-05-24 21:48 (+0200)
+
+- **`renderEventMessage.ts`** — `avatar_died` for Atranor: “entered Atranor. The gods decide their fate”.
+- **Tests** — `achievementScribes.test.ts` expectation updated to match.
+
+### Profile titles (`32bf3e7`) · 2026-05-24 23:18 (+0200)
+
+- **Domain** — `achievementTitles.ts`: `collectUnlockedTitlesFromAchievements`, `formatAvatarDisplayName`, validation in `setAvatarDisplayTitle`.
+- **API** — profile response adds `unlockedTitles[]`; avatars include `displayTitle`; `PATCH /avatar/:avatarId/display-title` with `INVALID_DISPLAY_TITLE` when title not unlocked.
+- **UI** — `PlayerProfileOverlay` title dropdown per current avatar; `avatarDisplayName.ts` on dashboard avatar cards and selection panel.
+
+### Seal of Norghor subscription (`32bf3e7`) · 2026-05-24 23:18 (+0200)
+
+- **Cost / duration** — **67** yellow red gems for **28** days (`sealOfNorghor.ts` constants).
+- **Storage** — `player.sealOfNorghor.expiresAt` on player document.
+- **API** — `GET /player/seal-of-norghor`; `POST /player/seal-of-norghor/activate` debits gems and sets expiry; errors `SEAL_ALREADY_ACTIVE`, `INSUFFICIENT_GEMS`.
+- **Expansions** — `mergeUnlockedExpansionsWithSeal` appends all active expansion ids while seal is valid (effective unlocks on `GET /player` without overwriting purchased list).
+- **UI** — `SealOfNorghorSection.tsx` in Settings: seal art, lore intro, status line, gem balance, activate button.
+
+### Settings panel UX (`32bf3e7`) · 2026-05-24 23:18 (+0200)
+
+- **Layout** — three-row panel (header / scroll body / footer); player name inline with SETTINGS title.
+- **Scroll hint** — `ResizeObserver` + gradient overlay with bouncing chevron when body has hidden content.
+- **Recovery key** — download row using `sessionKeys.downloadRecoveryKey`; inline messages when key missing on device.
+- **About Us** — footer `PanelButton` opens existing credits overlay.
+
+### Encounter art keys (local, uncommitted) · 2026-05-24
+
+- **Renames** — `help_heal_drained_aevis` → `drained_aevis`; `chest_common` → `common_chest`; `combat_animal_ember` → `embersnout`; `20111_redeye` → `young_redeye`; `20190_eye` → `veilwalker`.
+- **Content** — Embersnout encounter text shortened; encounter **20098** reward amount **2**.
