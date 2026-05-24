@@ -89,7 +89,10 @@ const enableRattleAnimationStyle: CSSProperties = {
   transformOrigin: '50% 50%',
 };
 
+type SolutionTooltipAnchorX = 'left' | 'center' | 'right';
+
 interface SolutionTooltipState {
+  anchorX: SolutionTooltipAnchorX;
   description: string;
   detail: string;
   name: string;
@@ -99,6 +102,7 @@ interface SolutionTooltipState {
 }
 
 const unavailableSolutionTooltipStyle: CSSProperties = {
+  width: 160,
   maxWidth: 160,
   padding: '6px 9px',
   textAlign: 'center',
@@ -224,6 +228,7 @@ const diceRollAnimationStyle: CSSProperties = {
 const solutionTooltipStyle: CSSProperties = {
   position: 'absolute',
   zIndex: 50,
+  width: 220,
   maxWidth: 220,
   maxHeight: 'min(42vh, 200px)',
   overflow: 'auto',
@@ -239,9 +244,34 @@ const solutionTooltipStyle: CSSProperties = {
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
   boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   pointerEvents: 'none',
-  transform: 'translate(-50%, calc(-100% - 12px))',
   boxSizing: 'border-box',
 };
+
+function solutionTooltipTransform(anchorX: SolutionTooltipAnchorX): string {
+  const offsetY = 'calc(-100% - 12px)';
+
+  if (anchorX === 'left') {
+    return `translate(0, ${offsetY})`;
+  }
+
+  if (anchorX === 'right') {
+    return `translate(-100%, ${offsetY})`;
+  }
+
+  return `translate(-50%, ${offsetY})`;
+}
+
+function solutionTooltipAnchorX(slot: SlotLetter): SolutionTooltipAnchorX {
+  if (slot === 'A' || slot === 'B') {
+    return 'left';
+  }
+
+  if (slot === 'C' || slot === 'D') {
+    return 'right';
+  }
+
+  return 'center';
+}
 
 const solutionTooltipTitleStyle: CSSProperties = {
   margin: '0 0 4px',
@@ -504,6 +534,7 @@ export function SolutionBlock({
     description: string,
     detail: string,
     unavailable: boolean,
+    anchorX: SolutionTooltipAnchorX,
     event: SolutionTooltipTriggerEvent,
   ): void {
     if (!actionsReady) {
@@ -517,14 +548,19 @@ export function SolutionBlock({
 
     const blockRect = blockRef.current?.getBoundingClientRect();
     const buttonRect = trigger.getBoundingClientRect();
-    const x = blockRect
-      ? buttonRect.left - blockRect.left + buttonRect.width / 2
-      : buttonRect.width / 2;
     const y = blockRect
       ? buttonRect.top - blockRect.top
       : 0;
+    const x = !blockRect
+      ? buttonRect.width / 2
+      : anchorX === 'left'
+        ? buttonRect.left - blockRect.left
+        : anchorX === 'right'
+          ? buttonRect.right - blockRect.left
+          : buttonRect.left - blockRect.left + buttonRect.width / 2;
 
     setSolutionTooltip({
+      anchorX,
       description,
       detail,
       name,
@@ -545,12 +581,13 @@ export function SolutionBlock({
         ? `Charges: ${solution.uses}`
         : 'Not in inventory',
       !solution.available,
+      solutionTooltipAnchorX(solution.slot),
       event,
     );
   }
 
   function showDiceTooltip(event: SolutionTooltipTriggerEvent): void {
-    showActionTooltip('Dice', '', 'try your luck', false, event);
+    showActionTooltip('Dice', '', 'try your luck', false, 'center', event);
   }
 
   function hideSolutionTooltip(): void {
@@ -763,6 +800,7 @@ export function SolutionBlock({
             ...(solutionTooltip.unavailable ? unavailableSolutionTooltipStyle : {}),
             left: solutionTooltip.x,
             top: solutionTooltip.y,
+            transform: solutionTooltipTransform(solutionTooltip.anchorX),
           }}
         >
           {solutionTooltip.unavailable ? (
