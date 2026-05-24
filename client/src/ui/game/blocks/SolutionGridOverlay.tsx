@@ -58,7 +58,7 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
   10: 'Combat Item',
   13: 'Climb Skill',
   14: 'Climb Item',
-  15: 'Treasure / Life / Essence',
+  15: 'Essence',
   16: 'Life Skill',
   17: 'Speechcraft Skill',
   18: 'Speechcraft Item',
