@@ -367,6 +367,40 @@ button:focus-visible {
   filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
 }
 
+.morkahja-panel-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.morkahja-panel-button:disabled {
+  cursor: default;
+}
+
+.morkahja-panel-button-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+}
+
+.morkahja-panel-button:hover:not(:disabled) .morkahja-panel-button-visual,
+.morkahja-panel-button:focus-visible:not(:disabled) .morkahja-panel-button-visual {
+  transform: scale(1.06) translateY(-2px);
+  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+}
+
+.morkahja-panel-button:disabled .morkahja-panel-button-visual {
+  transform: none;
+  filter: none;
+}
+
 .morkahja-avatar-slot-button {
   position: relative;
 }

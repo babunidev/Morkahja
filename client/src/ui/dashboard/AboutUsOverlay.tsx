@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import DonationOverlay from './DonationOverlay.js';
+import { ClosePanelButton, overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
+import { PanelButton } from '../common/PanelButton.js';
 import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
@@ -84,17 +86,6 @@ const titleStyle: CSSProperties = {
   letterSpacing: '0.06em',
 };
 
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
-};
-
 const bodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
@@ -123,7 +114,7 @@ const creditCardStyle: CSSProperties = {
   overflow: 'hidden',
 };
 
-const creditHeaderButtonStyle: CSSProperties = {
+const creditHeaderVisualStyle: CSSProperties = {
   width: '100%',
   display: 'grid',
   gap: 6,
@@ -131,7 +122,6 @@ const creditHeaderButtonStyle: CSSProperties = {
   border: 0,
   background: 'transparent',
   color: 'inherit',
-  cursor: 'pointer',
   textAlign: 'center',
   fontFamily: 'inherit',
 };
@@ -190,7 +180,7 @@ function CreditCard({
 
   return (
     <article style={creditCardStyle}>
-      <button
+      <PanelButton
         aria-controls={bodyId}
         aria-expanded={expanded}
         id={headerId}
@@ -198,13 +188,13 @@ function CreditCard({
           playSfx(DEFAULT_BUTTON_SOUND);
           onToggle();
         }}
-        style={creditHeaderButtonStyle}
-        type="button"
+        pressKey={`about-credit-${credit.id}`}
+        visualStyle={creditHeaderVisualStyle}
       >
         <h3 style={nameStyle}>{credit.name}</h3>
         <p style={roleLineStyle}>{credit.roles}</p>
         <p style={expandHintStyle}>{expanded ? 'Show less' : 'Read more'}</p>
-      </button>
+      </PanelButton>
       {expanded ? (
         <div
           aria-labelledby={headerId}
@@ -289,16 +279,7 @@ export function AboutUsOverlay({
       >
         <header style={headerStyle}>
           <h2 id="about-us-overlay-title" style={titleStyle}>ABOUT US</h2>
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="about-close" />
         </header>
         <div data-about-us-scroll="" style={bodyStyle}>
           <style>
@@ -318,16 +299,16 @@ export function AboutUsOverlay({
           </div>
         </div>
         <footer style={donateFooterStyle}>
-          <button
+          <PanelButton
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
               setDonationOpen(true);
             }}
-            style={closeButtonStyle}
-            type="button"
+            pressKey="about-donation"
+            visualStyle={overlayCloseButtonVisualStyle}
           >
             Donation
-          </button>
+          </PanelButton>
         </footer>
       </section>
       <DonationOverlay

@@ -16,6 +16,7 @@ import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import ExpansionsOverlay from './ExpansionsOverlay.js';
 import FriendsOverlay from './FriendsOverlay.js';
+import { fetchAvatars } from '../../api/http.js';
 import PlayerProfileOverlay from './PlayerProfileOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
@@ -739,6 +740,7 @@ export function Dashboard({
           }}
           onLogout={onLogout}
           open={settingsOpen}
+          playerId={playerId}
           playerName={playerName}
         />
       ) : null}
@@ -778,6 +780,15 @@ export function Dashboard({
       {showChrome ? (
         <PlayerProfileOverlay
           fallbackPlayerName={playerName}
+          onAvatarsChanged={() => {
+            void fetchAvatars()
+              .then((nextAvatars) => {
+                onAvatarsChanged?.(nextAvatars);
+              })
+              .catch((error: unknown) => {
+                console.error('Avatar refresh after title change failed', error);
+              });
+          }}
           onClose={() => {
             setProfileOpen(false);
           }}

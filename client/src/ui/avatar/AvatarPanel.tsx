@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
+import { formatAvatarDisplayName } from './avatarDisplayName.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
@@ -168,11 +169,14 @@ export function AvatarPanel({
   }, [onDetailsVisibleChange, showDetails]);
 
   return (
-    <article aria-label={`${avatar.name}, level ${avatar.level}`} style={panelStyle}>
+    <article
+      aria-label={`${formatAvatarDisplayName(avatar)}, level ${avatar.level}`}
+      style={panelStyle}
+    >
       <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
         <button
           aria-expanded={showDetails}
-          aria-label={`Show details for ${avatar.name}`}
+          aria-label={`Show details for ${formatAvatarDisplayName(avatar)}`}
           className="morkahja-avatar-slot-button"
           onClick={() => {
             playSfx(DEFAULT_BUTTON_SOUND);
@@ -214,7 +218,7 @@ export function AvatarPanel({
       {showDetails ? (
         <div style={detailsClusterStyle}>
           <div role="tooltip" style={detailsTooltipStyle}>
-            <span className="morkahja-title" style={nameStyle}>{avatar.name}</span>
+            <span className="morkahja-title" style={nameStyle}>{formatAvatarDisplayName(avatar)}</span>
             <span style={levelStyle}>
               Level {avatar.level} · {avatar.race} {avatar.role}
             </span>

@@ -1,3 +1,4 @@
+import { normalizePersistedAvatar } from '../ui/avatar/avatarDisplayName.js';
 import { ApiRequestError } from './httpErrorMessage.js';
 import type {
   AchievementsResponse,
@@ -21,6 +22,8 @@ import type {
   PersistedAvatarDto,
   PlayerProfileResponse,
   PlayerResponse,
+  ActivateSealOfNorghorResponse,
+  SetAvatarDisplayTitleResponse,
   StaticGameDataStatus,
 } from '@shared/contracts';
 
@@ -153,6 +156,24 @@ export async function fetchPlayerProfile(): Promise<PlayerProfileResponse> {
   return request<PlayerProfileResponse>('/player/profile');
 }
 
+export async function setAvatarDisplayTitle(
+  avatarId: string,
+  displayTitle: string | null,
+): Promise<SetAvatarDisplayTitleResponse> {
+  const response = await request<SetAvatarDisplayTitleResponse>(
+    `/avatar/${encodeURIComponent(avatarId)}/display-title`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ displayTitle }),
+    },
+  );
+
+  return {
+    ...response,
+    avatar: normalizePersistedAvatar(response.avatar),
+  };
+}
+
 export async function offerLoreGem(avatarId: string): Promise<LoreGemOfferResponse> {
   return request<LoreGemOfferResponse>('/encounter/lore-gem/offer', {
     method: 'POST',
@@ -183,6 +204,13 @@ export async function unlockExpansion(
   return request<UnlockExpansionResponse>('/player/expansions/unlock', {
     method: 'POST',
     body: JSON.stringify({ expansionId }),
+  });
+}
+
+export async function activateSealOfNorghor(): Promise<ActivateSealOfNorghorResponse> {
+  return request<ActivateSealOfNorghorResponse>('/player/seal-of-norghor/activate', {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 
@@ -251,7 +279,7 @@ export async function fetchActiveEncounter(
 
 export async function fetchAvatars(): Promise<PersistedAvatar[]> {
   const response = await request<AvatarsResponse>('/avatars');
-  return response.avatars;
+  return response.avatars.map((avatar) => normalizePersistedAvatar(avatar));
 }
 
 export async function createAvatar(
@@ -266,7 +294,7 @@ export async function createAvatar(
     throw new Error('Avatar creation response did not include an avatar.');
   }
 
-  return response.avatar;
+  return normalizePersistedAvatar(response.avatar);
 }
 
 export async function selectAvatar(
@@ -277,7 +305,10 @@ export async function selectAvatar(
     body: JSON.stringify(avatar),
   });
 
-  return response;
+  return {
+    avatar: normalizePersistedAvatar(response.avatar),
+    encounter: response.encounter,
+  };
 }
 
 export async function deleteAvatar(avatarId: string): Promise<void> {
@@ -311,13 +342,22 @@ export async function resolveEncounterAction(
   action: EncounterAction,
   avatarId: string,
 ): Promise<ResolveEncounterResponse> {
-  return request<ResolveEncounterResponse>('/encounter/continue', {
+  const response = await request<ResolveEncounterResponse>('/encounter/continue', {
     method: 'POST',
     body: JSON.stringify({
       avatarId,
       action,
     }),
   });
+
+  if (!response.avatar) {
+    return response;
+  }
+
+  return {
+    ...response,
+    avatar: normalizePersistedAvatar(response.avatar),
+  };
 }
 
 export async function clearEncounter(avatarId: string): Promise<void> {

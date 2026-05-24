@@ -38,6 +38,7 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
 import AvatarCreation from './AvatarCreation.js';
 import AvatarCard from './AvatarCard.js';
+import { formatAvatarDisplayName } from './avatarDisplayName.js';
 
 const CREATE_AVATAR_ASSET = '/UI/03_DASHBOARD/CreateAvatar.webp';
 
@@ -113,7 +114,7 @@ const messageStyle: CSSProperties = {
 function avatarSlotTooltipContent(avatar: PersistedAvatar): ReactNode {
   return (
     <>
-      <span className="morkahja-avatar-slot-tooltip-title">{avatar.name}</span>
+      <span className="morkahja-avatar-slot-tooltip-title">{formatAvatarDisplayName(avatar)}</span>
       <span className="morkahja-avatar-slot-tooltip-meta">
         Level {avatar.level} · {avatar.race} {avatar.role}
       </span>
@@ -199,7 +200,7 @@ function AvatarSlot({
   return (
     <button
       {...slotButtonProps}
-      aria-label={`Select ${avatar.name}, level ${avatar.level}, ${avatar.race} ${avatar.role}`}
+      aria-label={`Select ${formatAvatarDisplayName(avatar)}, level ${avatar.level}, ${avatar.race} ${avatar.role}`}
       onClick={(event) => {
         const source = event.currentTarget.querySelector(`[${AVATAR_ENTER_SOURCE_ATTR}]`);
         onSelect(

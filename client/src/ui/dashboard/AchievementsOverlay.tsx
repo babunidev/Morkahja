@@ -15,7 +15,7 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
-import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
 
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
 
@@ -74,17 +74,6 @@ const titleStyle: CSSProperties = {
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.06em',
-};
-
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
 };
 
 const gemsFooterStyle: CSSProperties = {
@@ -247,16 +236,7 @@ export function AchievementsOverlay({
       >
         <header style={headerStyle}>
           <h2 id="achievements-overlay-title" style={titleStyle}>ACHIEVEMENTS</h2>
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="achievements-close" />
         </header>
         <div data-achievements-scroll="" style={scrollBodyStyle}>
           <style>

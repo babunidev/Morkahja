@@ -6,6 +6,7 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
@@ -110,17 +111,6 @@ const titleStyle: CSSProperties = {
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.06em',
-};
-
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
 };
 
 const bodyStyle: CSSProperties = {
@@ -552,16 +542,7 @@ export function ExpansionsOverlay({
           <h2 id="expansions-overlay-title" style={titleStyle}>
             EXPANSIONS
           </h2>
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="expansions-close" />
         </header>
         <div data-expansions-scroll="" style={bodyStyle}>
           <style>

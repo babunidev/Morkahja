@@ -43,5 +43,9 @@ export interface PlayerDocument {
     encountersPlayed: number;
     claimedAt?: number;
   };
+  /** Seal of Norghor subscription (28-day access; no auto-renew). */
+  sealOfNorghor?: {
+    expiresAt: number;
+  };
   [key: string]: unknown;
 }

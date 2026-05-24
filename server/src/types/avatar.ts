@@ -17,6 +17,8 @@ export interface AvatarProfile {
   roleRewardType?: 37 | 38 | 39;
   /** Reward type used for race-based spellbook initialization. */
   raceRewardType?: 40 | 41 | 42 | 43;
+  /** Achievement rank title shown before the avatar name in-game. */
+  displayTitle?: string | null;
 }
 
 export interface AvatarDocumentProgression {

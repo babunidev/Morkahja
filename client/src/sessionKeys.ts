@@ -1,4 +1,5 @@
 const DEVICE_KEY_STORAGE = 'morkahja.deviceKeypair';
+const IDENTITY_KEY_STORAGE = 'morkahja.identityKeypair';
 export const RESTORE_CHALLENGE_PREFIX = 'morkahja-restore:';
 
 export interface StoredKeypair {
@@ -11,6 +12,11 @@ export interface RecoveryKeyFile {
   version: 1;
   privateKey: JsonWebKey;
   publicKey: JsonWebKey;
+}
+
+interface StoredIdentityKeypair {
+  playerId: string;
+  keypair: StoredKeypair;
 }
 
 function keyAlgorithm(): EcKeyGenParams {
@@ -77,7 +83,48 @@ export async function signChallenge(
   return encodeBase64Url(signature);
 }
 
-export function downloadRecoveryKey(keypair: StoredKeypair): void {
+export function saveIdentityKeypair(playerId: string, keypair: StoredKeypair): void {
+  const payload: StoredIdentityKeypair = { playerId, keypair };
+  window.localStorage.setItem(IDENTITY_KEY_STORAGE, JSON.stringify(payload));
+}
+
+export function loadIdentityKeypair(playerId: string): StoredKeypair | null {
+  try {
+    const stored = window.localStorage.getItem(IDENTITY_KEY_STORAGE);
+
+    if (!stored) {
+      return null;
+    }
+
+    const parsed = JSON.parse(stored) as StoredIdentityKeypair;
+
+    if (
+      parsed.playerId !== playerId
+      || !parsed.keypair?.privateKey
+      || !parsed.keypair?.publicKey
+    ) {
+      return null;
+    }
+
+    return parsed.keypair;
+  } catch {
+    return null;
+  }
+}
+
+export function recoveryKeyFilename(playerName: string): string {
+  const sanitized = playerName
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Za-z0-9_-]/g, '')
+    .slice(0, 64);
+
+  const username = sanitized.length > 0 ? sanitized : 'Adventurer';
+  return `Morkahja_${username}.key`;
+}
+
+export function downloadRecoveryKey(keypair: StoredKeypair, playerName: string): void {
   const file: RecoveryKeyFile = {
     kind: 'morkahja.identityKey',
     version: 1,
@@ -89,7 +136,7 @@ export function downloadRecoveryKey(keypair: StoredKeypair): void {
   const link = document.createElement('a');
 
   link.href = url;
-  link.download = 'morkahja.key';
+  link.download = recoveryKeyFilename(playerName);
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -98,7 +145,7 @@ export async function readRecoveryKey(file: File): Promise<RecoveryKeyFile> {
   const parsed = JSON.parse(await file.text()) as RecoveryKeyFile;
 
   if (parsed.kind !== 'morkahja.identityKey' || !parsed.privateKey || !parsed.publicKey) {
-    throw new Error('Invalid morkahja.key file.');
+    throw new Error('Invalid Morkahja recovery key file.');
   }
 
   return parsed;

@@ -15,7 +15,11 @@ import {
   listAvatars,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
-import { getExpansionById } from './gameData.js';
+import {
+  isSealOfNorghorActive,
+  readSealOfNorghorExpiresAt,
+} from '../domain/subscription/sealOfNorghor.js';
+import { getExpansionById, getExpansions } from './gameData.js';
 import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import {
   recordAvatarCreatedEvent,
@@ -87,8 +91,52 @@ export interface PersistedAvatarPayload {
   displayTitle?: string | null;
 }
 
-function uniqueSorted(values: number[]): number[] {
+export function uniqueSortedExpansionIds(values: number[]): number[] {
   return [...new Set(values)].sort((a, b) => a - b);
+}
+
+export function readYellowRedGemBalance(
+  currencies: PlayerDocument['currencies'] | undefined,
+): number {
+  const gems = currencies?.yellow_red_gem;
+
+  if (typeof gems === 'number' && Number.isFinite(gems)) {
+    return Math.max(0, Math.floor(gems));
+  }
+
+  if (typeof gems === 'string') {
+    const parsed = Number(gems);
+
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.floor(parsed));
+    }
+  }
+
+  return 0;
+}
+
+function uniqueSorted(values: number[]): number[] {
+  return uniqueSortedExpansionIds(values);
+}
+
+function allActiveExpansionIds(): number[] {
+  return uniqueSortedExpansionIds(
+    getExpansions()
+      .filter((entry) => entry.mExtensioActive && entry.mExtensioID > 0)
+      .map((entry) => entry.mExtensioID),
+  );
+}
+
+export function mergeUnlockedExpansionsWithSeal(
+  baseUnlocked: number[],
+  sealExpiresAt: number | null | undefined,
+  now = Date.now(),
+): number[] {
+  if (!isSealOfNorghorActive(sealExpiresAt, now)) {
+    return baseUnlocked;
+  }
+
+  return uniqueSortedExpansionIds([...baseUnlocked, ...allActiveExpansionIds()]);
 }
 
 function normalizeUnlockedExpansions(value: unknown): number[] {
@@ -122,6 +170,13 @@ export async function loadPlayer(
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : now,
     lastPlayedAt: typeof data.lastPlayedAt === 'number' ? data.lastPlayedAt : now,
     unlockedExpansions: normalizeUnlockedExpansions(data.unlockedExpansions),
+    sealOfNorghor: readSealOfNorghorExpiresAt(data.sealOfNorghor) !== null
+      ? { expiresAt: readSealOfNorghorExpiresAt(data.sealOfNorghor) as number }
+      : undefined,
+    currencies: {
+      ...(typeof data.currencies === 'object' && data.currencies !== null ? data.currencies : {}),
+      yellow_red_gem: readYellowRedGemBalance(data.currencies),
+    },
   };
 }
 
@@ -150,9 +205,11 @@ export async function getPlayerUnlockedExpansions(
   playerId: string,
 ): Promise<number[]> {
   const player = await loadPlayer(playerId);
-  return player?.unlockedExpansions && player.unlockedExpansions.length > 0
+  const base = player?.unlockedExpansions && player.unlockedExpansions.length > 0
     ? player.unlockedExpansions
     : DEFAULT_UNLOCKED_EXPANSIONS;
+
+  return mergeUnlockedExpansionsWithSeal(base, player?.sealOfNorghor?.expiresAt);
 }
 
 export async function addPlayerYellowRedGems(

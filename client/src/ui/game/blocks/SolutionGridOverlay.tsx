@@ -19,8 +19,13 @@ const OVERLAY_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
-/** Bottom offset: tooltip sits just above the golden frame seam. */
-const TOOLTIP_SEAM_BOTTOM_PX = 22;
+/** Offset from the golden frame seam when the tooltip is docked. */
+const TOOLTIP_SEAM_INSET_PX = 22;
+
+const GRID_COLUMNS = 5;
+
+/** 1-based row index at which the tooltip docks to the top instead of the bottom. */
+const TOOLTIP_TOP_ROW_START = 5;
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -128,7 +133,7 @@ const scrollWrapStyle: CSSProperties = {
 
 const itemGridStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+  gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
   gap: 'clamp(8px, 2vw, 14px)',
   justifyItems: 'center',
 };
@@ -185,15 +190,33 @@ function mergeGridItemPointerHandlers(
   };
 }
 
-const itemTooltipDockStyle: CSSProperties = {
+const itemTooltipDockBaseStyle: CSSProperties = {
   position: 'relative',
   zIndex: 24,
   flexShrink: 0,
   width: '100%',
-  padding: `0 clamp(14px, 4vw, 28px) ${TOOLTIP_SEAM_BOTTOM_PX}px`,
+  padding: `0 clamp(14px, 4vw, 28px)`,
   boxSizing: 'border-box',
   pointerEvents: 'none',
 };
+
+const itemTooltipDockBottomStyle: CSSProperties = {
+  ...itemTooltipDockBaseStyle,
+  paddingBottom: TOOLTIP_SEAM_INSET_PX,
+};
+
+const itemTooltipDockTopStyle: CSSProperties = {
+  ...itemTooltipDockBaseStyle,
+  paddingTop: TOOLTIP_SEAM_INSET_PX,
+};
+
+function gridRowIndex(itemIndex: number): number {
+  return Math.floor(itemIndex / GRID_COLUMNS);
+}
+
+function shouldDockTooltipAtTop(itemIndex: number): boolean {
+  return gridRowIndex(itemIndex) + 1 >= TOOLTIP_TOP_ROW_START;
+}
 
 const itemTooltipStyle: CSSProperties = {
   width: '100%',
@@ -351,6 +374,23 @@ export function SolutionGridOverlay({
     showItemTooltip(item);
   }
 
+  const tooltipItemIndex = tooltipItem
+    ? items.findIndex((item) => item.solutionId === tooltipItem.solutionId)
+    : -1;
+  const tooltipAtTop = tooltipItemIndex >= 0 && shouldDockTooltipAtTop(tooltipItemIndex);
+
+  const tooltipPanel = tooltipItem ? (
+    <div
+      role="tooltip"
+      style={itemTooltipStyle}
+    >
+      <p style={tooltipTitleStyle}>{tooltipItem.name}</p>
+      <p style={tooltipTextStyle}>{tooltipItem.text}</p>
+      <p style={tooltipMetaStyle}>Charges: {tooltipItem.uses}</p>
+      <p style={tooltipMetaStyle}>Type: {tooltipItem.typeLabel}</p>
+    </div>
+  ) : null;
+
   return (
     <aside
       aria-hidden={!visible}
@@ -368,6 +408,9 @@ export function SolutionGridOverlay({
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
       </style>
+      {tooltipAtTop ? (
+        <div style={itemTooltipDockTopStyle}>{tooltipPanel}</div>
+      ) : null}
       <div
         {...{ [`data-${scrollDataAttribute}`]: '' }}
         style={{
@@ -434,15 +477,8 @@ export function SolutionGridOverlay({
           <p style={emptyTextStyle}>{emptyText}</p>
         )}
       </div>
-      {tooltipItem ? (
-        <div style={itemTooltipDockStyle}>
-          <div role="tooltip" style={itemTooltipStyle}>
-            <p style={tooltipTitleStyle}>{tooltipItem.name}</p>
-            <p style={tooltipTextStyle}>{tooltipItem.text}</p>
-            <p style={tooltipMetaStyle}>Charges: {tooltipItem.uses}</p>
-            <p style={tooltipMetaStyle}>Type: {tooltipItem.typeLabel}</p>
-          </div>
-        </div>
+      {!tooltipAtTop && tooltipPanel ? (
+        <div style={itemTooltipDockBottomStyle}>{tooltipPanel}</div>
       ) : null}
       <img
         alt=""

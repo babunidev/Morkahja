@@ -20,6 +20,7 @@ import {
   refreshAvatarSelectionAfterHome,
   saveDeadAvatarIds,
 } from './ui/avatar/avatarSelectionPrepare.js';
+import { formatAvatarDisplayName } from './ui/avatar/avatarDisplayName.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
@@ -264,6 +265,14 @@ export default function App() {
             onAvatarSlotsVisibleChange={setAvatarSlotsVisible}
             onAvatarsChanged={(avatars) => {
               setAvatarSelectionAvatars(avatars);
+              setActiveAvatar((current) => {
+                if (!current) {
+                  return current;
+                }
+
+                const updated = avatars.find((avatar) => avatar.id === current.id);
+                return updated ?? current;
+              });
               void preloadAvatarSelectionAssets(avatars).catch((error: unknown) => {
                 console.error('Avatar selection preload after change failed', error);
               });
@@ -348,7 +357,7 @@ export default function App() {
         ) : null}
         {deathOverlayAvatar ? (
           <AvatarDeathOverlay
-            avatarName={deathOverlayAvatar.name}
+            avatarName={formatAvatarDisplayName(deathOverlayAvatar)}
             onHandoffComplete={() => {
               setDeathOverlayAvatar(null);
             }}

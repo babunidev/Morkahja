@@ -11,6 +11,7 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementPanel from './AchievementPanel.js';
 
@@ -101,22 +102,6 @@ const titleStyle: CSSProperties = {
   letterSpacing: '0.06em',
 };
 
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
-};
-
-const backButtonStyle: CSSProperties = {
-  ...closeButtonStyle,
-  minWidth: 64,
-};
-
 const bodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
@@ -125,6 +110,17 @@ const bodyStyle: CSSProperties = {
   alignContent: 'start',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
+};
+
+const backButtonStyle: CSSProperties = {
+  minWidth: 64,
+  minHeight: 34,
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 9,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  cursor: 'pointer',
+  fontFamily: 'Georgia, serif',
 };
 
 const addRowStyle: CSSProperties = {
@@ -559,16 +555,7 @@ export function FriendsOverlay({
               FRIENDS
             </h2>
           )}
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="friends-close" />
         </header>
         <div data-friends-scroll="" style={bodyStyle}>
           <style>

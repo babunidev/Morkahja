@@ -1,6 +1,13 @@
 import type { AvatarDocument } from '../types/avatar.js';
 import type { PlayerDocument, WallOfFameEntry } from '../types/player.js';
+import {
+  collectUnlockedTitlesFromAchievements,
+  readAvatarDisplayTitle,
+  type UnlockedTitleOption,
+} from '../domain/achievements/achievementTitles.js';
 import { getPlayer, listAvatars, setPlayer } from '../db/postgresDocumentStore.js';
+import { loadAvatar, saveAvatar } from './encounterPersistence.js';
+import { getAchievementsSnapshotReadOnly } from './achievementService.js';
 import { loadAvatarProgression } from './avatarProgressionService.js';
 import type { AvatarRace, AvatarRole } from './playerService.js';
 
@@ -15,6 +22,7 @@ export interface PlayerProfileAvatarView {
   portrait: string;
   frame: string;
   createdAt: number;
+  displayTitle: string | null;
 }
 
 export interface PlayerProfile {
@@ -23,6 +31,21 @@ export interface PlayerProfile {
   joinedAt: number;
   avatars: PlayerProfileAvatarView[];
   wallOfFame: WallOfFameEntry[];
+  unlockedTitles: UnlockedTitleOption[];
+}
+
+export class InvalidAvatarDisplayTitleError extends Error {
+  constructor() {
+    super('Achievement title is not unlocked');
+    this.name = 'InvalidAvatarDisplayTitleError';
+  }
+}
+
+export class AvatarProfileNotFoundError extends Error {
+  constructor() {
+    super('Avatar not found');
+    this.name = 'AvatarProfileNotFoundError';
+  }
 }
 
 function normalizeWallOfFame(value: unknown): WallOfFameEntry[] {
@@ -63,7 +86,51 @@ function toProfileAvatarView(avatar: AvatarDocument): PlayerProfileAvatarView | 
     portrait: avatar.portrait,
     frame: avatar.frame,
     createdAt,
+    displayTitle: readAvatarDisplayTitle(avatar),
   };
+}
+
+export async function listUnlockedAchievementTitles(
+  playerId: string,
+): Promise<UnlockedTitleOption[]> {
+  const achievements = await getAchievementsSnapshotReadOnly(playerId);
+  return collectUnlockedTitlesFromAchievements(achievements);
+}
+
+export async function setAvatarDisplayTitle(
+  playerId: string,
+  avatarId: string,
+  displayTitle: string | null,
+): Promise<AvatarDocument> {
+  const avatar = await loadAvatar(playerId, avatarId);
+
+  if (!avatar) {
+    throw new AvatarProfileNotFoundError();
+  }
+
+  const normalized = typeof displayTitle === 'string' && displayTitle.trim().length > 0
+    ? displayTitle.trim()
+    : null;
+
+  if (normalized !== null) {
+    const unlockedTitles = await listUnlockedAchievementTitles(playerId);
+    const isUnlocked = unlockedTitles.some((entry) => entry.title === normalized);
+
+    if (!isUnlocked) {
+      throw new InvalidAvatarDisplayTitleError();
+    }
+  }
+
+  const nextAvatar: AvatarDocument = {
+    ...avatar,
+    profile: {
+      ...avatar.profile,
+      displayTitle: normalized,
+    },
+  };
+
+  await saveAvatar(playerId, avatarId, nextAvatar);
+  return nextAvatar;
 }
 
 export async function recordWallOfFameEntry(
@@ -131,15 +198,20 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
     return null;
   }
 
-  const avatars = (await listAvatars<AvatarDocument>(playerId))
-    .map((record) => ({
-      ...record.data,
-      id: record.data.id ?? record.id,
-    }))
-    .map(toProfileAvatarView)
-    .filter((avatar): avatar is PlayerProfileAvatarView => avatar !== null)
-    .sort((left, right) => left.createdAt - right.createdAt)
-    .slice(0, 3);
+  const [avatars, unlockedTitles] = await Promise.all([
+    listAvatars<AvatarDocument>(playerId).then((records) => (
+      records
+        .map((record) => ({
+          ...record.data,
+          id: record.data.id ?? record.id,
+        }))
+        .map(toProfileAvatarView)
+        .filter((avatar): avatar is PlayerProfileAvatarView => avatar !== null)
+        .sort((left, right) => left.createdAt - right.createdAt)
+        .slice(0, 3)
+    )),
+    listUnlockedAchievementTitles(playerId),
+  ]);
 
   return {
     playerId,
@@ -147,5 +219,6 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
     joinedAt: player.createdAt,
     avatars,
     wallOfFame: player.wallOfFame,
+    unlockedTitles,
   };
 }

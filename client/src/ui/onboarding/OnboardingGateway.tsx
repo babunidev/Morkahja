@@ -7,6 +7,8 @@ import {
   generateKeypair,
   publicKeyString,
   readRecoveryKey,
+  recoveryKeyFilename,
+  saveIdentityKeypair,
   RESTORE_CHALLENGE_PREFIX,
   signChallenge,
 } from '../../sessionKeys.js';
@@ -137,7 +139,9 @@ export function OnboardingGateway({
   const [keyAcknowledged, setKeyAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const canCreate = playerName.trim().length > 0 && policyAccepted && termsAccepted && keyAcknowledged && !busy;
+  const trimmedPlayerName = playerName.trim();
+  const recoveryFileName = recoveryKeyFilename(trimmedPlayerName);
+  const canCreate = trimmedPlayerName.length > 0 && policyAccepted && termsAccepted && keyAcknowledged && !busy;
 
   async function startNewJourney(): Promise<void> {
     if (!canCreate) {
@@ -152,12 +156,13 @@ export function OnboardingGateway({
       const session = await bootstrapSession({
         devicePublicKey: publicKeyString(device.publicKey),
         identityPublicKey: publicKeyString(identity.publicKey),
-        playerName: playerName.trim(),
+        playerName: trimmedPlayerName,
       });
 
-      downloadRecoveryKey(identity);
+      saveIdentityKeypair(session.playerId, identity);
+      downloadRecoveryKey(identity, session.playerName);
       seedDefaultAudioVolumesIfUnset();
-      setMessage('Losing morkahja.key means permanent loss of access.');
+      setMessage(`Losing ${recoveryKeyFilename(session.playerName)} means permanent loss of access.`);
       onSessionReady(session);
     } catch (error) {
       console.error('New journey bootstrap failed', error);
@@ -186,6 +191,10 @@ export function OnboardingGateway({
         signedIdentityChallenge: { challenge, signature },
       });
 
+      saveIdentityKeypair(session.playerId, {
+        privateKey: recoveryKey.privateKey,
+        publicKey: recoveryKey.publicKey,
+      });
       seedDefaultAudioVolumesIfUnset();
       onSessionReady(session);
     } catch (error) {
@@ -225,11 +234,11 @@ export function OnboardingGateway({
             </label>
             <label style={checkboxLabelStyle}>
               <input checked={keyAcknowledged} onChange={(event) => setKeyAcknowledged(event.target.checked)} type="checkbox" />
-              I understand that morkahja.key is required to restore access.
+              I understand that my Morkahja recovery key is required to restore access.
             </label>
             <p style={keyNoticeStyle}>
               Creating your journey will automatically download your recovery file.
-              <span style={keyFileNameStyle}>morkahja.key</span>
+              <span style={keyFileNameStyle}>{recoveryFileName}</span>
               Keep it somewhere safe.
               Losing this file means permanent loss of access.
             </p>

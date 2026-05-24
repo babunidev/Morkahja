@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { AvatarDocument } from '../types/avatar.js';
+import { formatAvatarDisplayName, readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import { recordWallOfFameEntry } from './playerProfileService.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
@@ -117,13 +118,16 @@ async function recordGameEvent(input: RecordGameEventInput): Promise<GameEvent> 
 
 function basePayload(
   playerName: string | undefined,
-  avatar: Pick<AvatarDocument, 'id' | 'name' | 'race' | 'role' | 'portrait' | 'frame'>,
+  avatar: Pick<AvatarDocument, 'id' | 'name' | 'race' | 'role' | 'portrait' | 'frame' | 'profile'>,
   encounterId?: number,
   encounterTitle?: string,
 ): Record<string, unknown> {
   return {
     playerName,
-    avatarName: avatar.name,
+    avatarName: formatAvatarDisplayName(
+      avatar.name?.trim() || 'Adventurer',
+      readAvatarDisplayTitle(avatar),
+    ),
     avatarId: avatar.id,
     race: avatar.race,
     role: avatar.role,

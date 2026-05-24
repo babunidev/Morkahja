@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import AvatarPortraitStack from './AvatarPortraitStack.js';
+import { formatAvatarDisplayName } from './avatarDisplayName.js';
 
 interface AvatarCardData {
   name: string;
@@ -8,6 +9,7 @@ interface AvatarCardData {
   portrait: string;
   frame: string;
   level: number;
+  displayTitle?: string | null;
 }
 
 const cardStyle: CSSProperties = {
@@ -58,7 +60,7 @@ export function AvatarCard({
       </div>
       {hideLabels ? null : (
         <>
-          <h2 className="morkahja-title" style={nameStyle}>{avatar.name}</h2>
+          <h2 className="morkahja-title" style={nameStyle}>{formatAvatarDisplayName(avatar)}</h2>
           <p style={metaStyle}>
             Level {avatar.level} · {avatar.race} {avatar.role}
           </p>

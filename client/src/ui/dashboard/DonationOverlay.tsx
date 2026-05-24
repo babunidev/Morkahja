@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { donateGems, fetchPlayer } from '../../api/http.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
+import { PanelButton } from '../common/PanelButton.js';
 import { useTooltipReveal } from '../hooks/useTooltipReveal.js';
 import {
   protectedImageProps,
@@ -14,7 +16,7 @@ const PAYPAL_DEVELOPER_URL = 'https://www.paypal.com/paypalme/babunigaming';
 const DEVELOPER_DONATION_TOOLTIP = (
   'All donations go directly into the ongoing maintenance, development, and improvement '
   + 'of Morkahja. Funds are used to support server costs, new features, system stability, '
-  + 'and continuous expansion of the game world.'
+  + 'and continuous expansion of the game world. This will open an external website.'
 );
 
 const DONATION_PRESETS = [
@@ -66,17 +68,6 @@ const titleStyle: CSSProperties = {
   letterSpacing: '0.06em',
 };
 
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
-};
-
 const gemsRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -113,22 +104,25 @@ const buttonGridStyle: CSSProperties = {
   gap: 10,
 };
 
-const donateButtonStyle: CSSProperties = {
+const donateButtonVisualStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
   minHeight: 42,
   border: '1px solid rgba(255, 204, 102, 0.72)',
   borderRadius: 9,
   background: 'rgba(51, 0, 0, 0.82)',
   color: '#ffcc66',
-  cursor: 'pointer',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
   letterSpacing: '0.04em',
+  textAlign: 'center',
 };
 
-const donateButtonDisabledStyle: CSSProperties = {
-  ...donateButtonStyle,
+const donateButtonDisabledVisualStyle: CSSProperties = {
+  ...donateButtonVisualStyle,
   opacity: 0.42,
-  cursor: 'default',
 };
 
 const messageStyle: CSSProperties = {
@@ -147,6 +141,11 @@ const directDonateSectionStyle: CSSProperties = {
 const directDonateButtonWrapStyle: CSSProperties = {
   position: 'relative',
   display: 'grid',
+  width: '100%',
+};
+
+const fullWidthPanelButtonStyle: CSSProperties = {
+  width: '100%',
 };
 
 const directDonateTooltipStyle: CSSProperties = {
@@ -195,15 +194,16 @@ function DirectDeveloperDonateSection() {
         >
           {DEVELOPER_DONATION_TOOLTIP}
         </span>
-        <button
+        <PanelButton
           aria-describedby="direct-developer-donate-tooltip"
           onClick={openDeveloperPaypalDonation}
-          style={donateButtonStyle}
-          type="button"
+          pressKey="donate-paypal"
+          style={fullWidthPanelButtonStyle}
+          visualStyle={donateButtonVisualStyle}
           {...tooltipHandlers}
         >
-          Donate directly to the developers
-        </button>
+          Donate directly to Babunigaming
+        </PanelButton>
       </div>
     </div>
   );
@@ -314,17 +314,11 @@ export function DonationOverlay({
       >
         <header style={headerStyle}>
           <h2 id="donation-overlay-title" style={titleStyle}>DONATE</h2>
-          <button
+          <ClosePanelButton
             disabled={donatePending}
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+            onClose={onClose}
+            pressKey="donate-close"
+          />
         </header>
         {loadError ? (
           <p style={{ ...messageStyle, color: '#ffb0a8' }}>{loadError}</p>
@@ -341,42 +335,44 @@ export function DonationOverlay({
               <p style={gemsCountStyle}>{formatGemCount(gemBalance)}</p>
             </div>
             <p style={introStyle}>
-              Support the team with yellow red gems from your balance.
+              Support the team with yellow red gems from your treasury.
             </p>
             <div style={buttonGridStyle}>
               {DONATION_PRESETS.map((preset) => {
                 const enabled = !donatePending && gemBalance >= preset.amount;
 
                 return (
-                  <button
-                    key={preset.amount}
+                  <PanelButton
                     aria-disabled={!enabled}
                     disabled={!enabled}
+                    key={preset.amount}
                     onClick={() => {
                       void handleDonate(preset.amount);
                     }}
-                    style={enabled ? donateButtonStyle : donateButtonDisabledStyle}
-                    type="button"
+                    pressKey={`donate-gems-${preset.amount}`}
+                    style={fullWidthPanelButtonStyle}
+                    visualStyle={enabled ? donateButtonVisualStyle : donateButtonDisabledVisualStyle}
                   >
                     {preset.label}
-                  </button>
+                  </PanelButton>
                 );
               })}
-              <button
+              <PanelButton
                 aria-disabled={donatePending || gemBalance <= 0}
                 disabled={donatePending || gemBalance <= 0}
                 onClick={() => {
                   void handleDonate(gemBalance);
                 }}
-                style={
+                pressKey="donate-gems-all"
+                style={fullWidthPanelButtonStyle}
+                visualStyle={
                   !donatePending && gemBalance > 0
-                    ? donateButtonStyle
-                    : donateButtonDisabledStyle
+                    ? donateButtonVisualStyle
+                    : donateButtonDisabledVisualStyle
                 }
-                type="button"
               >
                 All my gems
-              </button>
+              </PanelButton>
             </div>
           </>
         )}

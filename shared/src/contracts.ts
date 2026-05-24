@@ -12,6 +12,26 @@ export interface ClientSession {
   accessToken: string;
 }
 
+export interface SealOfNorghorStatusDto {
+  active: boolean;
+  expiresAt: number | null;
+  cost: number;
+  durationDays: number;
+  gemBalance: number;
+  canActivate: boolean;
+}
+
+export interface ActivateSealOfNorghorResponse {
+  playerId: string;
+  spent: number;
+  currencies: {
+    yellow_red_gem?: number;
+    [key: string]: number | undefined;
+  };
+  sealOfNorghor: SealOfNorghorStatusDto;
+  unlockedExpansions: number[];
+}
+
 export interface PlayerResponse {
   playerId: string;
   currencies?: {
@@ -19,6 +39,7 @@ export interface PlayerResponse {
     [key: string]: number | undefined;
   };
   unlockedExpansions?: number[];
+  sealOfNorghor?: SealOfNorghorStatusDto;
 }
 
 export interface WallOfFameEntryDto {
@@ -33,6 +54,12 @@ export interface WallOfFameEntryDto {
   diedAt: number;
 }
 
+export interface UnlockedTitleOptionDto {
+  title: string;
+  achievementId: string;
+  rank: number;
+}
+
 export interface PlayerProfileAvatarDto {
   id: string;
   name: string;
@@ -42,6 +69,7 @@ export interface PlayerProfileAvatarDto {
   portrait: string;
   frame: string;
   createdAt: number;
+  displayTitle: string | null;
 }
 
 export interface PlayerProfileResponse {
@@ -50,6 +78,12 @@ export interface PlayerProfileResponse {
   joinedAt: number;
   avatars: PlayerProfileAvatarDto[];
   wallOfFame: WallOfFameEntryDto[];
+  unlockedTitles: UnlockedTitleOptionDto[];
+}
+
+export interface SetAvatarDisplayTitleResponse {
+  playerId: string;
+  avatar: PersistedAvatarDto;
 }
 
 export interface UnlockExpansionResponse {
@@ -160,6 +194,7 @@ export interface PersistedAvatarDto {
   frame: string;
   createdAt?: number;
   lastPlayedAt?: number;
+  displayTitle?: string | null;
 }
 
 export interface AvatarResponse {

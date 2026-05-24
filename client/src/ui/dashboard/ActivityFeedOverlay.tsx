@@ -7,7 +7,7 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
-import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -55,17 +55,6 @@ const titleStyle: CSSProperties = {
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.06em',
-};
-
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
 };
 
 const scrollBodyStyle: CSSProperties = {
@@ -322,16 +311,7 @@ export function ActivityFeedOverlay({
       >
         <header style={headerStyle}>
           <h2 id="scribes-feed-title" style={titleStyle}>SCRIBES</h2>
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="scribes-close" />
         </header>
         <div style={scrollBodyStyle}>
           {loading && entries.length === 0 ? (

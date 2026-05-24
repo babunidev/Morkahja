@@ -2,14 +2,17 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import type {
   PlayerProfileAvatarDto,
   PlayerProfileResponse,
+  UnlockedTitleOptionDto,
   WallOfFameEntryDto,
 } from '@shared/contracts';
-import { fetchPlayerProfile } from '../../api/http.js';
+import { fetchPlayerProfile, setAvatarDisplayTitle } from '../../api/http.js';
+import { formatAvatarDisplayName } from '../avatar/avatarDisplayName.js';
 import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
 import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
+import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -69,17 +72,6 @@ const titleStyle: CSSProperties = {
   letterSpacing: '0.06em',
 };
 
-const closeButtonStyle: CSSProperties = {
-  minWidth: 72,
-  minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
-  color: '#ffcc66',
-  cursor: 'pointer',
-  fontFamily: 'Georgia, serif',
-};
-
 const bodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
@@ -125,7 +117,7 @@ const currentSlotsStyle: CSSProperties = {
 
 const slotCardStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '104px minmax(0, 1fr)',
+  gridTemplateColumns: '104px minmax(0, 1fr) auto',
   gap: 14,
   alignItems: 'center',
   padding: '12px 14px',
@@ -165,11 +157,50 @@ const slotNameStyle: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+const slotRaceRoleStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(247, 239, 224, 0.78)',
+  fontSize: '0.84rem',
+  lineHeight: 1.35,
+  letterSpacing: '0.04em',
+};
+
 const slotLevelStyle: CSSProperties = {
   margin: 0,
   color: 'rgba(247, 239, 224, 0.82)',
   fontSize: '0.9rem',
   lineHeight: 1.35,
+};
+
+const titleSelectWrapStyle: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+  justifyItems: 'end',
+  alignSelf: 'stretch',
+  justifyContent: 'center',
+};
+
+const titleSelectLabelStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 204, 102, 0.72)',
+  fontSize: '0.72rem',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+};
+
+const titleSelectStyle: CSSProperties = {
+  width: '100%',
+  minWidth: 108,
+  maxWidth: 120,
+  minHeight: 38,
+  padding: '6px 8px',
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 9,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.82rem',
+  cursor: 'pointer',
 };
 
 const emptySlotPortraitStyle: CSSProperties = {
@@ -239,16 +270,60 @@ function formatJoinedAt(joinedAt: number): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(joinedAt));
 }
 
-function CurrentAvatarSlot({ avatar }: { avatar: PlayerProfileAvatarDto }) {
+function CurrentAvatarSlot({
+  avatar,
+  titleSavePending,
+  unlockedTitles,
+  onTitleChange,
+}: {
+  avatar: PlayerProfileAvatarDto;
+  titleSavePending: boolean;
+  unlockedTitles: UnlockedTitleOptionDto[];
+  onTitleChange: (avatarId: string, displayTitle: string | null) => void;
+}) {
+  const selectedTitle = avatar.displayTitle ?? '';
+  const hasCurrentTitle = selectedTitle.length > 0;
+  const currentTitleListed = !hasCurrentTitle
+    || unlockedTitles.some((option) => option.title === selectedTitle);
+
   return (
     <article style={slotCardStyle}>
       <div style={slotPortraitStyle}>
         <AvatarPortraitStack frame={avatar.frame} portrait={avatar.portrait} />
       </div>
       <div style={slotDetailsStyle}>
-        <p style={slotNameStyle}>{avatar.name}</p>
+        <p style={slotNameStyle}>{formatAvatarDisplayName(avatar)}</p>
+        <p style={slotRaceRoleStyle}>
+          {avatar.race} {avatar.role}
+        </p>
         <p style={slotLevelStyle}>Level {avatar.level}</p>
       </div>
+      <label style={titleSelectWrapStyle}>
+        <span style={titleSelectLabelStyle}>Title</span>
+        <select
+          aria-label={`Select title for ${avatar.name}`}
+          disabled={titleSavePending}
+          onChange={(event) => {
+            const nextTitle = event.target.value;
+            onTitleChange(avatar.id, nextTitle.length > 0 ? nextTitle : null);
+          }}
+          style={titleSelectStyle}
+          value={currentTitleListed ? selectedTitle : ''}
+        >
+          <option value="">No title</option>
+          {!currentTitleListed && hasCurrentTitle ? (
+            <option value={selectedTitle}>{selectedTitle}</option>
+          ) : null}
+          {unlockedTitles.map((option) => (
+            <option
+              key={`${option.achievementId}-${option.rank}`}
+              value={option.title}
+            >
+              {option.title}
+            </option>
+          ))}
+        </select>
+      </label>
     </article>
   );
 }
@@ -282,10 +357,12 @@ function WallOfFameCard({ entry }: { entry: WallOfFameEntryDto }) {
 
 export function PlayerProfileOverlay({
   fallbackPlayerName,
+  onAvatarsChanged,
   onClose,
   open,
 }: {
   fallbackPlayerName: string;
+  onAvatarsChanged?: () => void;
   onClose: () => void;
   open: boolean;
 }) {
@@ -293,6 +370,8 @@ export function PlayerProfileOverlay({
   const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
   const [loadPending, setLoadPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [titleSaveError, setTitleSaveError] = useState<string | null>(null);
+  const [titleSavePendingId, setTitleSavePendingId] = useState<string | null>(null);
 
   const refreshProfile = useCallback(async (): Promise<void> => {
     setLoadPending(true);
@@ -314,6 +393,8 @@ export function PlayerProfileOverlay({
       setVisible(false);
       setProfile(null);
       setLoadError(null);
+      setTitleSaveError(null);
+      setTitleSavePendingId(null);
       setLoadPending(false);
       return;
     }
@@ -339,6 +420,46 @@ export function PlayerProfileOverlay({
     () => Array.from({ length: 3 }, (_, index) => profile?.avatars[index] ?? null),
     [profile?.avatars],
   );
+
+  const unlockedTitles = profile?.unlockedTitles ?? [];
+
+  async function handleTitleChange(
+    avatarId: string,
+    displayTitle: string | null,
+  ): Promise<void> {
+    setTitleSavePendingId(avatarId);
+    setTitleSaveError(null);
+    playSfx(DEFAULT_BUTTON_SOUND);
+
+    try {
+      const result = await setAvatarDisplayTitle(avatarId, displayTitle);
+
+      setProfile((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          avatars: current.avatars.map((avatar) => (
+            avatar.id === avatarId
+              ? {
+                  ...avatar,
+                  displayTitle: result.avatar.displayTitle ?? null,
+                }
+              : avatar
+          )),
+        };
+      });
+      onAvatarsChanged?.();
+    } catch (error) {
+      setTitleSaveError(
+        error instanceof Error ? error.message : 'Could not update avatar title',
+      );
+    } finally {
+      setTitleSavePendingId(null);
+    }
+  }
 
   if (!open) {
     return null;
@@ -374,16 +495,7 @@ export function PlayerProfileOverlay({
               {displayName}
             </p>
           </div>
-          <button
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onClose();
-            }}
-            style={closeButtonStyle}
-            type="button"
-          >
-            Close
-          </button>
+          <ClosePanelButton onClose={onClose} pressKey="profile-close" />
         </header>
         <div data-player-profile-scroll="" style={bodyStyle}>
           <style>
@@ -393,6 +505,7 @@ export function PlayerProfileOverlay({
             Joined {profile ? formatJoinedAt(profile.joinedAt) : '…'}
           </p>
           {loadError ? <p style={errorMessageStyle}>{loadError}</p> : null}
+          {titleSaveError ? <p style={errorMessageStyle}>{titleSaveError}</p> : null}
           {loadPending && !profile ? (
             <p style={messageStyle}>Loading profile…</p>
           ) : (
@@ -402,7 +515,15 @@ export function PlayerProfileOverlay({
                 <div style={currentSlotsStyle}>
                   {currentSlots.map((avatar, index) => (
                     avatar ? (
-                      <CurrentAvatarSlot avatar={avatar} key={avatar.id} />
+                      <CurrentAvatarSlot
+                        avatar={avatar}
+                        key={avatar.id}
+                        onTitleChange={(avatarId, displayTitle) => {
+                          void handleTitleChange(avatarId, displayTitle);
+                        }}
+                        titleSavePending={titleSavePendingId === avatar.id}
+                        unlockedTitles={unlockedTitles}
+                      />
                     ) : (
                       <EmptyAvatarSlot key={`empty-slot-${index}`} />
                     )
