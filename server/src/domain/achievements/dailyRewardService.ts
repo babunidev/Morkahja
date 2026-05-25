@@ -2,12 +2,28 @@ import { getPlayer, setPlayer } from '../../db/postgresDocumentStore.js';
 import { addPlayerYellowRedGems } from '../../services/playerService.js';
 import { recordDailyRewardClaimedEvent } from '../../services/gameEventService.js';
 import type { PlayerDocument } from '../../types/player.js';
+import { ADVENTURER_ACHIEVEMENT_ID } from './adventurerAchievement.js';
+import { ALPHA_PLAYER_ACHIEVEMENT_ID } from './alphaPlayerAchievement.js';
+import { BLESSED_ACHIEVEMENT_ID } from './blessedAchievement.js';
+import { CONTRIBUTOR_ACHIEVEMENT_ID } from './contributorAchievement.js';
 import {
-  ADVENTURER_ACHIEVEMENT_ID,
-  adventurerDailyRewardGems,
-  adventurerRankFromProgress,
-} from './adventurerAchievement.js';
-import { loadAchievementProgress } from './achievementPersistence.js';
+  COMBATANT_ACHIEVEMENT_ID,
+  HELPER_ACHIEVEMENT_ID,
+  TRICKSTER_ACHIEVEMENT_ID,
+} from './encounterSolveAchievements.js';
+import { FIRESTARTER_ACHIEVEMENT_ID } from './firestarterAchievement.js';
+import { loadFirestarterState } from './firestarterProgress.js';
+import {
+  achievementRankFromProgress,
+  loadAllAchievementProgressForPlayer,
+} from './achievementPersistence.js';
+import {
+  computeDailyRewardGems,
+  sumAchievementRanks,
+  type DailyRewardAchievementRanks,
+} from './achievementDailyReward.js';
+
+export { computeDailyRewardGems, type DailyRewardAchievementRanks } from './achievementDailyReward.js';
 
 export const DAILY_REWARD_ENCOUNTERS_REQUIRED = 42;
 
@@ -24,6 +40,7 @@ export interface DailyRewardStatus {
   claimable: boolean;
   claimedToday: boolean;
   gemReward: number;
+  /** Sum of achievement ranks used for the daily payout (server-derived). */
   achievementRank: number;
 }
 
@@ -49,6 +66,23 @@ function readDailyRewardState(player: PlayerDocument | null): PlayerDailyRewardS
   };
 }
 
+function isDailyRewardClaimedForDay(
+  player: PlayerDocument | null,
+  utcDay: string,
+): boolean {
+  const state = readDailyRewardState(player);
+  if (state.utcDay === utcDay && state.claimedAt !== undefined) {
+    return true;
+  }
+
+  const claimKey = dailyRewardClaimKey(utcDay);
+  return player?.loreGemClaims?.[claimKey] === true;
+}
+
+function dailyRewardClaimKey(utcDay: string): string {
+  return `daily-reward-${utcDay}`;
+}
+
 async function writeDailyRewardState(
   playerId: string,
   state: PlayerDailyRewardState,
@@ -63,9 +97,55 @@ async function writeDailyRewardState(
   );
 }
 
-export async function getAdventurerRankForPlayer(playerId: string): Promise<number> {
-  const progress = await loadAchievementProgress(playerId, ADVENTURER_ACHIEVEMENT_ID);
-  return adventurerRankFromProgress(progress?.progress ?? 0);
+function progressByAchievementId(
+  records: Awaited<ReturnType<typeof loadAllAchievementProgressForPlayer>>,
+): Map<string, number> {
+  const map = new Map<string, number>();
+
+  for (const record of records) {
+    map.set(record.achievementId, Math.max(0, record.progress));
+  }
+
+  return map;
+}
+
+/** Ranks are always derived from authoritative progress (or live avatars for Firestarter). */
+export async function resolveDailyRewardRanks(
+  playerId: string,
+): Promise<DailyRewardAchievementRanks> {
+  const [records, firestarter] = await Promise.all([
+    loadAllAchievementProgressForPlayer(playerId),
+    loadFirestarterState(playerId),
+  ]);
+
+  const progress = progressByAchievementId(records);
+  const readProgress = (achievementId: string): number => progress.get(achievementId) ?? 0;
+
+  return {
+    adventurer: achievementRankFromProgress(
+      ADVENTURER_ACHIEVEMENT_ID,
+      readProgress(ADVENTURER_ACHIEVEMENT_ID),
+    ),
+    firestarter: firestarter.rank,
+    blessed: achievementRankFromProgress(BLESSED_ACHIEVEMENT_ID, readProgress(BLESSED_ACHIEVEMENT_ID)),
+    combatant: achievementRankFromProgress(
+      COMBATANT_ACHIEVEMENT_ID,
+      readProgress(COMBATANT_ACHIEVEMENT_ID),
+    ),
+    trickster: achievementRankFromProgress(
+      TRICKSTER_ACHIEVEMENT_ID,
+      readProgress(TRICKSTER_ACHIEVEMENT_ID),
+    ),
+    helper: achievementRankFromProgress(HELPER_ACHIEVEMENT_ID, readProgress(HELPER_ACHIEVEMENT_ID)),
+    contributor: achievementRankFromProgress(
+      CONTRIBUTOR_ACHIEVEMENT_ID,
+      readProgress(CONTRIBUTOR_ACHIEVEMENT_ID),
+    ),
+    alphaPlayer: achievementRankFromProgress(
+      ALPHA_PLAYER_ACHIEVEMENT_ID,
+      readProgress(ALPHA_PLAYER_ACHIEVEMENT_ID),
+    ),
+  };
 }
 
 export async function recordDailyEncounterPlayed(
@@ -96,10 +176,12 @@ export async function recordDailyEncounterPlayed(
 export async function getDailyRewardStatus(playerId: string): Promise<DailyRewardStatus> {
   const player = await getPlayer<PlayerDocument>(playerId);
   const state = readDailyRewardState(player);
-  const achievementRank = await getAdventurerRankForPlayer(playerId);
-  const gemReward = adventurerDailyRewardGems(achievementRank);
-  const claimedToday = state.claimedAt !== undefined;
-  const claimable = !claimedToday && state.encountersPlayed >= DAILY_REWARD_ENCOUNTERS_REQUIRED;
+  const ranks = await resolveDailyRewardRanks(playerId);
+  const gemReward = computeDailyRewardGems(ranks);
+  const claimedToday = isDailyRewardClaimedForDay(player, state.utcDay);
+  const claimable = !claimedToday
+    && state.encountersPlayed >= DAILY_REWARD_ENCOUNTERS_REQUIRED
+    && gemReward > 0;
 
   return {
     utcDay: state.utcDay,
@@ -108,7 +190,7 @@ export async function getDailyRewardStatus(playerId: string): Promise<DailyRewar
     claimable,
     claimedToday,
     gemReward,
-    achievementRank,
+    achievementRank: sumAchievementRanks(ranks),
   };
 }
 
@@ -117,32 +199,60 @@ export async function claimDailyReward(playerId: string): Promise<{
   granted: boolean;
   currencies: NonNullable<PlayerDocument['currencies']>;
 }> {
-  const status = await getDailyRewardStatus(playerId);
+  const player = await getPlayer<PlayerDocument>(playerId);
+  const state = readDailyRewardState(player);
+  const utcDay = state.utcDay;
+  const claimKey = dailyRewardClaimKey(utcDay);
 
-  if (!status.claimable) {
-    const player = await getPlayer<PlayerDocument>(playerId);
+  if (isDailyRewardClaimedForDay(player, utcDay)) {
     return {
-      status,
+      status: await getDailyRewardStatus(playerId),
       granted: false,
       currencies: player?.currencies ?? { yellow_red_gem: 0 },
     };
   }
 
-  const claimKey = `daily-reward-${status.utcDay}`;
+  if (state.encountersPlayed < DAILY_REWARD_ENCOUNTERS_REQUIRED) {
+    const ranks = await resolveDailyRewardRanks(playerId);
+    return {
+      status: {
+        utcDay,
+        encountersPlayed: state.encountersPlayed,
+        encountersRequired: DAILY_REWARD_ENCOUNTERS_REQUIRED,
+        claimable: false,
+        claimedToday: false,
+        gemReward: computeDailyRewardGems(ranks),
+        achievementRank: sumAchievementRanks(ranks),
+      },
+      granted: false,
+      currencies: player?.currencies ?? { yellow_red_gem: 0 },
+    };
+  }
+
+  const ranks = await resolveDailyRewardRanks(playerId);
+  const gemReward = computeDailyRewardGems(ranks);
+
+  if (gemReward <= 0) {
+    return {
+      status: await getDailyRewardStatus(playerId),
+      granted: false,
+      currencies: player?.currencies ?? { yellow_red_gem: 0 },
+    };
+  }
+
   const { currencies, granted } = await addPlayerYellowRedGems(
     playerId,
-    status.gemReward,
+    gemReward,
     claimKey,
   );
 
+  await writeDailyRewardState(playerId, {
+    ...state,
+    claimedAt: Date.now(),
+  });
+
   if (granted) {
-    const player = await getPlayer<PlayerDocument>(playerId);
-    const state = readDailyRewardState(player);
-    await writeDailyRewardState(playerId, {
-      ...state,
-      claimedAt: Date.now(),
-    });
-    await recordDailyRewardClaimedEvent(playerId, status.gemReward, status.utcDay);
+    await recordDailyRewardClaimedEvent(playerId, gemReward, utcDay);
   }
 
   return {

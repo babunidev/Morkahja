@@ -10,6 +10,8 @@ import {
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
+const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+
 const panelBodyStyle: CSSProperties = {
   display: 'grid',
   gap: 14,
@@ -94,6 +96,39 @@ const progressLabelStyle: CSSProperties = {
 const dailyRewardCardStyle: CSSProperties = {
   ...achievementCardStyle,
   gap: 10,
+};
+
+const dailyRewardHeadingStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  flexWrap: 'wrap',
+};
+
+const dailyRewardTitleStyle: CSSProperties = {
+  ...achievementTitleStyle,
+  textAlign: 'left',
+};
+
+const dailyRewardGemsStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '1rem',
+  fontWeight: 700,
+  fontFamily: 'Georgia, serif',
+  letterSpacing: '0.03em',
+  textShadow: '0 0 8px rgba(255, 204, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.85)',
+};
+
+const dailyRewardGemsIconStyle: CSSProperties = {
+  width: 28,
+  height: 28,
+  objectFit: 'contain',
+  filter: 'drop-shadow(0 0 8px rgba(255, 204, 102, 0.55)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45))',
 };
 
 const claimButtonStyle: CSSProperties = {
@@ -243,9 +278,23 @@ function DailyRewardCard({
 }) {
   const canClaim = dailyReward.claimable && !claimPending;
 
+  const gemReward = dailyReward.gemReward;
+
   return (
     <section style={dailyRewardCardStyle}>
-      <h3 style={achievementTitleStyle}>Daily Reward</h3>
+      <div style={dailyRewardHeadingStyle}>
+        <h3 style={dailyRewardTitleStyle}>Daily Reward</h3>
+        <p aria-label={`${gemReward} yellow red gems per claim`} style={dailyRewardGemsStyle}>
+          <img
+            alt=""
+            aria-hidden="true"
+            {...protectedImageProps}
+            src={GEMS_ICON}
+            style={dailyRewardGemsIconStyle}
+          />
+          <span>{gemReward}</span>
+        </p>
+      </div>
       <p style={progressLabelStyle}>
         {dailyReward.encountersPlayed}/{dailyReward.encountersRequired} encounters
         {dailyReward.claimedToday ? ' — claimed' : ''}

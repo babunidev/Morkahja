@@ -66,9 +66,17 @@ export function adventurerRankDefinition(rank: number): AchievementRankDefinitio
   return ADVENTURER_RANKS.find((entry) => entry.rank === rank) ?? null;
 }
 
-export function adventurerDailyRewardGems(rank: number): number {
-  const clamped = Math.max(0, Math.min(ADVENTURER_MAX_RANK, rank));
+/** Standard daily bonus used by Adventurer and every other chain except Alpha Player. */
+export function standardAchievementDailyRewardGems(
+  rank: number,
+  maxRank = ADVENTURER_MAX_RANK,
+): number {
+  const clamped = Math.max(0, Math.min(maxRank, Math.floor(rank)));
   return clamped + 1;
+}
+
+export function adventurerDailyRewardGems(rank: number): number {
+  return standardAchievementDailyRewardGems(rank, ADVENTURER_MAX_RANK);
 }
 
 export function adventurerProgressBand(progress: number): {

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  alphaPlayerDailyRewardGems,
   alphaPlayerProgressBand,
   alphaPlayerRankFromProgress,
 } from './alphaPlayerAchievement.js';
@@ -23,5 +24,9 @@ assert.deepEqual(alphaPlayerProgressBand(0), {
 assert.equal(alphaPlayerProgressBand(10).progressInBand, 0.5);
 assert.equal(alphaPlayerProgressBand(160).progressInBand, 1);
 assert.equal(alphaPlayerProgressBand(160).bandEnd, null);
+
+assert.equal(alphaPlayerDailyRewardGems(0), 0);
+assert.equal(alphaPlayerDailyRewardGems(1), 50);
+assert.equal(alphaPlayerDailyRewardGems(4), 200);
 
 console.log('alphaPlayerAchievement.test.ts passed');

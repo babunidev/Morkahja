@@ -9,6 +9,7 @@ export const ALPHA_PLAYER_CHAIN_TEXT =
 export const ALPHA_PLAYER_RANK_THRESHOLDS = [20, 40, 80, 160] as const;
 export const ALPHA_PLAYER_MAX_RANK = 4;
 export const ALPHA_PLAYER_RANK4_SLOT_CAP = 100;
+export const ALPHA_PLAYER_DAILY_REWARD_GEMS_PER_RANK = 50;
 
 export const ALPHA_PLAYER_BASE_ICON = 'UI/04_ACHIEVEMENTS/im_glyph_alphaplayer.webp';
 
@@ -64,6 +65,11 @@ export function alphaPlayerRankDefinition(rank: number): AchievementRankDefiniti
   }
 
   return ALPHA_PLAYER_RANKS.find((entry) => entry.rank === rank) ?? null;
+}
+
+export function alphaPlayerDailyRewardGems(rank: number): number {
+  const clamped = Math.max(0, Math.min(ALPHA_PLAYER_MAX_RANK, rank));
+  return clamped * ALPHA_PLAYER_DAILY_REWARD_GEMS_PER_RANK;
 }
 
 export function alphaPlayerProgressBand(progress: number): {

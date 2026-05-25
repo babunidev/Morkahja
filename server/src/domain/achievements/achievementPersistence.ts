@@ -21,7 +21,7 @@ import {
 } from './encounterSolveAchievements.js';
 import type { AchievementProgress } from './achievementProgress.js';
 
-function rankFromProgress(achievementId: string, progress: number): number {
+export function achievementRankFromProgress(achievementId: string, progress: number): number {
   if (achievementId === ADVENTURER_ACHIEVEMENT_ID) {
     return adventurerRankFromProgress(progress);
   }
@@ -50,7 +50,7 @@ function rankFromProgress(achievementId: string, progress: number): number {
 export async function reconcileAchievementProgress(
   record: AchievementProgress,
 ): Promise<AchievementProgress> {
-  const rank = rankFromProgress(record.achievementId, record.progress);
+  const rank = achievementRankFromProgress(record.achievementId, record.progress);
 
   if (record.rank === rank) {
     return record;
@@ -103,6 +103,28 @@ function rowToAchievementProgress(row: {
     unlockedAt: row.unlocked_at === null ? undefined : Number(row.unlocked_at),
     updatedAt: Number(row.updated_at),
   };
+}
+
+export async function loadAllAchievementProgressForPlayer(
+  playerId: string,
+): Promise<AchievementProgress[]> {
+  await ensurePlayerAchievementsReady();
+
+  const result = await pool.query<{
+    player_id: string;
+    achievement_id: string;
+    rank: number;
+    progress: number;
+    unlocked_at: string | null;
+    updated_at: string;
+  }>(
+    `SELECT player_id, achievement_id, rank, progress, unlocked_at, updated_at
+     FROM player_achievements
+     WHERE player_id = $1`,
+    [playerId],
+  );
+
+  return result.rows.map(rowToAchievementProgress);
 }
 
 export async function loadAchievementProgress(
