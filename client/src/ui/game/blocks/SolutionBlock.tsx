@@ -527,7 +527,9 @@ export function SolutionBlock({
   }
 
   const actionsReady = actionsInteractive && !hidden;
-  const bindTooltipReveal = useTooltipRevealBinding(actionsReady);
+  const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
+    actionsReady,
+  );
 
   function showActionTooltip(
     name: string,
@@ -594,11 +596,19 @@ export function SolutionBlock({
     setSolutionTooltip(null);
   }
 
-  function handleDiceClick(): void {
+  function handleDiceButtonClick(): void {
+    if (consumeLongPressActivation()) {
+      return;
+    }
+
     if (!actionsReady) {
       return;
     }
 
+    handleDiceClick();
+  }
+
+  function handleDiceClick(): void {
     clearRollRevealTimer();
     hideSolutionTooltip();
 
@@ -611,11 +621,19 @@ export function SolutionBlock({
     }, DICE_ROLL_ANIMATION_MS);
   }
 
-  function handleSolutionClick(solution: VisibleSolutionSlot): void {
-    if (!actionsReady) {
+  function handleSolutionButtonClick(solution: VisibleSolutionSlot): void {
+    if (consumeLongPressActivation()) {
       return;
     }
 
+    if (!actionsReady || !solution.available) {
+      return;
+    }
+
+    handleSolutionClick(solution);
+  }
+
+  function handleSolutionClick(solution: VisibleSolutionSlot): void {
     clearRollRevealTimer();
     hideSolutionTooltip();
 
@@ -676,7 +694,7 @@ export function SolutionBlock({
                 aria-label="Roll dice"
                 className="morkahja-footer-button"
                 disabled={!actionsReady}
-                onClick={handleDiceClick}
+                onClick={handleDiceButtonClick}
                 {...bindTooltipReveal({
                   onShow: showDiceTooltip,
                   onHide: hideSolutionTooltip,
@@ -756,11 +774,7 @@ export function SolutionBlock({
                   onHide: hideSolutionTooltip,
                 })}
                 onClick={() => {
-                  if (!actionsReady || !visibleSlot.available) {
-                    return;
-                  }
-
-                  handleSolutionClick(visibleSlot);
+                  handleSolutionButtonClick(visibleSlot);
                 }}
                 style={{
                   ...solutionButtonStyle,

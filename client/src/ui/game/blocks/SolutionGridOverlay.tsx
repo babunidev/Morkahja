@@ -334,7 +334,9 @@ export function SolutionGridOverlay({
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
   const [tooltipItem, setTooltipItem] = useState<SolutionGridEntry | null>(null);
-  const bindTooltipReveal = useTooltipRevealBinding(visible);
+  const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
+    visible,
+  );
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const items = useMemo(
     () => inventoryEntries(inventory, sourceContainer, inventoryType),
@@ -365,6 +367,10 @@ export function SolutionGridOverlay({
   }
 
   function handleItemClick(item: SolutionGridEntry): void {
+    if (consumeLongPressActivation()) {
+      return;
+    }
+
     if (selectedItemId === item.solutionId && tooltipItem !== null) {
       setSelectedItemId(null);
       hideItemTooltip();

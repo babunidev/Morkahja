@@ -474,7 +474,7 @@ export function AvatarCreation({
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const { mode } = useLayoutMode();
   const mobilePortrait = mode === 'mobile-portrait';
-  const bindTooltipReveal = useTooltipRevealBinding(visible);
+  const { bind: bindTooltipReveal } = useTooltipRevealBinding(visible);
 
   useEffect(() => {
     if (!visible) {

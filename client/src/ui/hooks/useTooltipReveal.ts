@@ -10,8 +10,11 @@ import {
 
 export const TOOLTIP_LONG_PRESS_MS = 420;
 
-/** Touch-primary devices; desktop mice report hover even on hybrid hardware. */
-const HOVER_TOOLTIP_QUERY = '(hover: hover)';
+/** Desktop mice and precise pointers — hover tooltips. */
+const HOVER_TOOLTIP_QUERY = '(hover: hover) and (pointer: fine)';
+
+/** Phones / tablets — long-press tooltips (also matches coarse pointers on hybrid devices). */
+const TOUCH_TOOLTIP_QUERY = '(hover: none), (pointer: coarse)';
 
 type TooltipTarget = HTMLElement;
 type TooltipPointerEvent = PointerEvent<TooltipTarget>;
@@ -26,6 +29,10 @@ export interface TooltipRevealCallbacks {
 function readHoverCapable(): boolean {
   if (typeof window === 'undefined') {
     return true;
+  }
+
+  if (window.matchMedia(TOUCH_TOOLTIP_QUERY).matches) {
+    return false;
   }
 
   return window.matchMedia(HOVER_TOOLTIP_QUERY).matches;
@@ -55,17 +62,20 @@ function useTooltipLongPressMode(): boolean {
   const [hoverCapable, setHoverCapable] = useState(readHoverCapable);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(HOVER_TOOLTIP_QUERY);
+    const hoverQuery = window.matchMedia(HOVER_TOOLTIP_QUERY);
+    const touchQuery = window.matchMedia(TOUCH_TOOLTIP_QUERY);
 
     function update(): void {
-      setHoverCapable(mediaQuery.matches);
+      setHoverCapable(readHoverCapable());
     }
 
     update();
-    mediaQuery.addEventListener('change', update);
+    hoverQuery.addEventListener('change', update);
+    touchQuery.addEventListener('change', update);
 
     return () => {
-      mediaQuery.removeEventListener('change', update);
+      hoverQuery.removeEventListener('change', update);
+      touchQuery.removeEventListener('change', update);
     };
   }, []);
 
@@ -116,13 +126,17 @@ export function useTooltipReveal(enabled = true) {
     void event;
   }, [enabled]);
 
+  const longPressTriggeredRef = useRef(false);
+
   const onPointerDown = useCallback((_event: TooltipPointerEvent) => {
     if (!enabled || !useLongPress) {
       return;
     }
 
+    longPressTriggeredRef.current = false;
     clearTimer();
     timerRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true;
       setVisible(true);
     }, TOOLTIP_LONG_PRESS_MS);
   }, [clearTimer, enabled, useLongPress]);
@@ -135,13 +149,30 @@ export function useTooltipReveal(enabled = true) {
     }
   }, [enabled, hide]);
 
+  const onPointerUp = useCallback(() => {
+    clearTimer();
+    hide();
+  }, [clearTimer, hide]);
+
+  const onPointerCancel = useCallback(() => {
+    clearTimer();
+    longPressTriggeredRef.current = false;
+    hide();
+  }, [clearTimer, hide]);
+
+  const onPointerLeave = useCallback(() => {
+    clearTimer();
+    longPressTriggeredRef.current = false;
+    hide();
+  }, [clearTimer, hide]);
+
   const handlers = enabled
     ? useLongPress
       ? {
           onPointerDown,
-          onPointerUp: hide,
-          onPointerCancel: hide,
-          onPointerLeave: hide,
+          onPointerUp,
+          onPointerCancel,
+          onPointerLeave,
         }
       : hoverHandlers({
           onShow: show,
@@ -196,7 +227,9 @@ export function useTooltipRevealGroup() {
             show(id);
           }, TOOLTIP_LONG_PRESS_MS);
         },
-        onPointerUp: hide,
+        onPointerUp: () => {
+          clearTimer();
+        },
         onPointerCancel: hide,
         onPointerLeave: hide,
       };
@@ -223,12 +256,22 @@ export function useTooltipRevealGroup() {
 export function useTooltipRevealBinding(enabled = true) {
   const useLongPress = useTooltipLongPressMode();
   const timerRef = useRef<number | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+  }, []);
+
+  const consumeLongPressActivation = useCallback(() => {
+    if (!longPressTriggeredRef.current) {
+      return false;
+    }
+
+    longPressTriggeredRef.current = false;
+    return true;
   }, []);
 
   const bind = useCallback((callbacks: TooltipRevealCallbacks): TooltipRevealHandlerProps => {
@@ -239,8 +282,10 @@ export function useTooltipRevealBinding(enabled = true) {
     if (useLongPress) {
       return {
         onPointerDown: (event: TooltipPointerEvent) => {
+          longPressTriggeredRef.current = false;
           clearTimer();
           timerRef.current = window.setTimeout(() => {
+            longPressTriggeredRef.current = true;
             callbacks.onShow(event);
           }, TOOLTIP_LONG_PRESS_MS);
         },
@@ -250,10 +295,12 @@ export function useTooltipRevealBinding(enabled = true) {
         },
         onPointerCancel: () => {
           clearTimer();
+          longPressTriggeredRef.current = false;
           callbacks.onHide();
         },
         onPointerLeave: () => {
           clearTimer();
+          longPressTriggeredRef.current = false;
           callbacks.onHide();
         },
       };
@@ -264,5 +311,5 @@ export function useTooltipRevealBinding(enabled = true) {
 
   useEffect(() => () => clearTimer(), [clearTimer]);
 
-  return bind;
+  return { bind, consumeLongPressActivation };
 }
