@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AchievementProgressDto } from '@shared/contracts';
 import {
+  fetchAchievements,
   fetchActiveEncounter,
   fetchAvatar,
   heartbeatSession,
@@ -12,6 +14,13 @@ import {
   type EncounterSnapshot,
   type PersistedAvatar,
 } from './api/http.js';
+import AchievementsOverlay from './ui/dashboard/AchievementsOverlay.js';
+import {
+  findNewRankUnlocks,
+  pickPrimaryUnlock,
+} from './ui/dashboard/achievementUnlockDetection.js';
+import { markAchievementsSeen } from './ui/dashboard/achievementsAttentionState.js';
+import ScribesAchievementToast from './ui/dashboard/ScribesAchievementToast.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
 import {
@@ -35,6 +44,12 @@ import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
+
+const ACHIEVEMENT_POLL_MS = 10_000;
+
+function isAchievementWatchScreen(screen: AppScreen): boolean {
+  return screen === 'game' || screen === 'dashboard';
+}
 
 function musicZoneForScreen(screen: AppScreen): MusicZone {
   if (screen === 'dashboard') {
@@ -109,12 +124,64 @@ export default function App() {
   const [deathCreationHandoff, setDeathCreationHandoff] = useState(false);
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
+  const [achievementToast, setAchievementToast] = useState<AchievementProgressDto | null>(null);
+  const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
+  const achievementsBaselineRef = useRef<AchievementProgressDto[] | null>(null);
+  const session = loadStoredSession();
+  const playerId = session?.playerId ?? '';
+  const playerName = session?.playerName ?? '';
   useMobileFullscreen();
   useProtectedImages();
 
   useEffect(() => {
     seedDefaultAudioVolumesIfUnset();
   }, []);
+
+  const checkAchievementUnlocks = useCallback(async (options?: {
+    seedBaseline?: boolean;
+  }): Promise<void> => {
+    if (!playerId || !isAchievementWatchScreen(screen)) {
+      return;
+    }
+
+    try {
+      const response = await fetchAchievements();
+      const previous = achievementsBaselineRef.current;
+
+      if (options?.seedBaseline || !previous) {
+        achievementsBaselineRef.current = response.achievements;
+        return;
+      }
+
+      const unlock = pickPrimaryUnlock(findNewRankUnlocks(previous, response.achievements));
+      achievementsBaselineRef.current = response.achievements;
+
+      if (unlock) {
+        setAchievementToast(unlock.achievement);
+      }
+    } catch (error) {
+      console.error('Achievement unlock check failed', error);
+    }
+  }, [playerId, screen]);
+
+  useEffect(() => {
+    if (!isAchievementWatchScreen(screen)) {
+      setAchievementToast(null);
+      setAchievementsOverlayOpen(false);
+      achievementsBaselineRef.current = null;
+      return;
+    }
+
+    void checkAchievementUnlocks({ seedBaseline: true });
+
+    const pollTimer = window.setInterval(() => {
+      void checkAchievementUnlocks();
+    }, ACHIEVEMENT_POLL_MS);
+
+    return () => {
+      window.clearInterval(pollTimer);
+    };
+  }, [checkAchievementUnlocks, screen]);
 
   const loadingHooks = useMemo(
     () => ({
@@ -255,8 +322,13 @@ export default function App() {
         ) : null}
         {screen === 'dashboard' || gameEnterHandoff ? (
           <Dashboard
+            achievementsOpen={achievementsOverlayOpen}
             avatars={avatarSelectionAvatars}
             avatarSlotsVisible={avatarSlotsVisible}
+            onAchievementCheck={() => {
+              void checkAchievementUnlocks();
+            }}
+            onAchievementsOpenChange={setAchievementsOverlayOpen}
             creationPreset={avatarCreationPreset}
             creationRevealDelayMs={deathCreationHandoff ? FADE_DURATION_MS : 0}
             excludedAvatarIds={excludedAvatarIds}
@@ -340,6 +412,9 @@ export default function App() {
               setScreen('dashboard');
               void applyAvatarSelectionFromHome();
             }}
+            onAchievementCheck={() => {
+              void checkAchievementUnlocks();
+            }}
             onAvatarDeath={(presetAvatar) => {
               setExcludedAvatarIds((currentIds) => {
                 const nextIds = currentIds.includes(presetAvatar.id)
@@ -397,6 +472,34 @@ export default function App() {
             fading={avatarEnterHandoff.fading}
             glowAtCenter={avatarEnterHandoff.phase === 'at-center'}
             moveDurationMs={avatarEnterHandoff.moveDurationMs}
+          />
+        ) : null}
+        {isAchievementWatchScreen(screen) && achievementToast ? (
+          <ScribesAchievementToast
+            achievement={achievementToast}
+            onDismiss={() => {
+              setAchievementToast(null);
+            }}
+            onOpenAchievements={() => {
+              setAchievementsOverlayOpen(true);
+            }}
+            playerName={playerName}
+          />
+        ) : null}
+        {isAchievementWatchScreen(screen) && achievementsOverlayOpen && playerId ? (
+          <AchievementsOverlay
+            onClose={() => {
+              setAchievementsOverlayOpen(false);
+            }}
+            onProgressChange={() => {
+              void checkAchievementUnlocks();
+            }}
+            onSnapshotViewed={(snapshot) => {
+              markAchievementsSeen(playerId, snapshot);
+              achievementsBaselineRef.current = snapshot.achievements;
+            }}
+            open
+            playerId={playerId}
           />
         ) : null}
       </MusicEngine>

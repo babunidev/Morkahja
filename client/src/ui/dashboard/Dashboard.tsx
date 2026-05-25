@@ -6,13 +6,9 @@ import {
   type EncounterSnapshot,
   type PersistedAvatar,
 } from '../../api/http.js';
-import {
-  hasUnseenAchievements,
-  markAchievementsSeen,
-} from './achievementsAttentionState.js';
+import { hasUnseenAchievements } from './achievementsAttentionState.js';
 import AvatarSelectionPanel from '../avatar/AvatarSelectionPanel.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
-import AchievementsOverlay from './AchievementsOverlay.js';
 import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import ExpansionsOverlay from './ExpansionsOverlay.js';
 import FriendsOverlay from './FriendsOverlay.js';
@@ -209,6 +205,7 @@ const radialButtonStyle: CSSProperties = {
 };
 
 export function Dashboard({
+  achievementsOpen = false,
   avatars = [],
   creationPreset = null,
   creationRevealDelayMs = 0,
@@ -217,6 +214,8 @@ export function Dashboard({
   selectionNotice = null,
   avatarSlotsVisible = false,
   playPreparePending = false,
+  onAchievementCheck,
+  onAchievementsOpenChange,
   onAvatarSlotsVisibleChange,
   onAvatarSelectionHome,
   onAvatarsChanged,
@@ -230,6 +229,7 @@ export function Dashboard({
   onPrepareGame,
   onLogout,
 }: {
+  achievementsOpen?: boolean;
   avatars?: PersistedAvatar[];
   creationPreset?: PersistedAvatar | null;
   creationRevealDelayMs?: number;
@@ -238,6 +238,8 @@ export function Dashboard({
   selectionNotice?: string | null;
   avatarSlotsVisible?: boolean;
   playPreparePending?: boolean;
+  onAchievementCheck?: () => void;
+  onAchievementsOpenChange?: (open: boolean) => void;
   onAvatarSlotsVisibleChange?: (visible: boolean) => void;
   onAvatarSelectionHome?: () => void;
   onAvatarsChanged?: (avatars: PersistedAvatar[]) => void;
@@ -258,7 +260,6 @@ export function Dashboard({
   const [avatarCreationOpen, setAvatarCreationOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [expansionsOpen, setExpansionsOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -340,6 +341,20 @@ export function Dashboard({
       window.clearInterval(pollTimer);
     };
   }, [refreshAchievementsAttention, refreshScribesUnread, showChrome]);
+
+  useEffect(() => {
+    if (!achievementsOpen || !showChrome) {
+      return;
+    }
+
+    const refreshTimer = window.setTimeout(() => {
+      void refreshAchievementsAttention();
+    }, 800);
+
+    return () => {
+      window.clearTimeout(refreshTimer);
+    };
+  }, [achievementsOpen, refreshAchievementsAttention, showChrome]);
 
   async function closeAvatarSelection(): Promise<void> {
     if (!avatarSlotsVisible) {
@@ -484,6 +499,7 @@ export function Dashboard({
             creationRevealDelayMs={creationRevealDelayMs}
             excludedAvatarIds={excludedAvatarIds}
             selectionNotice={selectionNotice}
+            onAchievementCheck={onAchievementCheck}
             onAvatarsChanged={onAvatarsChanged}
             onCreationPresetConsumed={onCreationPresetConsumed}
             onEnterGameComplete={() => {
@@ -562,7 +578,7 @@ export function Dashboard({
                   setSettingsOpen(true);
                 }
                 if (button.label === 'Achievements') {
-                  setAchievementsOpen(true);
+                  onAchievementsOpenChange?.(true);
                 }
                 if (button.label === 'Expansions') {
                   setExpansionsOpen(true);
@@ -742,20 +758,6 @@ export function Dashboard({
           open={settingsOpen}
           playerId={playerId}
           playerName={playerName}
-        />
-      ) : null}
-      {showChrome ? (
-        <AchievementsOverlay
-          onClose={() => {
-            setAchievementsOpen(false);
-          }}
-          onSnapshotViewed={(snapshot) => {
-            markAchievementsSeen(playerId, snapshot);
-            setAchievementsAttention(false);
-            void refreshAchievementsAttention();
-          }}
-          open={achievementsOpen}
-          playerId={playerId}
         />
       ) : null}
       {showChrome ? (

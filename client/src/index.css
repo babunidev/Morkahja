@@ -140,6 +140,68 @@ button:focus-visible {
   }
 }
 
+@keyframes morkahja-scribes-achievement-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes morkahja-scribes-achievement-toast-shake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  18% {
+    transform: translateY(-2px) rotate(-0.55deg);
+  }
+  36% {
+    transform: translateY(1px) rotate(0.5deg);
+  }
+  54% {
+    transform: translateY(-1px) rotate(-0.35deg);
+  }
+  72% {
+    transform: translateY(1px) rotate(0.35deg);
+  }
+}
+
+@keyframes morkahja-scribes-achievement-toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.morkahja-scribes-achievement-toast-button {
+  opacity: 0;
+}
+
+.morkahja-scribes-achievement-toast-button--enter {
+  animation: morkahja-scribes-achievement-toast-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.morkahja-scribes-achievement-toast-button--shown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.morkahja-scribes-achievement-toast-button--shake {
+  animation: morkahja-scribes-achievement-toast-shake 520ms ease-in-out forwards;
+}
+
+.morkahja-scribes-achievement-toast-button--exit {
+  animation: morkahja-scribes-achievement-toast-exit 320ms ease-in forwards;
+}
+
 .morkahja-nav-attention-dot {
   position: absolute;
   left: 50%;

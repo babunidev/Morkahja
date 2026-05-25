@@ -238,6 +238,7 @@ export function AvatarSelectionPanel({
   creationRevealDelayMs = 0,
   excludedAvatarIds = [],
   selectionNotice = null,
+  onAchievementCheck,
   onAvatarsChanged,
   onAvatarEnter,
   onCreationPresetConsumed,
@@ -255,6 +256,7 @@ export function AvatarSelectionPanel({
   creationRevealDelayMs?: number;
   excludedAvatarIds?: string[];
   selectionNotice?: string | null;
+  onAchievementCheck?: () => void;
   onAvatarsChanged?: (avatars: PersistedAvatar[]) => void;
   onAvatarEnter?: () => void;
   onCreationPresetConsumed?: () => void;
@@ -421,6 +423,7 @@ export function AvatarSelectionPanel({
       await createAvatar(avatar);
       const refreshedAvatars = uniqueAvatars(await fetchAvatars());
       onAvatarsChanged?.(refreshedAvatars);
+      onAchievementCheck?.();
       setCreatingSlotIndex(null);
       setActiveCreationPreset(null);
       setMessage('');

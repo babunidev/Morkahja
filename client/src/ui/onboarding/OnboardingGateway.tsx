@@ -47,13 +47,29 @@ const panelStyle: CSSProperties = {
   textAlign: 'center',
 };
 
+const titleGroupStyle: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+  justifyItems: 'center',
+};
+
 const titleStyle: CSSProperties = {
   margin: 0,
   color: '#330000',
   fontFamily: 'Breathe Fire, Georgia, serif',
   fontSize: 'clamp(1.8rem, 8vw, 3rem)',
+  lineHeight: 1.1,
   WebkitTextStroke: '1px #ffcc66',
   paintOrder: 'stroke fill',
+};
+
+const welcomeStyle: CSSProperties = {
+  margin: 0,
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(1rem, 3.6vw, 1.2rem)',
+  letterSpacing: '0.04em',
+  lineHeight: 1.3,
 };
 
 const buttonStyle: CSSProperties = {
@@ -208,7 +224,10 @@ export function OnboardingGateway({
   return (
     <main aria-label="Morkahja Onboarding" style={screenStyle}>
       <section style={panelStyle}>
-        <h1 style={titleStyle}>Morkahja</h1>
+        <div style={titleGroupStyle}>
+          <h1 style={titleStyle}>Morkahja</h1>
+          <p style={welcomeStyle}>Welcome, Adventurer!</p>
+        </div>
         {mode === 'gateway' ? (
           <>
             <button onClick={() => setMode('new')} style={buttonStyle} type="button">Start New Journey</button>

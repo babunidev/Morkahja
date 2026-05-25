@@ -110,11 +110,13 @@ function formatGemCount(count: number): string {
 
 export function AchievementsOverlay({
   onClose,
+  onProgressChange,
   onSnapshotViewed,
   open,
   playerId,
 }: {
   onClose: () => void;
+  onProgressChange?: () => void;
   onSnapshotViewed?: (snapshot: AchievementsResponse) => void;
   open: boolean;
   playerId: string;
@@ -204,6 +206,7 @@ export function AchievementsOverlay({
         achievements: result.achievements,
         dailyReward: result.dailyReward,
       });
+      onProgressChange?.();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not claim daily reward');
     } finally {

@@ -59,6 +59,7 @@ interface GameEnvironmentProps {
   hideAvatarPortraitForHandoff?: boolean;
   initialAvatar: PersistedAvatar;
   initialEncounter: EncounterSnapshot;
+  onAchievementCheck?: () => void;
   onAvatarDeath: (presetAvatar: PersistedAvatar) => void;
   onHome: () => void;
 }
@@ -206,6 +207,7 @@ export function GameEnvironment({
   initialAvatar,
   initialEncounter,
   deathPending = false,
+  onAchievementCheck,
   onAvatarDeath,
   onHome,
 }: GameEnvironmentProps) {
@@ -313,6 +315,8 @@ export function GameEnvironment({
       if (result.avatarDied) {
         onAvatarDeath(result.avatar ?? avatar);
       }
+
+      onAchievementCheck?.();
     } finally {
       setContinuePending(false);
     }
