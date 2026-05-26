@@ -91,12 +91,12 @@ export function EncounterImageBlock({
   inventory: AvatarInventory | undefined;
   inventoryOpen: boolean;
   loreOpen: boolean;
-  skillbookOpen: boolean;
   onContinue: (
     action: EncounterAction,
     roll: number | null,
     solutionId: number | null,
   ) => Promise<void>;
+  skillbookOpen: boolean;
   title: string;
 }) {
   const [revealedRoll, setRevealedRoll] = useState<number | null>(null);

@@ -29,7 +29,7 @@ const titleWrapStyle: CSSProperties = {
 const titleLayerStyle: CSSProperties = {
   margin: 0,
   padding: '0 18px',
-  fontSize: 'clamp(1.25rem, 5.5vw, 2rem)',
+  fontSize: 'clamp(1.5rem, 6.6vw, 2.4rem)',
   textAlign: 'center',
   position: 'absolute',
   inset: 0,

@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-24 23:18 (+0200) |
+| **Last updated** | 2026-05-25 19:14 (+0200) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -125,8 +125,8 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 69. **Stack on server** — Ubuntu; **nginx** serves `client/dist` from `/var/www/morkahja` (rsync after each `npm run build`); API paths proxied to **PM2** → Node on `127.0.0.1:3000`; **PostgreSQL** on localhost (`morkahjadbadmin` + `morkahja` DB).
 70. **HTTPS** — Let’s Encrypt via `certbot --nginx`; required for Web Crypto (`crypto.subtle`) so **Create journey** / recovery keys work in the browser (plain `http://` on a public IP is not a secure context).
 71. **Deploy wiring** (since `ef92dd4`) — `ecosystem.config.cjs` (PM2 from repo root, `cwd: server`, `tsx` on `src/server.ts`); `PORT` + `CLIENT_ORIGINS` via `server/src/config/corsOrigins.ts`; client `API_BASE_URL` defaults to **same-origin** (`VITE_API_BASE_URL` optional) so production does not call `localhost:3000`.
-72. **Ops lessons** — `.env` only on server (never git): one `KEY=value` per line; URL-encode `+` / `*` in `DATABASE_URL`; `source .env` before `pm2 restart --update-env`; Postgres 15+ needs `GRANT` on `public` for app user; home-dir `root` needs `chmod o+x` or use `/var/www/…`; nginx `root` line must be exactly `root /var/www/morkahja;` (not `root root …`).
-73. **Workflow** — develop on PC → `git push` → on VPS `git pull`, `npm run build --prefix client`, `sudo rsync -a client/dist/ /var/www/morkahja/`, `pm2 restart` when server changes.
+72. **Ops lessons** — `.env` only on server (never git): one `KEY=value` per line; URL-encode `+` / `*` in `DATABASE_URL`; **`Key.js` is dev-only** (never on VPS); without `DATABASE_URL` the server falls back to `localhost:4242` in `postgresDocumentStore.ts`; Postgres 15+ needs `GRANT` on `public` for app user; nginx `root` line must be exactly `root /var/www/morkahja;`.
+73. **Workflow** — develop on PC → `git push origin main` → on VPS `git pull origin main`, `npm install --include=dev`, `npm run build --prefix client`, `sudo rsync -a --delete client/dist/ /var/www/morkahja/`, `pm2 restart morkahja-api --update-env` (see **Production deploy** session note).
 74. **Image protection (extended)** (`bb226dd`) — `protectedOverlaySurfaceProps`, `protectedOverlayTextStyle`, `preventImageContextMenu`; Lore / Result / PlayerHub / SolutionBlock / dashboard overlays / Settings marked; document-level `selectstart` guard (inputs still selectable); blocks “Open image in new tab” on CSS backgrounds via computed `background-image` check.
 75. **Pre-invite security review** — OK for small trusted alpha on HTTPS; before wide launch: rate-limit `/session/bootstrap`, cap JSON body size, Postgres backups, firewall (only 22/80/443).
 76. **Lore gem exploit fix** (`18d0d1b`) — Removed `POST /player/currency/yellow_red_gem`. Lore gems are server-authoritative: `POST /encounter/lore-gem/offer` rolls eligibility + delay on the active encounter snapshot; `POST /encounter/lore-gem/claim` requires matching `encounterKey`, active encounter, offer timing, and one claim per snapshot via `loreGemClaims`. `addPlayerYellowRedGems` now requires a claim key when granting.
@@ -144,7 +144,7 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 ### 2026-05-24 01:50–04:22 (+0200) — PM2 fixes, dice reveal UX, Scribes Atranor feed (`942be4b`…`11f84af`)
 
 84. **API startup fix** (`942be4b`) — `adminController` import paths corrected (`gameData` / `adminPlayerService` live under `services/`); friend summary after add passes live session ids.
-85. **PM2 production wiring** (`70a7d70`, `7905205`, `2fcfd6c`) — `ecosystem.config.cjs` reads repo-root `.env`; absolute `tsx` path from repo root; `tsx` promoted to server production dependency; PM2 runs `tsx src/server.ts` with `interpreter: 'none'`.
+85. **PM2 production wiring** (`70a7d70`, `7905205`, `2fcfd6c`, `3f1aaa4`) — `ecosystem.config.cjs` loads repo-root `.env` into PM2 `env`; absolute `tsx` path; `tsx` as server production dependency; PM2 runs `tsx src/server.ts` with `interpreter: 'none'`.
 86. **Dice and solution reveal** (`e5b5e86`, `8d032dd`) — directional fade-in for solution slots (A/B from sides, C/D from bottom); dice scale-in + 720° bounce roll on tap; dice tooltip; `morkahja-dice-roll` keyframes.
 87. **Avatar creation tooltips** (`22fe987`, `11f84af`) — race/role option tooltips follow cursor on desktop; skipped on mobile portrait (`useLayoutMode`).
 88. **Encounter image keys** (`11f84af`) — `mEncounterImageName` aligned with new `.webp` assets (rare treasure chest, Liani shadowwolf, ferocious silvermane, disheartened rokur).
@@ -190,9 +190,22 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 110. **Settings refresh** — scrollable panel (header / body / footer); bottom gradient **scroll hint** when content overflows; **Recovery key** download row; player name beside SETTINGS title; About Us remains in footer.
 111. **`GET /player`** — includes `sealOfNorghor` status DTO (active, expiry, cost, `canActivate`) alongside gems and expansions.
 
-### 2026-05-24 (uncommitted) — Encounter art keys
+### 2026-05-24 23:25 (+0200) — Encounter art keys (`c2e1533`)
 
-112. Local rename/sync: `drained_aevis`, `common_chest`, `embersnout`, `young_redeye`, `veilwalker`; Embersnout lore trim; common chest reward amount **2** (was **1**).
+112. Rename/sync encounter images: `drained_aevis`, `common_chest`, `embersnout`, `young_redeye`, `veilwalker`; Embersnout lore trim; common chest reward amount **2** (was **1**); DEVLOG through profile/seal/tooltip work.
+
+### 2026-05-24 23:30 (+0200) — PM2 loads `.env` on deploy (`3f1aaa4`)
+
+113. **`ecosystem.config.cjs`** — parses repo-root `.env` into PM2 `env` (replaces non-functional `env_file`); `DATABASE_URL` and `CLIENT_ORIGINS` reach the API without `set -a; source .env` on restart.
+114. **Repo `main`** — GitHub `main` restored to app-at-root layout (solo dev); VPS deploy is `git pull origin main` on `~/arcanitebrothers`, not submodule SHAs or extra branches.
+
+### 2026-05-25 00:18–19:14 (+0200) — Daily rewards, UI fixes, admin encounters (`244a33e`…`bbd6623`)
+
+115. **Inventory UI** — essence slot label renamed from prior wording to **Essence** (`244a33e`).
+116. **Solution tooltips (touch)** — tap-to-use no longer blocked by tooltip handlers (`df6bfbc`).
+117. **Scribes achievement toast** — animated achievement notices in game and on dashboard (`5f354b7`).
+118. **Daily reward** — payouts extended across **all** achievement chains; `dailyRewardService` + tests; `AchievementPanel` shows chain-aware daily copy (`0410092`).
+119. **Admin content** — batch encounter data + `.webp` art via admin API (Lovely Meadows, Liani line, Gobbl, treasure, Ashen Revenant, Echowraith, Auraglow Mireling, Tempest Fury, etc.).
 
 ---
 
@@ -296,13 +309,26 @@ Since `dd17e2f`.
 - **CSS** — global `user-select: none` and `-webkit-user-drag: none` on `img`; exceptions for `input`, `textarea`, `select`, and `[contenteditable]`.
 - **Surfaces** — `PersistentBackground`, `EncounterFooter`, `PlayerHub` party/footer layers, and encounter image block marked with data attributes; background/footer layers use `pointer-events: auto` so the guard can intercept events.
 
-### Production deploy on Hetzner (`ef92dd4` + ops) · 2026-05-23 21:50 (+0200)
+### Production deploy on Hetzner (`ef92dd4` + ops) · 2026-05-23 21:50 (+0200); simplified 2026-05-24
 
 - **Domain** — `arcanitebrothers.com` / `www` → VPS; certbot installs TLS into nginx `sites-enabled/morkahja`.
-- **PM2** — start from repo root: `cd server && pm2 start src/server.ts --interpreter ../node_modules/.bin/tsx` (or `ecosystem.config.cjs` after pull); always load `.env` in the same shell before start/restart.
-- **nginx** — `location ~ ^/(health|game-data|session|player|avatar|avatars|encounter|activity)` → `proxy_pass http://127.0.0.1:3000`; `try_files` → `index.html` for SPA; disable default site so “Welcome to nginx!” does not win.
-- **Static** — build on VPS under `~/arcanitebrothers/client/dist`, publish to `/var/www/morkahja` (avoids nginx `www-data` traversing `/home/morkahja`).
-- **Smoke** — `curl https://arcanitebrothers.com/health`; browser hard refresh; Create journey + recovery key download verified on HTTPS.
+- **Layout** — single clone at `~/arcanitebrothers`; `main` = app at repo root (`client/`, `server/`, `shared/`). No submodule checkout on deploy.
+- **PM2** — `ecosystem.config.cjs` from repo root (since `3f1aaa4` loads `.env` into `env`); `cwd: server`, `tsx src/server.ts`. First boot: `pm2 start ecosystem.config.cjs --update-env`; later: `pm2 restart morkahja-api --update-env`.
+- **nginx** — `location ~ ^/(health|game-data|session|player|avatar|avatars|encounter|activity)` → `proxy_pass http://127.0.0.1:3000`; `try_files` → `index.html` for SPA.
+- **Static** — `npm run build --prefix client` → `sudo rsync -a --delete client/dist/ /var/www/morkahja/`.
+- **VPS build** — `NODE_ENV=production` skips devDependencies unless `npm install --include=dev` (needed for `tsc` / Vite). Do **not** commit `Key.js` on the server.
+- **Smoke** — `curl http://127.0.0.1:3000/health` then `curl https://arcanitebrothers.com/health`; browser hard refresh.
+
+**Standard deploy commands:**
+
+```bash
+cd ~/arcanitebrothers
+git pull origin main
+npm install --include=dev
+npm run build --prefix client
+sudo rsync -a --delete client/dist/ /var/www/morkahja/
+pm2 restart morkahja-api --update-env
+```
 
 ### Extended image protection (`bb226dd`) · 2026-05-23 21:51 (+0200)
 
@@ -341,13 +367,13 @@ Since `5b2d423`.
 - **Admin** — player DTO `status: online` only when a live session exists and moderation allows play.
 - **Auth** — bootstrap and access-token refresh revoke all sessions when `assertPlayerCanPlay` fails (ban/timeout mid-session).
 
-### PM2 production fixes (`942be4b`, `70a7d70`, `7905205`, `2fcfd6c`) · 2026-05-24 01:50–02:01 (+0200)
+### PM2 production fixes (`942be4b`, `70a7d70`, `7905205`, `2fcfd6c`, `3f1aaa4`) · 2026-05-24 01:50–23:30 (+0200)
 
 - **Problem** — after admin API landed, wrong import paths crashed the API on boot; PM2 could not find `tsx` or `.env` when `cwd` was `server/`.
 - **Imports** — `adminController.ts` pulls `gameData` and `adminPlayerService` from `services/`; `friendService` passes live session ids when building a friend row after add.
-- **ecosystem.config.cjs** — `env_file` → repo-root `.env`; `script` → absolute `node_modules/.bin/tsx`; `args` → `src/server.ts`; `interpreter: 'none'`.
-- **Dependencies** — `tsx` moved from devDependency to production dependency in `server/package.json` so `npm install --omit=dev` on the VPS still starts the API.
-- **Deploy** — on VPS after pull: `npm install`, `pm2 restart morkahja-api` (or `pm2 start ecosystem.config.cjs` on first boot); smoke with `curl https://arcanitebrothers.com/health`.
+- **ecosystem.config.cjs** — `script` → absolute `node_modules/.bin/tsx`; `args` → `src/server.ts`; `interpreter: 'none'`; **`loadEnvFile()`** parses repo-root `.env` into `env` (since `3f1aaa4`; PM2 ignores `env_file`).
+- **Dependencies** — `tsx` moved to production dependency in `server/package.json` so `npm install --omit=dev` on the VPS still starts the API.
+- **Deploy** — `pm2 start ecosystem.config.cjs --update-env` or `pm2 restart morkahja-api --update-env`; smoke `curl http://127.0.0.1:3000/health` (logs should show Postgres `port=5432`, not `4242`).
 
 ### Dice and solution reveal UX (`e5b5e86`, `8d032dd`) · 2026-05-24 02:13–03:51 (+0200)
 
@@ -442,7 +468,25 @@ Since `5b2d423`.
 - **Recovery key** — download row using `sessionKeys.downloadRecoveryKey`; inline messages when key missing on device.
 - **About Us** — footer `PanelButton` opens existing credits overlay.
 
-### Encounter art keys (local, uncommitted) · 2026-05-24
+### Encounter art keys (`c2e1533`) · 2026-05-24 23:25 (+0200)
 
 - **Renames** — `help_heal_drained_aevis` → `drained_aevis`; `chest_common` → `common_chest`; `combat_animal_ember` → `embersnout`; `20111_redeye` → `young_redeye`; `20190_eye` → `veilwalker`.
 - **Content** — Embersnout encounter text shortened; encounter **20098** reward amount **2**.
+
+### PM2 `.env` loading (`3f1aaa4`) · 2026-05-24 23:30 (+0200)
+
+- **`loadEnvFile`** — reads `DATABASE_URL`, `CLIENT_ORIGINS`, `PORT`, `ADMIN_API_KEY`, etc. from repo-root `.env` at PM2 start.
+- **VPS** — no `Key.js`; if `.env` is missing, warn at PM2 boot and API may fall back to dev default port **4242**.
+
+### Daily reward all chains (`0410092`) · 2026-05-25 19:03 (+0200)
+
+- **`dailyRewardService`** — daily gem payout sums eligible ranks across achievement chains (not Adventurer-only); persistence + tests updated.
+- **UI** — `AchievementPanel` reflects expanded daily reward rules.
+
+### Scribes achievement toast (`5f354b7`) · 2026-05-25 18:16 (+0200)
+
+- **Toast** — achievement unlock notifications with animation in game environment and dashboard shell.
+
+### Solution tooltips on touch (`df6bfbc`) · 2026-05-25 17:46 (+0200)
+
+- **Fix** — tooltips on touch no longer swallow taps needed to use solutions.
