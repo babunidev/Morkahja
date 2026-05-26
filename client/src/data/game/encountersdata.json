@@ -1561,7 +1561,7 @@
   },
   "20075": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20075,
     "mEncounterImageName": "grumpy_fence",
