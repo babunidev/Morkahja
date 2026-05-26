@@ -1061,10 +1061,10 @@
   },
   "20050": {
     "mEncounterDifficulty": 2,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1001,
     "mEncounterFollow": 19666,
     "mEncounterID": 20050,
-    "mEncounterImageName": "trick_key_door_dark",
+    "mEncounterImageName": "blackwood_portal",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
