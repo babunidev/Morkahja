@@ -1564,7 +1564,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 20075,
-    "mEncounterImageName": "trade_grimnir_fence",
+    "mEncounterImageName": "grumpy_fence",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -1576,7 +1576,7 @@
     "mEncounterSolutiuonTypeC": 3,
     "mEncounterSolutiuonTypeD": 0,
     "mEncounterText": "Tucked away in a somber corner of the Forest of Keldor, a peculiar figure attracts the adventurous and the curious. An old, grumpy merchant draped in shabby grey robes, his face obscured by a worn wizard's hat. He peddles his wares from a collection of trinkets and oddments laid out on a moth-eaten cloth. A strange array of items - bones of forgotten creatures, skull talismans, arcane amulets, and other such curiosities - are on display. These artifacts are claimed to be imbued with magical properties, though their authenticity is a matter of conjecture. He is a character of shady charm, his tales of each item's provenance as murky as the forest surrounding him. Despite the uncertainties, one thing is clear - his offerings tempt those seeking the unusual, the mystical, and the borderline blasphemous.",
-    "mEncounterTitle": "Grimnir Fence",
+    "mEncounterTitle": "Grumpy Fence",
     "mEncounterType": 5
   },
   "20076": {
