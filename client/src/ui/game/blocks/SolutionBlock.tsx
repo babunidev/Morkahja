@@ -504,6 +504,13 @@ export function SolutionBlock({
       window.clearTimeout(rattleClearTimer);
     };
   }, [encounter, encounterRevealKey, inventory]);
+
+  useEffect(() => {
+    if (hidden) {
+      setSolutionTooltip(null);
+    }
+  }, [hidden]);
+
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
   const solutionSlots = ['A', 'B', 'dice', 'C', 'D'] as const;
@@ -806,7 +813,7 @@ export function SolutionBlock({
             );
         })}
       </div>
-      {solutionTooltip ? (
+      {solutionTooltip && !hidden ? (
         <div
           role="tooltip"
           style={{
