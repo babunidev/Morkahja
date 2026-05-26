@@ -1264,7 +1264,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 20060,
-    "mEncounterImageName": "trade_hidden_verdanitreasury",
+    "mEncounterImageName": "verdani_treasury",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -1275,7 +1275,7 @@
     "mEncounterSolutiuonTypeB": 0,
     "mEncounterSolutiuonTypeC": 3,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "Amongst the towering trees of the Eldertree Forest, there lies a small and unassuming shop that seems to have sprung up from the earth itself. The wooden walls and thatched roof are adorned with vines and moss, blending seamlessly with the lush surroundings. Inside, the air is perfumed with the scent of herbs and spices, and the walls are lined with shelves stacked high with jars, baskets, and trinkets of all kinds. Behind the rustic counter, an elderly Faun stands, his gnarled hands expertly weaving twine through the pages of an ancient book. His kind eyes crinkle at the corners as he looks up and greets each customer by name, offering them a warm smile and a cup of tea. In this humble shop, one can find anything from enchanted talismans to rare potions, all crafted with care and wisdom passed down through generations of Verdani. It's said that those who seek wisdom and guidance can find it within the walls of this unassuming shop, where the old Verdani is always ready with a kind word and a listening ear.",
+    "mEncounterText": "Amongst the towering trees of the Eldertree Forest, there lies a small and unassuming shop that seems to have sprung up from the earth itself. The wooden walls and thatched roof are adorned with vines and moss, blending seamlessly with the lush surroundings. Inside, the air is perfumed with the scent of herbs and spices, and the walls are lined with shelves stacked high with jars, baskets, and trinkets of all kinds. Behind the rustic counter, an elderly Verdani stands, his gnarled hands expertly weaving twine through the pages of an ancient book. His kind eyes crinkle at the corners as he looks up and greets each customer by name, offering them a warm smile and a cup of tea. In this humble shop, one can find anything from enchanted talismans to rare potions, all crafted with care and wisdom passed down through generations of Verdani. It's said that those who seek wisdom and guidance can find it within the walls of this unassuming shop, where the old Verdani is always ready with a kind word and a listening ear.",
     "mEncounterTitle": "Verdani Treasury",
     "mEncounterType": 5
   },
