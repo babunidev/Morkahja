@@ -68,7 +68,10 @@ module.exports = {
       script: tsx,
       args: 'src/server.ts',
       interpreter: 'none',
-      env: loadEnvFile(envFilePath),
+      env: {
+        NODE_ENV: 'production',
+        ...loadEnvFile(envFilePath),
+      },
     },
   ],
 };

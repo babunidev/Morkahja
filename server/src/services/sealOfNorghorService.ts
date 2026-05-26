@@ -8,11 +8,11 @@ import {
   type SealOfNorghorRecord,
 } from '../domain/subscription/sealOfNorghor.js';
 import {
-  loadPlayer,
   mergeUnlockedExpansionsWithSeal,
   readYellowRedGemBalance,
+  loadPlayer,
 } from './playerService.js';
-import { setPlayer } from '../db/postgresDocumentStore.js';
+import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 
 export interface SealOfNorghorStatus {
   active: boolean;
@@ -67,42 +67,49 @@ export async function activateSealOfNorghor(
   spent: number;
   unlockedExpansions: number[];
 }> {
-  const player = await loadPlayer(playerId);
+  const { player, now, expiresAt, currencies, sealOfNorghor } = await withDocumentTransaction(async (transaction) => {
+    const lockedPlayer = await transaction.getPlayer<PlayerDocument>(playerId);
+    if (!lockedPlayer) {
+      throw new Error(`Player not found: ${playerId}`);
+    }
 
-  if (!player) {
-    throw new Error(`Player not found: ${playerId}`);
-  }
+    const nowTs = Date.now();
+    const currentExpiresAt = getSealExpiresAt(lockedPlayer);
+    if (isSealOfNorghorActive(currentExpiresAt, nowTs)) {
+      throw new SealOfNorghorAlreadyActiveError();
+    }
 
-  const now = Date.now();
-  const currentExpiresAt = getSealExpiresAt(player);
+    const currentCurrencies = lockedPlayer.currencies ?? {};
+    const currentGems = readYellowRedGemBalance(currentCurrencies);
+    if (currentGems < SEAL_OF_NORGHOR_GEM_COST) {
+      throw new InsufficientGemsForSealError();
+    }
 
-  if (isSealOfNorghorActive(currentExpiresAt, now)) {
-    throw new SealOfNorghorAlreadyActiveError();
-  }
+    const expiresAtTs = nowTs + SEAL_OF_NORGHOR_DURATION_MS;
+    const sealRecord: SealOfNorghorRecord = { expiresAt: expiresAtTs };
+    const nextCurrencies = {
+      ...currentCurrencies,
+      yellow_red_gem: currentGems - SEAL_OF_NORGHOR_GEM_COST,
+    };
 
-  const currentCurrencies = player.currencies ?? {};
-  const currentGems = readYellowRedGemBalance(currentCurrencies);
+    await transaction.setPlayer(
+      playerId,
+      {
+        sealOfNorghor: sealRecord,
+        currencies: nextCurrencies,
+        updatedAt: nowTs,
+      },
+      { merge: true },
+    );
 
-  if (currentGems < SEAL_OF_NORGHOR_GEM_COST) {
-    throw new InsufficientGemsForSealError();
-  }
-
-  const expiresAt = now + SEAL_OF_NORGHOR_DURATION_MS;
-  const sealOfNorghor: SealOfNorghorRecord = { expiresAt };
-  const currencies = {
-    ...currentCurrencies,
-    yellow_red_gem: currentGems - SEAL_OF_NORGHOR_GEM_COST,
-  };
-
-  await setPlayer(
-    playerId,
-    {
-      sealOfNorghor,
-      currencies,
-      updatedAt: now,
-    },
-    { merge: true },
-  );
+    return {
+      player: lockedPlayer,
+      now: nowTs,
+      expiresAt: expiresAtTs,
+      currencies: nextCurrencies,
+      sealOfNorghor: sealRecord,
+    };
+  });
 
   const updatedPlayer: PlayerDocument = {
     ...player,

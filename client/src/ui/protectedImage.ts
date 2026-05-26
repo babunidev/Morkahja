@@ -79,7 +79,7 @@ export function useProtectedImages(): void {
     }
 
     function onSelectStart(event: Event): void {
-      if (!isTextInputTarget(event.target)) {
+      if (findProtectedMediaTarget(event.target) && !isTextInputTarget(event.target)) {
         event.preventDefault();
       }
     }

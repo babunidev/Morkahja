@@ -437,6 +437,7 @@ export interface DocumentTransaction {
   getActiveEncounter<T>(playerId: string, avatarId: string): Promise<T | null>;
   getInventory<T>(playerId: string, avatarId: string): Promise<T | null>;
   getProgression<T>(playerId: string, avatarId: string): Promise<T | null>;
+  setPlayer<T extends JsonObject>(playerId: string, data: T, options?: { merge?: boolean }): Promise<void>;
   setAvatar<T extends JsonObject>(playerId: string, avatarId: string, data: T, options?: { merge?: boolean }): Promise<void>;
   setActiveEncounter<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
   setInventory<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
@@ -481,6 +482,19 @@ export async function withDocumentTransaction<T>(
            FOR UPDATE`,
           [playerId, avatarId],
         )) as Promise<R | null>,
+      setPlayer: async <R extends JsonObject>(
+        playerId: string,
+        data: R,
+        options: { merge?: boolean } = {},
+      ) => {
+        const existing = options.merge ? await transaction.getPlayer<R>(playerId) : null;
+        await client.query(
+          `INSERT INTO players (id, data)
+           VALUES ($1, $2::jsonb)
+           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+          [playerId, JSON.stringify(mergeData(existing, data, options.merge))],
+        );
+      },
       setAvatar: async <R extends JsonObject>(
         playerId: string,
         avatarId: string,

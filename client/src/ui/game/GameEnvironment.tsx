@@ -323,6 +323,12 @@ export function GameEnvironment({
       }
 
       onAchievementCheck?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not continue encounter.';
+      setActionLog((currentLog) => [
+        ...currentLog,
+        `Continue failed: ${message}`,
+      ].slice(-24));
     } finally {
       setContinuePending(false);
     }

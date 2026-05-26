@@ -63,6 +63,17 @@ const statusTextStyle: CSSProperties = {
   textTransform: 'uppercase',
 };
 
+const retryButtonStyle: CSSProperties = {
+  pointerEvents: 'auto',
+  padding: '8px 14px',
+  borderRadius: 6,
+  border: '1px solid rgba(255, 204, 102, 0.85)',
+  background: 'rgba(12, 9, 8, 0.8)',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  cursor: 'pointer',
+};
+
 const logoStageStyle: CSSProperties = {
   position: 'fixed',
   top: '50%',
@@ -110,6 +121,7 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
   const [view, setView] = useState<LoadingStateView>(getLoadingStateView('INIT'));
   const [foregroundVisible, setForegroundVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const logoPath = useMemo(() => resolveLoadingLogoPath(), []);
   const logoSwaying = !errorMessage && view.state !== 'READY';
@@ -171,7 +183,7 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
     return () => {
       mounted = false;
     };
-  }, [hooks, minDurationMs, onError, onReady]);
+  }, [hooks, minDurationMs, onError, onReady, retryNonce]);
 
   return (
     <main
@@ -252,6 +264,19 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
             >
               {errorMessage}
             </p>
+          ) : null}
+          {errorMessage ? (
+            <button
+              onClick={() => {
+                setErrorMessage(null);
+                setView(getLoadingStateView('INIT'));
+                setRetryNonce((current) => current + 1);
+              }}
+              style={retryButtonStyle}
+              type="button"
+            >
+              Retry
+            </button>
           ) : null}
         </section>
       ) : null}

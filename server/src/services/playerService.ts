@@ -14,6 +14,7 @@ import {
   getPlayer,
   listAvatars,
   setPlayer,
+  withDocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import {
   isSealOfNorghorActive,
@@ -81,9 +82,6 @@ export interface PersistedAvatarPayload {
   name: string;
   race: AvatarRace;
   role: AvatarRole;
-  level: number;
-  experience: number;
-  inventory?: unknown;
   portrait: string;
   frame: string;
   createdAt?: number;
@@ -221,34 +219,37 @@ export async function addPlayerYellowRedGems(
     throw new Error('loreGemClaimKey is required when granting yellow_red_gem');
   }
 
-  const player = await loadPlayer(playerId);
-  const currentCurrencies = player?.currencies ?? {};
-  const loreGemClaims = player?.loreGemClaims ?? {};
-  const alreadyClaimed = loreGemClaimKey ? loreGemClaims[loreGemClaimKey] === true : false;
-  const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
-    ? currentCurrencies.yellow_red_gem
-    : 0;
-  const currencies = {
-    ...currentCurrencies,
-    yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
-  };
+  const { currencies, granted } = await withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const currentCurrencies = player?.currencies ?? {};
+    const loreGemClaims = player?.loreGemClaims ?? {};
+    const alreadyClaimed = loreGemClaimKey ? loreGemClaims[loreGemClaimKey] === true : false;
+    const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
+      ? currentCurrencies.yellow_red_gem
+      : 0;
+    const nextCurrencies = {
+      ...currentCurrencies,
+      yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
+    };
+    const grantedNow = !alreadyClaimed && amount > 0;
 
-  const granted = !alreadyClaimed && amount > 0;
+    await transaction.setPlayer(
+      playerId,
+      {
+        currencies: nextCurrencies,
+        ...(loreGemClaimKey ? {
+          loreGemClaims: {
+            ...loreGemClaims,
+            [loreGemClaimKey]: true,
+          },
+        } : {}),
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
 
-  await setPlayer(
-    playerId,
-    {
-      currencies,
-      ...(loreGemClaimKey ? {
-        loreGemClaims: {
-          ...loreGemClaims,
-          [loreGemClaimKey]: true,
-        },
-      } : {}),
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
+    return { currencies: nextCurrencies, granted: grantedNow };
+  });
 
   if (granted) {
     await recordGemsReceivedEvent(playerId, amount, {
@@ -271,30 +272,34 @@ export async function donatePlayerYellowRedGems(
     throw new Error(`Invalid donation amount: ${amount}`);
   }
 
-  const player = await loadPlayer(playerId);
-  const currentCurrencies = player?.currencies ?? {};
-  const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
-    ? currentCurrencies.yellow_red_gem
-    : 0;
-  const donated = Math.min(amount, currentAmount);
+  const { currencies, donated } = await withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const currentCurrencies = player?.currencies ?? {};
+    const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
+      ? currentCurrencies.yellow_red_gem
+      : 0;
+    const donatedAmount = Math.min(amount, currentAmount);
 
-  if (donated <= 0) {
-    throw new InsufficientGemsForDonationError();
-  }
+    if (donatedAmount <= 0) {
+      throw new InsufficientGemsForDonationError();
+    }
 
-  const currencies = {
-    ...currentCurrencies,
-    yellow_red_gem: currentAmount - donated,
-  };
+    const nextCurrencies = {
+      ...currentCurrencies,
+      yellow_red_gem: currentAmount - donatedAmount,
+    };
 
-  await setPlayer(
-    playerId,
-    {
-      currencies,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
+    await transaction.setPlayer(
+      playerId,
+      {
+        currencies: nextCurrencies,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+
+    return { currencies: nextCurrencies, donated: donatedAmount };
+  });
 
   await recordGemsDonatedEvent(playerId, donated);
 
@@ -324,49 +329,54 @@ export async function unlockPlayerExpansion(
     throw new ExpansionInactiveError();
   }
 
-  const player = await loadPlayer(playerId);
+  const { currencies, nextUnlockedExpansions } = await withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    if (!player) {
+      throw new Error(`Player not found: ${playerId}`);
+    }
 
-  if (!player) {
-    throw new Error(`Player not found: ${playerId}`);
-  }
+    const baseUnlocked = normalizeUnlockedExpansions(player.unlockedExpansions);
+    const unlockedExpansions = mergeUnlockedExpansionsWithSeal(
+      baseUnlocked.length > 0 ? baseUnlocked : DEFAULT_UNLOCKED_EXPANSIONS,
+      readSealOfNorghorExpiresAt(player),
+    );
+    if (unlockedExpansions.includes(expansionId)) {
+      throw new ExpansionAlreadyUnlockedError();
+    }
 
-  const unlockedExpansions = await getPlayerUnlockedExpansions(playerId);
+    const cost = expansion.mExtensioCost;
+    const currentCurrencies = player.currencies ?? {};
+    const currentGems = typeof currentCurrencies.yellow_red_gem === 'number'
+      ? currentCurrencies.yellow_red_gem
+      : 0;
+    if (currentGems < cost) {
+      throw new InsufficientGemsForExpansionError();
+    }
 
-  if (unlockedExpansions.includes(expansionId)) {
-    throw new ExpansionAlreadyUnlockedError();
-  }
+    const nextCurrencies = {
+      ...currentCurrencies,
+      yellow_red_gem: currentGems - cost,
+    };
+    const nextUnlocked = uniqueSorted([...baseUnlocked, expansionId]);
 
-  const cost = expansion.mExtensioCost;
-  const currentCurrencies = player.currencies ?? {};
-  const currentGems = typeof currentCurrencies.yellow_red_gem === 'number'
-    ? currentCurrencies.yellow_red_gem
-    : 0;
+    await transaction.setPlayer(
+      playerId,
+      {
+        currencies: nextCurrencies,
+        unlockedExpansions: nextUnlocked,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
 
-  if (currentGems < cost) {
-    throw new InsufficientGemsForExpansionError();
-  }
-
-  const currencies = {
-    ...currentCurrencies,
-    yellow_red_gem: currentGems - cost,
-  };
-  const nextUnlockedExpansions = uniqueSorted([...unlockedExpansions, expansionId]);
-
-  await setPlayer(
-    playerId,
-    {
-      currencies,
-      unlockedExpansions: nextUnlockedExpansions,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
+    return { currencies: nextCurrencies, nextUnlockedExpansions: nextUnlocked };
+  });
 
   return {
     currencies,
     unlockedExpansions: nextUnlockedExpansions,
     expansionId,
-    spent: cost,
+    spent: expansion.mExtensioCost,
   };
 }
 
@@ -434,8 +444,7 @@ export async function savePlayerAvatar(
       : readAvatarDisplayTitle(existing ?? {}),
   };
   const storedInventory = await loadInventory(playerId, payload.id);
-  const inventory = (payload.inventory as AvatarDocument['inventory'] | undefined)
-    ?? existing?.inventory
+  const inventory = existing?.inventory
     ?? storedInventory
     ?? createInitialAvatarInventory(profile);
   const avatar: AvatarDocument = {
@@ -444,8 +453,8 @@ export async function savePlayerAvatar(
     name: payload.name,
     race: payload.race,
     role: payload.role,
-    level: payload.level,
-    experience: payload.experience,
+    level: typeof existing?.level === 'number' ? existing.level : 1,
+    experience: typeof existing?.experience === 'number' ? existing.experience : 0,
     portrait: payload.portrait,
     frame: payload.frame,
     createdAt: payload.createdAt ?? existing?.createdAt ?? now,

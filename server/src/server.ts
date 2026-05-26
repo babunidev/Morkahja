@@ -59,6 +59,9 @@ import { logAndFormatRequestError } from './http/errorResponse.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const CLIENT_ORIGINS = loadAllowedClientOrigins();
+const AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
+const AUTH_RATE_LIMIT_MAX_REQUESTS = 25;
+const authRateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 loadStaticGameEnvironment();
 
@@ -80,7 +83,30 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   next();
 });
-app.use(express.json());
+app.use(express.json({ limit: '32kb' }));
+
+function authRateLimitKey(req: Request): string {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  return `${ip}:${req.path}`;
+}
+
+function authRateLimit(req: Request, res: Response, next: NextFunction): void {
+  const now = Date.now();
+  const key = authRateLimitKey(req);
+  const current = authRateLimitBuckets.get(key);
+  const bucket = !current || current.resetAt <= now
+    ? { count: 0, resetAt: now + AUTH_RATE_LIMIT_WINDOW_MS }
+    : current;
+
+  bucket.count += 1;
+  authRateLimitBuckets.set(key, bucket);
+  if (bucket.count > AUTH_RATE_LIMIT_MAX_REQUESTS) {
+    res.status(429).json({ error: 'RATE_LIMITED' });
+    return;
+  }
+
+  next();
+}
 
 // Future runtime hooks:
 // app.use(requestLogger);
@@ -113,7 +139,7 @@ app.get('/game-data/status', (_req: Request, res: Response) => {
   });
 });
 
-app.post('/session/bootstrap', async (req: Request, res: Response) => {
+app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response) => {
   const body = req.body as Record<string, unknown>;
   const devicePublicKey = typeof body.devicePublicKey === 'string'
     ? body.devicePublicKey
@@ -148,7 +174,7 @@ app.post('/session/bootstrap', async (req: Request, res: Response) => {
   res.status(201).json(session);
 });
 
-app.post('/session/heartbeat', async (req: Request, res: Response) => {
+app.post('/session/heartbeat', authRateLimit, async (req: Request, res: Response) => {
   const header = req.headers.authorization;
   const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length).trim() : '';
 
@@ -274,9 +300,6 @@ app.post('/avatar', async (req: Request, res: Response) => {
       name: body.name as string,
       race: body.race as never,
       role: body.role as never,
-      level: typeof body.level === 'number' ? body.level : 1,
-      experience: typeof body.experience === 'number' ? body.experience : 0,
-      inventory: body.inventory,
       portrait: body.portrait as string,
       frame: body.frame as string,
       createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,
@@ -327,9 +350,6 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
     name: body.name as string,
     race: body.race as never,
     role: body.role as never,
-    level: typeof body.level === 'number' ? body.level : 1,
-    experience: typeof body.experience === 'number' ? body.experience : 0,
-    inventory: body.inventory,
     portrait: body.portrait as string,
     frame: body.frame as string,
     createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,

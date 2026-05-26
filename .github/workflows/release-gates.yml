@@ -1,0 +1,29 @@
+name: release-gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Verify static data sync
+        run: npm run verify:static-data
+      - name: Server session auth test
+        run: npm run test:session-auth --prefix server
+      - name: Server achievements test
+        run: npm run test:achievements --prefix server
+      - name: Server dice test
+        run: npm run test:dice --prefix server
+      - name: Typecheck and client build
+        run: npm run typecheck

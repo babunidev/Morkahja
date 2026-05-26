@@ -117,12 +117,12 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
     throw new SessionError('identityPublicKey is required', 400);
   }
 
+  const existing = await findPlayerByIdentityPublicKey<PlayerDocument>(input.identityPublicKey);
+
   if (input.signedIdentityChallenge) {
     if (!verifyIdentitySignature(input.identityPublicKey, input.signedIdentityChallenge)) {
       throw new SessionError('SESSION_INVALID', 401);
     }
-
-    const existing = await findPlayerByIdentityPublicKey<PlayerDocument>(input.identityPublicKey);
 
     if (!existing) {
       throw new SessionError('Player identity not found', 404);
@@ -134,13 +134,8 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
     };
   }
 
-  const existing = await findPlayerByIdentityPublicKey<PlayerDocument>(input.identityPublicKey);
-
   if (existing) {
-    return {
-      ...existing.data,
-      playerId: existing.data.playerId ?? existing.id,
-    };
+    throw new SessionError('signedIdentityChallenge is required', 401);
   }
 
   const playerName = input.playerName?.trim();

@@ -14,6 +14,7 @@ import {
   type EncounterSnapshot,
   type PersistedAvatar,
 } from './api/http.js';
+import { ApiRequestError } from './api/httpErrorMessage.js';
 import AchievementsOverlay from './ui/dashboard/AchievementsOverlay.js';
 import {
   findNewRankUnlocks,
@@ -252,9 +253,25 @@ export default function App() {
       return undefined;
     }
 
+    let transientFailures = 0;
     const interval = window.setInterval(() => {
-      void heartbeatSession().catch((error: unknown) => {
+      void heartbeatSession().then(() => {
+        transientFailures = 0;
+      }).catch((error: unknown) => {
         console.error('Session heartbeat failed', error);
+        if (error instanceof ApiRequestError && (error.status === 401 || error.status === 403)) {
+          clearStoredSession();
+          setActiveAvatar(null);
+          setActiveEncounter(null);
+          setScreen('gateway');
+          return;
+        }
+
+        transientFailures += 1;
+        if (transientFailures < 3) {
+          return;
+        }
+
         clearStoredSession();
         setActiveAvatar(null);
         setActiveEncounter(null);

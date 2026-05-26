@@ -79,17 +79,21 @@ function accessToken(): string | null {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = accessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(accessToken() ? { Authorization: `Bearer ${accessToken()}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
   });
 
   if (!response.ok) {
     const body = await response.text();
+    if (response.status === 401 && token) {
+      clearStoredSession();
+    }
     throw new ApiRequestError(response.status, response.statusText, body);
   }
 

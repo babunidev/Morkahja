@@ -8,8 +8,13 @@ const repoRoot = path.resolve(
 );
 
 const keyPath = path.join(repoRoot, 'Key.js');
+const isProduction = process.env.NODE_ENV === 'production';
 
-if (!process.env.DATABASE_URL?.trim() && existsSync(keyPath)) {
+if (isProduction && existsSync(keyPath)) {
+  throw new Error('Key.js must not exist in production. Use DATABASE_URL from environment.');
+}
+
+if (!isProduction && !process.env.DATABASE_URL?.trim() && existsSync(keyPath)) {
   const keyModule = await import(pathToFileURL(keyPath).href);
   const url =
     typeof keyModule.buildDatabaseUrl === 'function'

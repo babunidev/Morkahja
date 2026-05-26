@@ -16,6 +16,8 @@ import {
 const BACKGROUND = '/UI/01_2_Agreement/menuBGplayerCreation.webp';
 const FALLBACK_BACKGROUND = '/UI/01_1_SignIn/menuBG.webp';
 const AGREE_BUTTON = '/UI/01_2_Agreement/NEWAgreeButt.png';
+const PRIVACY_POLICY_URL = 'https://arcanitebrothers.com/privacy';
+const TERMS_OF_SERVICE_URL = 'https://arcanitebrothers.com/terms';
 
 type Mode = 'gateway' | 'new' | 'restore';
 
@@ -245,11 +247,11 @@ export function OnboardingGateway({
             />
             <label style={checkboxLabelStyle}>
               <input checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} type="checkbox" />
-              Privacy Policy accepted (placeholder)
+              I accept the <a href={PRIVACY_POLICY_URL} rel="noreferrer" style={{ color: '#ffcc66' }} target="_blank">Privacy Policy</a>.
             </label>
             <label style={checkboxLabelStyle}>
               <input checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} type="checkbox" />
-              Terms of Service accepted (placeholder)
+              I accept the <a href={TERMS_OF_SERVICE_URL} rel="noreferrer" style={{ color: '#ffcc66' }} target="_blank">Terms of Service</a>.
             </label>
             <label style={checkboxLabelStyle}>
               <input checked={keyAcknowledged} onChange={(event) => setKeyAcknowledged(event.target.checked)} type="checkbox" />
