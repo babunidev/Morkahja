@@ -844,7 +844,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 20039,
-    "mEncounterImageName": "trick_climb_forest_eldertreegrove",
+    "mEncounterImageName": "eldertree_grove",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -855,7 +855,7 @@
     "mEncounterSolutiuonTypeB": 14,
     "mEncounterSolutiuonTypeC": 13,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "This towering tree stands as a witness to the birth of the world, its roots delving deep into the earth and its branches reaching towards the heavens. It is said that the first giants carved their culture into the bark of this tree, and that the faun would gather around it to sing their songs of water and life. The ancient tree is a place of great power and magic, where one can commune with the elements and connect with the primal forces of nature.",
+    "mEncounterText": "This towering tree stands as a witness to the birth of the world, its roots delving deep into the earth and its branches reaching towards the heavens. It is said that the first giants carved their culture into the bark of this tree, and that the Vaerdani would gather around it to sing their songs of water and life. The ancient tree is a place of great power and magic, where one can commune with the elements and connect with the primal forces of nature.",
     "mEncounterTitle": "Eldertree Grove",
     "mEncounterType": 2
   },
