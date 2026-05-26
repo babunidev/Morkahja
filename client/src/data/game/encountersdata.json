@@ -1031,10 +1031,10 @@
     "mEncounterSolutiuonB": 10071,
     "mEncounterSolutiuonC": 10070,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 0,
+    "mEncounterSolutiuonTypeA": 40,
     "mEncounterSolutiuonTypeB": 14,
     "mEncounterSolutiuonTypeC": 13,
-    "mEncounterSolutiuonTypeD": 0,
+    "mEncounterSolutiuonTypeD": 39,
     "mEncounterText": "Nestled deep within the forest is a small set of stairs, carved from the earth itself. They wind their way up a gentle incline, each step carefully hewn from the natural rock and soil of the forest floor. The stairs are small and unassuming, but they hold a special magic. It is said that the Grimnir, who call the underground world their home, carved these steps as a way to visit the surface world in secret. The forest around the stairs is quiet, with only the sounds of rustling leaves and chirping birds breaking the stillness.",
     "mEncounterTitle": "Grimnir Steps",
     "mEncounterType": 2
