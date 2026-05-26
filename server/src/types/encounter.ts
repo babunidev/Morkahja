@@ -24,8 +24,11 @@ export interface PreparedEncounter {
 /** Authoritative server-side encounter fate snapshot stored in persistence. */
 export interface EncounterSnapshot {
   snapshotId: string;
+  /** Legacy owner fields; room-owned snapshots use roomId as authority. */
   playerId: string;
   avatarId: string;
+  /** When set, the encounter is owned by an EncounterRoom. */
+  roomId?: string;
   encounterId: number;
 
   // Metadata copied from the selected encounter definition at creation time.
@@ -71,6 +74,8 @@ export interface EncounterSnapshot {
   resolved: boolean;
   state: EncounterSnapshotState;
   createdAt: number;
+  /** Earliest timestamp when player actions are accepted for this encounter. */
+  actionReadyAt?: number;
   preparedEncounter: PreparedEncounter;
 
   /** Server-authoritative lore gem roll; set when the player opens lore. */

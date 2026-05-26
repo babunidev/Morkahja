@@ -281,6 +281,9 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
     },
   );
 
+  const { touchPlayerPresence } = await import('./roomService.js');
+  await touchPlayerPresence(player.playerId, 'online');
+
   return nextSession;
 }
 

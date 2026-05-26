@@ -10,11 +10,18 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
 
+interface CostLine {
+  amount: string;
+  title: string;
+  detail: string;
+}
+
 interface CreditEntry {
   id: string;
   name: string;
   roles: string;
   paragraphs: string[];
+  costLines?: CostLine[];
 }
 
 const CREDITS: CreditEntry[] = [
@@ -38,6 +45,32 @@ const CREDITS: CreditEntry[] = [
       'Working with Nikita Malko has been a deeply inspiring part of this project. His approach to composition — treating music as an emotional architecture of a game world — aligns naturally with the vision behind Morkahja. Every track feels like it belongs, not added on top, but grown from within the world itself.',
       'From subtle atmospheric textures to strong thematic identities, his work shapes presence, mood, and meaning without ever forcing attention. It supports the experience in a way that feels both careful and alive.',
       'There is a sincere hope to continue working together in the future, especially as the project grows and begins to support further expansion of its music systems. The intention is to evolve the audio layer of the game into something even more dynamic and expressive, and his contribution forms a strong foundation for that direction.',
+    ],
+  },
+  {
+    id: 'operational-costs',
+    name: 'Operational Costs · 85€/mo',
+    roles: 'What keeps Morkahja running',
+    paragraphs: [
+      'Monthly costs for keeping Morkahja alive and evolving:',
+      'These expenses are personally covered to keep the game free, independent, and stable. Donations support ongoing development and world expansion rather than unlocking content or advantages.',
+    ],
+    costLines: [
+      {
+        amount: '5€',
+        title: 'Server hosting',
+        detail: 'Keeps the world running and scales as more adventurers join.',
+      },
+      {
+        amount: '60€',
+        title: 'Development tools (Cursor Pro + maintenance)',
+        detail: 'Used to build, refine, and debug the game systems continuously.',
+      },
+      {
+        amount: '20€',
+        title: 'Creative assets (Midjourney)',
+        detail: 'Generates encounter art, environments, and visual storytelling pieces.',
+      },
     ],
   },
 ];
@@ -114,9 +147,16 @@ const creditCardStyle: CSSProperties = {
   overflow: 'hidden',
 };
 
+const creditHeaderButtonStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+};
+
 const creditHeaderVisualStyle: CSSProperties = {
   width: '100%',
-  display: 'grid',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'stretch',
   gap: 6,
   padding: '14px 14px 12px',
   border: 0,
@@ -124,36 +164,52 @@ const creditHeaderVisualStyle: CSSProperties = {
   color: 'inherit',
   textAlign: 'center',
   fontFamily: 'inherit',
+  boxSizing: 'border-box',
 };
 
 const nameStyle: CSSProperties = {
   margin: 0,
+  width: '100%',
   color: '#ffcc66',
   fontSize: '1.2rem',
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.04em',
+  textAlign: 'center',
 };
 
 const roleLineStyle: CSSProperties = {
   margin: 0,
+  width: '100%',
   color: 'rgba(247, 239, 224, 0.94)',
   fontSize: '0.95rem',
   lineHeight: 1.45,
+  textAlign: 'center',
 };
 
 const expandHintStyle: CSSProperties = {
   margin: 0,
+  width: '100%',
   color: 'rgba(255, 204, 102, 0.72)',
   fontSize: '0.78rem',
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
+  textAlign: 'center',
 };
 
 const creditBodyStyle: CSSProperties = {
+  padding: '0 14px 14px',
+  width: '100%',
+  boxSizing: 'border-box',
+};
+
+/** Full card width up to 40ch, centered — avoids flex shrink-to-content misalignment. */
+const creditBodyColumnStyle: CSSProperties = {
   display: 'grid',
   gap: 12,
-  padding: '0 14px 14px',
+  width: 'min(100%, 40ch)',
+  maxWidth: '40ch',
+  marginInline: 'auto',
   textAlign: 'center',
 };
 
@@ -162,8 +218,18 @@ const bodyTextStyle: CSSProperties = {
   color: 'rgba(247, 239, 224, 0.82)',
   fontSize: '0.88rem',
   lineHeight: 1.55,
-  maxWidth: '40ch',
-  justifySelf: 'center',
+  textAlign: 'center',
+};
+
+const costLineLabelStyle: CSSProperties = {
+  ...bodyTextStyle,
+  margin: '0 0 4px',
+  color: 'rgba(255, 204, 102, 0.92)',
+};
+
+const costLineDetailStyle: CSSProperties = {
+  ...bodyTextStyle,
+  margin: '0 0 14px',
 };
 
 function CreditCard({
@@ -189,6 +255,7 @@ function CreditCard({
           onToggle();
         }}
         pressKey={`about-credit-${credit.id}`}
+        style={creditHeaderButtonStyle}
         visualStyle={creditHeaderVisualStyle}
       >
         <h3 style={nameStyle}>{credit.name}</h3>
@@ -201,11 +268,28 @@ function CreditCard({
           id={bodyId}
           style={creditBodyStyle}
         >
-          {credit.paragraphs.map((paragraph) => (
-            <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
-              {paragraph}
-            </p>
-          ))}
+          <div style={creditBodyColumnStyle}>
+            {credit.paragraphs.slice(0, credit.costLines ? 1 : undefined).map((paragraph) => (
+              <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
+                {paragraph}
+              </p>
+            ))}
+            {credit.costLines?.map((line) => (
+              <div key={`${line.amount}-${line.title}`}>
+                <p style={costLineLabelStyle}>
+                  {line.amount} {line.title}
+                </p>
+                <p style={costLineDetailStyle}>{line.detail}</p>
+              </div>
+            ))}
+            {credit.costLines
+              ? credit.paragraphs.slice(1).map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
+                    {paragraph}
+                  </p>
+                ))
+              : null}
+          </div>
         </div>
       ) : null}
     </article>

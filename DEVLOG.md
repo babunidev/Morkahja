@@ -5,7 +5,8 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-25 19:14 (+0200) |
+| **Last updated** | 2026-05-26 (+0200) |
+| **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
 
@@ -490,3 +491,10 @@ Since `5b2d423`.
 ### Solution tooltips on touch (`df6bfbc`) · 2026-05-25 17:46 (+0200)
 
 - **Fix** — tooltips on touch no longer swallow taps needed to use solutions.
+
+### Public beta version **0.9.0-beta.1** · 2026-05-26 (+0200)
+
+- **Versioning** — project tagged as **beta** before stable **1.0.0**; `package.json` workspaces set to `0.9.0-beta.1` (replaces placeholder `0.0.0`).
+- **Prior tags** — `v0.1` (playable), `v0.12` (music engine); live production on **https://arcanitebrothers.com** is ahead of those tags.
+- **Git tag** (when ready): `git tag -a v0.9.0-beta.1 -m "Public beta"`.
+- **Next** — `0.9.0-beta.2` for beta deploys with notable fixes; **1.0.0** when leaving beta.

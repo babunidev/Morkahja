@@ -6,6 +6,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
 
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const ACTION_LOG_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_news_a.webp';
 
 const panelStyle: CSSProperties = {
   width: 'fit-content',
@@ -78,9 +79,17 @@ const detailsTooltipStyle: CSSProperties = {
   textAlign: 'left',
 };
 
-const homeButtonStyle: CSSProperties = {
+const actionButtonsStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 'clamp(4px, 1.1vw, 7px)',
   flex: '0 0 auto',
-  width: 'clamp(42px, 11vw, 74px)',
+};
+
+const hubActionButtonStyle: CSSProperties = {
+  flex: '0 0 auto',
+  width: 'clamp(21px, 5.5vw, 37px)',
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -144,15 +153,19 @@ function experienceRequiredForNextLevel(level: number): number {
 }
 
 export function AvatarPanel({
+  actionLogOpen = false,
   avatar,
   hidePortraitForHandoff = false,
   homeVisible = false,
+  onActionLogToggle,
   onDetailsVisibleChange,
   onHome,
 }: {
+  actionLogOpen?: boolean;
   avatar: PersistedAvatar;
   hidePortraitForHandoff?: boolean;
   homeVisible?: boolean;
+  onActionLogToggle?: () => void;
   onDetailsVisibleChange?: (visible: boolean) => void;
   onHome?: () => void;
 }) {
@@ -234,46 +247,79 @@ export function AvatarPanel({
               XP {currentExperience}/{nextLevelExperience}
             </span>
           </div>
-          {onHome ? (
-            <button
-              aria-label="Return home"
-              className="morkahja-footer-button"
-              disabled={!homeVisible}
-              onClick={() => {
-                if (!homeVisible) {
-                  return;
-                }
-
-                playSfx(DEFAULT_BUTTON_SOUND);
-                onHome();
-              }}
-              onPointerDown={() => {
-                if (!homeVisible) {
-                  return;
-                }
-
-                pulse('home');
-              }}
-              style={{
-                ...homeButtonStyle,
-                opacity: homeVisible ? 1 : 0,
-                pointerEvents: homeVisible ? 'auto' : 'none',
-              }}
-              type="button"
-            >
-              <span className="morkahja-footer-button-visual">
-                <img
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  src={HOME_BUTTON_ASSET}
-                  style={{
-                    ...homeImageStyle,
-                    animation: pressAnimation(isPressed('home')),
+          {onActionLogToggle || onHome ? (
+            <div style={actionButtonsStyle}>
+              {onActionLogToggle ? (
+                <button
+                  aria-expanded={actionLogOpen}
+                  aria-label="Action log"
+                  className="morkahja-footer-button"
+                  onClick={() => {
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    onActionLogToggle();
                   }}
-                />
-              </span>
-            </button>
+                  onPointerDown={() => {
+                    pulse('action-log');
+                  }}
+                  style={hubActionButtonStyle}
+                  type="button"
+                >
+                  <span className="morkahja-footer-button-visual">
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      src={ACTION_LOG_BUTTON_ASSET}
+                      style={{
+                        ...homeImageStyle,
+                        animation: pressAnimation(isPressed('action-log')),
+                      }}
+                    />
+                  </span>
+                </button>
+              ) : null}
+              {onHome ? (
+                <button
+                  aria-label="Return home"
+                  className="morkahja-footer-button"
+                  disabled={!homeVisible}
+                  onClick={() => {
+                    if (!homeVisible) {
+                      return;
+                    }
+
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    onHome();
+                  }}
+                  onPointerDown={() => {
+                    if (!homeVisible) {
+                      return;
+                    }
+
+                    pulse('home');
+                  }}
+                  style={{
+                    ...hubActionButtonStyle,
+                    opacity: homeVisible ? 1 : 0,
+                    pointerEvents: homeVisible ? 'auto' : 'none',
+                  }}
+                  type="button"
+                >
+                  <span className="morkahja-footer-button-visual">
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      src={HOME_BUTTON_ASSET}
+                      style={{
+                        ...homeImageStyle,
+                        animation: pressAnimation(isPressed('home')),
+                      }}
+                    />
+                  </span>
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       ) : null}

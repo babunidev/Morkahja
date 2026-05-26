@@ -27,6 +27,7 @@ import { toPersistedAvatarDto } from './services/avatarPresentation.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
+import { roomRoutes } from './routes/roomRoutes.js';
 import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
 import { loadInventory } from './services/inventoryService.js';
@@ -207,6 +208,7 @@ app.post('/session/logout', async (req: Request, res: Response) => {
 // Mount authenticated game API.
 app.use(authMiddleware);
 app.use('/encounter', encounterRoutes);
+app.use('/room', roomRoutes);
 app.get('/activity/recent', getRecentActivityController);
 app.get('/player/achievements', getPlayerAchievementsController);
 app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);

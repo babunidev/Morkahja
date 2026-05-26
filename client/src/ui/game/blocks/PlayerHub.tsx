@@ -1,6 +1,8 @@
-import { useState, type CSSProperties, type MouseEvent } from 'react';
-import type { PersistedAvatar } from '../../../api/http.js';
+import { useRef, useState, type CSSProperties } from 'react';
+import type { EncounterRoomSnapshotDto, PersistedAvatar, SlotStateDto } from '../../../api/http.js';
 import AvatarPanel from '../../avatar/AvatarPanel.js';
+import PartyEmptySlot from './PartyEmptySlot.js';
+import PartyMemberSlot from './PartyMemberSlot.js';
 import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import {
@@ -60,6 +62,8 @@ const partyStripStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   alignItems: 'center',
+  overflow: 'visible',
+  zIndex: 8,
   pointerEvents: 'auto',
 };
 
@@ -149,60 +153,64 @@ const actionLogListStyle: CSSProperties = {
   userSelect: 'none',
 };
 
-function PartySlotPlaceholder({
-  animationDelayMs = 0,
-  label,
-}: {
-  animationDelayMs?: number;
-  label: string;
-}) {
-  return (
-    <div
-      aria-label={`${label} slot empty`}
-      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-      onContextMenu={preventImageContextMenu}
-      style={partySlotStyle}
-    >
-      <span
-        aria-hidden="true"
-        className="morkahja-party-slot-dot"
-        style={animationDelayMs > 0 ? { animationDelay: `${animationDelayMs}ms` } : undefined}
-      />
-    </div>
-  );
-}
-
 export function PlayerHub({
   actionLog,
   avatar,
   hideAvatarPortraitForHandoff = false,
   homeVisible,
   onAvatarDetailsVisibleChange,
+  onCallForHelp,
+  helpCalled = false,
   onHome,
   onInventoryToggle,
   onLoreToggle,
   onSkillbookToggle,
+  onSlotStateChange,
+  room = null,
 }: {
   actionLog: string[];
   avatar: PersistedAvatar;
   hideAvatarPortraitForHandoff?: boolean;
   homeVisible: boolean;
   onAvatarDetailsVisibleChange: (visible: boolean) => void;
+  onCallForHelp?: () => void;
+  helpCalled?: boolean;
   onHome: () => void;
   onInventoryToggle: () => void;
   onLoreToggle: () => void;
   onSkillbookToggle: () => void;
+  onSlotStateChange?: (slotIndex: number, slotState: SlotStateDto) => void;
+  room?: EncounterRoomSnapshotDto | null;
 }) {
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [actionLogPosition, setActionLogPosition] = useState({ x: 16, y: 16 });
+  const [openSlotMenu, setOpenSlotMenu] = useState<number | null>(null);
+  const avatarAnchorRef = useRef<HTMLDivElement | null>(null);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const localPlayerId = room?.participants.find((participant) => participant.isLocal)?.playerId;
+  const canManageSlots = Boolean(
+    room &&
+    onSlotStateChange &&
+    localPlayerId &&
+    room.leaderPlayerId === localPlayerId,
+  );
 
-  function handleActionLogClick(event: MouseEvent<HTMLButtonElement>): void {
-    setActionLogPosition({
-      x: Math.min(event.clientX + 12, window.innerWidth - 340),
-      y: Math.min(event.clientY - 12, window.innerHeight - 280),
-    });
+  function toggleActionLog(): void {
+    const anchorRect = avatarAnchorRef.current?.getBoundingClientRect();
+    if (anchorRect) {
+      setActionLogPosition({
+        x: Math.min(anchorRect.right + 12, window.innerWidth - 340),
+        y: Math.max(8, anchorRect.top),
+      });
+    }
     setActionLogVisible((visible) => !visible);
+  }
+
+  function handleAvatarDetailsVisibleChange(visible: boolean): void {
+    onAvatarDetailsVisibleChange(visible);
+    if (!visible) {
+      setActionLogVisible(false);
+    }
   }
 
   return (
@@ -212,39 +220,75 @@ export function PlayerHub({
       </div>
       <div style={hubContentStyle}>
         <div aria-label="Party avatars" {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={partyStripStyle}>
-          <div
-            aria-label="Player 1 main slot"
-            {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-            style={mainPartySlotStyle}
-          >
-            <div style={mainAvatarAnchorStyle}>
-              <AvatarPanel
-                avatar={avatar}
-                hidePortraitForHandoff={hideAvatarPortraitForHandoff}
-                homeVisible={homeVisible}
-                onDetailsVisibleChange={onAvatarDetailsVisibleChange}
-                onHome={onHome}
+          {[0, 1, 2].map((slotIndex) => {
+            const participant = room?.participants.find((entry) => entry.slotIndex === slotIndex);
+            if (slotIndex === 0 && (!participant || participant.isLocal)) {
+              return (
+                <div
+                  aria-label="Player 1 main slot"
+                  key={`slot-${slotIndex}`}
+                  {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+                  style={mainPartySlotStyle}
+                >
+                  <div ref={avatarAnchorRef} style={mainAvatarAnchorStyle}>
+                    <AvatarPanel
+                      actionLogOpen={actionLogVisible}
+                      avatar={avatar}
+                      hidePortraitForHandoff={hideAvatarPortraitForHandoff}
+                      homeVisible={homeVisible}
+                      onActionLogToggle={toggleActionLog}
+                      onDetailsVisibleChange={handleAvatarDetailsVisibleChange}
+                      onHome={onHome}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            if (participant) {
+              return (
+                <PartyMemberSlot
+                  key={`slot-${slotIndex}`}
+                  participant={participant}
+                />
+              );
+            }
+
+            return (
+              <PartyEmptySlot
+                animationDelayMs={slotIndex * 420}
+                canManage={canManageSlots}
+                key={`slot-${slotIndex}`}
+                menuOpen={openSlotMenu === slotIndex}
+                onMenuOpenChange={(open) => {
+                  setOpenSlotMenu(open ? slotIndex : null);
+                }}
+                onSlotStateChange={onSlotStateChange}
+                slotIndex={slotIndex}
+                slotState={room?.slotStates[slotIndex] ?? 'open'}
               />
-            </div>
-          </div>
-          <PartySlotPlaceholder animationDelayMs={420} label="Player 2" />
-          <PartySlotPlaceholder animationDelayMs={840} label="Player 3" />
+            );
+          })}
         </div>
       </div>
       <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={footerContentStyle}>
         <div aria-label="Footer actions" style={footerButtonRowStyle}>
           {FOOTER_BUTTONS.map((button, index) => (
             <button
-              aria-label={index === 0 ? 'Action log' : button.alt}
+              aria-label={index === 0 ? 'Call for help' : button.alt}
               className="morkahja-footer-button"
               data-morkahja-footer-target={
                 index === 1 ? 'skillbook' : index === 2 ? 'inventory' : undefined
               }
+              disabled={index === 0 && helpCalled}
               key={button.alt}
-              onClick={(event) => {
+              onClick={() => {
                 if (index === 0) {
+                  if (helpCalled) {
+                    return;
+                  }
                   playSfx(DEFAULT_BUTTON_SOUND);
-                  handleActionLogClick(event);
+                  onCallForHelp?.();
                 }
                 if (index === 1) {
                   playSfx(DEFAULT_BUTTON_SOUND);
@@ -262,7 +306,11 @@ export function PlayerHub({
               onPointerDown={() => {
                 pulse(button.alt);
               }}
-              style={footerButtonStyle}
+              style={{
+                ...footerButtonStyle,
+                opacity: index === 0 && helpCalled ? 0.42 : 1,
+                cursor: index === 0 && helpCalled ? 'default' : 'pointer',
+              }}
               type="button"
             >
               <span className="morkahja-footer-button-visual">

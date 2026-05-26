@@ -12,7 +12,10 @@ import { createInitialProgression } from '../domain/avatar/AvatarProgression.js'
 import type { EncounterData, EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
-import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
+import {
+  withDocumentTransaction,
+  type DocumentTransaction,
+} from '../db/postgresDocumentStore.js';
 import type {
   EncounterSnapshot,
   PreparedEncounter,
@@ -65,9 +68,13 @@ import {
   recordEncounterStartedEvent,
   type EncounterContinuedEventContext,
 } from './gameEventService.js';
+import type { RoomEncounterLineage } from '../domain/rooms/RoomSystemEvent.js';
+import { LEVEL_UP_ENCOUNTER_NUMERIC_ID as ROOM_LEVEL_UP_ID } from '../domain/rooms/RoomSystemEvent.js';
 
 const RANDOM_ENCOUNTER_MIN_ID = 20001;
 const MAX_EXPANSION_REROLLS = 200;
+/** Must match client action unlock timing: reveal delay + fade-in. */
+export const ENCOUNTER_ACTION_ENABLE_DELAY_MS = 3_280;
 /** Atranor death encounter (mEncounterID 1) — queued when essence is depleted. */
 export const DEATH_ENCOUNTER_ID = '00001';
 export const LEVEL_UP_ENCOUNTER_ID = '00002';
@@ -218,7 +225,7 @@ function selectRandomPreparedEncounter(
   throw new Error('Failed to prepare a valid random encounter after rerolls');
 }
 
-function preparedSystemEncounter(encounterId: number): PreparedEncounter {
+export function preparedSystemEncounter(encounterId: number): PreparedEncounter {
   const encounter = getEncounterById(encounterId);
 
   if (!encounter) {
@@ -312,6 +319,7 @@ export function buildEncounterSnapshot(
   preparedEncounter: PreparedEncounter,
   avatar?: AvatarDocument,
 ): EncounterSnapshot {
+  const createdAt = Date.now();
   const rolls = generateSnapshotRolls();
   const rewardIds = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID
     ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE)
@@ -328,12 +336,13 @@ export function buildEncounterSnapshot(
     prosperityRewardId: randomEssenceReward(),
     resolved: false,
     state: 'created',
-    createdAt: Date.now(),
+    createdAt,
+    actionReadyAt: createdAt + ENCOUNTER_ACTION_ENABLE_DELAY_MS,
     preparedEncounter,
   };
 }
 
-function withPrecomputedSnapshotRewards(
+export function withPrecomputedSnapshotRewards(
   snapshot: EncounterSnapshot,
   avatar?: AvatarDocument,
 ): EncounterSnapshot {
@@ -398,7 +407,7 @@ function isFollowOutcome(outcome: ReturnType<typeof interpretRoll>): boolean {
 
 function getNextEncounterAfterResolution(
   snapshot: EncounterSnapshot,
-  selectedRollOutcome: ReturnType<typeof interpretRoll>,
+  selectedRollOutcome: RollOutcome | null,
   unlockedExpansions: number[],
 ): EncounterData {
   if (snapshot.preparedEncounter?.followMode === 'system') {
@@ -419,6 +428,57 @@ function getNextEncounterAfterResolution(
   }
 
   return selectRandomPreparedEncounter(unlockedExpansions, getEncounters());
+}
+
+/** Next encounter after witnessed system events complete — uses origin lineage, not system snapshot. */
+export function resolveNextEncounterForRoom(
+  lineage: RoomEncounterLineage,
+  mergedExpansions: number[],
+): { encounter: EncounterData; prepared: PreparedEncounter } {
+  if (lineage.preparedEncounter?.followMode === 'system') {
+    const encounter = getEncounterById(lineage.preparedEncounter.encounterId);
+    if (!encounter) {
+      throw new Error(
+        `Prepared system encounter not found: ${lineage.preparedEncounter.encounterId}`,
+      );
+    }
+    const prepared = prepareNextEncounter(encounter, mergedExpansions);
+    return { encounter, prepared };
+  }
+
+  if (
+    lineage.originEncounterFollow > 0 &&
+    lineage.originSuccess &&
+    isFollowOutcome(lineage.originRollOutcome)
+  ) {
+    const followEncounter = getEncounterById(lineage.originEncounterFollow);
+    if (!followEncounter) {
+      throw new Error(`Follow encounter not found: ${lineage.originEncounterFollow}`);
+    }
+    return {
+      encounter: followEncounter,
+      prepared: prepareNextEncounter(followEncounter, mergedExpansions),
+    };
+  }
+
+  const encounter = selectNextEncounter({
+    unlockedExpansions: mergedExpansions,
+    previousEncounter: null,
+  }, getEncounters());
+  return {
+    encounter,
+    prepared: prepareNextEncounter(encounter, mergedExpansions),
+  };
+}
+
+export function buildLineagePreparedEncounter(
+  deathTriggered: boolean,
+  leveledUp: boolean,
+): PreparedEncounter | undefined {
+  if (deathTriggered && leveledUp) {
+    return preparedSystemEncounter(ROOM_LEVEL_UP_ID);
+  }
+  return undefined;
 }
 
 function currentEssence(inventory: AvatarInventory): number {
@@ -1055,6 +1115,154 @@ export async function clearEncounter(
   void playerId;
   void avatarId;
   throw new Error('clearEncounter is disabled; use /encounter/continue');
+}
+
+export interface ResolveParticipantInRoomResult {
+  avatar: AvatarDocument;
+  resolution: EncounterResolution;
+  selectedRollOutcome: RollOutcome | null;
+  deathTriggered: boolean;
+  avatarDied: boolean;
+  eventContext: EncounterContinuedEventContext;
+}
+
+/**
+ * Resolve one participant against a shared room encounter snapshot.
+ * Does not advance the room encounter — caller owns room lifecycle.
+ */
+export async function resolveParticipantInRoom(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  encounterSnapshot: EncounterSnapshot,
+  action: PlayerEncounterAction,
+): Promise<ResolveParticipantInRoomResult> {
+  const [
+    avatar,
+    inventoryDocument,
+    progressionDocument,
+  ] = await Promise.all([
+    transaction.getAvatar<AvatarDocument>(playerId, avatarId),
+    transaction.getInventory<AvatarInventory>(playerId, avatarId),
+    transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
+  ]);
+
+  if (!avatar) {
+    throw new Error(`Avatar not found: ${avatarId}`);
+  }
+
+  let snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
+
+  const inventory = inventoryDocument
+    ?? avatar.inventory
+    ?? createInitialAvatarInventory(avatar.profile);
+  const progression = progressionDocument
+    ?? createInitialProgression(avatar.createdAt ?? Date.now());
+
+  const actionForResolution = selectedActionForSnapshot(snapshot, action);
+  const encounter = snapshotToEncounterData(snapshot);
+  const baseResolution = runDeterministicResolver(
+    encounter,
+    flattenInventorySolutionIds(inventory),
+    getSolutionMap(),
+    snapshotToRolls(snapshot),
+    toSelectedEncounterAction(actionForResolution),
+    snapshot.rewardIds,
+  );
+  const selectedRollOutcome = interpretRoll(baseResolution.selectedRoll);
+  const resolution = normalizeSystemEncounterResolution(
+    snapshot,
+    avatar,
+    withProsperityEssenceReward(
+      snapshot,
+      baseResolution,
+      selectedRollOutcome,
+    ),
+    selectedRollOutcome,
+  );
+  const progressionResult = applyEncounterProgressionState(
+    progression,
+    selectedRollOutcome,
+  );
+  const essenceCost = essenceCostForOutcome(
+    selectedRollOutcome,
+    snapshot.encounterDifficulty,
+  );
+  const deathTriggered = !resolution.success &&
+    snapshot.encounterId !== DEATH_ENCOUNTER_NUMERIC_ID &&
+    snapshot.encounterId !== LEVEL_UP_ENCOUNTER_NUMERIC_ID &&
+    essenceCost > 0 &&
+    currentEssence(inventory) <= essenceCost;
+
+  let nextInventory: AvatarInventory;
+
+  if (snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
+    if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
+      nextInventory = createInitialAvatarInventory(avatar.profile);
+    } else if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
+      const essenceReward = randomEssenceReward();
+      const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
+      nextInventory = essenceReward && essenceUses > 0
+        ? addRewardToInventoryState(inventory, essenceReward, essenceUses)
+        : inventory;
+    } else {
+      nextInventory = inventory;
+    }
+  } else if (snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
+    nextInventory = applyLevelUpInventoryChanges(
+      inventory,
+      resolution.rewards,
+      snapshot.encounterDifficulty,
+    );
+  } else {
+    nextInventory = applyEncounterInventoryChanges(
+      inventory,
+      resolution.usedInventorySolutions,
+      resolution.success ? resolution.rewards : [],
+      resolution.success,
+      selectedRollOutcome,
+      snapshot.encounterDifficulty,
+    );
+  }
+
+  const updatedAvatar: AvatarDocument = {
+    ...avatar,
+    id: avatar.id ?? avatarId,
+    level: progressionResult.progression.level,
+    experience: progressionResult.progression.experience,
+    inventory: nextInventory,
+    lastPlayedAt: progressionResult.progression.lastPlayedAt,
+    progression: {
+      ...avatar.progression,
+      lastEncounterId: snapshot.encounterId,
+    },
+  };
+
+  await transaction.setProgression(playerId, avatarId, progressionResult.progression);
+  await transaction.setInventory(playerId, avatarId, nextInventory);
+  await transaction.setAvatar(playerId, avatarId, updatedAvatar, { merge: true });
+
+  const eventContext: EncounterContinuedEventContext = {
+    resolvedEncounterId: snapshot.encounterId,
+    resolvedEncounterTitle: snapshot.encounterTitle,
+    selectedRollOutcome,
+    leveledUp: progressionResult.leveledUp,
+    deathTriggered,
+    isDeathEncounterResolution: snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID,
+  };
+
+  const avatarDied =
+    eventContext.isDeathEncounterResolution &&
+    isDeathEncounterFailureOutcome(selectedRollOutcome);
+
+  return {
+    avatar: updatedAvatar,
+    resolution,
+    selectedRollOutcome,
+    deathTriggered,
+    avatarDied,
+    eventContext,
+  };
 }
 
 /** Seed or update avatar document (inventory, profile, progression). */

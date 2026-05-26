@@ -1,8 +1,9 @@
 import { normalizePersistedAvatar } from '../ui/avatar/avatarDisplayName.js';
-import { ApiRequestError } from './httpErrorMessage.js';
+import { ApiRequestError, looksLikeHtml } from './httpErrorMessage.js';
 import type {
   AchievementsResponse,
   ActivityFeedResponse,
+  CallForHelpResponse,
   ClaimDailyRewardResponse,
   DonateGemsResponse,
   UnlockExpansionResponse,
@@ -15,6 +16,7 @@ import type {
   ClientSession,
   EncounterAction,
   EncounterResultResponse,
+  EncounterRoomSnapshotDto,
   EncounterSnapshotDto,
   InventoryItemDto,
   LoreGemClaimResponse,
@@ -23,7 +25,13 @@ import type {
   PlayerProfileResponse,
   PlayerResponse,
   ActivateSealOfNorghorResponse,
+  RoomHelpPendingResponse,
+  RespondHelpResponse,
+  RoomParticipantDto,
+  RoomStateDto,
+  ParticipantResolutionSummaryDto,
   SetAvatarDisplayTitleResponse,
+  SlotStateDto,
   StaticGameDataStatus,
 } from '@shared/contracts';
 
@@ -45,7 +53,12 @@ export type {
   AvatarsResponse,
   ClientSession,
   EncounterAction,
+  EncounterRoomSnapshotDto,
+  ParticipantResolutionSummaryDto,
   PlayerResponse,
+  RoomParticipantDto,
+  RoomStateDto,
+  SlotStateDto,
   StaticGameDataStatus,
 };
 
@@ -89,15 +102,32 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
 
+  const body = await response.text();
+
   if (!response.ok) {
-    const body = await response.text();
     if (response.status === 401 && token) {
       clearStoredSession();
     }
     throw new ApiRequestError(response.status, response.statusText, body);
   }
 
-  return (await response.json()) as T;
+  if (looksLikeHtml(body)) {
+    throw new ApiRequestError(
+      502,
+      'Bad Gateway',
+      'The game API returned a web page instead of game data. Restart the backend or update your server proxy to include /room.',
+    );
+  }
+
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    throw new ApiRequestError(
+      502,
+      'Bad Gateway',
+      body.trim().length > 0 ? body : 'The game server returned an invalid response.',
+    );
+  }
 }
 
 export async function fetchSession(): Promise<ClientSession> {
@@ -382,6 +412,94 @@ export async function createNextEncounter(
       avatarId: avatar.id,
     }),
   });
+}
+
+const ROOM_POLL_MS = 2500;
+
+export { ROOM_POLL_MS };
+
+export async function fetchActiveRoom(avatarId: string): Promise<EncounterRoomSnapshotDto | null> {
+  const response = await request<{ room: EncounterRoomSnapshotDto | null }>(
+    `/room/active?avatarId=${encodeURIComponent(avatarId)}`,
+  );
+  return response.room;
+}
+
+export async function createEncounterRoom(
+  avatarId: string,
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/create', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
+  return response.room;
+}
+
+export async function submitRoomChoice(
+  avatarId: string,
+  action: EncounterAction,
+  solutionId?: number,
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/choice', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, action, solutionId }),
+  });
+  return response.room;
+}
+
+export async function submitRoomFocus(
+  avatarId: string,
+  focusState: 'none' | 'lore' | 'inventory' | 'skillbook',
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/focus', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, focusState }),
+  });
+  return response.room;
+}
+
+export async function submitRoomContinue(avatarId: string): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/continue', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
+  return response.room;
+}
+
+export async function submitRoomSlotState(
+  avatarId: string,
+  slotIndex: number,
+  slotState: SlotStateDto,
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/slot', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, slotIndex, slotState }),
+  });
+  return response.room;
+}
+
+export async function requestRoomHelp(avatarId: string): Promise<CallForHelpResponse> {
+  return request<CallForHelpResponse>('/room/help/request', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
+}
+
+export async function fetchPendingHelpInvitations(): Promise<RoomHelpPendingResponse> {
+  return request<RoomHelpPendingResponse>('/room/help/pending');
+}
+
+export async function respondHelpInvite(
+  inviteId: string,
+): Promise<RespondHelpResponse> {
+  return request<RespondHelpResponse>('/room/help/respond', {
+    method: 'POST',
+    body: JSON.stringify({ inviteId, accept: true }),
+  });
+}
+
+export async function leaveEncounterRoom(): Promise<void> {
+  await request<{ ok: true }>('/room/leave', { method: 'POST', body: JSON.stringify({}) });
 }
 
 export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {

@@ -58,6 +58,7 @@ type SolutionRevealDirection = 'left' | 'right' | 'bottom';
 function solutionRevealStyle(
   visible: boolean,
   direction: SolutionRevealDirection,
+  targetOpacity = 1,
 ): CSSProperties {
   const hiddenRotation = direction === 'left'
     ? '-14deg'
@@ -66,7 +67,7 @@ function solutionRevealStyle(
       : '-10deg';
 
   return {
-    opacity: visible ? 1 : 0,
+    opacity: visible ? targetOpacity : 0,
     transform: visible
       ? 'rotate(0deg) scale(1)'
       : `rotate(${hiddenRotation}) scale(0.86)`,
@@ -75,12 +76,12 @@ function solutionRevealStyle(
   };
 }
 
-function diceRevealStyle(visible: boolean): CSSProperties {
+function diceRevealStyle(visible: boolean, targetOpacity = 1): CSSProperties {
   return {
-    opacity: visible ? 1 : 0,
-    transform: visible ? 'scale(1)' : 'scale(0.92)',
+    opacity: visible ? targetOpacity : 0,
+    transform: visible ? 'rotate(0deg) scale(1)' : 'rotate(-12deg) scale(0.92)',
     transformOrigin: '50% 50%',
-    transition: `opacity ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+    transition: encounterActionsRevealTransition,
   };
 }
 
@@ -503,7 +504,8 @@ export function SolutionBlock({
       window.clearTimeout(interactiveTimer);
       window.clearTimeout(rattleClearTimer);
     };
-  }, [encounter, encounterRevealKey, inventory]);
+    // Only re-run reveal when the encounter snapshot changes — not on room poll object churn.
+  }, [encounterRevealKey]);
 
   useEffect(() => {
     if (hidden) {
@@ -693,7 +695,7 @@ export function SolutionBlock({
               key={slot}
               style={{
                 ...diceSlotStyle,
-                ...diceRevealStyle(actionsVisible && !hidden),
+                ...diceRevealStyle(actionsVisible && !hidden, 1),
               }}
             >
               <button
@@ -785,10 +787,11 @@ export function SolutionBlock({
                 }}
                 style={{
                   ...solutionButtonStyle,
-                  ...solutionRevealStyle(actionsVisible && !hidden, revealDirection),
-                  ...(actionsVisible && !hidden && !visibleSlot.available
-                    ? { opacity: UNAVAILABLE_SOLUTION_OPACITY }
-                    : {}),
+                  ...solutionRevealStyle(
+                    actionsVisible && !hidden,
+                    revealDirection,
+                    visibleSlot.available ? 1 : UNAVAILABLE_SOLUTION_OPACITY,
+                  ),
                 }}
                 type="button"
               >

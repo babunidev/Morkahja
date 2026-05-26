@@ -344,3 +344,112 @@ export interface FriendAchievementsResponse {
   avatars: FriendAvatarDto[];
   achievements: AchievementProgressDto[];
 }
+
+export type RoomStateDto =
+  | 'active_encounter'
+  | 'resolving'
+  | 'system_event'
+  | 'waiting_continue'
+  | 'closed';
+
+export type ParticipantChoiceStateDto =
+  | 'choosing'
+  | 'ready'
+  | 'resolved'
+  | 'witnessing'
+  | 'disengaged';
+
+export type ParticipantFocusStateDto =
+  | 'none'
+  | 'lore'
+  | 'inventory'
+  | 'skillbook';
+
+export type SlotStateDto = 'open' | 'friends_only' | 'locked';
+
+export interface ParticipantResolutionSummaryDto {
+  success: boolean;
+  message: string;
+  selectedRoll?: number;
+  rewards: number[];
+  failurePenalty?: number;
+  usedInventorySolutions?: number[];
+  deathTriggered?: boolean;
+  avatarDied?: boolean;
+  leveledUp?: boolean;
+}
+
+export interface RoomSystemEventDto {
+  actorPlayerId: string;
+  encounterId: number;
+  kind: 'level_up' | 'atranor';
+  isLocalActor: boolean;
+  isLocalWitness: boolean;
+  lastEventRecap?: ParticipantResolutionSummaryDto;
+}
+
+export interface RoomParticipantDto {
+  playerId: string;
+  avatarId: string;
+  slotIndex: number;
+  playerName: string;
+  avatar: PersistedAvatarDto;
+  choiceState: ParticipantChoiceStateDto;
+  focusState: ParticipantFocusStateDto;
+  selectedSolutionId?: number;
+  continuePressed: boolean;
+  resolutionSummary?: ParticipantResolutionSummaryDto;
+  isLocal: boolean;
+}
+
+export interface EncounterRoomSnapshotDto {
+  roomId: string;
+  leaderPlayerId: string;
+  roomState: RoomStateDto;
+  slotStates: [SlotStateDto, SlotStateDto, SlotStateDto];
+  participants: RoomParticipantDto[];
+  activeEncounter: EncounterSnapshotDto;
+  helpCalledForEncounter: boolean;
+  systemEvent?: RoomSystemEventDto;
+  lineageEncounterId?: number;
+  updatedAt: number;
+}
+
+export interface RoomActiveResponse {
+  room: EncounterRoomSnapshotDto | null;
+}
+
+export interface RoomCreateResponse {
+  room: EncounterRoomSnapshotDto;
+}
+
+export interface RoomHelpInvitationDto {
+  inviteId: string;
+  roomId: string;
+  fromPlayerId: string;
+  fromPlayerName: string;
+  expiresAt: number;
+}
+
+export interface RoomHelpPendingResponse {
+  invitations: RoomHelpInvitationDto[];
+}
+
+export interface RoomChoiceRequest {
+  action: EncounterAction;
+  solutionId?: number;
+}
+
+export interface RoomFocusRequest {
+  focusState: ParticipantFocusStateDto;
+}
+
+export interface CallForHelpResponse {
+  invitedCount: number;
+  targetMode: 'friends' | 'random';
+  helpCalled: boolean;
+}
+
+export interface RespondHelpResponse {
+  room: EncounterRoomSnapshotDto | null;
+}

@@ -99,7 +99,7 @@ export interface EncounterContinuedEventContext {
   isDeathEncounterResolution: boolean;
 }
 
-async function recordGameEvent(input: RecordGameEventInput): Promise<GameEvent> {
+export async function recordGameEvent(input: RecordGameEventInput): Promise<GameEvent> {
   const event: GameEvent = {
     eventId: randomUUID(),
     timestamp: input.timestamp ?? Date.now(),

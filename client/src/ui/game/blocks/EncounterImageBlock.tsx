@@ -3,6 +3,8 @@ import type {
   AvatarInventory,
   EncounterAction,
   EncounterSnapshot,
+  ParticipantResolutionSummaryDto,
+  RoomStateDto,
 } from '../../../api/http.js';
 import { claimLoreGem, offerLoreGem } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
@@ -81,8 +83,12 @@ export function EncounterImageBlock({
   inventoryOpen,
   loreOpen,
   onContinue,
+  roomState = 'active_encounter',
+  serverResolution,
   skillbookOpen,
   title,
+  witnessMode = false,
+  systemEventActorName,
 }: {
   avatarId: string;
   continuePending: boolean;
@@ -96,8 +102,12 @@ export function EncounterImageBlock({
     roll: number | null,
     solutionId: number | null,
   ) => Promise<void>;
+  roomState?: RoomStateDto;
+  serverResolution?: ParticipantResolutionSummaryDto;
   skillbookOpen: boolean;
   title: string;
+  witnessMode?: boolean;
+  systemEventActorName?: string;
 }) {
   const [revealedRoll, setRevealedRoll] = useState<number | null>(null);
   const [selectedAction, setSelectedAction] = useState<EncounterAction>('dice');
@@ -152,11 +162,32 @@ export function EncounterImageBlock({
     };
   }, [currentImageSrc, imageSrc]);
 
-  async function handleContinue(): Promise<void> {
-    await onContinue(selectedAction, revealedRoll, selectedSolutionId);
+  useEffect(() => {
     setRevealedRoll(null);
     setSelectedAction('dice');
     setSelectedSolutionId(null);
+  }, [encounter.snapshotId]);
+
+  useEffect(() => {
+    if (roomState === 'waiting_continue' && serverResolution?.selectedRoll !== undefined) {
+      setRevealedRoll(serverResolution.selectedRoll);
+    }
+  }, [roomState, serverResolution?.selectedRoll, encounter.snapshotId]);
+
+  async function handleContinue(): Promise<void> {
+    if (roomState === 'waiting_continue') {
+      await onContinue(selectedAction, revealedRoll, selectedSolutionId);
+      return;
+    }
+
+    await onContinue(selectedAction, revealedRoll, selectedSolutionId);
+    if (roomState === 'active_encounter' || roomState === 'system_event') {
+      setRevealedRoll(revealedRoll);
+    } else {
+      setRevealedRoll(null);
+      setSelectedAction('dice');
+      setSelectedSolutionId(null);
+    }
   }
 
   function handleActionReveal(
@@ -232,8 +263,31 @@ export function EncounterImageBlock({
           }}
         />
       )}
+      {witnessMode ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: 24,
+            transform: 'translateX(-50%)',
+            zIndex: 22,
+            padding: '10px 18px',
+            borderRadius: 8,
+            background: 'rgba(6, 7, 10, 0.82)',
+            color: '#e8d4a8',
+            fontFamily: 'Georgia, serif',
+            fontSize: 'clamp(0.85rem, 2.5vw, 1.05rem)',
+            textAlign: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          {systemEventActorName
+            ? `Witnessing ${systemEventActorName}'s fate…`
+            : 'Witnessing a shared moment…'}
+        </div>
+      ) : null}
       <ResultBlock
-        disabled={continuePending}
+        disabled={continuePending || (witnessMode && roomState === 'system_event')}
         encounterId={encounter.encounterId}
         encounterDifficulty={encounter.encounterDifficulty ?? 1}
         hidden={loreOpen || inventoryOpen || skillbookOpen}
@@ -243,14 +297,22 @@ export function EncounterImageBlock({
         }}
         prosperityRewardId={encounter.prosperityRewardId}
         resolutionAction={revealedRoll !== null ? selectedAction : null}
-        rewardIds={encounter.rewardIds}
+        rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
         roll={revealedRoll}
         usedSolutionId={selectedSolutionId}
       />
       <SolutionBlock
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}
-        hidden={revealedRoll !== null || loreOpen || inventoryOpen || skillbookOpen}
+        hidden={
+          witnessMode ||
+          revealedRoll !== null ||
+          loreOpen ||
+          inventoryOpen ||
+          skillbookOpen ||
+          roomState === 'waiting_continue' ||
+          roomState === 'resolving'
+        }
         inventory={inventory}
         onActionReveal={handleActionReveal}
       />

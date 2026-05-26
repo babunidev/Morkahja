@@ -235,6 +235,25 @@ button:focus-visible {
   animation: morkahja-party-slot-shimmer 2.6s ease-in-out infinite;
 }
 
+.morkahja-party-member-disengaged {
+  opacity: 0.38;
+  filter: grayscale(0.85);
+}
+
+@keyframes morkahja-party-member-continue-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(255, 204, 102, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 204, 102, 0.72));
+  }
+}
+
+.morkahja-party-member-continue-glow {
+  animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
+}
+
 @keyframes morkahja-nav-attention-glow-scribes {
   0%,
   100% {

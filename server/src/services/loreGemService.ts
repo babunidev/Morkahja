@@ -1,7 +1,13 @@
 import { rollLoreGemClaimableAt } from '../domain/encounters/loreGemConstants.js';
+import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import { loadActiveEncounter, saveActiveEncounter } from './encounterPersistence.js';
 import { addPlayerYellowRedGems, loadPlayer } from './playerService.js';
+import {
+  findActiveRoomIdForPlayer,
+  loadEncounterRoom,
+  saveEncounterRoom,
+} from './roomPersistence.js';
 
 export class LoreGemError extends Error {
   constructor(
@@ -37,19 +43,78 @@ function assertActiveEncounterForLore(
   return snapshot;
 }
 
+function activeRoomParticipants(room: EncounterRoom) {
+  return room.participants.filter((participant) => participant.choiceState !== 'disengaged');
+}
+
+async function loadAuthoritativeSnapshot(
+  playerId: string,
+  avatarId: string,
+): Promise<{ snapshot: EncounterSnapshot; room: EncounterRoom | null }> {
+  const roomId = await findActiveRoomIdForPlayer(playerId);
+  if (roomId) {
+    const room = await loadEncounterRoom(roomId);
+    if (room && room.roomState !== 'closed') {
+      return { snapshot: room.activeEncounterSnapshot, room };
+    }
+  }
+
+  return {
+    snapshot: assertActiveEncounterForLore(await loadActiveEncounter(playerId, avatarId)),
+    room: null,
+  };
+}
+
+async function persistSnapshotWithOffer(
+  snapshot: EncounterSnapshot,
+  loreGemOffer: NonNullable<EncounterSnapshot['loreGemOffer']>,
+  room: EncounterRoom | null,
+  playerId: string,
+  avatarId: string,
+): Promise<void> {
+  const nextSnapshot: EncounterSnapshot = {
+    ...snapshot,
+    loreGemOffer,
+  };
+
+  if (room) {
+    const updatedRoom: EncounterRoom = {
+      ...room,
+      activeEncounterSnapshot: nextSnapshot,
+      updatedAt: Date.now(),
+    };
+    await saveEncounterRoom(updatedRoom);
+    await Promise.all(
+      activeRoomParticipants(updatedRoom).map((participant) =>
+        saveActiveEncounter({
+          ...nextSnapshot,
+          playerId: participant.playerId,
+          avatarId: participant.avatarId,
+        }),
+      ),
+    );
+    return;
+  }
+
+  await saveActiveEncounter({
+    ...nextSnapshot,
+    playerId,
+    avatarId,
+  });
+}
+
 export async function offerLoreGem(
   playerId: string,
   avatarId: string,
 ): Promise<LoreGemOfferResult> {
-  const snapshot = assertActiveEncounterForLore(
-    await loadActiveEncounter(playerId, avatarId),
-  );
+  const { snapshot, room } = await loadAuthoritativeSnapshot(playerId, avatarId);
+  const activeSnapshot = assertActiveEncounterForLore(snapshot);
 
-  if (snapshot.loreGemOffer) {
+  if (activeSnapshot.loreGemOffer) {
     return {
-      eligible: snapshot.loreGemOffer.eligible,
-      claimableAt: snapshot.loreGemOffer.claimableAt,
-      encounterKey: snapshot.snapshotId,
+      eligible: activeSnapshot.loreGemOffer.eligible,
+      claimableAt: activeSnapshot.loreGemOffer.claimableAt,
+      encounterKey: activeSnapshot.snapshotId,
     };
   }
 
@@ -61,15 +126,12 @@ export async function offerLoreGem(
     offeredAt: nowMs,
   };
 
-  await saveActiveEncounter({
-    ...snapshot,
-    loreGemOffer,
-  });
+  await persistSnapshotWithOffer(activeSnapshot, loreGemOffer, room, playerId, avatarId);
 
   return {
     eligible: loreGemOffer.eligible,
     claimableAt: loreGemOffer.claimableAt,
-    encounterKey: snapshot.snapshotId,
+    encounterKey: activeSnapshot.snapshotId,
   };
 }
 
@@ -86,34 +148,50 @@ export async function claimLoreGem(
     throw new LoreGemError('encounterKey is required');
   }
 
-  const snapshot = assertActiveEncounterForLore(
-    await loadActiveEncounter(playerId, avatarId),
-    encounterKey,
-  );
+  const { snapshot, room } = await loadAuthoritativeSnapshot(playerId, avatarId);
+  const activeSnapshot = assertActiveEncounterForLore(snapshot, encounterKey);
 
-  if (!snapshot.loreGemOffer) {
+  if (!activeSnapshot.loreGemOffer) {
     throw new LoreGemError('Lore gem has not been offered for this encounter');
   }
 
-  if (!snapshot.loreGemOffer.eligible || snapshot.loreGemOffer.claimableAt === null) {
+  if (!activeSnapshot.loreGemOffer.eligible || activeSnapshot.loreGemOffer.claimableAt === null) {
     throw new LoreGemError('No lore gem is available for this encounter', 409);
   }
 
   const nowMs = Date.now();
-  if (nowMs < snapshot.loreGemOffer.claimableAt) {
+  if (nowMs < activeSnapshot.loreGemOffer.claimableAt) {
     throw new LoreGemError('Lore gem is not ready to collect yet', 409);
   }
 
-  const player = await loadPlayer(playerId);
-  if (player?.loreGemClaims?.[encounterKey] === true) {
+  const recipients = room
+    ? activeRoomParticipants(room)
+    : [{ playerId, avatarId }];
+
+  let lastCurrencies: NonNullable<Awaited<ReturnType<typeof addPlayerYellowRedGems>>['currencies']> = {
+    yellow_red_gem: 0,
+  };
+  let grantedAny = false;
+
+  for (const recipient of recipients) {
+    const claimKey = `${encounterKey}:${recipient.playerId}`;
+    const player = await loadPlayer(recipient.playerId);
+    if (player?.loreGemClaims?.[claimKey] === true) {
+      continue;
+    }
+
+    const { currencies, granted } = await addPlayerYellowRedGems(
+      recipient.playerId,
+      1,
+      claimKey,
+    );
+    lastCurrencies = currencies;
+    grantedAny = grantedAny || granted;
+  }
+
+  if (!grantedAny) {
     throw new LoreGemError('Lore gem already claimed for this encounter', 409);
   }
 
-  const { currencies, granted } = await addPlayerYellowRedGems(
-    playerId,
-    1,
-    encounterKey,
-  );
-
-  return { playerId, currencies, granted };
+  return { playerId, currencies: lastCurrencies, granted: grantedAny };
 }

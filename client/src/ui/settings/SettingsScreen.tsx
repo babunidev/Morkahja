@@ -10,6 +10,7 @@ import {
   loadIdentityKeypair,
   recoveryKeyFilename,
 } from '../../sessionKeys.js';
+import { APP_VERSION } from '../../appVersion.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
@@ -184,6 +185,15 @@ const keyNoticeStyle: CSSProperties = {
 const keyNoticeErrorStyle: CSSProperties = {
   ...keyNoticeStyle,
   color: '#ffb4a8',
+};
+
+const versionLabelStyle: CSSProperties = {
+  margin: '2px 0 0',
+  textAlign: 'center',
+  color: 'rgba(247, 239, 224, 0.55)',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.8rem',
+  letterSpacing: '0.04em',
 };
 
 export function SettingsScreen({
@@ -398,6 +408,7 @@ export function SettingsScreen({
                   End Session
                 </PanelButton>
               </div>
+              <p style={versionLabelStyle}>Version {APP_VERSION}</p>
             </div>
           </div>
           {showScrollHint ? (

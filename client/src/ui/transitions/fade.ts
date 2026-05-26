@@ -4,7 +4,7 @@ export const FADE_DURATION_MS = 420;
 export const FADE_DURATION_SECONDS = FADE_DURATION_MS / 1000;
 export const ENCOUNTER_FADE_DURATION_MS = 720;
 export const ENCOUNTER_ACTIONS_REVEAL_DELAY_MS = 280;
-export const ENCOUNTER_ACTIONS_FADE_DURATION_MS = 1500;
+export const ENCOUNTER_ACTIONS_FADE_DURATION_MS = 3000;
 
 export const fadeTransition = `opacity ${FADE_DURATION_MS}ms ease`;
 export const encounterFadeTransition = `opacity ${ENCOUNTER_FADE_DURATION_MS}ms ease`;

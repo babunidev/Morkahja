@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AchievementProgressDto } from '@shared/contracts';
+import type { AchievementProgressDto, RoomHelpInvitationDto } from '@shared/contracts';
 import {
   fetchAchievements,
   fetchActiveEncounter,
   fetchAvatar,
+  fetchPendingHelpInvitations,
   heartbeatSession,
   loadStoredSession,
   logoutSession,
@@ -11,6 +12,7 @@ import {
   fetchPlayer,
   fetchSession,
   fetchStaticGameDataStatus,
+  respondHelpInvite,
   type EncounterSnapshot,
   type PersistedAvatar,
 } from './api/http.js';
@@ -30,7 +32,8 @@ import {
   refreshAvatarSelectionAfterHome,
   saveDeadAvatarIds,
 } from './ui/avatar/avatarSelectionPrepare.js';
-import { formatAvatarDisplayName } from './ui/avatar/avatarDisplayName.js';
+import { formatAvatarDisplayName, normalizePersistedAvatar } from './ui/avatar/avatarDisplayName.js';
+import GameMessageToast from './ui/game/GameMessageToast.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
@@ -47,6 +50,7 @@ import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
 const ACHIEVEMENT_POLL_MS = 10_000;
+const HELP_INVITE_POLL_MS = 5_000;
 
 function isAchievementWatchScreen(screen: AppScreen): boolean {
   return screen === 'game' || screen === 'dashboard';
@@ -127,7 +131,11 @@ export default function App() {
   const [playPreparePending, setPlayPreparePending] = useState(false);
   const [achievementToast, setAchievementToast] = useState<AchievementProgressDto | null>(null);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
+  const [helpInviteToast, setHelpInviteToast] = useState<RoomHelpInvitationDto | null>(null);
+  const [gameEntryKey, setGameEntryKey] = useState(0);
   const achievementsBaselineRef = useRef<AchievementProgressDto[] | null>(null);
+  const seenHelpInviteIdsRef = useRef<Set<string>>(new Set());
+  const helpInviteAcceptPendingRef = useRef(false);
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
   const playerName = session?.playerName ?? '';
@@ -183,6 +191,87 @@ export default function App() {
       window.clearInterval(pollTimer);
     };
   }, [checkAchievementUnlocks, screen]);
+
+  const dismissHelpInviteToast = useCallback((invite: RoomHelpInvitationDto | null) => {
+    if (invite) {
+      seenHelpInviteIdsRef.current.add(invite.inviteId);
+    }
+    setHelpInviteToast(null);
+  }, []);
+
+  const acceptHelpInvite = useCallback(async (invite: RoomHelpInvitationDto) => {
+    if (helpInviteAcceptPendingRef.current) {
+      return;
+    }
+
+    helpInviteAcceptPendingRef.current = true;
+    seenHelpInviteIdsRef.current.add(invite.inviteId);
+    setHelpInviteToast(null);
+
+    try {
+      const response = await respondHelpInvite(invite.inviteId);
+      const joinedRoom = response.room;
+      if (!joinedRoom) {
+        return;
+      }
+
+      const localParticipant = joinedRoom.participants.find((participant) => participant.isLocal);
+      if (!localParticipant?.avatar) {
+        return;
+      }
+
+      setActiveAvatar(normalizePersistedAvatar(localParticipant.avatar));
+      setActiveEncounter(joinedRoom.activeEncounter);
+      setGameEntryKey((current) => current + 1);
+      resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+      setAvatarSlotsVisible(false);
+      setScreen('game');
+    } catch (error) {
+      console.error('Help invite accept failed', error);
+    } finally {
+      helpInviteAcceptPendingRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!playerId || !isAchievementWatchScreen(screen)) {
+      setHelpInviteToast(null);
+      return;
+    }
+
+    async function pollHelpInvites(): Promise<void> {
+      if (helpInviteToast || helpInviteAcceptPendingRef.current) {
+        return;
+      }
+
+      try {
+        const response = await fetchPendingHelpInvitations();
+        const now = Date.now();
+        const nextInvite = response.invitations.find(
+          (invitation) => (
+            !seenHelpInviteIdsRef.current.has(invitation.inviteId)
+            && invitation.expiresAt > now
+          ),
+        );
+
+        if (nextInvite) {
+          setHelpInviteToast(nextInvite);
+        }
+      } catch (error) {
+        console.error('Help invite poll failed', error);
+      }
+    }
+
+    void pollHelpInvites();
+
+    const pollTimer = window.setInterval(() => {
+      void pollHelpInvites();
+    }, HELP_INVITE_POLL_MS);
+
+    return () => {
+      window.clearInterval(pollTimer);
+    };
+  }, [helpInviteToast, playerId, screen]);
 
   const loadingHooks = useMemo(
     () => ({
@@ -416,6 +505,7 @@ export default function App() {
         ) : null}
         {screen === 'game' && activeAvatar && activeEncounter ? (
           <GameEnvironment
+            key={gameEntryKey}
             deathPending={deathOverlayAvatar !== null}
             deferReveal={gameEnterHandoff && !handoffLanded}
             hideAvatarPortraitForHandoff={gameEnterHandoff && !handoffLanded}
@@ -501,6 +591,18 @@ export default function App() {
               setAchievementsOverlayOpen(true);
             }}
             playerName={playerName}
+          />
+        ) : null}
+        {isAchievementWatchScreen(screen) && helpInviteToast ? (
+          <GameMessageToast
+            label="Call for help"
+            message={`${helpInviteToast.fromPlayerName} calls for help. Tap to join.`}
+            onClick={() => {
+              void acceptHelpInvite(helpInviteToast);
+            }}
+            onDismiss={() => {
+              dismissHelpInviteToast(helpInviteToast);
+            }}
           />
         ) : null}
         {isAchievementWatchScreen(screen) && achievementsOverlayOpen && playerId ? (

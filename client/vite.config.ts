@@ -76,6 +76,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/activity': 'http://127.0.0.1:3000',
         '/encounter': 'http://127.0.0.1:3000',
+        '/room': 'http://127.0.0.1:3000',
         '/session': 'http://127.0.0.1:3000',
         '/player': 'http://127.0.0.1:3000',
         '/avatar': 'http://127.0.0.1:3000',

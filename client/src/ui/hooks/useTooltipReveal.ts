@@ -38,6 +38,65 @@ function readHoverCapable(): boolean {
   return window.matchMedia(HOVER_TOOLTIP_QUERY).matches;
 }
 
+function isTouchLikePointer(event: TooltipPointerEvent): boolean {
+  return event.pointerType === 'touch' || event.pointerType === 'pen';
+}
+
+/** React clears `currentTarget` after the handler returns; keep a stable target for delayed show. */
+function createTooltipShowEvent(
+  pressTarget: TooltipTarget,
+): TooltipPointerEvent {
+  return { currentTarget: pressTarget, target: pressTarget } as unknown as TooltipPointerEvent;
+}
+
+function scheduleTooltipLongPressShow(
+  pressTarget: TooltipTarget,
+  callbacks: TooltipRevealCallbacks,
+  clearTimer: () => void,
+  timerRef: { current: number | null },
+  longPressTriggeredRef: { current: boolean },
+): void {
+  longPressTriggeredRef.current = false;
+  clearTimer();
+  timerRef.current = window.setTimeout(() => {
+    longPressTriggeredRef.current = true;
+    callbacks.onShow(createTooltipShowEvent(pressTarget));
+  }, TOOLTIP_LONG_PRESS_MS);
+}
+
+function longPressHandlers(
+  callbacks: TooltipRevealCallbacks,
+  clearTimer: () => void,
+  timerRef: { current: number | null },
+  longPressTriggeredRef: { current: boolean },
+): TooltipRevealHandlerProps {
+  return {
+    onPointerDown: (event: TooltipPointerEvent) => {
+      scheduleTooltipLongPressShow(
+        event.currentTarget,
+        callbacks,
+        clearTimer,
+        timerRef,
+        longPressTriggeredRef,
+      );
+    },
+    onPointerUp: () => {
+      clearTimer();
+      callbacks.onHide();
+    },
+    onPointerCancel: () => {
+      clearTimer();
+      longPressTriggeredRef.current = false;
+      callbacks.onHide();
+    },
+    onPointerLeave: () => {
+      clearTimer();
+      longPressTriggeredRef.current = false;
+      callbacks.onHide();
+    },
+  };
+}
+
 function eventTargetNode(target: TooltipMouseEvent['relatedTarget']): Node | null {
   return target instanceof Node ? target : null;
 }
@@ -280,33 +339,43 @@ export function useTooltipRevealBinding(enabled = true) {
     }
 
     if (useLongPress) {
-      return {
-        onPointerDown: (event: TooltipPointerEvent) => {
-          longPressTriggeredRef.current = false;
-          clearTimer();
-          timerRef.current = window.setTimeout(() => {
-            longPressTriggeredRef.current = true;
-            callbacks.onShow(event);
-          }, TOOLTIP_LONG_PRESS_MS);
-        },
-        onPointerUp: () => {
-          clearTimer();
-          callbacks.onHide();
-        },
-        onPointerCancel: () => {
-          clearTimer();
-          longPressTriggeredRef.current = false;
-          callbacks.onHide();
-        },
-        onPointerLeave: () => {
-          clearTimer();
-          longPressTriggeredRef.current = false;
-          callbacks.onHide();
-        },
-      };
+      return longPressHandlers(callbacks, clearTimer, timerRef, longPressTriggeredRef);
     }
 
-    return hoverHandlers(callbacks);
+    const hover = hoverHandlers(callbacks);
+    const touchLongPress = longPressHandlers(
+      callbacks,
+      clearTimer,
+      timerRef,
+      longPressTriggeredRef,
+    );
+
+    return {
+      ...hover,
+      onPointerDown: (event: TooltipPointerEvent) => {
+        if (isTouchLikePointer(event)) {
+          touchLongPress.onPointerDown?.(event);
+        }
+      },
+      onPointerUp: (event: TooltipPointerEvent) => {
+        if (isTouchLikePointer(event)) {
+          touchLongPress.onPointerUp?.(event);
+          return;
+        }
+
+        clearTimer();
+      },
+      onPointerCancel: (event: TooltipPointerEvent) => {
+        if (isTouchLikePointer(event)) {
+          touchLongPress.onPointerCancel?.(event);
+        }
+      },
+      onPointerLeave: (event: TooltipPointerEvent) => {
+        if (isTouchLikePointer(event)) {
+          touchLongPress.onPointerLeave?.(event);
+        }
+      },
+    };
   }, [clearTimer, enabled, useLongPress]);
 
   useEffect(() => () => clearTimer(), [clearTimer]);

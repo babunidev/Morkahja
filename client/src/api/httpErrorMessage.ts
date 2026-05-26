@@ -1,4 +1,4 @@
-function looksLikeHtml(text: string): boolean {
+export function looksLikeHtml(text: string): boolean {
   const trimmed = text.trim().toLowerCase();
   return (
     trimmed.startsWith('<!doctype') ||

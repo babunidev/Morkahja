@@ -69,6 +69,21 @@ async function ensureSchema(client: PgPool | PoolClient = pool): Promise<void> {
       data jsonb NOT NULL DEFAULT '{}'::jsonb,
       PRIMARY KEY (player_id, avatar_id, id)
     );
+
+    CREATE TABLE IF NOT EXISTS encounter_rooms (
+      id text PRIMARY KEY,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb
+    );
+
+    CREATE TABLE IF NOT EXISTS room_invitations (
+      id text PRIMARY KEY,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb
+    );
+
+    CREATE TABLE IF NOT EXISTS player_presence (
+      player_id text PRIMARY KEY,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb
+    );
   `).then(() => undefined);
 
   await schemaReady;
@@ -431,15 +446,116 @@ export async function deleteProgression(playerId: string, avatarId: string): Pro
   );
 }
 
+export async function getEncounterRoom<T>(roomId: string): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM encounter_rooms WHERE id = $1', [roomId]));
+}
+
+export async function setEncounterRoom<T extends JsonObject>(roomId: string, data: T): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO encounter_rooms (id, data)
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+    [roomId, JSON.stringify(data)],
+  );
+}
+
+export async function deleteEncounterRoom(roomId: string): Promise<void> {
+  await ensureSchema();
+  await pool.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+}
+
+export async function findRoomIdByParticipant(playerId: string): Promise<string | null> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string }>(
+    `SELECT id FROM encounter_rooms
+     WHERE data->>'roomState' <> 'closed'
+       AND EXISTS (
+         SELECT 1
+         FROM jsonb_array_elements(data->'participants') AS participant
+         WHERE participant->>'playerId' = $1
+       )
+     LIMIT 1`,
+    [playerId],
+  );
+  return result.rows[0]?.id ?? null;
+}
+
+export async function findRoomIdByParticipantAvatar(
+  playerId: string,
+  avatarId: string,
+): Promise<string | null> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string }>(
+    `SELECT id FROM encounter_rooms
+     WHERE data->>'roomState' <> 'closed'
+       AND EXISTS (
+         SELECT 1
+         FROM jsonb_array_elements(data->'participants') AS participant
+         WHERE participant->>'playerId' = $1
+           AND participant->>'avatarId' = $2
+       )
+     LIMIT 1`,
+    [playerId, avatarId],
+  );
+  return result.rows[0]?.id ?? null;
+}
+
+export async function getPlayerPresence<T>(playerId: string): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM player_presence WHERE player_id = $1', [playerId]));
+}
+
+export async function setPlayerPresence<T extends JsonObject>(playerId: string, data: T): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO player_presence (player_id, data)
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT (player_id) DO UPDATE SET data = EXCLUDED.data`,
+    [playerId, JSON.stringify(data)],
+  );
+}
+
+export async function getRoomInvitation<T>(inviteId: string): Promise<T | null> {
+  await ensureSchema();
+  return one(pool.query('SELECT data FROM room_invitations WHERE id = $1', [inviteId]));
+}
+
+export async function setRoomInvitation<T extends JsonObject>(inviteId: string, data: T): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO room_invitations (id, data)
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+    [inviteId, JSON.stringify(data)],
+  );
+}
+
+export async function listPendingInvitationsForPlayer<T>(playerId: string): Promise<T[]> {
+  await ensureSchema();
+  const now = Date.now();
+  const result = await pool.query<{ data: T }>(
+    `SELECT data FROM room_invitations
+     WHERE data->>'toPlayerId' = $1
+       AND data->>'status' = 'pending'
+       AND COALESCE((data->>'expiresAt')::bigint, 0) > $2`,
+    [playerId, now],
+  );
+  return result.rows.map((row) => row.data);
+}
+
 export interface DocumentTransaction {
   getPlayer<T>(playerId: string): Promise<T | null>;
   getAvatar<T>(playerId: string, avatarId: string): Promise<T | null>;
   getActiveEncounter<T>(playerId: string, avatarId: string): Promise<T | null>;
+  getEncounterRoom<T>(roomId: string): Promise<T | null>;
   getInventory<T>(playerId: string, avatarId: string): Promise<T | null>;
   getProgression<T>(playerId: string, avatarId: string): Promise<T | null>;
   setPlayer<T extends JsonObject>(playerId: string, data: T, options?: { merge?: boolean }): Promise<void>;
   setAvatar<T extends JsonObject>(playerId: string, avatarId: string, data: T, options?: { merge?: boolean }): Promise<void>;
   setActiveEncounter<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
+  setEncounterRoom<T extends JsonObject>(roomId: string, data: T): Promise<void>;
   setInventory<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
   setProgression<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
 }
@@ -467,6 +583,11 @@ export async function withDocumentTransaction<T>(
            WHERE player_id = $1 AND avatar_id = $2 AND id = 'current'
            FOR UPDATE`,
           [playerId, avatarId],
+        )) as Promise<R | null>,
+      getEncounterRoom: async <R>(roomId: string) =>
+        one(client.query(
+          'SELECT data FROM encounter_rooms WHERE id = $1 FOR UPDATE',
+          [roomId],
         )) as Promise<R | null>,
       getInventory: async <R>(playerId: string, avatarId: string) =>
         one(client.query(
@@ -515,6 +636,14 @@ export async function withDocumentTransaction<T>(
            VALUES ($1, $2, 'current', $3::jsonb)
            ON CONFLICT (player_id, avatar_id, id) DO UPDATE SET data = EXCLUDED.data`,
           [playerId, avatarId, JSON.stringify(data)],
+        );
+      },
+      setEncounterRoom: async <R extends JsonObject>(roomId: string, data: R) => {
+        await client.query(
+          `INSERT INTO encounter_rooms (id, data)
+           VALUES ($1, $2::jsonb)
+           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+          [roomId, JSON.stringify(data)],
         );
       },
       setInventory: async <R extends JsonObject>(playerId: string, avatarId: string, data: R) => {

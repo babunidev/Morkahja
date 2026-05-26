@@ -1,14 +1,22 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import encountersData from '../../data/game/encountersdata.json';
 import solutionData from '../../data/game/solutiondata.json';
 import {
-  resolveEncounterAction,
-  type AvatarInventory,
+  createEncounterRoom,
+  fetchActiveRoom,
+  ROOM_POLL_MS,
+  requestRoomHelp,
+  submitRoomChoice,
+  submitRoomContinue,
+  submitRoomFocus,
+  submitRoomSlotState,
   type EncounterAction,
+  type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
-  type InventoryItem,
   type PersistedAvatar,
+  type SlotStateDto,
 } from '../../api/http.js';
+import { ApiRequestError } from '../../api/httpErrorMessage.js';
 import { normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
@@ -22,6 +30,7 @@ import {
 import EncounterHeader from './blocks/EncounterHeader.js';
 import EncounterImageBlock from './blocks/EncounterImageBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
+import GameMessageToast from './GameMessageToast.js';
 
 const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 
@@ -41,24 +50,19 @@ const solutionsById = solutionData as Record<string, SolutionDataRecord>;
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
     const image = new Image();
-    image.onload = () => {
-      resolve();
-    };
-    image.onerror = () => {
-      resolve();
-    };
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
     image.src = src;
   });
 }
 
-// Atranor (id 1) is queued server-side when essence runs out; death overlay only on avatarDied
-// (Atranor Misery/Hardship). deathTriggered alone must not skip playing Atranor.
 interface GameEnvironmentProps {
   deathPending?: boolean;
   deferReveal?: boolean;
   hideAvatarPortraitForHandoff?: boolean;
   initialAvatar: PersistedAvatar;
   initialEncounter: EncounterSnapshot;
+  initialRoom?: EncounterRoomSnapshotDto | null;
   onAchievementCheck?: () => void;
   onAvatarDeath: (presetAvatar: PersistedAvatar) => void;
   onHome: () => void;
@@ -71,11 +75,8 @@ const topZoneStyle: CSSProperties = {
   gridTemplateRows: '15% minmax(0, 1fr)',
 };
 
-const headerSlotStyle: CSSProperties = {
-  minHeight: 0,
-};
+const headerSlotStyle: CSSProperties = { minHeight: 0 };
 
-/** Keep the header golden seam above the inventory/skillbook overlay (z-index 22). */
 const headerSlotRaisedStyle: CSSProperties = {
   position: 'relative',
   zIndex: 25,
@@ -107,7 +108,6 @@ function encounterRevealStyle(visible: boolean, delayMs = 120): CSSProperties {
 function encounterLookup(encounterId: number): EncounterDataRecord | null {
   const directKey = String(encounterId).padStart(5, '0');
   const records = encountersData as Record<string, EncounterDataRecord>;
-
   return records[directKey] ?? records[String(encounterId)] ?? null;
 }
 
@@ -120,91 +120,49 @@ function rewardName(rewardId: number): string {
   return solutionsById[String(rewardId)]?.mSolutionName ?? `Reward ${rewardId}`;
 }
 
-function inventoryUseMap(inventory: AvatarInventory | undefined): Map<number, number> {
-  const map = new Map<number, number>();
-
-  if (!inventory) {
-    return map;
+function applyRoomSnapshot(
+  room: EncounterRoomSnapshotDto,
+  setRoom: (room: EncounterRoomSnapshotDto | null) => void,
+  setEncounter: (encounter: EncounterSnapshot) => void,
+  setAvatar: (avatar: PersistedAvatar) => void,
+  currentAvatar: PersistedAvatar,
+  currentRoom: EncounterRoomSnapshotDto | null,
+): boolean {
+  if (currentRoom && room.updatedAt < currentRoom.updatedAt) {
+    return false;
   }
 
-  const items: InventoryItem[] = [
-    ...inventory.spellbook,
-    ...inventory.items,
-    ...inventory.essences,
-  ];
-
-  for (const item of items) {
-    map.set(item.solutionId, (map.get(item.solutionId) ?? 0) + item.uses);
+  setRoom(room);
+  setEncounter(room.activeEncounter);
+  const localParticipant = room.participants.find((participant) => participant.isLocal);
+  if (localParticipant?.avatar) {
+    setAvatar(normalizePersistedAvatar({
+      ...currentAvatar,
+      ...localParticipant.avatar,
+      inventory: localParticipant.avatar.inventory ?? currentAvatar.inventory,
+    }));
   }
 
-  return map;
+  return true;
 }
 
-function inventoryMovementEntries(
-  before: AvatarInventory | undefined,
-  after: AvatarInventory | undefined,
-  usedSolutionIds: number[],
-): string[] {
-  const beforeUses = inventoryUseMap(before);
-  const afterUses = inventoryUseMap(after);
-  const solutionIds = new Set([...beforeUses.keys(), ...afterUses.keys()]);
-  const usedIds = new Set(usedSolutionIds);
-  const entries: string[] = [];
-
-  for (const solutionId of solutionIds) {
-    const delta = (afterUses.get(solutionId) ?? 0) - (beforeUses.get(solutionId) ?? 0);
-
-    if (delta > 0) {
-      entries.push(`Got: ${rewardName(solutionId)} +${delta}`);
-    }
-
-    if (delta < 0) {
-      const verb = usedIds.has(solutionId) ? 'Used' : 'Lost';
-      entries.push(`${verb}: ${rewardName(solutionId)} ${delta}`);
-    }
-  }
-
-  return entries;
-}
-
-function actionLogEntries({
-  encounterTitle,
-  inventoryEntries,
-  message,
-  rewards,
-  roll,
-  solutionIds,
-}: {
-  encounterTitle: string;
-  inventoryEntries: string[];
-  message: string;
-  rewards: number[];
-  roll: number | null;
-  solutionIds: number[];
-}): string[] {
-  const outcome = roll === null ? null : interpretRoll(roll);
-  const inventoryRewardIds = new Set(
-    inventoryEntries
-      .filter((entry) => entry.startsWith('Got: '))
-      .map((entry) => entry.match(/^Got: (.+) \+\d+$/)?.[1])
-      .filter((entry): entry is string => Boolean(entry)),
+function isSoloRoom(room: EncounterRoomSnapshotDto): boolean {
+  const awaitingContinue = room.participants.filter(
+    (participant) => participant.resolutionSummary !== undefined
+      || participant.choiceState === 'resolved',
   );
+  return awaitingContinue.length <= 1;
+}
 
-  return [
-    `Encounter: ${encounterTitle}`,
-    solutionIds.length > 0
-      ? `Solution: ${solutionIds.map(rewardName).join(', ')}`
-      : 'Solution: Dice',
-    roll === null
-      ? 'Roll: unknown'
-      : `Roll: ${roll}${outcome ? ` (${outcome})` : ''}`,
-    ...inventoryEntries,
-    ...rewards
-      .map(rewardName)
-      .filter((name) => !inventoryRewardIds.has(name))
-      .map((name) => `Got: ${name}`),
-    message ? `Result: ${message}` : '',
-  ].filter((entry) => entry.length > 0);
+function currentFocusState(
+  loreOpen: boolean,
+  inventoryOpen: boolean,
+  skillbookOpen: boolean,
+): 'none' | 'lore' | 'inventory' | 'skillbook' {
+  if (loreOpen) return 'lore';
+  if (inventoryOpen) return 'inventory';
+  if (skillbookOpen) return 'skillbook';
+  return 'none';
 }
 
 export function GameEnvironment({
@@ -212,6 +170,7 @@ export function GameEnvironment({
   hideAvatarPortraitForHandoff = false,
   initialAvatar,
   initialEncounter,
+  initialRoom = null,
   deathPending = false,
   onAchievementCheck,
   onAvatarDeath,
@@ -220,12 +179,27 @@ export function GameEnvironment({
   const [visible, setVisible] = useState(!deferReveal);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [encounter, setEncounter] = useState(initialEncounter);
+  const [room, setRoom] = useState<EncounterRoomSnapshotDto | null>(initialRoom);
   const [continuePending, setContinuePending] = useState(false);
   const [loreOpen, setLoreOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
   const [homeVisible, setHomeVisible] = useState(false);
   const [actionLog, setActionLog] = useState<string[]>([]);
+  const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
+  const dismissHelpToast = useCallback(() => {
+    setHelpToastMessage(null);
+  }, []);
+  const avatarRef = useRef(avatar);
+  const roomRef = useRef(room);
+  const continuePendingRef = useRef(false);
+  avatarRef.current = avatar;
+  roomRef.current = room;
+  continuePendingRef.current = continuePending;
+
+  const localParticipant = room?.participants.find((participant) => participant.isLocal);
+  const serverResolution = localParticipant?.resolutionSummary;
+
   const encounterData = useMemo(
     () => encounterLookup(encounter.encounterId),
     [encounter.encounterId],
@@ -236,9 +210,7 @@ export function GameEnvironment({
     ?? 'im_encounter_placeholder_bg_new';
   const preparedEncounterId = encounter.preparedEncounter?.encounterId;
   const preparedEncounterData = useMemo(
-    () => preparedEncounterId
-      ? encounterLookup(preparedEncounterId)
-      : null,
+    () => (preparedEncounterId ? encounterLookup(preparedEncounterId) : null),
     [preparedEncounterId],
   );
   const nextEncounterImageSrc = preparedEncounterData?.mEncounterImageName
@@ -255,82 +227,342 @@ export function GameEnvironment({
     if (deferReveal) {
       return;
     }
+    const timer = window.setTimeout(() => setVisible(true), 0);
+    return () => window.clearTimeout(timer);
+  }, [deferReveal]);
 
-    const timer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function ensureRoom(): Promise<void> {
+      try {
+        const active = await fetchActiveRoom(avatarRef.current.id);
+        if (cancelled) {
+          return;
+        }
+        if (active) {
+          applyRoomSnapshot(
+            active,
+            setRoom,
+            setEncounter,
+            setAvatar,
+            avatarRef.current,
+            roomRef.current,
+          );
+          return;
+        }
+        const created = await createEncounterRoom(avatarRef.current.id);
+        if (!cancelled) {
+          applyRoomSnapshot(
+            created,
+            setRoom,
+            setEncounter,
+            setAvatar,
+            avatarRef.current,
+            roomRef.current,
+          );
+        }
+      } catch (error) {
+        console.error('Failed to initialize encounter room', error);
+      }
+    }
+
+    if (!initialRoom) {
+      void ensureRoom();
+    }
+
+    const poll = window.setInterval(() => {
+      void fetchActiveRoom(avatarRef.current.id).then((nextRoom) => {
+        if (!nextRoom || cancelled || continuePendingRef.current) {
+          return;
+        }
+        applyRoomSnapshot(
+          nextRoom,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
+
+        const local = nextRoom.participants.find((participant) => participant.isLocal);
+        if (local?.resolutionSummary?.avatarDied) {
+          onAvatarDeath(local.avatar);
+        }
+      }).catch(() => undefined);
+    }, ROOM_POLL_MS);
 
     return () => {
-      window.clearTimeout(timer);
+      cancelled = true;
+      window.clearInterval(poll);
     };
-  }, [deferReveal]);
+  }, [initialRoom, onAvatarDeath]);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+    const focusState = currentFocusState(loreOpen, inventoryOpen, skillbookOpen);
+    if (localParticipant?.focusState === focusState) {
+      return;
+    }
+    void submitRoomFocus(avatarRef.current.id, focusState)
+      .then((nextRoom) => {
+        applyRoomSnapshot(
+          nextRoom,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
+      })
+      .catch(() => undefined);
+  }, [loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
+
+  async function syncEncounterRoom(): Promise<EncounterRoomSnapshotDto | null> {
+    const active = await fetchActiveRoom(avatarRef.current.id);
+    if (active) {
+      applyRoomSnapshot(
+        active,
+        setRoom,
+        setEncounter,
+        setAvatar,
+        avatarRef.current,
+        roomRef.current,
+      );
+      return active;
+    }
+
+    const created = await createEncounterRoom(avatarRef.current.id);
+    applyRoomSnapshot(
+      created,
+      setRoom,
+      setEncounter,
+      setAvatar,
+      avatarRef.current,
+      roomRef.current,
+    );
+    return created;
+  }
+
+  function appendActionLog(entries: string[]): void {
+    setActionLog((currentLog) => [...currentLog, ...entries].slice(-24));
+  }
+
+  async function advanceResolvedEncounter(
+    currentRoom: EncounterRoomSnapshotDto,
+  ): Promise<EncounterRoomSnapshotDto> {
+    setLoreOpen(false);
+    setInventoryOpen(false);
+    setSkillbookOpen(false);
+
+    let workingRoom = currentRoom;
+    const local = workingRoom.participants.find((participant) => participant.isLocal);
+    if (local?.focusState !== 'none') {
+      workingRoom = await submitRoomFocus(avatarRef.current.id, 'none');
+      applyRoomSnapshot(
+        workingRoom,
+        setRoom,
+        setEncounter,
+        setAvatar,
+        avatarRef.current,
+        roomRef.current,
+      );
+    }
+
+    const nextRoom = await submitRoomContinue(avatarRef.current.id);
+    applyRoomSnapshot(
+      nextRoom,
+      setRoom,
+      setEncounter,
+      setAvatar,
+      avatarRef.current,
+      roomRef.current,
+    );
+    return nextRoom;
+  }
 
   async function handleContinueEncounter(
     action: EncounterAction,
-    selectedRoll: number | null,
+    _selectedRoll: number | null,
     selectedSolutionId: number | null,
   ): Promise<void> {
     if (continuePending || deathPending) {
+      appendActionLog(['Continue blocked: another action is in progress.']);
       return;
     }
 
     setContinuePending(true);
 
     try {
-      const resolvedEncounterTitle = title;
-      const resolvedRoll = selectedRoll;
-      const inventoryBefore = avatar.inventory;
-      const result = await resolveEncounterAction(action, avatar.id);
-      const inventoryAfter = result.avatar?.inventory;
-      const usedSolutionIds = result.usedInventorySolutions ?? [];
-      const loggedSolutionIds = usedSolutionIds.length > 0
-        ? usedSolutionIds
-        : selectedSolutionId === null
-          ? []
-          : [selectedSolutionId];
-      const resultRoll = result.selectedRoll ?? resolvedRoll;
-      setActionLog((currentLog) => [
-        ...currentLog,
-        ...actionLogEntries({
-          encounterTitle: resolvedEncounterTitle,
-          inventoryEntries: inventoryMovementEntries(inventoryBefore, inventoryAfter, usedSolutionIds),
-          message: result.message,
-          rewards: result.rewards,
-          roll: resultRoll,
-          solutionIds: loggedSolutionIds,
-        }),
-      ].slice(-24));
-
-      setEncounter(result.snapshot);
-      setLoreOpen(false);
-      setInventoryOpen(false);
-      setSkillbookOpen(false);
-
-      if (result.avatar) {
-        if (result.avatar.level > avatar.level) {
-          playSfx(LEVEL_UP_SOUND);
-        }
-        setAvatar(normalizePersistedAvatar({
-          ...avatar,
-          ...result.avatar,
-          inventory: result.avatar.inventory ?? avatar.inventory,
-        }));
+      let currentRoom = roomRef.current;
+      if (!currentRoom) {
+        currentRoom = await syncEncounterRoom();
       }
 
-      // Server-authoritative death (Atranor / encounter 1 chain); do not infer death locally.
-      if (result.avatarDied) {
-        onAvatarDeath(result.avatar ?? avatar);
+      if (!currentRoom) {
+        appendActionLog(['Continue failed: Could not sync encounter room.']);
+        return;
+      }
+
+      if (currentRoom.roomState === 'waiting_continue') {
+        const nextRoom = await advanceResolvedEncounter(currentRoom);
+        appendActionLog([
+          nextRoom.roomState === 'active_encounter'
+            ? 'Continue: Encounter advanced.'
+            : 'Continue: Waiting for other players.',
+        ]);
+        onAchievementCheck?.();
+        return;
+      }
+
+      if (currentRoom.roomState === 'system_event' && currentRoom.systemEvent?.isLocalWitness) {
+        appendActionLog(['Only the actor can resolve this moment.']);
+        return;
+      }
+
+      let nextRoom = await submitRoomChoice(
+        avatarRef.current.id,
+        action,
+        selectedSolutionId ?? undefined,
+      );
+      applyRoomSnapshot(
+        nextRoom,
+        setRoom,
+        setEncounter,
+        setAvatar,
+        avatarRef.current,
+        roomRef.current,
+      );
+
+      const local = nextRoom.participants.find((participant) => participant.isLocal);
+      const summary = local?.resolutionSummary;
+      if (summary) {
+        const outcome = summary.selectedRoll === undefined
+          ? ''
+          : interpretRoll(summary.selectedRoll);
+        appendActionLog([
+          `Encounter: ${title}`,
+          selectedSolutionId ? `Solution: ${rewardName(selectedSolutionId)}` : 'Solution: Dice',
+          summary.selectedRoll !== undefined
+            ? `Roll: ${summary.selectedRoll}${outcome ? ` (${outcome})` : ''}`
+            : 'Roll: unknown',
+          summary.message ? `Result: ${summary.message}` : '',
+        ]);
+      } else {
+        appendActionLog([`Continue: Room state is ${nextRoom.roomState}.`]);
+      }
+
+      const shouldAutoAcknowledgeSystemEvent =
+        currentRoom.roomState === 'system_event' &&
+        currentRoom.systemEvent?.isLocalActor === true &&
+        nextRoom.roomState === 'waiting_continue' &&
+        nextRoom.systemEvent?.lastEventRecap !== undefined;
+      if (shouldAutoAcknowledgeSystemEvent) {
+        nextRoom = await advanceResolvedEncounter(nextRoom);
+        appendActionLog([
+          nextRoom.roomState === 'active_encounter'
+            ? 'Continue: Encounter advanced.'
+            : 'Continue: Waiting for other players.',
+        ]);
+      }
+
+      if (
+        nextRoom.roomState === 'waiting_continue' &&
+        isSoloRoom(nextRoom) &&
+        !isPostSystemWaitingContinue(nextRoom) &&
+        !shouldAutoAcknowledgeSystemEvent
+      ) {
+        nextRoom = await advanceResolvedEncounter(nextRoom);
+        appendActionLog([
+          nextRoom.roomState === 'active_encounter'
+            ? 'Continue: Encounter advanced.'
+            : 'Continue: Waiting for other players.',
+        ]);
+      }
+
+      if (summary?.avatarDied) {
+        onAvatarDeath(local?.avatar ?? avatar);
+      }
+
+      if (local && local.avatar.level > avatar.level) {
+        playSfx(LEVEL_UP_SOUND);
       }
 
       onAchievementCheck?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not continue encounter.';
-      setActionLog((currentLog) => [
-        ...currentLog,
-        `Continue failed: ${message}`,
-      ].slice(-24));
+      appendActionLog([`Continue failed: ${message}`]);
     } finally {
       setContinuePending(false);
+    }
+  }
+
+  const helpCalled = room?.helpCalledForEncounter ?? false;
+
+  async function handleCallForHelp(): Promise<void> {
+    if (helpCalled) {
+      return;
+    }
+
+    try {
+      const result = await requestRoomHelp(avatar.id);
+      if (result.invitedCount === 0) {
+        setHelpToastMessage('No one could hear you.');
+      } else {
+        const adventurerLabel = result.invitedCount === 1 ? 'adventurer has' : 'adventurers have';
+        setHelpToastMessage(
+          `You called for help, ${result.invitedCount} ${adventurerLabel} heard you.`,
+        );
+      }
+
+      const nextRoom = await fetchActiveRoom(avatarRef.current.id);
+      if (nextRoom) {
+        applyRoomSnapshot(
+          nextRoom,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 409) {
+        const nextRoom = await fetchActiveRoom(avatarRef.current.id);
+        if (nextRoom) {
+          applyRoomSnapshot(
+            nextRoom,
+            setRoom,
+            setEncounter,
+            setAvatar,
+            avatarRef.current,
+            roomRef.current,
+          );
+        }
+        return;
+      }
+      setHelpToastMessage('No one could hear you.');
+    }
+  }
+
+  async function handleSlotStateChange(
+    slotIndex: number,
+    slotState: SlotStateDto,
+  ): Promise<void> {
+    try {
+      const nextRoom = await submitRoomSlotState(avatarRef.current.id, slotIndex, slotState);
+      applyRoomSnapshot(
+        nextRoom,
+        setRoom,
+        setEncounter,
+        setAvatar,
+        avatarRef.current,
+        roomRef.current,
+      );
+    } catch (error) {
+      console.error('Failed to update party slot state', error);
     }
   }
 
@@ -345,8 +577,32 @@ export function GameEnvironment({
     transitionDelay: visible ? '160ms' : '0ms',
   };
 
+  const systemEvent = room?.systemEvent;
+  const isWitnessMode = room?.roomState === 'system_event' && systemEvent?.isLocalWitness === true;
+  const systemEventActor = systemEvent
+    ? room?.participants.find((participant) => participant.playerId === systemEvent.actorPlayerId)
+    : undefined;
+  const postSystemRecap = room?.roomState === 'waiting_continue'
+    ? systemEvent?.lastEventRecap
+    : undefined;
+  const displayResolution = postSystemRecap ?? serverResolution;
+
+  const waitingForResolution = room?.roomState === 'resolving';
+  const showServerResult = room?.roomState === 'waiting_continue' && displayResolution !== undefined;
+
+  function isPostSystemWaitingContinue(currentRoom: EncounterRoomSnapshotDto): boolean {
+    return currentRoom.roomState === 'waiting_continue'
+      && currentRoom.systemEvent?.lastEventRecap !== undefined;
+  }
+
   return (
     <div aria-label="Game Environment" style={fadeStyle(visible)}>
+      {helpToastMessage ? (
+        <GameMessageToast
+          message={helpToastMessage}
+          onDismiss={dismissHelpToast}
+        />
+      ) : null}
       <GameLayout
         top={
           <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
@@ -367,20 +623,25 @@ export function GameEnvironment({
                 title={title}
               />
             </div>
-            <div style={{
-              ...encounterImageSlotStyle,
-              ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
-            }}
+            <div
+              style={{
+                ...encounterImageSlotStyle,
+                ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
+              }}
             >
               <EncounterImageBlock
                 avatarId={avatar.id}
+                continuePending={continuePending || deathPending || waitingForResolution}
                 encounter={encounter}
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
-                continuePending={continuePending || deathPending}
                 inventoryOpen={inventoryOpen}
                 loreOpen={loreOpen}
                 onContinue={handleContinueEncounter}
+                roomState={room?.roomState ?? 'active_encounter'}
+                serverResolution={showServerResult ? displayResolution : undefined}
+                witnessMode={isWitnessMode}
+                systemEventActorName={systemEventActor?.playerName}
                 skillbookOpen={skillbookOpen}
                 title={title}
               />
@@ -395,6 +656,10 @@ export function GameEnvironment({
               hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
               onAvatarDetailsVisibleChange={setHomeVisible}
+              onCallForHelp={() => {
+                void handleCallForHelp();
+              }}
+              helpCalled={helpCalled}
               onHome={() => {
                 void handleHome();
               }}
@@ -428,6 +693,10 @@ export function GameEnvironment({
                   return next;
                 });
               }}
+              onSlotStateChange={(slotIndex, slotState) => {
+                void handleSlotStateChange(slotIndex, slotState);
+              }}
+              room={room}
             />
           </div>
         }
