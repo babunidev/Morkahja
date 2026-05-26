@@ -12,6 +12,7 @@ import {
   useTooltipRevealBinding,
   type TooltipRevealHandlerProps,
 } from '../../hooks/useTooltipReveal.js';
+import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 
@@ -19,13 +20,7 @@ const OVERLAY_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
-/** Offset from the golden frame seam when the tooltip is docked. */
-const TOOLTIP_SEAM_INSET_PX = 22;
-
 const GRID_COLUMNS = 5;
-
-/** 1-based row index at which the tooltip docks to the top instead of the bottom. */
-const TOOLTIP_TOP_ROW_START = 5;
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -38,6 +33,7 @@ interface SolutionRecord {
 
 export interface SolutionGridEntry {
   solutionId: number;
+  solutionType: number;
   name: string;
   text: string;
   typeLabel: string;
@@ -88,6 +84,9 @@ const solutionsById = solutionData as Record<string, SolutionRecord>;
 
 const OVERLAY_Z_INDEX = 22;
 
+/** Above scroll grid; below header seam (raised in GameEnvironment). */
+const OVERLAY_BOTTOM_SEAM_Z_INDEX = 24;
+
 const overlayBlockStyle: CSSProperties = {
   position: 'absolute',
   left: 0,
@@ -115,7 +114,7 @@ const blockBottomSeamStyle: CSSProperties = {
   height: 10,
   objectFit: 'cover',
   transform: 'translate(-50%, 7px)',
-  zIndex: 20,
+  zIndex: OVERLAY_BOTTOM_SEAM_Z_INDEX,
   pointerEvents: 'none',
 };
 
@@ -164,6 +163,17 @@ const gridItemHoverImageStyle: CSSProperties = {
   filter: 'brightness(1.12) drop-shadow(0 0 12px rgba(255, 204, 102, 0.42)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55))',
 };
 
+const tooltipFloatStyle: CSSProperties = {
+  position: 'absolute',
+  top: 'clamp(0px, 0.6vw, 6px)',
+  left: '50%',
+  transform: 'translate(-50%, -6px)',
+  zIndex: 30,
+  width: 'min(92%, 340px)',
+  maxWidth: 'calc(100% - 28px)',
+  pointerEvents: 'none',
+};
+
 function mergeGridItemPointerHandlers(
   itemId: number,
   tooltipHandlers: TooltipRevealHandlerProps,
@@ -189,71 +199,6 @@ function mergeGridItemPointerHandlers(
     },
   };
 }
-
-const itemTooltipDockBaseStyle: CSSProperties = {
-  position: 'relative',
-  zIndex: 24,
-  flexShrink: 0,
-  width: '100%',
-  padding: `0 clamp(14px, 4vw, 28px)`,
-  boxSizing: 'border-box',
-  pointerEvents: 'none',
-};
-
-const itemTooltipDockBottomStyle: CSSProperties = {
-  ...itemTooltipDockBaseStyle,
-  paddingBottom: TOOLTIP_SEAM_INSET_PX,
-};
-
-const itemTooltipDockTopStyle: CSSProperties = {
-  ...itemTooltipDockBaseStyle,
-  paddingTop: TOOLTIP_SEAM_INSET_PX,
-};
-
-function gridRowIndex(itemIndex: number): number {
-  return Math.floor(itemIndex / GRID_COLUMNS);
-}
-
-function shouldDockTooltipAtTop(itemIndex: number): boolean {
-  return gridRowIndex(itemIndex) + 1 >= TOOLTIP_TOP_ROW_START;
-}
-
-const itemTooltipStyle: CSSProperties = {
-  width: '100%',
-  maxHeight: 'min(28vh, 180px)',
-  overflow: 'auto',
-  padding: '10px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.96)',
-  color: '#f7efe0',
-  fontFamily: 'Georgia, serif',
-  fontSize: '0.82rem',
-  lineHeight: 1.35,
-  textAlign: 'left',
-  textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  boxSizing: 'border-box',
-};
-
-const tooltipTitleStyle: CSSProperties = {
-  margin: '0 0 6px',
-  color: '#ffcc66',
-  fontSize: '0.92rem',
-  fontWeight: 700,
-  lineHeight: 1.2,
-};
-
-const tooltipTextStyle: CSSProperties = {
-  margin: '0 0 8px',
-  color: '#f7efe0',
-  whiteSpace: 'pre-wrap',
-};
-
-const tooltipMetaStyle: CSSProperties = {
-  margin: '4px 0 0',
-  color: '#ffcc66',
-};
 
 const emptyTextStyle: CSSProperties = {
   margin: 0,
@@ -302,6 +247,7 @@ function inventoryEntries(
 
       entriesById.set(item.solutionId, {
         solutionId: item.solutionId,
+        solutionType: solution.mSolutionType,
         name: solution.mSolutionName,
         text: solution.mSolutionText,
         typeLabel: solutionTypeLabel(solution.mSolutionType),
@@ -311,7 +257,13 @@ function inventoryEntries(
     }
   }
 
-  return [...entriesById.values()].sort((left, right) => left.name.localeCompare(right.name));
+  return [...entriesById.values()].sort((left, right) => {
+    if (left.solutionType !== right.solutionType) {
+      return left.solutionType - right.solutionType;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
 }
 
 export function SolutionGridOverlay({
@@ -380,23 +332,6 @@ export function SolutionGridOverlay({
     showItemTooltip(item);
   }
 
-  const tooltipItemIndex = tooltipItem
-    ? items.findIndex((item) => item.solutionId === tooltipItem.solutionId)
-    : -1;
-  const tooltipAtTop = tooltipItemIndex >= 0 && shouldDockTooltipAtTop(tooltipItemIndex);
-
-  const tooltipPanel = tooltipItem ? (
-    <div
-      role="tooltip"
-      style={itemTooltipStyle}
-    >
-      <p style={tooltipTitleStyle}>{tooltipItem.name}</p>
-      <p style={tooltipTextStyle}>{tooltipItem.text}</p>
-      <p style={tooltipMetaStyle}>Charges: {tooltipItem.uses}</p>
-      <p style={tooltipMetaStyle}>Type: {tooltipItem.typeLabel}</p>
-    </div>
-  ) : null;
-
   return (
     <aside
       aria-hidden={!visible}
@@ -414,9 +349,6 @@ export function SolutionGridOverlay({
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
       </style>
-      {tooltipAtTop ? (
-        <div style={itemTooltipDockTopStyle}>{tooltipPanel}</div>
-      ) : null}
       <div
         {...{ [`data-${scrollDataAttribute}`]: '' }}
         style={{
@@ -483,8 +415,10 @@ export function SolutionGridOverlay({
           <p style={emptyTextStyle}>{emptyText}</p>
         )}
       </div>
-      {!tooltipAtTop && tooltipPanel ? (
-        <div style={itemTooltipDockBottomStyle}>{tooltipPanel}</div>
+      {tooltipItem ? (
+        <div aria-live="polite" style={tooltipFloatStyle}>
+          <SolutionGridTooltipPanel item={tooltipItem} />
+        </div>
       ) : null}
       <img
         alt=""

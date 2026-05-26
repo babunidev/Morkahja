@@ -75,6 +75,12 @@ const headerSlotStyle: CSSProperties = {
   minHeight: 0,
 };
 
+/** Keep the header golden seam above the inventory/skillbook overlay (z-index 22). */
+const headerSlotRaisedStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 25,
+};
+
 const encounterImageSlotStyle: CSSProperties = {
   gridRow: '2',
   gridColumn: '1',
@@ -338,7 +344,12 @@ export function GameEnvironment({
       <GameLayout
         top={
           <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
-            <div style={headerSlotStyle}>
+            <div
+              style={{
+                ...headerSlotStyle,
+                ...(inventoryOpen || skillbookOpen ? headerSlotRaisedStyle : {}),
+              }}
+            >
               <EncounterHeader
                 overlayTitle={
                   inventoryOpen
