@@ -16,6 +16,11 @@ import { loadAvatar } from './encounterPersistence.js';
 import { toPersistedAvatarDto } from './avatarPresentation.js';
 import type { PlayerDocument } from '../types/player.js';
 
+const FALLBACK_PORTRAIT = 'im_avatar_rokur_m_01.webp';
+const FALLBACK_FRAME = 'im_frame_01.webp';
+
+const loggedParticipantFallbacks = new Set<string>();
+
 function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotDto {
   return {
     snapshotId: snapshot.snapshotId,
@@ -59,26 +64,18 @@ async function readPlayerName(playerId: string): Promise<string> {
   return name && name.length > 0 ? name : playerId;
 }
 
-async function participantToDto(
+function buildParticipantDto(
   participant: RoomParticipant,
   localPlayerId: string,
-): Promise<RoomParticipantDto | null> {
-  const avatar = await loadAvatar(participant.playerId, participant.avatarId);
-  if (!avatar) {
-    return null;
-  }
-
-  const dto = toPersistedAvatarDto(avatar);
-  if (!dto) {
-    return null;
-  }
-
+  playerName: string,
+  avatar: RoomParticipantDto['avatar'],
+): RoomParticipantDto {
   return {
     playerId: participant.playerId,
     avatarId: participant.avatarId,
     slotIndex: participant.slotIndex,
-    playerName: await readPlayerName(participant.playerId),
-    avatar: dto,
+    playerName,
+    avatar,
     choiceState: participant.choiceState,
     focusState: participant.focusState,
     selectedSolutionId: participant.selectedSolutionId,
@@ -86,6 +83,40 @@ async function participantToDto(
     resolutionSummary: participant.resolutionSummary,
     isLocal: participant.playerId === localPlayerId,
   };
+}
+
+async function participantToDto(
+  participant: RoomParticipant,
+  localPlayerId: string,
+  roomId: string,
+): Promise<RoomParticipantDto> {
+  const playerName = await readPlayerName(participant.playerId);
+  const avatar = await loadAvatar(participant.playerId, participant.avatarId);
+  const dto = avatar ? toPersistedAvatarDto(avatar) : null;
+
+  if (dto) {
+    return buildParticipantDto(participant, localPlayerId, playerName, dto);
+  }
+
+  const fallbackKey = `${roomId}:${participant.playerId}:${participant.avatarId}`;
+  if (!loggedParticipantFallbacks.has(fallbackKey)) {
+    loggedParticipantFallbacks.add(fallbackKey);
+    console.warn(
+      `[roomDtoMapper] Using placeholder avatar for participant ${participant.playerId} in room ${roomId}`,
+    );
+  }
+
+  return buildParticipantDto(participant, localPlayerId, playerName, {
+    id: participant.avatarId,
+    name: playerName,
+    race: 'Rokur',
+    role: 'Mage',
+    level: 1,
+    experience: 0,
+    portrait: FALLBACK_PORTRAIT,
+    frame: FALLBACK_FRAME,
+    displayTitle: null,
+  });
 }
 
 function currentSystemEventActorId(room: EncounterRoom): string | undefined {
@@ -129,9 +160,9 @@ export async function toEncounterRoomSnapshotDto(
   room: EncounterRoom,
   localPlayerId: string,
 ): Promise<EncounterRoomSnapshotDto> {
-  const participantDtos = (
-    await Promise.all(room.participants.map((p) => participantToDto(p, localPlayerId)))
-  ).filter((entry): entry is RoomParticipantDto => entry !== null);
+  const participantDtos = await Promise.all(
+    room.participants.map((participant) => participantToDto(participant, localPlayerId, room.roomId)),
+  );
 
   participantDtos.sort((a, b) => a.slotIndex - b.slotIndex);
 

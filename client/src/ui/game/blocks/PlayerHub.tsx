@@ -1,5 +1,11 @@
 import { useRef, useState, type CSSProperties } from 'react';
-import type { EncounterRoomSnapshotDto, PersistedAvatar, SlotStateDto } from '../../../api/http.js';
+import type {
+  EncounterRoomSnapshotDto,
+  PersistedAvatar,
+  RoomStateDto,
+  SlotStateDto,
+} from '../../../api/http.js';
+import { GAME_FOOTER_BUTTONS } from '../gameUiAssets.js';
 import AvatarPanel from '../../avatar/AvatarPanel.js';
 import PartyEmptySlot from './PartyEmptySlot.js';
 import PartyMemberSlot from './PartyMemberSlot.js';
@@ -12,13 +18,7 @@ import {
 } from '../../protectedImage.js';
 import EncounterFooter from './EncounterFooter.js';
 
-const GAME_UI_ROOT = '/UI/09_GAME';
-const FOOTER_BUTTONS = [
-  { alt: 'Get help', src: `${GAME_UI_ROOT}/im_button_gethelp.webp` },
-  { alt: 'Skillbook', src: `${GAME_UI_ROOT}/im_button_skillbook.webp` },
-  { alt: 'Inventory', src: `${GAME_UI_ROOT}/im_button_inventory.webp` },
-  { alt: 'Lore', src: `${GAME_UI_ROOT}/im_button_lore.webp` },
-] as const;
+const FOOTER_BUTTONS = GAME_FOOTER_BUTTONS;
 
 const hubStyle: CSSProperties = {
   position: 'relative',
@@ -167,6 +167,7 @@ export function PlayerHub({
   onSkillbookToggle,
   onSlotStateChange,
   room = null,
+  roomState,
 }: {
   actionLog: string[];
   avatar: PersistedAvatar;
@@ -181,6 +182,7 @@ export function PlayerHub({
   onSkillbookToggle: () => void;
   onSlotStateChange?: (slotIndex: number, slotState: SlotStateDto) => void;
   room?: EncounterRoomSnapshotDto | null;
+  roomState?: RoomStateDto;
 }) {
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [actionLogPosition, setActionLogPosition] = useState({ x: 16, y: 16 });
@@ -222,10 +224,10 @@ export function PlayerHub({
         <div aria-label="Party avatars" {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={partyStripStyle}>
           {[0, 1, 2].map((slotIndex) => {
             const participant = room?.participants.find((entry) => entry.slotIndex === slotIndex);
-            if (slotIndex === 0 && (!participant || participant.isLocal)) {
+            if (participant?.isLocal) {
               return (
                 <div
-                  aria-label="Player 1 main slot"
+                  aria-label={`Your party slot ${slotIndex + 1}`}
                   key={`slot-${slotIndex}`}
                   {...{ [PROTECTED_SURFACE_ATTR]: '' }}
                   style={mainPartySlotStyle}
@@ -250,6 +252,7 @@ export function PlayerHub({
                 <PartyMemberSlot
                   key={`slot-${slotIndex}`}
                   participant={participant}
+                  roomState={roomState}
                 />
               );
             }

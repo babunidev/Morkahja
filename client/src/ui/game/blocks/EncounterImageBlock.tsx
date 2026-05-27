@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type Ref } from 'react';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -11,7 +11,7 @@ import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
 import { ENCOUNTER_FADE_DURATION_MS, encounterFadeTransition } from '../../transitions/fade.js';
-import ResultBlock from './ResultBlock.js';
+import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
@@ -77,12 +77,16 @@ function imageFileName(imageSrc: string): string {
 export function EncounterImageBlock({
   avatarId,
   continuePending,
+  deferRewardDismiss = false,
   encounter,
   imageSrc,
   inventory,
   inventoryOpen,
+  localContinuePressed = false,
   loreOpen,
+  multiplayerContinueWaiting = false,
   onContinue,
+  resultBlockRef,
   roomState = 'active_encounter',
   serverResolution,
   skillbookOpen,
@@ -92,16 +96,20 @@ export function EncounterImageBlock({
 }: {
   avatarId: string;
   continuePending: boolean;
+  deferRewardDismiss?: boolean;
   encounter: EncounterSnapshot;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
   inventoryOpen: boolean;
+  localContinuePressed?: boolean;
   loreOpen: boolean;
+  multiplayerContinueWaiting?: boolean;
   onContinue: (
     action: EncounterAction,
     roll: number | null,
     solutionId: number | null,
   ) => Promise<void>;
+  resultBlockRef?: Ref<ResultBlockHandle>;
   roomState?: RoomStateDto;
   serverResolution?: ParticipantResolutionSummaryDto;
   skillbookOpen: boolean;
@@ -287,15 +295,19 @@ export function EncounterImageBlock({
         </div>
       ) : null}
       <ResultBlock
+        deferRewardDismiss={deferRewardDismiss}
         disabled={continuePending || (witnessMode && roomState === 'system_event')}
         encounterId={encounter.encounterId}
         encounterDifficulty={encounter.encounterDifficulty ?? 1}
         hidden={loreOpen || inventoryOpen || skillbookOpen}
         inventory={inventory}
+        localContinuePressed={localContinuePressed}
+        multiplayerContinueWaiting={multiplayerContinueWaiting}
         onContinue={() => {
           void handleContinue();
         }}
         prosperityRewardId={encounter.prosperityRewardId}
+        ref={resultBlockRef}
         resolutionAction={revealedRoll !== null ? selectedAction : null}
         rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
         roll={revealedRoll}

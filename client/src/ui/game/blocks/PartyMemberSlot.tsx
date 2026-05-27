@@ -1,9 +1,11 @@
 import type { CSSProperties } from 'react';
-import type { RoomParticipantDto } from '../../../api/http.js';
+import type { RoomParticipantDto, RoomStateDto } from '../../../api/http.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
+import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
 import {
   preventImageContextMenu,
   PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
 } from '../../protectedImage.js';
 
 const slotStyle: CSSProperties = {
@@ -28,26 +30,30 @@ const overlayStyle: CSSProperties = {
   left: '50%',
   transform: 'translateX(-50%)',
   zIndex: 6,
-  fontSize: '1.1rem',
   lineHeight: 1,
   pointerEvents: 'none',
 };
 
-const FOCUS_ICONS: Record<string, string> = {
-  lore: '📜',
-  inventory: '🎒',
-  skillbook: '📖',
+const focusIconStyle: CSSProperties = {
+  display: 'block',
+  width: 26,
+  height: 26,
+  objectFit: 'contain',
+  filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55))',
 };
 
 export function PartyMemberSlot({
   participant,
+  roomState,
 }: {
   participant: RoomParticipantDto;
+  roomState?: RoomStateDto;
 }) {
   const disengaged = participant.choiceState === 'disengaged';
-  const waitingContinue =
-    participant.continuePressed &&
-    participant.resolutionSummary !== undefined;
+  const waitingContinue = roomState === 'waiting_continue' && participant.continuePressed;
+  const focusIconSrc = participant.focusState !== 'none'
+    ? GAME_FOCUS_BUTTON_ICONS[participant.focusState]
+    : undefined;
 
   return (
     <div
@@ -71,9 +77,14 @@ export function PartyMemberSlot({
           frameScale={1.01}
           portrait={participant.avatar.portrait}
         />
-        {participant.focusState !== 'none' ? (
+        {focusIconSrc ? (
           <span aria-hidden="true" style={overlayStyle}>
-            {FOCUS_ICONS[participant.focusState] ?? '•'}
+            <img
+              alt=""
+              {...protectedImageProps}
+              src={focusIconSrc}
+              style={focusIconStyle}
+            />
           </span>
         ) : null}
         {participant.choiceState === 'ready' && participant.selectedSolutionId ? (

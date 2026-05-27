@@ -29,8 +29,14 @@ import {
 } from '../transitions/fade.js';
 import EncounterHeader from './blocks/EncounterHeader.js';
 import EncounterImageBlock from './blocks/EncounterImageBlock.js';
+import type { ResultBlockHandle } from './blocks/ResultBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
 import GameMessageToast from './GameMessageToast.js';
+import {
+  isMultiplayerContinue,
+  localContinuePressed,
+  multiplayerContinueWaiting,
+} from './roomContinue.js';
 
 const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 
@@ -192,10 +198,10 @@ export function GameEnvironment({
   }, []);
   const avatarRef = useRef(avatar);
   const roomRef = useRef(room);
-  const continuePendingRef = useRef(false);
+  const continueSubmitInFlightRef = useRef(false);
+  const resultBlockRef = useRef<ResultBlockHandle>(null);
   avatarRef.current = avatar;
   roomRef.current = room;
-  continuePendingRef.current = continuePending;
 
   const localParticipant = room?.participants.find((participant) => participant.isLocal);
   const serverResolution = localParticipant?.resolutionSummary;
@@ -272,10 +278,24 @@ export function GameEnvironment({
     }
 
     const poll = window.setInterval(() => {
-      void fetchActiveRoom(avatarRef.current.id).then((nextRoom) => {
-        if (!nextRoom || cancelled || continuePendingRef.current) {
+      void fetchActiveRoom(avatarRef.current.id).then(async (nextRoom) => {
+        if (!nextRoom || cancelled || continueSubmitInFlightRef.current) {
           return;
         }
+
+        const currentRoom = roomRef.current;
+        const shouldDismissBeforeAdvance = Boolean(
+          currentRoom?.roomState === 'waiting_continue'
+          && nextRoom.roomState === 'active_encounter'
+          && currentRoom.participants.some(
+            (participant) => participant.isLocal && participant.resolutionSummary !== undefined,
+          ),
+        );
+
+        if (shouldDismissBeforeAdvance) {
+          await resultBlockRef.current?.playDismissAnimations().catch(() => undefined);
+        }
+
         applyRoomSnapshot(
           nextRoom,
           setRoom,
@@ -357,30 +377,44 @@ export function GameEnvironment({
     setInventoryOpen(false);
     setSkillbookOpen(false);
 
-    let workingRoom = currentRoom;
-    const local = workingRoom.participants.find((participant) => participant.isLocal);
-    if (local?.focusState !== 'none') {
-      workingRoom = await submitRoomFocus(avatarRef.current.id, 'none');
+    continueSubmitInFlightRef.current = true;
+
+    try {
+      let workingRoom = currentRoom;
+      const local = workingRoom.participants.find((participant) => participant.isLocal);
+      if (local?.focusState !== 'none') {
+        workingRoom = await submitRoomFocus(avatarRef.current.id, 'none');
+        applyRoomSnapshot(
+          workingRoom,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
+      }
+
+      const nextRoom = await submitRoomContinue(avatarRef.current.id);
+      const advancedFromWaiting = currentRoom.roomState === 'waiting_continue'
+        && nextRoom.roomState === 'active_encounter';
+
+      if (advancedFromWaiting) {
+        await resultBlockRef.current?.playDismissAnimations().catch(() => undefined);
+      }
+
       applyRoomSnapshot(
-        workingRoom,
+        nextRoom,
         setRoom,
         setEncounter,
         setAvatar,
         avatarRef.current,
         roomRef.current,
       );
-    }
 
-    const nextRoom = await submitRoomContinue(avatarRef.current.id);
-    applyRoomSnapshot(
-      nextRoom,
-      setRoom,
-      setEncounter,
-      setAvatar,
-      avatarRef.current,
-      roomRef.current,
-    );
-    return nextRoom;
+      return nextRoom;
+    } finally {
+      continueSubmitInFlightRef.current = false;
+    }
   }
 
   async function handleContinueEncounter(
@@ -589,6 +623,9 @@ export function GameEnvironment({
 
   const waitingForResolution = room?.roomState === 'resolving';
   const showServerResult = room?.roomState === 'waiting_continue' && displayResolution !== undefined;
+  const deferRewardDismiss = isMultiplayerContinue(room);
+  const partyContinueWaiting = multiplayerContinueWaiting(room);
+  const localHasContinuePressed = room ? localContinuePressed(room) : false;
 
   function isPostSystemWaitingContinue(currentRoom: EncounterRoomSnapshotDto): boolean {
     return currentRoom.roomState === 'waiting_continue'
@@ -635,12 +672,16 @@ export function GameEnvironment({
               <EncounterImageBlock
                 avatarId={avatar.id}
                 continuePending={continuePending || deathPending || waitingForResolution}
+                deferRewardDismiss={deferRewardDismiss}
                 encounter={encounter}
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
                 inventoryOpen={inventoryOpen}
+                localContinuePressed={localHasContinuePressed}
                 loreOpen={loreOpen}
+                multiplayerContinueWaiting={partyContinueWaiting}
                 onContinue={handleContinueEncounter}
+                resultBlockRef={resultBlockRef}
                 roomState={room?.roomState ?? 'active_encounter'}
                 serverResolution={showServerResult ? displayResolution : undefined}
                 witnessMode={isWitnessMode}
@@ -700,6 +741,7 @@ export function GameEnvironment({
                 void handleSlotStateChange(slotIndex, slotState);
               }}
               room={room}
+              roomState={room?.roomState}
             />
           </div>
         }

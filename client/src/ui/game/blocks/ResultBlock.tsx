@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
 import { interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
@@ -375,31 +384,44 @@ function visibleRewardIds({
   ];
 }
 
-export function ResultBlock({
-  disabled = false,
-  encounterDifficulty,
-  encounterId,
-  hidden = false,
-  inventory,
-  onContinue,
-  prosperityRewardId,
-  resolutionAction = null,
-  rewardIds = [],
-  roll,
-  usedSolutionId = null,
-}: {
-  disabled?: boolean;
-  encounterDifficulty: number;
-  encounterId: number;
-  hidden?: boolean;
-  inventory?: AvatarInventory;
-  onContinue: () => void | Promise<void>;
-  prosperityRewardId?: number | null;
-  resolutionAction?: EncounterAction | null;
-  rewardIds?: number[];
-  roll: number | null;
-  usedSolutionId?: number | null;
-}) {
+export type ResultBlockHandle = {
+  playDismissAnimations: () => Promise<void>;
+};
+
+export const ResultBlock = forwardRef(function ResultBlock(
+  {
+    deferRewardDismiss = false,
+    disabled = false,
+    encounterDifficulty,
+    encounterId,
+    hidden = false,
+    inventory,
+    localContinuePressed = false,
+    multiplayerContinueWaiting = false,
+    onContinue,
+    prosperityRewardId,
+    resolutionAction = null,
+    rewardIds = [],
+    roll,
+    usedSolutionId = null,
+  }: {
+    deferRewardDismiss?: boolean;
+    disabled?: boolean;
+    encounterDifficulty: number;
+    encounterId: number;
+    hidden?: boolean;
+    inventory?: AvatarInventory;
+    localContinuePressed?: boolean;
+    multiplayerContinueWaiting?: boolean;
+    onContinue: () => void | Promise<void>;
+    prosperityRewardId?: number | null;
+    resolutionAction?: EncounterAction | null;
+    rewardIds?: number[];
+    roll: number | null;
+    usedSolutionId?: number | null;
+  },
+  ref,
+) {
   const [continueBusy, setContinueBusy] = useState(false);
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
@@ -663,13 +685,12 @@ export function ResultBlock({
     return flights;
   }
 
-  async function handleContinueClick(): Promise<void> {
-    if (disabled || hidden || !visible || continueBusy || !continueInteractive) {
+  const playDismissAnimations = useCallback(async (): Promise<void> => {
+    if (!visible || continueBusy) {
       return;
     }
 
     setContinueBusy(true);
-    playSfx(CONTINUE_SOUND);
     hideItemTooltip();
 
     try {
@@ -699,10 +720,45 @@ export function ResultBlock({
       } else {
         await waitContinueBounce();
       }
+    } finally {
+      setContinueBusy(false);
+    }
+  }, [continueBusy, visible, losses, rewards, roll]);
 
+  useImperativeHandle(ref, () => ({
+    playDismissAnimations,
+  }), [playDismissAnimations]);
+
+  async function handleContinueClick(): Promise<void> {
+    if (
+      disabled
+      || hidden
+      || !visible
+      || continueBusy
+      || !continueInteractive
+      || (deferRewardDismiss && localContinuePressed)
+    ) {
+      return;
+    }
+
+    playSfx(CONTINUE_SOUND);
+    hideItemTooltip();
+
+    if (deferRewardDismiss) {
+      try {
+        await Promise.resolve(onContinue());
+      } catch {
+        // Parent logs failures; keep results visible for retry.
+      }
+      return;
+    }
+
+    setContinueBusy(true);
+
+    try {
+      await playDismissAnimations();
       await Promise.resolve(onContinue());
     } finally {
-      // Keep rewards hidden after fly-out; roll reset in useEffect clears rewardsFlyingAway.
       setContinueBusy(false);
     }
   }
@@ -901,14 +957,25 @@ export function ResultBlock({
         aria-disabled={!continueInteractive}
         aria-label="Continue"
         className="morkahja-footer-button"
-        disabled={disabled || continueBusy || !continueInteractive}
+        disabled={
+          disabled
+          || continueBusy
+          || !continueInteractive
+          || (deferRewardDismiss && localContinuePressed)
+        }
         onClick={() => {
           void handleContinueClick();
         }}
         onContextMenu={preventImageContextMenu}
         style={{
           ...continueButtonStyle,
-          cursor: disabled || continueBusy || !continueInteractive ? 'default' : 'pointer',
+          cursor:
+            disabled
+            || continueBusy
+            || !continueInteractive
+            || (deferRewardDismiss && localContinuePressed)
+              ? 'default'
+              : 'pointer',
           pointerEvents: resultInteractive && continueInteractive && !continueBusy ? 'auto' : 'none',
         }}
         type="button"
@@ -922,13 +989,17 @@ export function ResultBlock({
               : continueInteractive || continueEnableRattle
                 ? continueSettledStyle
                 : continueHiddenStyle),
-            ...(continueBusy ? continueAnimatingStyle : {}),
+            ...(continueBusy && !multiplayerContinueWaiting ? continueAnimatingStyle : {}),
+            ...(multiplayerContinueWaiting ? { animation: undefined } : {}),
           }}
         >
           <span
+            className={multiplayerContinueWaiting ? 'morkahja-continue-waiting-party' : undefined}
             style={{
               display: 'block',
-              ...(continueEnableRattle ? continueEnableRattleStyle : {}),
+              ...(continueEnableRattle && !multiplayerContinueWaiting
+                ? continueEnableRattleStyle
+                : {}),
             }}
           >
             <img
@@ -1020,6 +1091,6 @@ export function ResultBlock({
       ) : null}
     </div>
   );
-}
+});
 
 export default ResultBlock;

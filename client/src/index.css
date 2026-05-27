@@ -567,3 +567,65 @@ button:focus-visible {
   height: 100%;
   animation: morkahja-avatar-enter-center-glow 700ms ease-in-out 2;
 }
+
+@keyframes morkahja-continue-reveal-spin {
+  0% {
+    opacity: 0;
+    transform: rotate(-200deg) scale(0.72);
+  }
+  62% {
+    opacity: 1;
+    transform: rotate(12deg) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes morkahja-continue-enable-rattle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-3deg) scale(1.03);
+  }
+  50% {
+    transform: rotate(2.5deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(-1.5deg) scale(1.02);
+  }
+}
+
+@keyframes morkahja-continue-bounce-right {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+  35% {
+    transform: translateX(10px) scale(0.96);
+  }
+  65% {
+    transform: translateX(-4px) scale(1.02);
+  }
+}
+
+@keyframes morkahja-continue-leaf-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  33% {
+    transform: translateY(-7px) rotate(1.2deg);
+  }
+  66% {
+    transform: translateY(-3px) rotate(-0.8deg);
+  }
+}
+
+.morkahja-continue-waiting-party {
+  animation: morkahja-continue-leaf-float 3.8s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
