@@ -41,6 +41,14 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'hearth_blessing_ready':
     case 'daily_reward_claimed':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
+    case 'help_requested': {
+      if (!viewingPlayerId) {
+        return false;
+      }
+
+      const toPlayerId = readString(event.payload, 'toPlayerId');
+      return toPlayerId === viewingPlayerId;
+    }
     default:
       return false;
   }

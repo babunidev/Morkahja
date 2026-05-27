@@ -1412,11 +1412,13 @@ async function canReceiveHelpInvite(
 async function sendHelpInvitation(
   fromPlayerId: string,
   toPlayerId: string,
-  roomId: string,
+  room: EncounterRoom,
+  fromPlayerName: string,
+  avatarVisual?: { portrait?: string; frame?: string },
 ): Promise<RoomInvitation> {
   const invitation: RoomInvitation = {
     inviteId: randomUUID(),
-    roomId,
+    roomId: room.roomId,
     fromPlayerId,
     toPlayerId,
     createdAt: nowMs(),
@@ -1425,7 +1427,19 @@ async function sendHelpInvitation(
   };
 
   await saveRoomInvitation(invitation);
-  await recordHelpRequestedEvent(fromPlayerId, toPlayerId, roomId);
+  await recordHelpRequestedEvent(
+    fromPlayerId,
+    toPlayerId,
+    room.roomId,
+    invitation.inviteId,
+    {
+      encounterId: room.activeEncounterSnapshot.encounterId,
+      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
+      fromPlayerName,
+      avatarPortrait: avatarVisual?.portrait,
+      avatarFrame: avatarVisual?.frame,
+    },
+  );
   return invitation;
 }
 
@@ -1488,10 +1502,16 @@ export async function broadcastCallForHelp(
   const fromPlayer = await loadPlayer(fromPlayerId);
   const friendIds = fromPlayer?.friendIds ?? [];
 
+  const callerAvatar = avatarId ? await loadAvatar(fromPlayerId, avatarId) : null;
+  const avatarVisual = callerAvatar?.portrait && callerAvatar.frame
+    ? { portrait: callerAvatar.portrait, frame: callerAvatar.frame }
+    : undefined;
+  const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
+
   const eligibleFriendIds: string[] = [];
   for (const friendId of friendIds) {
     const friendPlayer = await loadPlayer(friendId);
-    if (!friendPlayer || !isPlayerOnlineAndActive(friendPlayer, liveSessionPlayerIds, now)) {
+    if (!friendPlayer || !liveSessionPlayerIds.has(friendId)) {
       continue;
     }
     if (!(await canReceiveHelpInvite(fromPlayerId, friendId, room.roomId))) {
@@ -1528,7 +1548,13 @@ export async function broadcastCallForHelp(
   }
 
   for (const targetId of targetIds) {
-    await sendHelpInvitation(fromPlayerId, targetId, room.roomId);
+    await sendHelpInvitation(
+      fromPlayerId,
+      targetId,
+      room,
+      fromPlayerName,
+      avatarVisual,
+    );
   }
 
   const updatedRoom: EncounterRoom = {
@@ -1590,9 +1616,163 @@ export async function requestHelp(
     status: 'pending',
   };
 
+  const fromPlayer = await loadPlayer(fromPlayerId);
+  const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
   await saveRoomInvitation(invitation);
-  await recordHelpRequestedEvent(fromPlayerId, friendId, room.roomId);
+  await recordHelpRequestedEvent(
+    fromPlayerId,
+    friendId,
+    room.roomId,
+    invitation.inviteId,
+    {
+      encounterId: room.activeEncounterSnapshot.encounterId,
+      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
+      fromPlayerName,
+    },
+  );
   return invitation;
+}
+
+export interface FriendJoinableRoom {
+  roomId: string;
+  encounterTitle: string;
+  participantCount: number;
+  maxParticipants: number;
+  inviteId?: string;
+}
+
+async function assertPlayersAreFriends(playerId: string, friendPlayerId: string): Promise<void> {
+  const fromPlayer = await loadPlayer(playerId);
+  const friendIds = fromPlayer?.friendIds ?? [];
+  if (!friendIds.includes(friendPlayerId)) {
+    throw new RoomError('Target is not a friend', 403, 'NOT_FRIEND');
+  }
+}
+
+function canViewerJoinRoom(
+  room: EncounterRoom,
+  viewerPlayerId: string,
+  leaderFriendIds: string[],
+): boolean {
+  if (room.roomState === 'closed') {
+    return false;
+  }
+
+  if (engagedParticipants(room).length >= MAX_PARTICIPANTS) {
+    return false;
+  }
+
+  const openSlot = findOpenSlot(room);
+  if (openSlot === null) {
+    return false;
+  }
+
+  const slotState = room.slotStates[openSlot];
+  if (slotState === 'locked') {
+    return false;
+  }
+
+  if (slotState === 'friends_only' && !leaderFriendIds.includes(viewerPlayerId)) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function describeJoinableRoomForFriend(
+  viewerPlayerId: string,
+  friendPlayerId: string,
+): Promise<FriendJoinableRoom | null> {
+  await assertPlayersAreFriends(viewerPlayerId, friendPlayerId);
+
+  const now = nowMs();
+  const pendingInvites = await loadPendingInvitations(viewerPlayerId);
+  const helpInvite = pendingInvites.find(
+    (invite) => invite.fromPlayerId === friendPlayerId && invite.expiresAt > now,
+  );
+
+  const roomId = helpInvite?.roomId ?? await findActiveRoomIdForPlayer(friendPlayerId);
+  if (!roomId) {
+    return null;
+  }
+
+  const room = await loadEncounterRoom(roomId);
+  if (!room || room.roomState === 'closed') {
+    return null;
+  }
+
+  const friendPlayer = await loadPlayer(friendPlayerId);
+  const leaderFriendIds = friendPlayer?.friendIds ?? [];
+  if (!canViewerJoinRoom(room, viewerPlayerId, leaderFriendIds)) {
+    if (!helpInvite) {
+      return null;
+    }
+  }
+
+  const participantCount = engagedParticipants(room).length;
+  if (!helpInvite && participantCount !== 1) {
+    return null;
+  }
+
+  if (participantCount >= MAX_PARTICIPANTS && !helpInvite) {
+    return null;
+  }
+
+  return {
+    roomId: room.roomId,
+    encounterTitle: room.activeEncounterSnapshot.encounterTitle ?? 'Encounter',
+    participantCount,
+    maxParticipants: MAX_PARTICIPANTS,
+    ...(helpInvite ? { inviteId: helpInvite.inviteId } : {}),
+  };
+}
+
+export async function joinFriendRoom(
+  playerId: string,
+  friendPlayerId: string,
+  avatarId?: string,
+): Promise<EncounterRoom> {
+  await assertPlayersAreFriends(playerId, friendPlayerId);
+
+  const now = nowMs();
+  const pendingInvites = await loadPendingInvitations(playerId);
+  const helpInvite = pendingInvites.find(
+    (invite) => invite.fromPlayerId === friendPlayerId && invite.expiresAt > now,
+  );
+
+  if (helpInvite) {
+    const joined = await respondHelp(playerId, helpInvite.inviteId, true, avatarId);
+    if (!joined) {
+      throw new RoomError('Invitation was declined', 409, 'INVITE_DECLINED');
+    }
+    return joined;
+  }
+
+  const roomId = await findActiveRoomIdForPlayer(friendPlayerId);
+  if (!roomId) {
+    throw new RoomError('Friend is not in a room', 404, 'FRIEND_NOT_IN_ROOM');
+  }
+
+  const room = await loadEncounterRoom(roomId);
+  if (!room || room.roomState === 'closed') {
+    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+  }
+
+  const friendPlayer = await loadPlayer(friendPlayerId);
+  const leaderFriendIds = friendPlayer?.friendIds ?? [];
+  if (!canViewerJoinRoom(room, playerId, leaderFriendIds)) {
+    throw new RoomError('You cannot join this room right now', 409, 'ROOM_NOT_JOINABLE');
+  }
+
+  const existingRoomId = await findActiveRoomIdForPlayer(playerId);
+  if (existingRoomId && existingRoomId !== roomId) {
+    await leaveRoom(playerId);
+  }
+
+  const joinAvatarId = await resolveHelpJoinAvatarId(playerId, avatarId);
+  const joined = await joinRoom(playerId, joinAvatarId, roomId);
+  await recordHelpJoinedEvent(playerId, joinAvatarId, joined.roomId);
+  return joined;
 }
 
 export async function respondHelp(

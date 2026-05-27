@@ -2,6 +2,7 @@ import type { GameEvent, GameEventVisibility } from './GameEvent.js';
 
 export interface QueryRecentEventsOptions {
   playerId?: string;
+  friendIds?: string[];
   sinceTimestamp?: number;
   limit?: number;
   visibilities?: GameEventVisibility[];

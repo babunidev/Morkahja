@@ -89,13 +89,30 @@ export async function recordHelpRequestedEvent(
   fromPlayerId: string,
   toPlayerId: string,
   roomId: string,
+  inviteId: string,
+  context: {
+    encounterId: number;
+    encounterTitle?: string;
+    fromPlayerName?: string;
+    avatarPortrait?: string;
+    avatarFrame?: string;
+  },
 ): Promise<void> {
   await recordGameEvent({
     playerId: fromPlayerId,
     type: 'help_requested',
     visibility: 'friends',
-    importance: 'low',
-    payload: { roomId, toPlayerId },
+    importance: 'high',
+    payload: {
+      roomId,
+      toPlayerId,
+      inviteId,
+      encounterId: context.encounterId,
+      encounterTitle: context.encounterTitle,
+      playerName: context.fromPlayerName,
+      ...(context.avatarPortrait ? { avatarPortrait: context.avatarPortrait } : {}),
+      ...(context.avatarFrame ? { avatarFrame: context.avatarFrame } : {}),
+    },
   });
 }
 

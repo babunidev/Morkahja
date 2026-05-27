@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import type { ActivityFeedEntryDto } from '@shared/contracts';
+import type { ActivityFeedEntryDto, ActivityFeedJoinRoomActionDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
 import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
 import {
@@ -157,6 +157,19 @@ const timeStyle: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+const joinButtonStyle: CSSProperties = {
+  marginTop: 8,
+  padding: '6px 14px',
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 8,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  cursor: 'pointer',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.82rem',
+  letterSpacing: '0.04em',
+};
+
 const entryIconStyle: CSSProperties = {
   width: 48,
   height: 48,
@@ -216,11 +229,13 @@ function formatRelativeTime(timestamp: number): string {
 
 export function ActivityFeedOverlay({
   onClose,
+  onJoinRoom,
   onReadStateChange,
   open,
   playerId,
 }: {
   onClose: () => void;
+  onJoinRoom?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
   onReadStateChange?: () => void;
   open: boolean;
   playerId: string;
@@ -230,6 +245,7 @@ export function ActivityFeedOverlay({
   const [readIds, setReadIds] = useState(() => loadScribesReadIds(playerId));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [joinPendingId, setJoinPendingId] = useState<string | null>(null);
 
   async function refreshFeed(): Promise<void> {
     setLoading(true);
@@ -337,7 +353,25 @@ export function ActivityFeedOverlay({
                   </span>
                 </div>
                 <div style={entryBodyStyle}>
-                  <div style={entryTextStyle}>{entry.message}</div>
+                  <div style={entryTextStyle}>
+                    <div>{entry.message}</div>
+                    {entry.joinAction && onJoinRoom ? (
+                      <button
+                        disabled={joinPendingId === entry.eventId}
+                        onClick={() => {
+                          setJoinPendingId(entry.eventId);
+                          void Promise.resolve(onJoinRoom(entry.joinAction!))
+                            .finally(() => {
+                              setJoinPendingId(null);
+                            });
+                        }}
+                        style={joinButtonStyle}
+                        type="button"
+                      >
+                        {joinPendingId === entry.eventId ? 'Joining…' : 'Join'}
+                      </button>
+                    ) : null}
+                  </div>
                   {scribesEntryVisual(entry)}
                 </div>
               </li>

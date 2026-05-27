@@ -211,6 +211,13 @@ export interface StaticGameDataStatus {
 
 export type ActivityFeedImportance = 'low' | 'medium' | 'high' | 'legendary';
 
+export interface ActivityFeedJoinRoomActionDto {
+  type: 'join_room';
+  roomId: string;
+  inviteId?: string;
+  fromPlayerId: string;
+}
+
 export interface ActivityFeedEntryDto {
   eventId: string;
   timestamp: number;
@@ -223,6 +230,8 @@ export interface ActivityFeedEntryDto {
   avatarPortrait?: string;
   /** Frame asset filename (under Frames/) when the entry shows an avatar likeness. */
   avatarFrame?: string;
+  /** When set, the scribe entry can open or join the caller's encounter room. */
+  joinAction?: ActivityFeedJoinRoomActionDto;
 }
 
 export interface ActivityFeedResponse {
@@ -281,6 +290,14 @@ export interface ClaimDailyRewardResponse {
   dailyReward: DailyRewardStatusDto;
 }
 
+export interface FriendJoinableRoomDto {
+  roomId: string;
+  encounterTitle: string;
+  participantCount: number;
+  maxParticipants: number;
+  inviteId?: string;
+}
+
 export interface FriendSummaryDto {
   playerId: string;
   playerName: string;
@@ -288,6 +305,9 @@ export interface FriendSummaryDto {
   portrait: string;
   frame: string;
   avatarName: string | null;
+  lastPlayedAt: number;
+  recentlyActive: boolean;
+  joinableRoom: FriendJoinableRoomDto | null;
 }
 
 export interface FriendsListResponse {
@@ -431,4 +451,8 @@ export interface CallForHelpResponse {
 
 export interface RespondHelpResponse {
   room: EncounterRoomSnapshotDto | null;
+}
+
+export interface JoinFriendRoomResponse {
+  room: EncounterRoomSnapshotDto;
 }

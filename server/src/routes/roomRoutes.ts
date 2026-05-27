@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createRoomController,
   getActiveRoomController,
+  joinFriendRoomController,
   joinRoomController,
   leaveRoomController,
   listPendingHelpController,
@@ -18,6 +19,7 @@ export const roomRoutes = Router();
 roomRoutes.get('/active', getActiveRoomController);
 roomRoutes.post('/create', createRoomController);
 roomRoutes.post('/join', joinRoomController);
+roomRoutes.post('/join/friend', joinFriendRoomController);
 roomRoutes.post('/leave', leaveRoomController);
 roomRoutes.post('/slot', setSlotStateController);
 roomRoutes.post('/choice', submitRoomChoiceController);

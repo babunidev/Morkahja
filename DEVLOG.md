@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-27 21:04 (+0200) |
+| **Last updated** | 2026-05-27 21:44 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -221,9 +221,11 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 
 126. **Asset hygiene** (`133f405`) — remove legacy PNG encounter art, archived avatar-creation trees, duplicate portraits, unused Scribes/Help assets; drop large `.wav` music (keep `.mp3`); `posterRaceSkills2.webp` replaces multi‑MB PNG; delete obsolete `strings.xml`.
 127. **Seal of Norghor removed** (`d26f799`) — subscription API, `SealOfNorghorSection`, `mergeUnlockedExpansionsWithSeal`, and related player DTO fields removed (feature retired from beta).
-128. **Anchored tooltips** (`d26f799`) — `anchoredTooltip.ts`; inventory and skillbook tooltips use edge-anchored placement without blocking taps.
+128. **Anchored tooltips** (`d26f799`) — `anchoredTooltip.ts`; inventory and skillbook tooltips anchor to the hovered cell, clamp inside the overlay, and sit above the game header (`z-index` **26**); grid buttons use `morkahja-grid-item-button` with direct mouse enter/leave so hover works under the dimmer; inventory panel renders last when multiple grids are open.
 129. **Result / rewards** (`d26f799`) — `ResultBlock` and `rewardFlyAnimation` rework; death overlay and game toasts refined; **Firestarter** achievement progress/events in Scribes (`firestarterAchievement`, `firestarterProgress`).
 130. **Admin content** — Crumblegheist Berserk, Tempestwailer Stormcaller, Ashen Revenant Witch/Seer encounters + art.
+131. **Signup legal** (`f08b632`) — `PrivacyPolicyOverlay` and `TermsOfServiceOverlay` (May 2026 copy); **New journey** opens scrollable in-app modals from Privacy Policy / Terms of Service links instead of external URLs (`OnboardingGateway`).
+132. **Production build** (`6ea41d5`) — `SolutionGridOverlay` strict TS: capture `anchorX` before the layout `measureAndPlace` callback; `handleItemClick` typed as `GridTooltipTriggerEvent` (fixes `tsc -b` on deploy).
 
 ---
 
@@ -494,8 +496,17 @@ Since `5b2d423`.
 ### Seal removal and tooltip/result polish (`d26f799`) · 2026-05-27 21:04 (+0200)
 
 - **Seal** — delete `sealOfNorghorService`, controller routes, Settings section, shared DTOs; strip `sealOfNorghor` from `GET /player`.
-- **Tooltips** — `anchoredTooltip.ts` shared helper; `SolutionGridOverlay` inventory/skillbook placement fixed.
+- **Tooltips** — `anchoredTooltip.ts` shared helper; `SolutionGridOverlay` anchors to grid cells, clamps in-bounds, `OVERLAY_Z_INDEX` **26**, `morkahja-grid-item-button` + mouse handlers; inventory overlay ordered after skillbook in `EncounterImageBlock`.
 - **UX** — `ResultBlock` / `rewardFlyAnimation` improvements; `AvatarDeathOverlay` refactor; Firestarter Scribes lines and tests.
+
+### Signup privacy and terms (`f08b632`) · 2026-05-27 21:39 (+0200)
+
+- **Overlays** — `PrivacyPolicyOverlay` (effective May 27, 2026) and `TermsOfServiceOverlay` (sections 1–18) as full-screen scrollable modals.
+- **Onboarding** — checkbox links on **New journey** toggle local state; removed `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` external hrefs.
+
+### SolutionGridOverlay build (`6ea41d5`) · 2026-05-27 21:44 (+0200)
+
+- **TypeScript** — `anchorX` read once when the tooltip layout effect runs (nested `measureAndPlace` no longer closes over nullable `tooltip`); `handleItemClick` accepts `GridTooltipTriggerEvent` so `tsc -b` passes on the VPS.
 
 ### Settings panel UX (`32bf3e7`) · 2026-05-24 23:18 (+0200)
 

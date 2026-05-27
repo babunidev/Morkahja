@@ -90,13 +90,33 @@ export async function queryRecentGameEvents(
   const limit = Math.max(1, Math.min(options.limit ?? 50, 100));
   const sinceTimestamp = options.sinceTimestamp ?? 0;
   const playerId = options.playerId;
+  const friendIds = options.friendIds ?? [];
   const globalVisibility: GameEventVisibility = 'global';
   const params: unknown[] = [sinceTimestamp, globalVisibility];
   let visibilityFilterSql = 'visibility = $2';
 
   if (playerId) {
     params.push(playerId);
-    visibilityFilterSql = '(visibility = $2 OR player_id = $3)';
+    if (friendIds.length > 0) {
+      params.push(friendIds);
+      visibilityFilterSql = `(
+        visibility = $2
+        OR player_id = $3
+        OR (
+          visibility = 'friends'
+          AND (
+            player_id = ANY($4::text[])
+            OR (type = 'help_requested' AND payload->>'toPlayerId' = $3)
+          )
+        )
+      )`;
+    } else {
+      visibilityFilterSql = `(
+        visibility = $2
+        OR player_id = $3
+        OR (visibility = 'friends' AND type = 'help_requested' AND payload->>'toPlayerId' = $3)
+      )`;
+    }
   }
 
   params.push(limit);

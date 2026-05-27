@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import type {
+  ActivityFeedJoinRoomActionDto,
+  FriendSummaryDto,
+} from '@shared/contracts';
 import {
   fetchAchievements,
   fetchRecentActivity,
@@ -225,6 +229,8 @@ export function Dashboard({
   onEnterWorldFailed,
   onHandoffLand,
   onAvatarEnter,
+  onJoinFriend,
+  onJoinRoomFromScribes,
   onPlay,
   onPrepareGame,
   onLogout,
@@ -249,6 +255,8 @@ export function Dashboard({
   onEnterWorldFailed?: () => void;
   onHandoffLand?: () => void;
   onAvatarEnter?: () => void;
+  onJoinFriend?: (friend: FriendSummaryDto) => void | Promise<void>;
+  onJoinRoomFromScribes?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
   onPlay?: () => Promise<boolean> | boolean;
   onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
   onLogout: () => void;
@@ -742,6 +750,7 @@ export function Dashboard({
           onClose={() => {
             setActivityOpen(false);
           }}
+          onJoinRoom={onJoinRoomFromScribes}
           onReadStateChange={() => {
             void refreshScribesUnread();
           }}
@@ -774,6 +783,7 @@ export function Dashboard({
           onClose={() => {
             setFriendsOpen(false);
           }}
+          onJoinFriend={onJoinFriend}
           open={friendsOpen}
           playerId={playerId}
           playerName={playerName}

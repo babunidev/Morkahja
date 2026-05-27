@@ -6,6 +6,7 @@ import {
   broadcastCallForHelp,
   createRoom,
   getActiveRoomForPlayer,
+  joinFriendRoom,
   joinRoom,
   leaveRoom,
   listPendingHelpInvitations,
@@ -255,6 +256,30 @@ export async function respondHelpController(
     const room = await respondHelp(playerId, inviteId, accept, avatarId);
     res.json({
       room: room ? await toEncounterRoomSnapshotDto(room, playerId) : null,
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function joinFriendRoomController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const body = req.body as Record<string, unknown>;
+    const friendPlayerId = typeof body.friendPlayerId === 'string' ? body.friendPlayerId : '';
+    const avatarId = typeof body.avatarId === 'string' ? body.avatarId : undefined;
+
+    if (!friendPlayerId) {
+      throw new RequestError('friendPlayerId is required');
+    }
+
+    const room = await joinFriendRoom(playerId, friendPlayerId, avatarId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
     });
   } catch (error) {
     handleRoomError(error, res, next);

@@ -183,7 +183,7 @@ const listStyle: CSSProperties = {
 
 const friendRowStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '64px minmax(0, 1fr) 28px',
+  gridTemplateColumns: '64px minmax(0, 1fr) auto 28px',
   gap: 12,
   alignItems: 'center',
   width: '100%',
@@ -195,6 +195,19 @@ const friendRowStyle: CSSProperties = {
   cursor: 'pointer',
   textAlign: 'left',
   fontFamily: 'inherit',
+};
+
+const joinFriendButtonStyle: CSSProperties = {
+  minWidth: 58,
+  padding: '5px 10px',
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 8,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  cursor: 'pointer',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.78rem',
+  letterSpacing: '0.04em',
 };
 
 const portraitWrapStyle: CSSProperties = {
@@ -312,30 +325,72 @@ function FriendAvatarCard({ avatar }: { avatar: FriendAvatarDto }) {
 
 function FriendRow({
   friend,
+  joinPending,
+  onJoin,
   onSelect,
 }: {
   friend: FriendSummaryDto;
+  joinPending: boolean;
+  onJoin?: () => void;
   onSelect: () => void;
 }) {
+  const showJoin = Boolean(friend.joinableRoom && onJoin);
+
   return (
-    <button
-      onClick={() => {
-        playSfx(DEFAULT_BUTTON_SOUND);
-        onSelect();
-      }}
-      style={friendRowStyle}
-      type="button"
-    >
-      <div style={portraitWrapStyle}>
-        <AvatarPortraitStack frame={friend.frame} portrait={friend.portrait} />
-      </div>
-      <div>
-        <p style={friendNameStyle}>{friend.playerName}</p>
-        <p style={friendMetaStyle}>
-          {friend.online ? 'Online' : 'Offline'}
-          {friend.avatarName ? ` · Last played: ${friend.avatarName}` : ''}
-        </p>
-      </div>
+    <div style={friendRowStyle}>
+      <button
+        onClick={() => {
+          playSfx(DEFAULT_BUTTON_SOUND);
+          onSelect();
+        }}
+        style={{
+          display: 'contents',
+          padding: 0,
+          border: 0,
+          background: 'transparent',
+          color: 'inherit',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          textAlign: 'left',
+        }}
+        type="button"
+      >
+        <div style={portraitWrapStyle}>
+          <AvatarPortraitStack frame={friend.frame} portrait={friend.portrait} />
+        </div>
+        <div>
+          <p style={friendNameStyle}>{friend.playerName}</p>
+          <p style={friendMetaStyle}>
+            {friend.online ? 'Online' : 'Offline'}
+            {friend.joinableRoom
+              ? ` · ${friend.joinableRoom.encounterTitle}`
+              : friend.avatarName
+                ? ` · Last played: ${friend.avatarName}`
+                : ''}
+          </p>
+        </div>
+      </button>
+      {showJoin ? (
+        <button
+          aria-label={`Join ${friend.playerName}`}
+          disabled={joinPending}
+          onClick={(event) => {
+            event.stopPropagation();
+            playSfx(DEFAULT_BUTTON_SOUND);
+            onJoin?.();
+          }}
+          style={{
+            ...joinFriendButtonStyle,
+            opacity: joinPending ? 0.6 : 1,
+            cursor: joinPending ? 'default' : 'pointer',
+          }}
+          type="button"
+        >
+          {joinPending ? '…' : 'Join'}
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
       <img
         alt=""
         aria-hidden="true"
@@ -343,17 +398,19 @@ function FriendRow({
         src={friend.online ? ONLINE_ICON : OFFLINE_ICON}
         style={statusIconStyle}
       />
-    </button>
+    </div>
   );
 }
 
 export function FriendsOverlay({
   onClose,
+  onJoinFriend,
   open,
   playerId,
   playerName,
 }: {
   onClose: () => void;
+  onJoinFriend?: (friend: FriendSummaryDto) => void | Promise<void>;
   open: boolean;
   playerId: string;
   playerName: string;
@@ -369,6 +426,7 @@ export function FriendsOverlay({
   const [achievementsPending, setAchievementsPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [joiningFriendId, setJoiningFriendId] = useState<string | null>(null);
   const friendDetailRequestRef = useRef(0);
 
   const refreshFriends = useCallback(async (): Promise<void> => {
@@ -674,7 +732,17 @@ export function FriendsOverlay({
                 {friends.map((friend) => (
                   <FriendRow
                     friend={friend}
+                    joinPending={joiningFriendId === friend.playerId}
                     key={friend.playerId}
+                    onJoin={friend.joinableRoom && onJoinFriend
+                      ? () => {
+                          setJoiningFriendId(friend.playerId);
+                          void Promise.resolve(onJoinFriend(friend))
+                            .finally(() => {
+                              setJoiningFriendId(null);
+                            });
+                        }
+                      : undefined}
                     onSelect={() => {
                       setSelectedFriend(friend);
                       setAchievementsPending(true);

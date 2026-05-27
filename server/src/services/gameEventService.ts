@@ -17,6 +17,7 @@ import {
 } from '../domain/news/scribesFeedPresentation.js';
 import type { PlayerDocument } from '../types/player.js';
 import { getEncounterById, getSolutionMap } from './gameData.js';
+import { getPlayerFriendIds } from './friendService.js';
 
 const ATRANOR_DEATH_SYMBOL_SOLUTION_ID = 10015;
 
@@ -56,6 +57,13 @@ type RecordGameEventInput = Omit<GameEvent, 'eventId' | 'timestamp'> & {
   timestamp?: number;
 };
 
+export interface ActivityFeedJoinAction {
+  type: 'join_room';
+  roomId: string;
+  inviteId?: string;
+  fromPlayerId: string;
+}
+
 export interface ActivityFeedEntry {
   eventId: string;
   timestamp: number;
@@ -65,6 +73,7 @@ export interface ActivityFeedEntry {
   iconUrl?: string;
   avatarPortrait?: string;
   avatarFrame?: string;
+  joinAction?: ActivityFeedJoinAction;
 }
 
 function payloadString(payload: Record<string, unknown>, key: string): string | undefined {
@@ -453,10 +462,40 @@ export async function recordGemsReceivedEvent(
   });
 }
 
+function resolveJoinAction(
+  event: GameEvent,
+  viewingPlayerId: string,
+): ActivityFeedJoinAction | undefined {
+  if (event.type !== 'help_requested') {
+    return undefined;
+  }
+
+  const toPlayerId = payloadString(event.payload, 'toPlayerId');
+  if (toPlayerId !== viewingPlayerId) {
+    return undefined;
+  }
+
+  const roomId = payloadString(event.payload, 'roomId');
+  if (!roomId) {
+    return undefined;
+  }
+
+  const inviteId = payloadString(event.payload, 'inviteId');
+
+  return {
+    type: 'join_room',
+    roomId,
+    fromPlayerId: event.playerId,
+    ...(inviteId ? { inviteId } : {}),
+  };
+}
+
 export async function queryActivityFeed(playerId: string): Promise<ActivityFeedEntry[]> {
   const sinceTimestamp = Date.now() - ACTIVITY_FEED_WINDOW_MS;
+  const friendIds = await getPlayerFriendIds(playerId);
   const events = await postgresEventStore.queryRecentEvents({
     playerId,
+    friendIds,
     sinceTimestamp,
     limit: 50,
   });
@@ -476,6 +515,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       iconUrl: resolveScribesIconUrl(event),
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
+      joinAction: resolveJoinAction(event, playerId),
     };
   });
 }

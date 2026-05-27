@@ -18,6 +18,7 @@ import type {
   EncounterResultResponse,
   EncounterRoomSnapshotDto,
   EncounterSnapshotDto,
+  JoinFriendRoomResponse,
   InventoryItemDto,
   LoreGemClaimResponse,
   LoreGemOfferResponse,
@@ -487,6 +488,19 @@ export async function respondHelpInvite(
   return request<RespondHelpResponse>('/room/help/respond', {
     method: 'POST',
     body: JSON.stringify({ inviteId, accept: true }),
+  });
+}
+
+export async function joinFriendRoom(
+  friendPlayerId: string,
+  avatarId?: string,
+): Promise<JoinFriendRoomResponse> {
+  return request<JoinFriendRoomResponse>('/room/join/friend', {
+    method: 'POST',
+    body: JSON.stringify({
+      friendPlayerId,
+      ...(avatarId ? { avatarId } : {}),
+    }),
   });
 }
 

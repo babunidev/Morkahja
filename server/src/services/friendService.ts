@@ -7,8 +7,10 @@ import {
 } from '../db/postgresDocumentStore.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { PlayerDocument } from '../types/player.js';
+import { HELP_SEEN_WINDOW_MS } from '../domain/rooms/roomConstants.js';
 import { getAchievementsSnapshotReadOnly } from './achievementService.js';
 import { loadPlayerAvatars } from './playerService.js';
+import { describeJoinableRoomForFriend } from './roomService.js';
 
 export class FriendNotFoundError extends Error {
   constructor() {
@@ -52,6 +54,9 @@ export interface FriendSummary {
   portrait: string;
   frame: string;
   avatarName: string | null;
+  lastPlayedAt: number;
+  recentlyActive: boolean;
+  joinableRoom: Awaited<ReturnType<typeof describeJoinableRoomForFriend>>;
 }
 
 export interface FriendAvatarView {
@@ -249,6 +254,7 @@ async function resolveFriendAvatar(
 }
 
 async function buildFriendSummary(
+  viewerPlayerId: string,
   friendId: string,
   liveSessionPlayerIds: Set<string>,
 ): Promise<FriendSummary | null> {
@@ -265,12 +271,21 @@ async function buildFriendSummary(
     playerName: typeof record.playerName === 'string' ? record.playerName : canonicalFriendId,
   } as PlayerDocument;
   const avatar = await resolveFriendAvatar(canonicalFriendId);
+  const lastPlayedAt = typeof player.lastPlayedAt === 'number' ? player.lastPlayedAt : 0;
+  const online = isPlayerOnline(player, liveSessionPlayerIds);
+  const recentlyActive = online && (Date.now() - lastPlayedAt) <= HELP_SEEN_WINDOW_MS;
+  const joinableRoom = recentlyActive
+    ? await describeJoinableRoomForFriend(viewerPlayerId, canonicalFriendId)
+    : null;
 
   return {
     playerId: canonicalFriendId,
     playerName: player.playerName,
-    online: isPlayerOnline(player, liveSessionPlayerIds),
+    online,
     ...avatar,
+    lastPlayedAt,
+    recentlyActive,
+    joinableRoom,
   };
 }
 
@@ -284,7 +299,7 @@ export async function listPlayerFriends(playerId: string): Promise<FriendSummary
   const viewerName = typeof viewer?.playerName === 'string' ? viewer.playerName : playerId;
   const friendIds = await getPlayerFriendIds(playerId);
   const summaries = await Promise.all(
-    friendIds.map((friendId) => buildFriendSummary(friendId, liveSessionPlayerIds)),
+    friendIds.map((friendId) => buildFriendSummary(playerId, friendId, liveSessionPlayerIds)),
   );
 
   return summaries
@@ -349,7 +364,7 @@ export async function addPlayerFriend(
   );
 
   const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions();
-  const friend = await buildFriendSummary(friendId, liveSessionPlayerIds);
+  const friend = await buildFriendSummary(playerId, friendId, liveSessionPlayerIds);
 
   if (!friend) {
     throw new FriendLookupNotFoundError();
