@@ -1,12 +1,15 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { PanelButton } from '../common/PanelButton.js';
+import { overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
 import { FADE_DURATION_MS, waitForFade } from '../transitions/fade.js';
-import {
-  NAV_BUTTON_PRESS_MS,
-  useNavButtonPress,
-} from '../transitions/navButtonPress.js';
+import { NAV_BUTTON_PRESS_MS } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import {
+  PROTECTED_SURFACE_ATTR,
+  protectedImageProps,
+} from '../protectedImage.js';
 
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const DEATH_OVERLAY_ASSET = '/UI/09_GAME/im_overlay_death.webp';
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',
@@ -21,14 +24,35 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  position: 'relative',
+  width: 'min(92vw, 480px)',
+  minHeight: 'min(72vh, 520px)',
   display: 'grid',
-  gap: 20,
-  padding: '24px 20px 20px',
-  border: '1px solid rgba(255, 204, 102, 0.62)',
+  placeItems: 'center',
+  overflow: 'hidden',
   borderRadius: 14,
-  background: 'rgba(12, 7, 5, 0.94)',
-  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
+  pointerEvents: 'auto',
+};
+
+const deathArtStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'contain',
+  objectPosition: 'center',
+  pointerEvents: 'none',
+  userSelect: 'none',
+};
+
+const panelContentStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  width: '100%',
+  display: 'grid',
+  gap: 18,
+  padding: 'clamp(28px, 8vh, 56px) clamp(20px, 5vw, 32px) clamp(24px, 6vh, 40px)',
+  boxSizing: 'border-box',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   textAlign: 'center',
@@ -37,64 +61,71 @@ const panelStyle: CSSProperties = {
 const titleStyle: CSSProperties = {
   margin: 0,
   color: '#ffcc66',
-  fontSize: '1.35rem',
+  fontSize: 'clamp(1.2rem, 4.5vw, 1.45rem)',
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.05em',
+  textShadow: '0 3px 12px rgba(0, 0, 0, 0.9)',
 };
 
 const messageStyle: CSSProperties = {
   margin: 0,
-  color: 'rgba(247, 239, 224, 0.92)',
-  fontSize: '1.02rem',
+  color: 'rgba(247, 239, 224, 0.94)',
+  fontSize: 'clamp(0.95rem, 3.6vw, 1.05rem)',
   lineHeight: 1.5,
+  textShadow: '0 2px 10px rgba(0, 0, 0, 0.88)',
 };
 
 const hopeStyle: CSSProperties = {
   margin: 0,
-  color: 'rgba(247, 239, 224, 0.78)',
-  fontSize: '0.94rem',
+  color: 'rgba(247, 239, 224, 0.8)',
+  fontSize: 'clamp(0.88rem, 3.2vw, 0.96rem)',
   lineHeight: 1.55,
   fontStyle: 'italic',
+  textShadow: '0 2px 10px rgba(0, 0, 0, 0.88)',
 };
 
-const homeButtonStyle: CSSProperties = {
-  margin: '0 auto',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-  width: 'min(58vw, 200px)',
-};
-
-const homeImageStyle: CSSProperties = {
-  display: 'block',
+const actionsRowStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 12,
   width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5))',
+  marginTop: 8,
 };
+
+const actionButtonVisualStyle: CSSProperties = {
+  ...overlayCloseButtonVisualStyle,
+  width: '100%',
+  minHeight: 40,
+  padding: '8px 10px',
+  fontSize: '0.92rem',
+  lineHeight: 1.2,
+};
+
+type DeathAction = 'same-soul' | 'new-avatar';
 
 export function AvatarDeathOverlay({
   avatarName,
-  onHandoffStart,
   onHandoffComplete,
+  onNewAvatar,
+  onSameSoul,
   open,
 }: {
   avatarName: string;
-  onHandoffStart: () => void | Promise<void>;
   onHandoffComplete: () => void;
+  onNewAvatar: () => void | Promise<void>;
+  onSameSoul: () => void | Promise<void>;
   open: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const [homePending, setHomePending] = useState(false);
-  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const [pendingAction, setPendingAction] = useState<DeathAction | null>(null);
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       setExiting(false);
-      setHomePending(false);
+      setPendingAction(null);
       return;
     }
 
@@ -107,30 +138,29 @@ export function AvatarDeathOverlay({
     };
   }, [open]);
 
-  async function handleHome(): Promise<void> {
-    if (homePending || exiting) {
+  async function handleAction(action: DeathAction, handler: () => void | Promise<void>): Promise<void> {
+    if (pendingAction !== null || exiting) {
       return;
     }
 
-    setHomePending(true);
-    pulse('death-home');
+    setPendingAction(action);
     playSfx(DEFAULT_BUTTON_SOUND);
     await new Promise((resolve) => {
       window.setTimeout(resolve, NAV_BUTTON_PRESS_MS);
     });
 
     try {
-      await onHandoffStart();
+      await handler();
     } catch (error) {
-      console.error('Death overlay home failed', error);
-      setHomePending(false);
+      console.error(`Death overlay ${action} failed`, error);
+      setPendingAction(null);
       return;
     }
 
     setExiting(true);
     await waitForFade();
     onHandoffComplete();
-    setHomePending(false);
+    setPendingAction(null);
   }
 
   if (!open) {
@@ -138,6 +168,7 @@ export function AvatarDeathOverlay({
   }
 
   const showOverlay = visible && !exiting;
+  const actionsDisabled = pendingAction !== null;
 
   return (
     <div
@@ -152,43 +183,49 @@ export function AvatarDeathOverlay({
       <section
         aria-labelledby="avatar-death-title"
         style={panelStyle}
+        {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       >
-        <h2 id="avatar-death-title" style={titleStyle}>Your journey has ended.</h2>
-        <p style={messageStyle}>
-          {avatarName} didn&apos;t get the blessing of the gods.
-        </p>
-        <p style={hopeStyle}>
-          Return home when you are ready — you may begin the road again as the same
-          soul, or shape a new avatar and walk a different path.
-        </p>
-        <button
-          aria-disabled={homePending}
-          aria-label="Return home"
-          disabled={homePending}
-          onClick={() => {
-            void handleHome();
-          }}
-          onPointerDown={() => {
-            if (!homePending) {
-              pulse('death-home');
-            }
-          }}
-          style={{
-            ...homeButtonStyle,
-            cursor: homePending ? 'default' : 'pointer',
-          }}
-          type="button"
-        >
-          <img
-            alt="Home"
-            draggable={false}
-            src={HOME_BUTTON_ASSET}
-            style={{
-              ...homeImageStyle,
-              animation: pressAnimation(isPressed('death-home')),
-            }}
-          />
-        </button>
+        <img
+          alt=""
+          aria-hidden="true"
+          {...protectedImageProps}
+          src={DEATH_OVERLAY_ASSET}
+          style={deathArtStyle}
+        />
+        <div style={panelContentStyle}>
+          <h2 id="avatar-death-title" style={titleStyle}>Your journey has ended.</h2>
+          <p style={messageStyle}>
+            {avatarName} didn&apos;t get the blessing of the gods.
+          </p>
+          <p style={hopeStyle}>
+            Return as the same soul with a fresh start, or shape a new avatar and walk
+            a different path.
+          </p>
+          <div style={actionsRowStyle}>
+            <PanelButton
+              aria-disabled={actionsDisabled}
+              disabled={actionsDisabled}
+              onClick={() => {
+                void handleAction('same-soul', onSameSoul);
+              }}
+              pressKey="death-same-soul"
+              visualStyle={actionButtonVisualStyle}
+            >
+              Same Soul
+            </PanelButton>
+            <PanelButton
+              aria-disabled={actionsDisabled}
+              disabled={actionsDisabled}
+              onClick={() => {
+                void handleAction('new-avatar', onNewAvatar);
+              }}
+              pressKey="death-new-avatar"
+              visualStyle={actionButtonVisualStyle}
+            >
+              New Avatar
+            </PanelButton>
+          </div>
+        </div>
       </section>
     </div>
   );

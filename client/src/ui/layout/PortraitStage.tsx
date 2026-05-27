@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useLayoutMode } from './useLayoutMode.js';
 
 const stageShellStyle: CSSProperties = {
   position: 'fixed',
@@ -6,6 +7,14 @@ const stageShellStyle: CSSProperties = {
   zIndex: 2,
   display: 'grid',
   placeItems: 'center',
+  overflow: 'hidden',
+  pointerEvents: 'none',
+};
+
+const stageShellMobileStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 2,
   overflow: 'hidden',
   pointerEvents: 'none',
 };
@@ -19,10 +28,24 @@ const stageStyle: CSSProperties = {
   pointerEvents: 'auto',
 };
 
+const stageMobileStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  overflow: 'hidden',
+  color: '#f7efe0',
+  pointerEvents: 'auto',
+};
+
 export function PortraitStage({ children }: { children: ReactNode }) {
+  const { mode } = useLayoutMode();
+  const mobilePortrait = mode === 'mobile-portrait';
+
   return (
-    <main aria-label="Portrait Stage" style={stageShellStyle}>
-      <div style={stageStyle}>{children}</div>
+    <main
+      aria-label="Portrait Stage"
+      style={mobilePortrait ? stageShellMobileStyle : stageShellStyle}
+    >
+      <div style={mobilePortrait ? stageMobileStyle : stageStyle}>{children}</div>
     </main>
   );
 }

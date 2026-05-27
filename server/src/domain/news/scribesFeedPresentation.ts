@@ -47,14 +47,12 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
 
   switch (event.type) {
     case 'avatar_died': {
-      const symbolIconName = readString(payload, 'symbolIconName');
-      if (symbolIconName) {
-        return `${SOLUTION_IMAGE_ROOT}/${symbolIconName}.webp`;
-      }
+      if (payload.pendingDeathEncounter === true) {
+        const symbolIconName = readString(payload, 'symbolIconName');
+        if (symbolIconName) {
+          return `${SOLUTION_IMAGE_ROOT}/${symbolIconName}.webp`;
+        }
 
-      const encounterId = readNumber(payload, 'encounterId');
-      const encounterTitle = readString(payload, 'encounterTitle')?.toLowerCase();
-      if (encounterId === 1 || encounterTitle === 'atranor') {
         return ATRANOR_SYMBOL_ICON;
       }
 
@@ -66,6 +64,7 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
       return LEVEL_UP_ICON;
     case 'gems_received':
     case 'gems_donated':
+    case 'hearth_blessing_ready':
     case 'daily_reward_claimed':
       return GEMS_ICON;
     case 'achievement_unlocked': {

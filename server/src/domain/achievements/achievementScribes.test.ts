@@ -137,7 +137,33 @@ assert.equal(
   '/game/solutionimages/im_solution_iron_blade.webp',
 );
 
-const atranorDeath = {
+const atranorPendingDeath = {
+  eventId: 'death-pending-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'avatar_died',
+  visibility: 'global' as const,
+  importance: 'legendary' as const,
+  payload: {
+    avatarName: 'Lyra',
+    encounterId: 42,
+    encounterTitle: 'Frozen Pass',
+    pendingDeathEncounter: true,
+    symbolIconName: 'tool_epic_atranor_potion',
+  },
+};
+
+assert.equal(
+  renderEventMessage(atranorPendingDeath),
+  'Lyra entered Atranor. The gods decide their fate',
+);
+assert.equal(
+  resolveScribesIconUrl(atranorPendingDeath),
+  '/game/solutionimages/tool_epic_atranor_potion.webp',
+);
+
+const actualAvatarDeath = {
   eventId: 'death-1',
   timestamp: Date.now(),
   playerId: 'player-a',
@@ -150,16 +176,42 @@ const atranorDeath = {
     encounterId: 1,
     encounterTitle: 'Atranor',
     symbolIconName: 'tool_epic_atranor_potion',
+    actualDeath: true,
   },
 };
 
 assert.equal(
-  renderEventMessage(atranorDeath),
-  'Lyra entered Atranor. The gods decide their fate',
+  renderEventMessage(actualAvatarDeath),
+  "Lyra didn't receive the blessing of the gods.",
 );
 assert.equal(
-  resolveScribesIconUrl(atranorDeath),
-  '/game/solutionimages/tool_epic_atranor_potion.webp',
+  resolveScribesIconUrl(actualAvatarDeath),
+  '/UI/09_GAME/im_overlay_death.webp',
+);
+
+const hearthBlessingReady = {
+  eventId: 'hearth-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  type: 'hearth_blessing_ready',
+  visibility: 'global' as const,
+  importance: 'high' as const,
+  payload: {
+    playerName: 'Babuni',
+    utcDay: '2026-05-24',
+    encountersRequired: 42,
+  },
+};
+
+assert.equal(isVisibleInScribesFeed(hearthBlessingReady, 'player-a'), true);
+assert.equal(isVisibleInScribesFeed(hearthBlessingReady, 'player-b'), false);
+assert.equal(
+  renderEventMessage(hearthBlessingReady),
+  'Babuni filled the Hearth Blessing (42 encounters). It is ready to claim.',
+);
+assert.equal(
+  resolveScribesIconUrl(hearthBlessingReady),
+  '/UI/03_DASHBOARD/im_gems.webp',
 );
 
 const encounterFailed = {

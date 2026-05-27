@@ -11,10 +11,6 @@ import {
 import { donatePlayerGemsController } from './controllers/donateController.js';
 import { unlockPlayerExpansionController } from './controllers/expansionController.js';
 import {
-  activateSealOfNorghorController,
-  getSealOfNorghorStatusController,
-} from './controllers/sealOfNorghorController.js';
-import {
   addPlayerFriendController,
   getFriendAchievementsController,
   listPlayerFriendsController,
@@ -53,7 +49,6 @@ import {
   savePlayerAvatar,
   selectPlayerAvatar,
 } from './services/playerService.js';
-import { buildSealOfNorghorStatus } from './services/sealOfNorghorService.js';
 import { loadAllowedClientOrigins } from './config/corsOrigins.js';
 import { logAndFormatRequestError } from './http/errorResponse.js';
 
@@ -214,8 +209,6 @@ app.get('/player/achievements', getPlayerAchievementsController);
 app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);
 app.post('/player/donate', donatePlayerGemsController);
 app.post('/player/expansions/unlock', unlockPlayerExpansionController);
-app.get('/player/seal-of-norghor', getSealOfNorghorStatusController);
-app.post('/player/seal-of-norghor/activate', activateSealOfNorghorController);
 app.get('/player/friends', listPlayerFriendsController);
 app.post('/player/friends', addPlayerFriendController);
 app.get('/player/friends/:friendId/achievements', getFriendAchievementsController);
@@ -235,7 +228,6 @@ app.get('/player', async (req: Request, res: Response) => {
     ...player,
     playerId,
     unlockedExpansions: await getPlayerUnlockedExpansions(playerId),
-    sealOfNorghor: buildSealOfNorghorStatus(player),
   });
 });
 

@@ -94,16 +94,30 @@ export function GameMessageToast({
   message,
   onClick,
   onDismiss,
+  stackOffsetPx = 0,
 }: {
   label?: string;
   message: string;
   onClick?: () => void;
   onDismiss: () => void;
+  stackOffsetPx?: number;
 }) {
   const [phase, setPhase] = useState<ToastPhase>('enter');
   const clickable = typeof onClick === 'function';
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
+  const positionedRootStyle: CSSProperties = stackOffsetPx > 0
+    ? {
+      ...rootStyle,
+      top: `calc(max(12px, env(safe-area-inset-top)) + ${stackOffsetPx}px)`,
+    }
+    : rootStyle;
+  const positionedClickableRootStyle: CSSProperties = stackOffsetPx > 0
+    ? {
+      ...clickableRootStyle,
+      top: `calc(max(12px, env(safe-area-inset-top)) + ${stackOffsetPx}px)`,
+    }
+    : clickableRootStyle;
 
   useEffect(() => {
     setPhase('enter');
@@ -149,7 +163,7 @@ export function GameMessageToast({
   );
 
   return (
-    <div aria-live="polite" style={clickable ? clickableRootStyle : rootStyle}>
+    <div aria-live="polite" style={clickable ? positionedClickableRootStyle : positionedRootStyle}>
       {clickable ? (
         <button
           aria-label={message}

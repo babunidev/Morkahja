@@ -1,6 +1,9 @@
 import { getPlayer, setPlayer } from '../../db/postgresDocumentStore.js';
 import { addPlayerYellowRedGems } from '../../services/playerService.js';
-import { recordDailyRewardClaimedEvent } from '../../services/gameEventService.js';
+import {
+  recordDailyRewardClaimedEvent,
+  recordHearthBlessingReadyEvent,
+} from '../../services/gameEventService.js';
 import type { PlayerDocument } from '../../types/player.js';
 import { ADVENTURER_ACHIEVEMENT_ID } from './adventurerAchievement.js';
 import { ALPHA_PLAYER_ACHIEVEMENT_ID } from './alphaPlayerAchievement.js';
@@ -31,6 +34,7 @@ export interface PlayerDailyRewardState {
   utcDay: string;
   encountersPlayed: number;
   claimedAt?: number;
+  readyNotifiedAt?: number;
 }
 
 export interface DailyRewardStatus {
@@ -63,6 +67,7 @@ function readDailyRewardState(player: PlayerDocument | null): PlayerDailyRewardS
     utcDay: stored.utcDay,
     encountersPlayed: Math.max(0, stored.encountersPlayed ?? 0),
     claimedAt: stored.claimedAt,
+    readyNotifiedAt: stored.readyNotifiedAt,
   };
 }
 
@@ -148,6 +153,49 @@ export async function resolveDailyRewardRanks(
   };
 }
 
+async function maybeRecordHearthBlessingReady(
+  playerId: string,
+  player: PlayerDocument | null,
+  previousEncountersPlayed: number,
+  next: PlayerDailyRewardState,
+  timestamp: number,
+): Promise<PlayerDailyRewardState> {
+  if (next.readyNotifiedAt !== undefined) {
+    return next;
+  }
+
+  if (previousEncountersPlayed >= DAILY_REWARD_ENCOUNTERS_REQUIRED) {
+    return next;
+  }
+
+  if (next.encountersPlayed < DAILY_REWARD_ENCOUNTERS_REQUIRED) {
+    return next;
+  }
+
+  if (isDailyRewardClaimedForDay(player, next.utcDay)) {
+    return next;
+  }
+
+  const ranks = await resolveDailyRewardRanks(playerId);
+  const gemReward = computeDailyRewardGems(ranks);
+  if (gemReward <= 0) {
+    return next;
+  }
+
+  await recordHearthBlessingReadyEvent(
+    playerId,
+    next.utcDay,
+    DAILY_REWARD_ENCOUNTERS_REQUIRED,
+  );
+
+  const notified: PlayerDailyRewardState = {
+    ...next,
+    readyNotifiedAt: timestamp,
+  };
+  await writeDailyRewardState(playerId, notified);
+  return notified;
+}
+
 export async function recordDailyEncounterPlayed(
   playerId: string,
   timestamp = Date.now(),
@@ -162,15 +210,22 @@ export async function recordDailyEncounterPlayed(
       encountersPlayed: 1,
     };
     await writeDailyRewardState(playerId, reset);
-    return reset;
+    return maybeRecordHearthBlessingReady(playerId, player, 0, reset, timestamp);
   }
 
+  const previousEncountersPlayed = state.encountersPlayed;
   const next: PlayerDailyRewardState = {
     ...state,
     encountersPlayed: state.encountersPlayed + 1,
   };
   await writeDailyRewardState(playerId, next);
-  return next;
+  return maybeRecordHearthBlessingReady(
+    playerId,
+    player,
+    previousEncountersPlayed,
+    next,
+    timestamp,
+  );
 }
 
 export async function getDailyRewardStatus(playerId: string): Promise<DailyRewardStatus> {

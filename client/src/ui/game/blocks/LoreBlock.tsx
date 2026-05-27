@@ -9,7 +9,6 @@ import {
 import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
 
 const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const LORE_GEM_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
 const LORE_GEM_COLLECT_ANIMATION_MS = 700;
 const LORE_GEM_POPUP_MS = 330;
@@ -24,7 +23,7 @@ const loreBlockStyle: CSSProperties = {
   right: 0,
   top: 0,
   bottom: -30,
-  zIndex: 19,
+  zIndex: 18,
   width: '100%',
   display: 'grid',
   gridTemplateRows: 'minmax(0, 1fr)',
@@ -33,7 +32,7 @@ const loreBlockStyle: CSSProperties = {
 };
 
 const loreBlockVisibleStyle: CSSProperties = {
-  zIndex: 25,
+  zIndex: 18,
 };
 
 const loreBackgroundLayerStyle: CSSProperties = {
@@ -46,18 +45,6 @@ const loreBackgroundLayerStyle: CSSProperties = {
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   opacity: LORE_BACKGROUND_OPACITY,
-  pointerEvents: 'auto',
-};
-
-const blockBottomSeamStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: 0,
-  width: '108%',
-  height: 10,
-  objectFit: 'cover',
-  transform: 'translate(-50%, 7px)',
-  zIndex: 20,
   pointerEvents: 'auto',
 };
 
@@ -340,13 +327,6 @@ export function LoreBlock({
           </button>
         ) : null}
       </div>
-      <img
-        alt=""
-        aria-hidden="true"
-        {...protectedImageProps}
-        src={FRAME_MASK}
-        style={blockBottomSeamStyle}
-      />
     </aside>
   );
 }

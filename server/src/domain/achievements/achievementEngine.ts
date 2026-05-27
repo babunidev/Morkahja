@@ -54,6 +54,7 @@ const ALPHA_PLAYER_ACTIVITY_EVENT_TYPES = new Set([
 const FIRESTARTER_ACTIVITY_EVENT_TYPES = new Set([
   'avatar_created',
   'level_up',
+  'avatar_died',
 ]);
 
 export async function handleGameEvent(event: GameEvent): Promise<void> {

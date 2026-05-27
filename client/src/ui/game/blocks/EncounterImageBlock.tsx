@@ -316,8 +316,6 @@ export function EncounterImageBlock({
         inventory={inventory}
         onActionReveal={handleActionReveal}
       />
-      <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
-      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
       <LoreBlock
         encounterKey={encounter.snapshotId}
         onLoreGemCollect={async () => {
@@ -327,6 +325,8 @@ export function EncounterImageBlock({
         text={encounter.encounterText ?? ''}
         visible={loreOpen}
       />
+      <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
+      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
     </section>
   );
 }

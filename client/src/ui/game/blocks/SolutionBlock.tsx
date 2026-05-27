@@ -15,6 +15,7 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
+import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
@@ -47,42 +48,84 @@ interface VisibleSolutionSlot {
 }
 
 const UNAVAILABLE_SOLUTION_OPACITY = 0.37;
+const AVAILABLE_SOLUTION_READY_MS = 560;
+const SOLUTION_REVEAL_TOTAL_MS = ENCOUNTER_ACTIONS_FADE_DURATION_MS + AVAILABLE_SOLUTION_READY_MS;
 const SOLUTION_ENABLE_RATTLE_MS = 520;
 const DICE_ROLL_ANIMATION_MS = 1350;
 const SOLUTION_ROLL_REVEAL_MS = 1800;
 
-const encounterActionsRevealTransition = `opacity ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${ENCOUNTER_ACTIONS_FADE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-
 type SolutionRevealDirection = 'left' | 'right' | 'bottom';
 
-function solutionRevealStyle(
-  visible: boolean,
+function solutionSpinAnimationName(
   direction: SolutionRevealDirection,
-  targetOpacity = 1,
-): CSSProperties {
+  available: boolean,
+): string {
+  const unavailableSuffix = available ? '' : '-unavailable';
+
+  if (direction === 'left') {
+    return `morkahja-solution-reveal-left${unavailableSuffix}`;
+  }
+
+  if (direction === 'right') {
+    return `morkahja-solution-reveal-right${unavailableSuffix}`;
+  }
+
+  return 'morkahja-solution-reveal-dice';
+}
+
+function solutionHiddenStyle(direction: SolutionRevealDirection): CSSProperties {
   const hiddenRotation = direction === 'left'
     ? '-14deg'
     : direction === 'right'
       ? '14deg'
-      : '-10deg';
+      : '-12deg';
+  const hiddenScale = direction === 'bottom' ? 0.92 : 0.86;
 
   return {
-    opacity: visible ? targetOpacity : 0,
-    transform: visible
-      ? 'rotate(0deg) scale(1)'
-      : `rotate(${hiddenRotation}) scale(0.86)`,
+    opacity: 0,
+    transform: `rotate(${hiddenRotation}) scale(${hiddenScale})`,
     transformOrigin: '50% 50%',
-    transition: encounterActionsRevealTransition,
   };
 }
 
-function diceRevealStyle(visible: boolean, targetOpacity = 1): CSSProperties {
+function solutionRevealSpinStyle(
+  direction: SolutionRevealDirection,
+  available: boolean,
+): CSSProperties {
   return {
-    opacity: visible ? targetOpacity : 0,
-    transform: visible ? 'rotate(0deg) scale(1)' : 'rotate(-12deg) scale(0.92)',
+    opacity: 0,
     transformOrigin: '50% 50%',
-    transition: encounterActionsRevealTransition,
+    animation: `${solutionSpinAnimationName(direction, available)} ${SOLUTION_REVEAL_TOTAL_MS}ms cubic-bezier(0.55, 0, 0.25, 1) forwards`,
   };
+}
+
+function solutionSettledStyle(available: boolean): CSSProperties {
+  return {
+    opacity: available ? 1 : UNAVAILABLE_SOLUTION_OPACITY,
+    transform: 'rotate(0deg) scale(1)',
+    transformOrigin: '50% 50%',
+  };
+}
+
+function solutionRevealStyle(
+  revealing: boolean,
+  interactive: boolean,
+  direction: SolutionRevealDirection,
+  available: boolean,
+): CSSProperties {
+  if (!revealing) {
+    return solutionHiddenStyle(direction);
+  }
+
+  if (!interactive) {
+    return solutionRevealSpinStyle(direction, available);
+  }
+
+  return solutionSettledStyle(available);
+}
+
+function diceRevealStyle(revealing: boolean, interactive: boolean): CSSProperties {
+  return solutionRevealStyle(revealing, interactive, 'bottom', true);
 }
 
 const enableRattleAnimationStyle: CSSProperties = {
@@ -478,10 +521,33 @@ export function SolutionBlock({
     setDiceRollCount(0);
     setSolutionTooltip(null);
 
-    const revealTimer = window.setTimeout(() => {
+    let cancelled = false;
+
+    async function runActionsReveal(): Promise<void> {
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
+      });
+
+      if (cancelled) {
+        return;
+      }
+
+      await waitForNextPaint();
+
+      if (cancelled) {
+        return;
+      }
+
       setActionsVisible(true);
-    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
-    const interactiveTimer = window.setTimeout(() => {
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, SOLUTION_REVEAL_TOTAL_MS);
+      });
+
+      if (cancelled) {
+        return;
+      }
+
       setActionsInteractive(true);
       setDiceEnableRattle(true);
 
@@ -493,16 +559,21 @@ export function SolutionBlock({
       if (slotsToRattle.length > 0) {
         setEnableRattleSlots(new Set(slotsToRattle));
       }
-    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + ENCOUNTER_ACTIONS_FADE_DURATION_MS);
-    const rattleClearTimer = window.setTimeout(() => {
-      setEnableRattleSlots(new Set());
-      setDiceEnableRattle(false);
-    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + ENCOUNTER_ACTIONS_FADE_DURATION_MS + SOLUTION_ENABLE_RATTLE_MS);
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, SOLUTION_ENABLE_RATTLE_MS);
+      });
+
+      if (!cancelled) {
+        setEnableRattleSlots(new Set());
+        setDiceEnableRattle(false);
+      }
+    }
+
+    void runActionsReveal();
 
     return () => {
-      window.clearTimeout(revealTimer);
-      window.clearTimeout(interactiveTimer);
-      window.clearTimeout(rattleClearTimer);
+      cancelled = true;
     };
     // Only re-run reveal when the encounter snapshot changes — not on room poll object churn.
   }, [encounterRevealKey]);
@@ -536,6 +607,7 @@ export function SolutionBlock({
   }
 
   const actionsReady = actionsInteractive && !hidden;
+  const actionsRevealing = actionsVisible && !hidden;
   const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
     actionsReady,
   );
@@ -668,6 +740,11 @@ export function SolutionBlock({
       }}
     >
       <style>
+        {'@keyframes morkahja-solution-reveal-left { 0% { opacity: 0; transform: rotate(-14deg) scale(0.86); } 55% { opacity: 0.42; transform: rotate(-6deg) scale(0.94); } 82% { opacity: 0.88; transform: rotate(-2deg) scale(0.99); } 100% { opacity: 1; transform: rotate(0deg) scale(1); } }'}
+        {'@keyframes morkahja-solution-reveal-left-unavailable { 0% { opacity: 0; transform: rotate(-14deg) scale(0.86); } 55% { opacity: 0.16; transform: rotate(-6deg) scale(0.94); } 82% { opacity: 0.33; transform: rotate(-2deg) scale(0.99); } 100% { opacity: 0.37; transform: rotate(0deg) scale(1); } }'}
+        {'@keyframes morkahja-solution-reveal-right { 0% { opacity: 0; transform: rotate(14deg) scale(0.86); } 55% { opacity: 0.42; transform: rotate(6deg) scale(0.94); } 82% { opacity: 0.88; transform: rotate(2deg) scale(0.99); } 100% { opacity: 1; transform: rotate(0deg) scale(1); } }'}
+        {'@keyframes morkahja-solution-reveal-right-unavailable { 0% { opacity: 0; transform: rotate(14deg) scale(0.86); } 55% { opacity: 0.16; transform: rotate(6deg) scale(0.94); } 82% { opacity: 0.33; transform: rotate(2deg) scale(0.99); } 100% { opacity: 0.37; transform: rotate(0deg) scale(1); } }'}
+        {'@keyframes morkahja-solution-reveal-dice { 0% { opacity: 0; transform: rotate(-12deg) scale(0.92); } 55% { opacity: 0.42; transform: rotate(-5deg) scale(0.96); } 82% { opacity: 0.88; transform: rotate(-1deg) scale(0.99); } 100% { opacity: 1; transform: rotate(0deg) scale(1); } }'}
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
         {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
         {'@keyframes morkahja-dice-roll { 0% { transform: rotate(0deg) translateY(0); } 12.5% { transform: rotate(90deg) translateY(-8px); } 25% { transform: rotate(180deg) translateY(0); } 37.5% { transform: rotate(270deg) translateY(-7px); } 50% { transform: rotate(360deg) translateY(0); } 62.5% { transform: rotate(450deg) translateY(-6px); } 75% { transform: rotate(540deg) translateY(0); } 87.5% { transform: rotate(630deg) translateY(-3px); } 100% { transform: rotate(720deg) translateY(0); } }'}
@@ -695,7 +772,7 @@ export function SolutionBlock({
               key={slot}
               style={{
                 ...diceSlotStyle,
-                ...diceRevealStyle(actionsVisible && !hidden, 1),
+                ...diceRevealStyle(actionsRevealing, actionsReady),
               }}
             >
               <button
@@ -751,7 +828,12 @@ export function SolutionBlock({
                 aria-hidden="true"
                 key={slot}
                 style={{
-                  ...solutionRevealStyle(actionsVisible && !hidden, slot === 'A' || slot === 'B' ? 'left' : 'right'),
+                  ...solutionRevealStyle(
+                    actionsRevealing,
+                    actionsReady,
+                    slot === 'A' || slot === 'B' ? 'left' : 'right',
+                    false,
+                  ),
                   width: SOLUTION_ACTION_SIZE_PX,
                   height: SOLUTION_ACTION_SIZE_PX,
                 }}
@@ -788,9 +870,10 @@ export function SolutionBlock({
                 style={{
                   ...solutionButtonStyle,
                   ...solutionRevealStyle(
-                    actionsVisible && !hidden,
+                    actionsRevealing,
+                    actionsReady,
                     revealDirection,
-                    visibleSlot.available ? 1 : UNAVAILABLE_SOLUTION_OPACITY,
+                    visibleSlot.available,
                   ),
                 }}
                 type="button"
@@ -801,7 +884,9 @@ export function SolutionBlock({
                     ...solutionIconShellStyle,
                     ...(enableRattleSlots.has(slot) ? enableRattleAnimationStyle : {}),
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
-                    ...(visibleSlot.available && visibleSlot.isPrimary ? primarySolutionGlowStyle : {}),
+                    ...(visibleSlot.available && visibleSlot.isPrimary && actionsReady
+                      ? primarySolutionGlowStyle
+                      : {}),
                   }}
                 >
                   <img

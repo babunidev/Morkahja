@@ -208,7 +208,7 @@ export function AchievementsOverlay({
       });
       onProgressChange?.();
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not claim daily reward');
+      setLoadError(error instanceof Error ? error.message : 'Could not claim Hearth Blessing');
     } finally {
       setClaimPending(false);
     }

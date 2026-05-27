@@ -256,7 +256,10 @@ export async function recordEncounterContinuedEvents(
       type: 'avatar_died',
       visibility: 'global',
       importance: 'legendary',
-      payload: withAtranorDeathSymbol(payload),
+      payload: withAtranorDeathSymbol({
+        ...payload,
+        actualDeath: true,
+      }),
     });
     await recordWallOfFameEntry(playerId, avatar);
     return;
@@ -353,6 +356,26 @@ export async function recordAchievementUnlockedEvent(
       achievementId: payload.achievementId,
       rank: payload.rank,
       rankTitle: payload.rankTitle,
+    },
+  });
+}
+
+export async function recordHearthBlessingReadyEvent(
+  playerId: string,
+  utcDay: string,
+  encountersRequired: number,
+): Promise<void> {
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'hearth_blessing_ready',
+    visibility: 'global',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      utcDay,
+      encountersRequired,
     },
   });
 }

@@ -9,9 +9,13 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import {
+  LOSS_ROW_FADE_IN_MS,
+  playLossBubblesFromTargets,
   playLossFlightsFromAvatar,
   playRewardFlights,
+  resultLossSequenceDurationMs,
   rewardFlyTargetKind,
+  type LossBubbleTargetSpec,
   type LossFlightSpec,
   type RewardFlightSpec,
 } from '../rewardFlyAnimation.js';
@@ -21,7 +25,11 @@ import {
   protectedImageProps,
 } from '../../protectedImage.js';
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
-import { fadeTransition } from '../../transitions/fade.js';
+import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
+import {
+  ENCOUNTER_ACTIONS_FADE_DURATION_MS,
+  fadeTransition,
+} from '../../transitions/fade.js';
 
 const RESULT_BACKGROUND = '/UI/09_GAME/im_bg_result.webp';
 const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
@@ -95,6 +103,59 @@ const continueImageStyle: CSSProperties = {
   width: '100%',
   height: 'auto',
   filter: 'drop-shadow(0 5px 9px rgba(0, 0, 0, 0.45))',
+};
+
+const CONTINUE_REVEAL_SPEED = 1.15;
+
+function continueTimingMs(durationMs: number): number {
+  return Math.round(durationMs / CONTINUE_REVEAL_SPEED);
+}
+
+const LOSS_REVEAL_LEAD_MS = 360;
+const LOSS_ROW_REVEAL_AT_PROGRESS = 0.52;
+
+/** When continue may start — same milestone as loss row reveal (~52% through bubble phase). */
+function lossRowRevealDelayMs(lossCount: number): number {
+  const bubbleDurationMs = Math.max(
+    0,
+    resultLossSequenceDurationMs(lossCount) - LOSS_ROW_FADE_IN_MS - LOSS_REVEAL_LEAD_MS,
+  );
+
+  return Math.max(
+    0,
+    Math.round(bubbleDurationMs * LOSS_ROW_REVEAL_AT_PROGRESS),
+  );
+}
+
+const CONTINUE_REVEAL_DELAY_MS = 0;
+const CONTINUE_REVEAL_FADE_MS = continueTimingMs(ENCOUNTER_ACTIONS_FADE_DURATION_MS);
+const CONTINUE_READY_MS = continueTimingMs(560);
+const CONTINUE_REVEAL_TOTAL_MS = CONTINUE_REVEAL_FADE_MS + CONTINUE_READY_MS;
+const CONTINUE_ENABLE_RATTLE_MS = continueTimingMs(520);
+
+const continueHiddenStyle: CSSProperties = {
+  opacity: 0,
+  transform: 'rotate(18deg) scale(0.82)',
+  transformOrigin: '50% 50%',
+};
+
+const continueSettledStyle: CSSProperties = {
+  opacity: 1,
+  transform: 'rotate(0deg) scale(1)',
+  transformOrigin: '50% 50%',
+};
+
+function continueRevealSpinStyle(): CSSProperties {
+  return {
+    opacity: 0,
+    transformOrigin: '50% 50%',
+    animation: `morkahja-continue-reveal-spin ${CONTINUE_REVEAL_TOTAL_MS}ms cubic-bezier(0.55, 0, 0.25, 1) forwards`,
+  };
+}
+
+const continueEnableRattleStyle: CSSProperties = {
+  animation: `morkahja-continue-enable-rattle ${CONTINUE_ENABLE_RATTLE_MS}ms ease-out`,
+  transformOrigin: '50% 50%',
 };
 
 const CONTINUE_BOUNCE_MS = 1000;
@@ -192,6 +253,8 @@ const usedSolutionImageStyle: CSSProperties = {
   height: 48,
   boxShadow: '0 0 10px rgba(247, 239, 224, 0.28), 0 5px 10px rgba(0, 0, 0, 0.46)',
 };
+
+const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
 const lossRowStyle: CSSProperties = {
   ...rewardRowStyle,
@@ -341,7 +404,12 @@ export function ResultBlock({
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
+  const [lossesFlyingAway, setLossesFlyingAway] = useState(false);
   const [lossesRevealed, setLossesRevealed] = useState(true);
+  const [lossesSequenceDone, setLossesSequenceDone] = useState(true);
+  const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
+  const [continueInteractive, setContinueInteractive] = useState(false);
+  const [continueEnableRattle, setContinueEnableRattle] = useState(false);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
@@ -393,60 +461,79 @@ export function ResultBlock({
   useEffect(() => {
     setOutcomeShowsRoll(false);
     setRewardsFlyingAway(false);
+    setLossesFlyingAway(false);
     setLossesRevealed(losses.length === 0);
+    setLossesSequenceDone(roll === null);
+    setContinueRevealPlaying(false);
+    setContinueInteractive(false);
+    setContinueEnableRattle(false);
     rewardButtonRefs.current.clear();
     lossButtonRefs.current.clear();
   }, [roll, losses.length]);
 
   useEffect(() => {
-    if (roll === null || losses.length === 0) {
+    if (roll === null) {
       return undefined;
     }
 
+    if (losses.length === 0) {
+      setLossesSequenceDone(false);
+      const readyTimer = window.setTimeout(() => {
+        setLossesSequenceDone(true);
+      }, lossRowRevealDelayMs(0));
+
+      return () => {
+        window.clearTimeout(readyTimer);
+      };
+    }
+
     let cancelled = false;
+    setLossesSequenceDone(false);
     setLossesRevealed(false);
 
     async function playLossRevealFlights(): Promise<void> {
-      await new Promise<void>((resolve) => {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            resolve();
-          });
-        });
-      });
+      await waitForNextPaint();
 
       if (cancelled) {
         return;
       }
 
-      const flights: LossFlightSpec[] = [];
+      const flights: LossFlightSpec[] = losses.map((loss) => ({
+        id: `loss-fly-${loss.solution.mSolutionID}`,
+        imageSrc: solutionImagePath(loss.solution),
+        size: lossIconSize(loss.solution.mSolutionInventoryType),
+      }));
+      const rowRevealDelayMs = lossRowRevealDelayMs(flights.length);
+      let rowRevealed = false;
 
-      for (const loss of losses) {
-        const solutionId = loss.solution.mSolutionID;
-        const button = lossButtonRefs.current.get(solutionId)
-          ?? document.querySelector<HTMLButtonElement>(
-            `[data-loss-fly-target="${solutionId}"]`,
-          );
-        const targetRect = button?.getBoundingClientRect();
-
-        if (!targetRect || targetRect.width <= 0 || targetRect.height <= 0) {
-          continue;
+      const markLossRowRevealed = (): void => {
+        if (cancelled || rowRevealed) {
+          return;
         }
 
-        flights.push({
-          id: `loss-fly-${solutionId}`,
-          imageSrc: solutionImagePath(loss.solution),
-          size: lossIconSize(loss.solution.mSolutionInventoryType),
-          targetRect,
-        });
-      }
+        rowRevealed = true;
+        setLossesRevealed(true);
+        setLossesSequenceDone(true);
+      };
+
+      const rowRevealTimer = window.setTimeout(() => {
+        markLossRowRevealed();
+      }, rowRevealDelayMs);
 
       if (flights.length > 0) {
         await playLossFlightsFromAvatar(flights);
       }
 
+      window.clearTimeout(rowRevealTimer);
+
+      if (!cancelled && !rowRevealed) {
+        markLossRowRevealed();
+      }
+
       if (!cancelled) {
-        setLossesRevealed(true);
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, LOSS_ROW_FADE_IN_MS);
+        });
       }
     }
 
@@ -455,7 +542,99 @@ export function ResultBlock({
     return () => {
       cancelled = true;
     };
-  }, [roll, lossesKey]);
+  }, [roll, lossesKey, losses.length]);
+
+  useEffect(() => {
+    if (roll === null || !lossesSequenceDone) {
+      setContinueRevealPlaying(false);
+      setContinueInteractive(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setContinueRevealPlaying(false);
+    setContinueInteractive(false);
+    setContinueEnableRattle(false);
+
+    async function revealContinue(): Promise<void> {
+      if (CONTINUE_REVEAL_DELAY_MS > 0) {
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, CONTINUE_REVEAL_DELAY_MS);
+        });
+
+        if (cancelled) {
+          return;
+        }
+      }
+
+      await waitForNextPaint();
+      if (cancelled) {
+        return;
+      }
+
+      setContinueRevealPlaying(true);
+
+      await waitForNextPaint();
+      if (cancelled) {
+        return;
+      }
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, CONTINUE_REVEAL_TOTAL_MS);
+      });
+
+      if (cancelled) {
+        return;
+      }
+
+      setContinueRevealPlaying(false);
+      setContinueEnableRattle(true);
+      setContinueInteractive(true);
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, CONTINUE_ENABLE_RATTLE_MS);
+      });
+
+      if (!cancelled) {
+        setContinueEnableRattle(false);
+      }
+    }
+
+    void revealContinue();
+
+    return () => {
+      cancelled = true;
+      setContinueRevealPlaying(false);
+      setContinueInteractive(false);
+      setContinueEnableRattle(false);
+    };
+  }, [lossesSequenceDone, roll]);
+
+  function buildLossFlights(): LossBubbleTargetSpec[] {
+    const flights: LossBubbleTargetSpec[] = [];
+
+    for (const loss of losses) {
+      const solutionId = loss.solution.mSolutionID;
+      const button = lossButtonRefs.current.get(solutionId)
+        ?? document.querySelector<HTMLButtonElement>(
+          `[data-loss-fly-target="${solutionId}"]`,
+        );
+      const sourceRect = button?.getBoundingClientRect();
+
+      if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+        continue;
+      }
+
+      flights.push({
+        id: `loss-dismiss-${solutionId}`,
+        imageSrc: solutionImagePath(loss.solution),
+        size: lossIconSize(loss.solution.mSolutionInventoryType),
+        sourceRect,
+      });
+    }
+
+    return flights;
+  }
 
   function buildRewardFlights(): RewardFlightSpec[] {
     const flights: RewardFlightSpec[] = [];
@@ -485,7 +664,7 @@ export function ResultBlock({
   }
 
   async function handleContinueClick(): Promise<void> {
-    if (disabled || hidden || !visible || continueBusy) {
+    if (disabled || hidden || !visible || continueBusy || !continueInteractive) {
       return;
     }
 
@@ -494,11 +673,29 @@ export function ResultBlock({
     hideItemTooltip();
 
     try {
-      const flights = buildRewardFlights();
+      const rewardFlights = buildRewardFlights();
+      const lossFlights = buildLossFlights();
 
-      if (flights.length > 0) {
+      if (rewardFlights.length > 0) {
         setRewardsFlyingAway(true);
-        await playRewardFlights(flights);
+      }
+
+      if (lossFlights.length > 0) {
+        setLossesFlyingAway(true);
+      }
+
+      const dismissAnimations: Promise<void>[] = [];
+
+      if (lossFlights.length > 0) {
+        dismissAnimations.push(playLossBubblesFromTargets(lossFlights));
+      }
+
+      if (rewardFlights.length > 0) {
+        dismissAnimations.push(playRewardFlights(rewardFlights));
+      }
+
+      if (dismissAnimations.length > 0) {
+        await Promise.all(dismissAnimations);
       } else {
         await waitContinueBounce();
       }
@@ -588,10 +785,16 @@ export function ResultBlock({
   }
 
   function renderLossIcon(loss: EncounterInventoryChange) {
+    const lossVisible = lossesRevealed && !lossesFlyingAway;
     const imageStyle = {
       ...lossIconStyle(loss.solution.mSolutionInventoryType),
-      opacity: lossesRevealed ? 1 : 0,
-      transition: lossesRevealed ? 'opacity 180ms ease' : 'none',
+      opacity: lossVisible ? 1 : 0,
+      transform: lossVisible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.9)',
+      transition: lossesFlyingAway
+        ? 'opacity 0ms, transform 0ms'
+        : lossesRevealed
+          ? lossRowRevealTransition
+          : 'none',
     };
 
     return (
@@ -617,7 +820,10 @@ export function ResultBlock({
         }}
         onContextMenu={preventImageContextMenu}
         onPointerLeave={hideItemTooltip}
-        style={rewardItemStyle}
+        style={{
+          ...rewardItemStyle,
+          pointerEvents: lossVisible ? 'auto' : 'none',
+        }}
         type="button"
       >
         <img
@@ -653,6 +859,31 @@ export function ResultBlock({
   40% { transform: rotate(1.2deg); }
   60% { transform: rotate(-0.9deg); }
   80% { transform: rotate(0.8deg); }
+}
+@keyframes morkahja-continue-reveal-spin {
+  0% {
+    opacity: 0;
+    transform: rotate(18deg) scale(0.82);
+  }
+  55% {
+    opacity: 0.42;
+    transform: rotate(8deg) scale(0.94);
+  }
+  82% {
+    opacity: 0.88;
+    transform: rotate(2deg) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+@keyframes morkahja-continue-enable-rattle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-2deg) scale(1.03); }
+  40% { transform: rotate(2deg) scale(1.02); }
+  60% { transform: rotate(-1.4deg) scale(1.035); }
+  80% { transform: rotate(1deg) scale(1.015); }
 }`}
       </style>
       <img
@@ -667,28 +898,48 @@ export function ResultBlock({
         }}
       />
       <button
+        aria-disabled={!continueInteractive}
         aria-label="Continue"
-        disabled={disabled || continueBusy}
+        className="morkahja-footer-button"
+        disabled={disabled || continueBusy || !continueInteractive}
         onClick={() => {
           void handleContinueClick();
         }}
         onContextMenu={preventImageContextMenu}
         style={{
           ...continueButtonStyle,
-          ...(continueBusy ? continueAnimatingStyle : {}),
-          cursor: disabled || continueBusy ? 'default' : 'pointer',
-          opacity: disabled ? 0.64 : 1,
-          pointerEvents: resultInteractive && !continueBusy ? 'auto' : 'none',
+          cursor: disabled || continueBusy || !continueInteractive ? 'default' : 'pointer',
+          pointerEvents: resultInteractive && continueInteractive && !continueBusy ? 'auto' : 'none',
         }}
         type="button"
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          {...protectedImageProps}
-          src={CONTINUE_BUTTON}
-          style={continueImageStyle}
-        />
+        <span
+          className="morkahja-footer-button-visual"
+          key={`continue-${roll}`}
+          style={{
+            ...(continueRevealPlaying
+              ? continueRevealSpinStyle()
+              : continueInteractive || continueEnableRattle
+                ? continueSettledStyle
+                : continueHiddenStyle),
+            ...(continueBusy ? continueAnimatingStyle : {}),
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              ...(continueEnableRattle ? continueEnableRattleStyle : {}),
+            }}
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              {...protectedImageProps}
+              src={CONTINUE_BUTTON}
+              style={continueImageStyle}
+            />
+          </span>
+        </span>
       </button>
       {rewards.length > 0 && !rewardsFlyingAway && !continueBusy ? (
         <div
@@ -739,11 +990,14 @@ export function ResultBlock({
           </button>
         </div>
       ) : null}
-      {losses.length > 0 ? (
+      {losses.length > 0 && !lossesFlyingAway ? (
         <div
           aria-label="Encounter losses"
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-          style={lossRowStyle}
+          style={{
+            ...lossRowStyle,
+            ...continueDismissLayerStyle(continueBusy),
+          }}
         >
           {losses.map((loss) => renderLossIcon(loss))}
         </div>

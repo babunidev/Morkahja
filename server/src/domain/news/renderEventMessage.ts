@@ -112,7 +112,10 @@ export function renderEventMessage(event: GameEvent): string {
         : `${avatarLabel(payload)} reached a new level.`;
     }
     case 'avatar_died':
-      return `${avatarLabel(payload)} entered Atranor. The gods decide their fate`;
+      if (payload.pendingDeathEncounter === true) {
+        return `${avatarLabel(payload)} entered Atranor. The gods decide their fate`;
+      }
+      return `${avatarLabel(payload)} didn't receive the blessing of the gods.`;
     case 'item_obtained': {
       const itemName = readString(payload, 'solutionName') ?? 'a treasure';
       return `${avatarLabel(payload)} claimed ${itemName}.`;
@@ -135,10 +138,14 @@ export function renderEventMessage(event: GameEvent): string {
       const rankTitle = readString(payload, 'rankTitle') ?? 'a new rank';
       return `${playerLabel(payload)} became ${formatArticle(rankTitle)}.`;
     }
+    case 'hearth_blessing_ready': {
+      const encountersRequired = readNumber(payload, 'encountersRequired') ?? 42;
+      return `${playerLabel(payload)} filled the Hearth Blessing (${encountersRequired} encounters). It is ready to claim.`;
+    }
     case 'daily_reward_claimed': {
       const amount = readNumber(payload, 'gemAmount') ?? 1;
       const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
-      return `${playerLabel(payload)} claimed the daily reward (${amount} ${gemLabel}).`;
+      return `${playerLabel(payload)} claimed the Hearth Blessing (${amount} ${gemLabel}).`;
     }
     default:
       return `${avatarLabel(payload)} made their mark on the world.`;

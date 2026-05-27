@@ -8,7 +8,10 @@ export interface LossFlightSpec {
   id: string;
   imageSrc: string;
   size: number;
-  targetRect: DOMRect;
+}
+
+export interface LossBubbleTargetSpec extends LossFlightSpec {
+  sourceRect: DOMRect;
 }
 
 export function rewardFlyTargetKind(inventoryType: number): RewardFlyTargetKind {
@@ -52,9 +55,19 @@ export function getAvatarPortraitRect(): DOMRect | null {
   return element?.getBoundingClientRect() ?? null;
 }
 
-export const LOSS_FLIGHT_MS = 820;
-const LOSS_FLIGHT_FADE_START_OFFSET = 0.78;
-const LOSS_FLIGHT_TIMEOUT_MS = LOSS_FLIGHT_MS + 500;
+export const LOSS_BUBBLE_MS = 2800;
+export const LOSS_BUBBLE_STAGGER_MS = 200;
+const LOSS_BUBBLE_TIMEOUT_MS = LOSS_BUBBLE_MS + 900;
+export const LOSS_ROW_FADE_IN_MS = 720;
+
+/** Wall-clock time for loss bubbles + row fade-in. */
+export function resultLossSequenceDurationMs(lossCount: number): number {
+  const bubbleMs = lossCount > 0
+    ? LOSS_BUBBLE_MS + Math.max(0, lossCount - 1) * LOSS_BUBBLE_STAGGER_MS
+    : LOSS_BUBBLE_MS;
+
+  return bubbleMs + LOSS_ROW_FADE_IN_MS;
+}
 
 export interface RewardFlightSpec {
   id: string;
@@ -101,17 +114,7 @@ interface IconFlightMotion {
   nearEndLeadMs?: number;
 }
 
-function runIconFlight(
-  sourceRect: DOMRect,
-  targetRect: DOMRect,
-  imageSrc: string,
-  size: number,
-  motion: IconFlightMotion,
-): Promise<void> {
-  const source = rectCenter(sourceRect);
-  const target = rectCenter(targetRect);
-  const half = size / 2;
-
+function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTMLImageElement {
   const flyer = document.createElement('img');
   flyer.dataset.morkahjaIconFlyer = 'true';
   flyer.alt = '';
@@ -129,15 +132,19 @@ function runIconFlight(
   flyer.style.objectFit = 'cover';
   flyer.style.pointerEvents = 'none';
   flyer.style.zIndex = '220';
-  flyer.style.transform = `translate(${source.x - half}px, ${source.y - half}px) scale(1)`;
-  flyer.style.opacity = '1';
-  flyer.style.boxShadow = motion.boxShadow;
+  flyer.style.boxShadow = boxShadow;
+  flyer.src = imageSrc;
   document.body.append(flyer);
+  return flyer;
+}
 
-  const nearEndTimer = motion.onNearEnd && motion.nearEndLeadMs
-    ? window.setTimeout(motion.onNearEnd, motion.durationMs - motion.nearEndLeadMs)
-    : null;
-
+function runAnimatedFlyer(
+  flyer: HTMLImageElement,
+  keyframes: Keyframe[],
+  durationMs: number,
+  timeoutMs: number,
+  onStart: () => void,
+): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
 
@@ -147,9 +154,6 @@ function runIconFlight(
       }
 
       settled = true;
-      if (nearEndTimer !== null) {
-        window.clearTimeout(nearEndTimer);
-      }
       flyer.remove();
       resolve();
     }
@@ -160,68 +164,186 @@ function runIconFlight(
           return;
         }
 
+        onStart();
+
         if (typeof flyer.animate !== 'function') {
           finish();
           return;
         }
 
-        const fadeStartX = source.x + (target.x - source.x) * motion.fadeStartOffset;
-        const fadeStartY = source.y + (target.y - source.y) * motion.fadeStartOffset;
-
-        const animation = flyer.animate(
-          [
-            {
-              offset: 0,
-              transform: `translate(${source.x - half}px, ${source.y - half}px) scale(1)`,
-              opacity: 1,
-            },
-            {
-              offset: motion.fadeStartOffset,
-              transform: `translate(${fadeStartX - half}px, ${fadeStartY - half}px) scale(0.82)`,
-              opacity: 1,
-            },
-            {
-              offset: 1,
-              transform: `translate(${target.x - half}px, ${target.y - half}px) scale(0.32)`,
-              opacity: 0,
-            },
-          ],
-          {
-            duration: motion.durationMs,
-            easing: 'cubic-bezier(0.12, 0.82, 0.18, 1)',
-            fill: 'forwards',
-          },
-        );
+        const animation = flyer.animate(keyframes, {
+          duration: durationMs,
+          easing: 'cubic-bezier(0.18, 0.04, 0.12, 1)',
+          fill: 'forwards',
+        });
 
         animation.finished.then(finish).catch(finish);
       });
     };
 
-    const loadTimeout = window.setTimeout(finish, motion.timeoutMs);
+    const loadTimeout = window.setTimeout(finish, timeoutMs);
 
-    const beginLoad = (): void => {
-      flyer.src = imageSrc;
+    if (flyer.complete && flyer.naturalWidth > 0) {
+      window.clearTimeout(loadTimeout);
+      startFlight();
+      return;
+    }
 
-      if (flyer.complete && flyer.naturalWidth > 0) {
-        window.clearTimeout(loadTimeout);
-        startFlight();
-        return;
-      }
-
-      flyer.addEventListener('load', () => {
-        window.clearTimeout(loadTimeout);
-        startFlight();
-      }, { once: true });
-      flyer.addEventListener('error', () => {
-        window.clearTimeout(loadTimeout);
-        finish();
-      }, { once: true });
-    };
-
-    beginLoad();
+    flyer.addEventListener('load', () => {
+      window.clearTimeout(loadTimeout);
+      startFlight();
+    }, { once: true });
+    flyer.addEventListener('error', () => {
+      window.clearTimeout(loadTimeout);
+      finish();
+    }, { once: true });
   });
 }
 
+function runIconFlight(
+  sourceRect: DOMRect,
+  targetRect: DOMRect,
+  imageSrc: string,
+  size: number,
+  motion: IconFlightMotion,
+): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const target = rectCenter(targetRect);
+  const half = size / 2;
+  const flyer = createIconFlyer(
+    imageSrc,
+    size,
+    motion.boxShadow,
+  );
+
+  const nearEndTimer = motion.onNearEnd && motion.nearEndLeadMs
+    ? window.setTimeout(motion.onNearEnd, motion.durationMs - motion.nearEndLeadMs)
+    : null;
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      {
+        offset: 0,
+        transform: `translate(${source.x - half}px, ${source.y - half}px) scale(1)`,
+        opacity: 1,
+      },
+      {
+        offset: motion.fadeStartOffset,
+        transform: `translate(${
+          source.x + (target.x - source.x) * motion.fadeStartOffset - half
+        }px, ${
+          source.y + (target.y - source.y) * motion.fadeStartOffset - half
+        }px) scale(0.82)`,
+        opacity: 1,
+      },
+      {
+        offset: 1,
+        transform: `translate(${target.x - half}px, ${target.y - half}px) scale(0.32)`,
+        opacity: 0,
+      },
+    ],
+    motion.durationMs,
+    motion.timeoutMs,
+    () => {
+      flyer.style.transform = `translate(${source.x - half}px, ${source.y - half}px) scale(1)`;
+      flyer.style.opacity = '1';
+    },
+  ).finally(() => {
+    if (nearEndTimer !== null) {
+      window.clearTimeout(nearEndTimer);
+    }
+  });
+}
+
+function bubbleTransform(
+  x: number,
+  y: number,
+  scale: number,
+): string {
+  return `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function runLossBubbleFlight(
+  sourceRect: DOMRect,
+  imageSrc: string,
+  size: number,
+  bubbleIndex: number,
+): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const half = size / 2;
+  const riseDistance = 156 + bubbleIndex * 24;
+  const wobble = 16 + (bubbleIndex % 3) * 7;
+  const flyer = createIconFlyer(
+    imageSrc,
+    size,
+    '0 0 18px rgba(255, 120, 96, 0.55), 0 0 28px rgba(255, 72, 48, 0.28), 0 8px 14px rgba(0, 0, 0, 0.35)',
+  );
+
+  const startX = source.x - half;
+  const startY = source.y - half;
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      {
+        offset: 0,
+        transform: bubbleTransform(startX, startY, 0.52),
+        opacity: 0,
+        filter: 'blur(0px)',
+      },
+      {
+        offset: 0.12,
+        transform: bubbleTransform(startX, startY - riseDistance * 0.06, 0.86),
+        opacity: 0.72,
+        filter: 'blur(0px)',
+      },
+      {
+        offset: 0.28,
+        transform: bubbleTransform(startX + wobble * 0.35, startY - riseDistance * 0.22, 1.05),
+        opacity: 1,
+        filter: 'blur(0px)',
+      },
+      {
+        offset: 0.48,
+        transform: bubbleTransform(startX - wobble * 0.55, startY - riseDistance * 0.44, 1.02),
+        opacity: 0.96,
+        filter: 'blur(0px)',
+      },
+      {
+        offset: 0.66,
+        transform: bubbleTransform(startX + wobble * 0.42, startY - riseDistance * 0.64, 0.98),
+        opacity: 0.82,
+        filter: 'blur(0.2px)',
+      },
+      {
+        offset: 0.82,
+        transform: bubbleTransform(startX - wobble * 0.28, startY - riseDistance * 0.82, 0.9),
+        opacity: 0.48,
+        filter: 'blur(0.6px)',
+      },
+      {
+        offset: 0.94,
+        transform: bubbleTransform(startX + wobble * 0.12, startY - riseDistance * 0.94, 0.82),
+        opacity: 0.16,
+        filter: 'blur(1.2px)',
+      },
+      {
+        offset: 1,
+        transform: bubbleTransform(startX, startY - riseDistance, 0.74),
+        opacity: 0,
+        filter: 'blur(2px)',
+      },
+    ],
+    LOSS_BUBBLE_MS,
+    LOSS_BUBBLE_TIMEOUT_MS,
+    () => {
+      flyer.style.transform = bubbleTransform(startX, startY, 0.52);
+      flyer.style.opacity = '0';
+      flyer.style.filter = 'blur(0px)';
+    },
+  );
+}
 function runRewardFlight(
   flight: RewardFlightSpec,
   vibratedTargets: Set<RewardFlyTargetKind>,
@@ -247,28 +369,25 @@ function runRewardFlight(
   });
 }
 
-function runLossFlight(
-  flight: LossFlightSpec,
-  sourceRect: DOMRect,
-): Promise<void> {
-  return runIconFlight(sourceRect, flight.targetRect, flight.imageSrc, flight.size, {
-    durationMs: LOSS_FLIGHT_MS,
-    fadeStartOffset: LOSS_FLIGHT_FADE_START_OFFSET,
-    timeoutMs: LOSS_FLIGHT_TIMEOUT_MS,
-    boxShadow: '0 0 16px rgba(255, 72, 48, 0.62), 0 6px 12px rgba(0, 0, 0, 0.5)',
-  });
-}
-
-export async function playLossFlightsFromAvatar(
+async function playLossBubbles(
   flights: LossFlightSpec[],
+  resolveSourceRect: (flight: LossFlightSpec, index: number) => DOMRect | null,
 ): Promise<void> {
   if (flights.length === 0) {
     return;
   }
 
-  const sourceRect = getAvatarPortraitRect();
+  const runnable = flights.flatMap((flight, index) => {
+    const sourceRect = resolveSourceRect(flight, index);
 
-  if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+    if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+      return [];
+    }
+
+    return [{ flight, index, sourceRect }];
+  });
+
+  if (runnable.length === 0) {
     return;
   }
 
@@ -276,14 +395,34 @@ export async function playLossFlightsFromAvatar(
 
   await Promise.race([
     waitForNextFrame().then(() => (
-      Promise.all(flights.map((flight, index) => (
-        wait(index * 70).then(() => runLossFlight(flight, sourceRect))
+      Promise.all(runnable.map(({ flight, index, sourceRect }, runnableIndex) => (
+        wait(runnableIndex * LOSS_BUBBLE_STAGGER_MS).then(() => (
+          runLossBubbleFlight(sourceRect, flight.imageSrc, flight.size, index)
+        ))
       )))
     )),
-    wait(LOSS_FLIGHT_TIMEOUT_MS + flights.length * 80),
+    wait(LOSS_BUBBLE_TIMEOUT_MS + runnable.length * LOSS_BUBBLE_STAGGER_MS),
   ]);
 
   cleanupRewardFlyers();
+}
+
+export async function playLossFlightsFromAvatar(
+  flights: LossFlightSpec[],
+): Promise<void> {
+  const sourceRect = getAvatarPortraitRect();
+
+  if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+    return;
+  }
+
+  await playLossBubbles(flights, () => sourceRect);
+}
+
+export async function playLossBubblesFromTargets(
+  flights: LossBubbleTargetSpec[],
+): Promise<void> {
+  await playLossBubbles(flights, (_, index) => flights[index]?.sourceRect ?? null);
 }
 
 export async function playRewardFlights(

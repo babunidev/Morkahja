@@ -24,7 +24,6 @@ import type {
   PersistedAvatarDto,
   PlayerProfileResponse,
   PlayerResponse,
-  ActivateSealOfNorghorResponse,
   RoomHelpPendingResponse,
   RespondHelpResponse,
   RoomParticipantDto,
@@ -238,13 +237,6 @@ export async function unlockExpansion(
   return request<UnlockExpansionResponse>('/player/expansions/unlock', {
     method: 'POST',
     body: JSON.stringify({ expansionId }),
-  });
-}
-
-export async function activateSealOfNorghor(): Promise<ActivateSealOfNorghorResponse> {
-  return request<ActivateSealOfNorghorResponse>('/player/seal-of-norghor/activate', {
-    method: 'POST',
-    body: JSON.stringify({}),
   });
 }
 

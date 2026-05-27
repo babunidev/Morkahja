@@ -283,7 +283,7 @@ function DailyRewardCard({
   return (
     <section style={dailyRewardCardStyle}>
       <div style={dailyRewardHeadingStyle}>
-        <h3 style={dailyRewardTitleStyle}>Daily Reward</h3>
+        <h3 style={dailyRewardTitleStyle}>Hearth Blessing</h3>
         <p aria-label={`${gemReward} yellow red gems per claim`} style={dailyRewardGemsStyle}>
           <img
             alt=""
@@ -296,7 +296,7 @@ function DailyRewardCard({
         </p>
       </div>
       <p style={progressLabelStyle}>
-        {dailyReward.encountersPlayed}/{dailyReward.encountersRequired} encounters
+        {dailyReward.encountersPlayed}/{dailyReward.encountersRequired} encounters toward Hearth Blessing
         {dailyReward.claimedToday ? ' — claimed' : ''}
       </p>
       <button
@@ -317,8 +317,8 @@ function DailyRewardCard({
           : dailyReward.claimedToday
             ? 'Claimed today'
             : dailyReward.claimable
-              ? `Claim ${dailyReward.gemReward} gem${dailyReward.gemReward === 1 ? '' : 's'}`
-              : 'Not ready yet'}
+              ? `Claim Hearth Blessing (${dailyReward.gemReward} gem${dailyReward.gemReward === 1 ? '' : 's'})`
+              : 'Hearth Blessing not ready yet'}
       </button>
     </section>
   );

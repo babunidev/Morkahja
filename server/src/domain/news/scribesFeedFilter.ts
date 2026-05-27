@@ -38,6 +38,7 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'gems_donated':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'achievement_unlocked':
+    case 'hearth_blessing_ready':
     case 'daily_reward_claimed':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     default:

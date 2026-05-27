@@ -19,9 +19,9 @@ import {
   storedMusicVolume,
 } from '../audioVolume.js';
 const MORKAHJA_MAIN_TRACKS = [
-  '/UI/Music/Morkahja_main_full_intro.wav',
-  '/UI/Music/Morkahja_main_intro.wav',
-  '/UI/Music/Morkahja_main_track.wav',
+  '/UI/Music/Morkahja_main_full_intro.mp3',
+  '/UI/Music/Morkahja_main_intro.mp3',
+  '/UI/Music/Morkahja_main_track.mp3',
 ];
 const DASHBOARD_MUSIC_DELAY_MS = 3000;
 const MUSIC_FADE_MS = 420;

@@ -16,6 +16,11 @@ import {
   blessedRankFromProgress,
 } from './blessedAchievement.js';
 import {
+  decodeFirestarterProgress,
+  FIRESTARTER_ACHIEVEMENT_ID,
+  firestarterRankFromState,
+} from './firestarterAchievement.js';
+import {
   encounterSolveRankFromProgress,
   getEncounterSolveAchievementById,
 } from './encounterSolveAchievements.js';
@@ -38,6 +43,11 @@ export function achievementRankFromProgress(achievementId: string, progress: num
     return blessedRankFromProgress(progress);
   }
 
+  if (achievementId === FIRESTARTER_ACHIEVEMENT_ID) {
+    const { peakAvatarCount, peakTotalLevels } = decodeFirestarterProgress(progress);
+    return firestarterRankFromState(peakAvatarCount, peakTotalLevels);
+  }
+
   const encounterSolve = getEncounterSolveAchievementById(achievementId);
   if (encounterSolve) {
     return encounterSolveRankFromProgress(encounterSolve, progress);
@@ -50,7 +60,10 @@ export function achievementRankFromProgress(achievementId: string, progress: num
 export async function reconcileAchievementProgress(
   record: AchievementProgress,
 ): Promise<AchievementProgress> {
-  const rank = achievementRankFromProgress(record.achievementId, record.progress);
+  const derivedRank = achievementRankFromProgress(record.achievementId, record.progress);
+  const rank = record.achievementId === FIRESTARTER_ACHIEVEMENT_ID
+    ? Math.max(record.rank, derivedRank)
+    : derivedRank;
 
   if (record.rank === rank) {
     return record;

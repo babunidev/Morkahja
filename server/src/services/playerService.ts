@@ -16,11 +16,7 @@ import {
   setPlayer,
   withDocumentTransaction,
 } from '../db/postgresDocumentStore.js';
-import {
-  isSealOfNorghorActive,
-  readSealOfNorghorExpiresAt,
-} from '../domain/subscription/sealOfNorghor.js';
-import { getExpansionById, getExpansions } from './gameData.js';
+import { getExpansionById } from './gameData.js';
 import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import {
   recordAvatarCreatedEvent,
@@ -117,26 +113,6 @@ function uniqueSorted(values: number[]): number[] {
   return uniqueSortedExpansionIds(values);
 }
 
-function allActiveExpansionIds(): number[] {
-  return uniqueSortedExpansionIds(
-    getExpansions()
-      .filter((entry) => entry.mExtensioActive && entry.mExtensioID > 0)
-      .map((entry) => entry.mExtensioID),
-  );
-}
-
-export function mergeUnlockedExpansionsWithSeal(
-  baseUnlocked: number[],
-  sealExpiresAt: number | null | undefined,
-  now = Date.now(),
-): number[] {
-  if (!isSealOfNorghorActive(sealExpiresAt, now)) {
-    return baseUnlocked;
-  }
-
-  return uniqueSortedExpansionIds([...baseUnlocked, ...allActiveExpansionIds()]);
-}
-
 function normalizeUnlockedExpansions(value: unknown): number[] {
   if (!Array.isArray(value)) {
     return [];
@@ -168,9 +144,6 @@ export async function loadPlayer(
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : now,
     lastPlayedAt: typeof data.lastPlayedAt === 'number' ? data.lastPlayedAt : now,
     unlockedExpansions: normalizeUnlockedExpansions(data.unlockedExpansions),
-    sealOfNorghor: readSealOfNorghorExpiresAt(data.sealOfNorghor) !== null
-      ? { expiresAt: readSealOfNorghorExpiresAt(data.sealOfNorghor) as number }
-      : undefined,
     currencies: {
       ...(typeof data.currencies === 'object' && data.currencies !== null ? data.currencies : {}),
       yellow_red_gem: readYellowRedGemBalance(data.currencies),
@@ -207,7 +180,7 @@ export async function getPlayerUnlockedExpansions(
     ? player.unlockedExpansions
     : DEFAULT_UNLOCKED_EXPANSIONS;
 
-  return mergeUnlockedExpansionsWithSeal(base, player?.sealOfNorghor?.expiresAt);
+  return base;
 }
 
 export async function addPlayerYellowRedGems(
@@ -336,10 +309,7 @@ export async function unlockPlayerExpansion(
     }
 
     const baseUnlocked = normalizeUnlockedExpansions(player.unlockedExpansions);
-    const unlockedExpansions = mergeUnlockedExpansionsWithSeal(
-      baseUnlocked.length > 0 ? baseUnlocked : DEFAULT_UNLOCKED_EXPANSIONS,
-      readSealOfNorghorExpiresAt(player),
-    );
+    const unlockedExpansions = baseUnlocked.length > 0 ? baseUnlocked : DEFAULT_UNLOCKED_EXPANSIONS;
     if (unlockedExpansions.includes(expansionId)) {
       throw new ExpansionAlreadyUnlockedError();
     }

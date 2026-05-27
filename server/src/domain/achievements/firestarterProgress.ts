@@ -2,6 +2,8 @@ import { loadPlayerAvatars } from '../../services/playerService.js';
 import type { AchievementProgress } from './achievementProgress.js';
 import {
   FIRESTARTER_ACHIEVEMENT_ID,
+  decodeFirestarterProgress,
+  encodeFirestarterProgress,
   firestarterRankDefinition,
   firestarterRankFromState,
   totalAvatarLevels,
@@ -18,15 +20,47 @@ export interface FirestarterState {
   rank: number;
 }
 
-export async function loadFirestarterState(playerId: string): Promise<FirestarterState> {
-  const avatars = await loadPlayerAvatars(playerId);
-  const avatarCount = avatars.length;
-  const levels = totalAvatarLevels(avatars);
+export function mergeFirestarterPeaks(
+  storedProgress: number | undefined,
+  storedRank: number | undefined,
+  liveAvatarCount: number,
+  liveTotalLevels: number,
+): {
+  peakAvatarCount: number;
+  peakTotalLevels: number;
+  rank: number;
+  progress: number;
+} {
+  const peaks = decodeFirestarterProgress(storedProgress ?? 0, storedRank ?? 0);
+  const peakAvatarCount = Math.max(peaks.peakAvatarCount, liveAvatarCount);
+  const peakTotalLevels = Math.max(peaks.peakTotalLevels, liveTotalLevels);
+  const computedRank = firestarterRankFromState(peakAvatarCount, peakTotalLevels);
+  const rank = Math.max(storedRank ?? 0, computedRank);
 
   return {
-    avatarCount,
-    totalLevels: levels,
-    rank: firestarterRankFromState(avatarCount, levels),
+    peakAvatarCount,
+    peakTotalLevels,
+    rank,
+    progress: encodeFirestarterProgress(peakAvatarCount, peakTotalLevels),
+  };
+}
+
+export async function loadFirestarterState(playerId: string): Promise<FirestarterState> {
+  const avatars = await loadPlayerAvatars(playerId);
+  const liveAvatarCount = avatars.length;
+  const liveTotalLevels = totalAvatarLevels(avatars);
+  const existing = await loadAchievementProgress(playerId, FIRESTARTER_ACHIEVEMENT_ID);
+  const merged = mergeFirestarterPeaks(
+    existing?.progress,
+    existing?.rank,
+    liveAvatarCount,
+    liveTotalLevels,
+  );
+
+  return {
+    avatarCount: merged.peakAvatarCount,
+    totalLevels: merged.peakTotalLevels,
+    rank: merged.rank,
   };
 }
 
@@ -34,29 +68,41 @@ export async function syncFirestarterAchievementProgress(
   playerId: string,
   timestamp = Date.now(),
 ): Promise<FirestarterState> {
-  const state = await loadFirestarterState(playerId);
+  const avatars = await loadPlayerAvatars(playerId);
+  const liveAvatarCount = avatars.length;
+  const liveTotalLevels = totalAvatarLevels(avatars);
   const existing = await loadAchievementProgress(playerId, FIRESTARTER_ACHIEVEMENT_ID);
   const previousRank = existing?.rank ?? 0;
+  const merged = mergeFirestarterPeaks(
+    existing?.progress,
+    existing?.rank,
+    liveAvatarCount,
+    liveTotalLevels,
+  );
 
   const updated: AchievementProgress = {
     achievementId: FIRESTARTER_ACHIEVEMENT_ID,
     playerId,
-    rank: state.rank,
-    progress: state.avatarCount,
+    rank: merged.rank,
+    progress: merged.progress,
     updatedAt: timestamp,
-    unlockedAt: existing?.unlockedAt ?? (state.rank >= 1 ? timestamp : undefined),
+    unlockedAt: existing?.unlockedAt ?? (merged.rank >= 1 ? timestamp : undefined),
   };
 
   await saveAchievementProgress(updated);
 
-  if (state.rank > previousRank) {
-    const rankDefinition = firestarterRankDefinition(state.rank);
+  if (merged.rank > previousRank) {
+    const rankDefinition = firestarterRankDefinition(merged.rank);
     await recordAchievementUnlockedEvent(playerId, {
       achievementId: FIRESTARTER_ACHIEVEMENT_ID,
-      rank: state.rank,
-      rankTitle: rankDefinition?.title ?? `Rank ${state.rank}`,
+      rank: merged.rank,
+      rankTitle: rankDefinition?.title ?? `Rank ${merged.rank}`,
     });
   }
 
-  return state;
+  return {
+    avatarCount: merged.peakAvatarCount,
+    totalLevels: merged.peakTotalLevels,
+    rank: merged.rank,
+  };
 }

@@ -12,26 +12,6 @@ export interface ClientSession {
   accessToken: string;
 }
 
-export interface SealOfNorghorStatusDto {
-  active: boolean;
-  expiresAt: number | null;
-  cost: number;
-  durationDays: number;
-  gemBalance: number;
-  canActivate: boolean;
-}
-
-export interface ActivateSealOfNorghorResponse {
-  playerId: string;
-  spent: number;
-  currencies: {
-    yellow_red_gem?: number;
-    [key: string]: number | undefined;
-  };
-  sealOfNorghor: SealOfNorghorStatusDto;
-  unlockedExpansions: number[];
-}
-
 export interface PlayerResponse {
   playerId: string;
   currencies?: {
@@ -39,7 +19,6 @@ export interface PlayerResponse {
     [key: string]: number | undefined;
   };
   unlockedExpansions?: number[];
-  sealOfNorghor?: SealOfNorghorStatusDto;
 }
 
 export interface WallOfFameEntryDto {

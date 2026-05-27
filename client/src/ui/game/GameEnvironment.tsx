@@ -626,6 +626,9 @@ export function GameEnvironment({
             <div
               style={{
                 ...encounterImageSlotStyle,
+                ...(inventoryOpen || skillbookOpen || loreOpen
+                  ? { position: 'relative', zIndex: 26 }
+                  : {}),
                 ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
               }}
             >

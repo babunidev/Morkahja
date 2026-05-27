@@ -14,7 +14,6 @@ import { APP_VERSION } from '../../appVersion.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
-import SealOfNorghorSection from './SealOfNorghorSection.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -369,7 +368,6 @@ export function SettingsScreen({
             style={panelBodyStyle}
           >
             <div ref={scrollContentRef} style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
-              <SealOfNorghorSection open={open} />
               <MusicVolumeSlider />
               <SfxVolumeSlider />
               <div style={settingRowStyle}>

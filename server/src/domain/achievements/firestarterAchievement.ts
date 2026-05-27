@@ -6,6 +6,9 @@ export const FIRESTARTER_AVATAR_RANK_THRESHOLDS = [1, 2, 3] as const;
 export const FIRESTARTER_TOTAL_LEVELS_RANK4 = 30;
 export const FIRESTARTER_MAX_RANK = 4;
 
+/** Encodes peak avatar count and total levels in one progress integer (legacy: raw avatar count). */
+export const FIRESTARTER_PROGRESS_LEVEL_MULTIPLIER = 1000;
+
 export const FIRESTARTER_RANKS: AchievementRankDefinition[] = [
   {
     rank: 1,
@@ -31,6 +34,37 @@ export const FIRESTARTER_RANKS: AchievementRankDefinition[] = [
     rankOverlayPath: 'UI/04_ACHIEVEMENTS/im_rank_gold_achievement.webp',
   },
 ];
+
+export function encodeFirestarterProgress(
+  peakAvatarCount: number,
+  peakTotalLevels: number,
+): number {
+  const avatars = Math.max(0, Math.floor(peakAvatarCount));
+  const levels = Math.max(0, Math.floor(peakTotalLevels));
+
+  return avatars * FIRESTARTER_PROGRESS_LEVEL_MULTIPLIER + levels;
+}
+
+export function decodeFirestarterProgress(
+  progress: number,
+  storedRank = 0,
+): { peakAvatarCount: number; peakTotalLevels: number } {
+  const safe = Math.max(0, Math.floor(progress));
+
+  if (safe < FIRESTARTER_PROGRESS_LEVEL_MULTIPLIER) {
+    return {
+      peakAvatarCount: safe,
+      peakTotalLevels: storedRank >= FIRESTARTER_MAX_RANK
+        ? FIRESTARTER_TOTAL_LEVELS_RANK4
+        : 0,
+    };
+  }
+
+  return {
+    peakAvatarCount: Math.floor(safe / FIRESTARTER_PROGRESS_LEVEL_MULTIPLIER),
+    peakTotalLevels: safe % FIRESTARTER_PROGRESS_LEVEL_MULTIPLIER,
+  };
+}
 
 export function firestarterRankFromState(
   avatarCount: number,

@@ -1,23 +1,29 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
-  type Dispatch,
-  type SetStateAction,
 } from 'react';
 import solutionData from '../../../data/game/solutiondata.json';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
+  anchorXForGridColumn,
+  anchoredTooltipCoords,
+  clampAnchoredTooltipPlacement,
+  tooltipTransform,
+  type AnchoredTooltipCoords,
+} from '../../hooks/anchoredTooltip.js';
+import {
   useTooltipRevealBinding,
-  type TooltipRevealHandlerProps,
+  type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 
 const OVERLAY_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
 const GRID_COLUMNS = 5;
@@ -82,10 +88,8 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
-const OVERLAY_Z_INDEX = 22;
-
-/** Above scroll grid; below header seam (raised in GameEnvironment). */
-const OVERLAY_BOTTOM_SEAM_Z_INDEX = 24;
+/** Above encounter header seam (25) when inventory/skillbook panel is open. */
+const OVERLAY_Z_INDEX = 26;
 
 const overlayBlockStyle: CSSProperties = {
   position: 'absolute',
@@ -104,18 +108,6 @@ const overlayBlockStyle: CSSProperties = {
   backgroundSize: 'cover',
   overflow: 'hidden',
   transition: fadeTransition,
-};
-
-const blockBottomSeamStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: 0,
-  width: '108%',
-  height: 10,
-  objectFit: 'cover',
-  transform: 'translate(-50%, 7px)',
-  zIndex: OVERLAY_BOTTOM_SEAM_Z_INDEX,
-  pointerEvents: 'none',
 };
 
 const scrollWrapStyle: CSSProperties = {
@@ -154,50 +146,29 @@ const itemImageStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
-const gridItemHoverVisualStyle: CSSProperties = {
-  transform: 'scale(1.06) translateY(-2px)',
-  filter: 'brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38))',
-};
+const GRID_TOOLTIP_WIDTH_PX = 220;
 
-const gridItemHoverImageStyle: CSSProperties = {
-  filter: 'brightness(1.12) drop-shadow(0 0 12px rgba(255, 204, 102, 0.42)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55))',
-};
-
-const tooltipFloatStyle: CSSProperties = {
+const gridTooltipShellStyle: CSSProperties = {
   position: 'absolute',
-  top: 'clamp(0px, 0.6vw, 6px)',
-  left: '50%',
-  transform: 'translate(-50%, -6px)',
   zIndex: 30,
-  width: 'min(92%, 340px)',
-  maxWidth: 'calc(100% - 28px)',
+  width: GRID_TOOLTIP_WIDTH_PX,
+  maxWidth: `min(${GRID_TOOLTIP_WIDTH_PX}px, calc(100% - 16px))`,
   pointerEvents: 'none',
+  boxSizing: 'border-box',
 };
 
-function mergeGridItemPointerHandlers(
-  itemId: number,
-  tooltipHandlers: TooltipRevealHandlerProps,
-  setHoveredItemId: Dispatch<SetStateAction<number | null>>,
-): TooltipRevealHandlerProps {
-  return {
-    ...tooltipHandlers,
-    onMouseOver: (event) => {
-      setHoveredItemId(itemId);
-      tooltipHandlers.onMouseOver?.(event);
-    },
-    onMouseOut: (event) => {
-      setHoveredItemId((current) => (current === itemId ? null : current));
-      tooltipHandlers.onMouseOut?.(event);
-    },
-    onFocus: (event) => {
-      setHoveredItemId(itemId);
-      tooltipHandlers.onFocus?.(event);
-    },
-    onBlur: (event) => {
-      setHoveredItemId((current) => (current === itemId ? null : current));
-      tooltipHandlers.onBlur?.(event);
-    },
-  };
+type GridTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
+
+interface GridTooltipState {
+  anchor: AnchoredTooltipCoords;
+  item: SolutionGridEntry;
+}
+
+function isRelatedTargetInside(
+  container: HTMLElement,
+  relatedTarget: EventTarget | null,
+): boolean {
+  return relatedTarget instanceof Node && container.contains(relatedTarget);
 }
 
 const emptyTextStyle: CSSProperties = {
@@ -283,9 +254,14 @@ export function SolutionGridOverlay({
   sourceContainer: 'spellbook' | 'items';
   visible: boolean;
 }) {
+  const overlayRef = useRef<HTMLElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const activeTriggerRef = useRef<HTMLElement | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
-  const [tooltipItem, setTooltipItem] = useState<SolutionGridEntry | null>(null);
+  const [tooltip, setTooltip] = useState<GridTooltipState | null>(null);
+  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(
+    null,
+  );
   const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
     visible,
   );
@@ -294,42 +270,110 @@ export function SolutionGridOverlay({
     () => inventoryEntries(inventory, sourceContainer, inventoryType),
     [inventory, inventoryType, sourceContainer],
   );
+  const itemSignature = useMemo(
+    () => items.map((item) => `${item.solutionId}:${item.uses}`).join(','),
+    [items],
+  );
 
   useEffect(() => {
     if (!visible) {
       setSelectedItemId(null);
-      setHoveredItemId(null);
-      setTooltipItem(null);
+      setTooltip(null);
+      setTooltipPlacement(null);
+      activeTriggerRef.current = null;
     }
   }, [visible]);
 
   useEffect(() => {
     setSelectedItemId(null);
-    setHoveredItemId(null);
-    setTooltipItem(null);
-  }, [inventory]);
+    setTooltip(null);
+    setTooltipPlacement(null);
+    activeTriggerRef.current = null;
+  }, [itemSignature]);
 
-  function showItemTooltip(item: SolutionGridEntry): void {
+  useLayoutEffect(() => {
+    if (!tooltip || !overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
+      return;
+    }
+
+    const container = overlayRef.current;
+    const trigger = activeTriggerRef.current;
+    const tooltipElement = tooltipRef.current;
+
+    function measureAndPlace(): void {
+      if (!overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const tooltipRect = tooltipElement.getBoundingClientRect();
+
+      if (tooltipRect.width <= 0 || tooltipRect.height <= 0) {
+        return;
+      }
+
+      setTooltipPlacement(
+        clampAnchoredTooltipPlacement(
+          containerRect,
+          triggerRect,
+          tooltipRect,
+          tooltip.anchor.anchorX,
+        ),
+      );
+    }
+
+    measureAndPlace();
+    const remeasureFrame = window.requestAnimationFrame(measureAndPlace);
+
+    return () => {
+      window.cancelAnimationFrame(remeasureFrame);
+    };
+  }, [tooltip]);
+
+  function showItemTooltip(
+    item: SolutionGridEntry,
+    columnIndex: number,
+    event: GridTooltipTriggerEvent,
+  ): void {
+    const trigger = event.currentTarget;
+
+    if (!(trigger instanceof HTMLElement) || !overlayRef.current) {
+      return;
+    }
+
+    const anchorX = anchorXForGridColumn(columnIndex, GRID_COLUMNS);
+    activeTriggerRef.current = trigger;
     setSelectedItemId(item.solutionId);
-    setTooltipItem(item);
+    setTooltipPlacement(null);
+    setTooltip({
+      item,
+      anchor: anchoredTooltipCoords(overlayRef.current, trigger, anchorX),
+    });
   }
 
   function hideItemTooltip(): void {
-    setTooltipItem(null);
+    activeTriggerRef.current = null;
+    setTooltip(null);
+    setTooltipPlacement(null);
   }
 
-  function handleItemClick(item: SolutionGridEntry): void {
+  function handleItemClick(
+    item: SolutionGridEntry,
+    columnIndex: number,
+    event: { currentTarget: HTMLElement },
+  ): void {
     if (consumeLongPressActivation()) {
       return;
     }
 
-    if (selectedItemId === item.solutionId && tooltipItem !== null) {
+    if (selectedItemId === item.solutionId && tooltip !== null) {
       setSelectedItemId(null);
       hideItemTooltip();
       return;
     }
 
-    showItemTooltip(item);
+    showItemTooltip(item, columnIndex, event);
   }
 
   return (
@@ -338,6 +382,7 @@ export function SolutionGridOverlay({
       aria-label={ariaLabel}
       className="morkahja-solution-grid-overlay"
       inert={visible ? undefined : true}
+      ref={overlayRef}
       style={{
         ...overlayBlockStyle,
         opacity: visible ? 1 : 0,
@@ -358,43 +403,53 @@ export function SolutionGridOverlay({
       >
         {items.length > 0 ? (
           <div style={itemGridStyle}>
-            {items.map((item) => {
+            {items.map((item, itemIndex) => {
               const itemKey = String(item.solutionId);
+              const columnIndex = itemIndex % GRID_COLUMNS;
               const isSelected = selectedItemId === item.solutionId;
-              const isHovered = hoveredItemId === item.solutionId;
-              const itemTooltipHandlers = mergeGridItemPointerHandlers(
-                item.solutionId,
-                bindTooltipReveal({
-                  onShow: () => {
-                    showItemTooltip(item);
-                  },
-                  onHide: hideItemTooltip,
-                }),
-                setHoveredItemId,
-              );
+              const touchTooltipHandlers = bindTooltipReveal({
+                onShow: (event) => {
+                  showItemTooltip(item, columnIndex, event);
+                },
+                onHide: hideItemTooltip,
+              });
               return (
                 <button
                   aria-label={item.name}
                   aria-pressed={isSelected}
-                  className={`morkahja-footer-button${
-                    isSelected ? ' morkahja-footer-button--selected' : ''
+                  className={`morkahja-grid-item-button${
+                    isSelected ? ' morkahja-grid-item-button--selected' : ''
                   }`}
+                  data-grid-item-id={item.solutionId}
                   key={item.solutionId}
-                  onClick={() => {
-                    handleItemClick(item);
+                  onBlur={hideItemTooltip}
+                  onClick={(event) => {
+                    handleItemClick(item, columnIndex, event);
                   }}
-                  {...itemTooltipHandlers}
+                  onFocus={(event) => {
+                    showItemTooltip(item, columnIndex, event);
+                  }}
+                  onMouseEnter={(event) => {
+                    showItemTooltip(item, columnIndex, event);
+                  }}
+                  onMouseLeave={(event) => {
+                    if (isRelatedTargetInside(event.currentTarget, event.relatedTarget)) {
+                      return;
+                    }
+
+                    hideItemTooltip();
+                  }}
                   onPointerDown={(event) => {
                     pulse(itemKey);
-                    itemTooltipHandlers.onPointerDown?.(event);
+                    touchTooltipHandlers.onPointerDown?.(event);
                   }}
+                  onPointerUp={touchTooltipHandlers.onPointerUp}
+                  onPointerCancel={touchTooltipHandlers.onPointerCancel}
+                  onPointerLeave={touchTooltipHandlers.onPointerLeave}
                   style={itemButtonStyle}
                   type="button"
                 >
-                  <span
-                    className="morkahja-footer-button-visual"
-                    style={isHovered ? gridItemHoverVisualStyle : undefined}
-                  >
+                  <span className="morkahja-grid-item-button-visual">
                     <img
                       alt=""
                       aria-hidden="true"
@@ -402,7 +457,6 @@ export function SolutionGridOverlay({
                       src={item.imageSrc}
                       style={{
                         ...itemImageStyle,
-                        ...(isHovered ? gridItemHoverImageStyle : {}),
                         animation: pressAnimation(isPressed(itemKey)),
                       }}
                     />
@@ -415,18 +469,23 @@ export function SolutionGridOverlay({
           <p style={emptyTextStyle}>{emptyText}</p>
         )}
       </div>
-      {tooltipItem ? (
-        <div aria-live="polite" style={tooltipFloatStyle}>
-          <SolutionGridTooltipPanel item={tooltipItem} />
+      {tooltip ? (
+        <div
+          aria-live="polite"
+          ref={tooltipRef}
+          role="tooltip"
+          style={{
+            ...gridTooltipShellStyle,
+            left: tooltipPlacement?.left ?? tooltip.anchor.x,
+            top: tooltipPlacement?.top ?? tooltip.anchor.y,
+            transform: tooltipPlacement
+              ? 'none'
+              : tooltipTransform(tooltip.anchor.anchorX),
+          }}
+        >
+          <SolutionGridTooltipPanel item={tooltip.item} />
         </div>
       ) : null}
-      <img
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        src={FRAME_MASK}
-        style={blockBottomSeamStyle}
-      />
     </aside>
   );
 }

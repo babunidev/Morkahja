@@ -42,10 +42,7 @@ export interface PlayerDocument {
     utcDay: string;
     encountersPlayed: number;
     claimedAt?: number;
-  };
-  /** Seal of Norghor subscription (28-day access; no auto-renew). */
-  sealOfNorghor?: {
-    expiresAt: number;
+    readyNotifiedAt?: number;
   };
   [key: string]: unknown;
 }

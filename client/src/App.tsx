@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AchievementProgressDto, RoomHelpInvitationDto } from '@shared/contracts';
 import {
+  createAvatar,
   fetchAchievements,
   fetchActiveEncounter,
   fetchAvatar,
@@ -26,6 +27,10 @@ import { markAchievementsSeen } from './ui/dashboard/achievementsAttentionState.
 import ScribesAchievementToast from './ui/dashboard/ScribesAchievementToast.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
+import {
+  buildAvatarFromPreset,
+  resolveCreationSlotIndex,
+} from './ui/avatar/avatarFromPreset.js';
 import {
   loadDeadAvatarIds,
   prepareAvatarSelection,
@@ -130,10 +135,17 @@ export default function App() {
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
   const [achievementToast, setAchievementToast] = useState<AchievementProgressDto | null>(null);
+  const [hearthBlessingToast, setHearthBlessingToast] = useState(false);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
   const [helpInviteToast, setHelpInviteToast] = useState<RoomHelpInvitationDto | null>(null);
   const [gameEntryKey, setGameEntryKey] = useState(0);
   const achievementsBaselineRef = useRef<AchievementProgressDto[] | null>(null);
+  const dailyRewardBaselineRef = useRef<{
+    utcDay: string;
+    claimable: boolean;
+    claimedToday: boolean;
+    encountersPlayed: number;
+  } | null>(null);
   const seenHelpInviteIdsRef = useRef<Set<string>>(new Set());
   const helpInviteAcceptPendingRef = useRef(false);
   const session = loadStoredSession();
@@ -157,8 +169,17 @@ export default function App() {
       const response = await fetchAchievements();
       const previous = achievementsBaselineRef.current;
 
+      const dailyReward = response.dailyReward;
+      const previousDaily = dailyRewardBaselineRef.current;
+
       if (options?.seedBaseline || !previous) {
         achievementsBaselineRef.current = response.achievements;
+        dailyRewardBaselineRef.current = {
+          utcDay: dailyReward.utcDay,
+          claimable: dailyReward.claimable,
+          claimedToday: dailyReward.claimedToday,
+          encountersPlayed: dailyReward.encountersPlayed,
+        };
         return;
       }
 
@@ -168,6 +189,23 @@ export default function App() {
       if (unlock) {
         setAchievementToast(unlock.achievement);
       }
+
+      if (
+        previousDaily
+        && !previousDaily.claimable
+        && dailyReward.claimable
+        && !dailyReward.claimedToday
+        && dailyReward.utcDay === previousDaily.utcDay
+      ) {
+        setHearthBlessingToast(true);
+      }
+
+      dailyRewardBaselineRef.current = {
+        utcDay: dailyReward.utcDay,
+        claimable: dailyReward.claimable,
+        claimedToday: dailyReward.claimedToday,
+        encountersPlayed: dailyReward.encountersPlayed,
+      };
     } catch (error) {
       console.error('Achievement unlock check failed', error);
     }
@@ -176,8 +214,10 @@ export default function App() {
   useEffect(() => {
     if (!isAchievementWatchScreen(screen)) {
       setAchievementToast(null);
+      setHearthBlessingToast(false);
       setAchievementsOverlayOpen(false);
       achievementsBaselineRef.current = null;
+      dailyRewardBaselineRef.current = null;
       return;
     }
 
@@ -543,7 +583,7 @@ export default function App() {
             onHandoffComplete={() => {
               setDeathOverlayAvatar(null);
             }}
-            onHandoffStart={async () => {
+            onNewAvatar={async () => {
               const preset = deathOverlayAvatar;
               if (!preset) {
                 return;
@@ -552,9 +592,9 @@ export default function App() {
               try {
                 await syncAvatarSelectionAfterHomeState();
               } catch (error) {
-                console.error('Death overlay home prepare failed', error);
+                console.error('Death overlay new avatar prepare failed', error);
                 setAvatarSelectionPrepared(false);
-                setAvatarSelectionNotice('Could not refresh avatars; try Home again.');
+                setAvatarSelectionNotice('Could not refresh avatars. Try again.');
                 throw error;
               }
 
@@ -568,6 +608,55 @@ export default function App() {
               window.requestAnimationFrame(() => {
                 setAvatarCreationPreset(preset);
               });
+            }}
+            onSameSoul={async () => {
+              const preset = deathOverlayAvatar;
+              if (!preset) {
+                return;
+              }
+
+              let avatars: PersistedAvatar[];
+              let purgeFailedIds: string[];
+
+              try {
+                const refresh = await refreshAvatarSelectionAfterHome();
+                avatars = refresh.avatars;
+                purgeFailedIds = refresh.purge.failedIds;
+                setAvatarSelectionAvatars(avatars);
+                setExcludedAvatarIds(purgeFailedIds);
+                setAvatarSelectionPrepared(true);
+                setAvatarSelectionNotice(
+                  purgeFailedIds.length > 0
+                    ? 'Could not remove fallen avatar; try again.'
+                    : null,
+                );
+              } catch (error) {
+                console.error('Death overlay same soul prepare failed', error);
+                setAvatarSelectionPrepared(false);
+                setAvatarSelectionNotice('Could not refresh avatars. Try again.');
+                throw error;
+              }
+
+              const slotIndex = resolveCreationSlotIndex(avatars, purgeFailedIds);
+
+              try {
+                await createAvatar(buildAvatarFromPreset(preset, slotIndex));
+                const refreshedAvatars = await prepareAvatarSelection();
+                setAvatarSelectionAvatars(refreshedAvatars);
+                void checkAchievementUnlocks();
+              } catch (error) {
+                console.error('Death overlay same soul create failed', error);
+                setAvatarSelectionNotice('Could not create avatar. Try again.');
+                throw error;
+              }
+
+              setDeathCreationHandoff(false);
+              setAvatarCreationPreset(null);
+              setActiveAvatar(null);
+              setActiveEncounter(null);
+              resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+              setScreen('dashboard');
+              setAvatarSlotsVisible(true);
             }}
             open
           />
@@ -593,6 +682,19 @@ export default function App() {
             playerName={playerName}
           />
         ) : null}
+        {isAchievementWatchScreen(screen) && hearthBlessingToast ? (
+          <GameMessageToast
+            label="Scribes"
+            message="Your Hearth Blessing is ready to be claimed."
+            onClick={() => {
+              setAchievementsOverlayOpen(true);
+            }}
+            onDismiss={() => {
+              setHearthBlessingToast(false);
+            }}
+            stackOffsetPx={achievementToast ? 78 : 0}
+          />
+        ) : null}
         {isAchievementWatchScreen(screen) && helpInviteToast ? (
           <GameMessageToast
             label="Call for help"
@@ -603,6 +705,7 @@ export default function App() {
             onDismiss={() => {
               dismissHelpInviteToast(helpInviteToast);
             }}
+            stackOffsetPx={achievementToast || hearthBlessingToast ? 78 : 0}
           />
         ) : null}
         {isAchievementWatchScreen(screen) && achievementsOverlayOpen && playerId ? (
@@ -616,6 +719,15 @@ export default function App() {
             onSnapshotViewed={(snapshot) => {
               markAchievementsSeen(playerId, snapshot);
               achievementsBaselineRef.current = snapshot.achievements;
+              dailyRewardBaselineRef.current = {
+                utcDay: snapshot.dailyReward.utcDay,
+                claimable: snapshot.dailyReward.claimable,
+                claimedToday: snapshot.dailyReward.claimedToday,
+                encountersPlayed: snapshot.dailyReward.encountersPlayed,
+              };
+              if (!snapshot.dailyReward.claimable) {
+                setHearthBlessingToast(false);
+              }
             }}
             open
             playerId={playerId}

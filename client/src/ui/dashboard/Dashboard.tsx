@@ -38,7 +38,7 @@ const RADIAL_BUTTONS = [
     tooltip: 'Settings',
     src: '/UI/03_DASHBOARD/im_button_setting_b.webp',
     x: -48,
-    y: -86,
+    y: 83,
   },
   {
     label: 'Social',
@@ -66,7 +66,7 @@ const RADIAL_BUTTONS = [
     tooltip: 'Expansions',
     src: '/UI/03_DASHBOARD/im_button_expansions.webp',
     x: -48,
-    y: 83,
+    y: -86,
   },
 ] as const;
 
