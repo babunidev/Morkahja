@@ -1616,7 +1616,6 @@ export async function requestHelp(
     status: 'pending',
   };
 
-  const fromPlayer = await loadPlayer(fromPlayerId);
   const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
   await saveRoomInvitation(invitation);
   await recordHelpRequestedEvent(
