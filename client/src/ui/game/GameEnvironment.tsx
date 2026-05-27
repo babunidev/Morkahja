@@ -33,9 +33,10 @@ import type { ResultBlockHandle } from './blocks/ResultBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
 import GameMessageToast from './GameMessageToast.js';
 import {
-  isMultiplayerContinue,
+  isPartySession,
   localContinuePressed,
   multiplayerContinueWaiting,
+  shouldDeferRewardDismiss,
 } from './roomContinue.js';
 
 const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
@@ -153,11 +154,7 @@ function applyRoomSnapshot(
 }
 
 function isSoloRoom(room: EncounterRoomSnapshotDto): boolean {
-  const awaitingContinue = room.participants.filter(
-    (participant) => participant.resolutionSummary !== undefined
-      || participant.choiceState === 'resolved',
-  );
-  return awaitingContinue.length <= 1;
+  return !isPartySession(room);
 }
 
 function currentFocusState(
@@ -193,6 +190,8 @@ export function GameEnvironment({
   const [homeVisible, setHomeVisible] = useState(false);
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
+  const [pendingPartyContinue, setPendingPartyContinue] = useState(false);
+  const [resultRollVisible, setResultRollVisible] = useState(false);
   const dismissHelpToast = useCallback(() => {
     setHelpToastMessage(null);
   }, []);
@@ -228,6 +227,11 @@ export function GameEnvironment({
       void preloadImage(nextEncounterImageSrc);
     }
   }, [nextEncounterImageSrc]);
+
+  useEffect(() => {
+    setPendingPartyContinue(false);
+    setResultRollVisible(false);
+  }, [encounter.snapshotId]);
 
   useEffect(() => {
     if (deferReveal) {
@@ -417,6 +421,40 @@ export function GameEnvironment({
     }
   }
 
+  useEffect(() => {
+    if (!room || room.roomState !== 'waiting_continue' || !pendingPartyContinue) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      setPendingPartyContinue(false);
+      setContinuePending(true);
+      try {
+        const currentRoom = roomRef.current ?? room;
+        const nextRoom = await advanceResolvedEncounter(currentRoom);
+        appendActionLog([
+          nextRoom.roomState === 'active_encounter'
+            ? 'Continue: Encounter advanced.'
+            : 'Continue: Waiting for other players.',
+        ]);
+        onAchievementCheck?.();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Could not continue encounter.';
+        appendActionLog([`Continue failed: ${message}`]);
+      } finally {
+        if (!cancelled) {
+          setContinuePending(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [room?.roomState, room?.updatedAt, pendingPartyContinue, onAchievementCheck]);
+
   async function handleContinueEncounter(
     action: EncounterAction,
     _selectedRoll: number | null,
@@ -449,6 +487,19 @@ export function GameEnvironment({
         ]);
         onAchievementCheck?.();
         return;
+      }
+
+      if (isPartySession(currentRoom)) {
+        const local = currentRoom.participants.find((participant) => participant.isLocal);
+        if (local?.choiceState === 'ready') {
+          setPendingPartyContinue(true);
+          appendActionLog(['Continue: Waiting for other players.']);
+          return;
+        }
+        if (local?.choiceState === 'resolved') {
+          appendActionLog(['Continue: Waiting for other players.']);
+          return;
+        }
       }
 
       if (currentRoom.roomState === 'system_event' && currentRoom.systemEvent?.isLocalWitness) {
@@ -623,8 +674,8 @@ export function GameEnvironment({
 
   const waitingForResolution = room?.roomState === 'resolving';
   const showServerResult = room?.roomState === 'waiting_continue' && displayResolution !== undefined;
-  const deferRewardDismiss = isMultiplayerContinue(room);
-  const partyContinueWaiting = multiplayerContinueWaiting(room);
+  const deferRewardDismiss = shouldDeferRewardDismiss(room, resultRollVisible);
+  const partyContinueWaiting = multiplayerContinueWaiting(room, pendingPartyContinue);
   const localHasContinuePressed = room ? localContinuePressed(room) : false;
 
   function isPostSystemWaitingContinue(currentRoom: EncounterRoomSnapshotDto): boolean {
@@ -677,10 +728,11 @@ export function GameEnvironment({
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
                 inventoryOpen={inventoryOpen}
-                localContinuePressed={localHasContinuePressed}
+                localContinuePressed={localHasContinuePressed || pendingPartyContinue}
                 loreOpen={loreOpen}
                 multiplayerContinueWaiting={partyContinueWaiting}
                 onContinue={handleContinueEncounter}
+                onResultsVisibleChange={setResultRollVisible}
                 resultBlockRef={resultBlockRef}
                 roomState={room?.roomState ?? 'active_encounter'}
                 serverResolution={showServerResult ? displayResolution : undefined}

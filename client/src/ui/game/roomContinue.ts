@@ -19,6 +19,14 @@ function isPostSystemEventContinue(room: EncounterRoomSnapshotDto): boolean {
   return room.systemEvent?.lastEventRecap !== undefined;
 }
 
+/** True when another adventurer is in the party (not disengaged). */
+export function isPartySession(room: EncounterRoomSnapshotDto | null | undefined): boolean {
+  if (!room) {
+    return false;
+  }
+  return engagedParticipants(room).length > 1;
+}
+
 /** Mirrors server `continueTargetsForRoom` for UI gating. */
 export function continueTargets(room: EncounterRoomSnapshotDto): RoomParticipantDto[] {
   if (isPostSystemEventContinue(room)) {
@@ -30,10 +38,23 @@ export function continueTargets(room: EncounterRoomSnapshotDto): RoomParticipant
 }
 
 export function isMultiplayerContinue(room: EncounterRoomSnapshotDto | null | undefined): boolean {
-  if (!room || room.roomState !== 'waiting_continue') {
+  return isPartySession(room);
+}
+
+export function shouldDeferRewardDismiss(
+  room: EncounterRoomSnapshotDto | null | undefined,
+  resultsVisible: boolean,
+): boolean {
+  if (!room || !isPartySession(room) || !resultsVisible) {
     return false;
   }
-  return continueTargets(room).length > 1;
+
+  if (room.roomState === 'waiting_continue') {
+    return true;
+  }
+
+  const local = room.participants.find((participant) => participant.isLocal);
+  return local?.choiceState === 'ready' || local?.choiceState === 'resolved';
 }
 
 export function allContinuePressed(room: EncounterRoomSnapshotDto): boolean {
@@ -46,9 +67,21 @@ export function localContinuePressed(room: EncounterRoomSnapshotDto): boolean {
   return local?.continuePressed === true;
 }
 
-export function multiplayerContinueWaiting(room: EncounterRoomSnapshotDto | null | undefined): boolean {
-  if (!room || room.roomState !== 'waiting_continue' || !isMultiplayerContinue(room)) {
+export function multiplayerContinueWaiting(
+  room: EncounterRoomSnapshotDto | null | undefined,
+  pendingPartyContinue = false,
+): boolean {
+  if (!isPartySession(room)) {
     return false;
   }
+
+  if (pendingPartyContinue) {
+    return true;
+  }
+
+  if (room?.roomState !== 'waiting_continue') {
+    return false;
+  }
+
   return localContinuePressed(room) && !allContinuePressed(room);
 }

@@ -1,4 +1,5 @@
 import type {
+  EncounterAction,
   EncounterRoomSnapshotDto,
   EncounterSnapshotDto,
   RoomParticipantDto,
@@ -10,14 +11,37 @@ import {
   DEATH_ENCOUNTER_NUMERIC_ID,
   LEVEL_UP_ENCOUNTER_NUMERIC_ID,
 } from '../domain/rooms/RoomSystemEvent.js';
-import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
+import type { EncounterSnapshot, PlayerEncounterAction } from '../types/encounterSnapshot.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
 import { loadAvatar } from './encounterPersistence.js';
 import { toPersistedAvatarDto } from './avatarPresentation.js';
 import type { PlayerDocument } from '../types/player.js';
 
-const FALLBACK_PORTRAIT = 'im_avatar_rokur_m_01.webp';
-const FALLBACK_FRAME = 'im_frame_01.webp';
+const FALLBACK_PORTRAIT = 'm_portrait_rokur_warrior';
+const FALLBACK_FRAME = 'm_frame_01';
+
+function playerActionToClientAction(
+  action: PlayerEncounterAction | undefined,
+): EncounterAction | undefined {
+  if (!action) {
+    return undefined;
+  }
+
+  switch (action.type) {
+    case 'primaryA':
+      return 'A';
+    case 'secondaryB':
+      return 'B';
+    case 'primaryC':
+      return 'C';
+    case 'secondaryD':
+      return 'D';
+    case 'dice':
+      return 'dice';
+    default:
+      return undefined;
+  }
+}
 
 const loggedParticipantFallbacks = new Set<string>();
 
@@ -78,6 +102,7 @@ function buildParticipantDto(
     avatar,
     choiceState: participant.choiceState,
     focusState: participant.focusState,
+    selectedAction: playerActionToClientAction(participant.selectedAction),
     selectedSolutionId: participant.selectedSolutionId,
     continuePressed: participant.continuePressed,
     resolutionSummary: participant.resolutionSummary,
@@ -91,11 +116,25 @@ async function participantToDto(
   roomId: string,
 ): Promise<RoomParticipantDto> {
   const playerName = await readPlayerName(participant.playerId);
-  const avatar = await loadAvatar(participant.playerId, participant.avatarId);
-  const dto = avatar ? toPersistedAvatarDto(avatar) : null;
+  const avatarDoc = await loadAvatar(participant.playerId, participant.avatarId);
+  const dto = avatarDoc ? toPersistedAvatarDto(avatarDoc) : null;
 
   if (dto) {
     return buildParticipantDto(participant, localPlayerId, playerName, dto);
+  }
+
+  if (avatarDoc?.portrait && avatarDoc.frame && avatarDoc.race && avatarDoc.role) {
+    return buildParticipantDto(participant, localPlayerId, playerName, {
+      id: participant.avatarId,
+      name: avatarDoc.name?.trim() || playerName,
+      race: avatarDoc.race,
+      role: avatarDoc.role,
+      level: typeof avatarDoc.level === 'number' ? avatarDoc.level : 1,
+      experience: typeof avatarDoc.experience === 'number' ? avatarDoc.experience : 0,
+      portrait: avatarDoc.portrait,
+      frame: avatarDoc.frame,
+      displayTitle: null,
+    });
   }
 
   const fallbackKey = `${roomId}:${participant.playerId}:${participant.avatarId}`;

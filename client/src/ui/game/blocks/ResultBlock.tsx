@@ -1,6 +1,5 @@
 import {
   forwardRef,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -685,7 +684,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return flights;
   }
 
-  const playDismissAnimations = useCallback(async (): Promise<void> => {
+  async function playDismissAnimations(): Promise<void> {
     if (!visible || continueBusy) {
       return;
     }
@@ -723,11 +722,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     } finally {
       setContinueBusy(false);
     }
-  }, [continueBusy, visible, losses, rewards, roll]);
+  }
 
   useImperativeHandle(ref, () => ({
     playDismissAnimations,
-  }), [playDismissAnimations]);
+  }));
 
   async function handleContinueClick(): Promise<void> {
     if (

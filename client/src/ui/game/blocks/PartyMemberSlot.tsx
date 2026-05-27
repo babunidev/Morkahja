@@ -1,12 +1,23 @@
 import type { CSSProperties } from 'react';
 import type { RoomParticipantDto, RoomStateDto } from '../../../api/http.js';
+import solutionData from '../../../data/game/solutiondata.json';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
-import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
+import { GAME_FOCUS_BUTTON_ICONS, GAME_UI_ROOT } from '../gameUiAssets.js';
 import {
   preventImageContextMenu,
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
+
+const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const DICE_CHOICE_ICON = `${GAME_UI_ROOT}/im_button_dice_a.webp`;
+
+interface SolutionRecord {
+  mSolutionIconName: string;
+  mSolutionID: number;
+}
+
+const solutionsById = solutionData as Record<string, SolutionRecord>;
 
 const slotStyle: CSSProperties = {
   width: '100%',
@@ -34,6 +45,19 @@ const overlayStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+const choiceOverlayStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  transform: 'translate(-50%, -50%)',
+  zIndex: 7,
+  width: 52,
+  height: 52,
+  display: 'grid',
+  placeItems: 'center',
+  pointerEvents: 'none',
+};
+
 const focusIconStyle: CSSProperties = {
   display: 'block',
   width: 26,
@@ -41,6 +65,30 @@ const focusIconStyle: CSSProperties = {
   objectFit: 'contain',
   filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55))',
 };
+
+const choiceIconStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  height: '100%',
+  borderRadius: '50%',
+  objectFit: 'cover',
+  boxShadow:
+    '0 0 12px rgba(255, 204, 102, 0.55), 0 4px 10px rgba(0, 0, 0, 0.5)',
+};
+
+function solutionImagePath(solutionId: number): string | null {
+  const solution = solutionsById[String(solutionId)];
+  if (!solution) {
+    return null;
+  }
+
+  return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+}
+
+function hasVisibleChoice(participant: RoomParticipantDto): boolean {
+  return participant.choiceState === 'ready'
+    || participant.choiceState === 'resolved';
+}
 
 export function PartyMemberSlot({
   participant,
@@ -54,6 +102,11 @@ export function PartyMemberSlot({
   const focusIconSrc = participant.focusState !== 'none'
     ? GAME_FOCUS_BUTTON_ICONS[participant.focusState]
     : undefined;
+  const showChoice = hasVisibleChoice(participant);
+  const choiceSolutionSrc = participant.selectedSolutionId
+    ? solutionImagePath(participant.selectedSolutionId)
+    : null;
+  const showDiceChoice = showChoice && !choiceSolutionSrc && participant.selectedAction === 'dice';
 
   return (
     <div
@@ -77,6 +130,16 @@ export function PartyMemberSlot({
           frameScale={1.01}
           portrait={participant.avatar.portrait}
         />
+        {showChoice && (choiceSolutionSrc || showDiceChoice) ? (
+          <span aria-hidden="true" style={choiceOverlayStyle}>
+            <img
+              alt=""
+              {...protectedImageProps}
+              src={choiceSolutionSrc ?? DICE_CHOICE_ICON}
+              style={choiceIconStyle}
+            />
+          </span>
+        ) : null}
         {focusIconSrc ? (
           <span aria-hidden="true" style={overlayStyle}>
             <img
@@ -85,14 +148,6 @@ export function PartyMemberSlot({
               src={focusIconSrc}
               style={focusIconStyle}
             />
-          </span>
-        ) : null}
-        {participant.choiceState === 'ready' && participant.selectedSolutionId ? (
-          <span
-            aria-hidden="true"
-            style={{ ...overlayStyle, top: 'auto', bottom: -4, fontSize: '0.72rem' }}
-          >
-            ✓
           </span>
         ) : null}
       </div>

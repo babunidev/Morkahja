@@ -395,6 +395,7 @@ export interface RoomParticipantDto {
   avatar: PersistedAvatarDto;
   choiceState: ParticipantChoiceStateDto;
   focusState: ParticipantFocusStateDto;
+  selectedAction?: EncounterAction;
   selectedSolutionId?: number;
   continuePressed: boolean;
   resolutionSummary?: ParticipantResolutionSummaryDto;

@@ -86,6 +86,7 @@ export function EncounterImageBlock({
   loreOpen,
   multiplayerContinueWaiting = false,
   onContinue,
+  onResultsVisibleChange,
   resultBlockRef,
   roomState = 'active_encounter',
   serverResolution,
@@ -109,6 +110,7 @@ export function EncounterImageBlock({
     roll: number | null,
     solutionId: number | null,
   ) => Promise<void>;
+  onResultsVisibleChange?: (visible: boolean) => void;
   resultBlockRef?: Ref<ResultBlockHandle>;
   roomState?: RoomStateDto;
   serverResolution?: ParticipantResolutionSummaryDto;
@@ -181,6 +183,10 @@ export function EncounterImageBlock({
       setRevealedRoll(serverResolution.selectedRoll);
     }
   }, [roomState, serverResolution?.selectedRoll, encounter.snapshotId]);
+
+  useEffect(() => {
+    onResultsVisibleChange?.(revealedRoll !== null);
+  }, [onResultsVisibleChange, revealedRoll]);
 
   async function handleContinue(): Promise<void> {
     if (roomState === 'waiting_continue') {
