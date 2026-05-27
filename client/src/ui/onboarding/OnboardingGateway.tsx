@@ -12,12 +12,12 @@ import {
   RESTORE_CHALLENGE_PREFIX,
   signChallenge,
 } from '../../sessionKeys.js';
+import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
+import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
 
 const BACKGROUND = '/UI/01_2_Agreement/menuBGplayerCreation.webp';
 const FALLBACK_BACKGROUND = '/UI/01_1_SignIn/menuBG.webp';
 const AGREE_BUTTON = '/UI/01_2_Agreement/NEWAgreeButt.png';
-const PRIVACY_POLICY_URL = 'https://arcanitebrothers.com/privacy';
-const TERMS_OF_SERVICE_URL = 'https://arcanitebrothers.com/terms';
 
 type Mode = 'gateway' | 'new' | 'restore';
 
@@ -107,6 +107,18 @@ const checkboxLabelStyle: CSSProperties = {
   textAlign: 'center',
 };
 
+const policyLinkButtonStyle: CSSProperties = {
+  margin: 0,
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  color: '#ffcc66',
+  font: 'inherit',
+  textDecoration: 'underline',
+  textUnderlineOffset: 2,
+  cursor: 'pointer',
+};
+
 const warningStyle: CSSProperties = {
   margin: 0,
   color: '#ffdf91',
@@ -155,6 +167,8 @@ export function OnboardingGateway({
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [keyAcknowledged, setKeyAcknowledged] = useState(false);
+  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
+  const [termsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const trimmedPlayerName = playerName.trim();
@@ -247,11 +261,39 @@ export function OnboardingGateway({
             />
             <label style={checkboxLabelStyle}>
               <input checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} type="checkbox" />
-              I accept the <a href={PRIVACY_POLICY_URL} rel="noreferrer" style={{ color: '#ffcc66' }} target="_blank">Privacy Policy</a>.
+              <span>
+                I accept the{' '}
+                <button
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setPrivacyPolicyOpen(true);
+                  }}
+                  style={policyLinkButtonStyle}
+                  type="button"
+                >
+                  Privacy Policy
+                </button>
+                .
+              </span>
             </label>
             <label style={checkboxLabelStyle}>
               <input checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} type="checkbox" />
-              I accept the <a href={TERMS_OF_SERVICE_URL} rel="noreferrer" style={{ color: '#ffcc66' }} target="_blank">Terms of Service</a>.
+              <span>
+                I accept the{' '}
+                <button
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setTermsOfServiceOpen(true);
+                  }}
+                  style={policyLinkButtonStyle}
+                  type="button"
+                >
+                  Terms of Service
+                </button>
+                .
+              </span>
             </label>
             <label style={checkboxLabelStyle}>
               <input checked={keyAcknowledged} onChange={(event) => setKeyAcknowledged(event.target.checked)} type="checkbox" />
@@ -296,6 +338,18 @@ export function OnboardingGateway({
         ) : null}
         {message ? <p style={warningStyle}>{message}</p> : null}
       </section>
+      <PrivacyPolicyOverlay
+        onClose={() => {
+          setPrivacyPolicyOpen(false);
+        }}
+        open={privacyPolicyOpen}
+      />
+      <TermsOfServiceOverlay
+        onClose={() => {
+          setTermsOfServiceOpen(false);
+        }}
+        open={termsOfServiceOpen}
+      />
     </main>
   );
 }

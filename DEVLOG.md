@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-26 (+0200) |
+| **Last updated** | 2026-05-27 21:04 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -186,10 +186,10 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 ### 2026-05-24 23:18 (+0200) — Profile titles, Seal of Norghor, overlay buttons, settings UX (`32bf3e7`)
 
 107. **Achievement titles** — unlocked rank titles from achievement chains exposed on profile; per-avatar `displayTitle` stored on avatar profile; `PATCH /avatar/:avatarId/display-title`; title `<select>` on each live avatar in **Player profile**; UI shows “Title Name” via `formatAvatarDisplayName`.
-108. **Seal of Norghor** — gem subscription (**67** yellow red gems / **28** days); `GET /player/seal-of-norghor`, `POST /player/seal-of-norghor/activate`; while active, `mergeUnlockedExpansionsWithSeal` merges all active expansion ids into effective unlocks; `SealOfNorghorSection` in Settings with lore art and activate CTA.
+108. **Seal of Norghor** — gem subscription (**67** yellow red gems / **28** days); Settings + API (`32bf3e7`); **removed** from beta (`d26f799`).
 109. **`PanelButton` / `ClosePanelButton`** — shared overlay press/hover (nav-style pulse + gold glow); adopted on Settings, About Us, Donation, achievements, friends, expansions, Scribes, and solution grid overlays.
 110. **Settings refresh** — scrollable panel (header / body / footer); bottom gradient **scroll hint** when content overflows; **Recovery key** download row; player name beside SETTINGS title; About Us remains in footer.
-111. **`GET /player`** — includes `sealOfNorghor` status DTO (active, expiry, cost, `canActivate`) alongside gems and expansions.
+111. **`GET /player`** — included `sealOfNorghor` status DTO (`32bf3e7`; field removed `d26f799`).
 
 ### 2026-05-24 23:25 (+0200) — Encounter art keys (`c2e1533`)
 
@@ -207,6 +207,23 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 117. **Scribes achievement toast** — animated achievement notices in game and on dashboard (`5f354b7`).
 118. **Daily reward** — payouts extended across **all** achievement chains; `dailyRewardService` + tests; `AchievementPanel` shows chain-aware daily copy (`0410092`).
 119. **Admin content** — batch encounter data + `.webp` art via admin API (Lovely Meadows, Liani line, Gobbl, treasure, Ashen Revenant, Echowraith, Auraglow Mireling, Tempest Fury, etc.).
+
+### 2026-05-26 (+0200) — Public beta tag and encounter rooms (`48f4f0a`, admin batch)
+
+120. **Version** — workspaces tagged **0.9.0-beta.1** (`package.json`); `appVersion.ts` exposes version to client (`48f4f0a`).
+121. **Encounter rooms** — server-backed **avatar-scoped** rooms (up to **3** players); `/room/*` API (create, join, leave, choice, focus, continue, call-for-help); `roomService` + Postgres persistence; `EncounterRoomSnapshotDto` on select/create encounter.
+122. **Room states** — `active_encounter` (shared encounter play) and `system_event` (level-up / Atranor **witness** flow for non-actors); party slots UI (`PartyMemberSlot`, `PartyEmptySlot`, `PlayerHub`); `GameEnvironment` syncs room snapshot on continue.
+123. **Help** — call-for-help invites friends or random online players; pending help list; join-via-invite; inactivity and invite TTL constants in `roomConstants.ts`.
+124. **Tests** — `roomService.test.ts` for room lifecycle and coordination rules.
+125. **Admin content** — mountain/travel/Verdani/Liani line encounters and art (Cliffs of Sarga through Raided Verdani Village, Bronze Vault, Aradia's Perch, etc.).
+
+### 2026-05-27 (+0200) — Asset cleanup, Seal removed, UI polish (`133f405`, `d26f799`, admin)
+
+126. **Asset hygiene** (`133f405`) — remove legacy PNG encounter art, archived avatar-creation trees, duplicate portraits, unused Scribes/Help assets; drop large `.wav` music (keep `.mp3`); `posterRaceSkills2.webp` replaces multi‑MB PNG; delete obsolete `strings.xml`.
+127. **Seal of Norghor removed** (`d26f799`) — subscription API, `SealOfNorghorSection`, `mergeUnlockedExpansionsWithSeal`, and related player DTO fields removed (feature retired from beta).
+128. **Anchored tooltips** (`d26f799`) — `anchoredTooltip.ts`; inventory and skillbook tooltips use edge-anchored placement without blocking taps.
+129. **Result / rewards** (`d26f799`) — `ResultBlock` and `rewardFlyAnimation` rework; death overlay and game toasts refined; **Firestarter** achievement progress/events in Scribes (`firestarterAchievement`, `firestarterProgress`).
+130. **Admin content** — Crumblegheist Berserk, Tempestwailer Stormcaller, Ashen Revenant Witch/Seer encounters + art.
 
 ---
 
@@ -454,13 +471,31 @@ Since `5b2d423`.
 - **API** — profile response adds `unlockedTitles[]`; avatars include `displayTitle`; `PATCH /avatar/:avatarId/display-title` with `INVALID_DISPLAY_TITLE` when title not unlocked.
 - **UI** — `PlayerProfileOverlay` title dropdown per current avatar; `avatarDisplayName.ts` on dashboard avatar cards and selection panel.
 
-### Seal of Norghor subscription (`32bf3e7`) · 2026-05-24 23:18 (+0200)
+### Seal of Norghor subscription (`32bf3e7`; removed `d26f799`) · 2026-05-24 23:18 (+0200)
 
-- **Cost / duration** — **67** yellow red gems for **28** days (`sealOfNorghor.ts` constants).
-- **Storage** — `player.sealOfNorghor.expiresAt` on player document.
-- **API** — `GET /player/seal-of-norghor`; `POST /player/seal-of-norghor/activate` debits gems and sets expiry; errors `SEAL_ALREADY_ACTIVE`, `INSUFFICIENT_GEMS`.
-- **Expansions** — `mergeUnlockedExpansionsWithSeal` appends all active expansion ids while seal is valid (effective unlocks on `GET /player` without overwriting purchased list).
-- **UI** — `SealOfNorghorSection.tsx` in Settings: seal art, lore intro, status line, gem balance, activate button.
+- **Was** — **67** gems / **28** days; `GET/POST /player/seal-of-norghor`; Settings section; temporary merge of all active expansions while active.
+- **Removed** (`d26f799`) — subscription retired from public beta; API, domain module, and UI deleted; expansions unlock via gem spend only.
+
+### Encounter rooms (`48f4f0a`) · 2026-05-26 23:58 (+0200)
+
+- **Scope** — up to **3** participants per room (`MAX_PARTICIPANTS`); rooms keyed by leader avatar; solo play uses the same room model with one filled slot.
+- **API** (`/room`) — `GET /active`, `POST /create`, `/join`, `/leave`, `/slot`, `/choice`, `/focus`, `/continue`, `/help/request`, `/help/respond`, `GET /help/pending`.
+- **States** — `active_encounter` for normal coordinated play; `waiting_continue` until all press continue; `system_event` when level-up or Atranor runs for witnesses (local actor vs witness UI).
+- **Persistence** — `roomPersistence.ts` + Postgres; `roomDtoMapper.ts` builds `EncounterRoomSnapshotDto` for client.
+- **Client** — `GameEnvironment` drives room sync; `PartyMemberSlot` / `PartyEmptySlot`; help invitations; `GameMessageToast` for room/help messaging; witness path for system events without blocking actors.
+- **Events** — `roomGameEvents.ts` hooks room outcomes into the game event bus / Scribes where applicable.
+- **Tests** — `roomService.test.ts`.
+
+### Asset cleanup (`133f405`) · 2026-05-27 18:36 (+0200)
+
+- **Removed** — hundreds of legacy PNG/WebP duplicates under avatar creation archives, old encounter PNGs, unused UI mockups, `.wav` music masters, `client/public/UI/StringsTexts/strings.xml`.
+- **Kept** — production `.webp` encounter art, compressed `posterRaceSkills2.webp`, `.mp3` music tracks.
+
+### Seal removal and tooltip/result polish (`d26f799`) · 2026-05-27 21:04 (+0200)
+
+- **Seal** — delete `sealOfNorghorService`, controller routes, Settings section, shared DTOs; strip `sealOfNorghor` from `GET /player`.
+- **Tooltips** — `anchoredTooltip.ts` shared helper; `SolutionGridOverlay` inventory/skillbook placement fixed.
+- **UX** — `ResultBlock` / `rewardFlyAnimation` improvements; `AvatarDeathOverlay` refactor; Firestarter Scribes lines and tests.
 
 ### Settings panel UX (`32bf3e7`) · 2026-05-24 23:18 (+0200)
 
