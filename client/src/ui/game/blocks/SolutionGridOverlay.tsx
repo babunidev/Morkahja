@@ -296,6 +296,7 @@ export function SolutionGridOverlay({
       return;
     }
 
+    const anchorX = tooltip.anchor.anchorX;
     const container = overlayRef.current;
     const trigger = activeTriggerRef.current;
     const tooltipElement = tooltipRef.current;
@@ -318,7 +319,7 @@ export function SolutionGridOverlay({
           containerRect,
           triggerRect,
           tooltipRect,
-          tooltip.anchor.anchorX,
+          anchorX,
         ),
       );
     }
@@ -361,7 +362,7 @@ export function SolutionGridOverlay({
   function handleItemClick(
     item: SolutionGridEntry,
     columnIndex: number,
-    event: { currentTarget: HTMLElement },
+    event: GridTooltipTriggerEvent,
   ): void {
     if (consumeLongPressActivation()) {
       return;
