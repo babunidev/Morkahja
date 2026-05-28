@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
-import { interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
+import { displayRollAsD20, interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
 import {
   predictEncounterLosses,
   scaledUses,
@@ -36,12 +36,17 @@ import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
+  FADE_DURATION_MS,
   fadeTransition,
 } from '../../transitions/fade.js';
 
 const RESULT_BACKGROUND = '/UI/09_GAME/im_bg_result.webp';
 const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
 const DICE_OUTCOME_ICON = '/UI/09_GAME/im_button_dice_a.webp';
+const LORE_GEM_REWARD_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
+const LORE_GEM_REWARD_ID = 90_001;
+const LORE_GEM_POPUP_MS = 330;
+const LORE_GEM_ACTIVATE_MS = 700;
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const ESSENCE_INVENTORY_TYPE = 3;
 const LEVEL_UP_ENCOUNTER_ID = 2;
@@ -262,6 +267,43 @@ const usedSolutionImageStyle: CSSProperties = {
   boxShadow: '0 0 10px rgba(247, 239, 224, 0.28), 0 5px 10px rgba(0, 0, 0, 0.46)',
 };
 
+const loreGemRewardButtonStyle: CSSProperties = {
+  ...rewardItemStyle,
+  position: 'relative',
+};
+
+const loreGemOutcomeImageStyle: CSSProperties = {
+  ...solutionIconImageBaseStyle,
+  width: 48,
+  height: 48,
+  boxShadow: '0 0 12px rgba(255, 204, 102, 0.42), 0 5px 10px rgba(0, 0, 0, 0.46)',
+  animation: 'morkahja-reward-shake 3.2s ease-in-out infinite',
+  transformOrigin: '50% 50%',
+};
+
+const loreGemFadeInStyle: CSSProperties = {
+  animation: `morkahja-lore-gem-fade-in ${FADE_DURATION_MS}ms ease forwards`,
+};
+
+const loreGemActivateStyle: CSSProperties = {
+  animation: `morkahja-lore-gem-collect ${LORE_GEM_ACTIVATE_MS}ms ease-in forwards`,
+};
+
+const loreGemPopupStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: 0,
+  zIndex: 31,
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.9rem, 4vw, 1.3rem)',
+  fontWeight: 700,
+  lineHeight: 1,
+  textShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 3px 8px rgba(0, 0, 0, 0.85)',
+  pointerEvents: 'none',
+  animation: 'morkahja-lore-gem-popup 330ms ease-out forwards',
+};
+
 const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
 const lossRowStyle: CSSProperties = {
@@ -389,8 +431,10 @@ export type ResultBlockHandle = {
 
 export const ResultBlock = forwardRef(function ResultBlock(
   {
+    continueGlowClass,
     deferRewardDismiss = false,
     disabled = false,
+    showLoreGemReward = false,
     encounterDifficulty,
     encounterId,
     hidden = false,
@@ -404,8 +448,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
     roll,
     usedSolutionId = null,
   }: {
+    continueGlowClass?: string;
     deferRewardDismiss?: boolean;
     disabled?: boolean;
+    showLoreGemReward?: boolean;
     encounterDifficulty: number;
     encounterId: number;
     hidden?: boolean;
@@ -431,10 +477,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
   const [continueInteractive, setContinueInteractive] = useState(false);
   const [continueEnableRattle, setContinueEnableRattle] = useState(false);
+  const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
+  const [loreGemActivating, setLoreGemActivating] = useState(false);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const outcome = roll === null ? null : interpretRoll(roll);
+  const displayRoll = roll === null ? null : displayRollAsD20(roll);
   const visible = roll !== null;
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
   const usedSolution = usedEncounterSolution({ inventory, solutionId: usedSolutionId });
@@ -488,9 +537,34 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setContinueRevealPlaying(false);
     setContinueInteractive(false);
     setContinueEnableRattle(false);
+    setLoreGemPopupVisible(false);
+    setLoreGemActivating(false);
     rewardButtonRefs.current.clear();
     lossButtonRefs.current.clear();
   }, [roll, losses.length]);
+
+  useEffect(() => {
+    if (!showLoreGemReward || roll === null || hidden) {
+      setLoreGemPopupVisible(false);
+      setLoreGemActivating(false);
+      return undefined;
+    }
+
+    setLoreGemActivating(true);
+    setLoreGemPopupVisible(true);
+
+    const activateTimer = window.setTimeout(() => {
+      setLoreGemActivating(false);
+    }, LORE_GEM_ACTIVATE_MS);
+    const popupTimer = window.setTimeout(() => {
+      setLoreGemPopupVisible(false);
+    }, LORE_GEM_POPUP_MS);
+
+    return () => {
+      window.clearTimeout(activateTimer);
+      window.clearTimeout(popupTimer);
+    };
+  }, [hidden, roll, showLoreGemReward]);
 
   useEffect(() => {
     if (roll === null) {
@@ -660,6 +734,24 @@ export const ResultBlock = forwardRef(function ResultBlock(
   function buildRewardFlights(): RewardFlightSpec[] {
     const flights: RewardFlightSpec[] = [];
 
+    if (showLoreGemReward) {
+      const button = rewardButtonRefs.current.get(LORE_GEM_REWARD_ID)
+        ?? document.querySelector<HTMLButtonElement>(
+          `[data-reward-fly-source="${LORE_GEM_REWARD_ID}"]`,
+        );
+      const sourceRect = button?.getBoundingClientRect();
+
+      if (sourceRect && sourceRect.width > 0 && sourceRect.height > 0) {
+        flights.push({
+          id: 'reward-fly-lore-gem',
+          imageSrc: LORE_GEM_REWARD_ASSET,
+          size: 64,
+          sourceRect,
+          target: 'inventory',
+        });
+      }
+    }
+
     for (const reward of rewards) {
       const solutionId = reward.solution.mSolutionID;
       const button = rewardButtonRefs.current.get(solutionId)
@@ -790,6 +882,66 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setItemTooltip(null);
   }
 
+  function renderLoreGemRewardIcon() {
+    const loreGemReward: VisibleReward = {
+      quantity: 1,
+      solution: {
+        mSolutionIconName: 'lore_gem_currency',
+        mSolutionID: LORE_GEM_REWARD_ID,
+        mSolutionInventoryType: 0,
+        mSolutionName: 'Yellow Red Gem',
+        mSolutionText: 'A rare gem earned from hidden lore.',
+        mSolutionUses: 1,
+      },
+    };
+
+    return (
+      <button
+        aria-label="Yellow Red Gem, quantity +1"
+        className="morkahja-footer-button"
+        data-reward-fly-source={LORE_GEM_REWARD_ID}
+        key="lore-gem-reward"
+        ref={(element) => {
+          if (element) {
+            rewardButtonRefs.current.set(LORE_GEM_REWARD_ID, element);
+            return;
+          }
+          rewardButtonRefs.current.delete(LORE_GEM_REWARD_ID);
+        }}
+        onBlur={hideItemTooltip}
+        onFocus={(event) => {
+          showItemTooltip(loreGemReward, '+', event);
+        }}
+        onPointerCancel={hideItemTooltip}
+        onPointerEnter={(event) => {
+          showItemTooltip(loreGemReward, '+', event);
+        }}
+        onContextMenu={preventImageContextMenu}
+        onPointerLeave={hideItemTooltip}
+        style={loreGemRewardButtonStyle}
+        type="button"
+      >
+        <span
+          className="morkahja-footer-button-visual"
+          style={{
+            position: 'relative',
+            display: 'block',
+            ...(loreGemActivating ? loreGemActivateStyle : loreGemFadeInStyle),
+          }}
+        >
+          <img
+            alt=""
+            aria-hidden="true"
+            {...protectedImageProps}
+            src={LORE_GEM_REWARD_ASSET}
+            style={loreGemOutcomeImageStyle}
+          />
+          {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
+        </span>
+      </button>
+    );
+  }
+
   function renderSolutionIcon(
     change: EncounterInventoryChange | VisibleReward,
     sign: '+' | '-' | 'used',
@@ -801,6 +953,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return (
       <button
         aria-label={`${change.solution.mSolutionName}, ${sign === 'used' ? 'used' : `quantity ${change.quantity}`}`}
+        className={trackRewardRef ? 'morkahja-footer-button' : undefined}
         data-reward-fly-source={trackRewardRef ? change.solution.mSolutionID : undefined}
         key={`${sign}-${change.solution.mSolutionID}`}
         ref={(element) => {
@@ -828,13 +981,18 @@ export const ResultBlock = forwardRef(function ResultBlock(
         style={buttonStyle}
         type="button"
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          {...protectedImageProps}
-          src={solutionImagePath(change.solution)}
-          style={imageStyle}
-        />
+        <span
+          className={trackRewardRef ? 'morkahja-footer-button-visual' : undefined}
+          style={trackRewardRef ? { display: 'block' } : undefined}
+        >
+          <img
+            alt=""
+            aria-hidden="true"
+            {...protectedImageProps}
+            src={solutionImagePath(change.solution)}
+            style={imageStyle}
+          />
+        </span>
       </button>
     );
   }
@@ -939,6 +1097,24 @@ export const ResultBlock = forwardRef(function ResultBlock(
   40% { transform: rotate(2deg) scale(1.02); }
   60% { transform: rotate(-1.4deg) scale(1.035); }
   80% { transform: rotate(1deg) scale(1.015); }
+}
+@keyframes morkahja-lore-gem-fade-in {
+  0% { opacity: 0; transform: scale(0.88); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes morkahja-lore-gem-collect {
+  0% { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
+  12% { transform: translateX(-4px) rotate(-9deg) scale(1.06); }
+  24% { transform: translateX(4px) rotate(9deg) scale(1.05); }
+  36% { transform: translateX(-3px) rotate(-7deg) scale(1.03); }
+  48% { transform: translateX(3px) rotate(7deg) scale(1.02); }
+  62% { opacity: 0.75; transform: translateX(-2px) rotate(-4deg) scale(0.96); }
+  100% { opacity: 0; transform: translateY(12px) rotate(0deg) scale(0.55); }
+}
+@keyframes morkahja-lore-gem-popup {
+  0% { opacity: 0; transform: translate(-50%, -2px) scale(0.9); }
+  18% { opacity: 1; transform: translate(-50%, -12px) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
 }`}
       </style>
       <img
@@ -993,7 +1169,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
           }}
         >
           <span
-            className={multiplayerContinueWaiting ? 'morkahja-continue-waiting-party' : undefined}
+            className={[
+              multiplayerContinueWaiting ? 'morkahja-continue-waiting-party' : undefined,
+              continueGlowClass,
+            ].filter(Boolean).join(' ') || undefined}
             style={{
               display: 'block',
               ...(continueEnableRattle && !multiplayerContinueWaiting
@@ -1047,7 +1226,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             />
           ) : null}
           <button
-            aria-label={outcomeShowsRoll ? `Roll ${roll}` : `${outcome}, show roll`}
+            aria-label={outcomeShowsRoll ? `Roll ${displayRoll}` : `${outcome}, show roll`}
             className="morkahja-result-outcome"
             onClick={() => {
               setOutcomeShowsRoll((showingRoll) => !showingRoll);
@@ -1056,8 +1235,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
             style={outcomeButtonStyle}
             type="button"
           >
-            {outcomeShowsRoll ? roll : outcome}
+            {outcomeShowsRoll ? displayRoll : outcome}
           </button>
+          {showLoreGemReward && !rewardsFlyingAway && !continueBusy
+            ? renderLoreGemRewardIcon()
+            : null}
         </div>
       ) : null}
       {losses.length > 0 && !lossesFlyingAway ? (

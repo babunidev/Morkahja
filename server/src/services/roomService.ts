@@ -37,6 +37,9 @@ import {
   ENCOUNTER_ACTION_ENABLE_DELAY_MS,
   prepareNextEncounter,
   preparedSystemEncounter,
+  commitPreparedOutcome,
+  prepareParticipantOutcome,
+  preparedResultFromResolve,
   resolveNextEncounterForRoom,
   resolveParticipantInRoom,
   selectNextEncounter,
@@ -50,6 +53,7 @@ import {
 } from './encounterPersistence.js';
 import { getEncounterById, getEncounters } from './gameData.js';
 import {
+  addPlayerYellowRedGems,
   getPlayerUnlockedExpansions,
   loadPlayer,
   loadPlayerActiveAvatar,
@@ -75,7 +79,10 @@ import {
   recordRoomEncounterResolvedEvent,
   recordRoomEncounterStartedEvent,
 } from './roomGameEvents.js';
-import { recordEncounterContinuedEvents } from './gameEventService.js';
+import {
+  ensureRoomLoreGemOffer,
+  withEncounterLoreGemOffer,
+} from './loreGemService.js';
 
 export class RoomError extends Error {
   constructor(
@@ -154,9 +161,38 @@ function engagedParticipants(room: EncounterRoom): RoomParticipant[] {
 function participantsAwaitingContinue(room: EncounterRoom): RoomParticipant[] {
   return engagedParticipants(room).filter(
     (participant) =>
-      participant.resolutionSummary !== undefined ||
-      participant.choiceState === 'resolved',
+      participant.choiceState === 'ready_to_continue' ||
+      participant.choiceState === 'resolved' ||
+      participant.preparedResult !== undefined,
   );
+}
+
+function participantOutcomeSummary(
+  participant: RoomParticipant,
+): NonNullable<RoomParticipant['resolutionSummary']> | undefined {
+  return participant.preparedResult ?? participant.resolutionSummary;
+}
+
+function canEnterWaitingContinue(room: EncounterRoom): boolean {
+  const active = activeParticipants(room);
+  if (active.length === 0) {
+    return false;
+  }
+
+  if (!active.every((participant) => participant.choiceState === 'ready_to_continue')) {
+    return false;
+  }
+
+  return active.some((participant) => participant.preparedResult !== undefined);
+}
+
+function canAdvanceRoom(room: EncounterRoom): boolean {
+  const continueTargets = continueTargetsForRoom(room);
+  if (continueTargets.some((participant) => participant.focusState !== 'none')) {
+    return false;
+  }
+
+  return continueTargets.every((participant) => participant.continuePressed);
 }
 
 function isPostSystemEventContinue(room: EncounterRoom): boolean {
@@ -168,7 +204,11 @@ function continueTargetsForRoom(room: EncounterRoom): RoomParticipant[] {
     return engagedParticipants(room);
   }
 
-  const awaitingContinue = participantsAwaitingContinue(room);
+  const awaitingContinue = engagedParticipants(room).filter(
+    (participant) =>
+      participant.choiceState === 'ready_to_continue' ||
+      participant.choiceState === 'resolved',
+  );
   return awaitingContinue.length > 0 ? awaitingContinue : engagedParticipants(room);
 }
 
@@ -179,7 +219,7 @@ function buildPendingSystemEventQueue(
   const queue: RoomSystemEventQueueItem[] = [];
 
   for (const participant of sorted) {
-    const summary = participant.resolutionSummary;
+    const summary = participantOutcomeSummary(participant);
     if (!summary) {
       continue;
     }
@@ -253,8 +293,12 @@ async function reengageParticipantIfNeeded(
     room.systemEvent.lastEvent.actorPlayerId !== participant.playerId;
   const restoredChoiceState =
     room.roomState === 'waiting_continue' &&
-    (participant.resolutionSummary !== undefined || wasWitnessToSystemEvent)
-      ? ('resolved' as const)
+    (participant.preparedResult !== undefined ||
+      participant.resolutionSummary !== undefined ||
+      wasWitnessToSystemEvent)
+      ? (participant.preparedResult !== undefined
+        ? ('ready_to_continue' as const)
+        : ('resolved' as const))
       : ('choosing' as const);
 
   const updated: EncounterRoom = {
@@ -341,11 +385,11 @@ async function seedRoomEncounterSnapshot(
 ): Promise<EncounterSnapshot> {
   const existing = await loadActiveEncounter(playerId, avatarId);
   if (existing && !existing.resolved && existing.state === 'active') {
-    return {
+    return withEncounterLoreGemOffer({
       ...withPrecomputedSnapshotRewards(existing, await loadAvatar(playerId, avatarId) ?? undefined),
       roomId,
       state: 'active',
-    };
+    });
   }
 
   const avatar = await loadAvatar(playerId, avatarId);
@@ -366,11 +410,11 @@ async function seedRoomEncounterSnapshot(
     avatar,
   );
 
-  return {
+  return withEncounterLoreGemOffer({
     ...snapshot,
     roomId,
     state: 'active',
-  };
+  });
 }
 
 function previousEncounterFromAvatar(avatar: AvatarDocument): EncounterData | null {
@@ -383,18 +427,19 @@ function previousEncounterFromAvatar(avatar: AvatarDocument): EncounterData | nu
 
 function resetParticipantsForNewEncounter(participants: RoomParticipant[]): RoomParticipant[] {
   const now = nowMs();
-  return participants
-    .filter((participant) => participant.choiceState !== 'disengaged')
-    .map((participant) => ({
-      ...participant,
-      choiceState: 'choosing' as const,
-      focusState: 'none' as const,
-      continuePressed: false,
-      selectedAction: undefined,
-      selectedSolutionId: undefined,
-      resolutionSummary: undefined,
-      lastInteractionAt: now,
-    }));
+  return participants.map((participant) => ({
+    ...participant,
+    choiceState: participant.choiceState === 'disengaged' ? 'disengaged' as const : 'choosing' as const,
+    focusState: 'none' as const,
+    continuePressed: false,
+    selectedAction: undefined,
+    selectedSolutionId: undefined,
+    resolutionSummary: undefined,
+    preparedResult: undefined,
+    preparedCommit: undefined,
+    loreGemCollected: undefined,
+    lastInteractionAt: now,
+  }));
 }
 
 function getRoomNextEncounter(
@@ -402,7 +447,7 @@ function getRoomNextEncounter(
   room: EncounterRoom,
 ): EncounterData {
   const summaries = activeParticipants(room)
-    .map((participant) => participant.resolutionSummary)
+    .map((participant) => participantOutcomeSummary(participant))
     .filter((summary): summary is NonNullable<typeof summary> => summary !== undefined);
   const allSucceeded = summaries.length > 0 && summaries.every((summary) => summary.success);
 
@@ -567,7 +612,7 @@ async function beginSystemEventInTransaction(
     actor.avatarId,
   );
   const prepared = preparedSystemEncounter(item.encounterId);
-  const snapshot: EncounterSnapshot = {
+  const snapshot = withEncounterLoreGemOffer({
     ...buildEncounterSnapshot(
       actor.playerId,
       actor.avatarId,
@@ -577,7 +622,7 @@ async function beginSystemEventInTransaction(
     ),
     roomId: room.roomId,
     state: 'active',
-  };
+  });
 
   const participants = room.participants.map((participant) => {
     if (participant.choiceState === 'disengaged') {
@@ -635,17 +680,227 @@ async function beginSystemEventInTransaction(
 function participantSummaryFromResolve(
   result: ResolveParticipantInRoomResult,
 ): NonNullable<RoomParticipant['resolutionSummary']> {
-  return {
-    success: result.resolution.success,
-    message: result.resolution.message,
-    selectedRoll: result.resolution.selectedRoll,
-    rewards: result.resolution.rewards,
-    failurePenalty: result.resolution.failurePenalty,
-    usedInventorySolutions: result.resolution.usedInventorySolutions,
-    deathTriggered: result.deathTriggered,
-    avatarDied: result.avatarDied,
-    leveledUp: result.eventContext.leveledUp,
+  return preparedResultFromResolve(result);
+}
+
+async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
+  const snapshotId = room.activeEncounterSnapshot.snapshotId;
+  if (
+    room.loreGemActivated !== true ||
+    room.loreGemActivatedSnapshotId !== snapshotId
+  ) {
+    return;
+  }
+
+  for (const participant of activeParticipants(room)) {
+    if (participant.loreGemCollected !== true) {
+      continue;
+    }
+
+    const claimKey = `${snapshotId}:${participant.playerId}`;
+    const player = await loadPlayer(participant.playerId);
+    if (player?.loreGemClaims?.[claimKey] === true) {
+      continue;
+    }
+    await addPlayerYellowRedGems(participant.playerId, 1, claimKey);
+  }
+}
+
+async function commitPreparedResultsForRoom(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<{
+  participants: RoomParticipant[];
+  commits: Map<string, ResolveParticipantInRoomResult>;
+}> {
+  let nextParticipants = [...room.participants];
+  const commits = new Map<string, ResolveParticipantInRoomResult>();
+
+  for (const participant of nextParticipants) {
+    if (participant.choiceState === 'disengaged') {
+      continue;
+    }
+
+    if (participant.preparedCommit && participant.selectedAction) {
+      const result = await commitPreparedOutcome(
+        transaction,
+        participant.playerId,
+        participant.avatarId,
+        participant.preparedCommit,
+      );
+      commits.set(participant.playerId, result);
+
+      nextParticipants = nextParticipants.map((entry) =>
+        entry.playerId === participant.playerId
+          ? {
+              ...entry,
+              choiceState: result.avatarDied ? 'disengaged' as const : entry.choiceState,
+              resolutionSummary: participantSummaryFromResolve(result),
+              preparedResult: undefined,
+              preparedCommit: undefined,
+              ...(result.avatarDied ? { disconnectedAt: nowMs() } : {}),
+            }
+          : entry,
+      );
+    }
+  }
+
+  return { participants: nextParticipants, commits };
+}
+
+async function advanceRoomAfterCommit(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  committedParticipants: RoomParticipant[],
+  commits: Map<string, ResolveParticipantInRoomResult>,
+): Promise<EncounterRoom> {
+  const roomId = room.roomId;
+  const participants = engagedParticipants({ ...room, participants: committedParticipants });
+  if (participants.length === 0) {
+    const closed: EncounterRoom = {
+      ...room,
+      participants: committedParticipants,
+      roomState: 'closed',
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, closed);
+    return closed;
+  }
+
+  const pendingQueue = buildPendingSystemEventQueue(committedParticipants);
+  if (pendingQueue.length > 0) {
+    const firstItem = pendingQueue[0]!;
+    const actorResult = commits.get(firstItem.actorPlayerId);
+    if (!actorResult) {
+      throw new RoomError('System event actor resolve missing', 500, 'SYSTEM_EVENT_ACTOR_MISSING');
+    }
+
+    const lineage = buildLineageFromResolve(room.activeEncounterSnapshot, actorResult);
+    const resolvedParticipantsRoom: EncounterRoom = {
+      ...room,
+      participants: committedParticipants,
+      updatedAt: nowMs(),
+    };
+
+    return beginSystemEventInTransaction(
+      transaction,
+      resolvedParticipantsRoom,
+      pendingQueue,
+      lineage,
+      0,
+    );
+  }
+
+  const leader = findParticipant({ ...room, participants: committedParticipants }, room.leaderPlayerId)
+    ?? participants[0];
+  const lineage = room.systemEvent?.lineage;
+  const lastEncounterId = lineage?.originEncounterId ?? room.activeEncounterSnapshot.encounterId;
+
+  let nextEncounter: EncounterData;
+  let preparedEncounter: ReturnType<typeof prepareNextEncounter>;
+  if (lineage) {
+    const resolved = resolveNextEncounterForRoom(lineage, room.mergedExpansions);
+    nextEncounter = resolved.encounter;
+    preparedEncounter = resolved.prepared;
+  } else {
+    nextEncounter = getRoomNextEncounter(room.activeEncounterSnapshot, {
+      ...room,
+      participants: committedParticipants,
+    });
+    preparedEncounter = prepareNextEncounter(nextEncounter, room.mergedExpansions);
+  }
+
+  const nextSnapshot = withEncounterLoreGemOffer({
+    ...buildEncounterSnapshot(
+      leader.playerId,
+      leader.avatarId,
+      nextEncounter,
+      preparedEncounter,
+      await transaction.getAvatar<AvatarDocument>(leader.playerId, leader.avatarId) ?? undefined,
+    ),
+    roomId: room.roomId,
+    state: 'active',
+  }, nowMs());
+
+  const advanced: EncounterRoom = {
+    ...room,
+    activeEncounterSnapshot: nextSnapshot,
+    lastEncounterId,
+    helpCalledSnapshotId: undefined,
+    systemEvent: undefined,
+    loreGemActivated: undefined,
+    loreGemActivatedSnapshotId: undefined,
+    advanceStartedAt: undefined,
+    participants: resetParticipantsForNewEncounter(committedParticipants),
+    roomState: 'active_encounter',
+    updatedAt: nowMs(),
   };
+
+  await transaction.setEncounterRoom(roomId, advanced);
+
+  for (const participant of advanced.participants) {
+    await transaction.setActiveEncounter(
+      participant.playerId,
+      participant.avatarId,
+      nextSnapshot,
+    );
+  }
+
+  return advanced;
+}
+
+export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
+  if (room.roomState === 'waiting_continue' && !canAdvanceRoom(room)) {
+    return room;
+  }
+
+  if (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing') {
+    return room;
+  }
+
+  const roomId = room.roomId;
+  const advanced = await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!current || current.roomState !== 'waiting_continue' || !canAdvanceRoom(current)) {
+      return current;
+    }
+
+    const now = nowMs();
+    const advancingRoom: EncounterRoom = {
+      ...current,
+      roomState: 'advancing',
+      advanceStartedAt: current.advanceStartedAt ?? now,
+      updatedAt: now,
+    };
+    await transaction.setEncounterRoom(roomId, advancingRoom);
+
+    const { participants: committedParticipants, commits } =
+      await commitPreparedResultsForRoom(transaction, advancingRoom);
+    const committedRoom: EncounterRoom = {
+      ...advancingRoom,
+      participants: committedParticipants,
+    };
+
+    await grantRoomLoreGemsOnCommit(committedRoom);
+
+    return advanceRoomAfterCommit(transaction, committedRoom, committedParticipants, commits);
+  });
+
+  if (advanced && advanced !== room) {
+    if (advanced.roomState === 'active_encounter') {
+      await recordRoomEncounterStartedEvent(advanced);
+    }
+  }
+
+  return advanced ?? room;
+}
+
+async function tickRoomById(roomId: string): Promise<EncounterRoom | null> {
+  const room = await loadEncounterRoom(roomId);
+  if (!room) {
+    return null;
+  }
+  return tickRoom(room);
 }
 
 async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRoom | null> {
@@ -662,24 +917,28 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
     }
 
     const actor = findParticipant(room, item.actorPlayerId);
-    if (!actor || actor.choiceState !== 'ready' || !actor.selectedAction) {
+    if (
+      !actor ||
+      !actor.selectedAction ||
+      (actor.choiceState !== 'ready_to_continue' && actor.choiceState !== 'ready')
+    ) {
       return room;
     }
 
-    const result = await resolveParticipantInRoom(
-      transaction,
-      actor.playerId,
-      actor.avatarId,
-      room.activeEncounterSnapshot,
-      actor.selectedAction,
-    );
-
-    await recordEncounterContinuedEvents(
-      actor.playerId,
-      result.avatar,
-      result.resolution,
-      result.eventContext,
-    );
+    const result = actor.preparedCommit
+      ? await commitPreparedOutcome(
+        transaction,
+        actor.playerId,
+        actor.avatarId,
+        actor.preparedCommit,
+      )
+      : await resolveParticipantInRoom(
+        transaction,
+        actor.playerId,
+        actor.avatarId,
+        room.activeEncounterSnapshot,
+        actor.selectedAction,
+      );
 
     const actorSummary = participantSummaryFromResolve(result);
     const now = nowMs();
@@ -773,179 +1032,53 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
   });
 }
 
-async function tryResolveRoomIfReady(roomId: string): Promise<EncounterRoom | null> {
-  return withDocumentTransaction(async (transaction) => {
-    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
-    if (!room || room.roomState !== 'active_encounter') {
-      return room;
-    }
+async function applyParticipantPrepare(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  playerId: string,
+  playerAction: PlayerEncounterAction,
+  solutionId: number | undefined,
+  now: number,
+): Promise<EncounterRoom> {
+  const participant = findParticipant(room, playerId);
+  if (!participant || participant.choiceState === 'disengaged') {
+    throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+  }
 
-    const choosing = activeParticipants(room);
-    if (choosing.length === 0) {
-      return room;
-    }
+  const prepared = await prepareParticipantOutcome(
+    transaction,
+    playerId,
+    participant.avatarId,
+    room.activeEncounterSnapshot,
+    playerAction,
+  );
 
-    if (!choosing.every((participant) => participant.choiceState === 'ready')) {
-      return room;
-    }
+  let nextParticipants = room.participants.map((entry) =>
+    entry.playerId === playerId
+      ? {
+          ...entry,
+          choiceState: 'ready_to_continue' as const,
+          selectedAction: playerAction,
+          selectedSolutionId: solutionId,
+          preparedResult: prepared.preparedResult,
+          preparedCommit: prepared.preparedCommit,
+          resolutionSummary: undefined,
+          lastInteractionAt: now,
+        }
+      : entry,
+  );
 
-    const resolvingRoom: EncounterRoom = {
-      ...room,
-      roomState: 'resolving',
-      updatedAt: nowMs(),
-    };
-    await transaction.setEncounterRoom(roomId, resolvingRoom);
+  const workingRoom: EncounterRoom = {
+    ...room,
+    participants: nextParticipants,
+    roomState: canEnterWaitingContinue({ ...room, participants: nextParticipants })
+      ? 'waiting_continue'
+      : room.roomState,
+    updatedAt: now,
+  };
 
-    const snapshot = room.activeEncounterSnapshot;
-    let nextParticipants = [...room.participants];
-    const resolveResults = new Map<string, ResolveParticipantInRoomResult>();
-
-    for (const participant of choosing) {
-      if (!participant.selectedAction) {
-        continue;
-      }
-
-      const result = await resolveParticipantInRoom(
-        transaction,
-        participant.playerId,
-        participant.avatarId,
-        snapshot,
-        participant.selectedAction,
-      );
-
-      resolveResults.set(participant.playerId, result);
-
-      await recordEncounterContinuedEvents(
-        participant.playerId,
-        result.avatar,
-        result.resolution,
-        result.eventContext,
-      );
-
-      nextParticipants = nextParticipants.map((entry) =>
-        entry.playerId === participant.playerId
-          ? {
-              ...entry,
-              choiceState: 'resolved' as const,
-              resolutionSummary: participantSummaryFromResolve(result),
-              ...(result.avatarDied
-                ? { choiceState: 'disengaged' as const, disconnectedAt: nowMs() }
-                : {}),
-            }
-          : entry,
-      );
-    }
-
-    const resolvedParticipantsRoom: EncounterRoom = {
-      ...resolvingRoom,
-      participants: nextParticipants,
-      updatedAt: nowMs(),
-    };
-
-    const pendingQueue = buildPendingSystemEventQueue(nextParticipants);
-    if (pendingQueue.length > 0) {
-      const firstItem = pendingQueue[0]!;
-      const actorResult = resolveResults.get(firstItem.actorPlayerId);
-      if (!actorResult) {
-        throw new RoomError('System event actor resolve missing', 500, 'SYSTEM_EVENT_ACTOR_MISSING');
-      }
-
-      const lineage = buildLineageFromResolve(snapshot, actorResult);
-      return beginSystemEventInTransaction(
-        transaction,
-        resolvedParticipantsRoom,
-        pendingQueue,
-        lineage,
-        0,
-      );
-    }
-
-    const resolvedRoom: EncounterRoom = {
-      ...resolvedParticipantsRoom,
-      roomState: 'waiting_continue',
-    };
-    await transaction.setEncounterRoom(roomId, resolvedRoom);
-    return resolvedRoom;
-  });
-}
-
-async function tryAdvanceRoomIfReady(roomId: string): Promise<EncounterRoom | null> {
-  return withDocumentTransaction(async (transaction) => {
-    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
-    if (!room || room.roomState !== 'waiting_continue') {
-      return room;
-    }
-
-    const participants = engagedParticipants(room);
-    if (participants.length === 0) {
-      const closed: EncounterRoom = {
-        ...room,
-        roomState: 'closed',
-        updatedAt: nowMs(),
-      };
-      await transaction.setEncounterRoom(roomId, closed);
-      return closed;
-    }
-
-    const continueTargets = continueTargetsForRoom(room);
-    if (continueTargets.some((participant) => participant.focusState !== 'none')) {
-      return room;
-    }
-
-    if (!continueTargets.every((participant) => participant.continuePressed)) {
-      return room;
-    }
-
-    const leader = findParticipant(room, room.leaderPlayerId) ?? participants[0];
-    const lineage = room.systemEvent?.lineage;
-    const lastEncounterId = lineage?.originEncounterId ?? room.activeEncounterSnapshot.encounterId;
-
-    let nextEncounter: EncounterData;
-    let preparedEncounter: ReturnType<typeof prepareNextEncounter>;
-    if (lineage) {
-      const resolved = resolveNextEncounterForRoom(lineage, room.mergedExpansions);
-      nextEncounter = resolved.encounter;
-      preparedEncounter = resolved.prepared;
-    } else {
-      nextEncounter = getRoomNextEncounter(room.activeEncounterSnapshot, room);
-      preparedEncounter = prepareNextEncounter(nextEncounter, room.mergedExpansions);
-    }
-
-    const nextSnapshot: EncounterSnapshot = {
-      ...buildEncounterSnapshot(
-        leader.playerId,
-        leader.avatarId,
-        nextEncounter,
-        preparedEncounter,
-        await transaction.getAvatar<AvatarDocument>(leader.playerId, leader.avatarId) ?? undefined,
-      ),
-      roomId: room.roomId,
-      state: 'active',
-    };
-
-    const advanced: EncounterRoom = {
-      ...room,
-      activeEncounterSnapshot: nextSnapshot,
-      lastEncounterId,
-      helpCalledSnapshotId: undefined,
-      systemEvent: undefined,
-      participants: resetParticipantsForNewEncounter(room.participants),
-      roomState: 'active_encounter',
-      updatedAt: nowMs(),
-    };
-
-    await transaction.setEncounterRoom(roomId, advanced);
-
-    for (const participant of advanced.participants) {
-      await transaction.setActiveEncounter(
-        participant.playerId,
-        participant.avatarId,
-        nextSnapshot,
-      );
-    }
-
-    return advanced;
-  });
+  await transaction.setEncounterRoom(room.roomId, workingRoom);
+  return workingRoom;
 }
 
 export async function createRoom(
@@ -1011,6 +1144,8 @@ export async function getActiveRoomForPlayer(
   }
 
   room = await reengageSoloParticipantIfNeeded(room, playerId);
+  room = await ensureRoomLoreGemOffer(room);
+  room = await tickRoom(room);
   return tickInactivity(room);
 }
 
@@ -1187,54 +1322,32 @@ export async function submitChoice(
         throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
       }
 
-      const nextRoom: EncounterRoom = {
-        ...room,
-        participants: room.participants.map((entry) =>
-          entry.playerId === playerId
-            ? {
-                ...entry,
-                choiceState: 'ready' as const,
-                selectedAction: playerAction,
-                selectedSolutionId: solutionId,
-                lastInteractionAt: now,
-              }
-            : entry,
-        ),
-        updatedAt: now,
-      };
-      await transaction.setEncounterRoom(roomId, nextRoom);
-      return nextRoom;
+      return applyParticipantPrepare(
+        transaction,
+        room,
+        playerId,
+        playerAction,
+        solutionId,
+        now,
+      );
     }
 
     if (room.roomState !== 'active_encounter') {
       throw new RoomError('Room is not accepting choices', 409, 'INVALID_ROOM_STATE');
     }
 
-    const participant = findParticipant(room, playerId);
-    if (!participant || participant.choiceState === 'disengaged') {
-      throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
-    }
     if (!isEncounterActionReady(room.activeEncounterSnapshot)) {
       throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
     }
 
-    const nextRoom: EncounterRoom = {
-      ...room,
-      participants: room.participants.map((entry) =>
-        entry.playerId === playerId
-          ? {
-              ...entry,
-              choiceState: 'ready' as const,
-              selectedAction: playerAction,
-              selectedSolutionId: solutionId,
-              lastInteractionAt: now,
-            }
-          : entry,
-      ),
-      updatedAt: now,
-    };
-    await transaction.setEncounterRoom(roomId, nextRoom);
-    return nextRoom;
+    return applyParticipantPrepare(
+      transaction,
+      room,
+      playerId,
+      playerAction,
+      solutionId,
+      now,
+    );
   });
 
   if (updated.roomState === 'system_event') {
@@ -1242,11 +1355,12 @@ export async function submitChoice(
     return resolved ?? updated;
   }
 
-  const resolved = await tryResolveRoomIfReady(roomId);
-  if (resolved) {
-    await recordRoomEncounterResolvedEvent(resolved);
+  if (updated.roomState === 'waiting_continue') {
+    await recordRoomEncounterResolvedEvent(updated);
   }
-  const result = resolved ?? updated;
+
+  const ticked = await tickRoomById(roomId);
+  const result = ticked ?? updated;
   return maybeAutoAdvanceSoloRoom(result, playerId);
 }
 
@@ -1295,34 +1409,29 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
 
   const now = nowMs();
   let room = await loadEncounterRoom(roomId);
-  if (!room || room.roomState !== 'waiting_continue') {
+  if (
+    !room ||
+    (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing')
+  ) {
     throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
   }
 
   room = await reengageParticipantIfNeeded(room, playerId);
 
   const continueTargets = continueTargetsForRoom(room);
-  const soloContinue = isSoloContinueRoom(room) && !isPostSystemEventContinue(room);
-
+  const localParticipant = findParticipant(room, playerId);
   if (
-    continueTargets.length > 0 &&
-    continueTargets.every((participant) => participant.continuePressed) &&
-    continueTargets.every((participant) => participant.focusState === 'none')
+    localParticipant &&
+    continueTargets.some((target) => target.playerId === playerId) &&
+    localParticipant.choiceState !== 'ready_to_continue' &&
+    localParticipant.choiceState !== 'resolved'
   ) {
-    const advanced = await tryAdvanceRoomIfReady(roomId);
-    if (advanced && advanced.roomState === 'active_encounter') {
-      await recordRoomEncounterStartedEvent(advanced);
-    }
-    return advanced ?? room;
+    throw new RoomError('Outcome not ready to continue', 409, 'NOT_READY_TO_CONTINUE');
   }
 
   const withContinue: EncounterRoom = {
     ...room,
     participants: room.participants.map((participant) => {
-      const isContinueTarget = continueTargets.some(
-        (target) => target.playerId === participant.playerId,
-      );
-
       if (participant.playerId === playerId) {
         return {
           ...participant,
@@ -1331,25 +1440,17 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
           lastInteractionAt: now,
         };
       }
-
-      if (soloContinue && isContinueTarget) {
-        return {
-          ...participant,
-          focusState: 'none',
-        };
-      }
-
       return participant;
     }),
     updatedAt: now,
   };
   await saveEncounterRoom(withContinue);
 
-  const advanced = await tryAdvanceRoomIfReady(roomId);
-  if (advanced && advanced.roomState === 'active_encounter') {
-    await recordRoomEncounterStartedEvent(advanced);
+  if (isSoloPartyRoom(withContinue)) {
+    return tickRoom(withContinue);
   }
-  return advanced ?? withContinue;
+
+  return withContinue;
 }
 
 function isFriendRecentlySeen(lastPlayedAt: number | undefined, now: number): boolean {

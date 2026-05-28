@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  displayRollAsD20 as sharedDisplayRollAsD20,
   interpretRoll as sharedInterpretRoll,
   isRollFavorable as sharedIsRollFavorable,
 } from '@shared/diceInterpreter.js';
@@ -40,6 +41,13 @@ for (let roll = 1; roll <= 100; roll += 1) {
     serverIsRollFavorable(roll),
     `favorable roll ${roll}`,
   );
+  const d20 = sharedDisplayRollAsD20(roll);
+  assert.ok(d20 >= 1 && d20 <= 20, `displayRollAsD20(${roll}) = ${d20}`);
 }
+
+assert.equal(sharedDisplayRollAsD20(1), 1);
+assert.equal(sharedDisplayRollAsD20(3), 1);
+assert.equal(sharedDisplayRollAsD20(50), 10);
+assert.equal(sharedDisplayRollAsD20(100), 20);
 
 console.log('diceInterpreter.test.ts passed');

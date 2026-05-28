@@ -254,6 +254,39 @@ button:focus-visible {
   animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
 }
 
+@keyframes morkahja-continue-glow-gathering {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 204, 102, 0.45));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(255, 210, 120, 0.85));
+  }
+}
+
+@keyframes morkahja-continue-glow-awaiting-you {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(72, 140, 88, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(96, 168, 112, 0.82));
+  }
+}
+
+.morkahja-continue-glow-gathering {
+  animation: morkahja-continue-glow-gathering 2.1s ease-in-out infinite;
+}
+
+.morkahja-continue-glow-awaiting-you {
+  animation: morkahja-continue-glow-awaiting-you 2.1s ease-in-out infinite;
+}
+
+.morkahja-footer-button-visual {
+  position: relative;
+  display: block;
+}
+
 @keyframes morkahja-nav-attention-glow-scribes {
   0%,
   100% {

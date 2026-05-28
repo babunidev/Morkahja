@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-27 21:44 (+0200) |
+| **Last updated** | 2026-05-28 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -227,6 +227,15 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 131. **Signup legal** (`f08b632`) — `PrivacyPolicyOverlay` and `TermsOfServiceOverlay` (May 2026 copy); **New journey** opens scrollable in-app modals from Privacy Policy / Terms of Service links instead of external URLs (`OnboardingGateway`).
 132. **Production build** (`6ea41d5`) — `SolutionGridOverlay` strict TS: capture `anchorX` before the layout `measureAndPlace` callback; `handleItemClick` typed as `GridTooltipTriggerEvent` (fixes `tsc -b` on deploy).
 
+### 2026-05-27 22:36–23:23 (+0200) — Party help, continue sync, party UI (`c46b30d`…`250a272`)
+
+133. **Call for help** (`c46b30d`) — Scribes feed shows `help_requested` with **Join**; friends list **Join** when a friend has a joinable solo room or pending invite; `POST /room/join/friend`; online-friend toasts in `App.tsx`; activity query includes friends’ events; `broadcastCallForHelp` invites eligible online friends with live sessions.
+134. **API startup** (`31ab13a`) — remove duplicate `fromPlayer` in `requestHelp` (`roomService.ts`) so `tsc`/PM2 boot succeeds (loading screen no longer hangs on `/health`).
+135. **Multiplayer continue (v1)** (`295ec88`) — `roomContinue.ts` mirrors server continue targets; defer reward fly-out until party is ready; leaf-float Continue while waiting; `ResultBlock.playDismissAnimations()` on unanimous advance; poll no longer frozen for whole continue animation; local avatar renders in real `slotIndex`; focus overlays use game button icons; `roomDtoMapper` never drops participants (placeholder portrait/frame).
+136. **Multiplayer continue (v2)** (`250a272`) — party session = 2+ engaged players (not “2+ already resolved”); defer dismiss whenever results are visible in a party; early Continue queues until `waiting_continue` then auto-`submitRoomContinue`; block duplicate `submitRoomChoice` when already `ready`/`resolved`; solo auto-advance only when actually alone; ally **solution/dice icon** on portrait (`selectedAction` on `RoomParticipantDto`); avatar DTO fallback uses `m_portrait_*` / `m_frame_*` asset keys.
+137. **VPS ops** — nginx API `location` regex must include **`room`** (and other mounted prefixes) or `POST /room/continue` returns **405** HTML and Continue appears to loop; after API fixes, `curl -X POST https://…/room/continue` should return **401** JSON when unauthenticated.
+138. **Room-authoritative continue & lore gems** — prepare/commit encounter outcomes on room tick; `ready_to_continue` / `advancing`; per-player `loreGemCollected` and grant on commit; pauseable lore-only reveal timer (`durationMs`, 14–28s); collect UX (hover, wiggle/+1, outcome-row icon); poll-safe timer key so countdown is not reset every 2.5s.
+
 ---
 
 ## Session notes (detail)
@@ -334,7 +343,7 @@ Since `dd17e2f`.
 - **Domain** — `arcanitebrothers.com` / `www` → VPS; certbot installs TLS into nginx `sites-enabled/morkahja`.
 - **Layout** — single clone at `~/arcanitebrothers`; `main` = app at repo root (`client/`, `server/`, `shared/`). No submodule checkout on deploy.
 - **PM2** — `ecosystem.config.cjs` from repo root (since `3f1aaa4` loads `.env` into `env`); `cwd: server`, `tsx src/server.ts`. First boot: `pm2 start ecosystem.config.cjs --update-env`; later: `pm2 restart morkahja-api --update-env`.
-- **nginx** — `location ~ ^/(health|game-data|session|player|avatar|avatars|encounter|activity)` → `proxy_pass http://127.0.0.1:3000`; `try_files` → `index.html` for SPA.
+- **nginx** — `location ~ ^/(health|game-data|session|player|avatar|avatars|encounter|activity|room)` → `proxy_pass http://127.0.0.1:3000` (must include **`room`** for multiplayer continue/help); `try_files` → `index.html` for SPA.
 - **Static** — `npm run build --prefix client` → `sudo rsync -a --delete client/dist/ /var/www/morkahja/`.
 - **VPS build** — `NODE_ENV=production` skips devDependencies unless `npm install --include=dev` (needed for `tsc` / Vite). Do **not** commit `Key.js` on the server.
 - **Smoke** — `curl http://127.0.0.1:3000/health` then `curl https://arcanitebrothers.com/health`; browser hard refresh.
@@ -508,6 +517,32 @@ Since `5b2d423`.
 
 - **TypeScript** — `anchorX` read once when the tooltip layout effect runs (nested `measureAndPlace` no longer closes over nullable `tooltip`); `handleItemClick` accepts `GridTooltipTriggerEvent` so `tsc -b` passes on the VPS.
 
+### Call for help and friend join (`c46b30d`) · 2026-05-27 22:36 (+0200)
+
+- **Scribes** — `help_requested` events in feed with `joinAction` (`ActivityFeedOverlay`); `gameEventPersistence` + `scribesFeedFilter` include friends and targeted help rows; `renderEventMessage` copy for help calls.
+- **Friends** — `FriendSummaryDto.joinableRoom`; `describeJoinableRoomForFriend` / `joinFriendRoom` in `roomService.ts`; **Join** on `FriendsOverlay` when friend is in a solo room or caller has a pending invite.
+- **Client** — `App.tsx` polls friends and shows toasts for online allies who can join; `joinFriendEncounter` wires Scribes and friends UI to `POST /room/join/friend`.
+- **Server** — `recordHelpRequestedEvent` per invite; `broadcastCallForHelp` only invites online friends not already in another room.
+
+### Server startup fix (`31ab13a`) · 2026-05-27 22:42 (+0200)
+
+- **Bug** — duplicate `const fromPlayer` in `requestHelp` prevented the API from compiling/starting; welcome loading waited forever on `/health`.
+- **Fix** — remove the duplicate declaration in `roomService.ts`.
+
+### Multiplayer continue UX (`295ec88`) · 2026-05-27 23:03 (+0200)
+
+- **`roomContinue.ts`** — `continueTargets`, `allContinuePressed`, `localContinuePressed`, `multiplayerContinueWaiting` aligned with `roomService.continueTargetsForRoom`.
+- **`ResultBlock`** — `deferRewardDismiss` skips fly-out on first Continue in a party; `morkahja-continue-waiting-party` leaf-float CSS; `playDismissAnimations()` exposed via ref for synchronized dismiss.
+- **`GameEnvironment`** — `continueSubmitInFlightRef` narrows poll blocking; dismiss before snapshot when poll sees `waiting_continue` → `active_encounter`; `PlayerHub` places `AvatarPanel` in the local player’s `slotIndex` column.
+- **`PartyMemberSlot`** — continue glow when `continuePressed` during `waiting_continue`; focus icons from `/UI/09_GAME/im_button_*.webp` via `gameUiAssets.ts`.
+- **`roomDtoMapper`** — participant DTOs always emitted; placeholder avatar when `toPersistedAvatarDto` fails.
+
+### Party continue wait and ally choices (`250a272`) · 2026-05-27 23:23 (+0200)
+
+- **Party detection** — `isPartySession` = 2+ engaged participants; `shouldDeferRewardDismiss` whenever results are visible in a party (including after local choice while allies are still picking).
+- **Continue flow** — early Continue sets `pendingPartyContinue` and floats the button until room reaches `waiting_continue`, then auto-submits continue; no second `submitRoomChoice` when local state is already `ready`/`resolved`; solo auto-advance uses `!isPartySession` only.
+- **Ally UI** — `selectedAction` on `RoomParticipantDto`; solution or dice icon centered on `PartyMemberSlot` as soon as choice is `ready`/`resolved`; portrait fallback keys `m_portrait_rokur_warrior` / `m_frame_01` match production asset naming.
+
 ### Settings panel UX (`32bf3e7`) · 2026-05-24 23:18 (+0200)
 
 - **Layout** — three-row panel (header / scroll body / footer); player name inline with SETTINGS title.
@@ -544,3 +579,14 @@ Since `5b2d423`.
 - **Prior tags** — `v0.1` (playable), `v0.12` (music engine); live production on **https://arcanitebrothers.com** is ahead of those tags.
 - **Git tag** (when ready): `git tag -a v0.9.0-beta.1 -m "Public beta"`.
 - **Next** — `0.9.0-beta.2` for beta deploys with notable fixes; **1.0.0** when leaving beta.
+
+### Room-authoritative continue & lore gems · 2026-05-28 (+0200)
+
+- **Prepare vs commit** — `prepareParticipantOutcome` dry-runs rewards; `commitPreparedOutcome` persists on heartbeat `tickRoom` after all continue targets ack.
+- **Room lifecycle** — `ready_to_continue`, `advancing`, `preparedResult` on participants; `GET /room/active` polls call `tickRoom` (party advance is poll-driven; solo still ticks on continue).
+- **Lore gems (server)** — `loreGemOffer` rolled at encounter start (`durationMs`, 14–28s); `POST /room/lore-gem/activate` sets `loreGemCollected` on the participant; yellow/red gems grant in `grantRoomLoreGemsOnCommit` **before** advance (only players who clicked); Scribes `gems_received` with `source: 'lore_gem'`.
+- **Lore gems (client)** — pauseable timer counts down only while lore is open (close = pause, reopen = resume); stable `loreGemOfferResetKey` so room polls do not restart the countdown; collect animation and **+1** run before the activate API returns (poll no longer unmounts the gem mid-animation); hover wiggle on the lore gem; no timer dot on the footer Lore button.
+- **Results UX** — pending lore gem icon beside outcome text (Misery / Prosperity / …) with fade-in, **+1** pop, and fly-to-avatar on Continue (not in the top reward row).
+- **Client continue** — removed `pendingPartyContinue`; inventory merge only after commit; continue glow (`gathering` / `awaiting_local`) from `continueReadiness` DTO.
+- **Disengaged** — travelers stay in the room through advance without rewards.
+- **Tests** — `roomService.test.ts` extended for prepare/commit, lore grant timing, and continue readiness.

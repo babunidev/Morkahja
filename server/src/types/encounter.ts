@@ -78,11 +78,12 @@ export interface EncounterSnapshot {
   actionReadyAt?: number;
   preparedEncounter: PreparedEncounter;
 
-  /** Server-authoritative lore gem roll; set when the player opens lore. */
+  /** Server-authoritative lore gem roll; set when the encounter becomes active. */
   loreGemOffer?: {
     eligible: boolean;
     claimableAt: number | null;
     offeredAt: number;
+    durationMs: number;
   };
 }
 

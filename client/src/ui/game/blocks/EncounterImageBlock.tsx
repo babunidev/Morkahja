@@ -2,11 +2,12 @@ import { useEffect, useState, type CSSProperties, type Ref } from 'react';
 import type {
   AvatarInventory,
   EncounterAction,
+  EncounterRoomSnapshotDto,
   EncounterSnapshot,
   ParticipantResolutionSummaryDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import { claimLoreGem, offerLoreGem } from '../../../api/http.js';
+import { activateRoomLoreGem } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
@@ -77,8 +78,12 @@ function imageFileName(imageSrc: string): string {
 export function EncounterImageBlock({
   avatarId,
   continuePending,
+  continueGlowClass,
   deferRewardDismiss = false,
   encounter,
+  loreGemCollected = false,
+  onRoomSnapshot,
+  showLoreGemReward = false,
   imageSrc,
   inventory,
   inventoryOpen,
@@ -97,8 +102,12 @@ export function EncounterImageBlock({
 }: {
   avatarId: string;
   continuePending: boolean;
+  continueGlowClass?: string;
   deferRewardDismiss?: boolean;
   encounter: EncounterSnapshot;
+  loreGemCollected?: boolean;
+  onRoomSnapshot?: (room: EncounterRoomSnapshotDto) => void;
+  showLoreGemReward?: boolean;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
   inventoryOpen: boolean;
@@ -179,10 +188,10 @@ export function EncounterImageBlock({
   }, [encounter.snapshotId]);
 
   useEffect(() => {
-    if (roomState === 'waiting_continue' && serverResolution?.selectedRoll !== undefined) {
+    if (serverResolution?.selectedRoll !== undefined) {
       setRevealedRoll(serverResolution.selectedRoll);
     }
-  }, [roomState, serverResolution?.selectedRoll, encounter.snapshotId]);
+  }, [serverResolution?.selectedRoll, encounter.snapshotId]);
 
   useEffect(() => {
     onResultsVisibleChange?.(revealedRoll !== null);
@@ -301,8 +310,10 @@ export function EncounterImageBlock({
         </div>
       ) : null}
       <ResultBlock
+        continueGlowClass={continueGlowClass}
         deferRewardDismiss={deferRewardDismiss}
         disabled={continuePending || (witnessMode && roomState === 'system_event')}
+        showLoreGemReward={showLoreGemReward}
         encounterId={encounter.encounterId}
         encounterDifficulty={encounter.encounterDifficulty ?? 1}
         hidden={loreOpen || inventoryOpen || skillbookOpen}
@@ -329,6 +340,7 @@ export function EncounterImageBlock({
           inventoryOpen ||
           skillbookOpen ||
           roomState === 'waiting_continue' ||
+          roomState === 'advancing' ||
           roomState === 'resolving'
         }
         inventory={inventory}
@@ -336,10 +348,12 @@ export function EncounterImageBlock({
       />
       <LoreBlock
         encounterKey={encounter.snapshotId}
+        loreGemCollected={loreGemCollected}
+        loreGemOffer={encounter.loreGemOffer}
         onLoreGemCollect={async () => {
-          await claimLoreGem(avatarId, encounter.snapshotId);
+          const result = await activateRoomLoreGem(avatarId, encounter.snapshotId);
+          onRoomSnapshot?.(result.room);
         }}
-        onLoreGemOffer={async () => offerLoreGem(avatarId)}
         text={encounter.encounterText ?? ''}
         visible={loreOpen}
       />

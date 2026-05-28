@@ -1,4 +1,5 @@
 import type {
+  ContinueReadinessDto,
   EncounterAction,
   EncounterRoomSnapshotDto,
   EncounterSnapshotDto,
@@ -79,6 +80,7 @@ function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotD
     preparedEncounter: snapshot.preparedEncounter,
     state: snapshot.state,
     resolved: snapshot.resolved,
+    loreGemOffer: snapshot.loreGemOffer,
   };
 }
 
@@ -106,8 +108,50 @@ function buildParticipantDto(
     selectedSolutionId: participant.selectedSolutionId,
     continuePressed: participant.continuePressed,
     resolutionSummary: participant.resolutionSummary,
+    preparedResult: participant.preparedResult,
+    loreGemCollected: participant.loreGemCollected === true,
     isLocal: participant.playerId === localPlayerId,
   };
+}
+
+function continueTargetsForDto(room: EncounterRoom): RoomParticipant[] {
+  const engaged = room.participants.filter((participant) => participant.choiceState !== 'disengaged');
+  if (room.systemEvent?.lastEvent) {
+    return engaged;
+  }
+  const awaiting = engaged.filter(
+    (participant) =>
+      participant.choiceState === 'ready_to_continue' ||
+      participant.choiceState === 'resolved',
+  );
+  return awaiting.length > 0 ? awaiting : engaged;
+}
+
+function continueReadinessForRoom(
+  room: EncounterRoom,
+  localPlayerId: string,
+): ContinueReadinessDto {
+  if (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing') {
+    return 'none';
+  }
+
+  const targets = continueTargetsForDto(room);
+  if (targets.length === 0) {
+    return 'none';
+  }
+
+  if (!targets.some((participant) => participant.continuePressed)) {
+    return 'gathering';
+  }
+
+  const local = targets.find((participant) => participant.playerId === localPlayerId);
+  if (local && !local.continuePressed && targets.every((participant) =>
+    participant.playerId === localPlayerId || participant.continuePressed,
+  )) {
+    return 'awaiting_local';
+  }
+
+  return 'none';
 }
 
 async function participantToDto(
@@ -216,6 +260,9 @@ export async function toEncounterRoomSnapshotDto(
       room.helpCalledSnapshotId === room.activeEncounterSnapshot.snapshotId,
     systemEvent: toSystemEventDto(room, localPlayerId),
     lineageEncounterId: room.systemEvent?.lineage.originEncounterId,
+    continueReadiness: continueReadinessForRoom(room, localPlayerId),
+    loreGemActivated: room.loreGemActivated === true,
+    loreGemActivatedSnapshotId: room.loreGemActivatedSnapshotId,
     updatedAt: room.updatedAt,
   };
 }

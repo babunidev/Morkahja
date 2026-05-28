@@ -34,3 +34,8 @@ export function isRollFavorable(roll: number): boolean {
   const outcome = interpretRoll(roll);
   return outcome === 'Fortune' || outcome === 'Prosperity';
 }
+
+/** Map a 1–100 roll to a 1–20 face for player-facing UI. */
+export function displayRollAsD20(roll: number): number {
+  return Math.min(20, Math.max(1, Math.round(roll / 5)));
+}

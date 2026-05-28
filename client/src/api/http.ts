@@ -14,6 +14,7 @@ import type {
   AvatarResponse,
   AvatarsResponse,
   ClientSession,
+  ContinueReadinessDto,
   EncounterAction,
   EncounterResultResponse,
   EncounterRoomSnapshotDto,
@@ -21,6 +22,7 @@ import type {
   JoinFriendRoomResponse,
   InventoryItemDto,
   LoreGemClaimResponse,
+  LoreGemOfferDto,
   LoreGemOfferResponse,
   PersistedAvatarDto,
   PlayerProfileResponse,
@@ -29,6 +31,7 @@ import type {
   RespondHelpResponse,
   RoomParticipantDto,
   RoomStateDto,
+  ParticipantPreparedResultDto,
   ParticipantResolutionSummaryDto,
   SetAvatarDisplayTitleResponse,
   SlotStateDto,
@@ -52,8 +55,11 @@ export type {
   AvatarResponse,
   AvatarsResponse,
   ClientSession,
+  ContinueReadinessDto,
   EncounterAction,
   EncounterRoomSnapshotDto,
+  LoreGemOfferDto,
+  ParticipantPreparedResultDto,
   ParticipantResolutionSummaryDto,
   PlayerResponse,
   RoomParticipantDto,
@@ -220,6 +226,24 @@ export async function claimLoreGem(
   encounterKey: string,
 ): Promise<LoreGemClaimResponse> {
   return request<LoreGemClaimResponse>('/encounter/lore-gem/claim', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, encounterKey }),
+  });
+}
+
+export async function activateRoomLoreGem(
+  avatarId: string,
+  encounterKey: string,
+): Promise<{
+  activated: boolean;
+  encounterKey: string;
+  room: EncounterRoomSnapshotDto;
+}> {
+  return request<{
+    activated: boolean;
+    encounterKey: string;
+    room: EncounterRoomSnapshotDto;
+  }>('/room/lore-gem/activate', {
     method: 'POST',
     body: JSON.stringify({ avatarId, encounterKey }),
   });

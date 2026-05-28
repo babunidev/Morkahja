@@ -85,6 +85,14 @@ export interface PlayerCurrencyResponse {
   granted: boolean;
 }
 
+export interface LoreGemOfferDto {
+  eligible: boolean;
+  claimableAt: number | null;
+  offeredAt: number;
+  /** Randomized reveal delay for this encounter; client counts down only while lore is open. */
+  durationMs: number;
+}
+
 export interface LoreGemOfferResponse {
   eligible: boolean;
   claimableAt: number | null;
@@ -147,6 +155,8 @@ export interface EncounterSnapshotDto {
   preparedEncounter?: PreparedEncounterDto;
   state: EncounterState;
   resolved: boolean;
+  /** Server-rolled reveal timer for this encounter (room-authoritative). */
+  loreGemOffer?: LoreGemOfferDto;
 }
 
 export interface InventoryItemDto {
@@ -347,6 +357,7 @@ export interface FriendAchievementsResponse {
 export type RoomStateDto =
   | 'active_encounter'
   | 'resolving'
+  | 'advancing'
   | 'system_event'
   | 'waiting_continue'
   | 'closed';
@@ -354,9 +365,12 @@ export type RoomStateDto =
 export type ParticipantChoiceStateDto =
   | 'choosing'
   | 'ready'
+  | 'ready_to_continue'
   | 'resolved'
   | 'witnessing'
   | 'disengaged';
+
+export type ContinueReadinessDto = 'none' | 'gathering' | 'awaiting_local';
 
 export type ParticipantFocusStateDto =
   | 'none'
@@ -387,6 +401,18 @@ export interface RoomSystemEventDto {
   lastEventRecap?: ParticipantResolutionSummaryDto;
 }
 
+export interface ParticipantPreparedResultDto {
+  success: boolean;
+  message: string;
+  selectedRoll?: number;
+  rewards: number[];
+  failurePenalty?: number;
+  usedInventorySolutions?: number[];
+  deathTriggered?: boolean;
+  avatarDied?: boolean;
+  leveledUp?: boolean;
+}
+
 export interface RoomParticipantDto {
   playerId: string;
   avatarId: string;
@@ -399,6 +425,8 @@ export interface RoomParticipantDto {
   selectedSolutionId?: number;
   continuePressed: boolean;
   resolutionSummary?: ParticipantResolutionSummaryDto;
+  preparedResult?: ParticipantPreparedResultDto;
+  loreGemCollected?: boolean;
   isLocal: boolean;
 }
 
@@ -412,6 +440,9 @@ export interface EncounterRoomSnapshotDto {
   helpCalledForEncounter: boolean;
   systemEvent?: RoomSystemEventDto;
   lineageEncounterId?: number;
+  continueReadiness?: ContinueReadinessDto;
+  loreGemActivated?: boolean;
+  loreGemActivatedSnapshotId?: string;
   updatedAt: number;
 }
 

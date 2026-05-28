@@ -17,6 +17,7 @@ import {
   submitChoice,
   submitContinue,
 } from '../services/roomService.js';
+import { activateRoomLoreGem, LoreGemError } from '../services/loreGemService.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
 import type { PlayerDocument } from '../types/player.js';
 
@@ -32,6 +33,10 @@ class RequestError extends Error {
 function handleRoomError(error: unknown, res: Response, next: NextFunction): void {
   if (error instanceof RoomError) {
     res.status(error.statusCode).json({ error: error.code ?? error.message });
+    return;
+  }
+  if (error instanceof LoreGemError) {
+    res.status(error.statusCode).json({ error: error.message });
     return;
   }
   next(error);
@@ -198,6 +203,26 @@ export async function submitRoomFocusController(
     const room = await setFocusState(playerId, avatarId, focusState);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function activateRoomLoreGemController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const body = req.body as Record<string, unknown>;
+    const avatarId = requireAvatarId(req);
+    const encounterKey = typeof body.encounterKey === 'string' ? body.encounterKey : '';
+    const result = await activateRoomLoreGem(playerId, avatarId, encounterKey);
+    res.json({
+      ...result,
+      room: await toEncounterRoomSnapshotDto(result.room, playerId),
     });
   } catch (error) {
     handleRoomError(error, res, next);

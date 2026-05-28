@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { LoreGemOfferResponse } from '@shared/contracts';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import type { LoreGemOfferDto } from '@shared/contracts';
+
 import {
   preventImageContextMenu,
   PROTECTED_BACKGROUND_ATTR,
@@ -12,6 +13,7 @@ const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
 const LORE_GEM_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
 const LORE_GEM_COLLECT_ANIMATION_MS = 700;
 const LORE_GEM_POPUP_MS = 330;
+const LORE_GEM_TICK_MS = 200;
 
 type LoreGemState = 'waiting' | 'visible' | 'collecting' | 'collected';
 
@@ -133,93 +135,129 @@ function wait(ms: number): Promise<void> {
   });
 }
 
+function offerDurationMs(offer: LoreGemOfferDto): number {
+  if (typeof offer.durationMs === 'number' && offer.durationMs > 0) {
+    return offer.durationMs;
+  }
+  if (offer.claimableAt !== null && offer.offeredAt > 0) {
+    return Math.max(0, offer.claimableAt - offer.offeredAt);
+  }
+  return 0;
+}
+
+/** Stable key so room polls do not reset the pauseable client timer. */
+function loreGemOfferResetKey(
+  encounterKey: string,
+  offer: LoreGemOfferDto | undefined,
+): string {
+  if (!offer?.eligible) {
+    return `${encounterKey}:none`;
+  }
+
+  const durationMs = offerDurationMs(offer);
+  if (durationMs <= 0) {
+    return `${encounterKey}:none`;
+  }
+
+  return `${encounterKey}:${offer.offeredAt}:${durationMs}`;
+}
+
 export function LoreBlock({
   encounterKey,
+  loreGemCollected = false,
+  loreGemOffer,
   onLoreGemCollect,
-  onLoreGemOffer,
   text,
   visible,
 }: {
   encounterKey: string;
+  loreGemCollected?: boolean;
+  loreGemOffer?: LoreGemOfferDto;
   onLoreGemCollect: () => Promise<void>;
-  onLoreGemOffer: () => Promise<LoreGemOfferResponse>;
   text: string;
   visible: boolean;
 }) {
   const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
   const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
-  const loreGemClaimableAt = useRef<number | null>(null);
-  const loreGemOfferLoaded = useRef(false);
+  const collectedThisEncounterRef = useRef(false);
+  const remainingMsRef = useRef<number | null>(null);
+  const durationMsRef = useRef(0);
+
+  const isCollected = loreGemCollected || collectedThisEncounterRef.current;
+  const offerDuration = loreGemOffer && loreGemOffer.eligible
+    ? offerDurationMs(loreGemOffer)
+    : 0;
+  const offerEligible = offerDuration > 0;
+  const loreGemOfferResetKeyValue = useMemo(
+    () => loreGemOfferResetKey(encounterKey, loreGemOffer),
+    [
+      encounterKey,
+      loreGemOffer?.eligible,
+      loreGemOffer?.offeredAt,
+      loreGemOffer?.durationMs,
+      loreGemOffer?.claimableAt,
+    ],
+  );
 
   useEffect(() => {
-    loreGemClaimableAt.current = null;
-    loreGemOfferLoaded.current = false;
-    setLoreGemState('waiting');
+    collectedThisEncounterRef.current = false;
     setLoreGemPopupVisible(false);
-  }, [encounterKey]);
+    durationMsRef.current = offerEligible ? offerDuration : 0;
+    remainingMsRef.current = durationMsRef.current > 0 ? durationMsRef.current : null;
+    setLoreGemState(offerEligible ? 'waiting' : 'collected');
+  }, [loreGemOfferResetKeyValue, offerEligible, offerDuration]);
 
   useEffect(() => {
-    if (!visible || loreGemState !== 'waiting') {
+    if (loreGemCollected && loreGemState !== 'collecting') {
+      collectedThisEncounterRef.current = true;
+    }
+  }, [loreGemCollected, loreGemState]);
+
+  useEffect(() => {
+    if (loreGemState === 'collecting') {
       return undefined;
     }
 
-    let timer: number | undefined;
-    let cancelled = false;
-
-    async function scheduleGem(): Promise<void> {
-      try {
-        if (!loreGemOfferLoaded.current) {
-          const offer = await onLoreGemOffer();
-          if (cancelled) {
-            return;
-          }
-
-          loreGemOfferLoaded.current = true;
-
-          if (offer.encounterKey !== encounterKey) {
-            return;
-          }
-
-          if (!offer.eligible || offer.claimableAt === null) {
-            setLoreGemState('collected');
-            return;
-          }
-
-          loreGemClaimableAt.current = offer.claimableAt;
-        }
-
-        const claimableAt = loreGemClaimableAt.current;
-        if (claimableAt === null) {
-          setLoreGemState('collected');
-          return;
-        }
-
-        const delay = Math.max(0, claimableAt - Date.now());
-        timer = window.setTimeout(() => {
-          if (!cancelled) {
-            setLoreGemState('visible');
-          }
-        }, delay);
-      } catch (error) {
-        console.error('Lore gem offer failed', error);
-        if (!cancelled) {
-          setLoreGemState('collected');
-        }
-      }
+    if (isCollected || !offerEligible) {
+      setLoreGemState('collected');
+      return undefined;
     }
 
-    void scheduleGem();
+    if (!visible) {
+      return undefined;
+    }
+
+    if (remainingMsRef.current === null) {
+      remainingMsRef.current = durationMsRef.current;
+    }
+
+    if ((remainingMsRef.current ?? 0) <= 0) {
+      setLoreGemState('visible');
+      return;
+    }
+
+    setLoreGemState('waiting');
+
+    const interval = window.setInterval(() => {
+      if (remainingMsRef.current === null) {
+        return;
+      }
+
+      remainingMsRef.current = Math.max(0, remainingMsRef.current - LORE_GEM_TICK_MS);
+      if (remainingMsRef.current <= 0) {
+        setLoreGemState('visible');
+      } else {
+        setLoreGemState('waiting');
+      }
+    }, LORE_GEM_TICK_MS);
 
     return () => {
-      cancelled = true;
-      if (timer !== undefined) {
-        window.clearTimeout(timer);
-      }
+      window.clearInterval(interval);
     };
-  }, [encounterKey, loreGemState, onLoreGemOffer, visible]);
+  }, [visible, isCollected, offerEligible, loreGemOfferResetKeyValue, loreGemState]);
 
   async function handleLoreGemClick(): Promise<void> {
-    if (loreGemState !== 'visible') {
+    if (loreGemState !== 'visible' || isCollected) {
       return;
     }
 
@@ -230,19 +268,26 @@ export function LoreBlock({
     }, LORE_GEM_POPUP_MS);
 
     try {
-      await Promise.all([
-        onLoreGemCollect(),
-        wait(LORE_GEM_COLLECT_ANIMATION_MS),
-      ]);
+      await wait(LORE_GEM_COLLECT_ANIMATION_MS);
+      await onLoreGemCollect();
+      collectedThisEncounterRef.current = true;
+      remainingMsRef.current = 0;
       setLoreGemState('collected');
     } catch (error) {
       console.error('Lore gem collection failed', error);
-      await wait(LORE_GEM_COLLECT_ANIMATION_MS);
-      setLoreGemState('visible');
+      if (!collectedThisEncounterRef.current) {
+        setLoreGemState('visible');
+      }
+    } finally {
+      setLoreGemPopupVisible(false);
     }
   }
 
   const loreGemVisible = loreGemState === 'visible' || loreGemState === 'collecting';
+  const showWaitingStar = visible
+    && !isCollected
+    && offerEligible
+    && loreGemState === 'waiting';
 
   return (
     <aside
@@ -282,6 +327,19 @@ export function LoreBlock({
             0%, 100% { opacity: 0.34; transform: scale(0.78); filter: brightness(0.88); }
             50% { opacity: 1; transform: scale(1.12); filter: brightness(1.25); }
           }
+          @keyframes morkahja-lore-gem-hover {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            35% { transform: scale(1.08) rotate(-5deg); }
+            70% { transform: scale(1.06) rotate(5deg); }
+          }
+          .morkahja-lore-gem-collectible:not(:disabled) .morkahja-lore-gem-visual {
+            display: block;
+            transition: filter 180ms ease;
+          }
+          .morkahja-lore-gem-collectible:not(:disabled):hover .morkahja-lore-gem-visual {
+            animation: morkahja-lore-gem-hover 680ms ease-in-out;
+            filter: drop-shadow(0 0 14px rgba(255, 204, 102, 0.95)) brightness(1.14);
+          }
         `}
       </style>
       <div
@@ -296,12 +354,13 @@ export function LoreBlock({
         style={textWrapStyle}
       >
         <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
-        {visible && loreGemState === 'waiting' ? (
+        {showWaitingStar ? (
           <span aria-hidden="true" style={loreGemStarStyle} />
         ) : null}
         {loreGemVisible ? (
           <button
             aria-label="lore_gem"
+            className="morkahja-lore-gem-collectible"
             data-lore-gem="true"
             disabled={loreGemState === 'collecting'}
             onClick={() => {
@@ -310,20 +369,28 @@ export function LoreBlock({
             onContextMenu={preventImageContextMenu}
             style={{
               ...loreGemButtonStyle,
-              ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
-              ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
               cursor: loreGemState === 'visible' ? 'pointer' : 'default',
             }}
             type="button"
           >
-            <img
-              alt=""
-              aria-hidden="true"
-              {...protectedImageProps}
-              src={LORE_GEM_ASSET}
-              style={loreGemImageStyle}
-            />
-            {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
+            <span
+              className="morkahja-lore-gem-visual"
+              style={{
+                position: 'relative',
+                display: 'block',
+                ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
+                ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
+              }}
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                {...protectedImageProps}
+                src={LORE_GEM_ASSET}
+                style={loreGemImageStyle}
+              />
+              {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
+            </span>
           </button>
         ) : null}
       </div>

@@ -70,6 +70,10 @@ import {
 } from './gameEventService.js';
 import type { RoomEncounterLineage } from '../domain/rooms/RoomSystemEvent.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID as ROOM_LEVEL_UP_ID } from '../domain/rooms/RoomSystemEvent.js';
+import type {
+  ParticipantPreparedResult,
+  PreparedCommitBundle,
+} from '../domain/rooms/RoomParticipant.js';
 
 const RANDOM_ENCOUNTER_MIN_ID = 20001;
 const MAX_EXPANSION_REROLLS = 200;
@@ -1126,39 +1130,37 @@ export interface ResolveParticipantInRoomResult {
   eventContext: EncounterContinuedEventContext;
 }
 
-/**
- * Resolve one participant against a shared room encounter snapshot.
- * Does not advance the room encounter — caller owns room lifecycle.
- */
-export async function resolveParticipantInRoom(
-  transaction: DocumentTransaction,
+export interface PrepareParticipantOutcomeResult extends ResolveParticipantInRoomResult {
+  preparedResult: ParticipantPreparedResult;
+  preparedCommit: PreparedCommitBundle;
+}
+
+export function preparedResultFromResolve(
+  result: ResolveParticipantInRoomResult,
+): ParticipantPreparedResult {
+  return {
+    success: result.resolution.success,
+    message: result.resolution.message,
+    selectedRoll: result.resolution.selectedRoll,
+    rewards: result.resolution.rewards,
+    failurePenalty: result.resolution.failurePenalty,
+    usedInventorySolutions: result.resolution.usedInventorySolutions,
+    deathTriggered: result.deathTriggered,
+    avatarDied: result.avatarDied,
+    leveledUp: result.eventContext.leveledUp,
+  };
+}
+
+function computeParticipantOutcome(
   playerId: string,
   avatarId: string,
+  avatar: AvatarDocument,
+  inventory: AvatarInventory,
+  progression: ReturnType<typeof createInitialProgression>,
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
-): Promise<ResolveParticipantInRoomResult> {
-  const [
-    avatar,
-    inventoryDocument,
-    progressionDocument,
-  ] = await Promise.all([
-    transaction.getAvatar<AvatarDocument>(playerId, avatarId),
-    transaction.getInventory<AvatarInventory>(playerId, avatarId),
-    transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
-  ]);
-
-  if (!avatar) {
-    throw new Error(`Avatar not found: ${avatarId}`);
-  }
-
-  let snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
-
-  const inventory = inventoryDocument
-    ?? avatar.inventory
-    ?? createInitialAvatarInventory(avatar.profile);
-  const progression = progressionDocument
-    ?? createInitialProgression(avatar.createdAt ?? Date.now());
-
+): PrepareParticipantOutcomeResult {
+  const snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
   const actionForResolution = selectedActionForSnapshot(snapshot, action);
   const encounter = snapshotToEncounterData(snapshot);
   const baseResolution = runDeterministicResolver(
@@ -1238,10 +1240,6 @@ export async function resolveParticipantInRoom(
     },
   };
 
-  await transaction.setProgression(playerId, avatarId, progressionResult.progression);
-  await transaction.setInventory(playerId, avatarId, nextInventory);
-  await transaction.setAvatar(playerId, avatarId, updatedAvatar, { merge: true });
-
   const eventContext: EncounterContinuedEventContext = {
     resolvedEncounterId: snapshot.encounterId,
     resolvedEncounterTitle: snapshot.encounterTitle,
@@ -1255,7 +1253,7 @@ export async function resolveParticipantInRoom(
     eventContext.isDeathEncounterResolution &&
     isDeathEncounterFailureOutcome(selectedRollOutcome);
 
-  return {
+  const resolveResult: ResolveParticipantInRoomResult = {
     avatar: updatedAvatar,
     resolution,
     selectedRollOutcome,
@@ -1263,6 +1261,118 @@ export async function resolveParticipantInRoom(
     avatarDied,
     eventContext,
   };
+
+  const preparedCommit: PreparedCommitBundle = {
+    resolution,
+    selectedRollOutcome,
+    deathTriggered,
+    avatarDied,
+    eventContext,
+    nextInventory,
+    nextProgression: progressionResult.progression,
+    updatedAvatar,
+  };
+
+  return {
+    ...resolveResult,
+    preparedResult: preparedResultFromResolve(resolveResult),
+    preparedCommit,
+  };
+}
+
+/**
+ * Dry-run resolve for room reveal — does not persist inventory, progression, or avatar.
+ */
+export async function prepareParticipantOutcome(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  encounterSnapshot: EncounterSnapshot,
+  action: PlayerEncounterAction,
+): Promise<PrepareParticipantOutcomeResult> {
+  const [
+    avatar,
+    inventoryDocument,
+    progressionDocument,
+  ] = await Promise.all([
+    transaction.getAvatar<AvatarDocument>(playerId, avatarId),
+    transaction.getInventory<AvatarInventory>(playerId, avatarId),
+    transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
+  ]);
+
+  if (!avatar) {
+    throw new Error(`Avatar not found: ${avatarId}`);
+  }
+
+  const inventory = inventoryDocument
+    ?? avatar.inventory
+    ?? createInitialAvatarInventory(avatar.profile);
+  const progression = progressionDocument
+    ?? createInitialProgression(avatar.createdAt ?? Date.now());
+
+  return computeParticipantOutcome(
+    playerId,
+    avatarId,
+    avatar,
+    inventory,
+    progression,
+    encounterSnapshot,
+    action,
+  );
+}
+
+/** Persist a prepared room outcome and record continuation events. */
+export async function commitPreparedOutcome(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  bundle: PreparedCommitBundle,
+): Promise<ResolveParticipantInRoomResult> {
+  await transaction.setProgression(playerId, avatarId, bundle.nextProgression);
+  await transaction.setInventory(playerId, avatarId, bundle.nextInventory);
+  await transaction.setAvatar(playerId, avatarId, bundle.updatedAvatar, { merge: true });
+
+  await recordEncounterContinuedEvents(
+    playerId,
+    bundle.updatedAvatar,
+    bundle.resolution,
+    bundle.eventContext,
+  );
+
+  return {
+    avatar: bundle.updatedAvatar,
+    resolution: bundle.resolution,
+    selectedRollOutcome: bundle.selectedRollOutcome,
+    deathTriggered: bundle.deathTriggered,
+    avatarDied: bundle.avatarDied,
+    eventContext: bundle.eventContext,
+  };
+}
+
+/**
+ * Resolve one participant against a shared room encounter snapshot.
+ * Does not advance the room encounter — caller owns room lifecycle.
+ */
+export async function resolveParticipantInRoom(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  encounterSnapshot: EncounterSnapshot,
+  action: PlayerEncounterAction,
+): Promise<ResolveParticipantInRoomResult> {
+  const prepared = await prepareParticipantOutcome(
+    transaction,
+    playerId,
+    avatarId,
+    encounterSnapshot,
+    action,
+  );
+  return commitPreparedOutcome(
+    transaction,
+    playerId,
+    avatarId,
+    prepared.preparedCommit,
+  );
 }
 
 /** Seed or update avatar document (inventory, profile, progression). */

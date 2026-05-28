@@ -9,20 +9,14 @@ const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const ACTION_LOG_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_news_a.webp';
 
 const panelStyle: CSSProperties = {
-  width: 'fit-content',
-  maxWidth: 'min(88vw, 380px)',
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 'clamp(10px, 2.4vw, 16px)',
-  textAlign: 'center',
   position: 'relative',
+  width: 'min(42vw, 176px)',
   zIndex: 5,
 };
 
 const portraitWrapStyle: CSSProperties = {
-  flex: '0 0 auto',
-  width: 'min(42vw, 176px)',
+  position: 'relative',
+  width: '100%',
 };
 
 const imageStackButtonStyle: CSSProperties = {
@@ -55,36 +49,39 @@ const portraitPressStyle: CSSProperties = {
   transformOrigin: 'center center',
 };
 
-const detailsClusterStyle: CSSProperties = {
+const detailsOverlayStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 6,
   display: 'flex',
-  flexDirection: 'row',
+  flexDirection: 'column',
   alignItems: 'center',
-  gap: 'clamp(8px, 2vw, 14px)',
-  flex: '0 1 auto',
-  minWidth: 0,
+  justifyContent: 'center',
+  gap: 'clamp(6px, 1.4vw, 10px)',
+  pointerEvents: 'none',
 };
 
 const detailsTooltipStyle: CSSProperties = {
-  flex: '0 1 auto',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  justifyContent: 'center',
-  minWidth: 'min(36vw, 148px)',
-  maxWidth: 'min(42vw, 180px)',
-  padding: '8px 10px',
-  borderRadius: 10,
-  background: 'rgba(6, 6, 10, 0.62)',
-  pointerEvents: 'none',
-  textAlign: 'left',
-};
-
-const actionButtonsStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: 'clamp(4px, 1.1vw, 7px)',
-  flex: '0 0 auto',
+  justifyContent: 'center',
+  width: 'min(88%, 156px)',
+  padding: '8px 10px',
+  borderRadius: 10,
+  background: 'rgba(6, 6, 10, 0.78)',
+  pointerEvents: 'none',
+  textAlign: 'center',
+  boxSizing: 'border-box',
+};
+
+const actionButtonsRowStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: 'min(88%, 156px)',
+  pointerEvents: 'auto',
 };
 
 const hubActionButtonStyle: CSSProperties = {
@@ -121,7 +118,7 @@ const levelStyle: CSSProperties = {
 
 const xpBarShellStyle: CSSProperties = {
   display: 'block',
-  width: '86%',
+  width: '100%',
   height: 6,
   marginTop: 7,
   border: '1px solid rgba(255, 204, 102, 0.72)',
@@ -227,102 +224,106 @@ export function AvatarPanel({
             </div>
           </span>
         </button>
-      </div>
-      {showDetails ? (
-        <div style={detailsClusterStyle}>
-          <div role="tooltip" style={detailsTooltipStyle}>
-            <span className="morkahja-title" style={nameStyle}>{formatAvatarDisplayName(avatar)}</span>
-            <span style={levelStyle}>
-              Level {avatar.level} · {avatar.race} {avatar.role}
-            </span>
-            <span aria-label={`Experience ${currentExperience} of ${nextLevelExperience}`} style={xpBarShellStyle}>
-              <span
-                style={{
-                  ...xpBarFillStyle,
-                  width: `${experiencePercent}%`,
-                }}
-              />
-            </span>
-            <span style={xpTextStyle}>
-              XP {currentExperience}/{nextLevelExperience}
-            </span>
-          </div>
-          {onActionLogToggle || onHome ? (
-            <div style={actionButtonsStyle}>
-              {onActionLogToggle ? (
-                <button
-                  aria-expanded={actionLogOpen}
-                  aria-label="Action log"
-                  className="morkahja-footer-button"
-                  onClick={() => {
-                    playSfx(DEFAULT_BUTTON_SOUND);
-                    onActionLogToggle();
-                  }}
-                  onPointerDown={() => {
-                    pulse('action-log');
-                  }}
-                  style={hubActionButtonStyle}
-                  type="button"
-                >
-                  <span className="morkahja-footer-button-visual">
-                    <img
-                      alt=""
-                      aria-hidden="true"
-                      draggable={false}
-                      src={ACTION_LOG_BUTTON_ASSET}
-                      style={{
-                        ...homeImageStyle,
-                        animation: pressAnimation(isPressed('action-log')),
-                      }}
-                    />
-                  </span>
-                </button>
-              ) : null}
-              {onHome ? (
-                <button
-                  aria-label="Return home"
-                  className="morkahja-footer-button"
-                  disabled={!homeVisible}
-                  onClick={() => {
-                    if (!homeVisible) {
-                      return;
-                    }
-
-                    playSfx(DEFAULT_BUTTON_SOUND);
-                    onHome();
-                  }}
-                  onPointerDown={() => {
-                    if (!homeVisible) {
-                      return;
-                    }
-
-                    pulse('home');
-                  }}
+        {showDetails ? (
+          <div style={detailsOverlayStyle}>
+            <div role="tooltip" style={detailsTooltipStyle}>
+              <span className="morkahja-title" style={nameStyle}>{formatAvatarDisplayName(avatar)}</span>
+              <span style={levelStyle}>
+                Level {avatar.level} · {avatar.race} {avatar.role}
+              </span>
+              <span aria-label={`Experience ${currentExperience} of ${nextLevelExperience}`} style={xpBarShellStyle}>
+                <span
                   style={{
-                    ...hubActionButtonStyle,
-                    opacity: homeVisible ? 1 : 0,
-                    pointerEvents: homeVisible ? 'auto' : 'none',
+                    ...xpBarFillStyle,
+                    width: `${experiencePercent}%`,
                   }}
-                  type="button"
-                >
-                  <span className="morkahja-footer-button-visual">
-                    <img
-                      alt=""
-                      aria-hidden="true"
-                      draggable={false}
-                      src={HOME_BUTTON_ASSET}
-                      style={{
-                        ...homeImageStyle,
-                        animation: pressAnimation(isPressed('home')),
-                      }}
-                    />
-                  </span>
-                </button>
-              ) : null}
+                />
+              </span>
+              <span style={xpTextStyle}>
+                XP {currentExperience}/{nextLevelExperience}
+              </span>
             </div>
-          ) : null}
-        </div>
-      ) : null}
+            {onActionLogToggle || onHome ? (
+              <div style={actionButtonsRowStyle}>
+                {onHome ? (
+                  <button
+                    aria-label="Return home"
+                    className="morkahja-footer-button"
+                    disabled={!homeVisible}
+                    onClick={() => {
+                      if (!homeVisible) {
+                        return;
+                      }
+
+                      playSfx(DEFAULT_BUTTON_SOUND);
+                      onHome();
+                    }}
+                    onPointerDown={() => {
+                      if (!homeVisible) {
+                        return;
+                      }
+
+                      pulse('home');
+                    }}
+                    style={{
+                      ...hubActionButtonStyle,
+                      opacity: homeVisible ? 1 : 0,
+                      pointerEvents: homeVisible ? 'auto' : 'none',
+                    }}
+                    type="button"
+                  >
+                    <span className="morkahja-footer-button-visual">
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        draggable={false}
+                        src={HOME_BUTTON_ASSET}
+                        style={{
+                          ...homeImageStyle,
+                          animation: pressAnimation(isPressed('home')),
+                        }}
+                      />
+                    </span>
+                  </button>
+                ) : (
+                  <span aria-hidden="true" style={hubActionButtonStyle} />
+                )}
+                {onActionLogToggle ? (
+                  <button
+                    aria-expanded={actionLogOpen}
+                    aria-label="Action log"
+                    className="morkahja-footer-button"
+                    onClick={() => {
+                      playSfx(DEFAULT_BUTTON_SOUND);
+                      onActionLogToggle();
+                    }}
+                    onPointerDown={() => {
+                      pulse('action-log');
+                    }}
+                    style={hubActionButtonStyle}
+                    type="button"
+                  >
+                    <span className="morkahja-footer-button-visual">
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        draggable={false}
+                        src={ACTION_LOG_BUTTON_ASSET}
+                        style={{
+                          ...homeImageStyle,
+                          animation: pressAnimation(isPressed('action-log')),
+                        }}
+                      />
+                    </span>
+                  </button>
+                ) : (
+                  <span aria-hidden="true" style={hubActionButtonStyle} />
+                )}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </article>
   );
 }
