@@ -5,6 +5,7 @@ import {
   DiceNotFoundError,
   DiceNotUnlockedError,
   InsufficientGemsForDiceError,
+  PlayerNotFoundError,
   setPlayerSelectedDice,
   unlockPlayerDice,
 } from '../services/diceService.js';
@@ -48,6 +49,11 @@ export async function unlockPlayerDiceController(
       return;
     }
 
+    if (error instanceof PlayerNotFoundError) {
+      res.status(404).json({ error: 'PLAYER_NOT_FOUND' });
+      return;
+    }
+
     throw error;
   }
 }
@@ -81,6 +87,11 @@ export async function selectPlayerDiceController(
 
     if (error instanceof DiceNotUnlockedError) {
       res.status(400).json({ error: 'DICE_NOT_UNLOCKED' });
+      return;
+    }
+
+    if (error instanceof PlayerNotFoundError) {
+      res.status(404).json({ error: 'PLAYER_NOT_FOUND' });
       return;
     }
 

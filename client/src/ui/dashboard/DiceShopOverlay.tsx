@@ -5,7 +5,8 @@ import {
   DICE_UNLOCK_GEM_COST,
   DEFAULT_DICE_ID,
 } from '@shared/diceCatalog.js';
-import { fetchPlayer, unlockDice } from '../../api/http.js';
+import { createCheckoutSession, fetchPlayer, selectDice, unlockDice } from '../../api/http.js';
+import { formatEurCents } from '../commerce/formatPrice.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import {
@@ -34,6 +35,20 @@ function unlockErrorMessage(error: unknown): string {
   }
 
   return message;
+}
+
+function checkoutErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : 'Purchase failed';
+
+  if (message.includes('PURCHASES_UNAVAILABLE')) {
+    return 'Card purchases are not available right now.';
+  }
+
+  if (message.includes('UNKNOWN_SKU')) {
+    return 'This die is not available for purchase.';
+  }
+
+  return 'Could not start checkout. Please try again.';
 }
 
 const backdropStyle: CSSProperties = {
@@ -232,17 +247,23 @@ function DiceCard({
   gemBalance,
   label,
   assetPath,
+  eurUnlockCents,
   unlocked,
   unlockPending,
+  checkoutPending,
   onUnlock,
+  onCheckout,
 }: {
   diceId: DiceId;
   gemBalance: number;
   label: string;
   assetPath: string;
+  eurUnlockCents: number;
   unlocked: boolean;
   unlockPending: boolean;
+  checkoutPending: boolean;
   onUnlock: () => void;
+  onCheckout: () => void;
 }) {
   const isDefault = diceId === DEFAULT_DICE_ID;
   const unlockEnabled = !unlocked
@@ -250,6 +271,8 @@ function DiceCard({
     && !isDefault
     && gemBalance >= DICE_UNLOCK_GEM_COST;
   const showUnlockActions = !unlocked && !isDefault;
+  const priceLabel = eurUnlockCents > 0 ? formatEurCents(eurUnlockCents) : null;
+  const checkoutEnabled = priceLabel !== null && !checkoutPending && !unlockPending;
 
   return (
     <article
@@ -304,13 +327,31 @@ function DiceCard({
               </span>
             </PanelButton>
             <PanelButton
-              aria-label={`Unlock ${label} with purchase`}
-              disabled
+              aria-label={
+                priceLabel
+                  ? `Unlock ${label} for ${priceLabel}`
+                  : `Unlock ${label} with purchase`
+              }
+              disabled={!checkoutEnabled}
+              onClick={(event) => {
+                event.stopPropagation();
+
+                if (!checkoutEnabled) {
+                  return;
+                }
+
+                playSfx(DEFAULT_BUTTON_SOUND);
+                onCheckout();
+              }}
               pressKey={`dice-unlock-cash-${diceId}`}
               style={expansionPanelButtonStyle}
-              visualStyle={expansionButtonDisabledVisualStyle}
+              visualStyle={
+                checkoutEnabled
+                  ? expansionButtonVisualStyle
+                  : expansionButtonDisabledVisualStyle
+              }
             >
-              Unlock $
+              {priceLabel ?? 'Unlock $'}
             </PanelButton>
           </div>
         ) : null}
@@ -334,6 +375,7 @@ export function DiceShopOverlay({
   const [yellowRedGems, setYellowRedGems] = useState(0);
   const [unlockedDiceIds, setUnlockedDiceIds] = useState<DiceId[]>([DEFAULT_DICE_ID]);
   const [unlockPending, setUnlockPending] = useState(false);
+  const [checkoutPending, setCheckoutPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -359,6 +401,7 @@ export function DiceShopOverlay({
     if (!open) {
       setVisible(false);
       setUnlockPending(false);
+      setCheckoutPending(false);
       setStatusMessage(null);
       setLoadError(null);
       return;
@@ -403,12 +446,30 @@ export function DiceShopOverlay({
       const result = await unlockDice(diceId);
       setYellowRedGems(result.currencies.yellow_red_gem ?? 0);
       setUnlockedDiceIds(result.unlockedDiceIds);
-      setStatusMessage(`${label} unlocked.`);
+      await selectDice(diceId);
+      setStatusMessage(`${label} unlocked and equipped.`);
       onPlayerUpdated?.();
     } catch (error) {
       setStatusMessage(unlockErrorMessage(error));
     } finally {
       setUnlockPending(false);
+    }
+  }
+
+  async function handleCheckout(diceId: DiceId): Promise<void> {
+    if (checkoutPending) {
+      return;
+    }
+
+    setCheckoutPending(true);
+    setStatusMessage(null);
+
+    try {
+      const { url } = await createCheckoutSession(`dice_${diceId}`);
+      window.location.assign(url);
+    } catch (error) {
+      setStatusMessage(checkoutErrorMessage(error));
+      setCheckoutPending(false);
     }
   }
 
@@ -456,12 +517,17 @@ export function DiceShopOverlay({
               <DiceCard
                 assetPath={entry.assetPath}
                 diceId={entry.id}
+                eurUnlockCents={entry.eurUnlockCents}
                 gemBalance={yellowRedGems}
                 key={entry.id}
                 label={entry.label}
                 onUnlock={() => {
                   void handleUnlock(entry.id, entry.label);
                 }}
+                onCheckout={() => {
+                  void handleCheckout(entry.id);
+                }}
+                checkoutPending={checkoutPending}
                 unlockPending={unlockPending}
                 unlocked={unlockedDiceIds.includes(entry.id)}
               />

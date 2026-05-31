@@ -10,6 +10,9 @@ export const DEFAULT_UNLOCKED_DICE_IDS: DiceId[] = [DEFAULT_DICE_ID];
 
 export const DICE_UNLOCK_GEM_COST = 100;
 
+/** Real-money price (EUR, in cents) to unlock any single dice skin. */
+export const DICE_UNLOCK_EUR_CENTS = 149;
+
 export function isDiceId(value: unknown): value is DiceId {
   return typeof value === 'string' && (DICE_IDS as readonly string[]).includes(value);
 }
@@ -63,6 +66,7 @@ export interface DiceCatalogEntry {
   label: string;
   assetPath: string;
   gemUnlockCost: number;
+  eurUnlockCents: number;
 }
 
 export const DICE_CATALOG: DiceCatalogEntry[] = DICE_IDS.map((id) => ({
@@ -70,4 +74,5 @@ export const DICE_CATALOG: DiceCatalogEntry[] = DICE_IDS.map((id) => ({
   label: DICE_NAMES[id],
   assetPath: diceButtonAssetPath(id),
   gemUnlockCost: id === DEFAULT_DICE_ID ? 0 : DICE_UNLOCK_GEM_COST,
+  eurUnlockCents: id === DEFAULT_DICE_ID ? 0 : DICE_UNLOCK_EUR_CENTS,
 }));

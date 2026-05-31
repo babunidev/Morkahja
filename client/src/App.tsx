@@ -48,6 +48,7 @@ import {
 } from './ui/avatar/avatarSelectionPrepare.js';
 import { formatAvatarDisplayName, normalizePersistedAvatar } from './ui/avatar/avatarDisplayName.js';
 import GameMessageToast from './ui/game/GameMessageToast.js';
+import PurchaseReturnToast from './ui/commerce/PurchaseReturnToast.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
@@ -596,6 +597,7 @@ export default function App() {
         fadeOutSignal={musicFadeOutSignal}
         zone={musicZoneForScreen(screen)}
       >
+        <PurchaseReturnToast />
         {screen === 'loading' ? (
           <LoadingScreen
             hooks={loadingHooks}

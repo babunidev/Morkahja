@@ -4,6 +4,7 @@ import type {
   AchievementsResponse,
   ActivityFeedResponse,
   CallForHelpResponse,
+  CheckoutSessionResponse,
   ClaimDailyRewardResponse,
   DiceId,
   DonateGemsResponse,
@@ -274,6 +275,15 @@ export async function unlockDice(
   return request<UnlockDiceResponse>('/player/dice/unlock', {
     method: 'POST',
     body: JSON.stringify({ diceId }),
+  });
+}
+
+export async function createCheckoutSession(
+  sku: string,
+): Promise<CheckoutSessionResponse> {
+  return request<CheckoutSessionResponse>('/player/checkout/session', {
+    method: 'POST',
+    body: JSON.stringify({ sku }),
   });
 }
 

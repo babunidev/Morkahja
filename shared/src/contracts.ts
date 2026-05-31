@@ -98,6 +98,10 @@ export interface UnlockExpansionResponse {
   unlockedExpansions: number[];
 }
 
+export interface CheckoutSessionResponse {
+  url: string;
+}
+
 export interface PlayerCurrencyResponse {
   playerId: string;
   currencies: {

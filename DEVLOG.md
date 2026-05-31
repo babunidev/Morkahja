@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-28 (+0200) |
+| **Last updated** | 2026-05-31 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -235,6 +235,12 @@ Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ra
 136. **Multiplayer continue (v2)** (`250a272`) — party session = 2+ engaged players (not “2+ already resolved”); defer dismiss whenever results are visible in a party; early Continue queues until `waiting_continue` then auto-`submitRoomContinue`; block duplicate `submitRoomChoice` when already `ready`/`resolved`; solo auto-advance only when actually alone; ally **solution/dice icon** on portrait (`selectedAction` on `RoomParticipantDto`); avatar DTO fallback uses `m_portrait_*` / `m_frame_*` asset keys.
 137. **VPS ops** — nginx API `location` regex must include **`room`** (and other mounted prefixes) or `POST /room/continue` returns **405** HTML and Continue appears to loop; after API fixes, `curl -X POST https://…/room/continue` should return **401** JSON when unauthenticated.
 138. **Room-authoritative continue & lore gems** — prepare/commit encounter outcomes on room tick; `ready_to_continue` / `advancing`; per-player `loreGemCollected` and grant on commit; pauseable lore-only reveal timer (`durationMs`, 14–28s); collect UX (hover, wiggle/+1, outcome-row icon); poll-safe timer key so countdown is not reset every 2.5s.
+139. **Party continue polish** (`2052168`) — dismiss reward flights before continue ack; forest-green Continue glow when all party members ready; room poll slowed to **3s**; expansion cards use `PanelButton` unlock rows instead of separate unlock `.webp` assets.
+140. **Account-wide dice skins** (`9bec698`) — six cosmetic dice in `UI/09_GAME/DIE/`; `@shared/diceCatalog` names (Frostchalk, Urbronze, Ashmaw, Grimroot, Wellwater, Cloudbone); `unlockedDiceIds` + `selectedDiceId` on player doc; `POST /player/dice/unlock|select`; **Dice** shop from Expansions footer; profile picker between avatars and wall of fame; `GameEnvironment` loads selected skin for solution/result dice art; `RoomFullOverlay` + `roomSession` helpers when a room is full.
+141. **Expansion preview** (`9bec698`) — **Preview** on expanded expansion cards shows three random encounters (image + title) from `encountersdata.json` for that expansion id.
+142. **Expansion art paths** (`4635309`) — header `.webp` files renamed to `expansion_keldor`, `expansion_everwinter`, `expansion_urcogor`, `expansion_aetherion` under `UI/03_DASHBOARD/expansions/`; `expansiondata.json` (client + server + public mirror) points at the new basenames so deploys/CDNs pick up fresh URLs.
+143. **Stripe checkout** (`2026-05-31`) — EUR **Unlock** on expansions and dice; `POST /player/checkout/session`; signed `POST /stripe/webhook`; idempotent grants via `grantPlayerExpansion` / `grantPlayerDice`; gem costs rounded in data; `PurchaseReturnToast` for `?purchase=success|cancel`; ToS sections 4/5/16 updated; `npm run test:commerce`.
+144. **Dice equip reliability** (`2026-05-31`) — `setPlayerSelectedDice` inside `withDocumentTransaction` + `FOR UPDATE`; shop auto-calls `selectDice` after gem unlock; `client/public/game/expansiondata.json` synced to `expansion_*` paths and `mExtensioPriceEurCents`.
 
 ---
 
@@ -590,3 +596,38 @@ Since `5b2d423`.
 - **Client continue** — removed `pendingPartyContinue`; inventory merge only after commit; continue glow (`gathering` / `awaiting_local`) from `continueReadiness` DTO.
 - **Disengaged** — travelers stay in the room through advance without rewards.
 - **Tests** — `roomService.test.ts` extended for prepare/commit, lore grant timing, and continue readiness.
+
+### Account-wide dice skins · 2026-05-30 (+0200) (`9bec698`)
+
+- **Catalog** — `@shared/diceCatalog.ts`: ids `a`–`f`, display names, `DICE_UNLOCK_GEM_COST` **100**, asset paths under `/UI/09_GAME/DIE/im_button_dice_{id}.webp`; default **Frostchalk** (`a`) always unlocked.
+- **Server** — `unlockedDiceIds` + `selectedDiceId` on `PlayerDocument`; `diceService` (`unlockPlayerDice`, `setPlayerSelectedDice`, `readPlayerDiceState`); `POST /player/dice/unlock` spends gems; `POST /player/dice/select` sets active skin; `GET /player` and `GET /player/profile` expose dice state.
+- **Client** — `DiceShopOverlay` from **Dice** on `ExpansionsOverlay` footer; `PlayerProfileOverlay` grid of unlocked dice; `fetchPlayer` on game entry applies `selectedDiceId` to `SolutionBlock` / `ResultBlock` dice art.
+- **Room UX** — `RoomFullOverlay` when join/create hits capacity; `leaveJoinedPartyRoomIfNeeded` / `ensureSoloLeaderRoom` in `roomSession.ts`.
+- **Expansions** — **Preview** button samples three encounters per expansion (image + title); refreshed header `.webp` art (later renamed — see expansion art paths).
+
+### Expansion art paths for deploy · 2026-05-31 (+0200) (`4635309`)
+
+- **Problem** — replacing `im_header_expansion_*.webp` in place did not always refresh on CDN/browser cache; old unlock/collection `.webp` assets were removed when unlock UI moved to `PanelButton`.
+- **Fix** — stable filenames: `expansion_keldor.webp`, `expansion_everwinter.webp`, `expansion_urcogor.webp`, `expansion_aetherion.webp` in `client/public/UI/03_DASHBOARD/expansions/`; all `mExtensio*Image` / `mExtensioUnlockButton` fields in `expansiondata.json` (client `src/data`, `public/game` mirror, `server/game`) use the same basename (no `im_header_` prefix).
+
+### Party continue wait UX · 2026-05-28 (+0200) (`2052168`)
+
+- **`roomContinue.ts`** — `continueWaitingAfterPress`, forest-green party Continue glow when everyone is ready.
+- **`ResultBlock` / `GameEnvironment`** — run dismiss animations before continue submit; defer blocking poll during dismiss; **3s** room poll interval.
+- **`ExpansionsOverlay`** — unlock rows use shared `PanelButton` styling; removed per-expansion unlock `.webp` buttons.
+
+### Stripe direct-unlock checkout · 2026-05-31 (+0200)
+
+- **Pricing** — gem prices lightly rounded in `expansiondata.json` (Keldor **75**, Everwinter **50**, Urcogor **60**, Aetherion **25**). EUR list prices on data: Aetherion **199¢**, Everwinter/Urcogor **299¢**, Keldor **399¢**, dice skin **149¢** (`mExtensioPriceEurCents` / `DICE_UNLOCK_EUR_CENTS`); Stripe catalog bundles **€7.99** (all expansions) / **€4.99** (all dice) / **€11.99** (complete). Real-money buys grant unlocks without spending gems.
+- **Model** — Stripe-hosted Checkout Sessions (one-time, dynamic payment methods). Webhook grants are idempotent; gem unlock path unchanged.
+- **Server** — `POST /player/checkout/session` (authed) with `metadata {playerId, sku}`; `POST /stripe/webhook` (raw body, before `express.json`) on `checkout.session.completed`; `processed_stripe_events` + `purchases` tables; `domain/commerce/catalog.ts` SKUs (`expansion_*`, `dice_*`, bundles); `grantPlayerExpansion` / `grantPlayerDice` (no gem debit).
+- **Client** — **Unlock €…** on `ExpansionsOverlay` / `DiceShopOverlay` (`formatEurCents`); redirect to Checkout; `PurchaseReturnToast` on `?purchase=success|cancel` in `App.tsx`.
+- **Stripe config** — `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLIENT_URL`; default live EUR price ids in `config/stripeConfig.ts` (override with `STRIPE_PRICE_*` for test mode). Nginx must proxy `/stripe/webhook` and `/player/checkout/session`. Optional `server/scripts/create-stripe-test-catalog.mjs` for test-mode catalog setup.
+- **ToS** — `TermsOfServiceOverlay` sections 4/5/16: optional paid expansions + cosmetic dice; no purchasable currency; no consumable microtransactions.
+- **Tests** — `npm run test:commerce`. Webhook E2E: Stripe CLI `stripe listen --forward-to localhost:3000/stripe/webhook`.
+
+### Dice equip reliability · 2026-05-31 (+0200)
+
+- **Bug** — `setPlayerSelectedDice` used non-transactional read/merge `setPlayer`, which could race with a just-finished gem unlock and return **500** / `DICE_NOT_UNLOCKED` when equipping immediately after purchase.
+- **Fix** — `setPlayerSelectedDice` runs inside `withDocumentTransaction` with `FOR UPDATE` (same pattern as unlock); `PlayerNotFoundError` mapped to **404** in `diceController`. After a gem unlock in `DiceShopOverlay`, client calls `selectDice` so the new skin is equipped without a separate profile step.
+- **Ops note** — Vite `ECONNRESET` then `ECONNREFUSED` on `/room/*` means the Node API on port **3000** stopped (crash or manual stop), not a dice-specific proxy bug — restart `npm run dev` in `server/` and retry.

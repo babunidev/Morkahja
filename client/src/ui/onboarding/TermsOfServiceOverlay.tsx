@@ -209,22 +209,23 @@ export function TermsOfServiceOverlay({
             <TermsParagraph>Morkahja is free to play.</TermsParagraph>
             <TermsList
               items={[
-                'No microtransactions exist.',
-                'No in-game currency is purchasable.',
-                'No paid advantages or randomized monetization systems are included.',
+                'Optional one-time purchases are available for expansions and cosmetic dice skins.',
+                'In-game currency (gems) is not purchasable and can only be earned through gameplay.',
+                'No paid advantages, loot boxes, or randomized monetization systems are included.',
                 'Progression is earned entirely through gameplay, except where expansions grant access to additional content.',
               ]}
             />
           </TermsSection>
 
           <TermsSection heading="5. Expansions and Paid Access">
-            <TermsParagraph>Certain optional expansions may be available for purchase.</TermsParagraph>
+            <TermsParagraph>Certain optional expansions and cosmetic dice skins may be available for purchase, either with earned in-game gems or with real money.</TermsParagraph>
             <TermsList
               items={[
                 'Expansions unlock access to additional content, regions, or systems.',
+                'Dice skins are purely cosmetic and do not affect gameplay or odds.',
                 'Purchases do not grant competitive advantage or gameplay power over other players.',
                 'There are no loot boxes, gambling mechanics, or randomized paid rewards.',
-                'Expansions are permanently tied to the player’s account key.',
+                'Unlocks are permanently tied to the player’s account key.',
                 'Purchases are final and non-refundable.',
                 'Expansions may be updated, reworked, merged, or restructured over time, while access rights are preserved where technically feasible.',
               ]}
@@ -352,15 +353,15 @@ export function TermsOfServiceOverlay({
             />
           </TermsSection>
 
-          <TermsSection heading="16. Paid Expansions">
-            <TermsParagraph>Morkahja includes optional paid expansions.</TermsParagraph>
+          <TermsSection heading="16. Paid Expansions and Cosmetics">
+            <TermsParagraph>Morkahja includes optional paid expansions and cosmetic dice skins.</TermsParagraph>
             <TermsList
               items={[
-                'Expansions unlock additional content and access rights.',
+                'Expansions unlock additional content and access rights; dice skins are cosmetic only.',
                 'No gameplay advantages are granted through payment.',
-                'No microtransactions, currencies, or consumable purchases exist.',
+                'Purchasable in-game currency and consumable microtransactions do not exist; gems are earned through play.',
                 'Purchases are final and non-refundable.',
-                'Expansions remain tied to the player’s account key and cannot be transferred.',
+                'Unlocks remain tied to the player’s account key and cannot be transferred.',
                 'Content may evolve over time while access rights are preserved where possible.',
               ]}
             />

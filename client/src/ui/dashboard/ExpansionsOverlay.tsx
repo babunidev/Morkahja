@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { fetchPlayer, unlockExpansion } from '../../api/http.js';
+import { createCheckoutSession, fetchPlayer, unlockExpansion } from '../../api/http.js';
+import { formatEurCents } from '../commerce/formatPrice.js';
 import encountersData from '../../data/game/encountersdata.json';
 import expansionData from '../../data/game/expansiondata.json';
 import {
@@ -22,6 +23,7 @@ interface ExpansionRecord {
   mExtensioActive: boolean;
   mExtensioCollectionImage: string;
   mExtensioCost: number;
+  mExtensioPriceEurCents?: number;
   mExtensioHeaderImage: string;
   mExtensioID: number;
   mExtensioName: string;
@@ -132,6 +134,20 @@ function unlockErrorMessage(error: unknown): string {
   }
 
   return message;
+}
+
+function checkoutErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : 'Purchase failed';
+
+  if (message.includes('PURCHASES_UNAVAILABLE')) {
+    return 'Card purchases are not available right now.';
+  }
+
+  if (message.includes('UNKNOWN_SKU')) {
+    return 'This item is not available for purchase.';
+  }
+
+  return 'Could not start checkout. Please try again.';
 }
 
 const backdropStyle: CSSProperties = {
@@ -452,10 +468,12 @@ function ExpansionCard({
   previewEncounters,
   previewOpen,
   unlockPending,
+  checkoutPending,
   unlocked,
   onPreview,
   onToggle,
   onUnlock,
+  onCheckout,
 }: {
   expansion: ExpansionRecord;
   encounterPool: EncounterPreviewEntry[];
@@ -464,15 +482,21 @@ function ExpansionCard({
   previewEncounters: EncounterPreviewEntry[] | null;
   previewOpen: boolean;
   unlockPending: boolean;
+  checkoutPending: boolean;
   unlocked: boolean;
   onPreview: () => void;
   onToggle: () => void;
   onUnlock: () => void;
+  onCheckout: () => void;
 }) {
   const headerId = `expansion-${expansion.mExtensioID}-header`;
   const bodyId = `expansion-${expansion.mExtensioID}-body`;
   const canAfford = gemBalance >= expansion.mExtensioCost;
   const unlockEnabled = expansion.mExtensioActive && !unlocked && canAfford && !unlockPending;
+  const priceLabel = typeof expansion.mExtensioPriceEurCents === 'number'
+    ? formatEurCents(expansion.mExtensioPriceEurCents)
+    : null;
+  const checkoutEnabled = priceLabel !== null && !checkoutPending && !unlockPending;
 
   return (
     <article
@@ -594,13 +618,31 @@ function ExpansionCard({
                 </span>
               </PanelButton>
               <PanelButton
-                aria-label={`Unlock ${expansion.mExtensioName} with purchase`}
-                disabled
+                aria-label={
+                  priceLabel
+                    ? `Unlock ${expansion.mExtensioName} for ${priceLabel}`
+                    : `Unlock ${expansion.mExtensioName} with purchase`
+                }
+                disabled={!checkoutEnabled}
+                onClick={(event) => {
+                  event.stopPropagation();
+
+                  if (!checkoutEnabled) {
+                    return;
+                  }
+
+                  playSfx(DEFAULT_BUTTON_SOUND);
+                  onCheckout();
+                }}
                 pressKey={`expansion-unlock-cash-${expansion.mExtensioID}`}
                 style={expansionPanelButtonStyle}
-                visualStyle={expansionButtonDisabledVisualStyle}
+                visualStyle={
+                  checkoutEnabled
+                    ? expansionButtonVisualStyle
+                    : expansionButtonDisabledVisualStyle
+                }
               >
-                Unlock $
+                {priceLabel ?? 'Unlock $'}
               </PanelButton>
             </div>
           ) : null}
@@ -624,6 +666,7 @@ export function ExpansionsOverlay({
   const [yellowRedGems, setYellowRedGems] = useState(0);
   const [unlockedExpansionIds, setUnlockedExpansionIds] = useState<number[]>([0]);
   const [unlockPending, setUnlockPending] = useState(false);
+  const [checkoutPending, setCheckoutPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const expansions = useMemo(() => loadExpansionList(), []);
@@ -658,6 +701,7 @@ export function ExpansionsOverlay({
       setExpandedIds(new Set());
       setPreviewSamples(null);
       setUnlockPending(false);
+      setCheckoutPending(false);
       setStatusMessage(null);
       setLoadError(null);
       setDiceShopOpen(false);
@@ -745,6 +789,23 @@ export function ExpansionsOverlay({
     }
   }
 
+  async function handleCheckout(expansionId: number): Promise<void> {
+    if (checkoutPending) {
+      return;
+    }
+
+    setCheckoutPending(true);
+    setStatusMessage(null);
+
+    try {
+      const { url } = await createCheckoutSession(`expansion_${expansionId}`);
+      window.location.assign(url);
+    } catch (error) {
+      setStatusMessage(checkoutErrorMessage(error));
+      setCheckoutPending(false);
+    }
+  }
+
   if (!open) {
     return null;
   }
@@ -802,6 +863,10 @@ export function ExpansionsOverlay({
                 onUnlock={() => {
                   void handleUnlock(expansion.mExtensioID, expansion.mExtensioName);
                 }}
+                onCheckout={() => {
+                  void handleCheckout(expansion.mExtensioID);
+                }}
+                checkoutPending={checkoutPending}
                 previewEncounters={
                   previewSamples?.expansionId === expansion.mExtensioID
                     ? previewSamples.encounters

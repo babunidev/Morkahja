@@ -350,6 +350,56 @@ export async function unlockPlayerExpansion(
   };
 }
 
+/**
+ * Grant an expansion without spending gems (used by real-money purchases).
+ * Idempotent: granting an already-unlocked expansion is a no-op.
+ */
+export async function grantPlayerExpansion(
+  playerId: string,
+  expansionId: number,
+): Promise<{
+  unlockedExpansions: number[];
+  expansionId: number;
+  alreadyUnlocked: boolean;
+}> {
+  if (!Number.isInteger(expansionId) || expansionId <= 0) {
+    throw new Error(`Invalid expansion id: ${expansionId}`);
+  }
+
+  const expansion = getExpansionById(expansionId);
+
+  if (!expansion) {
+    throw new ExpansionNotFoundError();
+  }
+
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    if (!player) {
+      throw new Error(`Player not found: ${playerId}`);
+    }
+
+    const baseUnlocked = normalizeUnlockedExpansions(player.unlockedExpansions);
+    const unlockedExpansions = baseUnlocked.length > 0 ? baseUnlocked : DEFAULT_UNLOCKED_EXPANSIONS;
+
+    if (unlockedExpansions.includes(expansionId)) {
+      return { unlockedExpansions, expansionId, alreadyUnlocked: true };
+    }
+
+    const nextUnlocked = uniqueSorted([...unlockedExpansions, expansionId]);
+
+    await transaction.setPlayer(
+      playerId,
+      {
+        unlockedExpansions: nextUnlocked,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+
+    return { unlockedExpansions: nextUnlocked, expansionId, alreadyUnlocked: false };
+  });
+}
+
 export async function migrateAvatarUnlockedExpansionsToPlayer(
   playerId: string,
   avatarId: string,

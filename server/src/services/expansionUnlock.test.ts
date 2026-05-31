@@ -5,7 +5,7 @@ const winterValley = getExpansionById(1003);
 
 assert.ok(winterValley, 'winter valley expansion should exist');
 assert.equal(winterValley.mExtensioActive, true);
-assert.equal(winterValley.mExtensioCost, 55);
+assert.equal(winterValley.mExtensioCost, 50);
 
 const inactive = getExpansionById(1002);
 

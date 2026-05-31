@@ -8,7 +8,8 @@
     "1001": {
       "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_keldor",
-      "mExtensioCost": 77,
+      "mExtensioCost": 75,
+      "mExtensioPriceEurCents": 399,
       "mExtensioHeaderImage": "expansion_keldor",
       "mExtensioID": 1001,
       "mExtensioName": "The cursed forest of Keldor",
@@ -20,7 +21,8 @@
     "1002": {
       "mExtensioActive": false,
       "mExtensioCollectionImage": "expansion_urcogor",
-      "mExtensioCost": 66,
+      "mExtensioCost": 60,
+      "mExtensioPriceEurCents": 299,
       "mExtensioHeaderImage": "expansion_urcogor",
       "mExtensioID": 1002,
       "mExtensioName": "Urcogor Ravage",
@@ -32,7 +34,8 @@
     "1003": {
       "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_everwinter",
-      "mExtensioCost": 55,
+      "mExtensioCost": 50,
+      "mExtensioPriceEurCents": 299,
       "mExtensioHeaderImage": "expansion_everwinter",
       "mExtensioID": 1003,
       "mExtensioName": "Everwinter Valley",
@@ -45,6 +48,7 @@
       "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_aetherion",
       "mExtensioCost": 25,
+      "mExtensioPriceEurCents": 199,
       "mExtensioHeaderImage": "expansion_aetherion",
       "mExtensioID": 1004,
       "mExtensioName": "Aetherion",

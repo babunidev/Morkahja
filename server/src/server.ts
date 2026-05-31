@@ -14,6 +14,10 @@ import {
   unlockPlayerDiceController,
 } from './controllers/diceController.js';
 import { unlockPlayerExpansionController } from './controllers/expansionController.js';
+import {
+  createCheckoutSessionController,
+  stripeWebhookController,
+} from './controllers/checkoutController.js';
 import { readPlayerDiceState } from './services/diceService.js';
 import {
   addPlayerFriendController,
@@ -84,6 +88,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   next();
 });
+
+// Stripe webhook needs the raw request body for signature verification, so it
+// must be registered before the JSON body parser and before auth middleware.
+app.post(
+  '/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  stripeWebhookController,
+);
+
 app.use(express.json({ limit: '32kb' }));
 
 function authRateLimitKey(req: Request): string {
@@ -216,6 +229,7 @@ app.post('/player/donate', donatePlayerGemsController);
 app.post('/player/expansions/unlock', unlockPlayerExpansionController);
 app.post('/player/dice/unlock', unlockPlayerDiceController);
 app.post('/player/dice/select', selectPlayerDiceController);
+app.post('/player/checkout/session', createCheckoutSessionController);
 app.get('/player/friends', listPlayerFriendsController);
 app.post('/player/friends', addPlayerFriendController);
 app.get('/player/friends/:friendId/achievements', getFriendAchievementsController);

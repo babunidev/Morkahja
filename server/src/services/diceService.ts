@@ -8,7 +8,7 @@ import {
   normalizeUnlockedDiceIds,
 } from '@shared/diceCatalog.js';
 import type { PlayerDocument } from '../types/player.js';
-import { getPlayer, setPlayer, withDocumentTransaction } from '../db/postgresDocumentStore.js';
+import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 import { loadPlayer, readYellowRedGemBalance } from './playerService.js';
 
 export class DiceNotFoundError extends Error {
@@ -36,6 +36,13 @@ export class DiceNotUnlockedError extends Error {
   constructor() {
     super('Dice skin is not unlocked');
     this.name = 'DiceNotUnlockedError';
+  }
+}
+
+export class PlayerNotFoundError extends Error {
+  constructor() {
+    super('Player not found');
+    this.name = 'PlayerNotFoundError';
   }
 }
 
@@ -83,7 +90,7 @@ export async function unlockPlayerDice(
     const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
 
     if (!player) {
-      throw new Error(`Player not found: ${playerId}`);
+      throw new PlayerNotFoundError();
     }
 
     const unlockedDiceIds = normalizeUnlockedDiceIds(player.unlockedDiceIds);
@@ -126,6 +133,54 @@ export async function unlockPlayerDice(
   };
 }
 
+/**
+ * Grant a dice skin without spending gems (used by real-money purchases).
+ * Idempotent: granting an already-unlocked dice is a no-op.
+ */
+export async function grantPlayerDice(
+  playerId: string,
+  diceId: string,
+): Promise<{
+  unlockedDiceIds: DiceId[];
+  diceId: DiceId;
+  alreadyUnlocked: boolean;
+}> {
+  if (!isDiceId(diceId)) {
+    throw new DiceNotFoundError();
+  }
+
+  if (diceId === DEFAULT_DICE_ID) {
+    return { unlockedDiceIds: [...DEFAULT_UNLOCKED_DICE_IDS], diceId, alreadyUnlocked: true };
+  }
+
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+
+    if (!player) {
+      throw new PlayerNotFoundError();
+    }
+
+    const unlockedDiceIds = normalizeUnlockedDiceIds(player.unlockedDiceIds);
+
+    if (unlockedDiceIds.includes(diceId)) {
+      return { unlockedDiceIds, diceId, alreadyUnlocked: true };
+    }
+
+    const nextUnlocked = normalizeUnlockedDiceIds([...unlockedDiceIds, diceId]);
+
+    await transaction.setPlayer(
+      playerId,
+      {
+        unlockedDiceIds: nextUnlocked,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+
+    return { unlockedDiceIds: nextUnlocked, diceId, alreadyUnlocked: false };
+  });
+}
+
 export async function setPlayerSelectedDice(
   playerId: string,
   diceId: string,
@@ -134,29 +189,31 @@ export async function setPlayerSelectedDice(
     throw new DiceNotFoundError();
   }
 
-  const player = await getPlayer<Partial<PlayerDocument>>(playerId);
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
 
-  if (!player) {
-    throw new Error(`Player not found: ${playerId}`);
-  }
+    if (!player) {
+      throw new PlayerNotFoundError();
+    }
 
-  const unlockedDiceIds = normalizeUnlockedDiceIds(player.unlockedDiceIds);
+    const unlockedDiceIds = normalizeUnlockedDiceIds(player.unlockedDiceIds);
 
-  if (!unlockedDiceIds.includes(diceId)) {
-    throw new DiceNotUnlockedError();
-  }
+    if (!unlockedDiceIds.includes(diceId)) {
+      throw new DiceNotUnlockedError();
+    }
 
-  await setPlayer(
-    playerId,
-    {
+    await transaction.setPlayer(
+      playerId,
+      {
+        selectedDiceId: diceId,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+
+    return {
+      unlockedDiceIds,
       selectedDiceId: diceId,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
-
-  return {
-    unlockedDiceIds,
-    selectedDiceId: diceId,
-  };
+    };
+  });
 }
