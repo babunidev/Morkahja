@@ -79,6 +79,7 @@ export function EncounterImageBlock({
   avatarId,
   continuePending,
   continueGlowClass,
+  continueWaitingAfterPress = false,
   deferRewardDismiss = false,
   encounter,
   loreGemCollected = false,
@@ -89,7 +90,6 @@ export function EncounterImageBlock({
   inventoryOpen,
   localContinuePressed = false,
   loreOpen,
-  multiplayerContinueWaiting = false,
   onContinue,
   onResultsVisibleChange,
   resultBlockRef,
@@ -103,6 +103,7 @@ export function EncounterImageBlock({
   avatarId: string;
   continuePending: boolean;
   continueGlowClass?: string;
+  continueWaitingAfterPress?: boolean;
   deferRewardDismiss?: boolean;
   encounter: EncounterSnapshot;
   loreGemCollected?: boolean;
@@ -113,7 +114,6 @@ export function EncounterImageBlock({
   inventoryOpen: boolean;
   localContinuePressed?: boolean;
   loreOpen: boolean;
-  multiplayerContinueWaiting?: boolean;
   onContinue: (
     action: EncounterAction,
     roll: number | null,
@@ -311,6 +311,7 @@ export function EncounterImageBlock({
       ) : null}
       <ResultBlock
         continueGlowClass={continueGlowClass}
+        continueWaitingAfterPress={continueWaitingAfterPress}
         deferRewardDismiss={deferRewardDismiss}
         disabled={continuePending || (witnessMode && roomState === 'system_event')}
         showLoreGemReward={showLoreGemReward}
@@ -319,7 +320,6 @@ export function EncounterImageBlock({
         hidden={loreOpen || inventoryOpen || skillbookOpen}
         inventory={inventory}
         localContinuePressed={localContinuePressed}
-        multiplayerContinueWaiting={multiplayerContinueWaiting}
         onContinue={() => {
           void handleContinue();
         }}

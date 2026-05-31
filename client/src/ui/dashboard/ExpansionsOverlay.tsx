@@ -7,6 +7,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
+import { PanelButton } from '../common/PanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
@@ -23,7 +24,6 @@ interface ExpansionRecord {
   mExtensioReward: number;
   mExtensioSummaryText: string;
   mExtensioText: string;
-  mExtensioUnlockButton: string;
 }
 
 function expansionAsset(assetName: string): string {
@@ -286,26 +286,45 @@ const bodyTextStyle: CSSProperties = {
   lineHeight: 1.55,
 };
 
-const unlockButtonStyle: CSSProperties = {
-  width: 'min(100%, 220px)',
-  justifySelf: 'center',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
-
-const unlockButtonDisabledStyle: CSSProperties = {
-  ...unlockButtonStyle,
-  cursor: 'default',
-  opacity: 0.45,
-};
-
-const unlockButtonImageStyle: CSSProperties = {
-  display: 'block',
+const unlockActionsRowStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 10,
   width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5))',
+};
+
+const expansionPanelButtonStyle: CSSProperties = {
+  width: '100%',
+};
+
+const expansionButtonVisualStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  minHeight: 42,
+  padding: '8px 10px',
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 9,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.95rem',
+  letterSpacing: '0.04em',
+  lineHeight: 1.2,
+  textAlign: 'center',
+};
+
+const expansionButtonDisabledVisualStyle: CSSProperties = {
+  ...expansionButtonVisualStyle,
+  opacity: 0.42,
+};
+
+const unlockButtonLabelStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
 };
 
 function ExpansionCard({
@@ -378,29 +397,49 @@ function ExpansionCard({
         <div aria-labelledby={headerId} id={bodyId} style={cardBodyStyle}>
           <p style={bodyTextStyle}>{expansion.mExtensioText}</p>
           {expansion.mExtensioActive && !unlocked ? (
-            <button
-              aria-label={`Unlock ${expansion.mExtensioName} for ${expansion.mExtensioCost} gems`}
-              disabled={!unlockEnabled}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (!unlockEnabled) {
-                  return;
-                }
+            <div style={unlockActionsRowStyle}>
+              <PanelButton
+                aria-label={`Unlock ${expansion.mExtensioName} for ${expansion.mExtensioCost} gems`}
+                disabled={!unlockEnabled}
+                onClick={(event) => {
+                  event.stopPropagation();
 
-                playSfx(DEFAULT_BUTTON_SOUND);
-                onUnlock();
-              }}
-              style={unlockEnabled ? unlockButtonStyle : unlockButtonDisabledStyle}
-              type="button"
-            >
-              <img
-                alt=""
-                aria-hidden="true"
-                {...protectedImageProps}
-                src={expansionAsset(expansion.mExtensioUnlockButton)}
-                style={unlockButtonImageStyle}
-              />
-            </button>
+                  if (!unlockEnabled) {
+                    return;
+                  }
+
+                  playSfx(DEFAULT_BUTTON_SOUND);
+                  onUnlock();
+                }}
+                pressKey={`expansion-unlock-gems-${expansion.mExtensioID}`}
+                style={expansionPanelButtonStyle}
+                visualStyle={
+                  unlockEnabled
+                    ? expansionButtonVisualStyle
+                    : expansionButtonDisabledVisualStyle
+                }
+              >
+                <span style={unlockButtonLabelStyle}>
+                  Unlock
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    {...protectedImageProps}
+                    src={GEMS_ICON}
+                    style={gemsIconSmallStyle}
+                  />
+                </span>
+              </PanelButton>
+              <PanelButton
+                aria-label={`Unlock ${expansion.mExtensioName} with purchase`}
+                disabled
+                pressKey={`expansion-unlock-cash-${expansion.mExtensioID}`}
+                style={expansionPanelButtonStyle}
+                visualStyle={expansionButtonDisabledVisualStyle}
+              >
+                Unlock $
+              </PanelButton>
+            </div>
           ) : null}
         </div>
       ) : null}

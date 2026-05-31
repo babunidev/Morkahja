@@ -33,10 +33,10 @@ import type { ResultBlockHandle } from './blocks/ResultBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
 import GameMessageToast from './GameMessageToast.js';
 import {
-  continueReadinessClass,
+  continueGlowClassForRoom,
   isPartySession,
   localContinuePressed,
-  multiplayerContinueWaiting,
+  localWaitingForRoomAdvance,
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
 
@@ -297,7 +297,8 @@ export function GameEnvironment({
           && currentRoom.participants.some(
             (participant) => participant.isLocal && (
               participant.preparedResult !== undefined ||
-              participant.resolutionSummary !== undefined
+              participant.resolutionSummary !== undefined ||
+              participant.continuePressed === true
             ),
           ),
         );
@@ -405,13 +406,6 @@ export function GameEnvironment({
       }
 
       const nextRoom = await submitRoomContinue(avatarRef.current.id);
-      const advancedFromWaiting = currentRoom.roomState === 'waiting_continue'
-        && nextRoom.roomState === 'active_encounter';
-
-      if (advancedFromWaiting) {
-        await resultBlockRef.current?.playDismissAnimations().catch(() => undefined);
-      }
-
       applyRoomSnapshot(
         nextRoom,
         setRoom,
@@ -638,9 +632,9 @@ export function GameEnvironment({
     localParticipant?.preparedResult !== undefined
   );
   const deferRewardDismiss = shouldDeferRewardDismiss(room, resultRollVisible);
-  const partyContinueWaiting = multiplayerContinueWaiting(room);
   const localHasContinuePressed = room ? localContinuePressed(room) : false;
-  const continueGlow = continueReadinessClass(room?.continueReadiness);
+  const continueGlow = continueGlowClassForRoom(room);
+  const continueWaitingAfterPress = localWaitingForRoomAdvance(room);
   const loreGemCollected = localParticipant?.loreGemCollected === true;
   const showLoreGemReward = loreGemCollected && encounter.loreGemOffer?.eligible === true;
 
@@ -701,6 +695,7 @@ export function GameEnvironment({
                 avatarId={avatar.id}
                 continueGlowClass={continueGlow}
                 continuePending={continuePending || deathPending || waitingForResolution}
+                continueWaitingAfterPress={continueWaitingAfterPress}
                 deferRewardDismiss={deferRewardDismiss}
                 encounter={encounter}
                 loreGemCollected={loreGemCollected}
@@ -711,7 +706,6 @@ export function GameEnvironment({
                 inventoryOpen={inventoryOpen}
                 localContinuePressed={localHasContinuePressed}
                 loreOpen={loreOpen}
-                multiplayerContinueWaiting={partyContinueWaiting}
                 onContinue={handleContinueEncounter}
                 onResultsVisibleChange={setResultRollVisible}
                 resultBlockRef={resultBlockRef}

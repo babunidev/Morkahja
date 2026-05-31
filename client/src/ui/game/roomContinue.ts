@@ -94,6 +94,21 @@ export function continueReadinessClass(
   return undefined;
 }
 
+/** Forest-green glow when every continue target has pressed Continue. */
+export function continueGlowClassForRoom(
+  room: EncounterRoomSnapshotDto | null | undefined,
+): string | undefined {
+  if (!room || (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing')) {
+    return undefined;
+  }
+
+  if (canAdvanceRoomHint(room)) {
+    return 'morkahja-continue-glow-ready';
+  }
+
+  return continueReadinessClass(room.continueReadiness);
+}
+
 /** UI-only mirror of server `canAdvanceRoom` — not authoritative. */
 export function canAdvanceRoomHint(room: EncounterRoomSnapshotDto): boolean {
   const targets = continueTargets(room);
@@ -101,4 +116,15 @@ export function canAdvanceRoomHint(room: EncounterRoomSnapshotDto): boolean {
     return false;
   }
   return targets.every((participant) => participant.continuePressed);
+}
+
+/** Local player pressed Continue and the room has not advanced yet. */
+export function localWaitingForRoomAdvance(
+  room: EncounterRoomSnapshotDto | null | undefined,
+): boolean {
+  if (!room || !localContinuePressed(room)) {
+    return false;
+  }
+
+  return room.roomState === 'waiting_continue' || room.roomState === 'advancing';
 }

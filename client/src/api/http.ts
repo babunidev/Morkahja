@@ -431,7 +431,7 @@ export async function createNextEncounter(
   });
 }
 
-const ROOM_POLL_MS = 2500;
+const ROOM_POLL_MS = 3000;
 
 export { ROOM_POLL_MS };
 

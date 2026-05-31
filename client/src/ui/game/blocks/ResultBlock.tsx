@@ -432,6 +432,7 @@ export type ResultBlockHandle = {
 export const ResultBlock = forwardRef(function ResultBlock(
   {
     continueGlowClass,
+    continueWaitingAfterPress = false,
     deferRewardDismiss = false,
     disabled = false,
     showLoreGemReward = false,
@@ -440,7 +441,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     hidden = false,
     inventory,
     localContinuePressed = false,
-    multiplayerContinueWaiting = false,
     onContinue,
     prosperityRewardId,
     resolutionAction = null,
@@ -449,6 +449,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     usedSolutionId = null,
   }: {
     continueGlowClass?: string;
+    continueWaitingAfterPress?: boolean;
     deferRewardDismiss?: boolean;
     disabled?: boolean;
     showLoreGemReward?: boolean;
@@ -457,7 +458,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     hidden?: boolean;
     inventory?: AvatarInventory;
     localContinuePressed?: boolean;
-    multiplayerContinueWaiting?: boolean;
     onContinue: () => void | Promise<void>;
     prosperityRewardId?: number | null;
     resolutionAction?: EncounterAction | null;
@@ -477,6 +477,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
   const [continueInteractive, setContinueInteractive] = useState(false);
   const [continueEnableRattle, setContinueEnableRattle] = useState(false);
+  const [continuePressAnimationDone, setContinuePressAnimationDone] = useState(false);
+  const [continueFloatingAfterPress, setContinueFloatingAfterPress] = useState(false);
   const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
   const [loreGemActivating, setLoreGemActivating] = useState(false);
   const blockRef = useRef<HTMLDivElement | null>(null);
@@ -523,6 +525,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return visibleRewards;
   }, []);
 
+  const showContinueFloat = continuePressAnimationDone
+    && (continueFloatingAfterPress || continueWaitingAfterPress)
+    && !continueRevealPlaying
+    && !continueEnableRattle
+    && !continueBusy;
+
   const lossesKey = useMemo(
     () => losses.map((loss) => `${loss.solution.mSolutionID}:${loss.quantity}`).join('|'),
     [losses],
@@ -537,6 +545,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setContinueRevealPlaying(false);
     setContinueInteractive(false);
     setContinueEnableRattle(false);
+    setContinuePressAnimationDone(false);
+    setContinueFloatingAfterPress(false);
     setLoreGemPopupVisible(false);
     setLoreGemActivating(false);
     rewardButtonRefs.current.clear();
@@ -565,6 +575,19 @@ export const ResultBlock = forwardRef(function ResultBlock(
       window.clearTimeout(popupTimer);
     };
   }, [hidden, roll, showLoreGemReward]);
+
+  useEffect(() => {
+    if (localContinuePressed && continueWaitingAfterPress) {
+      setContinuePressAnimationDone(true);
+      setContinueFloatingAfterPress(true);
+    }
+  }, [continueWaitingAfterPress, localContinuePressed]);
+
+  useEffect(() => {
+    if (!continueWaitingAfterPress && !localContinuePressed) {
+      setContinueFloatingAfterPress(false);
+    }
+  }, [continueWaitingAfterPress, localContinuePressed]);
 
   useEffect(() => {
     if (roll === null) {
@@ -835,20 +858,15 @@ export const ResultBlock = forwardRef(function ResultBlock(
     playSfx(CONTINUE_SOUND);
     hideItemTooltip();
 
-    if (deferRewardDismiss) {
-      try {
-        await Promise.resolve(onContinue());
-      } catch {
-        // Parent logs failures; keep results visible for retry.
-      }
-      return;
-    }
-
     setContinueBusy(true);
 
     try {
       await playDismissAnimations();
+      setContinuePressAnimationDone(true);
+      setContinueFloatingAfterPress(true);
       await Promise.resolve(onContinue());
+    } catch {
+      // Parent logs failures; keep results visible for retry.
     } finally {
       setContinueBusy(false);
     }
@@ -1164,18 +1182,18 @@ export const ResultBlock = forwardRef(function ResultBlock(
               : continueInteractive || continueEnableRattle
                 ? continueSettledStyle
                 : continueHiddenStyle),
-            ...(continueBusy && !multiplayerContinueWaiting ? continueAnimatingStyle : {}),
-            ...(multiplayerContinueWaiting ? { animation: undefined } : {}),
+            ...(continueBusy && !showContinueFloat ? continueAnimatingStyle : {}),
+            ...(showContinueFloat ? { animation: undefined } : {}),
           }}
         >
           <span
             className={[
-              multiplayerContinueWaiting ? 'morkahja-continue-waiting-party' : undefined,
+              showContinueFloat ? 'morkahja-continue-float' : undefined,
               continueGlowClass,
             ].filter(Boolean).join(' ') || undefined}
             style={{
               display: 'block',
-              ...(continueEnableRattle && !multiplayerContinueWaiting
+              ...(continueEnableRattle && !showContinueFloat
                 ? continueEnableRattleStyle
                 : {}),
             }}

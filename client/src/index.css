@@ -278,7 +278,8 @@ button:focus-visible {
   animation: morkahja-continue-glow-gathering 2.1s ease-in-out infinite;
 }
 
-.morkahja-continue-glow-awaiting-you {
+.morkahja-continue-glow-awaiting-you,
+.morkahja-continue-glow-ready {
   animation: morkahja-continue-glow-awaiting-you 2.1s ease-in-out infinite;
 }
 
@@ -658,7 +659,8 @@ button:focus-visible {
   }
 }
 
-.morkahja-continue-waiting-party {
+.morkahja-continue-waiting-party,
+.morkahja-continue-float {
   animation: morkahja-continue-leaf-float 3.8s ease-in-out infinite;
   transform-origin: 50% 50%;
 }
