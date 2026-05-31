@@ -2684,7 +2684,7 @@
     "mEncounterExpansion": 1003,
     "mEncounterFollow": 0,
     "mEncounterID": 20131,
-    "mEncounterImageName": "20131_trick_cave",
+    "mEncounterImageName": "everwinter_cave",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -2695,7 +2695,7 @@
     "mEncounterSolutiuonTypeB": 6,
     "mEncounterSolutiuonTypeC": 5,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "Massive stalactites like icy fangs glisten overhead, while frozen sculptures rise from the glittering frost like sentinels of a long-lost era. Prehistoric fossils, perfectly preserved, lie encased within clear ice walls, appearing as frozen mementoes of ancient creatures. Mysterious runes, scrawled in a forgotten script, etch stories of yore into the frost-rimed cavern walls, glowing with a faint, eerie light. This is no ordinary cave, but a timeless vault where nature’s artwork and ancient treasures coexist, shrouded in an eternal winter's chill. The frost-laden air fills your lungs with a biting cold, yet the prospect of undiscovered treasures and mysteries buried deep within the ice sparks an irresistible warmth of anticipation.",
+    "mEncounterText": "Massive stalactites like icy fangs glisten overhead, while frozen sculptures rise from the glittering frost like sentinels of a long-lost era. Prehistoric fossils, perfectly preserved, lie encased within clear ice walls, appearing as frozen mementoes of ancient creatures. Mysterious runes, scrawled in a forgotten script, etch stories of yore into the frost-rimed cavern walls, glowing with a faint, eerie light. This is no ordinary cave, but a timeless vault where nature’s artwork and ancient treasures coexist, shrouded in an eternal winter's chill. The frost-laden air fills ones lungs with a biting cold, yet the prospect of undiscovered treasures and mysteries buried deep within the ice sparks an irresistible warmth of anticipation.",
     "mEncounterTitle": "Everwinter Cave",
     "mEncounterType": 2
   },
