@@ -7,51 +7,51 @@
   "expansions": {
     "1001": {
       "mExtensioActive": true,
-      "mExtensioCollectionImage": "im_collection_expansion_cursed_forest",
+      "mExtensioCollectionImage": "expansion_keldor",
       "mExtensioCost": 77,
-      "mExtensioHeaderImage": "im_header_expansion_cursed_forest",
+      "mExtensioHeaderImage": "expansion_keldor",
       "mExtensioID": 1001,
       "mExtensioName": "The cursed forest of Keldor",
       "mExtensioReward": 30,
       "mExtensioSummaryText": "Unlock 40+ unique encounters, items and skills!",
       "mExtensioText": "The cursed forest of Keldor is a place of fear and mystery, shrouded in darkness and surrounded by remote mountains. It is said to be a hub of dark magic and ancient horrors, with twisted trees and bizarre wildlife that seem to come straight out of nightmares. The forest is blanketed by an ever-present, dense fog that obscures vision and permeates the air with a noxious odour. The cursed magic of the forest is believed to be slowly spreading, tainting everything in its path. Brave adventurers who venture into the forest may never return, and those who do come back with tales of unspeakable terror, forever changed by the horrors they have faced. The forest's shadows conceal strange and dangerous creatures that stalk their prey and prey upon the unwary. Only the bravest and most foolhardy dare to venture into the Cursed Forest, and they do so at their own peril.",
-      "mExtensioUnlockButton": "im_unlock_expansion_cursed_forest"
+      "mExtensioUnlockButton": "expansion_keldor"
     },
     "1002": {
       "mExtensioActive": false,
-      "mExtensioCollectionImage": "im_collection_expansion_urcogor_ravage",
+      "mExtensioCollectionImage": "expansion_urcogor",
       "mExtensioCost": 66,
-      "mExtensioHeaderImage": "im_header_expansion_urcogor_ravage",
+      "mExtensioHeaderImage": "expansion_urcogor",
       "mExtensioID": 1002,
       "mExtensioName": "Urcogor Ravage",
       "mExtensioReward": 31,
       "mExtensioSummaryText": "Unlock 30+ unique encounters, items and skills!",
       "mExtensioText": "The Urcogor Ravage is a recurring event that strikes the land of Morkahja from time to time. During these periods of chaos and unrest, the Urco race bands together with Gobbls and Ogrus to raid settlements and pillage the land. The ravages can last for weeks or even months, leaving devastation in their wake. Despite efforts to prepare for the Urcogor Ravage, the effects of these attacks are still devastating for those caught in their path. As the Urcogor Ravage continues to repeat itself over time, the people of Morkahja must remain vigilant and work together to defend themselves against these ruthless raiders.",
-      "mExtensioUnlockButton": "im_unlock_expansion_urcogor_ravage"
+      "mExtensioUnlockButton": "expansion_urcogor"
     },
     "1003": {
       "mExtensioActive": true,
-      "mExtensioCollectionImage": "im_collection_expansion_winter_valley",
+      "mExtensioCollectionImage": "expansion_everwinter",
       "mExtensioCost": 55,
-      "mExtensioHeaderImage": "im_header_expansion_winter_valley",
+      "mExtensioHeaderImage": "expansion_everwinter",
       "mExtensioID": 1003,
       "mExtensioName": "Everwinter Valley",
       "mExtensioReward": 15,
       "mExtensioSummaryText": "Unlock 20+ unique encounters, items and skills!",
       "mExtensioText": "Everwinter Valley, a permafrost valley high up in the Frostwind Mountains, is a place of breathtaking beauty and treacherous danger. The valley is blanketed in snow and ice all year round, with frigid winds that cut through even the warmest clothing. But despite the cold, the valley teems with life, from fierce snow wolves to elusive ice sprites. The valley is also home to a number of ancient ruins, some of which are said to hold powerful artefacts of the long-lost Frostweaver civilization. Adventurers brave enough to explore the valley must contend with the harsh climate, dangerous creatures, and the mysteries of the Frostweavers. The valley holds great potential for wealth and power, but only for those who are strong enough to survive its challenges.",
-      "mExtensioUnlockButton": "im_unlock_expansion_winter_valley"
+      "mExtensioUnlockButton": "expansion_everwinter"
     },
     "1004": {
       "mExtensioActive": true,
-      "mExtensioCollectionImage": "im_collection_expansion_aetherion",
+      "mExtensioCollectionImage": "expansion_aetherion",
       "mExtensioCost": 25,
-      "mExtensioHeaderImage": "im_header_expansion_aetherion",
+      "mExtensioHeaderImage": "expansion_aetherion",
       "mExtensioID": 1004,
       "mExtensioName": "Aetherion",
       "mExtensioReward": 15,
       "mExtensioSummaryText": "Unlock access to the City!",
       "mExtensioText": "Aetherion, the beating heart of Morkahja, emerges from the midst of lush, rolling landscapes of Ethera's Vale like a jewel of harmony and diversity. Envisioned as a grand confluence of the world's elemental forces, this city thrives under the banner of unity, drawing together the myriad races of Morkahja into a vibrant tapestry of coexistence. Here, the air vibrates with the pure, celestial energy of Aether, infusing the city with a sense of wonder and boundless potential. The city's architecture is a breathtaking spectacle, showcasing the ingenuity and aesthetic of its diverse inhabitants. Towering spires reach for the skies, their surfaces shimmering with enchantments that reflect the elements—flames dance, breezes whisper, waters ripple, and stones resonate with the deep, enduring strength of the earth. Aetherion's streets are alive with the buzz of activity, a place where magic and technology intertwine seamlessly, creating an environment that is both awe-inspiring and welcoming.",
-      "mExtensioUnlockButton": "im_unlock_expansion_aetherion"
+      "mExtensioUnlockButton": "expansion_aetherion"
     }
   }
 }
