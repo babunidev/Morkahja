@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import type {
+  DiceId,
   PlayerProfileAvatarDto,
   PlayerProfileResponse,
   UnlockedTitleOptionDto,
   WallOfFameEntryDto,
 } from '@shared/contracts';
-import { fetchPlayerProfile, setAvatarDisplayTitle } from '../../api/http.js';
+import { DICE_CATALOG } from '@shared/diceCatalog.js';
+import { fetchPlayerProfile, selectDice, setAvatarDisplayTitle } from '../../api/http.js';
+import { protectedImageProps } from '../protectedImage.js';
 import { formatAvatarDisplayName } from '../avatar/avatarDisplayName.js';
 import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
 import {
@@ -216,6 +219,44 @@ const emptySlotLabelStyle: CSSProperties = {
   fontSize: '0.9rem',
 };
 
+const diceGridStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 10,
+};
+
+const diceButtonBaseStyle: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+  justifyItems: 'center',
+  padding: 8,
+  borderRadius: 10,
+  border: '1px solid rgba(255, 204, 102, 0.28)',
+  background: 'rgba(8, 5, 4, 0.55)',
+  cursor: 'pointer',
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+};
+
+const diceButtonSelectedStyle: CSSProperties = {
+  borderColor: 'rgba(255, 204, 102, 0.88)',
+  boxShadow: '0 0 12px rgba(255, 204, 102, 0.35)',
+};
+
+const dicePreviewStyle: CSSProperties = {
+  width: 56,
+  height: 56,
+  objectFit: 'contain',
+};
+
+const diceLabelStyle: CSSProperties = {
+  margin: 0,
+  fontSize: '0.72rem',
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+  color: 'rgba(247, 239, 224, 0.82)',
+};
+
 const fameListStyle: CSSProperties = {
   display: 'grid',
   gap: 10,
@@ -372,6 +413,8 @@ export function PlayerProfileOverlay({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [titleSaveError, setTitleSaveError] = useState<string | null>(null);
   const [titleSavePendingId, setTitleSavePendingId] = useState<string | null>(null);
+  const [diceSavePending, setDiceSavePending] = useState(false);
+  const [diceSaveError, setDiceSaveError] = useState<string | null>(null);
 
   const refreshProfile = useCallback(async (): Promise<void> => {
     setLoadPending(true);
@@ -395,6 +438,8 @@ export function PlayerProfileOverlay({
       setLoadError(null);
       setTitleSaveError(null);
       setTitleSavePendingId(null);
+      setDiceSavePending(false);
+      setDiceSaveError(null);
       setLoadPending(false);
       return;
     }
@@ -422,6 +467,43 @@ export function PlayerProfileOverlay({
   );
 
   const unlockedTitles = profile?.unlockedTitles ?? [];
+  const unlockedDiceIds = profile?.unlockedDiceIds ?? [];
+  const selectedDiceId = profile?.selectedDiceId ?? 'a';
+  const unlockedDiceCatalog = DICE_CATALOG.filter((entry) => (
+    unlockedDiceIds.includes(entry.id)
+  ));
+
+  async function handleDiceSelect(diceId: DiceId): Promise<void> {
+    if (diceSavePending || diceId === selectedDiceId) {
+      return;
+    }
+
+    setDiceSavePending(true);
+    setDiceSaveError(null);
+    playSfx(DEFAULT_BUTTON_SOUND);
+
+    try {
+      const result = await selectDice(diceId);
+
+      setProfile((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          selectedDiceId: result.selectedDiceId,
+          unlockedDiceIds: result.unlockedDiceIds,
+        };
+      });
+    } catch (error) {
+      setDiceSaveError(
+        error instanceof Error ? error.message : 'Could not update selected die',
+      );
+    } finally {
+      setDiceSavePending(false);
+    }
+  }
 
   async function handleTitleChange(
     avatarId: string,
@@ -506,6 +588,7 @@ export function PlayerProfileOverlay({
           </p>
           {loadError ? <p style={errorMessageStyle}>{loadError}</p> : null}
           {titleSaveError ? <p style={errorMessageStyle}>{titleSaveError}</p> : null}
+          {diceSaveError ? <p style={errorMessageStyle}>{diceSaveError}</p> : null}
           {loadPending && !profile ? (
             <p style={messageStyle}>Loading profile…</p>
           ) : (
@@ -529,6 +612,45 @@ export function PlayerProfileOverlay({
                     )
                   ))}
                 </div>
+              </div>
+              <div>
+                <h3 style={sectionTitleStyle}>Dice</h3>
+                {unlockedDiceCatalog.length === 0 ? (
+                  <p style={messageStyle}>No dice unlocked yet.</p>
+                ) : (
+                  <div style={diceGridStyle}>
+                    {unlockedDiceCatalog.map((entry) => {
+                      const selected = entry.id === selectedDiceId;
+
+                      return (
+                        <button
+                          aria-label={`Use ${entry.label}`}
+                          aria-pressed={selected}
+                          disabled={diceSavePending}
+                          key={entry.id}
+                          onClick={() => {
+                            void handleDiceSelect(entry.id);
+                          }}
+                          style={{
+                            ...diceButtonBaseStyle,
+                            ...(selected ? diceButtonSelectedStyle : {}),
+                            opacity: diceSavePending && !selected ? 0.7 : 1,
+                          }}
+                          type="button"
+                        >
+                          <img
+                            alt=""
+                            aria-hidden="true"
+                            {...protectedImageProps}
+                            src={entry.assetPath}
+                            style={dicePreviewStyle}
+                          />
+                          <span style={diceLabelStyle}>{entry.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <h3 style={sectionTitleStyle}>Wall of fame</h3>

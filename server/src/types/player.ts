@@ -28,6 +28,10 @@ export interface PlayerDocument {
   lastPlayedAt: number;
   /** Account-wide expansion ids unlocked for all avatars. */
   unlockedExpansions: number[];
+  /** Cosmetic dice skins unlocked for this account. */
+  unlockedDiceIds?: string[];
+  /** Active dice skin used in encounters. */
+  selectedDiceId?: string;
   /** Player ids added as friends (account-wide). */
   friendIds?: string[];
   /** Fallen avatars preserved for the player profile wall of fame. */

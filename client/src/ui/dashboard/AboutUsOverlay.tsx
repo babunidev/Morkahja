@@ -49,7 +49,7 @@ const CREDITS: CreditEntry[] = [
   },
   {
     id: 'operational-costs',
-    name: 'Operational Costs · 85€/mo',
+    name: 'Operational Costs · 201/mo',
     roles: 'What keeps Morkahja running',
     paragraphs: [
       'Monthly costs for keeping Morkahja alive and evolving:',
@@ -62,7 +62,7 @@ const CREDITS: CreditEntry[] = [
         detail: 'Keeps the world running and scales as more adventurers join.',
       },
       {
-        amount: '60€',
+        amount: '176$',
         title: 'Development tools (Cursor Pro + maintenance)',
         detail: 'Used to build, refine, and debug the game systems continuously.',
       },

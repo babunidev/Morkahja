@@ -2,8 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import encountersData from '../../data/game/encountersdata.json';
 import solutionData from '../../data/game/solutiondata.json';
 import {
-  createEncounterRoom,
+  diceButtonAssetPath,
+  DEFAULT_DICE_ID,
+  isDiceId,
+} from '@shared/diceCatalog.js';
+import {
   fetchActiveRoom,
+  fetchPlayer,
   ROOM_POLL_MS,
   requestRoomHelp,
   submitRoomChoice,
@@ -18,6 +23,10 @@ import {
 } from '../../api/http.js';
 import { ApiRequestError } from '../../api/httpErrorMessage.js';
 import { normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
+import {
+  ensureSoloLeaderRoom,
+  leaveJoinedPartyRoomIfNeeded,
+} from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import { interpretRoll } from './encounterInventoryPreview.js';
@@ -195,6 +204,9 @@ export function GameEnvironment({
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
   const [resultRollVisible, setResultRollVisible] = useState(false);
+  const [diceButtonAsset, setDiceButtonAsset] = useState(
+    () => diceButtonAssetPath(DEFAULT_DICE_ID),
+  );
   const dismissHelpToast = useCallback(() => {
     setHelpToastMessage(null);
   }, []);
@@ -226,6 +238,30 @@ export function GameEnvironment({
     : undefined;
 
   useEffect(() => {
+    let cancelled = false;
+
+    void fetchPlayer(null).then((player) => {
+      if (cancelled) {
+        return;
+      }
+
+      const diceId = player.selectedDiceId;
+
+      setDiceButtonAsset(
+        isDiceId(diceId)
+          ? diceButtonAssetPath(diceId)
+          : diceButtonAssetPath(DEFAULT_DICE_ID),
+      );
+    }).catch(() => {
+      // Keep the default die skin when player data is unavailable.
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (nextEncounterImageSrc) {
       void preloadImage(nextEncounterImageSrc);
     }
@@ -248,32 +284,18 @@ export function GameEnvironment({
 
     async function ensureRoom(): Promise<void> {
       try {
-        const active = await fetchActiveRoom(avatarRef.current.id);
+        const room = await ensureSoloLeaderRoom(avatarRef.current.id);
         if (cancelled) {
           return;
         }
-        if (active) {
-          applyRoomSnapshot(
-            active,
-            setRoom,
-            setEncounter,
-            setAvatar,
-            avatarRef.current,
-            roomRef.current,
-          );
-          return;
-        }
-        const created = await createEncounterRoom(avatarRef.current.id);
-        if (!cancelled) {
-          applyRoomSnapshot(
-            created,
-            setRoom,
-            setEncounter,
-            setAvatar,
-            avatarRef.current,
-            roomRef.current,
-          );
-        }
+        applyRoomSnapshot(
+          room,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
       } catch (error) {
         console.error('Failed to initialize encounter room', error);
       }
@@ -352,29 +374,16 @@ export function GameEnvironment({
   }, [loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
 
   async function syncEncounterRoom(): Promise<EncounterRoomSnapshotDto | null> {
-    const active = await fetchActiveRoom(avatarRef.current.id);
-    if (active) {
-      applyRoomSnapshot(
-        active,
-        setRoom,
-        setEncounter,
-        setAvatar,
-        avatarRef.current,
-        roomRef.current,
-      );
-      return active;
-    }
-
-    const created = await createEncounterRoom(avatarRef.current.id);
+    const room = await ensureSoloLeaderRoom(avatarRef.current.id);
     applyRoomSnapshot(
-      created,
+      room,
       setRoom,
       setEncounter,
       setAvatar,
       avatarRef.current,
       roomRef.current,
     );
-    return created;
+    return room;
   }
 
   function appendActionLog(entries: string[]): void {
@@ -607,6 +616,11 @@ export function GameEnvironment({
   async function handleHome(): Promise<void> {
     setVisible(false);
     await waitForFade();
+    try {
+      await leaveJoinedPartyRoomIfNeeded(avatarRef.current.id);
+    } catch (error) {
+      console.error('Failed to leave joined room on home', error);
+    }
     onHome();
   }
 
@@ -693,6 +707,7 @@ export function GameEnvironment({
             >
               <EncounterImageBlock
                 avatarId={avatar.id}
+                diceButtonAsset={diceButtonAsset}
                 continueGlowClass={continueGlow}
                 continuePending={continuePending || deathPending || waitingForResolution}
                 continueWaitingAfterPress={continueWaitingAfterPress}

@@ -22,10 +22,11 @@ import {
   fetchSession,
   fetchStaticGameDataStatus,
   respondHelpInvite,
+  selectAvatar,
   type EncounterSnapshot,
   type PersistedAvatar,
 } from './api/http.js';
-import { ApiRequestError } from './api/httpErrorMessage.js';
+import { ApiRequestError, isApiErrorCode } from './api/httpErrorMessage.js';
 import AchievementsOverlay from './ui/dashboard/AchievementsOverlay.js';
 import {
   findNewRankUnlocks,
@@ -50,6 +51,12 @@ import GameMessageToast from './ui/game/GameMessageToast.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
+import RoomFullOverlay from './ui/game/RoomFullOverlay.js';
+import {
+  ensureSoloLeaderRoom,
+  leaveJoinedRoomForDashboard,
+  resolveDashboardLeaveAvatarId,
+} from './ui/game/roomSession.js';
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
@@ -72,6 +79,11 @@ interface FriendJoinToastState {
   roomId: string;
   encounterTitle: string;
   inviteId?: string;
+}
+
+interface RoomFullPromptState {
+  avatar: PersistedAvatar;
+  avatarName: string;
 }
 
 function isAchievementWatchScreen(screen: AppScreen): boolean {
@@ -137,6 +149,7 @@ export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [activeAvatar, setActiveAvatar] = useState<PersistedAvatar | null>(null);
   const [activeEncounter, setActiveEncounter] = useState<EncounterSnapshot | null>(null);
+  const [activeRoom, setActiveRoom] = useState<EncounterRoomSnapshotDto | null>(null);
   const [avatarSelectionAvatars, setAvatarSelectionAvatars] = useState<PersistedAvatar[]>([]);
   const [avatarCreationPreset, setAvatarCreationPreset] = useState<PersistedAvatar | null>(null);
   const [excludedAvatarIds, setExcludedAvatarIds] = useState(loadDeadAvatarIds);
@@ -156,6 +169,8 @@ export default function App() {
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
   const [helpInviteToast, setHelpInviteToast] = useState<RoomHelpInvitationDto | null>(null);
   const [friendJoinToast, setFriendJoinToast] = useState<FriendJoinToastState | null>(null);
+  const [roomFullPrompt, setRoomFullPrompt] = useState<RoomFullPromptState | null>(null);
+  const [roomFullContinuePending, setRoomFullContinuePending] = useState(false);
   const [gameEntryKey, setGameEntryKey] = useState(0);
   const achievementsBaselineRef = useRef<AchievementProgressDto[] | null>(null);
   const dailyRewardBaselineRef = useRef<{
@@ -251,6 +266,17 @@ export default function App() {
     };
   }, [checkAchievementUnlocks, screen]);
 
+  useEffect(() => {
+    if (screen !== 'dashboard') {
+      return;
+    }
+
+    void (async () => {
+      const avatarId = await resolveDashboardLeaveAvatarId();
+      await leaveJoinedRoomForDashboard(avatarId);
+    })();
+  }, [screen]);
+
   const dismissHelpInviteToast = useCallback((invite: RoomHelpInvitationDto | null) => {
     if (invite) {
       seenHelpInviteIdsRef.current.add(invite.inviteId);
@@ -266,11 +292,48 @@ export default function App() {
 
     setActiveAvatar(normalizePersistedAvatar(localParticipant.avatar));
     setActiveEncounter(joinedRoom.activeEncounter);
+    setActiveRoom(joinedRoom);
     setGameEntryKey((current) => current + 1);
     resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
     setAvatarSlotsVisible(false);
     setScreen('game');
   }, []);
+
+  const resolveJoinAvatar = useCallback(async (): Promise<PersistedAvatar | null> => {
+    const response = await fetchAvatar(null);
+    return response.avatar ? normalizePersistedAvatar(response.avatar) : null;
+  }, []);
+
+  const showRoomFullPrompt = useCallback(async () => {
+    const avatar = await resolveJoinAvatar();
+    if (!avatar) {
+      return;
+    }
+
+    setRoomFullPrompt({
+      avatar,
+      avatarName: formatAvatarDisplayName(avatar),
+    });
+  }, [resolveJoinAvatar]);
+
+  const continueSoloJourneyFromRoomFull = useCallback(async () => {
+    if (!roomFullPrompt || roomFullContinuePending) {
+      return;
+    }
+
+    setRoomFullContinuePending(true);
+
+    try {
+      const { avatar: selectedAvatar } = await selectAvatar(roomFullPrompt.avatar);
+      const room = await ensureSoloLeaderRoom(selectedAvatar.id);
+      setRoomFullPrompt(null);
+      enterGameFromRoom(room);
+    } catch (error) {
+      console.error('Continue solo journey failed', error);
+    } finally {
+      setRoomFullContinuePending(false);
+    }
+  }, [enterGameFromRoom, roomFullContinuePending, roomFullPrompt]);
 
   const joinFriendEncounter = useCallback(async (
     friendPlayerId: string,
@@ -297,11 +360,15 @@ export default function App() {
       const response = await joinFriendRoom(friendPlayerId);
       enterGameFromRoom(response.room);
     } catch (error) {
+      if (isApiErrorCode(error, 'ROOM_FULL')) {
+        await showRoomFullPrompt();
+        return;
+      }
       console.error('Join friend room failed', error);
     } finally {
       helpInviteAcceptPendingRef.current = false;
     }
-  }, [enterGameFromRoom]);
+  }, [enterGameFromRoom, showRoomFullPrompt]);
 
   const acceptHelpInvite = useCallback(async (invite: RoomHelpInvitationDto) => {
     await joinFriendEncounter(invite.fromPlayerId, invite.inviteId);
@@ -635,6 +702,7 @@ export default function App() {
             onPrepareGame={(avatar, encounter) => {
               setActiveAvatar(avatar);
               setActiveEncounter(encounter);
+              setActiveRoom(null);
               setHandoffLanded(false);
               setGameEnterHandoff(true);
               setScreen('game');
@@ -651,6 +719,7 @@ export default function App() {
                   setAvatarSlotsVisible(false);
                   setActiveAvatar(null);
                   setActiveEncounter(null);
+                  setActiveRoom(null);
                   setScreen('gateway');
                 });
             }}
@@ -664,13 +733,19 @@ export default function App() {
             hideAvatarPortraitForHandoff={gameEnterHandoff && !handoffLanded}
             initialAvatar={activeAvatar}
             initialEncounter={activeEncounter}
+            initialRoom={activeRoom}
             onHome={() => {
+              const avatarId = activeAvatar?.id;
               setActiveAvatar(null);
               setActiveEncounter(null);
+              setActiveRoom(null);
               setAvatarSlotsVisible(false);
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
-              void applyAvatarSelectionFromHome();
+              void (async () => {
+                await leaveJoinedRoomForDashboard(avatarId);
+                await applyAvatarSelectionFromHome();
+              })();
             }}
             onAchievementCheck={() => {
               void checkAchievementUnlocks();
@@ -837,6 +912,18 @@ export default function App() {
             stackOffsetPx={
               achievementToast || hearthBlessingToast || helpInviteToast ? 78 : 0
             }
+          />
+        ) : null}
+        {roomFullPrompt ? (
+          <RoomFullOverlay
+            avatarName={roomFullPrompt.avatarName}
+            continuePending={roomFullContinuePending}
+            onContinueJourney={() => {
+              void continueSoloJourneyFromRoomFull();
+            }}
+            onGoToDashboard={() => {
+              setRoomFullPrompt(null);
+            }}
           />
         ) : null}
         {isAchievementWatchScreen(screen) && achievementsOverlayOpen && playerId ? (

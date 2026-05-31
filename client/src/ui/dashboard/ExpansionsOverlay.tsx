@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { fetchPlayer, unlockExpansion } from '../../api/http.js';
+import encountersData from '../../data/game/encountersdata.json';
 import expansionData from '../../data/game/expansiondata.json';
 import {
   protectedImageProps,
@@ -8,11 +9,14 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
+import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
+const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
 const OVERLAY_FADE_MS = 300;
+const PREVIEW_ENCOUNTER_COUNT = 3;
 
 interface ExpansionRecord {
   mExtensioActive: boolean;
@@ -26,8 +30,70 @@ interface ExpansionRecord {
   mExtensioText: string;
 }
 
+interface EncounterDataRecord {
+  mEncounterExpansion: number;
+  mEncounterID: number;
+  mEncounterImageName: string;
+  mEncounterTitle: string;
+}
+
+interface EncounterPreviewEntry {
+  encounterId: number;
+  imageSrc: string;
+  title: string;
+}
+
 function expansionAsset(assetName: string): string {
   return `${EXPANSION_UI_ROOT}/${assetName}.webp`;
+}
+
+function encounterImagePath(imageName: string): string {
+  const fileName = imageName.endsWith('.webp') ? imageName : `${imageName}.webp`;
+
+  return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
+}
+
+function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
+  const records = encountersData as Record<string, EncounterDataRecord>;
+  const byExpansion = new Map<number, EncounterPreviewEntry[]>();
+
+  for (const record of Object.values(records)) {
+    const expansionId = record.mEncounterExpansion;
+    const pool = byExpansion.get(expansionId) ?? [];
+
+    pool.push({
+      encounterId: record.mEncounterID,
+      imageSrc: encounterImagePath(record.mEncounterImageName),
+      title: record.mEncounterTitle,
+    });
+    byExpansion.set(expansionId, pool);
+  }
+
+  for (const pool of byExpansion.values()) {
+    pool.sort((left, right) => left.title.localeCompare(right.title));
+  }
+
+  return byExpansion;
+}
+
+function pickRandomEncounterPreviews(
+  pool: EncounterPreviewEntry[],
+  count: number,
+): EncounterPreviewEntry[] {
+  if (pool.length <= count) {
+    return [...pool];
+  }
+
+  const shuffled = [...pool];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    const current = shuffled[index];
+    shuffled[index] = shuffled[swapIndex];
+    shuffled[swapIndex] = current;
+  }
+
+  return shuffled.slice(0, count);
 }
 
 function loadExpansionList(): ExpansionRecord[] {
@@ -143,10 +209,17 @@ const errorMessageStyle: CSSProperties = {
 const gemsFooterStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
+  justifyContent: 'space-between',
   gap: 12,
   paddingTop: 8,
   borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+};
+
+const gemsFooterBalanceStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  minWidth: 0,
 };
 
 const gemsIconStyle: CSSProperties = {
@@ -327,20 +400,72 @@ const unlockButtonLabelStyle: CSSProperties = {
   gap: 8,
 };
 
+const previewListStyle: CSSProperties = {
+  display: 'grid',
+  gap: 10,
+  margin: 0,
+  padding: '10px 12px',
+  listStyle: 'none',
+  border: '1px solid rgba(255, 204, 102, 0.28)',
+  borderRadius: 8,
+  background: 'rgba(6, 4, 3, 0.65)',
+};
+
+const previewRowStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '72px minmax(0, 1fr)',
+  gap: 10,
+  alignItems: 'center',
+};
+
+const previewImageStyle: CSSProperties = {
+  display: 'block',
+  width: 72,
+  height: 48,
+  objectFit: 'cover',
+  borderRadius: 6,
+  border: '1px solid rgba(255, 204, 102, 0.35)',
+  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.45)',
+};
+
+const previewTitleStyle: CSSProperties = {
+  margin: 0,
+  color: '#f7efe0',
+  fontSize: '0.9rem',
+  lineHeight: 1.35,
+};
+
+const previewHintStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 204, 102, 0.72)',
+  fontSize: '0.78rem',
+  letterSpacing: '0.04em',
+  lineHeight: 1.4,
+  textAlign: 'center',
+};
+
 function ExpansionCard({
   expansion,
+  encounterPool,
   expanded,
   gemBalance,
+  previewEncounters,
+  previewOpen,
   unlockPending,
   unlocked,
+  onPreview,
   onToggle,
   onUnlock,
 }: {
   expansion: ExpansionRecord;
+  encounterPool: EncounterPreviewEntry[];
   expanded: boolean;
   gemBalance: number;
+  previewEncounters: EncounterPreviewEntry[] | null;
+  previewOpen: boolean;
   unlockPending: boolean;
   unlocked: boolean;
+  onPreview: () => void;
   onToggle: () => void;
   onUnlock: () => void;
 }) {
@@ -396,6 +521,44 @@ function ExpansionCard({
       {expanded ? (
         <div aria-labelledby={headerId} id={bodyId} style={cardBodyStyle}>
           <p style={bodyTextStyle}>{expansion.mExtensioText}</p>
+          <PanelButton
+            aria-label={`Preview random encounters from ${expansion.mExtensioName}`}
+            disabled={encounterPool.length === 0}
+            onClick={(event) => {
+              event.stopPropagation();
+              playSfx(DEFAULT_BUTTON_SOUND);
+              onPreview();
+            }}
+            pressKey={`expansion-preview-${expansion.mExtensioID}`}
+            style={expansionPanelButtonStyle}
+            visualStyle={
+              encounterPool.length === 0
+                ? expansionButtonDisabledVisualStyle
+                : expansionButtonVisualStyle
+            }
+          >
+            Preview
+          </PanelButton>
+          {previewOpen ? (
+            encounterPool.length === 0 ? (
+              <p style={previewHintStyle}>No encounters are available to preview for this expansion yet.</p>
+            ) : previewEncounters && previewEncounters.length > 0 ? (
+              <ul aria-label="Encounter preview" style={previewListStyle}>
+                {previewEncounters.map((encounter) => (
+                  <li key={encounter.encounterId} style={previewRowStyle}>
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      {...protectedImageProps}
+                      src={encounter.imageSrc}
+                      style={previewImageStyle}
+                    />
+                    <p style={previewTitleStyle}>{encounter.title}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null
+          ) : null}
           {expansion.mExtensioActive && !unlocked ? (
             <div style={unlockActionsRowStyle}>
               <PanelButton
@@ -464,6 +627,12 @@ export function ExpansionsOverlay({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const expansions = useMemo(() => loadExpansionList(), []);
+  const encountersByExpansion = useMemo(() => buildEncountersByExpansion(), []);
+  const [previewSamples, setPreviewSamples] = useState<{
+    expansionId: number;
+    encounters: EncounterPreviewEntry[];
+  } | null>(null);
+  const [diceShopOpen, setDiceShopOpen] = useState(false);
 
   const refreshPlayer = useCallback(async (): Promise<void> => {
     if (!playerId) {
@@ -487,9 +656,11 @@ export function ExpansionsOverlay({
     if (!open) {
       setVisible(false);
       setExpandedIds(new Set());
+      setPreviewSamples(null);
       setUnlockPending(false);
       setStatusMessage(null);
       setLoadError(null);
+      setDiceShopOpen(false);
       return;
     }
 
@@ -530,7 +701,27 @@ export function ExpansionsOverlay({
         next.add(id);
       }
 
+      if (!next.has(id)) {
+        setPreviewSamples((preview) => (
+          preview?.expansionId === id ? null : preview
+        ));
+      }
+
       return next;
+    });
+  }
+
+  function handlePreview(expansionId: number): void {
+    const pool = encountersByExpansion.get(expansionId) ?? [];
+
+    if (pool.length === 0) {
+      setPreviewSamples(null);
+      return;
+    }
+
+    setPreviewSamples({
+      expansionId,
+      encounters: pickRandomEncounterPreviews(pool, PREVIEW_ENCOUNTER_COUNT),
     });
   }
 
@@ -559,6 +750,7 @@ export function ExpansionsOverlay({
   }
 
   return (
+    <>
     <div
       aria-label="Expansions"
       onClick={onClose}
@@ -597,33 +789,69 @@ export function ExpansionsOverlay({
             {expansions.map((expansion) => (
               <ExpansionCard
                 key={expansion.mExtensioID}
+                encounterPool={encountersByExpansion.get(expansion.mExtensioID) ?? []}
                 expanded={expandedIds.has(expansion.mExtensioID)}
                 expansion={expansion}
                 gemBalance={yellowRedGems}
+                onPreview={() => {
+                  handlePreview(expansion.mExtensioID);
+                }}
                 onToggle={() => {
                   toggleExpansion(expansion.mExtensioID);
                 }}
                 onUnlock={() => {
                   void handleUnlock(expansion.mExtensioID, expansion.mExtensioName);
                 }}
+                previewEncounters={
+                  previewSamples?.expansionId === expansion.mExtensioID
+                    ? previewSamples.encounters
+                    : null
+                }
+                previewOpen={previewSamples?.expansionId === expansion.mExtensioID}
                 unlockPending={unlockPending}
                 unlocked={unlockedExpansionIds.includes(expansion.mExtensioID)}
               />
             ))}
           </div>
         </div>
-        <footer aria-label="Yellow red gems" style={gemsFooterStyle}>
-          <img
-            alt=""
-            aria-hidden="true"
-            {...protectedImageProps}
-            src={GEMS_ICON}
-            style={gemsIconStyle}
-          />
-          <p style={gemsCountStyle}>{formatGemCount(yellowRedGems)}</p>
+        <footer aria-label="Expansions footer" style={gemsFooterStyle}>
+          <div aria-label="Yellow red gems" style={gemsFooterBalanceStyle}>
+            <img
+              alt=""
+              aria-hidden="true"
+              {...protectedImageProps}
+              src={GEMS_ICON}
+              style={gemsIconStyle}
+            />
+            <p style={gemsCountStyle}>{formatGemCount(yellowRedGems)}</p>
+          </div>
+          <PanelButton
+            aria-label="Open dice shop"
+            onClick={(event) => {
+              event.stopPropagation();
+              playSfx(DEFAULT_BUTTON_SOUND);
+              setDiceShopOpen(true);
+            }}
+            pressKey="expansions-open-dice-shop"
+            style={{ minWidth: 148, flex: '0 0 auto' }}
+            visualStyle={expansionButtonVisualStyle}
+          >
+            Dice
+          </PanelButton>
         </footer>
       </section>
     </div>
+    <DiceShopOverlay
+      onClose={() => {
+        setDiceShopOpen(false);
+      }}
+      onPlayerUpdated={() => {
+        void refreshPlayer();
+      }}
+      open={diceShopOpen}
+      playerId={playerId}
+    />
+    </>
   );
 }
 

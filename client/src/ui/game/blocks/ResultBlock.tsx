@@ -35,6 +35,10 @@ import {
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
+  diceButtonAssetPath,
+  DEFAULT_DICE_ID,
+} from '@shared/diceCatalog.js';
+import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   FADE_DURATION_MS,
   fadeTransition,
@@ -42,7 +46,7 @@ import {
 
 const RESULT_BACKGROUND = '/UI/09_GAME/im_bg_result.webp';
 const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
-const DICE_OUTCOME_ICON = '/UI/09_GAME/im_button_dice_a.webp';
+const DEFAULT_DICE_OUTCOME_ICON = diceButtonAssetPath(DEFAULT_DICE_ID);
 const LORE_GEM_REWARD_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
 const LORE_GEM_REWARD_ID = 90_001;
 const LORE_GEM_POPUP_MS = 330;
@@ -434,6 +438,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueGlowClass,
     continueWaitingAfterPress = false,
     deferRewardDismiss = false,
+    diceOutcomeIcon = DEFAULT_DICE_OUTCOME_ICON,
     disabled = false,
     showLoreGemReward = false,
     encounterDifficulty,
@@ -451,6 +456,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
     deferRewardDismiss?: boolean;
+    diceOutcomeIcon?: string;
     disabled?: boolean;
     showLoreGemReward?: boolean;
     encounterDifficulty: number;
@@ -1239,7 +1245,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
               alt=""
               aria-hidden="true"
               {...protectedImageProps}
-              src={DICE_OUTCOME_ICON}
+              src={diceOutcomeIcon}
               style={diceOutcomeIconStyle}
             />
           ) : null}

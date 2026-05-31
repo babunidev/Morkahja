@@ -78,6 +78,7 @@ function imageFileName(imageSrc: string): string {
 export function EncounterImageBlock({
   avatarId,
   continuePending,
+  diceButtonAsset,
   continueGlowClass,
   continueWaitingAfterPress = false,
   deferRewardDismiss = false,
@@ -102,6 +103,7 @@ export function EncounterImageBlock({
 }: {
   avatarId: string;
   continuePending: boolean;
+  diceButtonAsset: string;
   continueGlowClass?: string;
   continueWaitingAfterPress?: boolean;
   deferRewardDismiss?: boolean;
@@ -310,6 +312,7 @@ export function EncounterImageBlock({
         </div>
       ) : null}
       <ResultBlock
+        diceOutcomeIcon={diceButtonAsset}
         continueGlowClass={continueGlowClass}
         continueWaitingAfterPress={continueWaitingAfterPress}
         deferRewardDismiss={deferRewardDismiss}
@@ -331,6 +334,7 @@ export function EncounterImageBlock({
         usedSolutionId={selectedSolutionId}
       />
       <SolutionBlock
+        diceButtonAsset={diceButtonAsset}
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}
         hidden={

@@ -5,7 +5,10 @@ import type {
   ActivityFeedResponse,
   CallForHelpResponse,
   ClaimDailyRewardResponse,
+  DiceId,
   DonateGemsResponse,
+  SelectDiceResponse,
+  UnlockDiceResponse,
   UnlockExpansionResponse,
   AddFriendResponse,
   FriendAchievementsResponse,
@@ -262,6 +265,24 @@ export async function unlockExpansion(
   return request<UnlockExpansionResponse>('/player/expansions/unlock', {
     method: 'POST',
     body: JSON.stringify({ expansionId }),
+  });
+}
+
+export async function unlockDice(
+  diceId: DiceId,
+): Promise<UnlockDiceResponse> {
+  return request<UnlockDiceResponse>('/player/dice/unlock', {
+    method: 'POST',
+    body: JSON.stringify({ diceId }),
+  });
+}
+
+export async function selectDice(
+  diceId: DiceId,
+): Promise<SelectDiceResponse> {
+  return request<SelectDiceResponse>('/player/dice/select', {
+    method: 'POST',
+    body: JSON.stringify({ diceId }),
   });
 }
 
@@ -528,8 +549,11 @@ export async function joinFriendRoom(
   });
 }
 
-export async function leaveEncounterRoom(): Promise<void> {
-  await request<{ ok: true }>('/room/leave', { method: 'POST', body: JSON.stringify({}) });
+export async function leaveEncounterRoom(avatarId: string): Promise<void> {
+  await request<{ ok: true }>('/room/leave', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
 }
 
 export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {

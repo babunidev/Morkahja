@@ -4,6 +4,7 @@ export type EncounterState = 'created' | 'active' | 'resolving' | 'resolved';
 export type EncounterFollowMode = 'follow' | 'random' | 'system';
 export type AvatarRace = 'Rokur' | 'Verdani' | 'Aevis' | 'Grimnir';
 export type AvatarRole = 'Mage' | 'Warrior' | 'Rogue';
+export type DiceId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f';
 
 export interface ClientSession {
   playerId: string;
@@ -19,6 +20,8 @@ export interface PlayerResponse {
     [key: string]: number | undefined;
   };
   unlockedExpansions?: number[];
+  unlockedDiceIds?: DiceId[];
+  selectedDiceId?: DiceId;
 }
 
 export interface WallOfFameEntryDto {
@@ -58,11 +61,30 @@ export interface PlayerProfileResponse {
   avatars: PlayerProfileAvatarDto[];
   wallOfFame: WallOfFameEntryDto[];
   unlockedTitles: UnlockedTitleOptionDto[];
+  unlockedDiceIds: DiceId[];
+  selectedDiceId: DiceId;
 }
 
 export interface SetAvatarDisplayTitleResponse {
   playerId: string;
   avatar: PersistedAvatarDto;
+}
+
+export interface UnlockDiceResponse {
+  playerId: string;
+  diceId: DiceId;
+  spent: number;
+  currencies: {
+    yellow_red_gem?: number;
+    [key: string]: number | undefined;
+  };
+  unlockedDiceIds: DiceId[];
+}
+
+export interface SelectDiceResponse {
+  playerId: string;
+  selectedDiceId: DiceId;
+  unlockedDiceIds: DiceId[];
 }
 
 export interface UnlockExpansionResponse {

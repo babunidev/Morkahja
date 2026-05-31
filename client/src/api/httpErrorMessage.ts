@@ -7,7 +7,16 @@ export function looksLikeHtml(text: string): boolean {
   );
 }
 
-function tryParseJsonError(body: string): string | null {
+const ROOM_ERROR_MESSAGES: Record<string, string> = {
+  ROOM_FULL: 'This room is already full.',
+  ALREADY_IN_ROOM: 'You are already in another room.',
+  ROOM_NOT_FOUND: 'That room is no longer available.',
+  FRIEND_NOT_IN_ROOM: 'Your friend is no longer in a room.',
+  ROOM_NOT_JOINABLE: 'You cannot join this room right now.',
+  INVITE_EXPIRED: 'That invitation has expired.',
+};
+
+function tryParseJsonError(body: string): { code?: string; message: string } | null {
   try {
     const parsed = JSON.parse(body) as unknown;
 
@@ -16,7 +25,17 @@ function tryParseJsonError(body: string): string | null {
     }
 
     const error = (parsed as { error: unknown }).error;
-    return typeof error === 'string' && error.trim() ? error.trim() : null;
+    if (typeof error !== 'string' || !error.trim()) {
+      return null;
+    }
+
+    const trimmed = error.trim();
+    const knownMessage = ROOM_ERROR_MESSAGES[trimmed];
+    if (knownMessage) {
+      return { code: trimmed, message: knownMessage };
+    }
+
+    return { message: trimmed };
   } catch {
     return null;
   }
@@ -30,7 +49,7 @@ export function formatHttpErrorMessage(
 ): string {
   const jsonError = tryParseJsonError(body);
   if (jsonError) {
-    return jsonError;
+    return jsonError.message;
   }
 
   if (status === 502 || status === 503 || status === 504) {
@@ -55,10 +74,17 @@ export function formatHttpErrorMessage(
 
 export class ApiRequestError extends Error {
   readonly status: number;
+  readonly code?: string;
 
   constructor(status: number, statusText: string, body: string) {
-    super(formatHttpErrorMessage(status, statusText, body));
+    const parsed = tryParseJsonError(body);
+    super(parsed?.message ?? formatHttpErrorMessage(status, statusText, body));
     this.name = 'ApiRequestError';
     this.status = status;
+    this.code = parsed?.code;
   }
+}
+
+export function isApiErrorCode(error: unknown, code: string): boolean {
+  return error instanceof ApiRequestError && error.code === code;
 }

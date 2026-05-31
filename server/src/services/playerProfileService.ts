@@ -1,4 +1,6 @@
 import type { AvatarDocument } from '../types/avatar.js';
+import type { DiceId } from '@shared/diceCatalog.js';
+import { readPlayerDiceState } from './diceService.js';
 import type { PlayerDocument, WallOfFameEntry } from '../types/player.js';
 import {
   collectUnlockedTitlesFromAchievements,
@@ -32,6 +34,8 @@ export interface PlayerProfile {
   avatars: PlayerProfileAvatarView[];
   wallOfFame: WallOfFameEntry[];
   unlockedTitles: UnlockedTitleOption[];
+  unlockedDiceIds: DiceId[];
+  selectedDiceId: DiceId;
 }
 
 export class InvalidAvatarDisplayTitleError extends Error {
@@ -198,7 +202,7 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
     return null;
   }
 
-  const [avatars, unlockedTitles] = await Promise.all([
+  const [avatars, unlockedTitles, dice] = await Promise.all([
     listAvatars<AvatarDocument>(playerId).then((records) => (
       records
         .map((record) => ({
@@ -211,6 +215,7 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
         .slice(0, 3)
     )),
     listUnlockedAchievementTitles(playerId),
+    readPlayerDiceState(playerId),
   ]);
 
   return {
@@ -220,5 +225,7 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
     avatars,
     wallOfFame: player.wallOfFame,
     unlockedTitles,
+    unlockedDiceIds: dice.unlockedDiceIds,
+    selectedDiceId: dice.selectedDiceId,
   };
 }

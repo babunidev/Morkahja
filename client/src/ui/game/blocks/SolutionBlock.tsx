@@ -17,12 +17,16 @@ import {
 } from '../../protectedImage.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
+  diceButtonAssetPath,
+  DEFAULT_DICE_ID,
+} from '@shared/diceCatalog.js';
+import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
 } from '../../transitions/fade.js';
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
-const DICE_BUTTON = '/UI/09_GAME/im_button_dice_a.webp';
+const DEFAULT_DICE_BUTTON = diceButtonAssetPath(DEFAULT_DICE_ID);
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
 type SlotLetter = 'A' | 'B' | 'C' | 'D';
@@ -487,12 +491,14 @@ function rollForSolutionSlot(
 }
 
 export function SolutionBlock({
+  diceButtonAsset = DEFAULT_DICE_BUTTON,
   encounterRevealKey,
   hidden = false,
   onActionReveal,
   encounter,
   inventory,
 }: {
+  diceButtonAsset?: string;
   encounterRevealKey: string;
   hidden?: boolean;
   onActionReveal?: (
@@ -809,7 +815,7 @@ export function SolutionBlock({
                         alt=""
                         aria-hidden="true"
                         draggable={false}
-                        src={DICE_BUTTON}
+                        src={diceButtonAsset}
                         style={diceImageStyle}
                       />
                     </span>
