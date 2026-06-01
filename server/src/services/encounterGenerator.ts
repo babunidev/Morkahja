@@ -285,7 +285,10 @@ export function generateSnapshotRolls(): Pick<
   };
 }
 
-function randomRewardsForEncounter(encounter: EncounterData): number[] {
+export function randomRewardsForEncounter(
+  encounter: EncounterData,
+  excludeRewardIds: ReadonlySet<number> = new Set(),
+): number[] {
   const amount = Math.max(0, encounter.mEncounterRewardAmount);
 
   if (amount === 0) {
@@ -301,16 +304,20 @@ function randomRewardsForEncounter(encounter: EncounterData): number[] {
   }
 
   const rewards: number[] = [];
-  let pool = [...candidates];
+  const claimed = new Set(excludeRewardIds);
 
   for (let index = 0; index < amount; index += 1) {
+    let pool = candidates.filter(
+      (solution) => !claimed.has(solution.mSolutionID),
+    );
     if (pool.length === 0) {
       pool = [...candidates];
     }
 
     const rewardIndex = randomInt(0, pool.length - 1);
-    const [reward] = pool.splice(rewardIndex, 1);
+    const reward = pool[rewardIndex]!;
     rewards.push(reward.mSolutionID);
+    claimed.add(reward.mSolutionID);
   }
 
   return rewards;
@@ -1172,6 +1179,130 @@ export function preparedResultFromResolve(
   };
 }
 
+export const ROOM_SLOT_COUNT = 3;
+
+export type SlotEncounterSnapshots = [
+  EncounterSnapshot,
+  EncounterSnapshot,
+  EncounterSnapshot,
+];
+
+export interface RoomSlotParticipantRef {
+  slotIndex: number;
+  playerId: string;
+  avatarId: string;
+}
+
+/** Shared encounter identity; per-slot rolls and rewards stay on slotSnapshot. */
+export function alignSnapshotToRoomShell(
+  shell: EncounterSnapshot,
+  slotSnapshot: EncounterSnapshot,
+): EncounterSnapshot {
+  return {
+    ...slotSnapshot,
+    snapshotId: shell.snapshotId,
+    encounterId: shell.encounterId,
+    encounterTitle: shell.encounterTitle,
+    encounterImageName: shell.encounterImageName,
+    encounterText: shell.encounterText,
+    encounterDifficulty: shell.encounterDifficulty,
+    primarySolutionA: shell.primarySolutionA,
+    primarySolutionB: shell.primarySolutionB,
+    primarySolutionC: shell.primarySolutionC,
+    primarySolutionD: shell.primarySolutionD,
+    secondarySolutionTypeA: shell.secondarySolutionTypeA,
+    secondarySolutionTypeB: shell.secondarySolutionTypeB,
+    secondarySolutionTypeC: shell.secondarySolutionTypeC,
+    secondarySolutionTypeD: shell.secondarySolutionTypeD,
+    preparedEncounter: shell.preparedEncounter,
+    actionReadyAt: shell.actionReadyAt,
+    createdAt: shell.createdAt,
+    loreGemOffer: shell.loreGemOffer,
+    roomId: shell.roomId,
+    state: shell.state,
+    resolved: shell.resolved,
+  };
+}
+
+export function bindSnapshotToParticipant(
+  snapshot: EncounterSnapshot,
+  playerId: string,
+  avatarId: string,
+): EncounterSnapshot {
+  return {
+    ...snapshot,
+    playerId,
+    avatarId,
+  };
+}
+
+/** Pre-roll all room slots at an encounter boundary (solo seeds slots 1–2 for mid-join). */
+export function buildSlotEncounterSnapshots(
+  encounter: EncounterData,
+  preparedEncounter: PreparedEncounter,
+  roomId: string,
+  leaderPlayerId: string,
+  leaderAvatarId: string,
+  leaderAvatar: AvatarDocument | undefined,
+  participants: readonly RoomSlotParticipantRef[],
+  avatarForParticipant: (
+    playerId: string,
+    avatarId: string,
+  ) => AvatarDocument | undefined,
+): SlotEncounterSnapshots {
+  const shellBase = buildEncounterSnapshot(
+    leaderPlayerId,
+    leaderAvatarId,
+    encounter,
+    preparedEncounter,
+    leaderAvatar,
+  );
+  const shell: EncounterSnapshot = {
+    ...shellBase,
+    roomId,
+    state: 'active',
+  };
+  const claimedRewardIds = new Set<number>();
+  const slotSnapshots: EncounterSnapshot[] = [];
+
+  for (let slotIndex = 0; slotIndex < ROOM_SLOT_COUNT; slotIndex += 1) {
+    const occupant = participants.find((entry) => entry.slotIndex === slotIndex);
+    const playerId = occupant?.playerId ?? leaderPlayerId;
+    const avatarId = occupant?.avatarId ?? leaderAvatarId;
+    const avatar = occupant
+      ? avatarForParticipant(playerId, avatarId) ?? leaderAvatar
+      : leaderAvatar;
+
+    let slotSnapshot = buildEncounterSnapshot(
+      playerId,
+      avatarId,
+      encounter,
+      preparedEncounter,
+      avatar,
+    );
+
+    if (encounter.mEncounterID !== LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
+      const rewardIds = randomRewardsForEncounter(encounter, claimedRewardIds);
+      slotSnapshot = {
+        ...slotSnapshot,
+        rewardIds,
+      };
+      for (const rewardId of rewardIds) {
+        claimedRewardIds.add(rewardId);
+      }
+    }
+
+    slotSnapshots.push(alignSnapshotToRoomShell(shell, {
+      ...slotSnapshot,
+      snapshotId: shell.snapshotId,
+      playerId,
+      avatarId,
+    }));
+  }
+
+  return slotSnapshots as SlotEncounterSnapshots;
+}
+
 function computeParticipantOutcome(
   playerId: string,
   avatarId: string,
@@ -1184,11 +1315,12 @@ function computeParticipantOutcome(
   const snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
   const actionForResolution = selectedActionForSnapshot(snapshot, action);
   const encounter = snapshotToEncounterData(snapshot);
+  const rollsForResolution = snapshotToRolls(snapshot);
   const baseResolution = runDeterministicResolver(
     encounter,
     flattenInventorySolutionIds(inventory),
     getSolutionMap(),
-    snapshotToRolls(snapshot),
+    rollsForResolution,
     toSelectedEncounterAction(actionForResolution),
     snapshot.rewardIds,
   );

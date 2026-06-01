@@ -561,7 +561,11 @@ async function resolveJoinAction(
     };
   }
 
-  if (event.type !== 'room_created' && event.type !== 'help_called') {
+  if (
+    event.type !== 'room_created'
+    && event.type !== 'room_encounter_started'
+    && event.type !== 'help_called'
+  ) {
     return undefined;
   }
 

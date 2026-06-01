@@ -100,6 +100,8 @@ export function EncounterImageBlock({
   title,
   witnessMode = false,
   systemEventActorName,
+  outcomeRoll,
+  outcomeResolutionAction,
   holdResultRollReset = false,
 }: {
   avatarId: string;
@@ -130,6 +132,8 @@ export function EncounterImageBlock({
   title: string;
   witnessMode?: boolean;
   systemEventActorName?: string;
+  outcomeRoll?: number;
+  outcomeResolutionAction?: EncounterAction;
   /** When true, keep outcome roll visible until reward dismiss finishes. */
   holdResultRollReset?: boolean;
 }) {
@@ -383,9 +387,13 @@ export function EncounterImageBlock({
         }}
         prosperityRewardId={encounter.prosperityRewardId}
         ref={resultBlockRef}
-        resolutionAction={revealedRoll !== null ? selectedAction : null}
+        resolutionAction={
+          outcomeRoll !== undefined
+            ? (outcomeResolutionAction ?? selectedAction)
+            : (revealedRoll !== null ? selectedAction : null)
+        }
         rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
-        roll={revealedRoll}
+        roll={outcomeRoll ?? revealedRoll}
         usedSolutionId={selectedSolutionId}
       />
       <SolutionBlock

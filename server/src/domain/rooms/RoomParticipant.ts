@@ -31,6 +31,8 @@ export interface ParticipantResolutionSummary {
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;
+  /** Room encounter: yellow-red gem granted on commit for this participant. */
+  loreGemGranted?: boolean;
 }
 
 /** Reveal-only outcome attached after prepare; not persisted to avatar until room commit. */

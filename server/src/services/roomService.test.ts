@@ -4,16 +4,21 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { bootstrapSession } from './sessionService.js';
 import { shouldUseEncounterFollow } from './encounterGenerator.js';
 import {
+  broadcastCallForHelp,
   clientActionToPlayerAction,
   createRoom,
   getActiveRoomForPlayer,
   joinRoom,
+  listPendingHelpInvitations,
   RoomError,
   setFocusState,
   submitChoice,
   submitContinue,
   tickInactivity,
 } from './roomService.js';
+import { setPlayer } from '../db/postgresDocumentStore.js';
+import { queryActivityFeed } from './gameEventService.js';
+import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import { INACTIVITY_MS } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
@@ -670,5 +675,135 @@ const joinedRoom = await joinRoom(
   leaderPoolRoom.roomId,
 );
 assert.deepEqual(joinedRoom.mergedExpansions, leaderExpansionsBeforeJoin);
+
+assert.equal(leaderPoolRoom.slotEncounterSnapshots.length, 3);
+assert.notEqual(
+  leaderPoolRoom.slotEncounterSnapshots[0].rollA,
+  leaderPoolRoom.slotEncounterSnapshots[1].rollA,
+);
+const slotOneRollBeforeJoin = leaderPoolRoom.slotEncounterSnapshots[1].rollA;
+assert.equal(
+  joinedRoom.slotEncounterSnapshots[1].rollA,
+  slotOneRollBeforeJoin,
+);
+
+const leaderDto = await toEncounterRoomSnapshotDto(leaderPoolRoom, leaderPoolSession.playerId);
+const joinerDto = await toEncounterRoomSnapshotDto(joinedRoom, joinerSession.playerId);
+assert.equal(leaderDto.activeEncounter.rollA, leaderPoolRoom.slotEncounterSnapshots[0].rollA);
+assert.equal(joinerDto.activeEncounter.rollA, joinedRoom.slotEncounterSnapshots[1].rollA);
+assert.notEqual(leaderDto.activeEncounter.rollA, joinerDto.activeEncounter.rollA);
+
+const slotChoiceRoom = await createRoom(joinerSession.playerId, joinerAvatarId);
+const slotChoiceReady: EncounterRoom = {
+  ...slotChoiceRoom,
+  activeEncounterSnapshot: {
+    ...slotChoiceRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: slotChoiceRoom.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(slotChoiceReady);
+const afterSlotChoice = await submitChoice(joinerSession.playerId, joinerAvatarId, 'C');
+const slotChoiceParticipant = afterSlotChoice.participants.find(
+  (participant) => participant.playerId === joinerSession.playerId,
+);
+assert.ok(slotChoiceParticipant?.preparedResult);
+assert.equal(
+  slotChoiceParticipant?.preparedResult?.selectedRoll,
+  slotChoiceReady.slotEncounterSnapshots[1].rollPrimaryC
+    ?? slotChoiceReady.slotEncounterSnapshots[1].rollC,
+);
+
+const helpCallerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const helpCallerIdentityJwk = JSON.stringify(helpCallerKeyPair.publicKey.export({ format: 'jwk' }));
+const helpCallerSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: helpCallerIdentityJwk,
+  playerName: `room-help-caller-${Date.now()}`,
+});
+const helpCallerAvatarId = `help-caller-${Date.now()}`;
+await savePlayerAvatar(helpCallerSession.playerId, {
+  id: helpCallerAvatarId,
+  name: 'Help Caller',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+await createRoom(helpCallerSession.playerId, helpCallerAvatarId);
+
+const helpFriendKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const helpFriendIdentityJwk = JSON.stringify(helpFriendKeyPair.publicKey.export({ format: 'jwk' }));
+const helpFriendSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: helpFriendIdentityJwk,
+  playerName: `room-help-friend-${Date.now()}`,
+});
+await savePlayerAvatar(helpFriendSession.playerId, {
+  id: `help-friend-${Date.now()}`,
+  name: 'Help Friend',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+const helpStrangerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const helpStrangerIdentityJwk = JSON.stringify(helpStrangerKeyPair.publicKey.export({ format: 'jwk' }));
+const helpStrangerSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: helpStrangerIdentityJwk,
+  playerName: `room-help-stranger-${Date.now()}`,
+});
+await savePlayerAvatar(helpStrangerSession.playerId, {
+  id: `help-stranger-${Date.now()}`,
+  name: 'Help Stranger',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+const helpNow = Date.now();
+await setPlayer(helpCallerSession.playerId, {
+  friendIds: [helpFriendSession.playerId],
+  lastPlayedAt: helpNow,
+}, { merge: true });
+await setPlayer(helpFriendSession.playerId, {
+  lastPlayedAt: helpNow,
+}, { merge: true });
+await setPlayer(helpStrangerSession.playerId, {
+  lastPlayedAt: helpNow,
+}, { merge: true });
+
+const helpResult = await broadcastCallForHelp(helpCallerSession.playerId, helpCallerAvatarId);
+assert.ok(helpResult.invitedCount >= 1);
+
+const friendInvites = await listPendingHelpInvitations(helpFriendSession.playerId);
+const strangerInvites = await listPendingHelpInvitations(helpStrangerSession.playerId);
+assert.ok(
+  friendInvites.some((invite) => invite.fromPlayerId === helpCallerSession.playerId),
+  'eligible friend should receive a help invitation',
+);
+
+const friendFeed = await queryActivityFeed(helpFriendSession.playerId);
+const friendHelpEntry = friendFeed.find((entry) => entry.eventType === 'help_requested');
+assert.ok(friendHelpEntry);
+assert.equal(friendHelpEntry.message, 'Help Caller calls out for help.');
+assert.ok(friendHelpEntry.joinAction);
+
+if (strangerInvites.some((invite) => invite.fromPlayerId === helpCallerSession.playerId)) {
+  const strangerFeed = await queryActivityFeed(helpStrangerSession.playerId);
+  const strangerHelpEntry = strangerFeed.find((entry) => entry.eventType === 'help_requested');
+  assert.ok(strangerHelpEntry);
+  assert.equal(strangerHelpEntry.message, 'Help Caller calls out for help.');
+}
 
 console.log('roomService.test.ts passed');

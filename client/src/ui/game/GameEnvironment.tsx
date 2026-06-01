@@ -25,7 +25,7 @@ import {
   type SlotStateDto,
 } from '../../api/http.js';
 import { ApiRequestError } from '../../api/httpErrorMessage.js';
-import { normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
+import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
@@ -698,21 +698,37 @@ export function GameEnvironment({
   const postSystemRecap = room?.roomState === 'waiting_continue'
     ? systemEvent?.lastEventRecap
     : undefined;
-  const displayResolution = postSystemRecap ?? serverResolution;
+  const actorOutcome = systemEventActor
+    ? (systemEventActor.preparedResult
+      ?? systemEventActor.resolutionSummary
+      ?? systemEvent?.lastEventRecap)
+    : undefined;
+  const witnessActorOutcome = isWitnessMode && actorOutcome ? actorOutcome : undefined;
+  const displayResolution = witnessActorOutcome ?? postSystemRecap ?? serverResolution;
 
   const waitingForResolution = room?.roomState === 'advancing';
   const showServerResult = displayResolution !== undefined && (
     room?.roomState === 'waiting_continue' ||
     room?.roomState === 'advancing' ||
-    localParticipant?.preparedResult !== undefined
+    localParticipant?.preparedResult !== undefined ||
+    witnessActorOutcome !== undefined
   );
+  const outcomeRollForDisplay = witnessActorOutcome?.selectedRoll;
+  const outcomeResolutionAction = witnessActorOutcome
+    ? systemEventActor?.selectedAction
+    : undefined;
   const deferRewardDismiss = shouldDeferRewardDismiss(room, resultRollVisible);
   const localHasContinuePressed = room ? localContinuePressed(room) : false;
   const continueGlow = continueGlowClassForRoom(room);
   const continueWaitingAfterPress = localWaitingForRoomAdvance(room);
-  const loreGemCollected = localParticipant?.loreGemCollected === true;
-  const showLoreGemReward = loreGemCollected && encounter.loreGemOffer?.eligible === true;
-
+  const roomLoreGemEarned = encounter.loreGemOffer?.eligible === true
+    && room?.loreGemActivated === true
+    && room.loreGemActivatedSnapshotId === encounter.snapshotId
+    && localParticipant?.choiceState !== 'disengaged';
+  const loreGemCollected = localParticipant?.loreGemCollected === true || roomLoreGemEarned;
+  const showLoreGemReward = roomLoreGemEarned
+    || serverResolution?.loreGemGranted === true
+    || localParticipant?.preparedResult?.loreGemGranted === true;
   function applyLoreGemRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
     applyRoomSnapshot(
       nextRoom,
@@ -777,7 +793,13 @@ export function GameEnvironment({
                 roomState={room?.roomState ?? 'active_encounter'}
                 serverResolution={showServerResult ? displayResolution : undefined}
                 witnessMode={isWitnessMode}
-                systemEventActorName={systemEventActor?.playerName}
+                systemEventActorName={
+                  systemEventActor?.avatar
+                    ? formatAvatarDisplayName(systemEventActor.avatar)
+                    : undefined
+                }
+                outcomeRoll={outcomeRollForDisplay}
+                outcomeResolutionAction={outcomeResolutionAction}
                 skillbookOpen={skillbookOpen}
                 title={title}
               />

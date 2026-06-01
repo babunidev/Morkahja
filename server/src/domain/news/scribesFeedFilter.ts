@@ -45,8 +45,12 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'support_appreciation_nudge':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'help_requested':
-      return false;
+      if (!viewingPlayerId) {
+        return false;
+      }
+      return readString(event.payload, 'toPlayerId') === viewingPlayerId;
     case 'room_created':
+    case 'room_encounter_started':
     case 'help_called':
       return true;
     default:

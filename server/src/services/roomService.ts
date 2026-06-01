@@ -36,6 +36,11 @@ import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import {
+  formatAvatarDisplayName,
+  readAvatarDisplayTitle,
+} from '../domain/achievements/achievementTitles.js';
+import {
+  bindSnapshotToParticipant,
   buildEncounterSnapshot,
   buildLineagePreparedEncounter,
   ENCOUNTER_ACTION_ENABLE_DELAY_MS,
@@ -48,11 +53,15 @@ import {
   resolveParticipantInRoom,
   selectNextEncounter,
   shouldUseEncounterFollow,
-  withPrecomputedSnapshotRewards,
   type ResolveParticipantInRoomResult,
 } from './encounterGenerator.js';
 import {
-  loadActiveEncounter,
+  ensureSlotEncounterSnapshots,
+  seedAllSlotEncountersForRoom,
+  snapshotForParticipant,
+  syncActiveEncountersForRoom,
+} from './roomEncounterSeeding.js';
+import {
   loadAvatar,
   saveActiveEncounter,
 } from './encounterPersistence.js';
@@ -76,17 +85,18 @@ import {
   saveRoomInvitation,
 } from './roomPersistence.js';
 import {
-  recordHelpCalledEvent,
   recordHelpJoinedEvent,
   recordHelpRequestedEvent,
   recordPlayerDisengagedEvent,
-  recordRoomCreatedEvent,
   recordRoomEncounterResolvedEvent,
   recordRoomEncounterStartedEvent,
 } from './roomGameEvents.js';
 import { isPlayerRecentlyActive } from './playerInteractionService.js';
 import {
+  applyLoreGemOfferToRoom,
   ensureRoomLoreGemOffer,
+  participantsEarnedRoomLoreGem,
+  roomLoreGemActivatedForSnapshot,
   withEncounterLoreGemOffer,
 } from './loreGemService.js';
 
@@ -399,47 +409,6 @@ function previousEncounterFromRoom(room: EncounterRoom): EncounterData | null {
   return getEncounterById(lastId) ?? null;
 }
 
-async function seedRoomEncounterSnapshot(
-  playerId: string,
-  avatarId: string,
-  roomId: string,
-  mergedExpansions: number[],
-  room?: EncounterRoom,
-): Promise<EncounterSnapshot> {
-  const existing = await loadActiveEncounter(playerId, avatarId);
-  if (existing && !existing.resolved && existing.state === 'active') {
-    return withEncounterLoreGemOffer({
-      ...withPrecomputedSnapshotRewards(existing, await loadAvatar(playerId, avatarId) ?? undefined),
-      roomId,
-      state: 'active',
-    });
-  }
-
-  const avatar = await loadAvatar(playerId, avatarId);
-  if (!avatar) {
-    throw new RoomError('Avatar not found', 404, 'AVATAR_NOT_FOUND');
-  }
-
-  const encounter = selectNextEncounter({
-    unlockedExpansions: mergedExpansions,
-    previousEncounter: room ? previousEncounterFromRoom(room) : previousEncounterFromAvatar(avatar),
-  });
-  const preparedEncounter = prepareNextEncounter(encounter, mergedExpansions);
-  const snapshot = buildEncounterSnapshot(
-    playerId,
-    avatarId,
-    encounter,
-    preparedEncounter,
-    avatar,
-  );
-
-  return withEncounterLoreGemOffer({
-    ...snapshot,
-    roomId,
-    state: 'active',
-  });
-}
-
 function previousEncounterFromAvatar(avatar: AvatarDocument): EncounterData | null {
   const lastId = avatar.progression?.lastEncounterId;
   if (typeof lastId !== 'number' || lastId <= 0) {
@@ -559,6 +528,27 @@ export async function touchPlayerPresence(
 
 function findParticipant(room: EncounterRoom, playerId: string): RoomParticipant | undefined {
   return room.participants.find((participant) => participant.playerId === playerId);
+}
+
+async function syncActiveEncountersInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<void> {
+  for (const participant of room.participants) {
+    if (participant.choiceState === 'disengaged') {
+      continue;
+    }
+
+    await transaction.setActiveEncounter(
+      participant.playerId,
+      participant.avatarId,
+      bindSnapshotToParticipant(
+        room.slotEncounterSnapshots[participant.slotIndex],
+        participant.playerId,
+        participant.avatarId,
+      ),
+    );
+  }
 }
 
 const INACTIVE_OUTCOME_MESSAGE = 'Inactive';
@@ -756,22 +746,7 @@ async function beginSystemEventInTransaction(
     throw new RoomError('System encounter not found', 500, 'SYSTEM_ENCOUNTER_NOT_FOUND');
   }
 
-  const actorAvatar = await transaction.getAvatar<AvatarDocument>(
-    actor.playerId,
-    actor.avatarId,
-  );
   const prepared = preparedSystemEncounter(item.encounterId);
-  const snapshot = withEncounterLoreGemOffer({
-    ...buildEncounterSnapshot(
-      actor.playerId,
-      actor.avatarId,
-      systemEncounter,
-      prepared,
-      actorAvatar ?? undefined,
-    ),
-    roomId: room.roomId,
-    state: 'active',
-  });
 
   const participants = room.participants.map((participant) => {
     if (participant.choiceState === 'disengaged') {
@@ -797,31 +772,34 @@ async function beginSystemEventInTransaction(
     };
   });
 
-  const systemEventRoom: EncounterRoom = {
+  const draftRoom: EncounterRoom = {
     ...room,
+    participants,
+    updatedAt: nowMs(),
+  };
+  let seededRoom = await seedAllSlotEncountersForRoom(
+    draftRoom,
+    systemEncounter,
+    prepared,
+  );
+  const shellWithLore = withEncounterLoreGemOffer(seededRoom.activeEncounterSnapshot, nowMs());
+  if (shellWithLore.loreGemOffer) {
+    seededRoom = applyLoreGemOfferToRoom(seededRoom, shellWithLore.loreGemOffer);
+  }
+
+  const systemEventRoom: EncounterRoom = {
+    ...seededRoom,
     roomState: 'system_event',
-    activeEncounterSnapshot: snapshot,
     systemEvent: {
       queue,
       queueIndex,
       lineage,
     },
-    participants,
     updatedAt: nowMs(),
   };
 
   await transaction.setEncounterRoom(room.roomId, systemEventRoom);
-
-  for (const participant of participants) {
-    if (participant.choiceState === 'disengaged') {
-      continue;
-    }
-    await transaction.setActiveEncounter(
-      participant.playerId,
-      participant.avatarId,
-      snapshot,
-    );
-  }
+  await syncActiveEncountersInTransaction(transaction, systemEventRoom);
 
   return systemEventRoom;
 }
@@ -832,20 +810,28 @@ function participantSummaryFromResolve(
   return preparedResultFromResolve(result);
 }
 
-async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
-  const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (
-    room.loreGemActivated !== true ||
-    room.loreGemActivatedSnapshotId !== snapshotId
-  ) {
-    return;
+function withRoomLoreGemOnResolutionSummary(
+  room: EncounterRoom,
+  participant: RoomParticipant,
+  summary: ParticipantPreparedResult,
+): ParticipantPreparedResult {
+  if (participant.choiceState === 'disengaged') {
+    return summary;
   }
 
-  for (const participant of activeParticipants(room)) {
-    if (participant.loreGemCollected !== true) {
-      continue;
-    }
+  const snapshotId = room.activeEncounterSnapshot.snapshotId;
+  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)) {
+    return summary;
+  }
 
+  return { ...summary, loreGemGranted: true };
+}
+
+async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
+  const snapshotId = room.activeEncounterSnapshot.snapshotId;
+  const recipients = participantsEarnedRoomLoreGem(room, snapshotId);
+
+  for (const participant of recipients) {
     const claimKey = `${snapshotId}:${participant.playerId}`;
     const player = await loadPlayer(participant.playerId);
     if (player?.loreGemClaims?.[claimKey] === true) {
@@ -880,15 +866,21 @@ async function commitPreparedResultsForRoom(
       );
       commits.set(participant.playerId, result);
 
+      const summary = withRoomLoreGemOnResolutionSummary(
+        room,
+        participant,
+        participantSummaryFromResolve(result),
+      );
       nextParticipants = nextParticipants.map((entry) =>
         entry.playerId === participant.playerId
           ? {
               ...entry,
               choiceState: result.avatarDied ? 'disengaged' as const : entry.choiceState,
               disconnectedAt: result.avatarDied ? now : entry.disconnectedAt,
-              resolutionSummary: participantSummaryFromResolve(result),
+              resolutionSummary: summary,
               preparedResult: undefined,
               preparedCommit: undefined,
+              loreGemCollected: summary.loreGemGranted === true ? true : entry.loreGemCollected,
             }
           : entry,
       );
@@ -965,21 +957,8 @@ async function advanceRoomAfterCommit(
     preparedEncounter = prepareNextEncounter(nextEncounter, roomForAdvance.mergedExpansions);
   }
 
-  const nextSnapshot = withEncounterLoreGemOffer({
-    ...buildEncounterSnapshot(
-      leader.playerId,
-      leader.avatarId,
-      nextEncounter,
-      preparedEncounter,
-      await transaction.getAvatar<AvatarDocument>(leader.playerId, leader.avatarId) ?? undefined,
-    ),
-    roomId: roomForAdvance.roomId,
-    state: 'active',
-  }, nowMs());
-
-  const advanced: EncounterRoom = {
+  const advanceDraft: EncounterRoom = {
     ...roomForAdvance,
-    activeEncounterSnapshot: nextSnapshot,
     lastEncounterId,
     helpCalledSnapshotId: undefined,
     systemEvent: undefined,
@@ -990,16 +969,14 @@ async function advanceRoomAfterCommit(
     roomState: 'active_encounter',
     updatedAt: nowMs(),
   };
+  const advanced = await seedAllSlotEncountersForRoom(
+    advanceDraft,
+    nextEncounter,
+    preparedEncounter,
+  );
 
   await transaction.setEncounterRoom(roomId, advanced);
-
-  for (const participant of advanced.participants) {
-    await transaction.setActiveEncounter(
-      participant.playerId,
-      participant.avatarId,
-      nextSnapshot,
-    );
-  }
+  await syncActiveEncountersInTransaction(transaction, advanced);
 
   return advanced;
 }
@@ -1045,12 +1022,6 @@ export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
     );
   });
 
-  if (advanced && advanced !== room) {
-    if (advanced.roomState === 'active_encounter') {
-      await recordRoomEncounterStartedEvent(advanced);
-    }
-  }
-
   return advanced ?? room;
 }
 
@@ -1095,7 +1066,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
         transaction,
         actor.playerId,
         actor.avatarId,
-        room.activeEncounterSnapshot,
+        snapshotForParticipant(room, actor),
         actor.selectedAction,
       );
 
@@ -1211,7 +1182,7 @@ async function applyParticipantPrepare(
     transaction,
     playerId,
     participant.avatarId,
-    room.activeEncounterSnapshot,
+    snapshotForParticipant(room, participant),
     playerAction,
   );
 
@@ -1222,7 +1193,11 @@ async function applyParticipantPrepare(
           choiceState: 'ready_to_continue' as const,
           selectedAction: playerAction,
           selectedSolutionId: solutionId,
-          preparedResult: prepared.preparedResult,
+          preparedResult: withRoomLoreGemOnResolutionSummary(
+            room,
+            participant,
+            prepared.preparedResult,
+          ),
           preparedCommit: prepared.preparedCommit,
           resolutionSummary: undefined,
           lastInteractionAt: now,
@@ -1267,29 +1242,44 @@ export async function createRoom(
 
   const roomId = randomUUID();
   const leaderExpansions = await mergeExpansionsForPlayerIds([playerId]);
-  const snapshot = await seedRoomEncounterSnapshot(playerId, avatarId, roomId, leaderExpansions);
+  const encounter = selectNextEncounter({
+    unlockedExpansions: leaderExpansions,
+    previousEncounter: previousEncounterFromAvatar(avatar),
+  });
+  const preparedEncounter = prepareNextEncounter(encounter, leaderExpansions);
 
-  const room: EncounterRoom = {
+  const draftRoom: EncounterRoom = {
     roomId,
     leaderPlayerId: playerId,
     participants: [createParticipant(playerId, avatarId, 0)],
     slotStates: DEFAULT_SLOT_STATES,
     mergedExpansions: leaderExpansions,
-    activeEncounterSnapshot: snapshot,
+    activeEncounterSnapshot: buildEncounterSnapshot(
+      playerId,
+      avatarId,
+      encounter,
+      preparedEncounter,
+      avatar,
+    ),
+    slotEncounterSnapshots: [
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
+    ],
     roomState: 'active_encounter',
     lastEncounterId: avatar.progression?.lastEncounterId,
     createdAt: nowMs(),
     updatedAt: nowMs(),
   };
+  const room = await seedAllSlotEncountersForRoom(
+    draftRoom,
+    encounter,
+    preparedEncounter,
+  );
 
   await saveEncounterRoom(room);
-  await saveActiveEncounter({
-    ...snapshot,
-    playerId,
-    avatarId,
-  });
+  await syncActiveEncountersForRoom(room);
   await setPresenceInRoom(playerId, roomId);
-  await recordRoomCreatedEvent(playerId, room);
   await recordRoomEncounterStartedEvent(room);
   return room;
 }
@@ -1314,6 +1304,7 @@ export async function getActiveRoomForPlayer(
   if (!findParticipant(room, playerId)) {
     return null;
   }
+  room = await ensureSlotEncounterSnapshots(room);
   room = await ensureRoomLoreGemOffer(room);
   room = await tickRoom(room);
   return tickInactivity(room);
@@ -1361,18 +1352,21 @@ export async function joinRoom(
     }
   }
 
+  const roomWithJoiner = await ensureSlotEncounterSnapshots(room);
   const updated: EncounterRoom = {
-    ...room,
-    participants: [...room.participants, createParticipant(playerId, avatarId, slotIndex)],
+    ...roomWithJoiner,
+    participants: [...roomWithJoiner.participants, createParticipant(playerId, avatarId, slotIndex)],
     updatedAt: nowMs(),
   };
 
   await saveEncounterRoom(updated);
-  await saveActiveEncounter({
-    ...updated.activeEncounterSnapshot,
-    playerId,
-    avatarId,
-  });
+  await saveActiveEncounter(
+    bindSnapshotToParticipant(
+      updated.slotEncounterSnapshots[slotIndex],
+      playerId,
+      avatarId,
+    ),
+  );
   await setPresenceInRoom(playerId, roomId);
   return updated;
 }
@@ -1412,6 +1406,7 @@ export async function leaveRoom(playerId: string, avatarId?: string): Promise<vo
       mergedExpansions: await expansionsForRoomLeader(promoted),
     };
     await saveEncounterRoom(updated);
+    await syncActiveEncountersForRoom(updated);
     await clearPresenceRoom(playerId);
     return;
   }
@@ -1498,6 +1493,11 @@ export async function submitChoice(
   const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   if (!roomId) {
     throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+
+  const existingRoom = await loadEncounterRoom(roomId);
+  if (existingRoom) {
+    await ensureSlotEncounterSnapshots(existingRoom);
   }
 
   const playerAction = clientActionToPlayerAction(action);
@@ -1699,6 +1699,7 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
     throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
   }
 
+  room = await ensureSlotEncounterSnapshots(room);
   room = await reengageParticipantIfNeeded(room, playerId);
 
   const continueTargets = continueTargetsForRoom(room);
@@ -1798,6 +1799,7 @@ async function sendHelpInvitation(
   toPlayerId: string,
   room: EncounterRoom,
   fromPlayerName: string,
+  fromAvatarName: string,
   avatarVisual?: { portrait?: string; frame?: string },
 ): Promise<RoomInvitation> {
   const invitation: RoomInvitation = {
@@ -1820,6 +1822,7 @@ async function sendHelpInvitation(
       encounterId: room.activeEncounterSnapshot.encounterId,
       encounterTitle: room.activeEncounterSnapshot.encounterTitle,
       fromPlayerName,
+      avatarName: fromAvatarName,
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
     },
@@ -1891,6 +1894,12 @@ export async function broadcastCallForHelp(
     ? { portrait: callerAvatar.portrait, frame: callerAvatar.frame }
     : undefined;
   const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
+  const fromAvatarName = callerAvatar
+    ? formatAvatarDisplayName(
+      callerAvatar.name?.trim() || 'Adventurer',
+      readAvatarDisplayTitle(callerAvatar),
+    )
+    : fromPlayerName;
 
   const eligibleFriendIds: string[] = [];
   for (const friendId of friendIds) {
@@ -1904,12 +1913,15 @@ export async function broadcastCallForHelp(
     eligibleFriendIds.push(friendId);
   }
 
-  if (eligibleFriendIds.length > 0) {
-    await recordHelpCalledEvent(fromPlayerId, room, {
+  for (const friendId of eligibleFriendIds) {
+    await sendHelpInvitation(
+      fromPlayerId,
+      friendId,
+      room,
       fromPlayerName,
-      avatarPortrait: avatarVisual?.portrait,
-      avatarFrame: avatarVisual?.frame,
-    });
+      fromAvatarName,
+      avatarVisual,
+    );
   }
 
   const randomCandidates: string[] = [];
@@ -1937,6 +1949,7 @@ export async function broadcastCallForHelp(
       targetId,
       room,
       fromPlayerName,
+      fromAvatarName,
       avatarVisual,
     );
   }
@@ -2006,6 +2019,16 @@ export async function requestHelp(
   };
 
   const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
+  const activeAvatar = await loadPlayerActiveAvatar(fromPlayerId);
+  const callerAvatar = activeAvatar?.id
+    ? await loadAvatar(fromPlayerId, activeAvatar.id)
+    : null;
+  const fromAvatarName = callerAvatar
+    ? formatAvatarDisplayName(
+      callerAvatar.name?.trim() || 'Adventurer',
+      readAvatarDisplayTitle(callerAvatar),
+    )
+    : fromPlayerName;
   await saveRoomInvitation(invitation);
   await recordHelpRequestedEvent(
     fromPlayerId,
@@ -2016,6 +2039,9 @@ export async function requestHelp(
       encounterId: room.activeEncounterSnapshot.encounterId,
       encounterTitle: room.activeEncounterSnapshot.encounterTitle,
       fromPlayerName,
+      avatarName: fromAvatarName,
+      ...(callerAvatar?.portrait ? { avatarPortrait: callerAvatar.portrait } : {}),
+      ...(callerAvatar?.frame ? { avatarFrame: callerAvatar.frame } : {}),
     },
   );
   return invitation;

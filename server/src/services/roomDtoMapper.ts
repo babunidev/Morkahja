@@ -257,13 +257,20 @@ export async function toEncounterRoomSnapshotDto(
 
   participantDtos.sort((a, b) => a.slotIndex - b.slotIndex);
 
+  const localParticipant = room.participants.find(
+    (participant) => participant.playerId === localPlayerId,
+  );
+  const localSlotIndex = localParticipant?.slotIndex ?? 0;
+  const localEncounterSnapshot = room.slotEncounterSnapshots[localSlotIndex]
+    ?? room.activeEncounterSnapshot;
+
   return {
     roomId: room.roomId,
     leaderPlayerId: room.leaderPlayerId,
     roomState: room.roomState,
     slotStates: room.slotStates,
     participants: participantDtos,
-    activeEncounter: toEncounterSnapshotDto(room.activeEncounterSnapshot),
+    activeEncounter: toEncounterSnapshotDto(localEncounterSnapshot),
     helpCalledForEncounter:
       room.helpCalledSnapshotId === room.activeEncounterSnapshot.snapshotId,
     systemEvent: toSystemEventDto(room, localPlayerId),

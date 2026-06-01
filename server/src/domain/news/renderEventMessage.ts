@@ -160,13 +160,11 @@ export function renderEventMessage(event: GameEvent): string {
       return `${playerLabel(payload)} claimed the Hearth Blessing (${amount} ${gemLabel}).`;
     }
     case 'help_requested':
-    case 'help_called': {
-      const encounterTitle = readString(payload, 'encounterTitle') ?? 'an encounter';
-      return `${playerLabel(payload)} calls for help at ${encounterTitle}.`;
-    }
-    case 'room_created': {
-      return `${playerLabel(payload)} entered an encounter at ${encounterLabel(payload)}.`;
-    }
+    case 'help_called':
+      return `${avatarLabel(payload)} calls out for help.`;
+    case 'room_created':
+    case 'room_encounter_started':
+      return `${avatarLabel(payload)} encounters ${encounterLabel(payload)}.`;
     default:
       return `${avatarLabel(payload)} made their mark on the world.`;
   }

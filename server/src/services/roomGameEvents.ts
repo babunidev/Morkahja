@@ -1,6 +1,37 @@
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type { RoomInvitation } from '../domain/rooms/RoomInvitation.js';
+import {
+  formatAvatarDisplayName,
+  readAvatarDisplayTitle,
+} from '../domain/achievements/achievementTitles.js';
+import { loadAvatar } from './encounterPersistence.js';
 import { recordGameEvent } from './gameEventService.js';
+
+async function leaderAvatarPayload(
+  room: EncounterRoom,
+  leaderPlayerId: string,
+): Promise<Record<string, unknown>> {
+  const leader = room.participants.find((participant) => participant.playerId === leaderPlayerId);
+  const avatar = leader
+    ? await loadAvatar(leaderPlayerId, leader.avatarId)
+    : null;
+
+  return {
+    roomId: room.roomId,
+    encounterId: room.activeEncounterSnapshot.encounterId,
+    encounterTitle: room.activeEncounterSnapshot.encounterTitle,
+    ...(avatar
+      ? {
+          avatarName: formatAvatarDisplayName(
+            avatar.name?.trim() || 'Adventurer',
+            readAvatarDisplayTitle(avatar),
+          ),
+          ...(avatar.portrait ? { avatarPortrait: avatar.portrait } : {}),
+          ...(avatar.frame ? { avatarFrame: avatar.frame } : {}),
+        }
+      : {}),
+  };
+}
 
 export async function recordRoomCreatedEvent(
   playerId: string,
@@ -8,13 +39,11 @@ export async function recordRoomCreatedEvent(
 ): Promise<void> {
   await recordGameEvent({
     playerId,
+    avatarId: room.participants.find((participant) => participant.playerId === playerId)?.avatarId,
     type: 'room_created',
     visibility: 'friends',
     importance: 'low',
-    payload: {
-      roomId: room.roomId,
-      encounterId: room.activeEncounterSnapshot.encounterId,
-    },
+    payload: await leaderAvatarPayload(room, playerId),
   });
 }
 
@@ -62,9 +91,7 @@ export async function recordRoomEncounterStartedEvent(
     visibility: 'global',
     importance: 'medium',
     payload: {
-      roomId: room.roomId,
-      encounterId: room.activeEncounterSnapshot.encounterId,
-      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
+      ...(await leaderAvatarPayload(room, room.leaderPlayerId)),
       participantCount: room.participants.filter((p) => p.choiceState !== 'disengaged').length,
     },
   });
@@ -90,6 +117,7 @@ export async function recordHelpCalledEvent(
   room: EncounterRoom,
   context: {
     fromPlayerName?: string;
+    avatarName?: string;
     avatarPortrait?: string;
     avatarFrame?: string;
   },
@@ -104,6 +132,7 @@ export async function recordHelpCalledEvent(
       encounterId: room.activeEncounterSnapshot.encounterId,
       encounterTitle: room.activeEncounterSnapshot.encounterTitle,
       playerName: context.fromPlayerName,
+      avatarName: context.avatarName,
       snapshotId: room.activeEncounterSnapshot.snapshotId,
       ...(context.avatarPortrait ? { avatarPortrait: context.avatarPortrait } : {}),
       ...(context.avatarFrame ? { avatarFrame: context.avatarFrame } : {}),
@@ -120,6 +149,7 @@ export async function recordHelpRequestedEvent(
     encounterId: number;
     encounterTitle?: string;
     fromPlayerName?: string;
+    avatarName?: string;
     avatarPortrait?: string;
     avatarFrame?: string;
   },
@@ -136,6 +166,7 @@ export async function recordHelpRequestedEvent(
       encounterId: context.encounterId,
       encounterTitle: context.encounterTitle,
       playerName: context.fromPlayerName,
+      ...(context.avatarName ? { avatarName: context.avatarName } : {}),
       ...(context.avatarPortrait ? { avatarPortrait: context.avatarPortrait } : {}),
       ...(context.avatarFrame ? { avatarFrame: context.avatarFrame } : {}),
     },

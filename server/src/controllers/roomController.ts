@@ -27,6 +27,12 @@ import {
   touchPlayerInteraction,
 } from '../services/playerInteractionService.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
+import {
+  formatAvatarDisplayName,
+  readAvatarDisplayTitle,
+} from '../domain/achievements/achievementTitles.js';
+import { loadAvatar } from '../services/encounterPersistence.js';
+import { loadPlayerActiveAvatar } from '../services/playerService.js';
 import type { PlayerDocument } from '../types/player.js';
 
 class RequestError extends Error {
@@ -392,10 +398,26 @@ export async function listPendingHelpController(
     const invitations = await listPendingHelpInvitations(playerId);
     const playerIds = [...new Set(invitations.map((invite) => invite.fromPlayerId))];
     const names = new Map<string, string>();
+    const avatarNames = new Map<string, string>();
 
     await Promise.all(playerIds.map(async (id) => {
       const player = await getPlayer<Partial<PlayerDocument>>(id);
-      names.set(id, player?.playerName?.trim() || id);
+      const fromPlayerName = player?.playerName?.trim() || id;
+      names.set(id, fromPlayerName);
+
+      const activeAvatar = await loadPlayerActiveAvatar(id);
+      const avatar = activeAvatar?.id
+        ? await loadAvatar(id, activeAvatar.id)
+        : null;
+      avatarNames.set(
+        id,
+        avatar
+          ? formatAvatarDisplayName(
+            avatar.name?.trim() || 'Adventurer',
+            readAvatarDisplayTitle(avatar),
+          )
+          : fromPlayerName,
+      );
     }));
 
     res.json({
@@ -404,6 +426,9 @@ export async function listPendingHelpController(
         roomId: invite.roomId,
         fromPlayerId: invite.fromPlayerId,
         fromPlayerName: names.get(invite.fromPlayerId) ?? invite.fromPlayerId,
+        fromAvatarName: avatarNames.get(invite.fromPlayerId)
+          ?? names.get(invite.fromPlayerId)
+          ?? invite.fromPlayerId,
         expiresAt: invite.expiresAt,
       })),
     });

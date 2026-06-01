@@ -283,4 +283,61 @@ assert.equal(
   '/UI/06_SettingsMenu/No.webp',
 );
 
+const roomCreated = {
+  eventId: 'room-created-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'room_created',
+  visibility: 'friends' as const,
+  importance: 'low' as const,
+  payload: {
+    avatarName: 'Lyra',
+    encounterTitle: 'Frozen Pass',
+    encounterId: 12,
+    roomId: 'room-1',
+  },
+};
+
+assert.equal(
+  renderEventMessage(roomCreated),
+  'Lyra encounters Frozen Pass.',
+);
+
+const roomEncounterStarted = {
+  ...roomCreated,
+  eventId: 'room-started-1',
+  type: 'room_encounter_started',
+  visibility: 'global' as const,
+};
+
+assert.equal(
+  renderEventMessage(roomEncounterStarted),
+  'Lyra encounters Frozen Pass.',
+);
+
+const helpRequested = {
+  eventId: 'help-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  type: 'help_requested',
+  visibility: 'friends' as const,
+  importance: 'high' as const,
+  payload: {
+    avatarName: 'Lyra',
+    playerName: 'AccountName',
+    toPlayerId: 'player-b',
+    roomId: 'room-1',
+    inviteId: 'invite-1',
+  },
+};
+
+assert.equal(
+  renderEventMessage(helpRequested),
+  'Lyra calls out for help.',
+);
+assert.equal(isVisibleInScribesFeed(helpRequested, 'player-b'), true);
+assert.equal(isVisibleInScribesFeed(helpRequested, 'player-a'), false);
+assert.equal(isVisibleInScribesFeed(roomEncounterStarted, 'player-b'), true);
+
 console.log('achievementScribes.test.ts passed');

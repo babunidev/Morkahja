@@ -18,6 +18,12 @@ export interface EncounterRoom {
   slotStates: [SlotState, SlotState, SlotState];
   mergedExpansions: number[];
   activeEncounterSnapshot: EncounterSnapshot;
+  /** Pre-rolled fate per slot (0–2); mid-join binds occupant to slot snapshot. */
+  slotEncounterSnapshots: [
+    EncounterSnapshot,
+    EncounterSnapshot,
+    EncounterSnapshot,
+  ];
   roomState: RoomState;
   /** Witnessed level-up / Atranor flow and encounter lineage for advance. */
   systemEvent?: RoomSystemEventContext;

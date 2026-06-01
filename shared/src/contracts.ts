@@ -419,6 +419,7 @@ export interface ParticipantResolutionSummaryDto {
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;
+  loreGemGranted?: boolean;
 }
 
 export interface RoomSystemEventDto {
@@ -440,6 +441,7 @@ export interface ParticipantPreparedResultDto {
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;
+  loreGemGranted?: boolean;
 }
 
 export interface RoomParticipantDto {
@@ -495,6 +497,7 @@ export interface RoomHelpInvitationDto {
   roomId: string;
   fromPlayerId: string;
   fromPlayerName: string;
+  fromAvatarName: string;
   expiresAt: number;
 }
 

@@ -1,7 +1,16 @@
 import { rollLoreGemClaimableAt } from '../domain/encounters/loreGemConstants.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
+import {
+  alignSnapshotToRoomShell,
+  bindSnapshotToParticipant,
+  type SlotEncounterSnapshots,
+} from './encounterGenerator.js';
 import { loadActiveEncounter, saveActiveEncounter } from './encounterPersistence.js';
+import {
+  ensureSlotEncounterSnapshots,
+  localSlotSnapshotForPlayer,
+} from './roomEncounterSeeding.js';
 import { addPlayerYellowRedGems, loadPlayer } from './playerService.js';
 import {
   findActiveRoomIdForPlayerAvatar,
@@ -83,6 +92,50 @@ function activeRoomParticipants(room: EncounterRoom) {
   return room.participants.filter((participant) => participant.choiceState !== 'disengaged');
 }
 
+export function roomLoreGemActivatedForSnapshot(
+  room: EncounterRoom,
+  snapshotId: string,
+): boolean {
+  return (
+    room.loreGemActivated === true
+    && room.loreGemActivatedSnapshotId === snapshotId
+  );
+}
+
+/** Active participants who earn the room lore gem for this encounter snapshot. */
+export function participantsEarnedRoomLoreGem(
+  room: EncounterRoom,
+  snapshotId: string,
+): EncounterRoom['participants'] {
+  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)) {
+    return [];
+  }
+
+  return activeRoomParticipants(room);
+}
+
+export function applyLoreGemOfferToRoom(
+  room: EncounterRoom,
+  loreGemOffer: NonNullable<EncounterSnapshot['loreGemOffer']>,
+): EncounterRoom {
+  const shellSnapshot: EncounterSnapshot = {
+    ...room.activeEncounterSnapshot,
+    loreGemOffer,
+  };
+  const slotEncounterSnapshots = room.slotEncounterSnapshots.map((snapshot) =>
+    alignSnapshotToRoomShell(shellSnapshot, {
+      ...snapshot,
+      loreGemOffer,
+    }),
+  ) as SlotEncounterSnapshots;
+
+  return {
+    ...room,
+    activeEncounterSnapshot: shellSnapshot,
+    slotEncounterSnapshots,
+  };
+}
+
 export function createLoreGemOffer(
   nowMs: number = Date.now(),
 ): NonNullable<EncounterSnapshot['loreGemOffer']> {
@@ -116,19 +169,26 @@ export async function ensureRoomLoreGemOffer(room: EncounterRoom): Promise<Encou
   }
 
   const nowMs = Date.now();
+  const shellSnapshot = withEncounterLoreGemOffer(room.activeEncounterSnapshot, nowMs);
+  const loreGemOffer = shellSnapshot.loreGemOffer;
+  if (!loreGemOffer) {
+    return room;
+  }
+
   const updatedRoom: EncounterRoom = {
-    ...room,
-    activeEncounterSnapshot: withEncounterLoreGemOffer(room.activeEncounterSnapshot, nowMs),
+    ...applyLoreGemOfferToRoom(room, loreGemOffer),
     updatedAt: nowMs,
   };
   await saveEncounterRoom(updatedRoom);
   await Promise.all(
     activeRoomParticipants(updatedRoom).map((participant) =>
-      saveActiveEncounter({
-        ...updatedRoom.activeEncounterSnapshot,
-        playerId: participant.playerId,
-        avatarId: participant.avatarId,
-      }),
+      saveActiveEncounter(
+        bindSnapshotToParticipant(
+          updatedRoom.slotEncounterSnapshots[participant.slotIndex],
+          participant.playerId,
+          participant.avatarId,
+        ),
+      ),
     ),
   );
   return updatedRoom;
@@ -142,8 +202,12 @@ async function loadAuthoritativeSnapshot(
   if (roomId) {
     const room = await loadEncounterRoom(roomId);
     if (room && room.roomState !== 'closed') {
-      const withOffer = await ensureRoomLoreGemOffer(room);
-      return { snapshot: withOffer.activeEncounterSnapshot, room: withOffer };
+      const withSlots = await ensureSlotEncounterSnapshots(room);
+      const withOffer = await ensureRoomLoreGemOffer(withSlots);
+      return {
+        snapshot: localSlotSnapshotForPlayer(withOffer, playerId, avatarId),
+        room: withOffer,
+      };
     }
   }
 
@@ -167,18 +231,19 @@ async function persistSnapshotWithOffer(
 
   if (room) {
     const updatedRoom: EncounterRoom = {
-      ...room,
-      activeEncounterSnapshot: nextSnapshot,
+      ...applyLoreGemOfferToRoom(room, loreGemOffer),
       updatedAt: Date.now(),
     };
     await saveEncounterRoom(updatedRoom);
     await Promise.all(
       activeRoomParticipants(updatedRoom).map((participant) =>
-        saveActiveEncounter({
-          ...nextSnapshot,
-          playerId: participant.playerId,
-          avatarId: participant.avatarId,
-        }),
+        saveActiveEncounter(
+          bindSnapshotToParticipant(
+            updatedRoom.slotEncounterSnapshots[participant.slotIndex],
+            participant.playerId,
+            participant.avatarId,
+          ),
+        ),
       ),
     );
     return;
@@ -275,9 +340,9 @@ export async function activateRoomLoreGem(
     loreGemActivated: true,
     loreGemActivatedSnapshotId: activeSnapshot.snapshotId,
     participants: room.participants.map((participant) =>
-      participant.playerId === playerId
-        ? { ...participant, loreGemCollected: true }
-        : participant,
+      participant.choiceState === 'disengaged'
+        ? participant
+        : { ...participant, loreGemCollected: true },
     ),
     updatedAt: nowMs,
   };
