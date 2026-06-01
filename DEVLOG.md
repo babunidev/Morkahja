@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-06-01 (+0200) |
+| **Last updated** | 2026-06-02 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -651,3 +651,16 @@ Since `5b2d423`.
 - **Party UI** — `PartyMemberSlot` detail overlay (name, status, kick); larger centered focus icons; encounter header seam layering fix.
 - **Dice shop** — short descriptions per skin; **50 gems** unlock label aligned with catalog copy.
 - **Tests** — `roomService.test.ts` extended (solo `waiting_continue`, leader expansion pool, continue/advance paths).
+
+### Slot encounters, party Scribes/help UX, shared lore gems · 2026-06-02 (+0200) (`9b9ffc0`)
+
+- **Slot fate** — each party slot (0–2) gets a pre-rolled `EncounterSnapshot` at room create/advance (`slotEncounterSnapshots`, `roomEncounterSeeding.ts`); mid-join binds to that slot’s rolls/rewards (no re-roll); `prepareParticipantOutcome` resolves against the slot snapshot. Removed legacy `independent` roll mode.
+- **Witness / system events** — level-up and Atranor: witness banner uses **avatar** display name; allies see the actor’s `preparedResult` rewards and roll in `ResultBlock` (`outcomeRoll` on `EncounterImageBlock`).
+- **Scribes — room open** — one global `room_encounter_started` when the leader **creates** a room (`{Avatar} encounters {Encounter}.` + Join); no new Scribes line on every encounter advance inside the same room.
+- **Scribes / toasts — help** — `broadcastCallForHelp` sends per-friend `help_requested` + `RoomInvitation` (same as strangers); targeted Scribes visibility (`toPlayerId`); avatar copy (“calls out for help”); dashboard toasts for all pending invites + activity-feed join entries with session dedupe (`activityJoinToastState.ts`).
+- **Lore gems (party)** — first collect activates the room gem for the snapshot and marks **all active** participants `loreGemCollected`; `grantRoomLoreGemsOnCommit` grants yellow/red gems to every engaged player; `loreGemGranted` on prepared/summary DTO drives `showLoreGemReward` for each client.
+- **Tests** — Scribes message/visibility cases; `broadcastCallForHelp` friend invite + feed copy; slot roll binding in `roomService.test.ts`.
+
+### Room inactivity disabled · 2026-06-02 (+0200) (`3678b8f`)
+
+- **`ROOM_INACTIVITY_ENABLED = false`** — `tickInactivity` and `disengageRemainingChoosers` are no-ops until re-enabled; room polls no longer auto-disengage idle or slow choosers after 15s or when others finish choosing.
