@@ -37,6 +37,8 @@ import type {
   RoomStateDto,
   ParticipantPreparedResultDto,
   ParticipantResolutionSummaryDto,
+  PartyEjectionDto,
+  RoomActiveResponse,
   SetAvatarDisplayTitleResponse,
   SlotStateDto,
   StaticGameDataStatus,
@@ -65,7 +67,9 @@ export type {
   LoreGemOfferDto,
   ParticipantPreparedResultDto,
   ParticipantResolutionSummaryDto,
+  PartyEjectionDto,
   PlayerResponse,
+  RoomActiveResponse,
   RoomParticipantDto,
   RoomStateDto,
   SlotStateDto,
@@ -466,10 +470,14 @@ const ROOM_POLL_MS = 3000;
 
 export { ROOM_POLL_MS };
 
-export async function fetchActiveRoom(avatarId: string): Promise<EncounterRoomSnapshotDto | null> {
-  const response = await request<{ room: EncounterRoomSnapshotDto | null }>(
+export async function fetchActiveRoomState(avatarId: string): Promise<RoomActiveResponse> {
+  return request<RoomActiveResponse>(
     `/room/active?avatarId=${encodeURIComponent(avatarId)}`,
   );
+}
+
+export async function fetchActiveRoom(avatarId: string): Promise<EncounterRoomSnapshotDto | null> {
+  const response = await fetchActiveRoomState(avatarId);
   return response.room;
 }
 
@@ -495,9 +503,21 @@ export async function submitRoomChoice(
   return response.room;
 }
 
+export async function submitRoomSelection(
+  avatarId: string,
+  action: EncounterAction,
+  solutionId?: number,
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/selection', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, action, solutionId }),
+  });
+  return response.room;
+}
+
 export async function submitRoomFocus(
   avatarId: string,
-  focusState: 'none' | 'lore' | 'inventory' | 'skillbook',
+  focusState: 'none' | 'lore' | 'inventory' | 'skillbook' | 'avatar_details',
 ): Promise<EncounterRoomSnapshotDto> {
   const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/focus', {
     method: 'POST',
@@ -510,6 +530,17 @@ export async function submitRoomContinue(avatarId: string): Promise<EncounterRoo
   const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/continue', {
     method: 'POST',
     body: JSON.stringify({ avatarId }),
+  });
+  return response.room;
+}
+
+export async function kickRoomParticipant(
+  avatarId: string,
+  targetPlayerId: string,
+): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/kick', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, targetPlayerId }),
   });
   return response.room;
 }

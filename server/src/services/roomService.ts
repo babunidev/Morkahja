@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { EncounterAction } from '../../../shared/src/contracts.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
-import type { ParticipantFocusState, RoomParticipant } from '../domain/rooms/RoomParticipant.js';
+import type {
+  ParticipantFocusState,
+  ParticipantPreparedResult,
+  RoomParticipant,
+} from '../domain/rooms/RoomParticipant.js';
 import type {
   RoomEncounterLineage,
   RoomSystemEventQueueItem,
@@ -43,6 +47,7 @@ import {
   resolveNextEncounterForRoom,
   resolveParticipantInRoom,
   selectNextEncounter,
+  shouldUseEncounterFollow,
   withPrecomputedSnapshotRewards,
   type ResolveParticipantInRoomResult,
 } from './encounterGenerator.js';
@@ -71,14 +76,15 @@ import {
   saveRoomInvitation,
 } from './roomPersistence.js';
 import {
+  recordHelpCalledEvent,
   recordHelpJoinedEvent,
   recordHelpRequestedEvent,
   recordPlayerDisengagedEvent,
-  recordPlayerJoinedRoomEvent,
   recordRoomCreatedEvent,
   recordRoomEncounterResolvedEvent,
   recordRoomEncounterStartedEvent,
 } from './roomGameEvents.js';
+import { isPlayerRecentlyActive } from './playerInteractionService.js';
 import {
   ensureRoomLoreGemOffer,
   withEncounterLoreGemOffer,
@@ -279,39 +285,41 @@ function systemEventKindForEncounterId(encounterId: number): 'level_up' | 'atran
   return encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID ? 'level_up' : 'atranor';
 }
 
-function isSoloContinueRoom(room: EncounterRoom): boolean {
-  return participantsAwaitingContinue(room).length === 1;
-}
-
-/** True when no other players are in the party — solo players are never inactivity-disengaged. */
+/** True when no other engaged adventurers are in the party (ghost/disengaged slots ignored). */
 function isSoloPartyRoom(room: EncounterRoom): boolean {
-  return room.participants.length === 1;
+  return engagedParticipants(room).length <= 1;
 }
 
-async function reengageParticipantIfNeeded(
+function isInactivePreparedResult(participant: RoomParticipant): boolean {
+  return participant.preparedResult?.message === INACTIVE_OUTCOME_MESSAGE;
+}
+
+function reengageFromInactivity(
   room: EncounterRoom,
   playerId: string,
-): Promise<EncounterRoom> {
+  now: number,
+): EncounterRoom {
   const participant = findParticipant(room, playerId);
   if (!participant || participant.choiceState !== 'disengaged') {
     return room;
   }
 
-  const now = nowMs();
+  const inactiveDisengage = isInactivePreparedResult(participant);
+  const hasRealPreparedOutcome = participant.preparedResult !== undefined && !inactiveDisengage;
   const wasWitnessToSystemEvent =
     room.systemEvent?.lastEvent !== undefined &&
     room.systemEvent.lastEvent.actorPlayerId !== participant.playerId;
   const restoredChoiceState =
     room.roomState === 'waiting_continue' &&
-    (participant.preparedResult !== undefined ||
+    (hasRealPreparedOutcome ||
       participant.resolutionSummary !== undefined ||
       wasWitnessToSystemEvent)
-      ? (participant.preparedResult !== undefined
+      ? (hasRealPreparedOutcome
         ? ('ready_to_continue' as const)
         : ('resolved' as const))
       : ('choosing' as const);
 
-  const updated: EncounterRoom = {
+  return {
     ...room,
     participants: room.participants.map((entry) =>
       entry.playerId === playerId
@@ -321,11 +329,31 @@ async function reengageParticipantIfNeeded(
             disconnectedAt: undefined,
             focusState: 'none',
             lastInteractionAt: now,
+            ...(inactiveDisengage
+              ? {
+                  preparedResult: undefined,
+                  preparedCommit: undefined,
+                  selectedAction: undefined,
+                  selectedSolutionId: undefined,
+                  continuePressed: false,
+                }
+              : {}),
           }
         : entry,
     ),
     updatedAt: now,
   };
+}
+
+async function reengageParticipantIfNeeded(
+  room: EncounterRoom,
+  playerId: string,
+): Promise<EncounterRoom> {
+  const updated = reengageFromInactivity(room, playerId, nowMs());
+  if (updated === room) {
+    return room;
+  }
+
   await saveEncounterRoom(updated);
   return updated;
 }
@@ -339,26 +367,6 @@ async function reengageSoloParticipantIfNeeded(
   }
 
   return reengageParticipantIfNeeded(room, playerId);
-}
-
-async function maybeAutoAdvanceSoloRoom(
-  room: EncounterRoom,
-  playerId: string,
-): Promise<EncounterRoom> {
-  if (isPostSystemEventContinue(room)) {
-    return room;
-  }
-
-  if (room.roomState !== 'waiting_continue' || !isSoloContinueRoom(room)) {
-    return room;
-  }
-
-  const soloParticipant = participantsAwaitingContinue(room)[0];
-  if (!soloParticipant || soloParticipant.playerId !== playerId) {
-    return room;
-  }
-
-  return submitContinue(playerId, soloParticipant.avatarId);
 }
 
 async function mergeExpansionsForPlayerIds(playerIds: string[]): Promise<number[]> {
@@ -376,6 +384,11 @@ async function mergeExpansionsForPlayerIds(playerIds: string[]): Promise<number[
   }
 
   return [...merged].sort((a, b) => a - b);
+}
+
+/** Encounter pool for a room is always the leader's unlocked expansions only. */
+async function expansionsForRoomLeader(room: EncounterRoom): Promise<number[]> {
+  return mergeExpansionsForPlayerIds([room.leaderPlayerId]);
 }
 
 function previousEncounterFromRoom(room: EncounterRoom): EncounterData | null {
@@ -452,16 +465,24 @@ function resetParticipantsForNewEncounter(participants: RoomParticipant[]): Room
   }));
 }
 
+function slotZeroParticipant(room: EncounterRoom): RoomParticipant | undefined {
+  const atSlotZero = room.participants.find((participant) => participant.slotIndex === 0);
+  if (atSlotZero) {
+    return atSlotZero;
+  }
+
+  const sorted = [...room.participants].sort((left, right) => left.slotIndex - right.slotIndex);
+  return sorted[0];
+}
+
 function getRoomNextEncounter(
   currentSnapshot: EncounterSnapshot,
   room: EncounterRoom,
 ): EncounterData {
-  const summaries = activeParticipants(room)
-    .map((participant) => participantOutcomeSummary(participant))
-    .filter((summary): summary is NonNullable<typeof summary> => summary !== undefined);
-  const allSucceeded = summaries.length > 0 && summaries.every((summary) => summary.success);
+  const slotZero = slotZeroParticipant(room);
+  const slotZeroSummary = slotZero ? participantOutcomeSummary(slotZero) : undefined;
 
-  if (allSucceeded && currentSnapshot.encounterFollow > 0) {
+  if (shouldUseEncounterFollow(currentSnapshot.encounterFollow, slotZeroSummary)) {
     const followUp = getEncounterById(currentSnapshot.encounterFollow);
     if (followUp) {
       return followUp;
@@ -493,6 +514,36 @@ async function clearPresenceRoom(playerId: string): Promise<void> {
   });
 }
 
+async function markPlayerKickedFromParty(playerId: string, roomId: string): Promise<void> {
+  await savePlayerPresence({
+    playerId,
+    lastSeenAt: nowMs(),
+    activeRoomId: undefined,
+    state: 'online',
+    lastPartyEjection: {
+      reason: 'kicked',
+      at: nowMs(),
+      roomId,
+    },
+  });
+}
+
+export async function consumePartyEjection(playerId: string): Promise<'kicked' | undefined> {
+  const existing = await loadPlayerPresence(playerId);
+  if (existing?.lastPartyEjection?.reason !== 'kicked') {
+    return undefined;
+  }
+
+  await savePlayerPresence({
+    ...existing,
+    lastSeenAt: nowMs(),
+    activeRoomId: undefined,
+    lastPartyEjection: undefined,
+    state: existing.state === 'offline' ? 'offline' : 'online',
+  });
+  return 'kicked';
+}
+
 export async function touchPlayerPresence(
   playerId: string,
   state: PlayerPresence['state'] = 'online',
@@ -508,6 +559,94 @@ export async function touchPlayerPresence(
 
 function findParticipant(room: EncounterRoom, playerId: string): RoomParticipant | undefined {
   return room.participants.find((participant) => participant.playerId === playerId);
+}
+
+const INACTIVE_OUTCOME_MESSAGE = 'Inactive';
+
+function preparedInactiveOutcome(): ParticipantPreparedResult {
+  return {
+    success: false,
+    message: INACTIVE_OUTCOME_MESSAGE,
+    rewards: [],
+  };
+}
+
+function disengageParticipantAsInactive(
+  participant: RoomParticipant,
+  now: number,
+  autoContinue: boolean,
+): RoomParticipant {
+  return {
+    ...participant,
+    choiceState: 'disengaged',
+    disconnectedAt: now,
+    preparedResult: preparedInactiveOutcome(),
+    preparedCommit: undefined,
+    selectedAction: undefined,
+    selectedSolutionId: undefined,
+    ...(autoContinue ? { continuePressed: true } : {}),
+  };
+}
+
+function disengageRemainingChoosers(
+  participants: RoomParticipant[],
+  now: number,
+  autoContinue: boolean,
+): RoomParticipant[] {
+  return participants.map((participant) => {
+    if (
+      participant.choiceState !== 'choosing' ||
+      participant.focusState !== 'none'
+    ) {
+      return participant;
+    }
+
+    return disengageParticipantAsInactive(participant, now, autoContinue);
+  });
+}
+
+function applyAutoContinueForDisengaged(
+  participants: RoomParticipant[],
+): RoomParticipant[] {
+  return participants.map((participant) =>
+    participant.choiceState === 'disengaged'
+      ? { ...participant, continuePressed: true }
+      : participant,
+  );
+}
+
+function promoteHostAndReslot(
+  room: EncounterRoom,
+  departingLeaderPlayerId: string,
+): EncounterRoom {
+  const remaining = room.participants
+    .filter((participant) => participant.playerId !== departingLeaderPlayerId)
+    .sort((left, right) => left.slotIndex - right.slotIndex);
+  const nextParticipants = remaining.map((participant, slotIndex) => ({
+    ...participant,
+    slotIndex,
+  }));
+  const newLeaderId = nextParticipants[0]?.playerId ?? departingLeaderPlayerId;
+
+  return {
+    ...room,
+    leaderPlayerId: newLeaderId,
+    participants: nextParticipants,
+    updatedAt: nowMs(),
+  };
+}
+
+function ensurePromotedLeaderForAdvance(room: EncounterRoom): EncounterRoom {
+  const leader = findParticipant(room, room.leaderPlayerId);
+  if (leader && leader.choiceState !== 'disengaged') {
+    return room;
+  }
+
+  if (engagedParticipants(room).length === 0) {
+    return room;
+  }
+
+  return promoteHostAndReslot(room, room.leaderPlayerId);
 }
 
 function findOpenSlot(room: EncounterRoom): number | null {
@@ -561,11 +700,11 @@ export async function tickInactivity(room: EncounterRoom): Promise<EncounterRoom
 
     if (now - participant.lastInteractionAt >= INACTIVITY_MS) {
       changed = true;
-      return {
-        ...participant,
-        choiceState: 'disengaged' as const,
-        disconnectedAt: now,
-      };
+      return disengageParticipantAsInactive(
+        participant,
+        now,
+        room.roomState === 'waiting_continue',
+      );
     }
 
     return participant;
@@ -725,8 +864,9 @@ async function commitPreparedResultsForRoom(
 }> {
   let nextParticipants = [...room.participants];
   const commits = new Map<string, ResolveParticipantInRoomResult>();
+  const now = nowMs();
 
-  for (const participant of nextParticipants) {
+  for (const participant of room.participants) {
     if (participant.choiceState === 'disengaged') {
       continue;
     }
@@ -745,10 +885,10 @@ async function commitPreparedResultsForRoom(
           ? {
               ...entry,
               choiceState: result.avatarDied ? 'disengaged' as const : entry.choiceState,
+              disconnectedAt: result.avatarDied ? now : entry.disconnectedAt,
               resolutionSummary: participantSummaryFromResolve(result),
               preparedResult: undefined,
               preparedCommit: undefined,
-              ...(result.avatarDied ? { disconnectedAt: nowMs() } : {}),
             }
           : entry,
       );
@@ -765,11 +905,16 @@ async function advanceRoomAfterCommit(
   commits: Map<string, ResolveParticipantInRoomResult>,
 ): Promise<EncounterRoom> {
   const roomId = room.roomId;
-  const participants = engagedParticipants({ ...room, participants: committedParticipants });
+  let roomForAdvance = ensurePromotedLeaderForAdvance({
+    ...room,
+    participants: committedParticipants,
+  });
+  const committedAfterPromotion = roomForAdvance.participants;
+  const participants = engagedParticipants(roomForAdvance);
   if (participants.length === 0) {
     const closed: EncounterRoom = {
-      ...room,
-      participants: committedParticipants,
+      ...roomForAdvance,
+      participants: committedAfterPromotion,
       roomState: 'closed',
       updatedAt: nowMs(),
     };
@@ -777,7 +922,7 @@ async function advanceRoomAfterCommit(
     return closed;
   }
 
-  const pendingQueue = buildPendingSystemEventQueue(committedParticipants);
+  const pendingQueue = buildPendingSystemEventQueue(committedAfterPromotion);
   if (pendingQueue.length > 0) {
     const firstItem = pendingQueue[0]!;
     const actorResult = commits.get(firstItem.actorPlayerId);
@@ -787,8 +932,8 @@ async function advanceRoomAfterCommit(
 
     const lineage = buildLineageFromResolve(room.activeEncounterSnapshot, actorResult);
     const resolvedParticipantsRoom: EncounterRoom = {
-      ...room,
-      participants: committedParticipants,
+      ...roomForAdvance,
+      participants: committedAfterPromotion,
       updatedAt: nowMs(),
     };
 
@@ -801,23 +946,23 @@ async function advanceRoomAfterCommit(
     );
   }
 
-  const leader = findParticipant({ ...room, participants: committedParticipants }, room.leaderPlayerId)
+  const leader = findParticipant(roomForAdvance, roomForAdvance.leaderPlayerId)
     ?? participants[0];
-  const lineage = room.systemEvent?.lineage;
-  const lastEncounterId = lineage?.originEncounterId ?? room.activeEncounterSnapshot.encounterId;
+  const lineage = roomForAdvance.systemEvent?.lineage;
+  const lastEncounterId = lineage?.originEncounterId ?? roomForAdvance.activeEncounterSnapshot.encounterId;
 
   let nextEncounter: EncounterData;
   let preparedEncounter: ReturnType<typeof prepareNextEncounter>;
   if (lineage) {
-    const resolved = resolveNextEncounterForRoom(lineage, room.mergedExpansions);
+    const resolved = resolveNextEncounterForRoom(lineage, roomForAdvance.mergedExpansions);
     nextEncounter = resolved.encounter;
     preparedEncounter = resolved.prepared;
   } else {
-    nextEncounter = getRoomNextEncounter(room.activeEncounterSnapshot, {
-      ...room,
-      participants: committedParticipants,
+    nextEncounter = getRoomNextEncounter(roomForAdvance.activeEncounterSnapshot, {
+      ...roomForAdvance,
+      participants: committedAfterPromotion,
     });
-    preparedEncounter = prepareNextEncounter(nextEncounter, room.mergedExpansions);
+    preparedEncounter = prepareNextEncounter(nextEncounter, roomForAdvance.mergedExpansions);
   }
 
   const nextSnapshot = withEncounterLoreGemOffer({
@@ -828,12 +973,12 @@ async function advanceRoomAfterCommit(
       preparedEncounter,
       await transaction.getAvatar<AvatarDocument>(leader.playerId, leader.avatarId) ?? undefined,
     ),
-    roomId: room.roomId,
+    roomId: roomForAdvance.roomId,
     state: 'active',
   }, nowMs());
 
   const advanced: EncounterRoom = {
-    ...room,
+    ...roomForAdvance,
     activeEncounterSnapshot: nextSnapshot,
     lastEncounterId,
     helpCalledSnapshotId: undefined,
@@ -841,7 +986,7 @@ async function advanceRoomAfterCommit(
     loreGemActivated: undefined,
     loreGemActivatedSnapshotId: undefined,
     advanceStartedAt: undefined,
-    participants: resetParticipantsForNewEncounter(committedParticipants),
+    participants: resetParticipantsForNewEncounter(committedAfterPromotion),
     roomState: 'active_encounter',
     updatedAt: nowMs(),
   };
@@ -884,16 +1029,20 @@ export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
     };
     await transaction.setEncounterRoom(roomId, advancingRoom);
 
-    const { participants: committedParticipants, commits } =
-      await commitPreparedResultsForRoom(transaction, advancingRoom);
+    const commitResult = await commitPreparedResultsForRoom(transaction, advancingRoom);
     const committedRoom: EncounterRoom = {
       ...advancingRoom,
-      participants: committedParticipants,
+      participants: commitResult.participants,
     };
 
     await grantRoomLoreGemsOnCommit(committedRoom);
 
-    return advanceRoomAfterCommit(transaction, committedRoom, committedParticipants, commits);
+    return advanceRoomAfterCommit(
+      transaction,
+      committedRoom,
+      commitResult.participants,
+      commitResult.commits,
+    );
   });
 
   if (advanced && advanced !== room) {
@@ -952,15 +1101,18 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
 
     const actorSummary = participantSummaryFromResolve(result);
     const now = nowMs();
+    const deathEncounterChainedLevelUp =
+      item.chainedLevelUp === true
+      && room.activeEncounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID;
+    const actorDiedWithoutChain = result.avatarDied && !deathEncounterChainedLevelUp;
+
     let nextParticipants = room.participants.map((entry) =>
       entry.playerId === actor.playerId
         ? {
             ...entry,
-            choiceState: 'resolved' as const,
+            choiceState: actorDiedWithoutChain ? 'disengaged' as const : 'resolved' as const,
             resolutionSummary: actorSummary,
-            ...(result.avatarDied
-              ? { choiceState: 'disengaged' as const, disconnectedAt: now }
-              : {}),
+            ...(actorDiedWithoutChain ? { disconnectedAt: now } : {}),
           }
         : entry,
     );
@@ -1078,12 +1230,17 @@ async function applyParticipantPrepare(
       : entry,
   );
 
+  let workingParticipants = nextParticipants;
+  const canWait = canEnterWaitingContinue({ ...room, participants: nextParticipants });
+  if (canWait) {
+    workingParticipants = disengageRemainingChoosers(nextParticipants, now, true);
+    workingParticipants = applyAutoContinueForDisengaged(workingParticipants);
+  }
+
   const workingRoom: EncounterRoom = {
     ...room,
-    participants: nextParticipants,
-    roomState: canEnterWaitingContinue({ ...room, participants: nextParticipants })
-      ? 'waiting_continue'
-      : room.roomState,
+    participants: workingParticipants,
+    roomState: canWait ? 'waiting_continue' : room.roomState,
     updatedAt: now,
   };
 
@@ -1108,16 +1265,16 @@ export async function createRoom(
     }
   }
 
-  const mergedExpansions = await mergeExpansionsForPlayerIds([playerId]);
   const roomId = randomUUID();
-  const snapshot = await seedRoomEncounterSnapshot(playerId, avatarId, roomId, mergedExpansions);
+  const leaderExpansions = await mergeExpansionsForPlayerIds([playerId]);
+  const snapshot = await seedRoomEncounterSnapshot(playerId, avatarId, roomId, leaderExpansions);
 
   const room: EncounterRoom = {
     roomId,
     leaderPlayerId: playerId,
     participants: [createParticipant(playerId, avatarId, 0)],
     slotStates: DEFAULT_SLOT_STATES,
-    mergedExpansions,
+    mergedExpansions: leaderExpansions,
     activeEncounterSnapshot: snapshot,
     roomState: 'active_encounter',
     lastEncounterId: avatar.progression?.lastEncounterId,
@@ -1154,6 +1311,9 @@ export async function getActiveRoomForPlayer(
   }
 
   room = await reengageSoloParticipantIfNeeded(room, playerId);
+  if (!findParticipant(room, playerId)) {
+    return null;
+  }
   room = await ensureRoomLoreGemOffer(room);
   room = await tickRoom(room);
   return tickInactivity(room);
@@ -1201,14 +1361,9 @@ export async function joinRoom(
     }
   }
 
-  const mergedExpansions = await mergeExpansionsForPlayerIds(
-    [...room.participants.map((p) => p.playerId), playerId],
-  );
-
   const updated: EncounterRoom = {
     ...room,
     participants: [...room.participants, createParticipant(playerId, avatarId, slotIndex)],
-    mergedExpansions,
     updatedAt: nowMs(),
   };
 
@@ -1219,7 +1374,6 @@ export async function joinRoom(
     avatarId,
   });
   await setPresenceInRoom(playerId, roomId);
-  await recordPlayerJoinedRoomEvent(playerId, avatarId, updated);
   return updated;
 }
 
@@ -1238,7 +1392,7 @@ export async function leaveRoom(playerId: string, avatarId?: string): Promise<vo
   }
 
   const remaining = room.participants.filter((participant) => participant.playerId !== playerId);
-  if (remaining.length === 0 || playerId === room.leaderPlayerId) {
+  if (remaining.length === 0) {
     const closed: EncounterRoom = {
       ...room,
       roomState: 'closed',
@@ -1251,14 +1405,57 @@ export async function leaveRoom(playerId: string, avatarId?: string): Promise<vo
     return;
   }
 
+  if (playerId === room.leaderPlayerId) {
+    const promoted = promoteHostAndReslot(room, playerId);
+    const updated: EncounterRoom = {
+      ...promoted,
+      mergedExpansions: await expansionsForRoomLeader(promoted),
+    };
+    await saveEncounterRoom(updated);
+    await clearPresenceRoom(playerId);
+    return;
+  }
+
   const updated: EncounterRoom = {
     ...room,
     participants: remaining,
-    mergedExpansions: await mergeExpansionsForPlayerIds(remaining.map((p) => p.playerId)),
     updatedAt: nowMs(),
   };
   await saveEncounterRoom(updated);
   await clearPresenceRoom(playerId);
+}
+
+export async function kickParticipant(
+  playerId: string,
+  avatarId: string,
+  targetPlayerId: string,
+): Promise<EncounterRoom> {
+  const room = await getActiveRoomForPlayer(playerId, avatarId);
+  if (!room) {
+    throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+
+  if (room.leaderPlayerId !== playerId) {
+    throw new RoomError('Only the leader can kick players', 403, 'NOT_LEADER');
+  }
+
+  if (targetPlayerId === playerId) {
+    throw new RoomError('Cannot kick yourself', 400, 'CANNOT_KICK_SELF');
+  }
+
+  const remaining = room.participants.filter((participant) => participant.playerId !== targetPlayerId);
+  if (remaining.length === room.participants.length) {
+    throw new RoomError('Player is not in this room', 404, 'NOT_IN_ROOM');
+  }
+
+  const updated: EncounterRoom = {
+    ...room,
+    participants: remaining,
+    updatedAt: nowMs(),
+  };
+  await saveEncounterRoom(updated);
+  await markPlayerKickedFromParty(targetPlayerId, room.roomId);
+  return updated;
 }
 
 export async function setSlotState(
@@ -1306,16 +1503,14 @@ export async function submitChoice(
   const playerAction = clientActionToPlayerAction(action);
   const now = nowMs();
 
-  const loadedRoom = await loadEncounterRoom(roomId);
-  if (loadedRoom) {
-    await reengageParticipantIfNeeded(loadedRoom, playerId);
-  }
-
   const updated = await withDocumentTransaction(async (transaction) => {
-    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
+
+    room = reengageFromInactivity(room, playerId, now);
+    await transaction.setEncounterRoom(roomId, room);
 
     if (room.roomState === 'system_event') {
       const systemEvent = room.systemEvent;
@@ -1370,8 +1565,82 @@ export async function submitChoice(
   }
 
   const ticked = await tickRoomById(roomId);
-  const result = ticked ?? updated;
-  return maybeAutoAdvanceSoloRoom(result, playerId);
+  return ticked ?? updated;
+}
+
+export async function submitSelection(
+  playerId: string,
+  avatarId: string,
+  action: EncounterAction,
+  solutionId?: number,
+): Promise<EncounterRoom> {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
+    throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+
+  const playerAction = clientActionToPlayerAction(action);
+  const selectedSolutionId = action === 'dice' ? undefined : solutionId;
+  if (action !== 'dice' && selectedSolutionId === undefined) {
+    throw new RoomError('solutionId is required for solution actions', 400, 'SOLUTION_REQUIRED');
+  }
+
+  const now = nowMs();
+
+  return withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room) {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
+
+    room = reengageFromInactivity(room, playerId, now);
+    await transaction.setEncounterRoom(roomId, room);
+
+    if (room.roomState === 'system_event') {
+      const systemEvent = room.systemEvent;
+      const currentItem = systemEvent?.queue[systemEvent.queueIndex];
+      if (!currentItem || currentItem.actorPlayerId !== playerId) {
+        throw new RoomError('Witnesses cannot submit selections', 403, 'WITNESS_READONLY');
+      }
+    } else if (room.roomState !== 'active_encounter') {
+      throw new RoomError('Room is not accepting selections', 409, 'INVALID_ROOM_STATE');
+    }
+
+    if (!isEncounterActionReady(room.activeEncounterSnapshot)) {
+      throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
+    }
+
+    const participant = findParticipant(room, playerId);
+    if (!participant || participant.choiceState === 'disengaged') {
+      throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+    }
+
+    if (
+      participant.choiceState !== 'choosing' &&
+      participant.choiceState !== 'ready'
+    ) {
+      throw new RoomError('Selection is locked', 409, 'SELECTION_LOCKED');
+    }
+
+    const updated: EncounterRoom = {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? {
+              ...entry,
+              choiceState: 'ready' as const,
+              selectedAction: playerAction,
+              selectedSolutionId,
+              lastInteractionAt: now,
+            }
+          : entry,
+      ),
+      updatedAt: now,
+    };
+
+    await transaction.setEncounterRoom(roomId, updated);
+    return updated;
+  });
 }
 
 export async function setFocusState(
@@ -1391,7 +1660,11 @@ export async function setFocusState(
   }
 
   if (focusState !== 'none') {
-    room = await reengageParticipantIfNeeded(room, playerId);
+    const reengaged = reengageFromInactivity(room, playerId, now);
+    if (reengaged !== room) {
+      room = reengaged;
+      await saveEncounterRoom(room);
+    }
   }
 
   const updated: EncounterRoom = {
@@ -1456,7 +1729,7 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
   };
   await saveEncounterRoom(withContinue);
 
-  if (isSoloPartyRoom(withContinue)) {
+  if (canAdvanceRoom(withContinue)) {
     return tickRoom(withContinue);
   }
 
@@ -1488,7 +1761,7 @@ function isPlayerOnlineAndActive(
     return false;
   }
 
-  return isFriendRecentlySeen(player.lastPlayedAt, now);
+  return isPlayerRecentlyActive(player, now);
 }
 
 function shufflePlayerIds(playerIds: string[]): string[] {
@@ -1622,7 +1895,7 @@ export async function broadcastCallForHelp(
   const eligibleFriendIds: string[] = [];
   for (const friendId of friendIds) {
     const friendPlayer = await loadPlayer(friendId);
-    if (!friendPlayer || !liveSessionPlayerIds.has(friendId)) {
+    if (!friendPlayer || !isPlayerOnlineAndActive(friendPlayer, liveSessionPlayerIds, now)) {
       continue;
     }
     if (!(await canReceiveHelpInvite(fromPlayerId, friendId, room.roomId))) {
@@ -1631,34 +1904,34 @@ export async function broadcastCallForHelp(
     eligibleFriendIds.push(friendId);
   }
 
-  let targetIds = eligibleFriendIds;
-  let targetMode: BroadcastCallForHelpResult['targetMode'] = 'friends';
-
-  if (targetIds.length === 0) {
-    targetMode = 'random';
-    const randomCandidates: string[] = [];
-
-    for (const candidateId of liveSessionPlayerIds) {
-      if (candidateId === fromPlayerId || friendIds.includes(candidateId)) {
-        continue;
-      }
-
-      const candidate = await loadPlayer(candidateId);
-      if (!candidate || !isPlayerOnlineAndActive(candidate, liveSessionPlayerIds, now)) {
-        continue;
-      }
-
-      if (!(await canReceiveHelpInvite(fromPlayerId, candidateId, room.roomId))) {
-        continue;
-      }
-
-      randomCandidates.push(candidateId);
-    }
-
-    targetIds = shufflePlayerIds(randomCandidates).slice(0, RANDOM_HELP_RECIPIENT_COUNT);
+  if (eligibleFriendIds.length > 0) {
+    await recordHelpCalledEvent(fromPlayerId, room, {
+      fromPlayerName,
+      avatarPortrait: avatarVisual?.portrait,
+      avatarFrame: avatarVisual?.frame,
+    });
   }
 
-  for (const targetId of targetIds) {
+  const randomCandidates: string[] = [];
+  for (const candidateId of liveSessionPlayerIds) {
+    if (candidateId === fromPlayerId || friendIds.includes(candidateId)) {
+      continue;
+    }
+
+    const candidate = await loadPlayer(candidateId);
+    if (!candidate || !isPlayerOnlineAndActive(candidate, liveSessionPlayerIds, now)) {
+      continue;
+    }
+
+    if (!(await canReceiveHelpInvite(fromPlayerId, candidateId, room.roomId))) {
+      continue;
+    }
+
+    randomCandidates.push(candidateId);
+  }
+
+  const strangerTargetIds = shufflePlayerIds(randomCandidates).slice(0, RANDOM_HELP_RECIPIENT_COUNT);
+  for (const targetId of strangerTargetIds) {
     await sendHelpInvitation(
       fromPlayerId,
       targetId,
@@ -1675,8 +1948,13 @@ export async function broadcastCallForHelp(
   };
   await saveEncounterRoom(updatedRoom);
 
+  const invitedCount = eligibleFriendIds.length + strangerTargetIds.length;
+  const targetMode: BroadcastCallForHelpResult['targetMode'] = strangerTargetIds.length > 0
+    ? (eligibleFriendIds.length > 0 ? 'friends' : 'random')
+    : (eligibleFriendIds.length > 0 ? 'friends' : 'random');
+
   return {
-    invitedCount: targetIds.length,
+    invitedCount,
     targetMode,
     helpCalled: true,
   };
@@ -1759,7 +2037,7 @@ async function assertPlayersAreFriends(playerId: string, friendPlayerId: string)
   }
 }
 
-function canViewerJoinRoom(
+export function canViewerJoinRoom(
   room: EncounterRoom,
   viewerPlayerId: string,
   leaderFriendIds: string[],
@@ -1820,9 +2098,6 @@ export async function describeJoinableRoomForFriend(
   }
 
   const participantCount = engagedParticipants(room).length;
-  if (!helpInvite && participantCount !== 1) {
-    return null;
-  }
 
   if (participantCount >= MAX_PARTICIPANTS && !helpInvite) {
     return null;
@@ -1921,4 +2196,30 @@ export async function respondHelp(
 
 export async function listPendingHelpInvitations(playerId: string): Promise<RoomInvitation[]> {
   return loadPendingInvitations(playerId);
+}
+
+export async function resolveRoomJoinActionForViewer(
+  viewingPlayerId: string,
+  roomId: string,
+): Promise<{ roomId: string; fromPlayerId: string } | null> {
+  const room = await loadEncounterRoom(roomId);
+  if (!room || room.roomState === 'closed') {
+    return null;
+  }
+
+  const viewerRoomId = await findActiveRoomIdForPlayer(viewingPlayerId);
+  if (viewerRoomId) {
+    return null;
+  }
+
+  const leader = await loadPlayer(room.leaderPlayerId);
+  const leaderFriendIds = leader?.friendIds ?? [];
+  if (!canViewerJoinRoom(room, viewingPlayerId, leaderFriendIds)) {
+    return null;
+  }
+
+  return {
+    roomId: room.roomId,
+    fromPlayerId: room.leaderPlayerId,
+  };
 }

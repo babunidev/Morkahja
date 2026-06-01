@@ -44,14 +44,11 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'account_key_security_reminder':
     case 'support_appreciation_nudge':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
-    case 'help_requested': {
-      if (!viewingPlayerId) {
-        return false;
-      }
-
-      const toPlayerId = readString(event.payload, 'toPlayerId');
-      return toPlayerId === viewingPlayerId;
-    }
+    case 'help_requested':
+      return false;
+    case 'room_created':
+    case 'help_called':
+      return true;
     default:
       return false;
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { PanelButton } from '../common/PanelButton.js';
 import { overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
 import { FADE_DURATION_MS, waitForFade } from '../transitions/fade.js';
@@ -108,24 +108,29 @@ export function AvatarDeathOverlay({
   avatarName,
   onHandoffComplete,
   onNewAvatar,
+  onOptionsVisible,
   onSameSoul,
   open,
 }: {
   avatarName: string;
   onHandoffComplete: () => void;
   onNewAvatar: () => void | Promise<void>;
+  /** Fires once when Same Soul / New Avatar are shown (after fade-in). */
+  onOptionsVisible?: () => void | Promise<void>;
   onSameSoul: () => void | Promise<void>;
   open: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [pendingAction, setPendingAction] = useState<DeathAction | null>(null);
+  const optionsVisibleNotifiedRef = useRef(false);
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       setExiting(false);
       setPendingAction(null);
+      optionsVisibleNotifiedRef.current = false;
       return;
     }
 
@@ -137,6 +142,32 @@ export function AvatarDeathOverlay({
       window.clearTimeout(showTimer);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !visible || exiting || optionsVisibleNotifiedRef.current || !onOptionsVisible) {
+      return;
+    }
+
+    let cancelled = false;
+    const notify = (): void => {
+      if (cancelled || optionsVisibleNotifiedRef.current) {
+        return;
+      }
+      optionsVisibleNotifiedRef.current = true;
+      void Promise.resolve(onOptionsVisible()).catch((error) => {
+        console.error('Death overlay onOptionsVisible failed', error);
+      });
+    };
+
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(notify);
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [exiting, onOptionsVisible, open, visible]);
 
   async function handleAction(action: DeathAction, handler: () => void | Promise<void>): Promise<void> {
     if (pendingAction !== null || exiting) {

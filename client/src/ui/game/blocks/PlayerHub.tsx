@@ -51,7 +51,7 @@ const hubContentStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
-const PARTY_SLOT_TOP_OFFSET_PX = 57;
+const PARTY_SLOT_TOP_OFFSET_PX = 44;
 
 const partyStripStyle: CSSProperties = {
   position: 'absolute',
@@ -165,6 +165,7 @@ export function PlayerHub({
   onInventoryToggle,
   onLoreToggle,
   onSkillbookToggle,
+  onKickParticipant,
   onSlotStateChange,
   room = null,
   roomState,
@@ -180,6 +181,7 @@ export function PlayerHub({
   onInventoryToggle: () => void;
   onLoreToggle: () => void;
   onSkillbookToggle: () => void;
+  onKickParticipant?: (targetPlayerId: string) => void;
   onSlotStateChange?: (slotIndex: number, slotState: SlotStateDto) => void;
   room?: EncounterRoomSnapshotDto | null;
   roomState?: RoomStateDto;
@@ -250,7 +252,9 @@ export function PlayerHub({
             if (participant) {
               return (
                 <PartyMemberSlot
+                  canKick={canManageSlots}
                   key={`slot-${slotIndex}`}
+                  onKick={onKickParticipant}
                   participant={participant}
                   roomState={roomState}
                 />

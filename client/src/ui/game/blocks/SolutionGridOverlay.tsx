@@ -88,7 +88,7 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
-/** Above encounter header seam (25) when inventory/skillbook panel is open. */
+/** Above encounter art/lore inside the encounter row; header row (z-index 50) stays on top. */
 const OVERLAY_Z_INDEX = 26;
 
 const overlayBlockStyle: CSSProperties = {

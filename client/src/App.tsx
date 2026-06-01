@@ -15,6 +15,7 @@ import {
   fetchPendingHelpInvitations,
   heartbeatSession,
   joinFriendRoom,
+  leaveEncounterRoom,
   loadStoredSession,
   logoutSession,
   clearStoredSession,
@@ -77,15 +78,6 @@ type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
 const ACHIEVEMENT_POLL_MS = 10_000;
 const HELP_INVITE_POLL_MS = 5_000;
-const FRIEND_JOIN_POLL_MS = 12_000;
-
-interface FriendJoinToastState {
-  friendPlayerId: string;
-  friendPlayerName: string;
-  roomId: string;
-  encounterTitle: string;
-  inviteId?: string;
-}
 
 interface RoomFullPromptState {
   avatar: PersistedAvatar;
@@ -167,6 +159,8 @@ export default function App() {
     useState<AvatarEnterHandoffSnapshot | null>(null);
   const [handoffLanded, setHandoffLanded] = useState(false);
   const [deathOverlayAvatar, setDeathOverlayAvatar] = useState<PersistedAvatar | null>(null);
+  const [partyKickToast, setPartyKickToast] = useState<string | null>(null);
+  const deathLeaveDoneRef = useRef(false);
   const [deathCreationHandoff, setDeathCreationHandoff] = useState(false);
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
@@ -175,7 +169,6 @@ export default function App() {
   const [privateScribeToast, setPrivateScribeToast] = useState<string | null>(null);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
   const [helpInviteToast, setHelpInviteToast] = useState<RoomHelpInvitationDto | null>(null);
-  const [friendJoinToast, setFriendJoinToast] = useState<FriendJoinToastState | null>(null);
   const [roomFullPrompt, setRoomFullPrompt] = useState<RoomFullPromptState | null>(null);
   const [roomFullContinuePending, setRoomFullContinuePending] = useState(false);
   const [gameEntryKey, setGameEntryKey] = useState(0);
@@ -186,9 +179,22 @@ export default function App() {
     claimedToday: boolean;
     encountersPlayed: number;
   } | null>(null);
+  const completeDeathRoomLeave = useCallback(async (presetAvatar: PersistedAvatar) => {
+    if (deathLeaveDoneRef.current) {
+      return;
+    }
+    deathLeaveDoneRef.current = true;
+    try {
+      await leaveEncounterRoom(presetAvatar.id);
+    } catch (error) {
+      console.error('Failed to leave encounter room after death overlay', error);
+    }
+    setActiveRoom(null);
+  }, []);
+
   const seenHelpInviteIdsRef = useRef<Set<string>>(new Set());
-  const seenFriendJoinKeysRef = useRef<Set<string>>(new Set());
   const helpInviteAcceptPendingRef = useRef(false);
+  const friendIdsRef = useRef<Set<string>>(new Set());
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
   const playerName = session?.playerName ?? '';
@@ -359,7 +365,6 @@ export default function App() {
 
     helpInviteAcceptPendingRef.current = true;
     setHelpInviteToast(null);
-    setFriendJoinToast(null);
 
     try {
       if (inviteId) {
@@ -415,11 +420,16 @@ export default function App() {
       }
 
       try {
-        const response = await fetchPendingHelpInvitations();
+        const [response, friendsResponse] = await Promise.all([
+          fetchPendingHelpInvitations(),
+          fetchFriends(),
+        ]);
+        friendIdsRef.current = new Set(friendsResponse.friends.map((friend) => friend.playerId));
         const now = Date.now();
         const nextInvite = response.invitations.find(
           (invitation) => (
-            !seenHelpInviteIdsRef.current.has(invitation.inviteId)
+            !friendIdsRef.current.has(invitation.fromPlayerId)
+            && !seenHelpInviteIdsRef.current.has(invitation.inviteId)
             && invitation.expiresAt > now
           ),
         );
@@ -442,64 +452,6 @@ export default function App() {
       window.clearInterval(pollTimer);
     };
   }, [helpInviteToast, playerId, screen]);
-
-  useEffect(() => {
-    if (!playerId || !isAchievementWatchScreen(screen)) {
-      setFriendJoinToast(null);
-      return;
-    }
-
-    async function pollJoinableFriends(): Promise<void> {
-      if (friendJoinToast || helpInviteToast || helpInviteAcceptPendingRef.current) {
-        return;
-      }
-
-      try {
-        const response = await fetchFriends();
-        const candidate = response.friends.find((friend) => {
-          if (!friend.online || !friend.recentlyActive || !friend.joinableRoom) {
-            return false;
-          }
-
-          if (friend.joinableRoom.inviteId) {
-            return false;
-          }
-
-          const toastKey = `${friend.playerId}:${friend.joinableRoom.roomId}`;
-          if (seenFriendJoinKeysRef.current.has(toastKey)) {
-            return false;
-          }
-
-          return friend.joinableRoom.participantCount === 1;
-        });
-
-        if (!candidate?.joinableRoom) {
-          return;
-        }
-
-        const toastKey = `${candidate.playerId}:${candidate.joinableRoom.roomId}`;
-        seenFriendJoinKeysRef.current.add(toastKey);
-        setFriendJoinToast({
-          friendPlayerId: candidate.playerId,
-          friendPlayerName: candidate.playerName,
-          roomId: candidate.joinableRoom.roomId,
-          encounterTitle: candidate.joinableRoom.encounterTitle,
-        });
-      } catch (error) {
-        console.error('Joinable friends poll failed', error);
-      }
-    }
-
-    void pollJoinableFriends();
-
-    const pollTimer = window.setInterval(() => {
-      void pollJoinableFriends();
-    }, FRIEND_JOIN_POLL_MS);
-
-    return () => {
-      window.clearInterval(pollTimer);
-    };
-  }, [friendJoinToast, helpInviteToast, playerId, screen]);
 
   const loadingHooks = useMemo(
     () => ({
@@ -564,6 +516,26 @@ export default function App() {
       setAvatarSelectionNotice(null);
     }
   }
+
+  const handleKickedFromParty = useCallback(() => {
+    const avatarId = activeAvatar?.id;
+    setActiveAvatar(null);
+    setActiveEncounter(null);
+    setActiveRoom(null);
+    resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+    setScreen('dashboard');
+    setPartyKickToast('The party leader removed you from the room.');
+    void (async () => {
+      if (avatarId) {
+        try {
+          await leaveEncounterRoom(avatarId);
+        } catch (error) {
+          console.error('Failed to leave room after kick', error);
+        }
+      }
+      await applyAvatarSelectionFromHome();
+    })();
+  }, [activeAvatar?.id]);
 
   useEffect(() => {
     if (screen === 'loading' || screen === 'gateway') {
@@ -770,6 +742,7 @@ export default function App() {
               void checkAchievementUnlocks();
             }}
             onAvatarDeath={(presetAvatar) => {
+              deathLeaveDoneRef.current = false;
               setExcludedAvatarIds((currentIds) => {
                 const nextIds = currentIds.includes(presetAvatar.id)
                   ? currentIds
@@ -782,13 +755,21 @@ export default function App() {
               ));
               setDeathOverlayAvatar(presetAvatar);
             }}
+            onKickedFromParty={handleKickedFromParty}
           />
         ) : null}
         {deathOverlayAvatar ? (
           <AvatarDeathOverlay
             avatarName={formatAvatarDisplayName(deathOverlayAvatar)}
             onHandoffComplete={() => {
+              deathLeaveDoneRef.current = false;
               setDeathOverlayAvatar(null);
+            }}
+            onOptionsVisible={() => {
+              const preset = deathOverlayAvatar;
+              if (preset) {
+                void completeDeathRoomLeave(preset);
+              }
             }}
             onNewAvatar={async () => {
               const preset = deathOverlayAvatar;
@@ -915,22 +896,12 @@ export default function App() {
             stackOffsetPx={achievementToast || hearthBlessingToast ? 78 : 0}
           />
         ) : null}
-        {isAchievementWatchScreen(screen) && friendJoinToast ? (
+        {partyKickToast ? (
           <GameMessageToast
-            label="Join friend"
-            message={`${friendJoinToast.friendPlayerName} is at ${friendJoinToast.encounterTitle}. Tap to join.`}
-            onClick={() => {
-              void joinFriendEncounter(friendJoinToast.friendPlayerId);
-            }}
+            message={partyKickToast}
             onDismiss={() => {
-              seenFriendJoinKeysRef.current.add(
-                `${friendJoinToast.friendPlayerId}:${friendJoinToast.roomId}`,
-              );
-              setFriendJoinToast(null);
+              setPartyKickToast(null);
             }}
-            stackOffsetPx={
-              achievementToast || hearthBlessingToast || helpInviteToast ? 78 : 0
-            }
           />
         ) : null}
         {isAchievementWatchScreen(screen) && privateScribeToast ? (
@@ -941,7 +912,7 @@ export default function App() {
               setPrivateScribeToast(null);
             }}
             stackOffsetPx={
-              achievementToast || hearthBlessingToast || helpInviteToast || friendJoinToast
+              achievementToast || hearthBlessingToast || helpInviteToast
                 ? 78
                 : 0
             }

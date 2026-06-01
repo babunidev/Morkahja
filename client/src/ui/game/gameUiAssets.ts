@@ -11,4 +11,5 @@ export const GAME_FOCUS_BUTTON_ICONS = {
   lore: `${GAME_UI_ROOT}/im_button_lore.webp`,
   inventory: `${GAME_UI_ROOT}/im_button_inventory.webp`,
   skillbook: `${GAME_UI_ROOT}/im_button_skillbook.webp`,
+  avatar_details: `${GAME_UI_ROOT}/im_button_inventory.webp`,
 } as const;

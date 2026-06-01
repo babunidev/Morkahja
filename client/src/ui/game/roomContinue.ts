@@ -34,27 +34,39 @@ export function continueTargets(room: EncounterRoomSnapshotDto): RoomParticipant
   return awaitingContinue.length > 0 ? awaitingContinue : engagedParticipants(room);
 }
 
-export function isMultiplayerContinue(room: EncounterRoomSnapshotDto | null | undefined): boolean {
-  return isPartySession(room);
+const INACTIVE_OUTCOME_MESSAGE = 'Inactive';
+
+function localHasRevealedOutcome(room: EncounterRoomSnapshotDto): boolean {
+  const local = room.participants.find((participant) => participant.isLocal);
+  if (!local) {
+    return false;
+  }
+
+  const summary = local.preparedResult ?? local.resolutionSummary;
+  if (!summary) {
+    return false;
+  }
+
+  if (summary.message === INACTIVE_OUTCOME_MESSAGE && local.choiceState === 'disengaged') {
+    return false;
+  }
+
+  return true;
 }
 
+/** Keep reward/loss UI visible until the room advances to the next encounter snapshot. */
 export function shouldDeferRewardDismiss(
   room: EncounterRoomSnapshotDto | null | undefined,
   resultsVisible: boolean,
 ): boolean {
-  if (!room || !resultsVisible) {
+  if (!room || !resultsVisible || !localHasRevealedOutcome(room)) {
     return false;
   }
 
-  if (room.roomState === 'advancing') {
-    return false;
-  }
-
-  if (!isPartySession(room)) {
-    return false;
-  }
-
-  if (room.roomState === 'waiting_continue') {
+  if (
+    room.roomState === 'waiting_continue'
+    || room.roomState === 'advancing'
+  ) {
     return true;
   }
 
@@ -62,24 +74,32 @@ export function shouldDeferRewardDismiss(
   return local?.preparedResult !== undefined || local?.choiceState === 'ready_to_continue';
 }
 
-export function allContinuePressed(room: EncounterRoomSnapshotDto): boolean {
-  const targets = continueTargets(room);
-  return targets.length > 0 && targets.every((participant) => participant.continuePressed);
-}
-
 export function localContinuePressed(room: EncounterRoomSnapshotDto): boolean {
   const local = room.participants.find((participant) => participant.isLocal);
   return local?.continuePressed === true;
 }
 
-export function multiplayerContinueWaiting(
-  room: EncounterRoomSnapshotDto | null | undefined,
-): boolean {
-  if (!isPartySession(room) || room?.roomState !== 'waiting_continue') {
+/** Local player has submitted their encounter choice to the server. */
+export function localOutcomeCommitted(room: EncounterRoomSnapshotDto): boolean {
+  const local = room.participants.find((participant) => participant.isLocal);
+  if (!local) {
     return false;
   }
 
-  return localContinuePressed(room) && !allContinuePressed(room);
+  return (
+    local.choiceState === 'ready_to_continue' ||
+    local.choiceState === 'resolved' ||
+    local.preparedResult !== undefined
+  );
+}
+
+/** Room is waiting to continue and local still needs to send continuePressed. */
+export function localNeedsContinueAck(room: EncounterRoomSnapshotDto): boolean {
+  if (!localOutcomeCommitted(room) || localContinuePressed(room)) {
+    return false;
+  }
+
+  return room.roomState === 'waiting_continue' || room.roomState === 'advancing';
 }
 
 export function continueReadinessClass(

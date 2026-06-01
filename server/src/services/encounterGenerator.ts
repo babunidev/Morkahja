@@ -409,6 +409,27 @@ function isFollowOutcome(outcome: ReturnType<typeof interpretRoll>): boolean {
   return outcome === 'Fortune' || outcome === 'Prosperity';
 }
 
+export interface OutcomeSummaryForFollow {
+  success: boolean;
+  selectedRoll?: number;
+}
+
+/** Whether the room should use the configured follow encounter (slot-0 / lineage rules). */
+export function shouldUseEncounterFollow(
+  encounterFollow: number,
+  summary: OutcomeSummaryForFollow | undefined,
+): boolean {
+  if (encounterFollow <= 0 || !summary?.success) {
+    return false;
+  }
+
+  if (summary.selectedRoll === undefined) {
+    return false;
+  }
+
+  return isFollowOutcome(interpretRoll(summary.selectedRoll));
+}
+
 function getNextEncounterAfterResolution(
   snapshot: EncounterSnapshot,
   selectedRollOutcome: RollOutcome | null,

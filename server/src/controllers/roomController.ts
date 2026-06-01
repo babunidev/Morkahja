@@ -4,10 +4,12 @@ import { requireAuth } from '../middleware/authMiddleware.js';
 import { toEncounterRoomSnapshotDto } from '../services/roomDtoMapper.js';
 import {
   broadcastCallForHelp,
+  consumePartyEjection,
   createRoom,
   getActiveRoomForPlayer,
   joinFriendRoom,
   joinRoom,
+  kickParticipant,
   leaveRoom,
   listPendingHelpInvitations,
   respondHelp,
@@ -16,8 +18,14 @@ import {
   setSlotState,
   submitChoice,
   submitContinue,
+  submitSelection,
 } from '../services/roomService.js';
 import { activateRoomLoreGem, LoreGemError } from '../services/loreGemService.js';
+import {
+  ActiveAvatarConflictError,
+  assertActiveAvatarForRequest,
+  touchPlayerInteraction,
+} from '../services/playerInteractionService.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
 import type { PlayerDocument } from '../types/player.js';
 
@@ -35,11 +43,23 @@ function handleRoomError(error: unknown, res: Response, next: NextFunction): voi
     res.status(error.statusCode).json({ error: error.code ?? error.message });
     return;
   }
+  if (error instanceof ActiveAvatarConflictError) {
+    res.status(409).json({ error: 'ACTIVE_AVATAR_CHANGED' });
+    return;
+  }
   if (error instanceof LoreGemError) {
     res.status(error.statusCode).json({ error: error.message });
     return;
   }
   next(error);
+}
+
+async function requireActiveAvatar(req: Request): Promise<{ playerId: string; avatarId: string }> {
+  const { playerId } = requireAuth(req);
+  const avatarId = requireAvatarId(req);
+  await assertActiveAvatarForRequest(playerId, avatarId);
+  await touchPlayerInteraction(playerId);
+  return { playerId, avatarId };
 }
 
 function requireAvatarId(req: Request): string {
@@ -66,8 +86,14 @@ export async function getActiveRoomController(
     const { playerId } = requireAuth(req);
     const avatarId = requireAvatarId(req);
     const room = await getActiveRoomForPlayer(playerId, avatarId);
+    const partyEjection = room
+      ? undefined
+      : (await consumePartyEjection(playerId)) === 'kicked'
+        ? { reason: 'kicked' as const }
+        : undefined;
     res.json({
       room: room ? await toEncounterRoomSnapshotDto(room, playerId) : null,
+      partyEjection,
     });
   } catch (error) {
     handleRoomError(error, res, next);
@@ -180,6 +206,27 @@ export async function submitRoomChoiceController(
   }
 }
 
+export async function submitRoomSelectionController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const body = req.body as Record<string, unknown>;
+    const avatarId = requireAvatarId(req);
+    const action = body.action as EncounterAction;
+    const solutionId = typeof body.solutionId === 'number' ? body.solutionId : undefined;
+
+    const room = await submitSelection(playerId, avatarId, action, solutionId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
 export async function submitRoomFocusController(
   req: Request,
   res: Response,
@@ -195,7 +242,8 @@ export async function submitRoomFocusController(
       focusState !== 'none' &&
       focusState !== 'lore' &&
       focusState !== 'inventory' &&
-      focusState !== 'skillbook'
+      focusState !== 'skillbook' &&
+      focusState !== 'avatar_details'
     ) {
       throw new RequestError('Invalid focusState');
     }
@@ -303,6 +351,29 @@ export async function joinFriendRoomController(
     }
 
     const room = await joinFriendRoom(playerId, friendPlayerId, avatarId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function kickRoomParticipantController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId, avatarId } = await requireActiveAvatar(req);
+    const body = req.body as Record<string, unknown>;
+    const targetPlayerId = typeof body.targetPlayerId === 'string' ? body.targetPlayerId : '';
+
+    if (!targetPlayerId) {
+      throw new RequestError('targetPlayerId is required');
+    }
+
+    const room = await kickParticipant(playerId, avatarId, targetPlayerId);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
     });

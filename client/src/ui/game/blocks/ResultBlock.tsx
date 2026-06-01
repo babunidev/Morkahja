@@ -187,11 +187,11 @@ function waitContinueBounce(): Promise<void> {
   });
 }
 
-function continueDismissLayerStyle(continueBusy: boolean): CSSProperties {
+function rewardDismissLayerStyle(rewardDismissInProgress: boolean): CSSProperties {
   return {
-    opacity: continueBusy ? 0 : 1,
+    opacity: rewardDismissInProgress ? 0 : 1,
     transition: `opacity ${CONTINUE_BOUNCE_MS}ms ease-in-out`,
-    pointerEvents: continueBusy ? 'none' : 'auto',
+    pointerEvents: rewardDismissInProgress ? 'none' : 'auto',
   };
 }
 
@@ -473,7 +473,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   },
   ref,
 ) {
-  const [continueBusy, setContinueBusy] = useState(false);
+  const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
+  const [continuePressAnimating, setContinuePressAnimating] = useState(false);
+  const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
@@ -535,7 +537,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     && (continueFloatingAfterPress || continueWaitingAfterPress)
     && !continueRevealPlaying
     && !continueEnableRattle
-    && !continueBusy;
+    && !continueSubmitInFlight;
 
   const lossesKey = useMemo(
     () => losses.map((loss) => `${loss.solution.mSolutionID}:${loss.quantity}`).join('|'),
@@ -806,11 +808,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   async function playDismissAnimations(): Promise<void> {
-    if (!visible || continueBusy) {
+    if (!visible || rewardDismissInProgress) {
       return;
     }
 
-    setContinueBusy(true);
+    setRewardDismissInProgress(true);
     hideItemTooltip();
 
     try {
@@ -841,7 +843,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         await waitContinueBounce();
       }
     } finally {
-      setContinueBusy(false);
+      setRewardDismissInProgress(false);
     }
   }
 
@@ -854,7 +856,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       disabled
       || hidden
       || !visible
-      || continueBusy
+      || continueSubmitInFlight
       || !continueInteractive
       || (deferRewardDismiss && localContinuePressed)
     ) {
@@ -864,17 +866,23 @@ export const ResultBlock = forwardRef(function ResultBlock(
     playSfx(CONTINUE_SOUND);
     hideItemTooltip();
 
-    setContinueBusy(true);
+    setContinueSubmitInFlight(true);
+    setContinuePressAnimating(true);
+    const pressAnimTimer = window.setTimeout(() => {
+      setContinuePressAnimating(false);
+    }, CONTINUE_BOUNCE_MS);
 
     try {
-      await playDismissAnimations();
       setContinuePressAnimationDone(true);
       setContinueFloatingAfterPress(true);
+      await waitContinueBounce();
       await Promise.resolve(onContinue());
     } catch {
       // Parent logs failures; keep results visible for retry.
     } finally {
-      setContinueBusy(false);
+      window.clearTimeout(pressAnimTimer);
+      setContinuePressAnimating(false);
+      setContinueSubmitInFlight(false);
     }
   }
 
@@ -1148,7 +1156,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         src={RESULT_BACKGROUND}
         style={{
           ...resultImageStyle,
-          ...continueDismissLayerStyle(continueBusy),
+          ...rewardDismissLayerStyle(rewardDismissInProgress),
           pointerEvents: resultInteractive ? 'auto' : 'none',
         }}
       />
@@ -1158,7 +1166,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         className="morkahja-footer-button"
         disabled={
           disabled
-          || continueBusy
+          || continueSubmitInFlight
           || !continueInteractive
           || (deferRewardDismiss && localContinuePressed)
         }
@@ -1170,12 +1178,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
           ...continueButtonStyle,
           cursor:
             disabled
-            || continueBusy
+            || continueSubmitInFlight
             || !continueInteractive
             || (deferRewardDismiss && localContinuePressed)
               ? 'default'
               : 'pointer',
-          pointerEvents: resultInteractive && continueInteractive && !continueBusy ? 'auto' : 'none',
+          pointerEvents: resultInteractive && continueInteractive && !continueSubmitInFlight
+            ? 'auto'
+            : 'none',
         }}
         type="button"
       >
@@ -1188,7 +1198,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
               : continueInteractive || continueEnableRattle
                 ? continueSettledStyle
                 : continueHiddenStyle),
-            ...(continueBusy && !showContinueFloat ? continueAnimatingStyle : {}),
+            ...(continuePressAnimating && !showContinueFloat ? continueAnimatingStyle : {}),
             ...(showContinueFloat ? { animation: undefined } : {}),
           }}
         >
@@ -1214,7 +1224,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           </span>
         </span>
       </button>
-      {rewards.length > 0 && !rewardsFlyingAway && !continueBusy ? (
+      {rewards.length > 0 && !rewardsFlyingAway && !rewardDismissInProgress ? (
         <div
           aria-label="Predetermined rewards"
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
@@ -1229,7 +1239,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
           style={{
             ...outcomeClusterStyle,
-            ...continueDismissLayerStyle(continueBusy),
+            ...rewardDismissLayerStyle(rewardDismissInProgress),
           }}
         >
           {usedSolution && usedSolutionCost > 0
@@ -1261,7 +1271,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           >
             {outcomeShowsRoll ? displayRoll : outcome}
           </button>
-          {showLoreGemReward && !rewardsFlyingAway && !continueBusy
+          {showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
             ? renderLoreGemRewardIcon()
             : null}
         </div>
@@ -1272,7 +1282,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
           style={{
             ...lossRowStyle,
-            ...continueDismissLayerStyle(continueBusy),
+            ...rewardDismissLayerStyle(rewardDismissInProgress),
           }}
         >
           {losses.map((loss) => renderLossIcon(loss))}

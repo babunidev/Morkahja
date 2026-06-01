@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react';
 import { fadeTransition } from '../../transitions/fade.js';
 
 const HEADER_BACKGROUND = '/UI/09_GAME/im_encounter_background_top_a.webp';
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 
 const headerStyle: CSSProperties = {
   width: '100%',
@@ -38,18 +37,6 @@ const titleLayerStyle: CSSProperties = {
   transition: fadeTransition,
 };
 
-const bottomSeamStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  alignSelf: 'end',
-  justifySelf: 'center',
-  width: '108%',
-  height: 10,
-  objectFit: 'cover',
-  transform: 'translateY(7px)',
-  zIndex: 20,
-  pointerEvents: 'none',
-};
-
 export function EncounterHeader({
   overlayTitle = null,
   title,
@@ -83,13 +70,6 @@ export function EncounterHeader({
           </h1>
         ) : null}
       </div>
-      <img
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        src={FRAME_MASK}
-        style={bottomSeamStyle}
-      />
     </div>
   );
 }

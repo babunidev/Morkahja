@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type Ref } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -7,7 +7,7 @@ import type {
   ParticipantResolutionSummaryDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import { activateRoomLoreGem } from '../../../api/http.js';
+import { activateRoomLoreGem, submitRoomSelection } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
@@ -100,6 +100,7 @@ export function EncounterImageBlock({
   title,
   witnessMode = false,
   systemEventActorName,
+  holdResultRollReset = false,
 }: {
   avatarId: string;
   continuePending: boolean;
@@ -129,6 +130,8 @@ export function EncounterImageBlock({
   title: string;
   witnessMode?: boolean;
   systemEventActorName?: string;
+  /** When true, keep outcome roll visible until reward dismiss finishes. */
+  holdResultRollReset?: boolean;
 }) {
   const [revealedRoll, setRevealedRoll] = useState<number | null>(null);
   const [selectedAction, setSelectedAction] = useState<EncounterAction>('dice');
@@ -140,6 +143,8 @@ export function EncounterImageBlock({
   const [underlayHoldSrc, setUnderlayHoldSrc] = useState<string | null>(null);
   const underlayImageSrc = transitionImageSrc ?? underlayHoldSrc ?? undefined;
   const underlayVisible = underlayImageSrc !== undefined;
+  const lastSyncedSelectionKeyRef = useRef<string | null>(null);
+  const selectionSyncInFlightRef = useRef(false);
 
   function markMissingImage(src: string): void {
     setMissingImageSrcs((currentMissingImageSrcs) => (
@@ -184,10 +189,14 @@ export function EncounterImageBlock({
   }, [currentImageSrc, imageSrc]);
 
   useEffect(() => {
+    if (holdResultRollReset) {
+      return;
+    }
     setRevealedRoll(null);
     setSelectedAction('dice');
     setSelectedSolutionId(null);
-  }, [encounter.snapshotId]);
+    lastSyncedSelectionKeyRef.current = null;
+  }, [encounter.snapshotId, holdResultRollReset]);
 
   useEffect(() => {
     if (serverResolution?.selectedRoll !== undefined) {
@@ -215,6 +224,45 @@ export function EncounterImageBlock({
     }
   }
 
+  function selectionSyncKey(
+    action: EncounterAction,
+    solutionId: number | undefined,
+  ): string {
+    return `${action}:${solutionId ?? ''}`;
+  }
+
+  function syncSelectionToRoom(
+    action: EncounterAction,
+    solutionId: number | undefined,
+  ): void {
+    if (witnessMode) {
+      return;
+    }
+
+    if (
+      roomState !== 'active_encounter'
+      && roomState !== 'system_event'
+    ) {
+      return;
+    }
+
+    const key = selectionSyncKey(action, solutionId);
+    if (lastSyncedSelectionKeyRef.current === key || selectionSyncInFlightRef.current) {
+      return;
+    }
+
+    selectionSyncInFlightRef.current = true;
+    void submitRoomSelection(avatarId, action, solutionId)
+      .then((room) => {
+        lastSyncedSelectionKeyRef.current = key;
+        onRoomSnapshot?.(room);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        selectionSyncInFlightRef.current = false;
+      });
+  }
+
   function handleActionReveal(
     action: EncounterAction,
     roll: number | null,
@@ -223,6 +271,13 @@ export function EncounterImageBlock({
     setSelectedAction(action);
     setRevealedRoll(roll);
     setSelectedSolutionId(solutionId ?? null);
+
+    const isSelectionMoment = roll === null && (
+      solutionId !== undefined || action === 'dice'
+    );
+    if (isSelectionMoment) {
+      syncSelectionToRoom(action, solutionId);
+    }
   }
 
   return (

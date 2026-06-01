@@ -10,6 +10,7 @@ import type { PlayerDocument } from '../types/player.js';
 import { HELP_SEEN_WINDOW_MS } from '../domain/rooms/roomConstants.js';
 import { getAchievementsSnapshotReadOnly } from './achievementService.js';
 import { loadPlayerAvatars } from './playerService.js';
+import { isPlayerRecentlyActive, readLastInteractionAt } from './playerInteractionService.js';
 import { describeJoinableRoomForFriend } from './roomService.js';
 
 export class FriendNotFoundError extends Error {
@@ -271,9 +272,9 @@ async function buildFriendSummary(
     playerName: typeof record.playerName === 'string' ? record.playerName : canonicalFriendId,
   } as PlayerDocument;
   const avatar = await resolveFriendAvatar(canonicalFriendId);
-  const lastPlayedAt = typeof player.lastPlayedAt === 'number' ? player.lastPlayedAt : 0;
+  const lastPlayedAt = readLastInteractionAt(player as PlayerDocument);
   const online = isPlayerOnline(player, liveSessionPlayerIds);
-  const recentlyActive = online && (Date.now() - lastPlayedAt) <= HELP_SEEN_WINDOW_MS;
+  const recentlyActive = online && isPlayerRecentlyActive(player as PlayerDocument);
   const joinableRoom = recentlyActive
     ? await describeJoinableRoomForFriend(viewerPlayerId, canonicalFriendId)
     : null;

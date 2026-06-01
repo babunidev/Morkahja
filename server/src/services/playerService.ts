@@ -513,6 +513,7 @@ export async function selectPlayerAvatar(
     playerId,
     {
       activeAvatarId: payload.id,
+      lastInteractionAt: Date.now(),
       updatedAt: Date.now(),
     },
     { merge: true },

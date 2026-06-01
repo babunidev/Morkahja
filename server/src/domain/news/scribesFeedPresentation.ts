@@ -12,6 +12,7 @@ const CONTRIBUTOR_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_donator.webp'
 const BLESSED_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_lucker.webp';
 const COMBATANT_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_combatant.webp';
 const TRICKSTER_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_trickster.webp';
+const HELPER_ACHIEVEMENT_ICON = '/UI/04_ACHIEVEMENTS/im_glyph_helper.webp';
 const KEY_REMINDER_ICON = '/UI/03_DASHBOARD/im_button_setting_b.webp';
 
 function readString(payload: Record<string, unknown>, key: string): string | undefined {

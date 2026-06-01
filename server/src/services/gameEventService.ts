@@ -531,16 +531,37 @@ export async function recordGemsReceivedEvent(
   });
 }
 
-function resolveJoinAction(
+async function resolveJoinAction(
   event: GameEvent,
   viewingPlayerId: string,
-): ActivityFeedJoinAction | undefined {
-  if (event.type !== 'help_requested') {
-    return undefined;
+): Promise<ActivityFeedJoinAction | undefined> {
+  if (event.type === 'help_requested') {
+    const toPlayerId = payloadString(event.payload, 'toPlayerId');
+    if (toPlayerId !== viewingPlayerId) {
+      return undefined;
+    }
+
+    const roomId = payloadString(event.payload, 'roomId');
+    if (!roomId) {
+      return undefined;
+    }
+
+    const inviteId = payloadString(event.payload, 'inviteId');
+    const { resolveRoomJoinActionForViewer } = await import('./roomService.js');
+    const joinable = await resolveRoomJoinActionForViewer(viewingPlayerId, roomId);
+    if (!joinable) {
+      return undefined;
+    }
+
+    return {
+      type: 'join_room',
+      roomId: joinable.roomId,
+      fromPlayerId: joinable.fromPlayerId,
+      ...(inviteId ? { inviteId } : {}),
+    };
   }
 
-  const toPlayerId = payloadString(event.payload, 'toPlayerId');
-  if (toPlayerId !== viewingPlayerId) {
+  if (event.type !== 'room_created' && event.type !== 'help_called') {
     return undefined;
   }
 
@@ -549,13 +570,16 @@ function resolveJoinAction(
     return undefined;
   }
 
-  const inviteId = payloadString(event.payload, 'inviteId');
+  const { resolveRoomJoinActionForViewer } = await import('./roomService.js');
+  const joinable = await resolveRoomJoinActionForViewer(viewingPlayerId, roomId);
+  if (!joinable) {
+    return undefined;
+  }
 
   return {
     type: 'join_room',
-    roomId,
-    fromPlayerId: event.playerId,
-    ...(inviteId ? { inviteId } : {}),
+    roomId: joinable.roomId,
+    fromPlayerId: joinable.fromPlayerId,
   };
 }
 
@@ -580,7 +604,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
   const visibleEvents = events.filter((event) => isVisibleInScribesFeed(event, playerId));
   const playerNames = await buildPlayerNameLookup(visibleEvents.map((event) => event.playerId));
 
-  return visibleEvents.map((event) => {
+  const entries = await Promise.all(visibleEvents.map(async (event) => {
     const avatarVisual = resolveScribesAvatarVisual(event);
 
     return {
@@ -594,7 +618,9 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       iconUrl: resolveScribesIconUrl(event),
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
-      joinAction: resolveJoinAction(event, playerId),
+      joinAction: await resolveJoinAction(event, playerId),
     };
-  });
+  }));
+
+  return entries;
 }

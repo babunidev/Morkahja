@@ -114,8 +114,16 @@ function buildParticipantDto(
   };
 }
 
+function engagedParticipantsForDto(room: EncounterRoom): RoomParticipant[] {
+  return room.participants.filter(
+    (participant) =>
+      participant.choiceState !== 'disengaged' &&
+      participant.disconnectedAt === undefined,
+  );
+}
+
 function continueTargetsForDto(room: EncounterRoom): RoomParticipant[] {
-  const engaged = room.participants.filter((participant) => participant.choiceState !== 'disengaged');
+  const engaged = engagedParticipantsForDto(room);
   if (room.systemEvent?.lastEvent) {
     return engaged;
   }

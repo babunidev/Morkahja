@@ -159,9 +159,13 @@ export function renderEventMessage(event: GameEvent): string {
       const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
       return `${playerLabel(payload)} claimed the Hearth Blessing (${amount} ${gemLabel}).`;
     }
-    case 'help_requested': {
+    case 'help_requested':
+    case 'help_called': {
       const encounterTitle = readString(payload, 'encounterTitle') ?? 'an encounter';
       return `${playerLabel(payload)} calls for help at ${encounterTitle}.`;
+    }
+    case 'room_created': {
+      return `${playerLabel(payload)} entered an encounter at ${encounterLabel(payload)}.`;
     }
     default:
       return `${avatarLabel(payload)} made their mark on the world.`;

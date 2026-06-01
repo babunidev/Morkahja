@@ -8,6 +8,7 @@ import {
 } from '@shared/diceCatalog.js';
 import {
   fetchActiveRoom,
+  fetchActiveRoomState,
   fetchPlayer,
   ROOM_POLL_MS,
   requestRoomHelp,
@@ -15,6 +16,8 @@ import {
   submitRoomContinue,
   submitRoomFocus,
   submitRoomSlotState,
+  kickRoomParticipant,
+  leaveEncounterRoom,
   type EncounterAction,
   type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
@@ -23,10 +26,7 @@ import {
 } from '../../api/http.js';
 import { ApiRequestError } from '../../api/httpErrorMessage.js';
 import { normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
-import {
-  ensureSoloLeaderRoom,
-  leaveJoinedPartyRoomIfNeeded,
-} from './roomSession.js';
+import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import { interpretRoll } from './encounterInventoryPreview.js';
@@ -37,17 +37,22 @@ import {
   waitForFade,
 } from '../transitions/fade.js';
 import EncounterHeader from './blocks/EncounterHeader.js';
+import EncounterHeaderSeam from './blocks/EncounterHeaderSeam.js';
 import EncounterImageBlock from './blocks/EncounterImageBlock.js';
 import type { ResultBlockHandle } from './blocks/ResultBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
 import GameMessageToast from './GameMessageToast.js';
 import {
   continueGlowClassForRoom,
-  isPartySession,
   localContinuePressed,
+  localNeedsContinueAck,
   localWaitingForRoomAdvance,
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
+import {
+  encounterSnapshotAdvanced,
+  runEncounterAdvanceTransition,
+} from './roomAdvanceOrchestrator.js';
 
 const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 
@@ -82,26 +87,32 @@ interface GameEnvironmentProps {
   initialRoom?: EncounterRoomSnapshotDto | null;
   onAchievementCheck?: () => void;
   onAvatarDeath: (presetAvatar: PersistedAvatar) => void;
+  onKickedFromParty?: () => void;
   onHome: () => void;
 }
 
 const topZoneStyle: CSSProperties = {
+  position: 'relative',
   width: '100%',
   height: '100%',
   display: 'grid',
   gridTemplateRows: '15% minmax(0, 1fr)',
 };
 
-const headerSlotStyle: CSSProperties = { minHeight: 0 };
+/** Header row (title + seam) always stacks above the encounter row and its overlays (lore, inventory, results). */
+const ENCOUNTER_HEADER_ROW_Z_INDEX = 50;
 
-const headerSlotRaisedStyle: CSSProperties = {
+const headerSlotStyle: CSSProperties = {
   position: 'relative',
-  zIndex: 25,
+  zIndex: ENCOUNTER_HEADER_ROW_Z_INDEX,
+  minHeight: 0,
 };
 
 const encounterImageSlotStyle: CSSProperties = {
   gridRow: '2',
   gridColumn: '1',
+  position: 'relative',
+  zIndex: 1,
   minHeight: 0,
   width: '100%',
   display: 'flex',
@@ -166,18 +177,16 @@ function applyRoomSnapshot(
   return true;
 }
 
-function isSoloRoom(room: EncounterRoomSnapshotDto): boolean {
-  return !isPartySession(room);
-}
-
 function currentFocusState(
   loreOpen: boolean,
   inventoryOpen: boolean,
   skillbookOpen: boolean,
-): 'none' | 'lore' | 'inventory' | 'skillbook' {
+  avatarDetailsOpen: boolean,
+): 'none' | 'lore' | 'inventory' | 'skillbook' | 'avatar_details' {
   if (loreOpen) return 'lore';
   if (inventoryOpen) return 'inventory';
   if (skillbookOpen) return 'skillbook';
+  if (avatarDetailsOpen) return 'avatar_details';
   return 'none';
 }
 
@@ -190,6 +199,7 @@ export function GameEnvironment({
   deathPending = false,
   onAchievementCheck,
   onAvatarDeath,
+  onKickedFromParty,
   onHome,
 }: GameEnvironmentProps) {
   const [visible, setVisible] = useState(!deferReveal);
@@ -213,9 +223,51 @@ export function GameEnvironment({
   const avatarRef = useRef(avatar);
   const roomRef = useRef(room);
   const continueSubmitInFlightRef = useRef(false);
+  const encounterTransitionInFlightRef = useRef(false);
+  /** Prevents duplicate death handling and stops room poll from re-binding after death. */
+  const deathLeaveHandledRef = useRef<string | null>(null);
+  const userLeavingRef = useRef(false);
+  const [holdResultRollReset, setHoldResultRollReset] = useState(false);
   const resultBlockRef = useRef<ResultBlockHandle>(null);
   avatarRef.current = avatar;
   roomRef.current = room;
+
+  const handleLocalAvatarDeath = useCallback((deadAvatar: PersistedAvatar) => {
+    if (deathLeaveHandledRef.current === deadAvatar.id) {
+      return;
+    }
+    deathLeaveHandledRef.current = deadAvatar.id;
+    onAvatarDeath(deadAvatar);
+  }, [onAvatarDeath]);
+
+  const applySnapshotOnly = useCallback((nextRoom: EncounterRoomSnapshotDto) => {
+    applyRoomSnapshot(
+      nextRoom,
+      setRoom,
+      setEncounter,
+      setAvatar,
+      avatarRef.current,
+      roomRef.current,
+    );
+  }, []);
+
+  const roomAdvanceHooks = useMemo(() => ({
+    applySnapshotOnly,
+    playDismissAnimations: async () => {
+      setHoldResultRollReset(true);
+      try {
+        await resultBlockRef.current?.playDismissAnimations().catch(() => undefined);
+      } finally {
+        setHoldResultRollReset(false);
+      }
+    },
+    setTransitionInFlight: (inFlight: boolean) => {
+      encounterTransitionInFlightRef.current = inFlight;
+    },
+    onAdvanceComplete: () => {
+      setResultRollVisible(false);
+    },
+  }), [applySnapshotOnly]);
 
   const localParticipant = room?.participants.find((participant) => participant.isLocal);
   const serverResolution = localParticipant?.preparedResult ?? localParticipant?.resolutionSummary;
@@ -306,41 +358,50 @@ export function GameEnvironment({
     }
 
     const poll = window.setInterval(() => {
-      void fetchActiveRoom(avatarRef.current.id).then(async (nextRoom) => {
-        if (!nextRoom || cancelled || continueSubmitInFlightRef.current) {
+      void fetchActiveRoomState(avatarRef.current.id).then(async ({ room: nextRoom, partyEjection }) => {
+        if (cancelled) {
           return;
         }
 
-        const currentRoom = roomRef.current;
-        const shouldDismissBeforeAdvance = Boolean(
-          currentRoom
-          && (currentRoom.roomState === 'waiting_continue' || currentRoom.roomState === 'advancing')
-          && (nextRoom.roomState === 'active_encounter' || nextRoom.roomState === 'advancing')
-          && currentRoom.participants.some(
-            (participant) => participant.isLocal && (
-              participant.preparedResult !== undefined ||
-              participant.resolutionSummary !== undefined ||
-              participant.continuePressed === true
-            ),
-          ),
-        );
-
-        if (shouldDismissBeforeAdvance) {
-          await resultBlockRef.current?.playDismissAnimations().catch(() => undefined);
+        if (
+          partyEjection?.reason === 'kicked'
+          && !userLeavingRef.current
+          && onKickedFromParty
+        ) {
+          onKickedFromParty();
+          return;
         }
 
-        applyRoomSnapshot(
-          nextRoom,
-          setRoom,
-          setEncounter,
-          setAvatar,
-          avatarRef.current,
-          roomRef.current,
-        );
+        if (
+          !nextRoom
+          || continueSubmitInFlightRef.current
+          || deathLeaveHandledRef.current === avatarRef.current.id
+        ) {
+          return;
+        }
+
+        if (localNeedsContinueAck(nextRoom)) {
+          await acknowledgeRoomContinue(nextRoom);
+          return;
+        }
+
+        const baseline = roomRef.current;
+        if (!baseline) {
+          applySnapshotOnly(nextRoom);
+        } else if (encounterTransitionInFlightRef.current) {
+          if (nextRoom.activeEncounter.snapshotId === baseline.activeEncounter.snapshotId) {
+            applySnapshotOnly(nextRoom);
+          }
+        } else if (encounterSnapshotAdvanced(baseline, nextRoom)) {
+          await runEncounterAdvanceTransition(baseline, nextRoom, roomAdvanceHooks);
+        } else {
+          applySnapshotOnly(nextRoom);
+        }
 
         const local = nextRoom.participants.find((participant) => participant.isLocal);
-        if (local?.resolutionSummary?.avatarDied) {
-          onAvatarDeath(local.avatar);
+        const deathSummary = local?.preparedResult ?? local?.resolutionSummary;
+        if (deathSummary?.avatarDied && local) {
+          handleLocalAvatarDeath(local.avatar);
         }
       }).catch(() => undefined);
     }, ROOM_POLL_MS);
@@ -349,13 +410,19 @@ export function GameEnvironment({
       cancelled = true;
       window.clearInterval(poll);
     };
-  }, [initialRoom, onAvatarDeath]);
+  }, [
+    applySnapshotOnly,
+    handleLocalAvatarDeath,
+    initialRoom,
+    onKickedFromParty,
+    roomAdvanceHooks,
+  ]);
 
   useEffect(() => {
     if (!room) {
       return;
     }
-    const focusState = currentFocusState(loreOpen, inventoryOpen, skillbookOpen);
+    const focusState = currentFocusState(loreOpen, inventoryOpen, skillbookOpen, homeVisible);
     if (localParticipant?.focusState === focusState) {
       return;
     }
@@ -371,7 +438,7 @@ export function GameEnvironment({
         );
       })
       .catch(() => undefined);
-  }, [loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
+  }, [homeVisible, loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
 
   async function syncEncounterRoom(): Promise<EncounterRoomSnapshotDto | null> {
     const room = await ensureSoloLeaderRoom(avatarRef.current.id);
@@ -390,12 +457,14 @@ export function GameEnvironment({
     setActionLog((currentLog) => [...currentLog, ...entries].slice(-24));
   }
 
-  async function advanceResolvedEncounter(
+  /** Submit continue (ready). Dismiss runs only when the server advances the encounter snapshot. */
+  async function acknowledgeRoomContinue(
     currentRoom: EncounterRoomSnapshotDto,
   ): Promise<EncounterRoomSnapshotDto> {
     setLoreOpen(false);
     setInventoryOpen(false);
     setSkillbookOpen(false);
+    setHomeVisible(false);
 
     continueSubmitInFlightRef.current = true;
 
@@ -404,27 +473,12 @@ export function GameEnvironment({
       const local = workingRoom.participants.find((participant) => participant.isLocal);
       if (local?.focusState !== 'none') {
         workingRoom = await submitRoomFocus(avatarRef.current.id, 'none');
-        applyRoomSnapshot(
-          workingRoom,
-          setRoom,
-          setEncounter,
-          setAvatar,
-          avatarRef.current,
-          roomRef.current,
-        );
+        applySnapshotOnly(workingRoom);
       }
 
-      const nextRoom = await submitRoomContinue(avatarRef.current.id);
-      applyRoomSnapshot(
-        nextRoom,
-        setRoom,
-        setEncounter,
-        setAvatar,
-        avatarRef.current,
-        roomRef.current,
-      );
-
-      return nextRoom;
+      const roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
+      await runEncounterAdvanceTransition(workingRoom, roomAfterContinue, roomAdvanceHooks);
+      return roomAfterContinue;
     } finally {
       continueSubmitInFlightRef.current = false;
     }
@@ -454,11 +508,11 @@ export function GameEnvironment({
       }
 
       if (currentRoom.roomState === 'waiting_continue') {
-        const nextRoom = await advanceResolvedEncounter(currentRoom);
+        const nextRoom = await acknowledgeRoomContinue(currentRoom);
         appendActionLog([
           nextRoom.roomState === 'active_encounter'
             ? 'Continue: Encounter advanced.'
-            : 'Continue: Waiting for other players.',
+            : 'Continue: Ready — waiting for the party.',
         ]);
         onAchievementCheck?.();
         return;
@@ -474,14 +528,15 @@ export function GameEnvironment({
         action,
         selectedSolutionId ?? undefined,
       );
-      applyRoomSnapshot(
-        nextRoom,
-        setRoom,
-        setEncounter,
-        setAvatar,
-        avatarRef.current,
-        roomRef.current,
-      );
+      applySnapshotOnly(nextRoom);
+
+      const localAfterChoice = nextRoom.participants.find((participant) => participant.isLocal);
+      if (
+        nextRoom.roomState === 'waiting_continue'
+        && localAfterChoice?.continuePressed !== true
+      ) {
+        nextRoom = await acknowledgeRoomContinue(nextRoom);
+      }
 
       const local = nextRoom.participants.find((participant) => participant.isLocal);
       const summary = local?.preparedResult ?? local?.resolutionSummary;
@@ -507,30 +562,16 @@ export function GameEnvironment({
         nextRoom.roomState === 'waiting_continue' &&
         nextRoom.systemEvent?.lastEventRecap !== undefined;
       if (shouldAutoAcknowledgeSystemEvent) {
-        nextRoom = await advanceResolvedEncounter(nextRoom);
+        nextRoom = await acknowledgeRoomContinue(nextRoom);
         appendActionLog([
           nextRoom.roomState === 'active_encounter'
             ? 'Continue: Encounter advanced.'
-            : 'Continue: Waiting for other players.',
-        ]);
-      }
-
-      if (
-        nextRoom.roomState === 'waiting_continue' &&
-        isSoloRoom(nextRoom) &&
-        !isPostSystemWaitingContinue(nextRoom) &&
-        !shouldAutoAcknowledgeSystemEvent
-      ) {
-        nextRoom = await advanceResolvedEncounter(nextRoom);
-        appendActionLog([
-          nextRoom.roomState === 'active_encounter'
-            ? 'Continue: Encounter advanced.'
-            : 'Continue: Waiting for other players.',
+            : 'Continue: Ready — waiting for the party.',
         ]);
       }
 
       if (summary?.avatarDied) {
-        onAvatarDeath(local?.avatar ?? avatar);
+        handleLocalAvatarDeath(local?.avatar ?? avatar);
       }
 
       if (local && local.avatar.level > avatar.level) {
@@ -594,6 +635,22 @@ export function GameEnvironment({
     }
   }
 
+  async function handleKickParticipant(targetPlayerId: string): Promise<void> {
+    try {
+      const nextRoom = await kickRoomParticipant(avatarRef.current.id, targetPlayerId);
+      applyRoomSnapshot(
+        nextRoom,
+        setRoom,
+        setEncounter,
+        setAvatar,
+        avatarRef.current,
+        roomRef.current,
+      );
+    } catch (error) {
+      console.error('Failed to kick party member', error);
+    }
+  }
+
   async function handleSlotStateChange(
     slotIndex: number,
     slotState: SlotStateDto,
@@ -614,12 +671,16 @@ export function GameEnvironment({
   }
 
   async function handleHome(): Promise<void> {
+    userLeavingRef.current = true;
     setVisible(false);
     await waitForFade();
     try {
-      await leaveJoinedPartyRoomIfNeeded(avatarRef.current.id);
+      const active = await fetchActiveRoom(avatarRef.current.id);
+      if (active) {
+        await leaveEncounterRoom(avatarRef.current.id);
+      }
     } catch (error) {
-      console.error('Failed to leave joined room on home', error);
+      console.error('Failed to leave room on home', error);
     }
     onHome();
   }
@@ -639,7 +700,7 @@ export function GameEnvironment({
     : undefined;
   const displayResolution = postSystemRecap ?? serverResolution;
 
-  const waitingForResolution = room?.roomState === 'resolving' || room?.roomState === 'advancing';
+  const waitingForResolution = room?.roomState === 'advancing';
   const showServerResult = displayResolution !== undefined && (
     room?.roomState === 'waiting_continue' ||
     room?.roomState === 'advancing' ||
@@ -663,11 +724,6 @@ export function GameEnvironment({
     );
   }
 
-  function isPostSystemWaitingContinue(currentRoom: EncounterRoomSnapshotDto): boolean {
-    return currentRoom.roomState === 'waiting_continue'
-      && currentRoom.systemEvent?.lastEventRecap !== undefined;
-  }
-
   return (
     <div aria-label="Game Environment" style={fadeStyle(visible)}>
       {helpToastMessage ? (
@@ -679,12 +735,7 @@ export function GameEnvironment({
       <GameLayout
         top={
           <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
-            <div
-              style={{
-                ...headerSlotStyle,
-                ...(inventoryOpen || skillbookOpen ? headerSlotRaisedStyle : {}),
-              }}
-            >
+            <div style={headerSlotStyle}>
               <EncounterHeader
                 overlayTitle={
                   inventoryOpen
@@ -695,13 +746,11 @@ export function GameEnvironment({
                 }
                 title={title}
               />
+              <EncounterHeaderSeam />
             </div>
             <div
               style={{
                 ...encounterImageSlotStyle,
-                ...(inventoryOpen || skillbookOpen || loreOpen
-                  ? { position: 'relative', zIndex: 26 }
-                  : {}),
                 ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
               }}
             >
@@ -713,6 +762,7 @@ export function GameEnvironment({
                 continueWaitingAfterPress={continueWaitingAfterPress}
                 deferRewardDismiss={deferRewardDismiss}
                 encounter={encounter}
+                holdResultRollReset={holdResultRollReset}
                 loreGemCollected={loreGemCollected}
                 onRoomSnapshot={applyLoreGemRoomSnapshot}
                 showLoreGemReward={showLoreGemReward}
@@ -778,6 +828,9 @@ export function GameEnvironment({
                   }
                   return next;
                 });
+              }}
+              onKickParticipant={(targetPlayerId) => {
+                void handleKickParticipant(targetPlayerId);
               }}
               onSlotStateChange={(slotIndex, slotState) => {
                 void handleSlotStateChange(slotIndex, slotState);

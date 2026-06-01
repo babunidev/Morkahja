@@ -85,6 +85,32 @@ export async function recordRoomEncounterResolvedEvent(
   });
 }
 
+export async function recordHelpCalledEvent(
+  fromPlayerId: string,
+  room: EncounterRoom,
+  context: {
+    fromPlayerName?: string;
+    avatarPortrait?: string;
+    avatarFrame?: string;
+  },
+): Promise<void> {
+  await recordGameEvent({
+    playerId: fromPlayerId,
+    type: 'help_called',
+    visibility: 'friends',
+    importance: 'high',
+    payload: {
+      roomId: room.roomId,
+      encounterId: room.activeEncounterSnapshot.encounterId,
+      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
+      playerName: context.fromPlayerName,
+      snapshotId: room.activeEncounterSnapshot.snapshotId,
+      ...(context.avatarPortrait ? { avatarPortrait: context.avatarPortrait } : {}),
+      ...(context.avatarFrame ? { avatarFrame: context.avatarFrame } : {}),
+    },
+  });
+}
+
 export async function recordHelpRequestedEvent(
   fromPlayerId: string,
   toPlayerId: string,

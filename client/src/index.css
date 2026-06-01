@@ -254,6 +254,36 @@ button:focus-visible {
   animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
 }
 
+.morkahja-party-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 204, 102, 0.45);
+  color: #ffcc66;
+  font-family: Georgia, serif;
+  font-size: clamp(10px, 2.4vw, 12px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.morkahja-party-status-badge-inactive {
+  border-color: rgba(180, 180, 180, 0.5);
+  color: #c8c0b6;
+}
+
+.morkahja-party-kick-button {
+  margin-top: 2px;
+  padding: 2px 10px;
+  border: 1px solid rgba(255, 120, 80, 0.55);
+  border-radius: 999px;
+  background: rgba(40, 12, 8, 0.82);
+  color: #ffb08a;
+  font-family: Georgia, serif;
+  font-size: clamp(10px, 2.3vw, 11px);
+  cursor: pointer;
+}
+
 @keyframes morkahja-continue-glow-gathering {
   0%,
   100% {

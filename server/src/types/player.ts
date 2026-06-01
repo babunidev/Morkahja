@@ -26,6 +26,8 @@ export interface PlayerDocument {
   moderation?: PlayerModeration;
   createdAt: number;
   lastPlayedAt: number;
+  /** Last explicit UI interaction (heartbeat, room actions, etc.). */
+  lastInteractionAt?: number;
   /** Account-wide expansion ids unlocked for all avatars. */
   unlockedExpansions: number[];
   /** Cosmetic dice skins unlocked for this account. */

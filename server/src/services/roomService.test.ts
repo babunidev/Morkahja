@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 
 import { bootstrapSession } from './sessionService.js';
+import { shouldUseEncounterFollow } from './encounterGenerator.js';
 import {
   clientActionToPlayerAction,
   createRoom,
   getActiveRoomForPlayer,
+  joinRoom,
   RoomError,
   setFocusState,
   submitChoice,
@@ -141,11 +143,12 @@ try {
 await saveEncounterRoom(switchedAvatarRoom);
 
 const afterChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
-assert.equal(afterChoice.roomState, 'active_encounter');
-assert.notEqual(
+assert.equal(afterChoice.roomState, 'waiting_continue');
+assert.equal(
   afterChoice.activeEncounterSnapshot.snapshotId,
-  room.activeEncounterSnapshot.snapshotId,
+  switchedAvatarRoom.activeEncounterSnapshot.snapshotId,
 );
+assert.equal(afterChoice.participants[0]?.choiceState, 'ready_to_continue');
 
 const waitingContinueRoom: EncounterRoom = {
   ...afterChoice,
@@ -184,7 +187,7 @@ await saveEncounterRoom({
 });
 
 const followUpChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
-assert.equal(followUpChoice.roomState, 'active_encounter');
+assert.equal(followUpChoice.roomState, 'waiting_continue');
 
 const withIdleJoiner: EncounterRoom = {
   ...followUpChoice,
@@ -266,6 +269,17 @@ const multiInactivityRoom: EncounterRoom = {
 await saveEncounterRoom(multiInactivityRoom);
 const disengaged = await tickInactivity(multiInactivityRoom);
 assert.equal(disengaged.participants[0]?.choiceState, 'disengaged');
+
+const reengagedByFocus = await setFocusState(
+  session.playerId,
+  multiInactivityRoom.participants[0]!.avatarId,
+  'lore',
+);
+const reengagedParticipant = reengagedByFocus.participants.find(
+  (participant) => participant.playerId === session.playerId,
+);
+assert.equal(reengagedParticipant?.choiceState, 'choosing');
+assert.notEqual(reengagedParticipant?.preparedResult?.message, 'Inactive');
 
 const activeBeforePostSystem = await getActiveRoomForPlayer(
   session.playerId,
@@ -454,12 +468,207 @@ const disengagedAdvanceRoom: EncounterRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(disengagedAdvanceRoom);
-await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+const advancedByContinue = await submitContinue(session.playerId, prepareAvatarId);
+assert.equal(advancedByContinue.roomState, 'active_encounter');
 const roomAfterDisengagedAdvance = await loadEncounterRoom(disengagedAdvanceRoom.roomId);
 assert.equal(roomAfterDisengagedAdvance?.roomState, 'active_encounter');
 assert.equal(
   roomAfterDisengagedAdvance?.participants.some((participant) => participant.playerId === 'DisengagedTraveler'),
   true,
 );
+
+const focusBlocksAdvanceRoom: EncounterRoom = {
+  ...advancedAfterTick!,
+  roomState: 'waiting_continue',
+  participants: [
+    {
+      ...advancedAfterTick!.participants[0]!,
+      slotIndex: 0,
+      choiceState: 'resolved',
+      continuePressed: true,
+      focusState: 'none',
+      resolutionSummary: {
+        success: true,
+        message: 'leader',
+        rewards: [],
+      },
+    },
+    {
+      playerId: 'FocusBlockAlly',
+      avatarId: prepareAvatarId,
+      slotIndex: 1,
+      joinedAt: Date.now(),
+      choiceState: 'resolved',
+      continuePressed: true,
+      focusState: 'lore',
+      lastInteractionAt: Date.now(),
+      resolutionSummary: {
+        success: true,
+        message: 'ally',
+        rewards: [],
+      },
+    },
+  ],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(focusBlocksAdvanceRoom);
+const blockedByFocus = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(blockedByFocus?.roomState, 'waiting_continue');
+
+const focusClearedRoom: EncounterRoom = {
+  ...focusBlocksAdvanceRoom,
+  participants: focusBlocksAdvanceRoom.participants.map((participant) => ({
+    ...participant,
+    focusState: 'none' as const,
+  })),
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(focusClearedRoom);
+const advancedAfterFocusClear = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(advancedAfterFocusClear?.roomState, 'active_encounter');
+
+assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 70 }), true);
+assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 20 }), false);
+assert.equal(shouldUseEncounterFollow(19667, { success: false, selectedRoll: 96 }), false);
+
+const FOLLOW_ORIGIN_ID = 19666;
+const FOLLOW_TARGET_ID = 19667;
+
+function followOutcomeSummary(success: boolean, selectedRoll: number) {
+  return {
+    success,
+    message: 'follow-test',
+    rewards: [] as number[],
+    selectedRoll,
+  };
+}
+
+const advanceTemplate = advancedAfterTick!;
+
+const followSlot0NegativeRoom: EncounterRoom = {
+  ...advanceTemplate,
+  roomState: 'waiting_continue',
+  activeEncounterSnapshot: {
+    ...advanceTemplate.activeEncounterSnapshot,
+    encounterId: FOLLOW_ORIGIN_ID,
+    encounterFollow: FOLLOW_TARGET_ID,
+  },
+  participants: [
+    {
+      ...advanceTemplate.participants[0]!,
+      slotIndex: 0,
+      choiceState: 'ready_to_continue',
+      continuePressed: true,
+      focusState: 'none',
+      preparedResult: followOutcomeSummary(false, 20),
+      resolutionSummary: followOutcomeSummary(false, 20),
+    },
+    {
+      playerId: 'FollowAllyNegative',
+      avatarId: prepareAvatarId,
+      slotIndex: 1,
+      joinedAt: Date.now(),
+      choiceState: 'ready_to_continue',
+      focusState: 'none',
+      continuePressed: true,
+      lastInteractionAt: Date.now(),
+      preparedResult: followOutcomeSummary(true, 96),
+      resolutionSummary: followOutcomeSummary(true, 96),
+    },
+  ],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(followSlot0NegativeRoom);
+const followNegativeAdvance = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(followNegativeAdvance?.roomState, 'active_encounter');
+assert.notEqual(
+  followNegativeAdvance?.activeEncounterSnapshot.encounterId,
+  FOLLOW_TARGET_ID,
+);
+
+const followSlot0PositiveRoom: EncounterRoom = {
+  ...advanceTemplate,
+  roomState: 'waiting_continue',
+  activeEncounterSnapshot: {
+    ...advanceTemplate.activeEncounterSnapshot,
+    encounterId: FOLLOW_ORIGIN_ID,
+    encounterFollow: FOLLOW_TARGET_ID,
+  },
+  participants: [
+    {
+      ...advanceTemplate.participants[0]!,
+      slotIndex: 0,
+      choiceState: 'ready_to_continue',
+      continuePressed: true,
+      focusState: 'none',
+      preparedResult: followOutcomeSummary(true, 70),
+      resolutionSummary: followOutcomeSummary(true, 70),
+    },
+    {
+      playerId: 'FollowAllyPositive',
+      avatarId: prepareAvatarId,
+      slotIndex: 1,
+      joinedAt: Date.now(),
+      choiceState: 'ready_to_continue',
+      focusState: 'none',
+      continuePressed: true,
+      lastInteractionAt: Date.now(),
+      preparedResult: followOutcomeSummary(true, 96),
+      resolutionSummary: followOutcomeSummary(true, 96),
+    },
+  ],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(followSlot0PositiveRoom);
+const followPositiveAdvance = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(followPositiveAdvance?.roomState, 'active_encounter');
+assert.equal(
+  followPositiveAdvance?.activeEncounterSnapshot.encounterId,
+  FOLLOW_TARGET_ID,
+);
+
+const leaderPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const leaderPoolIdentityJwk = JSON.stringify(leaderPoolKeyPair.publicKey.export({ format: 'jwk' }));
+const leaderPoolSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: leaderPoolIdentityJwk,
+  playerName: `room-leader-pool-${Date.now()}`,
+});
+const leaderPoolAvatarId = `leader-pool-${Date.now()}`;
+await savePlayerAvatar(leaderPoolSession.playerId, {
+  id: leaderPoolAvatarId,
+  name: 'Leader Pool',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+const leaderPoolRoom = await createRoom(leaderPoolSession.playerId, leaderPoolAvatarId);
+const leaderExpansionsBeforeJoin = [...leaderPoolRoom.mergedExpansions];
+
+const joinerPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const joinerPoolIdentityJwk = JSON.stringify(joinerPoolKeyPair.publicKey.export({ format: 'jwk' }));
+const joinerSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: joinerPoolIdentityJwk,
+  playerName: `room-joiner-pool-${Date.now()}`,
+});
+const joinerAvatarId = `joiner-pool-${Date.now()}`;
+await savePlayerAvatar(joinerSession.playerId, {
+  id: joinerAvatarId,
+  name: 'Joiner Pool',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+const joinedRoom = await joinRoom(
+  joinerSession.playerId,
+  joinerAvatarId,
+  leaderPoolRoom.roomId,
+);
+assert.deepEqual(joinedRoom.mergedExpansions, leaderExpansionsBeforeJoin);
 
 console.log('roomService.test.ts passed');

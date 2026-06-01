@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import type { DiceId } from '@shared/contracts';
-import {
-  DICE_CATALOG,
-  DICE_UNLOCK_GEM_COST,
-  DEFAULT_DICE_ID,
-} from '@shared/diceCatalog.js';
+import { DICE_CATALOG, DEFAULT_DICE_ID } from '@shared/diceCatalog.js';
 import { createCheckoutSession, fetchPlayer, selectDice, unlockDice } from '../../api/http.js';
 import { formatEurCents } from '../commerce/formatPrice.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
@@ -151,6 +147,13 @@ const nameStyle: CSSProperties = {
   lineHeight: 1.25,
 };
 
+const descriptionStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(247, 239, 224, 0.82)',
+  fontSize: '0.88rem',
+  lineHeight: 1.42,
+};
+
 const unlockActionsRowStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
@@ -246,7 +249,9 @@ function DiceCard({
   diceId,
   gemBalance,
   label,
+  description,
   assetPath,
+  gemUnlockCost,
   eurUnlockCents,
   unlocked,
   unlockPending,
@@ -257,7 +262,9 @@ function DiceCard({
   diceId: DiceId;
   gemBalance: number;
   label: string;
+  description: string;
   assetPath: string;
+  gemUnlockCost: number;
   eurUnlockCents: number;
   unlocked: boolean;
   unlockPending: boolean;
@@ -269,7 +276,7 @@ function DiceCard({
   const unlockEnabled = !unlocked
     && !unlockPending
     && !isDefault
-    && gemBalance >= DICE_UNLOCK_GEM_COST;
+    && gemBalance >= gemUnlockCost;
   const showUnlockActions = !unlocked && !isDefault;
   const priceLabel = eurUnlockCents > 0 ? formatEurCents(eurUnlockCents) : null;
   const checkoutEnabled = priceLabel !== null && !checkoutPending && !unlockPending;
@@ -290,12 +297,15 @@ function DiceCard({
             src={assetPath}
             style={diePreviewStyle}
           />
-          <h3 style={nameStyle}>{label}</h3>
+          <div>
+            <h3 style={nameStyle}>{label}</h3>
+            <p style={descriptionStyle}>{description}</p>
+          </div>
         </div>
         {showUnlockActions ? (
           <div style={unlockActionsRowStyle}>
             <PanelButton
-              aria-label={`Unlock ${label} for ${DICE_UNLOCK_GEM_COST} gems`}
+              aria-label={`Unlock ${label} for ${gemUnlockCost} gems`}
               disabled={!unlockEnabled}
               onClick={(event) => {
                 event.stopPropagation();
@@ -324,6 +334,7 @@ function DiceCard({
                   src={GEMS_ICON}
                   style={gemsIconSmallStyle}
                 />
+                {gemUnlockCost}
               </span>
             </PanelButton>
             <PanelButton
@@ -351,7 +362,7 @@ function DiceCard({
                   : expansionButtonDisabledVisualStyle
               }
             >
-              {priceLabel ?? 'Unlock $'}
+              {priceLabel ? `Unlock ${priceLabel}` : 'Unlock'}
             </PanelButton>
           </div>
         ) : null}
@@ -519,9 +530,11 @@ export function DiceShopOverlay({
             {DICE_CATALOG.map((entry) => (
               <DiceCard
                 assetPath={entry.assetPath}
+                description={entry.description}
                 diceId={entry.id}
                 eurUnlockCents={entry.eurUnlockCents}
                 gemBalance={yellowRedGems}
+                gemUnlockCost={entry.gemUnlockCost}
                 key={entry.id}
                 label={entry.label}
                 onUnlock={() => {

@@ -58,6 +58,27 @@ function assertActiveEncounterForLore(
   return snapshot;
 }
 
+/** Lore gems can be collected during waiting_continue (e.g. lore open after Continue). */
+function assertLoreGemCollectibleForRoom(
+  snapshot: EncounterSnapshot | null,
+  room: EncounterRoom,
+  encounterKey?: string,
+): EncounterSnapshot {
+  if (!snapshot) {
+    throw new LoreGemError('No active encounter', 404);
+  }
+
+  if (encounterKey && snapshot.snapshotId !== encounterKey) {
+    throw new LoreGemError('Encounter snapshot mismatch', 409);
+  }
+
+  if (room.roomState === 'waiting_continue' || room.roomState === 'advancing') {
+    return snapshot;
+  }
+
+  return assertActiveEncounterForLore(snapshot, encounterKey);
+}
+
 function activeRoomParticipants(room: EncounterRoom) {
   return room.participants.filter((participant) => participant.choiceState !== 'disengaged');
 }
@@ -214,7 +235,7 @@ export async function activateRoomLoreGem(
     throw new LoreGemError('Room lore gem activation requires an active room', 409);
   }
 
-  const activeSnapshot = assertActiveEncounterForLore(snapshot, encounterKey);
+  const activeSnapshot = assertLoreGemCollectibleForRoom(snapshot, room, encounterKey);
 
   if (!activeSnapshot.loreGemOffer) {
     throw new LoreGemError('Lore gem has not been offered for this encounter');
@@ -242,6 +263,11 @@ export async function activateRoomLoreGem(
       encounterKey: activeSnapshot.snapshotId,
       room,
     };
+  }
+
+  const localParticipant = room.participants.find((participant) => participant.playerId === playerId);
+  if (!localParticipant || localParticipant.choiceState === 'disengaged') {
+    throw new LoreGemError('Inactive players cannot collect lore gems', 403);
   }
 
   const updatedRoom: EncounterRoom = {

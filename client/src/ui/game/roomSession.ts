@@ -59,8 +59,11 @@ export async function leaveJoinedRoomForDashboard(avatarId: string | undefined):
   }
 
   try {
-    await leaveJoinedPartyRoomIfNeeded(avatarId);
+    const room = await fetchActiveRoom(avatarId);
+    if (room) {
+      await leaveEncounterRoom(avatarId);
+    }
   } catch (error) {
-    console.error('Failed to leave joined room for dashboard', error);
+    console.error('Failed to leave room for dashboard', error);
   }
 }

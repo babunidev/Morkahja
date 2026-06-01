@@ -33,10 +33,6 @@ const loreBlockStyle: CSSProperties = {
   transition: fadeTransition,
 };
 
-const loreBlockVisibleStyle: CSSProperties = {
-  zIndex: 18,
-};
-
 const loreBackgroundLayerStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
@@ -297,7 +293,6 @@ export function LoreBlock({
       onContextMenu={preventImageContextMenu}
       style={{
         ...loreBlockStyle,
-        ...(visible ? loreBlockVisibleStyle : {}),
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',
       }}

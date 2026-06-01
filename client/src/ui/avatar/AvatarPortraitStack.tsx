@@ -45,6 +45,7 @@ export function AvatarPortraitStack({
   frameScale = 1,
   enterSource = false,
   enterTarget = false,
+  onPortraitError,
   style,
 }: {
   portrait: string;
@@ -52,6 +53,7 @@ export function AvatarPortraitStack({
   frameScale?: number;
   enterSource?: boolean;
   enterTarget?: boolean;
+  onPortraitError?: () => void;
   style?: CSSProperties;
 }) {
   const frameSizePercent = frameScale * 100;
@@ -65,6 +67,7 @@ export function AvatarPortraitStack({
         alt=""
         aria-hidden="true"
         draggable={false}
+        onError={onPortraitError}
         src={`${AVATAR_ASSET_ROOT}/${portrait}`}
         style={portraitStyle}
       />

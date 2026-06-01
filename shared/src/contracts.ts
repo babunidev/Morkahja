@@ -404,7 +404,8 @@ export type ParticipantFocusStateDto =
   | 'none'
   | 'lore'
   | 'inventory'
-  | 'skillbook';
+  | 'skillbook'
+  | 'avatar_details';
 
 export type SlotStateDto = 'open' | 'friends_only' | 'locked';
 
@@ -474,8 +475,15 @@ export interface EncounterRoomSnapshotDto {
   updatedAt: number;
 }
 
+export type PartyEjectionReasonDto = 'kicked';
+
+export interface PartyEjectionDto {
+  reason: PartyEjectionReasonDto;
+}
+
 export interface RoomActiveResponse {
   room: EncounterRoomSnapshotDto | null;
+  partyEjection?: PartyEjectionDto;
 }
 
 export interface RoomCreateResponse {
@@ -495,6 +503,11 @@ export interface RoomHelpPendingResponse {
 }
 
 export interface RoomChoiceRequest {
+  action: EncounterAction;
+  solutionId?: number;
+}
+
+export interface RoomSelectionRequest {
   action: EncounterAction;
   solutionId?: number;
 }

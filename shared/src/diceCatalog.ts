@@ -8,7 +8,7 @@ export const DEFAULT_DICE_ID: DiceId = 'a';
 
 export const DEFAULT_UNLOCKED_DICE_IDS: DiceId[] = [DEFAULT_DICE_ID];
 
-export const DICE_UNLOCK_GEM_COST = 100;
+export const DICE_UNLOCK_GEM_COST = 50;
 
 /** Real-money price (EUR, in cents) to unlock any single dice skin. */
 export const DICE_UNLOCK_EUR_CENTS = 149;
@@ -57,13 +57,27 @@ const DICE_NAMES: Record<DiceId, string> = {
   f: 'Cloudbone',
 };
 
+const DICE_DESCRIPTIONS: Record<DiceId, string> = {
+  a: 'Pale runes on frost-white bone—the die every new traveler starts with.',
+  b: 'Heavy bronze pips that warm in your palm like banked coals.',
+  c: 'Charred bone marked with Ashlands teeth; it clatters like dry kindling.',
+  d: 'Knotted grimwood that lands with a low, stubborn thud.',
+  e: 'River-polished stone, cool even after long days on the road.',
+  f: 'Hollow sky-ivory so light it seems to skim above the table.',
+};
+
 export function diceDisplayName(diceId: DiceId): string {
   return DICE_NAMES[diceId];
+}
+
+export function diceDescription(diceId: DiceId): string {
+  return DICE_DESCRIPTIONS[diceId];
 }
 
 export interface DiceCatalogEntry {
   id: DiceId;
   label: string;
+  description: string;
   assetPath: string;
   gemUnlockCost: number;
   eurUnlockCents: number;
@@ -72,6 +86,7 @@ export interface DiceCatalogEntry {
 export const DICE_CATALOG: DiceCatalogEntry[] = DICE_IDS.map((id) => ({
   id,
   label: DICE_NAMES[id],
+  description: DICE_DESCRIPTIONS[id],
   assetPath: diceButtonAssetPath(id),
   gemUnlockCost: id === DEFAULT_DICE_ID ? 0 : DICE_UNLOCK_GEM_COST,
   eurUnlockCents: id === DEFAULT_DICE_ID ? 0 : DICE_UNLOCK_EUR_CENTS,

@@ -12,7 +12,9 @@ import {
   submitRoomChoiceController,
   submitRoomContinueController,
   submitRoomFocusController,
+  submitRoomSelectionController,
   activateRoomLoreGemController,
+  kickRoomParticipantController,
 } from '../controllers/roomController.js';
 
 export const roomRoutes = Router();
@@ -22,8 +24,10 @@ roomRoutes.post('/create', createRoomController);
 roomRoutes.post('/join', joinRoomController);
 roomRoutes.post('/join/friend', joinFriendRoomController);
 roomRoutes.post('/leave', leaveRoomController);
+roomRoutes.post('/kick', kickRoomParticipantController);
 roomRoutes.post('/slot', setSlotStateController);
 roomRoutes.post('/choice', submitRoomChoiceController);
+roomRoutes.post('/selection', submitRoomSelectionController);
 roomRoutes.post('/focus', submitRoomFocusController);
 roomRoutes.post('/continue', submitRoomContinueController);
 roomRoutes.post('/lore-gem/activate', activateRoomLoreGemController);

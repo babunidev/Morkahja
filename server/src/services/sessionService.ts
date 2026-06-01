@@ -278,6 +278,7 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
       ...player,
       activeSessionExpiresAt: expiresAt,
       lastPlayedAt: now,
+      lastInteractionAt: now,
     },
   );
 
