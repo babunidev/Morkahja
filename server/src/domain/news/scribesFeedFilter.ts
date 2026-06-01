@@ -36,10 +36,13 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
       return isLootVisible(event.payload);
     case 'gems_received':
     case 'gems_donated':
+    case 'support_purchase':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'achievement_unlocked':
     case 'hearth_blessing_ready':
     case 'daily_reward_claimed':
+    case 'account_key_security_reminder':
+    case 'support_appreciation_nudge':
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'help_requested': {
       if (!viewingPlayerId) {

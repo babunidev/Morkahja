@@ -214,6 +214,50 @@ assert.equal(
   '/UI/03_DASHBOARD/im_gems.webp',
 );
 
+const accountKeyReminder = {
+  eventId: 'key-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  type: 'account_key_security_reminder',
+  visibility: 'private' as const,
+  importance: 'high' as const,
+  payload: {
+    playerName: 'Babuni',
+    recoveryKeyFilename: 'Morkahja_Babuni.key',
+    itemLabel: 'Keldor',
+  },
+};
+
+assert.equal(isVisibleInScribesFeed(accountKeyReminder, 'player-a'), true);
+assert.equal(isVisibleInScribesFeed(accountKeyReminder, 'player-b'), false);
+assert.equal(
+  renderEventMessage(accountKeyReminder),
+  'Keep your account key safe. You just unlocked Keldor. Back up Morkahja_Babuni.key somewhere secure — losing it means permanent loss of access.',
+);
+assert.equal(
+  resolveScribesIconUrl(accountKeyReminder),
+  '/UI/03_DASHBOARD/im_button_setting_b.webp',
+);
+
+const supportNudge = {
+  eventId: 'support-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  type: 'support_appreciation_nudge',
+  visibility: 'private' as const,
+  importance: 'medium' as const,
+  payload: {
+    playerName: 'Babuni',
+    utcDay: '2026-05-24',
+  },
+};
+
+assert.equal(isVisibleInScribesFeed(supportNudge, 'player-a'), true);
+assert.equal(
+  renderEventMessage(supportNudge),
+  'If you\'re enjoying Morkahja, consider supporting us — donate gems, unlock an expansion, or pick up a dice skin. We\'d be super happy!',
+);
+
 const encounterFailed = {
   eventId: 'fail-1',
   timestamp: Date.now(),

@@ -261,6 +261,8 @@ export interface ActivityFeedEntryDto {
   authorName: string;
   message: string;
   importance: ActivityFeedImportance;
+  eventType: string;
+  visibility: 'public' | 'private';
   iconUrl?: string;
   /** Portrait asset filename (under Avatare/) when the entry shows an avatar likeness. */
   avatarPortrait?: string;

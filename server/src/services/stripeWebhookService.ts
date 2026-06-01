@@ -2,6 +2,8 @@ import type Stripe from 'stripe';
 import { getStripeWebhookSecret } from '../config/stripeConfig.js';
 import { getCatalogEntry } from '../domain/commerce/catalog.js';
 import { claimStripeEvent, recordPurchase } from '../db/commerceStore.js';
+import { recordSupportPurchaseEvent } from './gameEventService.js';
+import { recordAccountKeySecurityReminder } from './privateScribeService.js';
 import { getStripeClient } from './stripeClient.js';
 
 export class WebhookNotConfiguredError extends Error {
@@ -88,13 +90,35 @@ async function handleCheckoutCompleted(event: Stripe.Event): Promise<void> {
     return;
   }
 
+  const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : null;
+  const currency = session.currency ?? null;
+
   await entry.grant(playerId);
   await recordPurchase({
     id: session.id,
     eventId: event.id,
     playerId,
     sku,
-    amountTotal: typeof session.amount_total === 'number' ? session.amount_total : null,
-    currency: session.currency ?? null,
+    amountTotal,
+    currency,
   });
+
+  // Record a personal "thank you" scribe entry. Non-fatal: a failure here must
+  // not fail the webhook (the event id is already claimed and the grant is
+  // done, so a Stripe retry would skip fulfillment entirely).
+  try {
+    await recordSupportPurchaseEvent(playerId, {
+      sku,
+      itemLabel: entry.label,
+      amountTotal,
+      currency,
+    });
+    await recordAccountKeySecurityReminder(playerId, { itemLabel: entry.label });
+  } catch (error) {
+    console.error('Failed to record support_purchase scribe', {
+      eventId: event.id,
+      sku,
+      error,
+    });
+  }
 }

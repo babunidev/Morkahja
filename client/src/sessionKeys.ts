@@ -1,3 +1,5 @@
+import { recoveryKeyFilename as sharedRecoveryKeyFilename } from '@shared/recoveryKeyFilename.js';
+
 const DEVICE_KEY_STORAGE = 'morkahja.deviceKeypair';
 const IDENTITY_KEY_STORAGE = 'morkahja.identityKeypair';
 export const RESTORE_CHALLENGE_PREFIX = 'morkahja-restore:';
@@ -113,15 +115,7 @@ export function loadIdentityKeypair(playerId: string): StoredKeypair | null {
 }
 
 export function recoveryKeyFilename(playerName: string): string {
-  const sanitized = playerName
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, '')
-    .replace(/\s+/g, '_')
-    .replace(/[^A-Za-z0-9_-]/g, '')
-    .slice(0, 64);
-
-  const username = sanitized.length > 0 ? sanitized : 'Adventurer';
-  return `Morkahja_${username}.key`;
+  return sharedRecoveryKeyFilename(playerName);
 }
 
 export function downloadRecoveryKey(keypair: StoredKeypair, playerName: string): void {

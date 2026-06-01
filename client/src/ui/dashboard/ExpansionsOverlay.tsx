@@ -654,10 +654,12 @@ function ExpansionCard({
 
 export function ExpansionsOverlay({
   onClose,
+  onContentUnlocked,
   open,
   playerId,
 }: {
   onClose: () => void;
+  onContentUnlocked?: () => void;
   open: boolean;
   playerId: string;
 }) {
@@ -782,6 +784,7 @@ export function ExpansionsOverlay({
       setYellowRedGems(result.currencies.yellow_red_gem ?? 0);
       setUnlockedExpansionIds(result.unlockedExpansions);
       setStatusMessage(`${expansionName} unlocked.`);
+      onContentUnlocked?.();
     } catch (error) {
       setStatusMessage(unlockErrorMessage(error));
     } finally {
@@ -910,6 +913,7 @@ export function ExpansionsOverlay({
       onClose={() => {
         setDiceShopOpen(false);
       }}
+      onContentUnlocked={onContentUnlocked}
       onPlayerUpdated={() => {
         void refreshPlayer();
       }}

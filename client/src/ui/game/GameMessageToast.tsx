@@ -6,7 +6,7 @@ import {
 
 const TOAST_ICON = '/UI/03_DASHBOARD/im_button_news_a.webp';
 const ENTER_MS = 420;
-const DISPLAY_MS = 4_000;
+const DISPLAY_MS = 6_000;
 const SHAKE_MS = 520;
 const EXIT_MS = 320;
 

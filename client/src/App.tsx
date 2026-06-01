@@ -19,6 +19,7 @@ import {
   logoutSession,
   clearStoredSession,
   fetchPlayer,
+  fetchRecentActivity,
   fetchSession,
   fetchStaticGameDataStatus,
   respondHelpInvite,
@@ -33,6 +34,10 @@ import {
   pickPrimaryUnlock,
 } from './ui/dashboard/achievementUnlockDetection.js';
 import { markAchievementsSeen } from './ui/dashboard/achievementsAttentionState.js';
+import {
+  findNextPrivateScribeToastEntry,
+  markPrivateScribeToastShown,
+} from './ui/dashboard/privateScribeToastState.js';
 import ScribesAchievementToast from './ui/dashboard/ScribesAchievementToast.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
@@ -167,6 +172,7 @@ export default function App() {
   const [playPreparePending, setPlayPreparePending] = useState(false);
   const [achievementToast, setAchievementToast] = useState<AchievementProgressDto | null>(null);
   const [hearthBlessingToast, setHearthBlessingToast] = useState(false);
+  const [privateScribeToast, setPrivateScribeToast] = useState<string | null>(null);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
   const [helpInviteToast, setHelpInviteToast] = useState<RoomHelpInvitationDto | null>(null);
   const [friendJoinToast, setFriendJoinToast] = useState<FriendJoinToastState | null>(null);
@@ -215,32 +221,38 @@ export default function App() {
           claimedToday: dailyReward.claimedToday,
           encountersPlayed: dailyReward.encountersPlayed,
         };
-        return;
+      } else {
+        const unlock = pickPrimaryUnlock(findNewRankUnlocks(previous, response.achievements));
+        achievementsBaselineRef.current = response.achievements;
+
+        if (unlock) {
+          setAchievementToast(unlock.achievement);
+        }
+
+        if (
+          previousDaily
+          && !previousDaily.claimable
+          && dailyReward.claimable
+          && !dailyReward.claimedToday
+          && dailyReward.utcDay === previousDaily.utcDay
+        ) {
+          setHearthBlessingToast(true);
+        }
+
+        dailyRewardBaselineRef.current = {
+          utcDay: dailyReward.utcDay,
+          claimable: dailyReward.claimable,
+          claimedToday: dailyReward.claimedToday,
+          encountersPlayed: dailyReward.encountersPlayed,
+        };
       }
 
-      const unlock = pickPrimaryUnlock(findNewRankUnlocks(previous, response.achievements));
-      achievementsBaselineRef.current = response.achievements;
-
-      if (unlock) {
-        setAchievementToast(unlock.achievement);
+      const activity = await fetchRecentActivity();
+      const privateToastEntry = findNextPrivateScribeToastEntry(playerId, activity.entries);
+      if (privateToastEntry) {
+        markPrivateScribeToastShown(playerId, privateToastEntry.eventId);
+        setPrivateScribeToast(privateToastEntry.message);
       }
-
-      if (
-        previousDaily
-        && !previousDaily.claimable
-        && dailyReward.claimable
-        && !dailyReward.claimedToday
-        && dailyReward.utcDay === previousDaily.utcDay
-      ) {
-        setHearthBlessingToast(true);
-      }
-
-      dailyRewardBaselineRef.current = {
-        utcDay: dailyReward.utcDay,
-        claimable: dailyReward.claimable,
-        claimedToday: dailyReward.claimedToday,
-        encountersPlayed: dailyReward.encountersPlayed,
-      };
     } catch (error) {
       console.error('Achievement unlock check failed', error);
     }
@@ -250,6 +262,7 @@ export default function App() {
     if (!isAchievementWatchScreen(screen)) {
       setAchievementToast(null);
       setHearthBlessingToast(false);
+      setPrivateScribeToast(null);
       setAchievementsOverlayOpen(false);
       achievementsBaselineRef.current = null;
       dailyRewardBaselineRef.current = null;
@@ -597,7 +610,11 @@ export default function App() {
         fadeOutSignal={musicFadeOutSignal}
         zone={musicZoneForScreen(screen)}
       >
-        <PurchaseReturnToast />
+        <PurchaseReturnToast
+          onPurchaseSuccess={() => {
+            void checkAchievementUnlocks();
+          }}
+        />
         {screen === 'loading' ? (
           <LoadingScreen
             hooks={loadingHooks}
@@ -913,6 +930,20 @@ export default function App() {
             }}
             stackOffsetPx={
               achievementToast || hearthBlessingToast || helpInviteToast ? 78 : 0
+            }
+          />
+        ) : null}
+        {isAchievementWatchScreen(screen) && privateScribeToast ? (
+          <GameMessageToast
+            label="Scribes"
+            message={privateScribeToast}
+            onDismiss={() => {
+              setPrivateScribeToast(null);
+            }}
+            stackOffsetPx={
+              achievementToast || hearthBlessingToast || helpInviteToast || friendJoinToast
+                ? 78
+                : 0
             }
           />
         ) : null}

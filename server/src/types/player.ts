@@ -48,5 +48,8 @@ export interface PlayerDocument {
     claimedAt?: number;
     readyNotifiedAt?: number;
   };
+  scribeNudges?: {
+    supportReminderUtcDay?: string;
+  };
   [key: string]: unknown;
 }

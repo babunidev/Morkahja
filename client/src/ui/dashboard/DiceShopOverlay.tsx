@@ -362,11 +362,13 @@ function DiceCard({
 
 export function DiceShopOverlay({
   onClose,
+  onContentUnlocked,
   onPlayerUpdated,
   open,
   playerId,
 }: {
   onClose: () => void;
+  onContentUnlocked?: () => void;
   onPlayerUpdated?: () => void;
   open: boolean;
   playerId: string;
@@ -449,6 +451,7 @@ export function DiceShopOverlay({
       await selectDice(diceId);
       setStatusMessage(`${label} unlocked and equipped.`);
       onPlayerUpdated?.();
+      onContentUnlocked?.();
     } catch (error) {
       setStatusMessage(unlockErrorMessage(error));
     } finally {

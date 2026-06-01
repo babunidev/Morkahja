@@ -9,6 +9,8 @@ import {
   setPlayerSelectedDice,
   unlockPlayerDice,
 } from '../services/diceService.js';
+import { diceDisplayName } from '@shared/diceCatalog.js';
+import { recordAccountKeySecurityReminder } from '../services/privateScribeService.js';
 
 export async function unlockPlayerDiceController(
   req: Request,
@@ -25,6 +27,13 @@ export async function unlockPlayerDiceController(
 
   try {
     const result = await unlockPlayerDice(playerId, diceId.trim());
+    const itemLabel = diceDisplayName(result.diceId);
+
+    try {
+      await recordAccountKeySecurityReminder(playerId, { itemLabel });
+    } catch (error) {
+      console.error('Failed to record account key security reminder after dice unlock', error);
+    }
 
     res.json({
       playerId,

@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
 import { requireAuth } from '../middleware/authMiddleware.js';
+import { getExpansionById } from '../services/gameData.js';
+import {
+  recordAccountKeySecurityReminder,
+} from '../services/privateScribeService.js';
 import {
   ExpansionAlreadyUnlockedError,
   ExpansionInactiveError,
@@ -23,6 +27,14 @@ export async function unlockPlayerExpansionController(
 
   try {
     const result = await unlockPlayerExpansion(playerId, expansionId);
+    const expansion = getExpansionById(expansionId);
+    const itemLabel = expansion?.mExtensioName ?? `Expansion ${expansionId}`;
+
+    try {
+      await recordAccountKeySecurityReminder(playerId, { itemLabel });
+    } catch (error) {
+      console.error('Failed to record account key security reminder after expansion unlock', error);
+    }
 
     res.json({
       playerId,

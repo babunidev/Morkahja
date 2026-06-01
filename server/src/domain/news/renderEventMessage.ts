@@ -134,6 +134,18 @@ export function renderEventMessage(event: GameEvent): string {
       const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
       return `${playerLabel(payload)} donated ${amount} ${gemLabel} to the team.`;
     }
+    case 'support_purchase': {
+      const itemLabel = readString(payload, 'itemLabel') ?? 'new content';
+      return `${playerLabel(payload)} supported Morkahja's development and unlocked ${itemLabel}. Thank you for keeping the adventure alive!`;
+    }
+    case 'account_key_security_reminder': {
+      const filename = readString(payload, 'recoveryKeyFilename') ?? 'your recovery key file';
+      const itemLabel = readString(payload, 'itemLabel');
+      const unlockNote = itemLabel ? ` You just unlocked ${itemLabel}.` : '';
+      return `Keep your account key safe.${unlockNote} Back up ${filename} somewhere secure — losing it means permanent loss of access.`;
+    }
+    case 'support_appreciation_nudge':
+      return 'If you\'re enjoying Morkahja, consider supporting us — donate gems, unlock an expansion, or pick up a dice skin. We\'d be super happy!';
     case 'achievement_unlocked': {
       const rankTitle = readString(payload, 'rankTitle') ?? 'a new rank';
       return `${playerLabel(payload)} became ${formatArticle(rankTitle)}.`;

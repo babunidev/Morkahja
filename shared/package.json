@@ -6,7 +6,8 @@
   "exports": {
     "./contracts": "./src/contracts.ts",
     "./diceInterpreter": "./src/diceInterpreter.ts",
-    "./diceCatalog": "./src/diceCatalog.ts"
+    "./diceCatalog": "./src/diceCatalog.ts",
+    "./recoveryKeyFilename": "./src/recoveryKeyFilename.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

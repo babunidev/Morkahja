@@ -84,6 +84,16 @@ import {
   withEncounterLoreGemOffer,
 } from './loreGemService.js';
 
+/**
+ * Multiplayer room lifecycle (authoritative on server; clients poll GET /room/active).
+ *
+ * States: active_encounter → waiting_continue → advancing → active_encounter | system_event | closed
+ * - choice: prepareParticipantOutcome → ready_to_continue; room may enter waiting_continue
+ * - continue: continuePressed on continue targets; tickRoom commits + grantRoomLoreGemsOnCommit + advance
+ * - inactivity: tickInactivity (15s) or eager disengage when last engaged player submits choice
+ * - host handoff: promoteHostAndReslot when leader leaves/dies/disconnects at encounter boundary
+ */
+
 export class RoomError extends Error {
   constructor(
     message: string,

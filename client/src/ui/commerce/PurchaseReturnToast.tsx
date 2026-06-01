@@ -11,7 +11,11 @@ const POLL_INTERVAL_MS = 1_200;
  * webhook) and shows a confirmation toast. On `?purchase=cancel` it silently
  * clears the URL. Rendered once at the app root, independent of screen.
  */
-export function PurchaseReturnToast() {
+export function PurchaseReturnToast({
+  onPurchaseSuccess,
+}: {
+  onPurchaseSuccess?: () => void;
+}) {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +37,9 @@ export function PurchaseReturnToast() {
     }
 
     let cancelled = false;
-    setMessage('Purchase complete! Your unlock will appear shortly.');
+    setMessage(
+      'Thank you for supporting Morkahja’s development! Your unlock will appear shortly, and every purchase keeps the adventure growing.',
+    );
 
     void (async () => {
       for (let attempt = 0; attempt < POLL_ATTEMPTS && !cancelled; attempt += 1) {
@@ -44,6 +50,10 @@ export function PurchaseReturnToast() {
         }
 
         await new Promise((resolve) => window.setTimeout(resolve, POLL_INTERVAL_MS));
+      }
+
+      if (!cancelled) {
+        onPurchaseSuccess?.();
       }
     })();
 
@@ -58,7 +68,7 @@ export function PurchaseReturnToast() {
 
   return (
     <GameMessageToast
-      label="Purchase"
+      label="Thank you!"
       message={message}
       onDismiss={() => {
         setMessage(null);

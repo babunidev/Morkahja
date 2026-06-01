@@ -18,7 +18,8 @@ export type ParticipantFocusState =
   | 'none'
   | 'lore'
   | 'inventory'
-  | 'skillbook';
+  | 'skillbook'
+  | 'avatar_details';
 
 export interface ParticipantResolutionSummary {
   success: boolean;

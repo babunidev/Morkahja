@@ -115,6 +115,18 @@ const unreadBadgeStyle: CSSProperties = {
   verticalAlign: 'middle',
 };
 
+const visibilityBadgeStyle: CSSProperties = {
+  display: 'inline-block',
+  padding: '1px 7px',
+  borderRadius: 999,
+  border: '1px solid rgba(255, 204, 102, 0.35)',
+  color: 'rgba(247, 239, 224, 0.82)',
+  fontSize: '0.64rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  verticalAlign: 'middle',
+};
+
 const entryBodyStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -348,6 +360,7 @@ export function ActivityFeedOverlay({
                 <div style={entryMetaRowStyle}>
                   <span style={authorStyle}>{entry.authorName || 'Unknown'}</span>
                   <span style={entryMetaRightStyle}>
+                    <span style={visibilityBadgeStyle}>{entry.visibility}</span>
                     <span style={timeStyle}>{formatRelativeTime(entry.timestamp)}</span>
                     {!read ? <span style={unreadBadgeStyle}>New</span> : null}
                   </span>

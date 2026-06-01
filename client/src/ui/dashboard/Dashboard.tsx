@@ -774,6 +774,7 @@ export function Dashboard({
           onClose={() => {
             setExpansionsOpen(false);
           }}
+          onContentUnlocked={onAchievementCheck}
           open={expansionsOpen}
           playerId={playerId}
         />

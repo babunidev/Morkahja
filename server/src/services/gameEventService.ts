@@ -18,6 +18,7 @@ import {
 import type { PlayerDocument } from '../types/player.js';
 import { getEncounterById, getSolutionMap } from './gameData.js';
 import { getPlayerFriendIds } from './friendService.js';
+import { ensureDailySupportAppreciationNudge } from './privateScribeService.js';
 
 const ATRANOR_DEATH_SYMBOL_SOLUTION_ID = 10015;
 
@@ -70,6 +71,8 @@ export interface ActivityFeedEntry {
   authorName: string;
   message: string;
   importance: GameEventImportance;
+  eventType: string;
+  visibility: 'public' | 'private';
   iconUrl?: string;
   avatarPortrait?: string;
   avatarFrame?: string;
@@ -433,6 +436,72 @@ export async function recordGemsDonatedEvent(
   });
 }
 
+export async function recordSupportPurchaseEvent(
+  playerId: string,
+  details: {
+    sku: string;
+    itemLabel: string;
+    amountTotal: number | null;
+    currency: string | null;
+  },
+): Promise<void> {
+  const player = await readPlayer(playerId);
+
+  await recordGameEvent({
+    playerId,
+    type: 'support_purchase',
+    visibility: 'private',
+    importance: 'high',
+    payload: {
+      playerName: player?.playerName,
+      sku: details.sku,
+      itemLabel: details.itemLabel,
+      ...(typeof details.amountTotal === 'number' ? { amountTotal: details.amountTotal } : {}),
+      ...(details.currency ? { currency: details.currency } : {}),
+    },
+  });
+}
+
+export async function recordAccountKeySecurityReminderEvent(
+  playerId: string,
+  payload: {
+    playerName: string;
+    recoveryKeyFilename: string;
+    itemLabel?: string;
+  },
+): Promise<void> {
+  await recordGameEvent({
+    playerId,
+    type: 'account_key_security_reminder',
+    visibility: 'private',
+    importance: 'high',
+    payload: {
+      playerName: payload.playerName,
+      recoveryKeyFilename: payload.recoveryKeyFilename,
+      ...(payload.itemLabel ? { itemLabel: payload.itemLabel } : {}),
+    },
+  });
+}
+
+export async function recordSupportAppreciationNudgeEvent(
+  playerId: string,
+  payload: {
+    playerName: string;
+    utcDay: string;
+  },
+): Promise<void> {
+  await recordGameEvent({
+    playerId,
+    type: 'support_appreciation_nudge',
+    visibility: 'private',
+    importance: 'medium',
+    payload: {
+      playerName: payload.playerName,
+      utcDay: payload.utcDay,
+    },
+  });
+}
+
 export async function recordGemsReceivedEvent(
   playerId: string,
   amount: number,
@@ -490,7 +559,15 @@ function resolveJoinAction(
   };
 }
 
+function resolveActivityFeedVisibility(
+  event: GameEvent,
+): 'public' | 'private' {
+  return event.visibility === 'private' ? 'private' : 'public';
+}
+
 export async function queryActivityFeed(playerId: string): Promise<ActivityFeedEntry[]> {
+  await ensureDailySupportAppreciationNudge(playerId);
+
   const sinceTimestamp = Date.now() - ACTIVITY_FEED_WINDOW_MS;
   const friendIds = await getPlayerFriendIds(playerId);
   const events = await postgresEventStore.queryRecentEvents({
@@ -512,6 +589,8 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       authorName: resolveEventAuthorName(event, playerNames),
       message: renderEventMessage(event),
       importance: event.importance,
+      eventType: event.type,
+      visibility: resolveActivityFeedVisibility(event),
       iconUrl: resolveScribesIconUrl(event),
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
