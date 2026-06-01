@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-05-31 (+0200) |
+| **Last updated** | 2026-06-01 (+0200) |
 | **Release** | **0.9.0-beta.1** (public beta, pre-1.0) |
 
 Section headings use **date** and **time** from git (`+0200`, Europe/Berlin). Ranges cover the commits grouped in that block.
@@ -639,3 +639,15 @@ Since `5b2d423`.
 - **nginx** — `/player/checkout/session` is already covered by the existing `player` prefix in the API `location` regex; only **`stripe`** had to be added so `/stripe/webhook` proxies to Node. nginx forwards the raw body unmodified by default, which the signature-verified `express.raw` handler needs.
 - **⚠️ PM2 `.env` reload gotcha** — `pm2 restart morkahja-api --update-env` (by process **name**) does **not** re-run `ecosystem.config.cjs`, so newly added `.env` keys are **not** picked up (symptoms: `CORS allowed origins: (none — set CLIENT_ORIGINS)` at boot, and checkout returns **503 `PURCHASES_UNAVAILABLE`** because `STRIPE_SECRET_KEY` is missing from `process.env`). After editing `.env`, restart **from the config file**: `pm2 restart ecosystem.config.cjs --update-env` (or `pm2 delete morkahja-api && pm2 start ecosystem.config.cjs --update-env`). Verify with `pm2 logs … | grep CORS` (should list real origins) and `pm2 env 0 | grep -i stripe`.
 - **Local dev webhook** — only needs the Stripe CLI (`stripe listen --forward-to localhost:3000/stripe/webhook`); `whsec_` goes in `Key.js`. Watch the leading `whsec_` survives the paste (a dropped `w` → silent signature-verify failure → unlock never granted). Stripe CLI is **not** installed on the VPS; production webhooks hit the public URL directly.
+
+### Room multiplayer flow · 2026-06-01 (+0200) (`6b603cc`)
+
+- **Single Continue** — one physical Continue per outcome: `submitRoomChoice` chains into `submitRoomContinue` when the room is already `waiting_continue`; poll auto-acks `localNeedsContinueAck` when a party member finished early and the room later catches up. Reward fly-out still runs only on snapshot advance via `roomAdvanceOrchestrator` (dismiss animations are not skipped).
+- **Party choice visibility** — `POST /room/selection` records dice/solution intent as soon as you use an action (`choiceState: ready`, `selectedSolutionId` / `selectedAction` on the participant). Allies see the icon on your portrait before Continue; status **Chose** until commit. Continue still runs `submitChoice` (prepare + `waiting_continue`).
+- **Advance orchestration** — `encounterSnapshotAdvanced` + `runEncounterAdvanceTransition`: poll and continue both dismiss rewards, then apply the new encounter snapshot; `holdResultRollReset` on `EncounterImageBlock` during dismiss.
+- **Death** — on fatal outcome the avatar stays in the room until `AvatarDeathOverlay` shows **Same Soul / New Avatar** (`onOptionsVisible` → `completeDeathRoomLeave`); server marks `disengaged` at commit instead of immediate `leaveRoom`.
+- **Kick** — leader kick sets `lastPartyEjection` on presence; `GET /room/active` returns one-shot `partyEjection`; client routes to dashboard with toast (“party leader removed you…”).
+- **Encounter pool** — room encounters use **only the leader’s** `mergedExpansions` (join no longer unions the whole party; leader promotion recomputes the pool).
+- **Party UI** — `PartyMemberSlot` detail overlay (name, status, kick); larger centered focus icons; encounter header seam layering fix.
+- **Dice shop** — short descriptions per skin; **50 gems** unlock label aligned with catalog copy.
+- **Tests** — `roomService.test.ts` extended (solo `waiting_continue`, leader expansion pool, continue/advance paths).
