@@ -21,6 +21,7 @@ import { DEFAULT_SLOT_STATES } from '../domain/rooms/RoomSlot.js';
 import {
   HELP_SEEN_WINDOW_MS,
   INACTIVITY_MS,
+  ROOM_INACTIVITY_ENABLED,
   MAX_PARTICIPANTS,
   RANDOM_HELP_RECIPIENT_COUNT,
   ROOM_INVITE_TTL_MS,
@@ -106,7 +107,7 @@ import {
  * States: active_encounter → waiting_continue → advancing → active_encounter | system_event | closed
  * - choice: prepareParticipantOutcome → ready_to_continue; room may enter waiting_continue
  * - continue: continuePressed on continue targets; tickRoom commits + grantRoomLoreGemsOnCommit + advance
- * - inactivity: tickInactivity (15s) or eager disengage when last engaged player submits choice
+ * - inactivity (optional): tickInactivity (15s) or eager disengage when last engaged player submits choice
  * - host handoff: promoteHostAndReslot when leader leaves/dies/disconnects at encounter boundary
  */
 
@@ -583,6 +584,10 @@ function disengageRemainingChoosers(
   now: number,
   autoContinue: boolean,
 ): RoomParticipant[] {
+  if (!ROOM_INACTIVITY_ENABLED) {
+    return participants;
+  }
+
   return participants.map((participant) => {
     if (
       participant.choiceState !== 'choosing' ||
@@ -669,6 +674,10 @@ async function findCurrentAvatarRoomId(playerId: string): Promise<string | null>
 }
 
 export async function tickInactivity(room: EncounterRoom): Promise<EncounterRoom> {
+  if (!ROOM_INACTIVITY_ENABLED) {
+    return room;
+  }
+
   if (room.roomState !== 'active_encounter') {
     return room;
   }

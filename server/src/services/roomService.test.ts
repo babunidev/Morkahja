@@ -20,7 +20,7 @@ import { setPlayer } from '../db/postgresDocumentStore.js';
 import { queryActivityFeed } from './gameEventService.js';
 import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
-import { INACTIVITY_MS } from '../domain/rooms/roomConstants.js';
+import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
 
@@ -272,12 +272,38 @@ const multiInactivityRoom: EncounterRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(multiInactivityRoom);
-const disengaged = await tickInactivity(multiInactivityRoom);
-assert.equal(disengaged.participants[0]?.choiceState, 'disengaged');
+const afterInactivityTick = await tickInactivity(multiInactivityRoom);
+assert.equal(
+  afterInactivityTick.participants[0]?.choiceState,
+  ROOM_INACTIVITY_ENABLED ? 'disengaged' : 'choosing',
+);
+
+const roomForReengage: EncounterRoom = ROOM_INACTIVITY_ENABLED
+  ? afterInactivityTick
+  : {
+    ...afterInactivityTick,
+    participants: afterInactivityTick.participants.map((participant, index) => (
+      index === 0
+        ? {
+            ...participant,
+            choiceState: 'disengaged' as const,
+            disconnectedAt: Date.now(),
+            preparedResult: {
+              success: false,
+              message: 'Inactive',
+              rewards: [],
+            },
+          }
+        : participant
+    )),
+  };
+if (!ROOM_INACTIVITY_ENABLED) {
+  await saveEncounterRoom(roomForReengage);
+}
 
 const reengagedByFocus = await setFocusState(
   session.playerId,
-  multiInactivityRoom.participants[0]!.avatarId,
+  roomForReengage.participants[0]!.avatarId,
   'lore',
 );
 const reengagedParticipant = reengagedByFocus.participants.find(
