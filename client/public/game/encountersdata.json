@@ -81,7 +81,7 @@
   },
   "19668": {
     "mEncounterDifficulty": 4,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1001,
     "mEncounterFollow": 19669,
     "mEncounterID": 19668,
     "mEncounterImageName": "the_hollow_choir",
