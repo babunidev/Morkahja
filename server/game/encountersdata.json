@@ -61,7 +61,7 @@
   },
   "19667": {
     "mEncounterDifficulty": 2,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1001,
     "mEncounterFollow": 19668,
     "mEncounterID": 19667,
     "mEncounterImageName": "blackwood_guardian",
