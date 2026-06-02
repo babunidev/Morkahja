@@ -155,6 +155,7 @@ export interface EncounterSnapshotDto {
   encounterImageName?: string;
   encounterText?: string;
   encounterDifficulty?: number;
+  encounterRewardAmount?: number;
   primarySolutionA?: number;
   primarySolutionB?: number;
   primarySolutionC?: number;
@@ -382,6 +383,24 @@ export interface FriendAchievementsResponse {
   achievements: AchievementProgressDto[];
 }
 
+export interface SoulLinkDto {
+  targetId: string;
+  targetName: string;
+  linkedAt: number;
+}
+
+export interface SoulLinkStatusResponse {
+  playerId: string;
+  soulLink: SoulLinkDto | null;
+}
+
+export interface CreateSoulLinkResponse {
+  playerId: string;
+  soulLink: SoulLinkDto;
+  friend: FriendSummaryDto | null;
+  friendIds: string[];
+}
+
 export type RoomStateDto =
   | 'active_encounter'
   | 'resolving'
@@ -420,6 +439,7 @@ export interface ParticipantResolutionSummaryDto {
   avatarDied?: boolean;
   leveledUp?: boolean;
   loreGemGranted?: boolean;
+  gainedExperience?: number;
 }
 
 export interface RoomSystemEventDto {
@@ -428,6 +448,11 @@ export interface RoomSystemEventDto {
   kind: 'level_up' | 'atranor';
   isLocalActor: boolean;
   isLocalWitness: boolean;
+  /** Actor roll/outcome for witness UI (only sent when the local player is a witness). */
+  actorOutcome?: ParticipantResolutionSummaryDto;
+  /** Pre-rolled reward pool for the actor's system encounter (witness display). */
+  actorRewardIds?: number[];
+  actorProsperityRewardId?: number | null;
   lastEventRecap?: ParticipantResolutionSummaryDto;
 }
 
@@ -442,6 +467,7 @@ export interface ParticipantPreparedResultDto {
   avatarDied?: boolean;
   leveledUp?: boolean;
   loreGemGranted?: boolean;
+  gainedExperience?: number;
 }
 
 export interface RoomParticipantDto {

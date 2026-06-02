@@ -64,6 +64,16 @@ import {
   encounterSolveRankDefinition,
   encounterSolveRankFromProgress,
 } from '../domain/achievements/encounterSolveAchievements.js';
+import {
+  SPIRITGUIDE_ACHIEVEMENT_ID,
+  SPIRITGUIDE_BASE_ICON,
+  SPIRITGUIDE_CHAIN_TEXT,
+  SPIRITGUIDE_CHAIN_TITLE,
+  SPIRITGUIDE_RANKS,
+  spiritguideProgressBand,
+  spiritguideRankDefinition,
+  spiritguideRankFromProgress,
+} from '../domain/achievements/spiritguideAchievement.js';
 
 export interface AchievementRankView {
   rank: number;
@@ -258,6 +268,37 @@ function buildContributorView(progress: number): AchievementProgressView {
   };
 }
 
+function buildSpiritguideView(progress: number): AchievementProgressView {
+  const rank = spiritguideRankFromProgress(progress);
+  const rankDefinition = spiritguideRankDefinition(rank);
+  const band = spiritguideProgressBand(progress);
+  const fallback = SPIRITGUIDE_RANKS[0];
+
+  return {
+    achievementId: SPIRITGUIDE_ACHIEVEMENT_ID,
+    rank,
+    progress,
+    bandStart: band.bandStart,
+    bandEnd: band.bandEnd,
+    progressInBand: band.progressInBand,
+    baseIconUrl: toPublicPath(SPIRITGUIDE_BASE_ICON),
+    rankOverlayUrl: rankDefinition?.rankOverlayPath
+      ? toPublicPath(rankDefinition.rankOverlayPath)
+      : undefined,
+    chainTitle: SPIRITGUIDE_CHAIN_TITLE,
+    title: rankDefinition?.title ?? (rank > 0 ? fallback.title : SPIRITGUIDE_CHAIN_TITLE),
+    text: rankDefinition?.text ?? (rank > 0 ? fallback.text : SPIRITGUIDE_CHAIN_TEXT),
+    ranks: SPIRITGUIDE_RANKS.map((entry) => ({
+      rank: entry.rank,
+      title: entry.title,
+      text: entry.text,
+      rankOverlayUrl: entry.rankOverlayPath
+        ? toPublicPath(entry.rankOverlayPath)
+        : undefined,
+    })),
+  };
+}
+
 function buildAlphaPlayerView(
   progress: number,
   globallyLocked: boolean,
@@ -322,6 +363,7 @@ function buildAchievementsViews(input: {
   tricksterProgress: number;
   helperProgress: number;
   contributorProgress: number;
+  spiritguideProgress: number;
   alphaProgress: number;
   alphaLocked: boolean;
 }): AchievementProgressView[] {
@@ -337,6 +379,7 @@ function buildAchievementsViews(input: {
     buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[1], input.tricksterProgress),
     buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[2], input.helperProgress),
     buildContributorView(input.contributorProgress),
+    buildSpiritguideView(input.spiritguideProgress),
     buildAlphaPlayerView(input.alphaProgress, input.alphaLocked),
   ];
 
@@ -355,6 +398,7 @@ export async function getAchievementsSnapshotReadOnly(
     tricksterProgress,
     helperProgress,
     contributorProgress,
+    spiritguideProgress,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -365,6 +409,7 @@ export async function getAchievementsSnapshotReadOnly(
     readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[1].achievementId),
     readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     readAchievementProgressValue(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
+    readAchievementProgressValue(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
     readAchievementProgressValue(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -378,6 +423,7 @@ export async function getAchievementsSnapshotReadOnly(
     tricksterProgress,
     helperProgress,
     contributorProgress,
+    spiritguideProgress,
     alphaProgress,
     alphaLocked,
   });
@@ -394,6 +440,7 @@ export async function getAchievementsSnapshot(
     tricksterProgress,
     helperProgress,
     contributorProgress,
+    spiritguideProgress,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -404,6 +451,7 @@ export async function getAchievementsSnapshot(
     loadSyncedAchievementProgress(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[1].achievementId),
     loadSyncedAchievementProgress(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     loadSyncedAchievementProgress(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
+    loadSyncedAchievementProgress(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
     loadSyncedAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -418,6 +466,7 @@ export async function getAchievementsSnapshot(
       tricksterProgress,
       helperProgress,
       contributorProgress,
+      spiritguideProgress,
       alphaProgress,
       alphaLocked,
     }),

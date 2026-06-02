@@ -26,7 +26,7 @@ assert.equal(alphaPlayerProgressBand(160).progressInBand, 1);
 assert.equal(alphaPlayerProgressBand(160).bandEnd, null);
 
 assert.equal(alphaPlayerDailyRewardGems(0), 0);
-assert.equal(alphaPlayerDailyRewardGems(1), 50);
-assert.equal(alphaPlayerDailyRewardGems(4), 200);
+assert.equal(alphaPlayerDailyRewardGems(1), 20);
+assert.equal(alphaPlayerDailyRewardGems(4), 80);
 
 console.log('alphaPlayerAchievement.test.ts passed');

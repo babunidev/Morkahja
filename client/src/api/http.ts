@@ -14,6 +14,8 @@ import type {
   AddFriendResponse,
   FriendAchievementsResponse,
   FriendsListResponse,
+  SoulLinkStatusResponse,
+  CreateSoulLinkResponse,
   AvatarInventoryDto,
   AvatarResponse,
   AvatarsResponse,
@@ -311,6 +313,17 @@ export async function addFriend(query: string): Promise<AddFriendResponse> {
   });
 }
 
+export async function fetchSoulLink(): Promise<SoulLinkStatusResponse> {
+  return request<SoulLinkStatusResponse>('/player/soul-link');
+}
+
+export async function createSoulLink(query: string): Promise<CreateSoulLinkResponse> {
+  return request<CreateSoulLinkResponse>('/player/soul-link', {
+    method: 'POST',
+    body: JSON.stringify({ query }),
+  });
+}
+
 export async function fetchFriendAchievements(
   friendId: string,
 ): Promise<FriendAchievementsResponse> {
@@ -594,6 +607,14 @@ export async function leaveEncounterRoom(avatarId: string): Promise<void> {
   await request<{ ok: true }>('/room/leave', {
     method: 'POST',
     body: JSON.stringify({ avatarId }),
+  });
+}
+
+/** Leave every open room for this player (all avatars). Used when returning to dashboard. */
+export async function leaveAllEncounterRooms(): Promise<void> {
+  await request<{ ok: true }>('/room/leave/all', {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 

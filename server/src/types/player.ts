@@ -36,6 +36,17 @@ export interface PlayerDocument {
   selectedDiceId?: string;
   /** Player ids added as friends (account-wide). */
   friendIds?: string[];
+  /**
+   * Permanent, one-time soul link to another adventurer. When this player claims
+   * their next Hearth Blessing, the target receives the "Gift of the Gods"
+   * (+1 Spiritguide progress), recorded via `giftDeliveredAt`.
+   */
+  soulLink?: {
+    targetId: string;
+    targetName: string;
+    linkedAt: number;
+    giftDeliveredAt?: number;
+  };
   /** Fallen avatars preserved for the player profile wall of fame. */
   wallOfFame?: WallOfFameEntry[];
   activeAvatarId?: string;

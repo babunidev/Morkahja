@@ -25,6 +25,10 @@ import {
   listPlayerFriendsController,
 } from './controllers/friendController.js';
 import {
+  createSoulLinkController,
+  getSoulLinkController,
+} from './controllers/soulLinkController.js';
+import {
   getPlayerProfileController,
   setAvatarDisplayTitleController,
 } from './controllers/playerProfileController.js';
@@ -233,6 +237,8 @@ app.post('/player/checkout/session', createCheckoutSessionController);
 app.get('/player/friends', listPlayerFriendsController);
 app.post('/player/friends', addPlayerFriendController);
 app.get('/player/friends/:friendId/achievements', getFriendAchievementsController);
+app.get('/player/soul-link', getSoulLinkController);
+app.post('/player/soul-link', createSoulLinkController);
 app.get('/player/profile', getPlayerProfileController);
 app.patch('/avatar/:avatarId/display-title', setAvatarDisplayTitleController);
 

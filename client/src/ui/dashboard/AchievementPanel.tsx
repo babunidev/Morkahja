@@ -195,6 +195,14 @@ function progressLabel(achievement: AchievementProgressDto): string {
     return `${achievement.progress} / ${achievement.bandEnd} gems donated`;
   }
 
+  if (achievement.achievementId === 'spiritguide') {
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} soul-links — max rank reached`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} soul-links`;
+  }
+
   if (achievement.achievementId === 'alpha_player') {
     if (achievement.globallyLocked && achievement.rank < 4) {
       return `${achievement.progress} activity — sealed (100 Legendborn claimed)`;

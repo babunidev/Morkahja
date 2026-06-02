@@ -1,5 +1,6 @@
 import { adventurerDailyRewardGems } from './adventurerAchievement.js';
 import { alphaPlayerDailyRewardGems } from './alphaPlayerAchievement.js';
+import { spiritguideDailyRewardGems } from './spiritguideAchievement.js';
 
 /** Upper bound for a single daily claim (all chains maxed + Alpha Player). */
 export const MAX_DAILY_REWARD_GEMS = 300;
@@ -12,6 +13,7 @@ export interface DailyRewardAchievementRanks {
   trickster: number;
   helper: number;
   contributor: number;
+  spiritguide: number;
   alphaPlayer: number;
 }
 
@@ -23,6 +25,7 @@ export function sumAchievementRanks(ranks: DailyRewardAchievementRanks): number 
     + ranks.trickster
     + ranks.helper
     + ranks.contributor
+    + ranks.spiritguide
     + ranks.alphaPlayer;
 }
 
@@ -34,6 +37,7 @@ export function computeDailyRewardGems(ranks: DailyRewardAchievementRanks): numb
     + adventurerDailyRewardGems(ranks.trickster)
     + adventurerDailyRewardGems(ranks.helper)
     + adventurerDailyRewardGems(ranks.contributor)
+    + spiritguideDailyRewardGems(ranks.spiritguide)
     + alphaPlayerDailyRewardGems(ranks.alphaPlayer);
 
   if (!Number.isFinite(raw) || raw <= 0) {

@@ -14,6 +14,7 @@ import {
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementPanel from './AchievementPanel.js';
+import SoulLinkOverlay from './SoulLinkOverlay.js';
 
 const FRIENDS_UI_ROOT = '/UI/07_FriendsMenu';
 const ADD_FRIEND_BUTTON = `${FRIENDS_UI_ROOT}/im_button_add_friend.webp`;
@@ -87,10 +88,24 @@ const panelStyle: CSSProperties = {
 };
 
 const headerStyle: CSSProperties = {
-  display: 'flex',
+  display: 'grid',
+  gridTemplateColumns: 'auto 1fr auto',
   alignItems: 'center',
-  justifyContent: 'space-between',
   gap: 12,
+};
+
+const soulLinkHeaderButtonStyle: CSSProperties = {
+  justifySelf: 'center',
+  minHeight: 34,
+  padding: '6px 16px',
+  border: '1px solid rgba(255, 204, 102, 0.72)',
+  borderRadius: 9,
+  background: 'rgba(51, 0, 0, 0.82)',
+  color: '#ffcc66',
+  cursor: 'pointer',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  fontSize: '0.98rem',
+  letterSpacing: '0.05em',
 };
 
 const titleStyle: CSSProperties = {
@@ -427,6 +442,7 @@ export function FriendsOverlay({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [joiningFriendId, setJoiningFriendId] = useState<string | null>(null);
+  const [soulLinkOpen, setSoulLinkOpen] = useState(false);
   const friendDetailRequestRef = useRef(0);
 
   const refreshFriends = useCallback(async (): Promise<void> => {
@@ -500,6 +516,7 @@ export function FriendsOverlay({
       setAddQuery('');
       setStatusMessage(null);
       setLoadError(null);
+      setSoulLinkOpen(false);
       return;
     }
 
@@ -573,6 +590,7 @@ export function FriendsOverlay({
   }
 
   return (
+    <>
     <div
       aria-label="Friends"
       onClick={onClose}
@@ -612,6 +630,20 @@ export function FriendsOverlay({
             <h2 id="friends-overlay-title" style={titleStyle}>
               FRIENDS
             </h2>
+          )}
+          {selectedFriend ? (
+            <span aria-hidden="true" />
+          ) : (
+            <button
+              onClick={() => {
+                playSfx(DEFAULT_BUTTON_SOUND);
+                setSoulLinkOpen(true);
+              }}
+              style={soulLinkHeaderButtonStyle}
+              type="button"
+            >
+              Soul Link
+            </button>
           )}
           <ClosePanelButton onClose={onClose} pressKey="friends-close" />
         </header>
@@ -759,6 +791,18 @@ export function FriendsOverlay({
         </div>
       </section>
     </div>
+    <SoulLinkOverlay
+      onClose={() => {
+        setSoulLinkOpen(false);
+      }}
+      onLinked={() => {
+        void refreshFriends();
+      }}
+      open={soulLinkOpen}
+      playerId={playerId}
+      playerName={playerName}
+    />
+    </>
   );
 }
 

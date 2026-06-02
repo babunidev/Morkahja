@@ -24,6 +24,10 @@ import {
   encounterSolveRankFromProgress,
   getEncounterSolveAchievementById,
 } from './encounterSolveAchievements.js';
+import {
+  SPIRITGUIDE_ACHIEVEMENT_ID,
+  spiritguideRankFromProgress,
+} from './spiritguideAchievement.js';
 import type { AchievementProgress } from './achievementProgress.js';
 
 export function achievementRankFromProgress(achievementId: string, progress: number): number {
@@ -41,6 +45,10 @@ export function achievementRankFromProgress(achievementId: string, progress: num
 
   if (achievementId === BLESSED_ACHIEVEMENT_ID) {
     return blessedRankFromProgress(progress);
+  }
+
+  if (achievementId === SPIRITGUIDE_ACHIEVEMENT_ID) {
+    return spiritguideRankFromProgress(progress);
   }
 
   if (achievementId === FIRESTARTER_ACHIEVEMENT_ID) {
