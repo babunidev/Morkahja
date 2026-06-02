@@ -159,6 +159,26 @@
     "mEncounterTitle": "Silent Throne",
     "mEncounterType": 3
   },
+  "19672": {
+    "mEncounterDifficulty": 1,
+    "mEncounterExpansion": 1001,
+    "mEncounterFollow": 0,
+    "mEncounterID": 19672,
+    "mEncounterImageName": "verdani_s_vigil",
+    "mEncounterRewardAmount": 3,
+    "mEncounterRewardType": 1,
+    "mEncounterSolutiuonA": 0,
+    "mEncounterSolutiuonB": 0,
+    "mEncounterSolutiuonC": 0,
+    "mEncounterSolutiuonD": 0,
+    "mEncounterSolutiuonTypeA": 18,
+    "mEncounterSolutiuonTypeB": 22,
+    "mEncounterSolutiuonTypeC": 21,
+    "mEncounterSolutiuonTypeD": 17,
+    "mEncounterText": "Darkness unthreads itself slowly, as if the world forgets how to hold shape.\nThe cathedral of roots, the silent throne, the kneeling stone figures, and the vast buried presence beneath them fade into drifting shadow. Their forms thin into memory, then sensation, then something indistinguishable from dream. The deep pulse that once shook the abyss softens until it resembles something familiar.\nA heartbeat. Then warmth.\nLight seeps through the dark like water through stone. The scent shifts from decay and void to damp earth, crushed herbs, and clean morning air. Nearby, water moves over rock in a steady rhythm.\n\nConsciousness returns within a small lazaret at the edge of the Cursed Forest of Keldor. Sunlight spills through wooden shutters, across shelves of medicinal plants, glowing vials, and tied herbs. The air is calm, shaped by healing wards. Outside, the forest rests under a pale sky, softened by mist.\n\nBeside the bed sits a Verdani healer.\nCurved antlers rise from her head, woven with living vines and small blossoms that open with her breath. Her features blend faun and deer, refined by arcane study. Water-like magic drifts around her hands, suspended in slow motion.\n\nWhen she notices movement, her expression softens.\n“Steady,” she says. “The body has endured what should not be survivable.”\nShe sets down a bowl of shimmering liquid.\n“You were recovered from deep within Keldor. Far beyond safe paths.”\nA pause.\n“Severe trauma. Exhaustion. Delirium. You spoke of roots beneath the forest, of impossible structures, of voices in the dark.”\nHer gaze turns to the window.\n“Many vanish in Keldor. Those who return rarely remember clearly.”\nShe offers a cup of glowing water.\n“The forest is dangerous, yes. But it remains a forest.”\nOutside, a bird calls once. Ordinary. Grounding.\n\nThen, far beneath the earth, something shifts without sound, as if an immense body adjusts itself in sleep.\n",
+    "mEncounterTitle": "Verdani’s Vigil",
+    "mEncounterType": 3
+  },
   "20001": {
     "mEncounterDifficulty": 1,
     "mEncounterExpansion": 0,
