@@ -7,7 +7,11 @@ import type {
   RoomSystemEventDto,
 } from '../../../shared/src/contracts.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
-import type { RoomParticipant } from '../domain/rooms/RoomParticipant.js';
+import type {
+  ParticipantResolutionSummary,
+  RoomParticipant,
+} from '../domain/rooms/RoomParticipant.js';
+import type { RoomSystemEventContext } from '../domain/rooms/RoomSystemEvent.js';
 import {
   DEATH_ENCOUNTER_NUMERIC_ID,
   LEVEL_UP_ENCOUNTER_NUMERIC_ID,
@@ -54,6 +58,7 @@ function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotD
     encounterImageName: snapshot.encounterImageName,
     encounterText: snapshot.encounterText,
     encounterDifficulty: snapshot.encounterDifficulty,
+    encounterRewardAmount: snapshot.encounterRewardAmount,
     primarySolutionA: snapshot.primarySolutionA,
     primarySolutionB: snapshot.primarySolutionB,
     primarySolutionC: snapshot.primarySolutionC,
@@ -215,6 +220,17 @@ function currentSystemEventActorId(room: EncounterRoom): string | undefined {
   return item?.actorPlayerId;
 }
 
+function witnessActorOutcomeSummary(
+  actorParticipant: RoomParticipant | undefined,
+  context: RoomSystemEventContext,
+): ParticipantResolutionSummary | undefined {
+  return (
+    actorParticipant?.preparedResult
+    ?? actorParticipant?.resolutionSummary
+    ?? context.lastEvent?.resolutionSummary
+  );
+}
+
 function toSystemEventDto(
   room: EncounterRoom,
   localPlayerId: string,
@@ -236,13 +252,39 @@ function toSystemEventDto(
       ? LEVEL_UP_ENCOUNTER_NUMERIC_ID
       : DEATH_ENCOUNTER_NUMERIC_ID);
   const kind = encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID ? 'level_up' : 'atranor';
+  const actorParticipant = room.participants.find(
+    (participant) => participant.playerId === actorPlayerId,
+  );
+  const localParticipant = room.participants.find(
+    (participant) => participant.playerId === localPlayerId,
+  );
+  const actorSlotSnapshot = actorParticipant
+    ? room.slotEncounterSnapshots[actorParticipant.slotIndex]
+    : undefined;
+  const isWitness = (
+    localPlayerId !== actorPlayerId
+    && (
+      room.roomState === 'system_event'
+      || (room.roomState === 'waiting_continue' && context.lastEvent !== undefined)
+    )
+  ) || localParticipant?.choiceState === 'witnessing';
+  const actorOutcome = isWitness
+    ? witnessActorOutcomeSummary(actorParticipant, context)
+    : undefined;
 
   return {
     actorPlayerId,
     encounterId,
     kind,
     isLocalActor: localPlayerId === actorPlayerId,
-    isLocalWitness: localPlayerId !== actorPlayerId && room.roomState === 'system_event',
+    isLocalWitness: isWitness,
+    ...(actorOutcome ? { actorOutcome } : {}),
+    ...(actorSlotSnapshot?.rewardIds?.length
+      ? { actorRewardIds: actorSlotSnapshot.rewardIds }
+      : {}),
+    ...(actorSlotSnapshot && 'prosperityRewardId' in actorSlotSnapshot
+      ? { actorProsperityRewardId: actorSlotSnapshot.prosperityRewardId ?? null }
+      : {}),
     lastEventRecap: context.lastEvent?.resolutionSummary,
   };
 }

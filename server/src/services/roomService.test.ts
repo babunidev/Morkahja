@@ -10,6 +10,7 @@ import {
   getActiveRoomForPlayer,
   joinRoom,
   listPendingHelpInvitations,
+  participantsAtSystemEventStart,
   RoomError,
   setFocusState,
   submitChoice,
@@ -99,7 +100,10 @@ switchedAvatarRoom = {
 };
 await saveEncounterRoom(switchedAvatarRoom);
 const originalAvatarRoomAgain = await createRoom(session.playerId, avatarId);
-assert.equal(originalAvatarRoomAgain.roomId, room.roomId);
+assert.notEqual(originalAvatarRoomAgain.roomId, switchedAvatarRoom.roomId);
+assert.equal(originalAvatarRoomAgain.participants[0]?.avatarId, avatarId);
+const firstRoomAfterSwitch = await loadEncounterRoom(room.roomId);
+assert.equal(firstRoomAfterSwitch?.roomState, 'closed');
 
 const witnessSystemRoom: EncounterRoom = {
   ...switchedAvatarRoom,
@@ -135,6 +139,28 @@ const witnessSystemRoom: EncounterRoom = {
   ],
   updatedAt: Date.now(),
 };
+const clearedForSystemEvent = participantsAtSystemEventStart(
+  [{
+    ...witnessSystemRoom.participants[1]!,
+    preparedResult: {
+      success: true,
+      message: 'stale',
+      rewards: [999],
+      selectedRoll: 96,
+    },
+    resolutionSummary: {
+      success: true,
+      message: 'stale',
+      rewards: [999],
+      selectedRoll: 96,
+    },
+    choiceState: 'ready_to_continue',
+  }],
+  'RoomTesterActor',
+);
+assert.equal(clearedForSystemEvent[0]?.preparedResult, undefined);
+assert.equal(clearedForSystemEvent[0]?.resolutionSummary, undefined);
+assert.equal(clearedForSystemEvent[0]?.choiceState, 'choosing');
 await saveEncounterRoom(witnessSystemRoom);
 try {
   await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
@@ -145,6 +171,58 @@ try {
     error.code === 'WITNESS_READONLY' || error.code === 'INVALID_ROOM_STATE',
   );
 }
+await saveEncounterRoom(switchedAvatarRoom);
+
+const actorRollSystemRoom: EncounterRoom = {
+  ...witnessSystemRoom,
+  activeEncounterSnapshot: {
+    ...witnessSystemRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  participants: [
+    {
+      playerId: 'RoomTesterWitness',
+      avatarId: secondAvatarId,
+      slotIndex: 0,
+      joinedAt: Date.now(),
+      choiceState: 'witnessing',
+      focusState: 'none',
+      continuePressed: false,
+      lastInteractionAt: Date.now(),
+    },
+    {
+      playerId: session.playerId,
+      avatarId,
+      slotIndex: 1,
+      joinedAt: Date.now(),
+      choiceState: 'choosing',
+      focusState: 'none',
+      continuePressed: false,
+      lastInteractionAt: Date.now(),
+    },
+  ],
+  systemEvent: {
+    ...witnessSystemRoom.systemEvent!,
+    queue: [{
+      actorPlayerId: session.playerId,
+      encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+    }],
+  },
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(actorRollSystemRoom);
+const afterActorSystemRoll = await submitChoice(session.playerId, avatarId, 'dice');
+const witnessSystemDto = await toEncounterRoomSnapshotDto(
+  afterActorSystemRoll,
+  'RoomTesterWitness',
+);
+assert.equal(witnessSystemDto.systemEvent?.isLocalWitness, true);
+assert.ok(witnessSystemDto.systemEvent?.actorOutcome);
+assert.ok(
+  witnessSystemDto.systemEvent?.actorOutcome?.selectedRoll !== undefined
+  || (witnessSystemDto.systemEvent?.actorOutcome?.rewards?.length ?? 0) > 0,
+  'witness DTO must include actor outcome after system-event roll',
+);
 await saveEncounterRoom(switchedAvatarRoom);
 
 const afterChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
@@ -416,6 +494,8 @@ await saveEncounterRoom(prepareReadyRoom);
 const preparedChoice = await submitChoice(session.playerId, prepareAvatarId, 'dice');
 assert.equal(preparedChoice.participants[0]?.choiceState, 'ready_to_continue');
 assert.ok(preparedChoice.participants[0]?.preparedResult);
+assert.ok((preparedChoice.participants[0]?.preparedResult?.gainedExperience ?? 0) >= 1);
+assert.ok((preparedChoice.participants[0]?.preparedResult?.gainedExperience ?? 0) <= 3);
 assert.equal(preparedChoice.roomState, 'active_encounter');
 assert.equal(preparedChoice.participants[0]?.resolutionSummary, undefined);
 
@@ -738,10 +818,13 @@ const slotChoiceParticipant = afterSlotChoice.participants.find(
   (participant) => participant.playerId === joinerSession.playerId,
 );
 assert.ok(slotChoiceParticipant?.preparedResult);
-assert.equal(
-  slotChoiceParticipant?.preparedResult?.selectedRoll,
-  slotChoiceReady.slotEncounterSnapshots[1].rollPrimaryC
-    ?? slotChoiceReady.slotEncounterSnapshots[1].rollC,
+const expectedPrimaryRoll = slotChoiceReady.slotEncounterSnapshots[1].rollPrimaryC
+  ?? slotChoiceReady.slotEncounterSnapshots[1].rollC;
+const expectedSecondaryRoll = slotChoiceReady.slotEncounterSnapshots[1].rollSecondaryC
+  ?? slotChoiceReady.slotEncounterSnapshots[1].rollD;
+assert.ok(
+  slotChoiceParticipant?.preparedResult?.selectedRoll === expectedPrimaryRoll
+    || slotChoiceParticipant?.preparedResult?.selectedRoll === expectedSecondaryRoll,
 );
 
 const helpCallerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });

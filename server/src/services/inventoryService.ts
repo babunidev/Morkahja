@@ -306,6 +306,7 @@ export function applyEncounterInventoryChanges(
   success: boolean,
   selectedRollOutcome: InventoryPenaltyOutcome | null,
   encounterDifficulty: number,
+  rewardAmount: number,
 ): AvatarInventory {
   const amount = scaledUses(1, encounterDifficulty);
   let next = normalizeInventory(inventory);
@@ -317,12 +318,13 @@ export function applyEncounterInventoryChanges(
   }
 
   if (success) {
+    const rewardMultiplier = Math.max(1, rewardAmount);
     for (const reward of rewards) {
       const solution = getSolution(reward);
       next = addRewardToInventoryState(
         next,
         reward,
-        scaledUses(solution.mSolutionUses ?? 1, encounterDifficulty),
+        Math.max(1, (solution.mSolutionUses ?? 1) * rewardMultiplier),
       );
     }
     return next;
@@ -350,7 +352,13 @@ export function flattenInventorySolutionIds(inventory: AvatarInventory): number[
     ...inventory.spellbook,
     ...inventory.items,
     ...inventory.essences,
-  ].filter((item) => item.uses > 0).map((item) => item.solutionId);
+  ].flatMap((item) => {
+    if (item.uses <= 0) {
+      return [];
+    }
+
+    return Array.from({ length: item.uses }, () => item.solutionId);
+  });
 }
 
 export async function getInventorySolutionIds(

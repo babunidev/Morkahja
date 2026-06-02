@@ -1,6 +1,7 @@
 import type {
   ContinueReadinessDto,
   EncounterRoomSnapshotDto,
+  ParticipantPreparedResultDto,
   RoomParticipantDto,
 } from '../../api/http.js';
 
@@ -10,6 +11,21 @@ function engagedParticipants(room: EncounterRoomSnapshotDto): RoomParticipantDto
 
 function isPostSystemEventContinue(room: EncounterRoomSnapshotDto): boolean {
   return room.systemEvent?.lastEventRecap !== undefined;
+}
+
+/** True when a system-event actor outcome is ready to mirror for witnesses. */
+export function hasWitnessableOutcome(
+  outcome: ParticipantPreparedResultDto | undefined,
+): boolean {
+  if (!outcome) {
+    return false;
+  }
+
+  return (
+    outcome.selectedRoll !== undefined
+    || (outcome.rewards?.length ?? 0) > 0
+    || outcome.leveledUp === true
+  );
 }
 
 /** True when another adventurer is in the party (not disengaged). */

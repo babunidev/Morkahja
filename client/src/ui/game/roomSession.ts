@@ -1,7 +1,7 @@
 import {
   createEncounterRoom,
   fetchActiveRoom,
-  fetchAvatar,
+  leaveAllEncounterRooms,
   leaveEncounterRoom,
   type EncounterRoomSnapshotDto,
 } from '../../api/http.js';
@@ -48,22 +48,10 @@ export async function ensureSoloLeaderRoom(avatarId: string): Promise<EncounterR
   return createEncounterRoom(avatarId);
 }
 
-export async function resolveDashboardLeaveAvatarId(): Promise<string | undefined> {
-  const response = await fetchAvatar(null);
-  return response.avatar?.id;
-}
-
-export async function leaveJoinedRoomForDashboard(avatarId: string | undefined): Promise<void> {
-  if (!avatarId) {
-    return;
-  }
-
+export async function leaveAllRoomsForDashboard(): Promise<void> {
   try {
-    const room = await fetchActiveRoom(avatarId);
-    if (room) {
-      await leaveEncounterRoom(avatarId);
-    }
+    await leaveAllEncounterRooms();
   } catch (error) {
-    console.error('Failed to leave room for dashboard', error);
+    console.error('Failed to leave all rooms for dashboard', error);
   }
 }

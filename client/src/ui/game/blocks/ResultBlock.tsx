@@ -39,6 +39,10 @@ import {
   DEFAULT_DICE_ID,
 } from '@shared/diceCatalog.js';
 import {
+  LEVEL_UP_ENCOUNTER_ID,
+  visibleEncounterRewardIds,
+} from '../visibleEncounterRewards.js';
+import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   FADE_DURATION_MS,
   fadeTransition,
@@ -53,7 +57,6 @@ const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_ACTIVATE_MS = 700;
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const ESSENCE_INVENTORY_TYPE = 3;
-const LEVEL_UP_ENCOUNTER_ID = 2;
 interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
@@ -398,37 +401,6 @@ function solutionImagePath(solution: SolutionRecord): string {
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
 }
 
-function visibleRewardIds({
-  encounterId,
-  prosperityRewardId,
-  rewardIds,
-  outcome,
-}: {
-  encounterId: number;
-  prosperityRewardId?: number | null;
-  rewardIds: number[];
-  outcome: ReturnType<typeof interpretRoll>;
-}): number[] {
-  if (outcome === null) {
-    return [];
-  }
-
-  if (encounterId === LEVEL_UP_ENCOUNTER_ID) {
-    return rewardIds;
-  }
-
-  const successful = outcome === 'Fortune' || outcome === 'Prosperity';
-
-  if (!successful) {
-    return [];
-  }
-
-  return [
-    ...rewardIds,
-    ...(outcome === 'Prosperity' && prosperityRewardId ? [prosperityRewardId] : []),
-  ];
-}
-
 export type ResultBlockHandle = {
   playDismissAnimations: () => Promise<void>;
 };
@@ -442,12 +414,15 @@ export const ResultBlock = forwardRef(function ResultBlock(
     disabled = false,
     showLoreGemReward = false,
     encounterDifficulty,
+    encounterRewardAmount = 1,
+    avatarLevel = 1,
     encounterId,
     hidden = false,
     inventory,
     localContinuePressed = false,
     onContinue,
     prosperityRewardId,
+    readOnlyWitness = false,
     resolutionAction = null,
     rewardIds = [],
     roll,
@@ -460,12 +435,15 @@ export const ResultBlock = forwardRef(function ResultBlock(
     disabled?: boolean;
     showLoreGemReward?: boolean;
     encounterDifficulty: number;
+    encounterRewardAmount?: number;
+    avatarLevel?: number;
     encounterId: number;
     hidden?: boolean;
     inventory?: AvatarInventory;
     localContinuePressed?: boolean;
     onContinue: () => void | Promise<void>;
     prosperityRewardId?: number | null;
+    readOnlyWitness?: boolean;
     resolutionAction?: EncounterAction | null;
     rewardIds?: number[];
     roll: number | null;
@@ -494,13 +472,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const outcome = roll === null ? null : interpretRoll(roll);
   const displayRoll = roll === null ? null : displayRollAsD20(roll);
-  const visible = roll !== null;
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
-  const usedSolution = usedEncounterSolution({ inventory, solutionId: usedSolutionId });
+  const usedSolution = readOnlyWitness
+    ? undefined
+    : usedEncounterSolution({ inventory, solutionId: usedSolutionId });
   const usedSolutionCost = usedSolutionId === null
     ? 0
     : scaledUses(1, encounterDifficulty);
-  const losses = isLevelUp
+  const losses = readOnlyWitness || isLevelUp
     ? []
     : predictEncounterLosses({
       encounterDifficulty,
@@ -509,7 +488,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       success: roll !== null && isRollFavorable(roll),
       usedSolutionId,
     });
-  const rewards = visibleRewardIds({
+  const rewards = visibleEncounterRewardIds({
     encounterId,
     prosperityRewardId,
     rewardIds,
@@ -521,7 +500,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return visibleRewards;
     }
 
-    const quantity = scaledUses(solution.mSolutionUses ?? 1, encounterDifficulty);
+    const quantity = isLevelUp
+      ? Math.max(1, (solution.mSolutionUses ?? 1) + (avatarLevel + 1))
+      : Math.max(1, (solution.mSolutionUses ?? 1) * Math.max(1, encounterRewardAmount));
     const existing = visibleRewards.find((reward) => reward.solution.mSolutionID === rewardId);
 
     if (existing) {
@@ -532,6 +513,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     visibleRewards.push({ quantity, solution });
     return visibleRewards;
   }, []);
+
+  const visible = roll !== null || (readOnlyWitness && (rewards.length > 0 || isLevelUp));
 
   const showContinueFloat = continuePressAnimationDone
     && (continueFloatingAfterPress || continueWaitingAfterPress)
@@ -562,7 +545,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }, [roll, losses.length]);
 
   useEffect(() => {
-    if (!showLoreGemReward || roll === null || hidden) {
+    if (readOnlyWitness || !showLoreGemReward || roll === null || hidden) {
       setLoreGemPopupVisible(false);
       setLoreGemActivating(false);
       return undefined;
@@ -598,6 +581,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }, [continueWaitingAfterPress, localContinuePressed]);
 
   useEffect(() => {
+    if (readOnlyWitness) {
+      setLossesSequenceDone(visible);
+      return undefined;
+    }
+
     if (roll === null) {
       return undefined;
     }
@@ -668,10 +656,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return () => {
       cancelled = true;
     };
-  }, [roll, lossesKey, losses.length]);
+  }, [roll, lossesKey, losses.length, visible]);
 
   useEffect(() => {
-    if (roll === null || !lossesSequenceDone) {
+    if (readOnlyWitness) {
+      setContinueRevealPlaying(false);
+      setContinueInteractive(false);
+      return undefined;
+    }
+
+    if (!visible || !lossesSequenceDone) {
       setContinueRevealPlaying(false);
       setContinueInteractive(false);
       return undefined;
@@ -734,7 +728,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       setContinueInteractive(false);
       setContinueEnableRattle(false);
     };
-  }, [lossesSequenceDone, roll]);
+  }, [lossesSequenceDone, visible, readOnlyWitness]);
 
   function buildLossFlights(): LossBubbleTargetSpec[] {
     const flights: LossBubbleTargetSpec[] = [];
@@ -848,7 +842,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   useImperativeHandle(ref, () => ({
-    playDismissAnimations,
+    playDismissAnimations: readOnlyWitness
+      ? async () => undefined
+      : playDismissAnimations,
   }));
 
   async function handleContinueClick(): Promise<void> {
@@ -1160,70 +1156,72 @@ export const ResultBlock = forwardRef(function ResultBlock(
           pointerEvents: resultInteractive ? 'auto' : 'none',
         }}
       />
-      <button
-        aria-disabled={!continueInteractive}
-        aria-label="Continue"
-        className="morkahja-footer-button"
-        disabled={
-          disabled
-          || continueSubmitInFlight
-          || !continueInteractive
-          || (deferRewardDismiss && localContinuePressed)
-        }
-        onClick={() => {
-          void handleContinueClick();
-        }}
-        onContextMenu={preventImageContextMenu}
-        style={{
-          ...continueButtonStyle,
-          cursor:
+      {!readOnlyWitness ? (
+        <button
+          aria-disabled={!continueInteractive}
+          aria-label="Continue"
+          className="morkahja-footer-button"
+          disabled={
             disabled
             || continueSubmitInFlight
             || !continueInteractive
             || (deferRewardDismiss && localContinuePressed)
-              ? 'default'
-              : 'pointer',
-          pointerEvents: resultInteractive && continueInteractive && !continueSubmitInFlight
-            ? 'auto'
-            : 'none',
-        }}
-        type="button"
-      >
-        <span
-          className="morkahja-footer-button-visual"
-          key={`continue-${roll}`}
-          style={{
-            ...(continueRevealPlaying
-              ? continueRevealSpinStyle()
-              : continueInteractive || continueEnableRattle
-                ? continueSettledStyle
-                : continueHiddenStyle),
-            ...(continuePressAnimating && !showContinueFloat ? continueAnimatingStyle : {}),
-            ...(showContinueFloat ? { animation: undefined } : {}),
+          }
+          onClick={() => {
+            void handleContinueClick();
           }}
+          onContextMenu={preventImageContextMenu}
+          style={{
+            ...continueButtonStyle,
+            cursor:
+              disabled
+              || continueSubmitInFlight
+              || !continueInteractive
+              || (deferRewardDismiss && localContinuePressed)
+                ? 'default'
+                : 'pointer',
+            pointerEvents: resultInteractive && continueInteractive && !continueSubmitInFlight
+              ? 'auto'
+              : 'none',
+          }}
+          type="button"
         >
           <span
-            className={[
-              showContinueFloat ? 'morkahja-continue-float' : undefined,
-              continueGlowClass,
-            ].filter(Boolean).join(' ') || undefined}
+            className="morkahja-footer-button-visual"
+            key={`continue-${roll}`}
             style={{
-              display: 'block',
-              ...(continueEnableRattle && !showContinueFloat
-                ? continueEnableRattleStyle
-                : {}),
+              ...(continueRevealPlaying
+                ? continueRevealSpinStyle()
+                : continueInteractive || continueEnableRattle
+                  ? continueSettledStyle
+                  : continueHiddenStyle),
+              ...(continuePressAnimating && !showContinueFloat ? continueAnimatingStyle : {}),
+              ...(showContinueFloat ? { animation: undefined } : {}),
             }}
           >
-            <img
-              alt=""
-              aria-hidden="true"
-              {...protectedImageProps}
-              src={CONTINUE_BUTTON}
-              style={continueImageStyle}
-            />
+            <span
+              className={[
+                showContinueFloat ? 'morkahja-continue-float' : undefined,
+                continueGlowClass,
+              ].filter(Boolean).join(' ') || undefined}
+              style={{
+                display: 'block',
+                ...(continueEnableRattle && !showContinueFloat
+                  ? continueEnableRattleStyle
+                  : {}),
+              }}
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                {...protectedImageProps}
+                src={CONTINUE_BUTTON}
+                style={continueImageStyle}
+              />
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+      ) : null}
       {rewards.length > 0 && !rewardsFlyingAway && !rewardDismissInProgress ? (
         <div
           aria-label="Predetermined rewards"
@@ -1271,7 +1269,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           >
             {outcomeShowsRoll ? displayRoll : outcome}
           </button>
-          {showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
+          {!readOnlyWitness && showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
             ? renderLoreGemRewardIcon()
             : null}
         </div>

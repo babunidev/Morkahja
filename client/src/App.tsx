@@ -15,6 +15,7 @@ import {
   fetchPendingHelpInvitations,
   heartbeatSession,
   joinFriendRoom,
+  leaveAllEncounterRooms,
   leaveEncounterRoom,
   loadStoredSession,
   logoutSession,
@@ -67,8 +68,7 @@ import GameEnvironment from './ui/game/GameEnvironment.js';
 import RoomFullOverlay from './ui/game/RoomFullOverlay.js';
 import {
   ensureSoloLeaderRoom,
-  leaveJoinedRoomForDashboard,
-  resolveDashboardLeaveAvatarId,
+  leaveAllRoomsForDashboard,
 } from './ui/game/roomSession.js';
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
@@ -319,10 +319,7 @@ export default function App() {
       return;
     }
 
-    void (async () => {
-      const avatarId = await resolveDashboardLeaveAvatarId();
-      await leaveJoinedRoomForDashboard(avatarId);
-    })();
+    void leaveAllRoomsForDashboard();
   }, [screen]);
 
   const dismissHelpInviteToast = useCallback((invite: RoomHelpInvitationDto | null) => {
@@ -397,11 +394,17 @@ export default function App() {
     try {
       if (inviteId) {
         seenHelpInviteIdsRef.current.add(inviteId);
-        const response = await respondHelpInvite(inviteId);
-        if (response.room) {
-          enterGameFromRoom(response.room);
+        try {
+          const response = await respondHelpInvite(inviteId);
+          if (response.room) {
+            enterGameFromRoom(response.room);
+          }
+          return;
+        } catch (error) {
+          if (!isApiErrorCode(error, 'INVITE_EXPIRED') && !isApiErrorCode(error, 'INVITE_NOT_FOUND')) {
+            throw error;
+          }
         }
-        return;
       }
 
       const response = await joinFriendRoom(friendPlayerId);
@@ -552,7 +555,6 @@ export default function App() {
   }
 
   const handleKickedFromParty = useCallback(() => {
-    const avatarId = activeAvatar?.id;
     setActiveAvatar(null);
     setActiveEncounter(null);
     setActiveRoom(null);
@@ -560,16 +562,14 @@ export default function App() {
     setScreen('dashboard');
     setPartyKickToast('The party leader removed you from the room.');
     void (async () => {
-      if (avatarId) {
-        try {
-          await leaveEncounterRoom(avatarId);
-        } catch (error) {
-          console.error('Failed to leave room after kick', error);
-        }
+      try {
+        await leaveAllEncounterRooms();
+      } catch (error) {
+        console.error('Failed to leave all rooms after kick', error);
       }
       await applyAvatarSelectionFromHome();
     })();
-  }, [activeAvatar?.id]);
+  }, []);
 
   useEffect(() => {
     if (screen === 'loading' || screen === 'gateway') {
@@ -760,7 +760,6 @@ export default function App() {
             initialEncounter={activeEncounter}
             initialRoom={activeRoom}
             onHome={() => {
-              const avatarId = activeAvatar?.id;
               setActiveAvatar(null);
               setActiveEncounter(null);
               setActiveRoom(null);
@@ -768,7 +767,7 @@ export default function App() {
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
               void (async () => {
-                await leaveJoinedRoomForDashboard(avatarId);
+                await leaveAllRoomsForDashboard();
                 await applyAvatarSelectionFromHome();
               })();
             }}

@@ -5,6 +5,7 @@ import {
   deleteEncounterRoom,
   findRoomIdByParticipant,
   findRoomIdByParticipantAvatar,
+  listOpenRoomIdsByParticipant,
   getEncounterRoom,
   getPlayerPresence,
   getRoomInvitation,
@@ -51,6 +52,10 @@ export async function findActiveRoomIdForPlayerAvatar(
   avatarId: string,
 ): Promise<string | null> {
   return findRoomIdByParticipantAvatar(playerId, avatarId);
+}
+
+export async function listActiveRoomIdsForPlayer(playerId: string): Promise<string[]> {
+  return listOpenRoomIdsByParticipant(playerId);
 }
 
 export async function loadPlayerPresence(playerId: string): Promise<PlayerPresence | null> {

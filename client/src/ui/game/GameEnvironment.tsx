@@ -17,7 +17,7 @@ import {
   submitRoomFocus,
   submitRoomSlotState,
   kickRoomParticipant,
-  leaveEncounterRoom,
+  leaveAllEncounterRooms,
   type EncounterAction,
   type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
@@ -49,6 +49,7 @@ import {
   localWaitingForRoomAdvance,
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
+import { witnessSystemEventDisplay } from './witnessSystemEventDisplay.js';
 import {
   encounterSnapshotAdvanced,
   runEncounterAdvanceTransition,
@@ -148,6 +149,18 @@ function rewardName(rewardId: number): string {
   return solutionsById[String(rewardId)]?.mSolutionName ?? `Reward ${rewardId}`;
 }
 
+function experienceRequiredForNextLevel(level: number): number {
+  return 7 * 2 ** (Math.max(1, level) - 1);
+}
+
+function progressionToLifetimeExperience(level: number, experience: number): number {
+  let total = Math.max(0, experience);
+  for (let currentLevel = 1; currentLevel < Math.max(1, level); currentLevel += 1) {
+    total += experienceRequiredForNextLevel(currentLevel);
+  }
+  return total;
+}
+
 function applyRoomSnapshot(
   room: EncounterRoomSnapshotDto,
   setRoom: (room: EncounterRoomSnapshotDto | null) => void,
@@ -228,7 +241,14 @@ export function GameEnvironment({
   const deathLeaveHandledRef = useRef<string | null>(null);
   const userLeavingRef = useRef(false);
   const [holdResultRollReset, setHoldResultRollReset] = useState(false);
+  const [localXpGainAmount, setLocalXpGainAmount] = useState(0);
+  const [partyXpPulseByPlayer, setPartyXpPulseByPlayer] = useState<Record<string, number>>({});
   const resultBlockRef = useRef<ResultBlockHandle>(null);
+  const seenXpEventKeysRef = useRef<Set<string>>(new Set());
+  const previousAvatarProgressRef = useRef({
+    level: initialAvatar.level,
+    experience: initialAvatar.experience,
+  });
   avatarRef.current = avatar;
   roomRef.current = room;
 
@@ -271,6 +291,64 @@ export function GameEnvironment({
 
   const localParticipant = room?.participants.find((participant) => participant.isLocal);
   const serverResolution = localParticipant?.preparedResult ?? localParticipant?.resolutionSummary;
+
+  useEffect(() => {
+    const previous = previousAvatarProgressRef.current;
+    const previousLifetimeExperience = progressionToLifetimeExperience(
+      previous.level,
+      previous.experience,
+    );
+    const currentLifetimeExperience = progressionToLifetimeExperience(
+      avatar.level,
+      avatar.experience,
+    );
+    const gainedExperience = currentLifetimeExperience - previousLifetimeExperience;
+    if (gainedExperience > 0) {
+      setLocalXpGainAmount(gainedExperience);
+      window.setTimeout(() => setLocalXpGainAmount(0), 900);
+    }
+    previousAvatarProgressRef.current = {
+      level: avatar.level,
+      experience: avatar.experience,
+    };
+  }, [avatar.level, avatar.experience]);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+    const activeParticipantCount = room.participants.filter(
+      (participant) => participant.choiceState !== 'disengaged',
+    ).length;
+
+    for (const participant of room.participants) {
+      const summaryExperience = participant.resolutionSummary?.gainedExperience ?? 0;
+      const preparedExperience = participant.preparedResult?.gainedExperience ?? 0;
+      const gainedExperience = summaryExperience > 0
+        ? summaryExperience
+        : (
+            activeParticipantCount <= 1
+              ? preparedExperience
+              : 0
+          );
+      if (gainedExperience <= 0) {
+        continue;
+      }
+
+      const eventKey = `${room.activeEncounter.snapshotId}:${participant.playerId}:${gainedExperience}`;
+      if (seenXpEventKeysRef.current.has(eventKey)) {
+        continue;
+      }
+      seenXpEventKeysRef.current.add(eventKey);
+
+      if (!participant.isLocal) {
+        setPartyXpPulseByPlayer((current) => ({
+          ...current,
+          [participant.playerId]: Date.now(),
+        }));
+      }
+    }
+  }, [room]);
 
   const encounterData = useMemo(
     () => encounterLookup(encounter.encounterId),
@@ -331,8 +409,11 @@ export function GameEnvironment({
     return () => window.clearTimeout(timer);
   }, [deferReveal]);
 
+  const witnessPollActive = witnessSystemEventDisplay(room).isWitness;
+
   useEffect(() => {
     let cancelled = false;
+    const pollMs = witnessPollActive ? 750 : ROOM_POLL_MS;
 
     async function ensureRoom(): Promise<void> {
       try {
@@ -380,11 +461,6 @@ export function GameEnvironment({
           return;
         }
 
-        if (localNeedsContinueAck(nextRoom)) {
-          await acknowledgeRoomContinue(nextRoom);
-          return;
-        }
-
         const baseline = roomRef.current;
         if (!baseline) {
           applySnapshotOnly(nextRoom);
@@ -398,13 +474,19 @@ export function GameEnvironment({
           applySnapshotOnly(nextRoom);
         }
 
+        const skipAutoContinueForWitness = witnessSystemEventDisplay(nextRoom).isWitness;
+        if (localNeedsContinueAck(nextRoom) && !skipAutoContinueForWitness) {
+          await acknowledgeRoomContinue(nextRoom);
+          return;
+        }
+
         const local = nextRoom.participants.find((participant) => participant.isLocal);
         const deathSummary = local?.preparedResult ?? local?.resolutionSummary;
         if (deathSummary?.avatarDied && local) {
           handleLocalAvatarDeath(local.avatar);
         }
       }).catch(() => undefined);
-    }, ROOM_POLL_MS);
+    }, pollMs);
 
     return () => {
       cancelled = true;
@@ -416,6 +498,7 @@ export function GameEnvironment({
     initialRoom,
     onKickedFromParty,
     roomAdvanceHooks,
+    witnessPollActive,
   ]);
 
   useEffect(() => {
@@ -518,7 +601,7 @@ export function GameEnvironment({
         return;
       }
 
-      if (currentRoom.roomState === 'system_event' && currentRoom.systemEvent?.isLocalWitness) {
+      if (currentRoom.roomState === 'system_event' && witnessSystemEventDisplay(currentRoom).isWitness) {
         appendActionLog(['Only the actor can resolve this moment.']);
         return;
       }
@@ -675,12 +758,9 @@ export function GameEnvironment({
     setVisible(false);
     await waitForFade();
     try {
-      const active = await fetchActiveRoom(avatarRef.current.id);
-      if (active) {
-        await leaveEncounterRoom(avatarRef.current.id);
-      }
+      await leaveAllEncounterRooms();
     } catch (error) {
-      console.error('Failed to leave room on home', error);
+      console.error('Failed to leave all rooms on home', error);
     }
     onHome();
   }
@@ -690,31 +770,32 @@ export function GameEnvironment({
     transitionDelay: visible ? '160ms' : '0ms',
   };
 
+  const witnessDisplay = witnessSystemEventDisplay(room);
   const systemEvent = room?.systemEvent;
-  const isWitnessMode = room?.roomState === 'system_event' && systemEvent?.isLocalWitness === true;
-  const systemEventActor = systemEvent
-    ? room?.participants.find((participant) => participant.playerId === systemEvent.actorPlayerId)
-    : undefined;
-  const postSystemRecap = room?.roomState === 'waiting_continue'
-    ? systemEvent?.lastEventRecap
-    : undefined;
-  const actorOutcome = systemEventActor
-    ? (systemEventActor.preparedResult
-      ?? systemEventActor.resolutionSummary
-      ?? systemEvent?.lastEventRecap)
-    : undefined;
-  const witnessActorOutcome = isWitnessMode && actorOutcome ? actorOutcome : undefined;
-  const displayResolution = witnessActorOutcome ?? postSystemRecap ?? serverResolution;
+  const systemEventActor = witnessDisplay.actor;
+  const witnessActorOutcome = witnessDisplay.outcome;
+  const isWitnessingLabel = witnessDisplay.showWaitingLabel;
+  const showWitnessResult = witnessDisplay.showActorResult;
+  const witnessEncounterId = systemEvent?.encounterId ?? encounter.encounterId;
+  const displayResolution = witnessDisplay.isWitness
+    ? witnessActorOutcome
+    : serverResolution;
+  const displayAvatarLevel = witnessActorOutcome
+    ? (systemEventActor?.avatar.level ?? avatar.level)
+    : avatar.level;
 
   const waitingForResolution = room?.roomState === 'advancing';
-  const showServerResult = displayResolution !== undefined && (
-    room?.roomState === 'waiting_continue' ||
-    room?.roomState === 'advancing' ||
-    localParticipant?.preparedResult !== undefined ||
-    witnessActorOutcome !== undefined
-  );
-  const outcomeRollForDisplay = witnessActorOutcome?.selectedRoll;
-  const outcomeResolutionAction = witnessActorOutcome
+  const showServerResult = witnessDisplay.isWitness
+    ? showWitnessResult
+    : displayResolution !== undefined && (
+      room?.roomState === 'waiting_continue' ||
+      room?.roomState === 'advancing' ||
+      localParticipant?.preparedResult !== undefined
+    );
+  const outcomeRollForDisplay = witnessDisplay.isWitness
+    ? witnessActorOutcome?.selectedRoll
+    : undefined;
+  const outcomeResolutionAction = witnessDisplay.isWitness
     ? systemEventActor?.selectedAction
     : undefined;
   const deferRewardDismiss = shouldDeferRewardDismiss(room, resultRollVisible);
@@ -772,6 +853,7 @@ export function GameEnvironment({
             >
               <EncounterImageBlock
                 avatarId={avatar.id}
+                avatarLevel={displayAvatarLevel}
                 diceButtonAsset={diceButtonAsset}
                 continueGlowClass={continueGlow}
                 continuePending={continuePending || deathPending || waitingForResolution}
@@ -792,7 +874,12 @@ export function GameEnvironment({
                 resultBlockRef={resultBlockRef}
                 roomState={room?.roomState ?? 'active_encounter'}
                 serverResolution={showServerResult ? displayResolution : undefined}
-                witnessMode={isWitnessMode}
+                witnessSuppressLocalResolution={witnessDisplay.isWitness}
+                isWitnessingLabel={isWitnessingLabel}
+                showWitnessResult={showWitnessResult}
+                witnessEncounterId={witnessEncounterId}
+                witnessOutcome={witnessActorOutcome ?? null}
+                witnessAvatarLevel={systemEventActor?.avatar.level}
                 systemEventActorName={
                   systemEventActor?.avatar
                     ? formatAvatarDisplayName(systemEventActor.avatar)
@@ -859,6 +946,8 @@ export function GameEnvironment({
               }}
               room={room}
               roomState={room?.roomState}
+              localXpGainAmount={localXpGainAmount}
+              partyXpPulseByPlayer={partyXpPulseByPlayer}
             />
           </div>
         }

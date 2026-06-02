@@ -59,26 +59,36 @@ const partyStripStyle: CSSProperties = {
   right: 0,
   top: PARTY_SLOT_TOP_OFFSET_PX,
   height: `calc(100% - ${PARTY_SLOT_TOP_OFFSET_PX}px)`,
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  display: 'flex',
+  justifyContent: 'center',
   alignItems: 'center',
+  gap: 'clamp(8px, 2.4vw, 20px)',
   overflow: 'visible',
   zIndex: 8,
   pointerEvents: 'auto',
 };
 
 const partySlotStyle: CSSProperties = {
-  width: '100%',
+  flex: '0 0 auto',
   height: '100%',
   display: 'grid',
   placeItems: 'center',
-  minWidth: 0,
   pointerEvents: 'auto',
 };
 
 const mainPartySlotStyle: CSSProperties = {
   ...partySlotStyle,
 };
+
+function partySlotVisualStyle(visualIndex: number): CSSProperties {
+  const centerVisual = visualIndex === 1;
+  return {
+    ...partySlotStyle,
+    width: centerVisual ? 'min(30vw, 176px)' : 'min(24vw, 140px)',
+    zIndex: centerVisual ? 14 : 8,
+    transform: centerVisual ? 'translateY(-10px)' : undefined,
+  };
+}
 
 const mainAvatarAnchorStyle: CSSProperties = {
   position: 'relative',
@@ -169,6 +179,8 @@ export function PlayerHub({
   onSlotStateChange,
   room = null,
   roomState,
+  localXpGainAmount = 0,
+  partyXpPulseByPlayer = {},
 }: {
   actionLog: string[];
   avatar: PersistedAvatar;
@@ -185,6 +197,8 @@ export function PlayerHub({
   onSlotStateChange?: (slotIndex: number, slotState: SlotStateDto) => void;
   room?: EncounterRoomSnapshotDto | null;
   roomState?: RoomStateDto;
+  localXpGainAmount?: number;
+  partyXpPulseByPlayer?: Record<string, number>;
 }) {
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [actionLogPosition, setActionLogPosition] = useState({ x: 16, y: 16 });
@@ -217,6 +231,8 @@ export function PlayerHub({
     }
   }
 
+  const visualSlotToLogical: [number, number, number] = [1, 0, 2];
+
   return (
     <section aria-label="Player Hub" style={hubStyle}>
       <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={footerLayerStyle}>
@@ -224,15 +240,16 @@ export function PlayerHub({
       </div>
       <div style={hubContentStyle}>
         <div aria-label="Party avatars" {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={partyStripStyle}>
-          {[0, 1, 2].map((slotIndex) => {
+          {[0, 1, 2].map((visualIndex) => {
+            const slotIndex = visualSlotToLogical[visualIndex];
             const participant = room?.participants.find((entry) => entry.slotIndex === slotIndex);
             if (participant?.isLocal) {
               return (
                 <div
                   aria-label={`Your party slot ${slotIndex + 1}`}
-                  key={`slot-${slotIndex}`}
+                  key={`slot-${visualIndex}-${slotIndex}`}
                   {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-                  style={mainPartySlotStyle}
+                  style={{ ...mainPartySlotStyle, ...partySlotVisualStyle(visualIndex) }}
                 >
                   <div ref={avatarAnchorRef} style={mainAvatarAnchorStyle}>
                     <AvatarPanel
@@ -243,6 +260,7 @@ export function PlayerHub({
                       onActionLogToggle={toggleActionLog}
                       onDetailsVisibleChange={handleAvatarDetailsVisibleChange}
                       onHome={onHome}
+                      xpGainAmount={localXpGainAmount}
                     />
                   </div>
                 </div>
@@ -253,10 +271,11 @@ export function PlayerHub({
               return (
                 <PartyMemberSlot
                   canKick={canManageSlots}
-                  key={`slot-${slotIndex}`}
+                  key={`slot-${visualIndex}-${slotIndex}`}
                   onKick={onKickParticipant}
                   participant={participant}
                   roomState={roomState}
+                  xpPulseToken={partyXpPulseByPlayer[participant.playerId]}
                 />
               );
             }
@@ -265,7 +284,7 @@ export function PlayerHub({
               <PartyEmptySlot
                 animationDelayMs={slotIndex * 420}
                 canManage={canManageSlots}
-                key={`slot-${slotIndex}`}
+                key={`slot-${visualIndex}-${slotIndex}`}
                 menuOpen={openSlotMenu === slotIndex}
                 onMenuOpenChange={(open) => {
                   setOpenSlotMenu(open ? slotIndex : null);

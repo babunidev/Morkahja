@@ -11,8 +11,9 @@ const headerStyle: CSSProperties = {
   gridTemplateColumns: '1fr',
   placeItems: 'center',
   backgroundImage: `url(${HEADER_BACKGROUND})`,
-  backgroundRepeat: 'repeat-x',
-  backgroundSize: 'auto 100%',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'center',
+  backgroundSize: 'cover',
 };
 
 const titleWrapStyle: CSSProperties = {

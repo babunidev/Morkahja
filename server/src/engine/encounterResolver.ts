@@ -170,6 +170,7 @@ function evaluatePrimaryLane(
   requirement: SlotRequirement,
   inventory: number[],
   roll: number,
+  requiredUses: number,
 ): SlotEvaluation {
   const { primarySolutionId } = requirement;
 
@@ -177,7 +178,7 @@ function evaluatePrimaryLane(
     return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
   }
 
-  const inventoryValid = inventory.includes(primarySolutionId);
+  const inventoryValid = inventory.filter((solutionId) => solutionId === primarySolutionId).length >= requiredUses;
 
   if (!inventoryValid) {
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
@@ -197,6 +198,7 @@ function evaluateSecondaryLane(
   inventory: number[],
   solutionMap: SolutionDataMap,
   roll: number,
+  requiredUses: number,
 ): SlotEvaluation {
   const { secondarySolutionType } = requirement;
 
@@ -204,14 +206,10 @@ function evaluateSecondaryLane(
     return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
   }
 
-  const matchedId = findSecondaryMatch(
-    inventory,
-    solutionMap,
-    secondarySolutionType,
-  );
+  const matchedId = findSecondaryMatch(inventory, solutionMap, secondarySolutionType);
   const inventoryValid = matchedId !== null;
 
-  if (!inventoryValid) {
+  if (!inventoryValid || inventory.filter((solutionId) => solutionId === matchedId).length < requiredUses) {
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
   }
 
@@ -230,11 +228,13 @@ function evaluateSlot(
   inventory: number[],
   solutionMap: SolutionDataMap,
   rolls: EncounterRollSnapshot,
+  requiredUses: number,
 ): SlotEvaluation {
   const primaryEvaluation = evaluatePrimaryLane(
     requirement,
     inventory,
     primaryRollForSlot(rolls, slot),
+    requiredUses,
   );
 
   if (primaryEvaluation.inventoryValid) {
@@ -246,6 +246,7 @@ function evaluateSlot(
     inventory,
     solutionMap,
     secondaryRollForSlot(rolls, slot),
+    requiredUses,
   );
 }
 
@@ -365,6 +366,7 @@ export function resolveEncounter(
 
   const frozenRolls = createEncounterRollSnapshot(rolls);
   const requirements = buildSlotRequirements(encounter);
+  const requiredUses = Math.max(1, encounter.mEncounterDifficulty);
   const failurePenalty = encounterDifficultyLossMultiplier(
     encounter.mEncounterDifficulty,
   );
@@ -406,6 +408,7 @@ export function resolveEncounter(
       inventory,
       solutionMap,
       frozenRolls,
+      requiredUses,
     );
 
     slotResults[slot] = evaluation.satisfied;
@@ -423,6 +426,7 @@ export function resolveEncounter(
     inventory,
     solutionMap,
     frozenRolls,
+    requiredUses,
   );
 
   const success = actionEvaluation.inventoryValid && actionEvaluation.satisfied;

@@ -46,6 +46,7 @@ import {
   resetAvatarProgression,
   touchAvatarProgression,
 } from './avatarProgressionService.js';
+import { experienceForSelectedRollOutcome } from '../domain/avatar/AvatarProgression.js';
 import {
   addRewardToInventoryState,
   applyEncounterInventoryChanges,
@@ -611,7 +612,7 @@ function levelUpFortuneRewards(avatar: AvatarDocument): number[] {
 function applyLevelUpInventoryChanges(
   inventory: AvatarInventory,
   rewardIds: number[],
-  encounterDifficulty: number,
+  newLevel: number,
 ): AvatarInventory {
   let next = inventory;
   const solutionMap = getSolutionMap();
@@ -626,7 +627,7 @@ function applyLevelUpInventoryChanges(
     next = addRewardToInventoryState(
       next,
       rewardId,
-      scaledUses(solution.mSolutionUses ?? 1, encounterDifficulty),
+      Math.max(1, (solution.mSolutionUses ?? 1) + (newLevel + 1)),
     );
   }
 
@@ -1072,7 +1073,7 @@ export async function continueEncounter(
         nextInventory = applyLevelUpInventoryChanges(
           inventory,
           resolution.rewards,
-          encounterSnapshot.encounterDifficulty,
+          progressionResult.progression.level,
         );
       } else {
         nextInventory = applyEncounterInventoryChanges(
@@ -1082,6 +1083,7 @@ export async function continueEncounter(
           resolution.success,
           selectedRollOutcome,
           encounterSnapshot.encounterDifficulty,
+          encounterSnapshot.encounterRewardAmount,
         );
       }
       const updatedAvatar: AvatarDocument = {
@@ -1156,6 +1158,7 @@ export interface ResolveParticipantInRoomResult {
   deathTriggered: boolean;
   avatarDied: boolean;
   eventContext: EncounterContinuedEventContext;
+  gainedExperience: number;
 }
 
 export interface PrepareParticipantOutcomeResult extends ResolveParticipantInRoomResult {
@@ -1176,6 +1179,7 @@ export function preparedResultFromResolve(
     deathTriggered: result.deathTriggered,
     avatarDied: result.avatarDied,
     leveledUp: result.eventContext.leveledUp,
+    gainedExperience: result.gainedExperience,
   };
 }
 
@@ -1339,6 +1343,7 @@ function computeParticipantOutcome(
     progression,
     selectedRollOutcome,
   );
+  const gainedExperience = experienceForSelectedRollOutcome(selectedRollOutcome);
   const essenceCost = essenceCostForOutcome(
     selectedRollOutcome,
     snapshot.encounterDifficulty,
@@ -1367,7 +1372,7 @@ function computeParticipantOutcome(
     nextInventory = applyLevelUpInventoryChanges(
       inventory,
       resolution.rewards,
-      snapshot.encounterDifficulty,
+      progressionResult.progression.level,
     );
   } else {
     nextInventory = applyEncounterInventoryChanges(
@@ -1377,6 +1382,7 @@ function computeParticipantOutcome(
       resolution.success,
       selectedRollOutcome,
       snapshot.encounterDifficulty,
+      snapshot.encounterRewardAmount,
     );
   }
 
@@ -1413,6 +1419,7 @@ function computeParticipantOutcome(
     deathTriggered,
     avatarDied,
     eventContext,
+    gainedExperience,
   };
 
   const preparedCommit: PreparedCommitBundle = {
@@ -1420,6 +1427,7 @@ function computeParticipantOutcome(
     selectedRollOutcome,
     deathTriggered,
     avatarDied,
+    gainedExperience,
     eventContext,
     nextInventory,
     nextProgression: progressionResult.progression,
@@ -1499,6 +1507,7 @@ export async function commitPreparedOutcome(
     deathTriggered: bundle.deathTriggered,
     avatarDied: bundle.avatarDied,
     eventContext: bundle.eventContext,
+    gainedExperience: bundle.gainedExperience,
   };
 }
 

@@ -145,6 +145,20 @@ const xpTextStyle: CSSProperties = {
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
 };
 
+const xpGainBubbleStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  bottom: '16%',
+  transform: 'translateX(-50%)',
+  zIndex: 9,
+  color: '#ffcc66',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  fontSize: 'clamp(0.95rem, 3.6vw, 1.25rem)',
+  textShadow: '0 0 8px rgba(255, 204, 102, 0.95), 0 3px 10px rgba(0, 0, 0, 0.85)',
+  pointerEvents: 'none',
+  animation: 'morkahja-xp-gain-popup 760ms ease-out forwards',
+};
+
 function experienceRequiredForNextLevel(level: number): number {
   return 7 * 2 ** (Math.max(1, level) - 1);
 }
@@ -157,6 +171,7 @@ export function AvatarPanel({
   onActionLogToggle,
   onDetailsVisibleChange,
   onHome,
+  xpGainAmount = 0,
 }: {
   actionLogOpen?: boolean;
   avatar: PersistedAvatar;
@@ -165,6 +180,7 @@ export function AvatarPanel({
   onActionLogToggle?: () => void;
   onDetailsVisibleChange?: (visible: boolean) => void;
   onHome?: () => void;
+  xpGainAmount?: number;
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
@@ -184,6 +200,9 @@ export function AvatarPanel({
       style={panelStyle}
     >
       <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
+        {xpGainAmount > 0 ? (
+          <span aria-hidden="true" style={xpGainBubbleStyle}>+{xpGainAmount} XP</span>
+        ) : null}
         <button
           aria-expanded={showDetails}
           aria-label={`Show details for ${formatAvatarDisplayName(avatar)}`}
@@ -324,6 +343,13 @@ export function AvatarPanel({
           </div>
         ) : null}
       </div>
+      <style>
+        {`@keyframes morkahja-xp-gain-popup {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.88); }
+  22% { opacity: 1; transform: translate(-50%, -2px) scale(1.06); }
+  100% { opacity: 0; transform: translate(-50%, -26px) scale(1); }
+}`}
+      </style>
     </article>
   );
 }

@@ -466,7 +466,7 @@ export async function deleteEncounterRoom(roomId: string): Promise<void> {
   await pool.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
 }
 
-export async function findRoomIdByParticipant(playerId: string): Promise<string | null> {
+export async function listOpenRoomIdsByParticipant(playerId: string): Promise<string[]> {
   await ensureSchema();
   const result = await pool.query<{ id: string }>(
     `SELECT id FROM encounter_rooms
@@ -476,10 +476,15 @@ export async function findRoomIdByParticipant(playerId: string): Promise<string 
          FROM jsonb_array_elements(data->'participants') AS participant
          WHERE participant->>'playerId' = $1
        )
-     LIMIT 1`,
+     ORDER BY (data->>'updatedAt')::bigint DESC NULLS LAST`,
     [playerId],
   );
-  return result.rows[0]?.id ?? null;
+  return result.rows.map((row) => row.id);
+}
+
+export async function findRoomIdByParticipant(playerId: string): Promise<string | null> {
+  const roomIds = await listOpenRoomIdsByParticipant(playerId);
+  return roomIds[0] ?? null;
 }
 
 export async function findRoomIdByParticipantAvatar(
@@ -496,6 +501,7 @@ export async function findRoomIdByParticipantAvatar(
          WHERE participant->>'playerId' = $1
            AND participant->>'avatarId' = $2
        )
+     ORDER BY (data->>'updatedAt')::bigint DESC NULLS LAST
      LIMIT 1`,
     [playerId, avatarId],
   );

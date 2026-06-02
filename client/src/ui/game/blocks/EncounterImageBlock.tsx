@@ -75,8 +75,28 @@ function imageFileName(imageSrc: string): string {
   return decodeURIComponent(imageSrc.split('/').pop() ?? imageSrc);
 }
 
+const witnessFloatingLabelStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  transform: 'translate(-50%, -50%)',
+  zIndex: 22,
+  maxWidth: 'min(88%, 320px)',
+  padding: '10px 18px',
+  boxSizing: 'border-box',
+  borderRadius: 8,
+  background: 'rgba(6, 7, 10, 0.82)',
+  fontSize: 'clamp(0.95rem, 2.8vw, 1.2rem)',
+  lineHeight: 1.2,
+  textAlign: 'center',
+  textTransform: 'none',
+  letterSpacing: '0.04em',
+  pointerEvents: 'none',
+};
+
 export function EncounterImageBlock({
   avatarId,
+  avatarLevel,
   continuePending,
   diceButtonAsset,
   continueGlowClass,
@@ -98,13 +118,19 @@ export function EncounterImageBlock({
   serverResolution,
   skillbookOpen,
   title,
-  witnessMode = false,
+  witnessSuppressLocalResolution = false,
+  isWitnessingLabel = false,
+  showWitnessResult = false,
   systemEventActorName,
   outcomeRoll,
   outcomeResolutionAction,
+  witnessOutcome,
+  witnessAvatarLevel,
+  witnessEncounterId,
   holdResultRollReset = false,
 }: {
   avatarId: string;
+  avatarLevel: number;
   continuePending: boolean;
   diceButtonAsset: string;
   continueGlowClass?: string;
@@ -130,10 +156,15 @@ export function EncounterImageBlock({
   serverResolution?: ParticipantResolutionSummaryDto;
   skillbookOpen: boolean;
   title: string;
-  witnessMode?: boolean;
+  witnessSuppressLocalResolution?: boolean;
+  isWitnessingLabel?: boolean;
+  showWitnessResult?: boolean;
   systemEventActorName?: string;
   outcomeRoll?: number;
   outcomeResolutionAction?: EncounterAction;
+  witnessOutcome?: ParticipantResolutionSummaryDto | null;
+  witnessAvatarLevel?: number;
+  witnessEncounterId?: number;
   /** When true, keep outcome roll visible until reward dismiss finishes. */
   holdResultRollReset?: boolean;
 }) {
@@ -203,10 +234,14 @@ export function EncounterImageBlock({
   }, [encounter.snapshotId, holdResultRollReset]);
 
   useEffect(() => {
+    if (witnessSuppressLocalResolution) {
+      return;
+    }
+
     if (serverResolution?.selectedRoll !== undefined) {
       setRevealedRoll(serverResolution.selectedRoll);
     }
-  }, [serverResolution?.selectedRoll, encounter.snapshotId]);
+  }, [encounter.snapshotId, serverResolution?.selectedRoll, witnessSuppressLocalResolution]);
 
   useEffect(() => {
     onResultsVisibleChange?.(revealedRoll !== null);
@@ -239,7 +274,7 @@ export function EncounterImageBlock({
     action: EncounterAction,
     solutionId: number | undefined,
   ): void {
-    if (witnessMode) {
+    if (witnessSuppressLocalResolution || isWitnessingLabel) {
       return;
     }
 
@@ -347,61 +382,65 @@ export function EncounterImageBlock({
           }}
         />
       )}
-      {witnessMode ? (
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            bottom: 24,
-            transform: 'translateX(-50%)',
-            zIndex: 22,
-            padding: '10px 18px',
-            borderRadius: 8,
-            background: 'rgba(6, 7, 10, 0.82)',
-            color: '#e8d4a8',
-            fontFamily: 'Georgia, serif',
-            fontSize: 'clamp(0.85rem, 2.5vw, 1.05rem)',
-            textAlign: 'center',
-            pointerEvents: 'none',
-          }}
-        >
+      {isWitnessingLabel && !showWitnessResult ? (
+        <div aria-live="polite" style={witnessFloatingLabelStyle}>
           {systemEventActorName
             ? `Witnessing ${systemEventActorName}'s fate…`
             : 'Witnessing a shared moment…'}
         </div>
       ) : null}
-      <ResultBlock
-        diceOutcomeIcon={diceButtonAsset}
-        continueGlowClass={continueGlowClass}
-        continueWaitingAfterPress={continueWaitingAfterPress}
-        deferRewardDismiss={deferRewardDismiss}
-        disabled={continuePending || (witnessMode && roomState === 'system_event')}
-        showLoreGemReward={showLoreGemReward}
-        encounterId={encounter.encounterId}
-        encounterDifficulty={encounter.encounterDifficulty ?? 1}
-        hidden={loreOpen || inventoryOpen || skillbookOpen}
-        inventory={inventory}
-        localContinuePressed={localContinuePressed}
-        onContinue={() => {
-          void handleContinue();
-        }}
-        prosperityRewardId={encounter.prosperityRewardId}
-        ref={resultBlockRef}
-        resolutionAction={
-          outcomeRoll !== undefined
-            ? (outcomeResolutionAction ?? selectedAction)
-            : (revealedRoll !== null ? selectedAction : null)
-        }
-        rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
-        roll={outcomeRoll ?? revealedRoll}
-        usedSolutionId={selectedSolutionId}
-      />
+      {showWitnessResult && witnessOutcome ? (
+        <ResultBlock
+          readOnlyWitness
+          diceOutcomeIcon={diceButtonAsset}
+          encounterDifficulty={encounter.encounterDifficulty ?? 1}
+          encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
+          avatarLevel={witnessAvatarLevel ?? avatarLevel}
+          encounterId={witnessEncounterId ?? encounter.encounterId}
+          hidden={loreOpen || inventoryOpen || skillbookOpen}
+          onContinue={() => undefined}
+          prosperityRewardId={null}
+          resolutionAction={outcomeResolutionAction ?? 'dice'}
+          rewardIds={witnessOutcome.rewards}
+          roll={witnessOutcome.selectedRoll ?? null}
+        />
+      ) : !isWitnessingLabel ? (
+        <ResultBlock
+          diceOutcomeIcon={diceButtonAsset}
+          continueGlowClass={continueGlowClass}
+          continueWaitingAfterPress={continueWaitingAfterPress}
+          deferRewardDismiss={deferRewardDismiss}
+          disabled={continuePending}
+          showLoreGemReward={showLoreGemReward}
+          encounterId={encounter.encounterId}
+          encounterDifficulty={encounter.encounterDifficulty ?? 1}
+          encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
+          avatarLevel={avatarLevel}
+          hidden={loreOpen || inventoryOpen || skillbookOpen}
+          inventory={inventory}
+          localContinuePressed={localContinuePressed}
+          onContinue={() => {
+            void handleContinue();
+          }}
+          prosperityRewardId={encounter.prosperityRewardId}
+          ref={resultBlockRef}
+          resolutionAction={
+            outcomeRoll !== undefined
+              ? (outcomeResolutionAction ?? selectedAction)
+              : (revealedRoll !== null ? selectedAction : null)
+          }
+          rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
+          roll={outcomeRoll ?? revealedRoll}
+          usedSolutionId={selectedSolutionId}
+        />
+      ) : null}
       <SolutionBlock
         diceButtonAsset={diceButtonAsset}
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}
         hidden={
-          witnessMode ||
+          isWitnessingLabel ||
+          showWitnessResult ||
           revealedRoll !== null ||
           loreOpen ||
           inventoryOpen ||

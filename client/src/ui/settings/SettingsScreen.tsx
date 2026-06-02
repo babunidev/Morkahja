@@ -15,6 +15,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
+import PatchNotesOverlay from './PatchNotesOverlay.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -186,13 +187,34 @@ const keyNoticeErrorStyle: CSSProperties = {
   color: '#ffb4a8',
 };
 
+const versionGroupStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 6,
+  marginTop: 2,
+};
+
 const versionLabelStyle: CSSProperties = {
-  margin: '2px 0 0',
+  margin: 0,
   textAlign: 'center',
   color: 'rgba(247, 239, 224, 0.55)',
   fontFamily: 'Georgia, serif',
   fontSize: '0.8rem',
   letterSpacing: '0.04em',
+};
+
+const patchNotesButtonVisualStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '4px 14px',
+  border: '1px solid rgba(255, 204, 102, 0.5)',
+  borderRadius: 8,
+  background: 'transparent',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.85rem',
+  letterSpacing: '0.03em',
 };
 
 export function SettingsScreen({
@@ -212,6 +234,7 @@ export function SettingsScreen({
   const recoveryFileName = recoveryKeyFilename(displayName);
   const [visible, setVisible] = useState(false);
   const [aboutUsOpen, setAboutUsOpen] = useState(false);
+  const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [keyMessage, setKeyMessage] = useState<string | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const scrollBodyRef = useRef<HTMLDivElement>(null);
@@ -235,6 +258,7 @@ export function SettingsScreen({
     if (!open) {
       setVisible(false);
       setAboutUsOpen(false);
+      setPatchNotesOpen(false);
       setKeyMessage(null);
       setShowScrollHint(false);
       return;
@@ -406,7 +430,19 @@ export function SettingsScreen({
                   End Session
                 </PanelButton>
               </div>
-              <p style={versionLabelStyle}>Version {APP_VERSION}</p>
+              <div style={versionGroupStyle}>
+                <p style={versionLabelStyle}>Version {APP_VERSION}</p>
+                <PanelButton
+                  onClick={() => {
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    setPatchNotesOpen(true);
+                  }}
+                  pressKey="settings-patch-notes"
+                  visualStyle={patchNotesButtonVisualStyle}
+                >
+                  Patch notes
+                </PanelButton>
+              </div>
             </div>
           </div>
           {showScrollHint ? (
@@ -443,6 +479,12 @@ export function SettingsScreen({
           setAboutUsOpen(false);
         }}
         open={aboutUsOpen}
+      />
+      <PatchNotesOverlay
+        onClose={() => {
+          setPatchNotesOpen(false);
+        }}
+        open={patchNotesOpen}
       />
     </div>
   );

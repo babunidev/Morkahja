@@ -121,6 +121,21 @@ const focusIconStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+const xpPulseDotStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  bottom: '16%',
+  transform: 'translateX(-50%)',
+  zIndex: 9,
+  width: 10,
+  height: 10,
+  borderRadius: '50%',
+  background: 'radial-gradient(circle, rgba(255,204,102,0.95) 0%, rgba(255,153,51,0.2) 70%)',
+  boxShadow: '0 0 12px rgba(255, 204, 102, 0.9)',
+  pointerEvents: 'none',
+  animation: 'morkahja-party-xp-pulse 700ms ease-out forwards',
+};
+
 const choiceIconStyle: CSSProperties = {
   display: 'block',
   width: '100%',
@@ -193,11 +208,13 @@ export function PartyMemberSlot({
   onKick,
   participant,
   roomState,
+  xpPulseToken,
 }: {
   canKick?: boolean;
   onKick?: (targetPlayerId: string) => void;
   participant: RoomParticipantDto;
   roomState?: RoomStateDto;
+  xpPulseToken?: number;
 }) {
   const [portraitSrc, setPortraitSrc] = useState(participant.avatar.portrait);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -300,8 +317,16 @@ export function PartyMemberSlot({
               ) : null}
             </div>
           ) : null}
+          {xpPulseToken ? <span aria-hidden="true" style={xpPulseDotStyle} /> : null}
         </button>
       </div>
+      <style>
+        {`@keyframes morkahja-party-xp-pulse {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.55); }
+  24% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1.35); }
+}`}
+      </style>
     </div>
   );
 }

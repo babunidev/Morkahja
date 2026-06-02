@@ -10,6 +10,7 @@ import {
   joinFriendRoom,
   joinRoom,
   kickParticipant,
+  leaveAllRoomsForPlayer,
   leaveRoom,
   listPendingHelpInvitations,
   respondHelp,
@@ -156,6 +157,20 @@ export async function leaveRoomController(
     const { playerId } = requireAuth(req);
     const avatarId = requireAvatarId(req);
     await leaveRoom(playerId, avatarId);
+    res.json({ ok: true });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function leaveAllRoomsController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    await leaveAllRoomsForPlayer(playerId);
     res.json({ ok: true });
   } catch (error) {
     handleRoomError(error, res, next);

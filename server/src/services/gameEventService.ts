@@ -540,28 +540,7 @@ async function resolveJoinAction(
     if (toPlayerId !== viewingPlayerId) {
       return undefined;
     }
-
-    const roomId = payloadString(event.payload, 'roomId');
-    if (!roomId) {
-      return undefined;
-    }
-
-    const inviteId = payloadString(event.payload, 'inviteId');
-    const { resolveRoomJoinActionForViewer } = await import('./roomService.js');
-    const joinable = await resolveRoomJoinActionForViewer(viewingPlayerId, roomId);
-    if (!joinable) {
-      return undefined;
-    }
-
-    return {
-      type: 'join_room',
-      roomId: joinable.roomId,
-      fromPlayerId: joinable.fromPlayerId,
-      ...(inviteId ? { inviteId } : {}),
-    };
-  }
-
-  if (
+  } else if (
     event.type !== 'room_created'
     && event.type !== 'room_encounter_started'
     && event.type !== 'help_called'
@@ -569,13 +548,9 @@ async function resolveJoinAction(
     return undefined;
   }
 
-  const roomId = payloadString(event.payload, 'roomId');
-  if (!roomId) {
-    return undefined;
-  }
-
-  const { resolveRoomJoinActionForViewer } = await import('./roomService.js');
-  const joinable = await resolveRoomJoinActionForViewer(viewingPlayerId, roomId);
+  const friendPlayerId = event.playerId;
+  const { resolveActivityFeedJoinAction } = await import('./roomService.js');
+  const joinable = await resolveActivityFeedJoinAction(viewingPlayerId, friendPlayerId);
   if (!joinable) {
     return undefined;
   }
@@ -584,6 +559,7 @@ async function resolveJoinAction(
     type: 'join_room',
     roomId: joinable.roomId,
     fromPlayerId: joinable.fromPlayerId,
+    ...(joinable.inviteId ? { inviteId: joinable.inviteId } : {}),
   };
 }
 

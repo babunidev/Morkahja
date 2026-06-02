@@ -33,6 +33,8 @@ export interface ParticipantResolutionSummary {
   leveledUp?: boolean;
   /** Room encounter: yellow-red gem granted on commit for this participant. */
   loreGemGranted?: boolean;
+  /** XP granted by the resolved encounter outcome shown to this participant. */
+  gainedExperience?: number;
 }
 
 /** Reveal-only outcome attached after prepare; not persisted to avatar until room commit. */
@@ -44,6 +46,7 @@ export interface PreparedCommitBundle {
   selectedRollOutcome: RollOutcome | null;
   deathTriggered: boolean;
   avatarDied: boolean;
+  gainedExperience: number;
   eventContext: EncounterContinuedEventContext;
   nextInventory: AvatarInventory;
   nextProgression: AvatarProgression;
