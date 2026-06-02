@@ -119,6 +119,26 @@
     "mEncounterTitle": "The Weeping Mire",
     "mEncounterType": 3
   },
+  "19670": {
+    "mEncounterDifficulty": 6,
+    "mEncounterExpansion": 1001,
+    "mEncounterFollow": 19671,
+    "mEncounterID": 19670,
+    "mEncounterImageName": "forgotten_procession",
+    "mEncounterRewardAmount": 3,
+    "mEncounterRewardType": 1,
+    "mEncounterSolutiuonA": 0,
+    "mEncounterSolutiuonB": 0,
+    "mEncounterSolutiuonC": 0,
+    "mEncounterSolutiuonD": 0,
+    "mEncounterSolutiuonTypeA": 26,
+    "mEncounterSolutiuonTypeB": 40,
+    "mEncounterSolutiuonTypeC": 25,
+    "mEncounterSolutiuonTypeD": 39,
+    "mEncounterText": "Past the mire stretches an ancient road of cracked black stone, impossibly preserved despite the corruption surrounding it. Along this path marches an endless procession of hooded figures.\n\nThey walk in complete silence.\n\nThousands move forward in perfect unison, carrying extinguished lanterns that emit no light. Their robes conceal their faces, and no traveler has ever succeeded in stopping one or pulling back a hood. Attempts to interfere are met only with indifference as the figures continue their march.\n\nThe procession leads toward a colossal structure hidden in the darkness ahead.\n\nMore unsettling still, observant travelers eventually notice something impossible.\n\nSome of the hooded figures bear their own height, build, clothing, and mannerisms.\n\nAnd among the countless marchers, there is always one figure that perfectly resembles the traveler themselves.\n\nIt walks near the front.",
+    "mEncounterTitle": "Forgotten Procession",
+    "mEncounterType": 3
+  },
   "20001": {
     "mEncounterDifficulty": 1,
     "mEncounterExpansion": 0,
