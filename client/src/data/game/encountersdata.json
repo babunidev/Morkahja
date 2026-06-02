@@ -99,6 +99,26 @@
     "mEncounterTitle": "The Hollow Choir",
     "mEncounterType": 3
   },
+  "19669": {
+    "mEncounterDifficulty": 5,
+    "mEncounterExpansion": 1001,
+    "mEncounterFollow": 19670,
+    "mEncounterID": 19669,
+    "mEncounterImageName": "the_weeping_mire",
+    "mEncounterRewardAmount": 3,
+    "mEncounterRewardType": 2,
+    "mEncounterSolutiuonA": 0,
+    "mEncounterSolutiuonB": 0,
+    "mEncounterSolutiuonC": 0,
+    "mEncounterSolutiuonD": 0,
+    "mEncounterSolutiuonTypeA": 22,
+    "mEncounterSolutiuonTypeB": 40,
+    "mEncounterSolutiuonTypeC": 21,
+    "mEncounterSolutiuonTypeD": 39,
+    "mEncounterText": "The path descends into a vast marsh hidden beneath the roots of the abyss. Pools of black water stretch endlessly into darkness, reflecting a sky that does not exist. The air is cold and damp, carrying the scent of decay and wet earth.\n\nAt first glance, the mire appears empty. Yet every pool contains reflections that move independently from those who gaze into them. Travelers often witness themselves staring back with subtle differences: missing eyes, twisted smiles, or expressions of overwhelming despair.\n\nScattered throughout the swamp stand stone figures half-submerged in the mud. Their features have long eroded away, but faint grooves suggest they were once living people.\n\nOccasionally, soft sobbing can be heard rising from beneath the water.\n\nThe sound always seems closest directly under one's feet.",
+    "mEncounterTitle": "The Weeping Mire",
+    "mEncounterType": 3
+  },
   "20001": {
     "mEncounterDifficulty": 1,
     "mEncounterExpansion": 0,
