@@ -4,7 +4,7 @@
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 19001,
-    "mEncounterImageName": "19001_waterdungeon",
+    "mEncounterImageName": "nerevals_sanctuary",
     "mEncounterRewardAmount": 1,
     "mEncounterRewardType": 2,
     "mEncounterSolutiuonA": 0,
@@ -15,7 +15,7 @@
     "mEncounterSolutiuonTypeB": 22,
     "mEncounterSolutiuonTypeC": 21,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "With a nod of solemn respect, the guardian of the forest steps aside, their silent approval a rare blessing granted. Clad in armor that whispers of ancient woods and silent streams, they allow passage to the stone portal that serves as a gateway to realms untold. The doorway, carved from the oldest stone and inscribed with runes of a forgotten language, sings a melody of tranquility and depth. This seal, aglow with a soft, inviting luminescence, bars entry to all but those who present a gesture of healing, as decreed by the ancient inscription that speaks of compassion and restoration. Beyond this threshold lies a domain consecrated by the deity of waters, a sanctuary where principles of fluidity, adaptation, and healing reign supreme. The air, rich with the essence of rain upon fertile earth, beckons with a promise of peace and rejuvenation for those who prove themselves worthy.",
+    "mEncounterText": "With a nod of solemn respect, the guardian of the forest steps aside, their silent approval a rare blessing granted. They allow passage to the stone portal that serves as a gateway to realms untold. The doorway, carved from the oldest stone and inscribed with runes of a forgotten language, sings a melody of tranquility and depth. This seal, aglow with a soft, inviting luminescence, bars entry to all but those who present a gesture of healing, as decreed by the ancient inscription that speaks of compassion and restoration. Beyond this threshold lies a domain consecrated by the deity of waters, a sanctuary where principles of fluidity, adaptation, and healing reign supreme. The air, rich with the essence of rain upon fertile earth, beckons with a promise of peace and rejuvenation for those who prove themselves worthy.",
     "mEncounterTitle": "Nerevals Sanctuary",
     "mEncounterType": 3
   },
