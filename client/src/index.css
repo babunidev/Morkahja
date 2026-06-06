@@ -254,6 +254,23 @@ button:focus-visible {
   animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
 }
 
+@keyframes morkahja-party-choice-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.1);
+  }
+}
+
+.morkahja-party-choice-badge {
+  animation: morkahja-party-choice-pulse 2.4s ease-in-out infinite;
+  transform-origin: center center;
+}
+
 .morkahja-party-status-badge {
   display: inline-block;
   padding: 2px 8px;

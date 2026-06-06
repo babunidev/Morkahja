@@ -235,38 +235,96 @@ function cloneInventory(inventory: AvatarInventory): AvatarInventory {
   };
 }
 
-function firstBySolutionId(items: InventoryItem[]): InventoryItem | null {
-  return [...items]
-    .filter((item) => item.uses > 0)
-    .sort((a, b) => a.solutionId - b.solutionId)[0] ?? null;
-}
-
-function consumeFromInventory(
+function consumeOneChargeFromContainer(
   inventory: AvatarInventory,
+  container: 'spellbook' | 'items' | 'essences',
   solutionId: number,
-  amount: number,
 ): void {
-  const containers = ['spellbook', 'items', 'essences'] as const;
-
-  for (const container of containers) {
-    const index = inventory[container].findIndex((item) => item.solutionId === solutionId);
-    if (index === -1) {
-      continue;
-    }
-
-    inventory[container][index].uses = Math.max(inventory[container][index].uses - amount, 0);
-    if (inventory[container][index].uses <= 0) {
-      inventory[container].splice(index, 1);
-    }
+  const index = inventory[container].findIndex((item) => item.solutionId === solutionId);
+  if (index === -1) {
     return;
   }
+
+  inventory[container][index].uses -= 1;
+  if (inventory[container][index].uses <= 0) {
+    inventory[container].splice(index, 1);
+  }
 }
 
-function consumeEssenceUse(inventory: AvatarInventory, amount: number): void {
-  const essence = firstBySolutionId(inventory.essences);
-  if (essence) {
-    consumeFromInventory(inventory, essence.solutionId, amount);
+function consumeRandomLossChargesFromContainer(
+  inventory: AvatarInventory,
+  container: 'essences' | 'items',
+  amount: number,
+): number[] {
+  const lostSolutionIds: number[] = [];
+
+  for (let index = 0; index < amount; index += 1) {
+    const charges = inventory[container]
+      .flatMap((item) =>
+        item.uses > 0 ? Array.from({ length: item.uses }, () => item.solutionId) : [],
+      );
+
+    if (charges.length === 0) {
+      break;
+    }
+
+    const solutionId = charges[0]!;
+    lostSolutionIds.push(solutionId);
+    consumeOneChargeFromContainer(inventory, container, solutionId);
   }
+
+  return lostSolutionIds;
+}
+
+function inventoryChangesFromSolutionIds(
+  inventory: AvatarInventory | undefined,
+  solutionIds: number[],
+): EncounterInventoryChange[] {
+  if (!inventory || solutionIds.length === 0) {
+    return [];
+  }
+
+  const counts = new Map<number, number>();
+
+  for (const solutionId of solutionIds) {
+    counts.set(solutionId, (counts.get(solutionId) ?? 0) + 1);
+  }
+
+  const changes: EncounterInventoryChange[] = [];
+
+  for (const [solutionId, quantity] of counts) {
+    const item = inventoryItems(inventory).find((entry) => entry.solutionId === solutionId);
+    const change = toChange(
+      item ?? {
+        solutionId,
+        solutionType: solutionsById[String(solutionId)]?.mSolutionType ?? 0,
+        uses: quantity,
+      },
+      quantity,
+    );
+
+    if (change) {
+      changes.push(change);
+    }
+  }
+
+  return changes.sort(
+    (left, right) => left.solution.mSolutionID - right.solution.mSolutionID,
+  );
+}
+
+export function encounterLossesFromSolutionIds({
+  inventory,
+  lostSolutionIds,
+  usedSolutionIds = [],
+}: {
+  inventory: AvatarInventory | undefined;
+  lostSolutionIds: number[];
+  usedSolutionIds?: number[];
+}): EncounterInventoryChange[] {
+  const usedSolutionIdSet = new Set(usedSolutionIds);
+  const filtered = lostSolutionIds.filter((solutionId) => !usedSolutionIdSet.has(solutionId));
+  return inventoryChangesFromSolutionIds(inventory, filtered);
 }
 
 function toChange(item: InventoryItem, quantity: number): EncounterInventoryChange | null {
@@ -276,29 +334,6 @@ function toChange(item: InventoryItem, quantity: number): EncounterInventoryChan
   }
 
   return { quantity, solution };
-}
-
-function pushLoss(
-  losses: EncounterInventoryChange[],
-  item: InventoryItem | null,
-  quantity: number,
-): void {
-  if (!item || quantity <= 0) {
-    return;
-  }
-
-  const change = toChange(item, quantity);
-  if (!change) {
-    return;
-  }
-
-  const existing = losses.find((loss) => loss.solution.mSolutionID === change.solution.mSolutionID);
-  if (existing) {
-    existing.quantity += change.quantity;
-    return;
-  }
-
-  losses.push(change);
 }
 
 /**
@@ -327,33 +362,26 @@ export function predictEncounterLosses({
   }
 
   const working = cloneInventory(inventory);
-  const losses: EncounterInventoryChange[] = [];
   const usedSolutionIdSet = new Set(usedSolutionIds);
+  const lostSolutionIds: number[] = [];
 
   for (const solutionId of usedSolutionIds) {
-    consumeFromInventory(working, solutionId, 1);
+    consumeOneChargeFromContainer(working, 'spellbook', solutionId);
+    consumeOneChargeFromContainer(working, 'items', solutionId);
+    consumeOneChargeFromContainer(working, 'essences', solutionId);
   }
 
   if (outcome === 'Hardship') {
-    const essence = firstBySolutionId(working.essences);
-    pushLoss(losses, essence, amount);
-    consumeEssenceUse(working, amount);
+    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'essences', amount));
   }
 
   if (outcome === 'Misery') {
-    const essence = firstBySolutionId(working.essences);
-    pushLoss(losses, essence, amount);
-    consumeEssenceUse(working, amount);
-
-    const item = firstBySolutionId(working.items);
-    pushLoss(losses, item, amount);
+    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'essences', amount));
+    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'items', amount));
   }
 
-  if (usedSolutionIdSet.size > 0) {
-    return losses.filter((loss) => !usedSolutionIdSet.has(loss.solution.mSolutionID));
-  }
-
-  return losses;
+  const filtered = lostSolutionIds.filter((solutionId) => !usedSolutionIdSet.has(solutionId));
+  return inventoryChangesFromSolutionIds(inventory, filtered);
 }
 
 function usedSolutionChanges(

@@ -5,6 +5,7 @@ import { CONTRIBUTOR_ACHIEVEMENT_ID } from './contributorAchievement.js';
 import { BLESSED_ACHIEVEMENT_ID } from './blessedAchievement.js';
 import { COMBATANT_ACHIEVEMENT_ID } from './encounterSolveAchievements.js';
 import { renderEventMessage } from '../news/renderEventMessage.js';
+import { levelUpScribeVisibility } from '../news/levelUpScribeVisibility.js';
 import { isVisibleInScribesFeed } from '../news/scribesFeedFilter.js';
 import { resolveScribesIconUrl } from '../news/scribesFeedPresentation.js';
 import type { GameEvent } from '../events/GameEvent.js';
@@ -339,5 +340,43 @@ assert.equal(
 assert.equal(isVisibleInScribesFeed(helpRequested, 'player-b'), true);
 assert.equal(isVisibleInScribesFeed(helpRequested, 'player-a'), false);
 assert.equal(isVisibleInScribesFeed(roomEncounterStarted, 'player-b'), true);
+
+const levelUpFriends = {
+  eventId: 'level-up-2',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'level_up',
+  visibility: 'friends' as const,
+  importance: 'high' as const,
+  payload: {
+    avatarName: 'Lyra',
+    level: 2,
+  },
+};
+
+assert.equal(
+  renderEventMessage(levelUpFriends),
+  'Lyra reached level 2.',
+);
+assert.equal(levelUpScribeVisibility(2), 'friends');
+assert.equal(levelUpScribeVisibility(5), 'global');
+assert.equal(isVisibleInScribesFeed(levelUpFriends, 'player-a'), true);
+
+const levelUpMilestone = {
+  ...levelUpFriends,
+  eventId: 'level-up-5',
+  visibility: 'global' as const,
+  payload: {
+    avatarName: 'Lyra',
+    level: 5,
+  },
+};
+
+assert.equal(
+  renderEventMessage(levelUpMilestone),
+  'Lyra reached level 5.',
+);
+assert.equal(isVisibleInScribesFeed(levelUpMilestone, 'player-b'), true);
 
 console.log('achievementScribes.test.ts passed');

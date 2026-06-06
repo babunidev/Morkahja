@@ -47,6 +47,8 @@ export interface EncounterResolution {
   selectedRoll: number;
   slotResults: EncounterSlotResults;
   usedInventorySolutions: number[];
+  /** One entry per charge lost to failure penalties (Misery/Hardship). */
+  lostInventorySolutions?: number[];
   failurePenalty: number;
   rewards: number[];
   message: string;

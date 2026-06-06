@@ -28,6 +28,7 @@ export interface ParticipantResolutionSummary {
   rewards: number[];
   failurePenalty?: number;
   usedInventorySolutions?: number[];
+  lostInventorySolutions?: number[];
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;

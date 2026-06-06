@@ -1,9 +1,20 @@
-import { useState, type CSSProperties } from 'react';
-import type { RoomParticipantDto, RoomStateDto } from '../../../api/http.js';
+import { useRef, useState, type CSSProperties } from 'react';
+import type {
+  ParticipantFocusStateDto,
+  RoomParticipantDto,
+  RoomStateDto,
+} from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
+import {
+  diceButtonAssetPath,
+  DEFAULT_DICE_ID,
+} from '@shared/diceCatalog.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
 import { formatAvatarDisplayName } from '../../avatar/avatarDisplayName.js';
-import { GAME_FOCUS_BUTTON_ICONS, GAME_UI_ROOT } from '../gameUiAssets.js';
+import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
+import {
+  AnchoredEncounterTooltip,
+} from '../encounterTooltip.js';
 import {
   preventImageContextMenu,
   PROTECTED_SURFACE_ATTR,
@@ -11,12 +22,19 @@ import {
 } from '../../protectedImage.js';
 
 const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
-const DICE_CHOICE_ICON = `${GAME_UI_ROOT}/im_button_dice_a.webp`;
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
+const PARTY_BADGE_SIZE_PX = 62;
+
+interface PartyBadgeTooltip {
+  label: string;
+  description?: string;
+}
 
 interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
+  mSolutionName: string;
+  mSolutionText: string;
 }
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
@@ -94,31 +112,46 @@ const metaStyle: CSSProperties = {
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.85)',
 };
 
-const choiceOverlayStyle: CSSProperties = {
+const badgeOverlayStyle: CSSProperties = {
   position: 'absolute',
   left: '50%',
   top: '50%',
   transform: 'translate(-50%, -50%)',
   zIndex: 7,
-  width: 52,
-  height: 52,
+  width: PARTY_BADGE_SIZE_PX,
+  height: PARTY_BADGE_SIZE_PX,
   display: 'grid',
   placeItems: 'center',
   pointerEvents: 'none',
 };
 
-const focusIconStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: '50%',
-  transform: 'translate(-50%, -50%)',
+const badgeOverlayInteractiveStyle: CSSProperties = {
+  ...badgeOverlayStyle,
+  pointerEvents: 'auto',
+  cursor: 'default',
+};
+
+const focusBadgeOverlayStyle: CSSProperties = {
+  ...badgeOverlayInteractiveStyle,
   zIndex: 6,
+};
+
+const badgeIconStyle: CSSProperties = {
   display: 'block',
-  width: 52,
-  height: 52,
+  width: '100%',
+  height: '100%',
+  borderRadius: '50%',
+  objectFit: 'cover',
+  boxShadow:
+    '0 0 12px rgba(255, 204, 102, 0.55), 0 4px 10px rgba(0, 0, 0, 0.5)',
+};
+
+const focusBadgeIconStyle: CSSProperties = {
+  ...badgeIconStyle,
   objectFit: 'contain',
+  borderRadius: 0,
+  boxShadow: 'none',
   filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65))',
-  pointerEvents: 'none',
 };
 
 const xpPulseDotStyle: CSSProperties = {
@@ -136,15 +169,64 @@ const xpPulseDotStyle: CSSProperties = {
   animation: 'morkahja-party-xp-pulse 700ms ease-out forwards',
 };
 
-const choiceIconStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: '100%',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  boxShadow:
-    '0 0 12px rgba(255, 204, 102, 0.55), 0 4px 10px rgba(0, 0, 0, 0.5)',
-};
+function focusBadgeTooltip(focusState: ParticipantFocusStateDto): PartyBadgeTooltip | null {
+  switch (focusState) {
+    case 'lore':
+      return { label: 'Reading lore' };
+    case 'inventory':
+      return { label: 'Viewing inventory' };
+    case 'skillbook':
+      return { label: 'Reading skillbook' };
+    case 'avatar_details':
+      return { label: 'Avatar details' };
+    default:
+      return null;
+  }
+}
+
+function PartyMemberOverlayBadge({
+  iconSrc,
+  iconStyle = badgeIconStyle,
+  overlayStyle = badgeOverlayInteractiveStyle,
+  tooltip,
+}: {
+  iconSrc: string;
+  iconStyle?: CSSProperties;
+  overlayStyle?: CSSProperties;
+  tooltip: PartyBadgeTooltip | null;
+}) {
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+
+  return (
+    <>
+      <span
+        ref={anchorRef}
+        aria-hidden="true"
+        className="morkahja-party-choice-badge"
+        onMouseEnter={() => {
+          if (tooltip) {
+            setTooltipVisible(true);
+          }
+        }}
+        onMouseLeave={() => {
+          setTooltipVisible(false);
+        }}
+        style={overlayStyle}
+      >
+        <img alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
+      </span>
+      {tooltip ? (
+        <AnchoredEncounterTooltip
+          anchorRef={anchorRef}
+          description={tooltip.description}
+          label={tooltip.label}
+          visible={tooltipVisible}
+        />
+      ) : null}
+    </>
+  );
+}
 
 function solutionImagePath(solutionId: number): string | null {
   const solution = solutionsById[String(solutionId)];
@@ -153,6 +235,28 @@ function solutionImagePath(solutionId: number): string | null {
   }
 
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+}
+
+function solutionTooltipForId(
+  solutionId: number | undefined,
+): PartyBadgeTooltip | null {
+  if (solutionId === undefined) {
+    return null;
+  }
+
+  const solution = solutionsById[String(solutionId)];
+  if (!solution) {
+    return null;
+  }
+
+  return {
+    label: solution.mSolutionName,
+    description: solution.mSolutionText,
+  };
+}
+
+function diceChoiceIcon(participant: RoomParticipantDto): string {
+  return diceButtonAssetPath(participant.selectedDiceId ?? DEFAULT_DICE_ID);
 }
 
 function hasVisibleChoice(
@@ -167,10 +271,11 @@ function hasVisibleChoice(
     return false;
   }
 
-  if (
-    roomState === 'system_event'
-    && systemEventActorPlayerId === participant.playerId
-  ) {
+  if (roomState === 'system_event') {
+    if (systemEventActorPlayerId !== participant.playerId) {
+      return false;
+    }
+
     return (
       participant.preparedResult !== undefined
       || participant.resolutionSummary !== undefined
@@ -238,14 +343,18 @@ export function PartyMemberSlot({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const disengaged = participant.choiceState === 'disengaged';
   const waitingContinue = roomState === 'waiting_continue' && participant.continuePressed;
-  const focusIconSrc = participant.focusState !== 'none'
-    ? GAME_FOCUS_BUTTON_ICONS[participant.focusState as keyof typeof GAME_FOCUS_BUTTON_ICONS]
+  const focusState = participant.focusState;
+  const focusIconSrc = focusState !== 'none'
+    ? GAME_FOCUS_BUTTON_ICONS[focusState as keyof typeof GAME_FOCUS_BUTTON_ICONS]
     : undefined;
+  const focusTooltip = focusState !== 'none' ? focusBadgeTooltip(focusState) : null;
   const showChoice = hasVisibleChoice(participant, roomState, systemEventActorPlayerId) && !detailsOpen;
   const choiceSolutionSrc = participant.selectedSolutionId
     ? solutionImagePath(participant.selectedSolutionId)
     : null;
+  const choiceSolutionTooltip = solutionTooltipForId(participant.selectedSolutionId);
   const showDiceChoice = showChoice && !choiceSolutionSrc && participant.selectedAction === 'dice';
+  const diceChoiceSrc = diceChoiceIcon(participant);
   const badge = statusLabel(participant, roomState);
   const avatarDisplayName = formatAvatarDisplayName(participant.avatar);
   const avatarMeta = participantAvatarMeta(participant.avatar);
@@ -284,22 +393,20 @@ export function PartyMemberSlot({
             portrait={portraitSrc}
           />
           {showChoice && (choiceSolutionSrc || showDiceChoice) ? (
-            <span aria-hidden="true" style={choiceOverlayStyle}>
-              <img
-                alt=""
-                {...protectedImageProps}
-                src={choiceSolutionSrc ?? DICE_CHOICE_ICON}
-                style={choiceIconStyle}
-              />
-            </span>
+            <PartyMemberOverlayBadge
+              iconSrc={choiceSolutionSrc ?? diceChoiceSrc}
+              tooltip={
+                choiceSolutionTooltip
+                ?? (showDiceChoice ? { label: 'Dice' } : null)
+              }
+            />
           ) : null}
           {focusIconSrc && !detailsOpen ? (
-            <img
-              alt=""
-              aria-hidden="true"
-              {...protectedImageProps}
-              src={focusIconSrc}
-              style={focusIconStyle}
+            <PartyMemberOverlayBadge
+              iconSrc={focusIconSrc}
+              iconStyle={focusBadgeIconStyle}
+              overlayStyle={focusBadgeOverlayStyle}
+              tooltip={focusTooltip}
             />
           ) : null}
           {detailsOpen ? (

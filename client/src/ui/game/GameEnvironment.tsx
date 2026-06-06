@@ -47,9 +47,11 @@ import {
   localContinuePressed,
   localNeedsContinueAck,
   localWaitingForRoomAdvance,
+  shouldApplyServerInventory,
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
 import { witnessSystemEventDisplay } from './witnessSystemEventDisplay.js';
+import { shouldPlayLevelUpSound } from './levelUpSoundCue.js';
 import {
   encounterSnapshotAdvanced,
   runEncounterAdvanceTransition,
@@ -176,12 +178,12 @@ function applyRoomSnapshot(
   setRoom(room);
   setEncounter(room.activeEncounter);
   const localParticipant = room.participants.find((participant) => participant.isLocal);
-  const mergeCommittedInventory = room.roomState === 'active_encounter';
+  const applyServerInventory = shouldApplyServerInventory(room, localParticipant);
   if (localParticipant?.avatar) {
     setAvatar(normalizePersistedAvatar({
       ...currentAvatar,
       ...localParticipant.avatar,
-      inventory: mergeCommittedInventory
+      inventory: applyServerInventory
         ? (localParticipant.avatar.inventory ?? currentAvatar.inventory)
         : currentAvatar.inventory,
     }));
@@ -245,6 +247,7 @@ export function GameEnvironment({
   const [partyXpPulseByPlayer, setPartyXpPulseByPlayer] = useState<Record<string, number>>({});
   const resultBlockRef = useRef<ResultBlockHandle>(null);
   const seenXpEventKeysRef = useRef<Set<string>>(new Set());
+  const playedLevelUpSoundsRef = useRef<Set<string>>(new Set());
   const previousAvatarProgressRef = useRef({
     level: initialAvatar.level,
     experience: initialAvatar.experience,
@@ -260,6 +263,25 @@ export function GameEnvironment({
     onAvatarDeath(deadAvatar);
   }, [onAvatarDeath]);
 
+  const playLevelUpSoundIfNeeded = useCallback((
+    previousRoom: EncounterRoomSnapshotDto | null,
+    nextRoom: EncounterRoomSnapshotDto,
+  ) => {
+    const key = shouldPlayLevelUpSound(
+      previousRoom,
+      nextRoom,
+      playedLevelUpSoundsRef.current,
+    );
+    if (!key) {
+      return;
+    }
+
+    playedLevelUpSoundsRef.current.add(key);
+    window.setTimeout(() => {
+      playSfx(LEVEL_UP_SOUND);
+    }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
+  }, []);
+
   const applySnapshotOnly = useCallback((nextRoom: EncounterRoomSnapshotDto) => {
     applyRoomSnapshot(
       nextRoom,
@@ -270,6 +292,17 @@ export function GameEnvironment({
       roomRef.current,
     );
   }, []);
+
+  const previousRoomForSoundRef = useRef<EncounterRoomSnapshotDto | null>(null);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+
+    playLevelUpSoundIfNeeded(previousRoomForSoundRef.current, room);
+    previousRoomForSoundRef.current = room;
+  }, [room, playLevelUpSoundIfNeeded]);
 
   const roomAdvanceHooks = useMemo(() => ({
     applySnapshotOnly,
@@ -608,7 +641,7 @@ export function GameEnvironment({
           && localActor.preparedResult !== undefined
         ) {
           const nextRoom = await submitRoomContinue(avatarRef.current.id);
-          applySnapshotOnly(nextRoom);
+          await runEncounterAdvanceTransition(currentRoom, nextRoom, roomAdvanceHooks);
           appendActionLog([
             nextRoom.roomState === 'waiting_continue'
               ? 'Continue: Shared moment resolved — waiting for the party.'
@@ -659,10 +692,6 @@ export function GameEnvironment({
 
       if (summary?.avatarDied) {
         handleLocalAvatarDeath(local?.avatar ?? avatar);
-      }
-
-      if (local && local.avatar.level > avatar.level) {
-        playSfx(LEVEL_UP_SOUND);
       }
 
       onAchievementCheck?.();
@@ -817,14 +846,7 @@ export function GameEnvironment({
     || serverResolution?.loreGemGranted === true
     || localParticipant?.preparedResult?.loreGemGranted === true;
   function applyEncounterRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
-    applyRoomSnapshot(
-      nextRoom,
-      setRoom,
-      setEncounter,
-      setAvatar,
-      avatarRef.current,
-      roomRef.current,
-    );
+    applySnapshotOnly(nextRoom);
   }
 
   return (

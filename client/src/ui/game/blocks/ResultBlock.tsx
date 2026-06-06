@@ -9,8 +9,9 @@ import {
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
-import { displayRollAsD20, interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
+import { displayRollAsD20, displayRollOutcome, interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
 import {
+  encounterLossesFromSolutionIds,
   predictEncounterLosses,
   usedEncounterSolutions,
   type EncounterInventoryChange,
@@ -39,8 +40,10 @@ import {
 } from '@shared/diceCatalog.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
+  DEATH_ENCOUNTER_ID,
   visibleEncounterRewardIds,
 } from '../visibleEncounterRewards.js';
+import { deathEncounterEssenceUses } from '@shared/deathEncounter';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   FADE_DURATION_MS,
@@ -427,6 +430,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     rewardIds = [],
     roll,
     usedSolutionIds = [],
+    lostSolutionIds = [],
   }: {
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
@@ -449,6 +453,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     rewardIds?: number[];
     roll: number | null;
     usedSolutionIds?: number[];
+    lostSolutionIds?: number[];
   },
   ref,
 ) {
@@ -472,20 +477,24 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const outcome = roll === null ? null : interpretRoll(roll);
+  const outcomeLabel = outcome === null ? null : displayRollOutcome(outcome);
   const displayRoll = roll === null ? null : displayRollAsD20(roll);
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
+  const isDeathEncounter = encounterId === DEATH_ENCOUNTER_ID;
   const usedSolutions = readOnlyWitness
     ? []
     : usedEncounterSolutions({ inventory, usedSolutionIds });
   const losses = readOnlyWitness || isLevelUp
     ? []
-    : predictEncounterLosses({
-      encounterDifficulty,
-      inventory,
-      outcome,
-      success: roll !== null && isRollFavorable(roll),
-      usedSolutionIds,
-    });
+    : lostSolutionIds.length > 0
+      ? encounterLossesFromSolutionIds({ inventory, lostSolutionIds, usedSolutionIds })
+      : predictEncounterLosses({
+        encounterDifficulty,
+        inventory,
+        outcome,
+        success: roll !== null && isRollFavorable(roll),
+        usedSolutionIds,
+      });
   const rewards = visibleEncounterRewardIds({
     encounterId,
     prosperityRewardId,
@@ -500,7 +509,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     const quantity = isLevelUp
       ? Math.max(1, (solution.mSolutionUses ?? 1) + (avatarLevel + 1))
-      : Math.max(1, (solution.mSolutionUses ?? 1) * Math.max(1, encounterRewardAmount));
+      : isDeathEncounter && outcome
+        ? deathEncounterEssenceUses(outcome)
+        : Math.max(1, (solution.mSolutionUses ?? 1) * Math.max(1, encounterRewardAmount));
     const existing = visibleRewards.find((reward) => reward.solution.mSolutionID === rewardId);
 
     if (existing) {
@@ -1229,7 +1240,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
       ) : null}
-      {outcome && roll !== null ? (
+      {outcome && outcomeLabel && roll !== null ? (
         <div
           aria-label="Encounter outcome"
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
@@ -1254,7 +1265,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             />
           ) : null}
           <button
-            aria-label={outcomeShowsRoll ? `Roll ${displayRoll}` : `${outcome}, show roll`}
+            aria-label={outcomeShowsRoll ? `Roll ${displayRoll}` : `${outcomeLabel}, show roll`}
             className="morkahja-result-outcome"
             onClick={() => {
               setOutcomeShowsRoll((showingRoll) => !showingRoll);
@@ -1263,7 +1274,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             style={outcomeButtonStyle}
             type="button"
           >
-            {outcomeShowsRoll ? displayRoll : outcome}
+            {outcomeShowsRoll ? displayRoll : outcomeLabel}
           </button>
           {!readOnlyWitness && showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
             ? renderLoreGemRewardIcon()

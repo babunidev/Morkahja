@@ -1,28 +1,39 @@
-import type { EncounterRoomSnapshotDto } from '../../api/http.js';
+import type { EncounterRoomSnapshotDto, RoomStateDto } from '../../api/http.js';
 
-/** True when the server advanced to a new encounter snapshot. */
+const ENCOUNTER_PRESENTATION_STATES: ReadonlySet<RoomStateDto> = new Set([
+  'active_encounter',
+  'system_event',
+]);
+
+const ENCOUNTER_TRANSITION_BASELINE_STATES: ReadonlySet<RoomStateDto> = new Set([
+  'active_encounter',
+  'system_event',
+  'waiting_continue',
+  'advancing',
+]);
+
+/** True when the shared encounter shell changed and the client should run the full transition. */
 export function encounterSnapshotAdvanced(
   baseline: EncounterRoomSnapshotDto,
   next: EncounterRoomSnapshotDto,
 ): boolean {
-  return (
-    next.roomState === 'active_encounter'
-    && next.activeEncounter.snapshotId !== baseline.activeEncounter.snapshotId
-  );
+  if (next.activeEncounter.snapshotId === baseline.activeEncounter.snapshotId) {
+    return false;
+  }
+
+  if (!ENCOUNTER_PRESENTATION_STATES.has(next.roomState)) {
+    return false;
+  }
+
+  return ENCOUNTER_TRANSITION_BASELINE_STATES.has(baseline.roomState);
 }
 
-/** Room advanced from waiting_continue / advancing (poll gating). */
+/** Room advanced from a continue/advance boundary (poll gating). */
 export function roomAdvancedFromBaseline(
   baseline: EncounterRoomSnapshotDto,
   next: EncounterRoomSnapshotDto,
 ): boolean {
-  return (
-    encounterSnapshotAdvanced(baseline, next)
-    && (
-      baseline.roomState === 'waiting_continue'
-      || baseline.roomState === 'advancing'
-    )
-  );
+  return encounterSnapshotAdvanced(baseline, next);
 }
 
 export interface RoomAdvanceTransitionHooks {

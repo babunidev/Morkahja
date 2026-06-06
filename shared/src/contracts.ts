@@ -476,6 +476,8 @@ export interface RoomParticipantDto {
   slotIndex: number;
   playerName: string;
   avatar: PersistedAvatarDto;
+  /** Account dice skin shown on this participant's party choice badge. */
+  selectedDiceId: DiceId;
   choiceState: ParticipantChoiceStateDto;
   focusState: ParticipantFocusStateDto;
   selectedAction?: EncounterAction;

@@ -28,6 +28,7 @@ import {
 } from '../domain/rooms/roomConstants.js';
 import {
   withDocumentTransaction,
+  getProgression,
   listPlayerIdsWithLiveSessions,
   type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
@@ -36,7 +37,7 @@ import type { EncounterData } from '../engine/types.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import type { AvatarDocument } from '../types/avatar.js';
-import { applyExperience } from '../domain/avatar/AvatarProgression.js';
+import { applyExperience, type AvatarProgression } from '../domain/avatar/AvatarProgression.js';
 import {
   formatAvatarDisplayName,
   readAvatarDisplayTitle,
@@ -175,6 +176,37 @@ function createParticipant(
   };
 }
 
+function createParticipantForRoomJoin(
+  room: EncounterRoom,
+  playerId: string,
+  avatarId: string,
+  slotIndex: number,
+): RoomParticipant {
+  const participant = createParticipant(playerId, avatarId, slotIndex);
+
+  if (room.roomState !== 'system_event' || !room.systemEvent) {
+    return participant;
+  }
+
+  const currentItem = room.systemEvent.queue[room.systemEvent.queueIndex];
+  const actorPlayerId = currentItem?.actorPlayerId ?? room.systemEvent.lastEvent?.actorPlayerId;
+  if (playerId === actorPlayerId) {
+    return participant;
+  }
+
+  return {
+    ...participant,
+    choiceState: 'witnessing',
+    preparedResult: undefined,
+    preparedCommit: undefined,
+    resolutionSummary: undefined,
+    selectedAction: undefined,
+    selectedSolutionId: undefined,
+    continuePressed: false,
+    focusState: 'none',
+  };
+}
+
 function activeParticipants(room: EncounterRoom): RoomParticipant[] {
   return room.participants.filter((participant) => participant.choiceState !== 'disengaged');
 }
@@ -241,20 +273,44 @@ function continueTargetsForRoom(room: EncounterRoom): RoomParticipant[] {
   return awaitingContinue.length > 0 ? awaitingContinue : engagedParticipants(room);
 }
 
-function buildPendingSystemEventQueue(
+function sortParticipantsForSystemEventQueue(
+  room: EncounterRoom,
   participants: RoomParticipant[],
+): RoomParticipant[] {
+  return [...participants].sort((left, right) => {
+    const leftIsLeader = left.playerId === room.leaderPlayerId;
+    const rightIsLeader = right.playerId === room.leaderPlayerId;
+
+    if (leftIsLeader && !rightIsLeader) {
+      return -1;
+    }
+
+    if (rightIsLeader && !leftIsLeader) {
+      return 1;
+    }
+
+    return left.slotIndex - right.slotIndex;
+  });
+}
+
+export function buildPendingSystemEventQueue(
+  room: EncounterRoom,
+  participants: RoomParticipant[],
+  pendingLevelUpByPlayerId: ReadonlyMap<string, boolean> = new Map(),
 ): RoomSystemEventQueueItem[] {
-  const sorted = [...participants].sort((a, b) => a.slotIndex - b.slotIndex);
+  const sorted = sortParticipantsForSystemEventQueue(room, participants);
   const queue: RoomSystemEventQueueItem[] = [];
 
   for (const participant of sorted) {
     const summary = participantOutcomeSummary(participant);
-    if (!summary) {
+    const pendingFromAvatar = pendingLevelUpByPlayerId.get(participant.playerId) === true;
+
+    if (!summary && !pendingFromAvatar) {
       continue;
     }
 
-    const leveledUp = summary.leveledUp === true;
-    const deathTriggered = summary.deathTriggered === true;
+    const leveledUp = summary?.leveledUp === true || pendingFromAvatar;
+    const deathTriggered = summary?.deathTriggered === true;
 
     if (deathTriggered && leveledUp) {
       queue.push({
@@ -267,7 +323,7 @@ function buildPendingSystemEventQueue(
         actorPlayerId: participant.playerId,
         encounterId: DEATH_ENCOUNTER_NUMERIC_ID,
       });
-    } else if (leveledUp) {
+    } else if (pendingFromAvatar) {
       queue.push({
         actorPlayerId: participant.playerId,
         encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
@@ -276,6 +332,97 @@ function buildPendingSystemEventQueue(
   }
 
   return queue;
+}
+
+async function loadPendingLevelUpFlagsForParticipants(
+  participants: RoomParticipant[],
+  readProgression: (
+    playerId: string,
+    avatarId: string,
+  ) => Promise<Partial<AvatarProgression> | null>,
+): Promise<Map<string, boolean>> {
+  const flags = new Map<string, boolean>();
+
+  await Promise.all(participants.map(async (participant) => {
+    const progression = await readProgression(participant.playerId, participant.avatarId);
+    if (progression?.pendingLevelUpRewards === true) {
+      flags.set(participant.playerId, true);
+    }
+  }));
+
+  return flags;
+}
+
+function buildLineageFromRoomEncounter(room: EncounterRoom): RoomEncounterLineage {
+  const snapshot = room.activeEncounterSnapshot;
+  return {
+    originEncounterId: snapshot.encounterId,
+    originEncounterFollow: snapshot.encounterFollow,
+    originRollOutcome: null,
+    originSuccess: true,
+  };
+}
+
+async function reconcilePendingLevelUpForRoom(room: EncounterRoom): Promise<EncounterRoom> {
+  if (room.roomState === 'closed' || room.roomState === 'system_event') {
+    return room;
+  }
+
+  const engaged = engagedParticipants(room);
+  if (engaged.length === 0) {
+    return room;
+  }
+
+  const pendingFlags = await loadPendingLevelUpFlagsForParticipants(
+    engaged,
+    (playerId, avatarId) => getProgression(playerId, avatarId),
+  );
+
+  const pendingQueue = buildPendingSystemEventQueue(room, room.participants, pendingFlags)
+    .filter((item) => item.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID);
+
+  if (pendingQueue.length === 0) {
+    return room;
+  }
+
+  const reconciled = await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed' || current.roomState === 'system_event') {
+      return current ?? room;
+    }
+
+    const engagedNow = engagedParticipants(current);
+    const flagsNow = await loadPendingLevelUpFlagsForParticipants(
+      engagedNow,
+      (playerId, avatarId) => transaction.getProgression(playerId, avatarId),
+    );
+
+    const queueNow = buildPendingSystemEventQueue(current, current.participants, flagsNow)
+      .filter((item) => item.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID);
+
+    if (queueNow.length === 0) {
+      return current;
+    }
+
+    const lineage = current.systemEvent?.lineage ?? buildLineageFromRoomEncounter(current);
+    return beginSystemEventInTransaction(transaction, current, queueNow, lineage, 0);
+  });
+
+  return reconciled ?? room;
+}
+
+function currentSystemEventQueueItem(
+  room: EncounterRoom,
+): RoomSystemEventQueueItem | undefined {
+  return room.systemEvent?.queue[room.systemEvent.queueIndex];
+}
+
+function requireCurrentSystemEventActor(room: EncounterRoom, playerId: string): void {
+  const currentItem = currentSystemEventQueueItem(room);
+
+  if (!currentItem || currentItem.actorPlayerId !== playerId) {
+    throw new RoomError('Witnesses cannot submit choices', 403, 'WITNESS_READONLY');
+  }
 }
 
 function buildLineageFromResolve(
@@ -829,6 +976,196 @@ async function beginSystemEventInTransaction(
   return systemEventRoom;
 }
 
+function isActiveSystemEventActor(
+  room: EncounterRoom,
+  actorPlayerId: string,
+): boolean {
+  const actor = findParticipant(room, actorPlayerId);
+  return !!actor && actor.choiceState !== 'disengaged';
+}
+
+function isSystemEventActorUnavailable(
+  room: EncounterRoom,
+  actorPlayerId: string,
+): boolean {
+  return !isActiveSystemEventActor(room, actorPlayerId);
+}
+
+function filterSystemEventQueueForActiveActors(
+  room: EncounterRoom,
+  queue: RoomSystemEventQueueItem[],
+): RoomSystemEventQueueItem[] {
+  return queue.filter((item) => isActiveSystemEventActor(room, item.actorPlayerId));
+}
+
+function isCurrentSystemEventStillValid(room: EncounterRoom): boolean {
+  if (room.roomState !== 'system_event' || !room.systemEvent) {
+    return false;
+  }
+
+  const currentItem = room.systemEvent.queue[room.systemEvent.queueIndex];
+  if (!currentItem || !isActiveSystemEventActor(room, currentItem.actorPlayerId)) {
+    return false;
+  }
+
+  return filterSystemEventQueueForActiveActors(room, room.systemEvent.queue).some(
+    (item) =>
+      item.actorPlayerId === currentItem.actorPlayerId &&
+      item.encounterId === currentItem.encounterId &&
+      item.chainedLevelUp === currentItem.chainedLevelUp,
+  );
+}
+
+async function advanceSystemEventQueueInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  queue: RoomSystemEventQueueItem[],
+  lineage: RoomEncounterLineage,
+  queueIndex: number,
+): Promise<EncounterRoom> {
+  const remainingQueue = filterSystemEventQueueForActiveActors(
+    room,
+    queue.slice(queueIndex),
+  );
+
+  if (remainingQueue.length === 0) {
+    return completeSystemEventQueueAfterActorSkipInTransaction(transaction, room, lineage);
+  }
+
+  return beginSystemEventInTransaction(
+    transaction,
+    room,
+    remainingQueue,
+    lineage,
+    0,
+  );
+}
+
+async function completeSystemEventQueueAfterActorSkipInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  lineage: RoomEncounterLineage,
+): Promise<EncounterRoom> {
+  const now = nowMs();
+  const participants = applyAutoContinueForDisengaged(
+    room.participants.map((participant) => {
+      if (participant.choiceState === 'disengaged') {
+        return participant;
+      }
+
+      return {
+        ...participant,
+        choiceState: 'resolved' as const,
+        continuePressed: true,
+        focusState: 'none' as const,
+      };
+    }),
+  );
+
+  const completedRoom: EncounterRoom = {
+    ...room,
+    participants,
+    roomState: 'waiting_continue',
+    systemEvent: {
+      queue: [],
+      queueIndex: 0,
+      lineage,
+    },
+    updatedAt: now,
+  };
+
+  await transaction.setEncounterRoom(room.roomId, completedRoom);
+  return completedRoom;
+}
+
+async function reconcileSystemEventIfActorUnavailableInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<EncounterRoom> {
+  if (room.roomState !== 'system_event' || !room.systemEvent) {
+    return room;
+  }
+
+  if (isCurrentSystemEventStillValid(room)) {
+    return room;
+  }
+
+  const { lineage } = room.systemEvent;
+  const filteredQueue = filterSystemEventQueueForActiveActors(
+    room,
+    room.systemEvent.queue,
+  );
+
+  let working: EncounterRoom;
+
+  if (filteredQueue.length === 0) {
+    working = await completeSystemEventQueueAfterActorSkipInTransaction(
+      transaction,
+      room,
+      lineage,
+    );
+  } else {
+    working = await beginSystemEventInTransaction(
+      transaction,
+      room,
+      filteredQueue,
+      lineage,
+      0,
+    );
+  }
+
+  if (working.roomState === 'waiting_continue' && canAdvanceRoom(working)) {
+    const advanced = await advanceWaitingRoomInTransaction(transaction, working);
+    if (advanced) {
+      working = advanced;
+    }
+  }
+
+  return working;
+}
+
+async function reconcileSystemEventAfterParticipantDeparture(roomId: string): Promise<void> {
+  const reconciled = await withDocumentTransaction(async (transaction) => {
+    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      return room;
+    }
+
+    return reconcileSystemEventIfActorUnavailableInTransaction(transaction, room);
+  });
+
+  if (reconciled && reconciled.roomState !== 'closed') {
+    await syncActiveEncountersForRoom(reconciled);
+  }
+}
+
+async function reconcileSystemEventForPoll(room: EncounterRoom): Promise<EncounterRoom> {
+  if (room.roomState !== 'system_event' || !room.systemEvent) {
+    return room;
+  }
+
+  const item = room.systemEvent.queue[room.systemEvent.queueIndex];
+  if (!item || !isSystemEventActorUnavailable(room, item.actorPlayerId)) {
+    return room;
+  }
+
+  const reconciled = await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current) {
+      return null;
+    }
+
+    return reconcileSystemEventIfActorUnavailableInTransaction(transaction, current);
+  });
+
+  if (!reconciled || reconciled.roomState === 'closed') {
+    return reconciled ?? room;
+  }
+
+  await syncActiveEncountersForRoom(reconciled);
+  return reconciled;
+}
+
 function participantSummaryFromResolve(
   result: ResolveParticipantInRoomResult,
 ): NonNullable<RoomParticipant['resolutionSummary']> {
@@ -949,6 +1286,40 @@ async function commitPreparedResultsForRoom(
   return { participants: nextParticipants, commits };
 }
 
+async function advanceWaitingRoomInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<EncounterRoom | null> {
+  const roomId = room.roomId;
+  if (room.roomState !== 'waiting_continue' || !canAdvanceRoom(room)) {
+    return room;
+  }
+
+  const now = nowMs();
+  const advancingRoom: EncounterRoom = {
+    ...room,
+    roomState: 'advancing',
+    advanceStartedAt: room.advanceStartedAt ?? now,
+    updatedAt: now,
+  };
+  await transaction.setEncounterRoom(roomId, advancingRoom);
+
+  const commitResult = await commitPreparedResultsForRoom(transaction, advancingRoom);
+  const committedRoom: EncounterRoom = {
+    ...advancingRoom,
+    participants: commitResult.participants,
+  };
+
+  await grantRoomLoreGemsOnCommit(committedRoom);
+
+  return advanceRoomAfterCommit(
+    transaction,
+    committedRoom,
+    commitResult.participants,
+    commitResult.commits,
+  );
+}
+
 async function advanceRoomAfterCommit(
   transaction: DocumentTransaction,
   room: EncounterRoom,
@@ -973,15 +1344,21 @@ async function advanceRoomAfterCommit(
     return closed;
   }
 
-  const pendingQueue = buildPendingSystemEventQueue(committedAfterPromotion);
+  const pendingFlags = await loadPendingLevelUpFlagsForParticipants(
+    committedAfterPromotion,
+    (playerId, avatarId) => transaction.getProgression(playerId, avatarId),
+  );
+  const pendingQueue = buildPendingSystemEventQueue(
+    roomForAdvance,
+    committedAfterPromotion,
+    pendingFlags,
+  );
   if (pendingQueue.length > 0) {
     const firstItem = pendingQueue[0]!;
     const actorResult = commits.get(firstItem.actorPlayerId);
-    if (!actorResult) {
-      throw new RoomError('System event actor resolve missing', 500, 'SYSTEM_EVENT_ACTOR_MISSING');
-    }
-
-    const lineage = buildLineageFromResolve(room.activeEncounterSnapshot, actorResult);
+    const lineage = actorResult
+      ? buildLineageFromResolve(room.activeEncounterSnapshot, actorResult)
+      : buildLineageFromRoomEncounter(roomForAdvance);
     const resolvedParticipantsRoom: EncounterRoom = {
       ...roomForAdvance,
       participants: committedAfterPromotion,
@@ -1056,29 +1433,7 @@ export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
       return current;
     }
 
-    const now = nowMs();
-    const advancingRoom: EncounterRoom = {
-      ...current,
-      roomState: 'advancing',
-      advanceStartedAt: current.advanceStartedAt ?? now,
-      updatedAt: now,
-    };
-    await transaction.setEncounterRoom(roomId, advancingRoom);
-
-    const commitResult = await commitPreparedResultsForRoom(transaction, advancingRoom);
-    const committedRoom: EncounterRoom = {
-      ...advancingRoom,
-      participants: commitResult.participants,
-    };
-
-    await grantRoomLoreGemsOnCommit(committedRoom);
-
-    return advanceRoomAfterCommit(
-      transaction,
-      committedRoom,
-      commitResult.participants,
-      commitResult.commits,
-    );
+    return advanceWaitingRoomInTransaction(transaction, current);
   });
 
   return advanced ?? room;
@@ -1109,7 +1464,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
     if (
       !actor ||
       !actor.selectedAction ||
-      (actor.choiceState !== 'ready_to_continue' && actor.choiceState !== 'ready')
+      actor.choiceState !== 'ready_to_continue'
     ) {
       return room;
     }
@@ -1134,15 +1489,17 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
     const deathEncounterChainedLevelUp =
       item.chainedLevelUp === true
       && room.activeEncounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID;
-    const actorDiedWithoutChain = result.avatarDied && !deathEncounterChainedLevelUp;
+    const actorDied = result.avatarDied;
 
     let nextParticipants = room.participants.map((entry) =>
       entry.playerId === actor.playerId
         ? {
             ...entry,
-            choiceState: actorDiedWithoutChain ? 'disengaged' as const : 'resolved' as const,
+            choiceState: actorDied ? 'disengaged' as const : 'resolved' as const,
             resolutionSummary: actorSummary,
-            ...(actorDiedWithoutChain ? { disconnectedAt: now } : {}),
+            preparedResult: undefined,
+            preparedCommit: undefined,
+            ...(actorDied ? { disconnectedAt: now } : {}),
           }
         : entry,
     );
@@ -1153,16 +1510,16 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
       updatedAt: now,
     };
 
-    if (
-      item.chainedLevelUp &&
-      room.activeEncounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID
-    ) {
+    if (deathEncounterChainedLevelUp && !actorDied) {
       const nextQueue: RoomSystemEventQueueItem[] = [
         {
           actorPlayerId: item.actorPlayerId,
           encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
         },
-        ...queue.slice(queueIndex + 1),
+        ...filterSystemEventQueueForActiveActors(
+          workingRoom,
+          queue.slice(queueIndex + 1),
+        ),
       ];
       return beginSystemEventInTransaction(
         transaction,
@@ -1175,7 +1532,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
 
     const nextIndex = queueIndex + 1;
     if (nextIndex < queue.length) {
-      return beginSystemEventInTransaction(
+      return advanceSystemEventQueueInTransaction(
         transaction,
         workingRoom,
         queue,
@@ -1235,6 +1592,10 @@ async function applyParticipantPrepare(
   const participant = findParticipant(room, playerId);
   if (!participant || participant.choiceState === 'disengaged') {
     throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+  }
+
+  if (room.roomState === 'system_event') {
+    requireCurrentSystemEventActor(room, playerId);
   }
 
   const prepared = await prepareParticipantOutcome(
@@ -1320,6 +1681,7 @@ export async function leaveRoomById(playerId: string, roomId: string): Promise<v
     await saveEncounterRoom(updated);
     await syncActiveEncountersForRoom(updated);
     await clearPresenceRoom(playerId);
+    await reconcileSystemEventAfterParticipantDeparture(roomId);
     return;
   }
 
@@ -1330,6 +1692,7 @@ export async function leaveRoomById(playerId: string, roomId: string): Promise<v
   };
   await saveEncounterRoom(updated);
   await clearPresenceRoom(playerId);
+  await reconcileSystemEventAfterParticipantDeparture(roomId);
 }
 
 /** Leave every open room except an optional room the player is entering or reusing. */
@@ -1372,7 +1735,7 @@ export async function createRoom(
       && existing.roomState !== 'closed'
       && findParticipant(existing, playerId)
     ) {
-      return tickInactivity(existing);
+      return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(existing)));
     }
   }
 
@@ -1417,7 +1780,7 @@ export async function createRoom(
   await syncActiveEncountersForRoom(room);
   await setPresenceInRoom(playerId, roomId);
   await recordRoomEncounterStartedEvent(room);
-  return room;
+  return tickInactivity(await reconcilePendingLevelUpForRoom(room));
 }
 
 export async function getActiveRoomForPlayer(
@@ -1442,7 +1805,9 @@ export async function getActiveRoomForPlayer(
   }
   room = await ensureSlotEncounterSnapshots(room);
   room = await ensureRoomLoreGemOffer(room);
+  room = await reconcilePendingLevelUpForRoom(room);
   room = await tickRoom(room);
+  room = await reconcileSystemEventForPoll(room);
   return tickInactivity(room);
 }
 
@@ -1464,7 +1829,7 @@ export async function joinRoom(
   }
 
   if (room.participants.some((participant) => participant.playerId === playerId)) {
-    return tickInactivity(room);
+    return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(room)));
   }
 
   const slotIndex = findOpenSlot(room);
@@ -1485,10 +1850,15 @@ export async function joinRoom(
     }
   }
 
-  const roomWithJoiner = await ensureSlotEncounterSnapshots(room);
+  const roomWithJoiner = room.roomState === 'system_event'
+    ? room
+    : await ensureSlotEncounterSnapshots(room);
   const updated: EncounterRoom = {
     ...roomWithJoiner,
-    participants: [...roomWithJoiner.participants, createParticipant(playerId, avatarId, slotIndex)],
+    participants: [
+      ...roomWithJoiner.participants,
+      createParticipantForRoomJoin(roomWithJoiner, playerId, avatarId, slotIndex),
+    ],
     updatedAt: nowMs(),
   };
 
@@ -1501,7 +1871,7 @@ export async function joinRoom(
     ),
   );
   await setPresenceInRoom(playerId, roomId);
-  return updated;
+  return tickInactivity(await reconcilePendingLevelUpForRoom(updated));
 }
 
 export async function leaveRoom(playerId: string, avatarId?: string): Promise<void> {
@@ -1558,6 +1928,7 @@ export async function kickParticipant(
   };
   await saveEncounterRoom(updated);
   await markPlayerKickedFromParty(targetPlayerId, room.roomId);
+  await reconcileSystemEventAfterParticipantDeparture(room.roomId);
   return updated;
 }
 
@@ -1621,15 +1992,21 @@ export async function submitChoice(
     await transaction.setEncounterRoom(roomId, room);
 
     if (room.roomState === 'system_event') {
-      const systemEvent = room.systemEvent;
-      const currentItem = systemEvent?.queue[systemEvent.queueIndex];
-      if (!currentItem || currentItem.actorPlayerId !== playerId) {
-        throw new RoomError('Witnesses cannot submit choices', 403, 'WITNESS_READONLY');
-      }
+      requireCurrentSystemEventActor(room, playerId);
 
       const participant = findParticipant(room, playerId);
       if (!participant || participant.choiceState === 'disengaged') {
         throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+      }
+      if (
+        participant.choiceState === 'ready_to_continue' &&
+        participant.preparedResult !== undefined
+      ) {
+        throw new RoomError(
+          'System event outcome is already prepared',
+          409,
+          'OUTCOME_ALREADY_PREPARED',
+        );
       }
       if (!isEncounterActionReady(room.activeEncounterSnapshot)) {
         throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
@@ -1700,11 +2077,7 @@ export async function submitSelection(
     await transaction.setEncounterRoom(roomId, room);
 
     if (room.roomState === 'system_event') {
-      const systemEvent = room.systemEvent;
-      const currentItem = systemEvent?.queue[systemEvent.queueIndex];
-      if (!currentItem || currentItem.actorPlayerId !== playerId) {
-        throw new RoomError('Witnesses cannot submit selections', 403, 'WITNESS_READONLY');
-      }
+      requireCurrentSystemEventActor(room, playerId);
     } else if (room.roomState !== 'active_encounter') {
       throw new RoomError('Room is not accepting selections', 409, 'INVALID_ROOM_STATE');
     }
@@ -1800,12 +2173,10 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
   }
 
   if (room.roomState === 'system_event') {
-    const systemEvent = room.systemEvent;
-    const currentItem = systemEvent?.queue[systemEvent.queueIndex];
-    const actor = currentItem ? findParticipant(room, currentItem.actorPlayerId) : undefined;
+    requireCurrentSystemEventActor(room, playerId);
+
+    const actor = findParticipant(room, playerId);
     if (
-      !currentItem ||
-      currentItem.actorPlayerId !== playerId ||
       !actor ||
       actor.choiceState !== 'ready_to_continue' ||
       !actor.preparedResult

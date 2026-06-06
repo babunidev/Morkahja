@@ -7,6 +7,27 @@ export interface AvatarProgression {
   encountersFailed: number;
   createdAt: number;
   lastPlayedAt: number;
+  /** Set when XP commits a new level; cleared when level-up rewards are granted. */
+  pendingLevelUpRewards?: boolean;
+}
+
+export function applyPendingLevelUpRewardsFlag(
+  progression: AvatarProgression,
+  options: {
+    leveledUp: boolean;
+    resolvedEncounterId: number;
+    levelUpEncounterId: number;
+  },
+): AvatarProgression {
+  if (options.resolvedEncounterId === options.levelUpEncounterId) {
+    return { ...progression, pendingLevelUpRewards: false };
+  }
+
+  if (options.leveledUp) {
+    return { ...progression, pendingLevelUpRewards: true };
+  }
+
+  return progression;
 }
 
 export function createInitialProgression(now = Date.now()): AvatarProgression {

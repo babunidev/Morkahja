@@ -17,9 +17,12 @@ import {
   LEVEL_UP_ENCOUNTER_NUMERIC_ID,
 } from '../domain/rooms/RoomSystemEvent.js';
 import type { EncounterSnapshot, PlayerEncounterAction } from '../types/encounterSnapshot.js';
+import type { DiceId } from '../../../shared/src/diceCatalog.js';
+import { DEFAULT_DICE_ID } from '../../../shared/src/diceCatalog.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
 import { loadAvatar } from './encounterPersistence.js';
 import { toPersistedAvatarDto } from './avatarPresentation.js';
+import { readPlayerDiceState } from './diceService.js';
 import type { PlayerDocument } from '../types/player.js';
 
 const FALLBACK_PORTRAIT = 'm_portrait_rokur_warrior';
@@ -100,6 +103,7 @@ function buildParticipantDto(
   localPlayerId: string,
   playerName: string,
   avatar: RoomParticipantDto['avatar'],
+  selectedDiceId: DiceId,
 ): RoomParticipantDto {
   return {
     playerId: participant.playerId,
@@ -107,6 +111,7 @@ function buildParticipantDto(
     slotIndex: participant.slotIndex,
     playerName,
     avatar,
+    selectedDiceId,
     choiceState: participant.choiceState,
     focusState: participant.focusState,
     selectedAction: playerActionToClientAction(participant.selectedAction),
@@ -172,12 +177,21 @@ async function participantToDto(
   localPlayerId: string,
   roomId: string,
 ): Promise<RoomParticipantDto> {
-  const playerName = await readPlayerName(participant.playerId);
-  const avatarDoc = await loadAvatar(participant.playerId, participant.avatarId);
+  const [playerName, avatarDoc, diceState] = await Promise.all([
+    readPlayerName(participant.playerId),
+    loadAvatar(participant.playerId, participant.avatarId),
+    readPlayerDiceState(participant.playerId),
+  ]);
   const dto = avatarDoc ? toPersistedAvatarDto(avatarDoc) : null;
 
   if (dto) {
-    return buildParticipantDto(participant, localPlayerId, playerName, dto);
+    return buildParticipantDto(
+      participant,
+      localPlayerId,
+      playerName,
+      dto,
+      diceState.selectedDiceId,
+    );
   }
 
   if (avatarDoc?.portrait && avatarDoc.frame && avatarDoc.race && avatarDoc.role) {
@@ -191,7 +205,7 @@ async function participantToDto(
       portrait: avatarDoc.portrait,
       frame: avatarDoc.frame,
       displayTitle: null,
-    });
+    }, diceState.selectedDiceId);
   }
 
   const fallbackKey = `${roomId}:${participant.playerId}:${participant.avatarId}`;
@@ -212,7 +226,7 @@ async function participantToDto(
     portrait: FALLBACK_PORTRAIT,
     frame: FALLBACK_FRAME,
     displayTitle: null,
-  });
+  }, diceState.selectedDiceId ?? DEFAULT_DICE_ID);
 }
 
 function currentSystemEventActorId(room: EncounterRoom): string | undefined {

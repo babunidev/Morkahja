@@ -121,6 +121,10 @@ export async function seedAllSlotEncountersForRoom(
 }
 
 export async function ensureSlotEncounterSnapshots(room: EncounterRoom): Promise<EncounterRoom> {
+  if (room.roomState === 'system_event') {
+    return room;
+  }
+
   if (room.slotEncounterSnapshots?.length === 3) {
     return room;
   }

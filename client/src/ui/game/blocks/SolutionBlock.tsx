@@ -24,6 +24,12 @@ import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
 } from '../../transitions/fade.js';
+import {
+  encounterTooltipDescriptionStyle,
+  encounterTooltipDetailStyle,
+  encounterTooltipFrameStyle,
+  encounterTooltipTitleStyle,
+} from '../encounterTooltip.js';
 import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
@@ -277,28 +283,6 @@ const diceRollAnimationStyle: CSSProperties = {
   transformOrigin: '50% 50%',
 };
 
-const solutionTooltipStyle: CSSProperties = {
-  position: 'absolute',
-  zIndex: 50,
-  width: 220,
-  maxWidth: 220,
-  maxHeight: 'min(42vh, 200px)',
-  overflow: 'auto',
-  padding: '7px 10px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.94)',
-  color: '#f7efe0',
-  fontFamily: 'Georgia, serif',
-  fontSize: '0.78rem',
-  lineHeight: 1.25,
-  textAlign: 'left',
-  textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  pointerEvents: 'none',
-  boxSizing: 'border-box',
-};
-
 function solutionTooltipTransform(anchorX: SolutionTooltipAnchorX): string {
   const offsetY = 'calc(-100% - 12px)';
 
@@ -324,24 +308,6 @@ function solutionTooltipAnchorX(slot: SlotLetter): SolutionTooltipAnchorX {
 
   return 'center';
 }
-
-const solutionTooltipTitleStyle: CSSProperties = {
-  margin: '0 0 4px',
-  color: '#ffcc66',
-  fontSize: '0.86rem',
-  fontWeight: 700,
-  textAlign: 'center',
-};
-
-const solutionTooltipDescriptionStyle: CSSProperties = {
-  margin: '0 0 6px',
-  whiteSpace: 'pre-wrap',
-};
-
-const solutionTooltipChargeDetailStyle: CSSProperties = {
-  margin: 0,
-  whiteSpace: 'pre-line',
-};
 
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
@@ -967,7 +933,7 @@ export function SolutionBlock({
         <div
           role="tooltip"
           style={{
-            ...solutionTooltipStyle,
+            ...encounterTooltipFrameStyle,
             ...(solutionTooltip.unavailable ? unavailableSolutionTooltipStyle : {}),
             left: solutionTooltip.x,
             top: solutionTooltip.y,
@@ -981,11 +947,11 @@ export function SolutionBlock({
             </>
           ) : (
             <>
-              <div style={solutionTooltipTitleStyle}>{solutionTooltip.name}</div>
+              <div style={encounterTooltipTitleStyle}>{solutionTooltip.name}</div>
               {solutionTooltip.description ? (
-                <div style={solutionTooltipDescriptionStyle}>{solutionTooltip.description}</div>
+                <div style={encounterTooltipDescriptionStyle}>{solutionTooltip.description}</div>
               ) : null}
-              <div style={solutionTooltipChargeDetailStyle}>{solutionTooltip.detail}</div>
+              <div style={encounterTooltipDetailStyle}>{solutionTooltip.detail}</div>
             </>
           )}
         </div>

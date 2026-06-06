@@ -10,6 +10,7 @@ import { gameEventBus } from '../domain/events/gameEventBus.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
 import { postgresEventStore } from '../db/gameEventPersistence.js';
 import { renderEventMessage } from '../domain/news/renderEventMessage.js';
+import { levelUpScribeVisibility } from '../domain/news/levelUpScribeVisibility.js';
 import { isVisibleInScribesFeed } from '../domain/news/scribesFeedFilter.js';
 import {
   resolveScribesAvatarVisual,
@@ -294,15 +295,16 @@ export async function recordEncounterContinuedEvents(
   });
 
   if (context.leveledUp) {
+    const level = avatar.level;
     await recordGameEvent({
       playerId,
       avatarId,
       type: 'level_up',
-      visibility: 'global',
+      visibility: levelUpScribeVisibility(level),
       importance: 'high',
       payload: {
         ...payload,
-        level: avatar.level,
+        level,
       },
     });
   }

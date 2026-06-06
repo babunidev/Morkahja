@@ -35,6 +35,15 @@ export function isRollFavorable(roll: number): boolean {
   return outcome === 'Fortune' || outcome === 'Prosperity';
 }
 
+/** Player-facing label for a roll outcome tier (internal enum values unchanged). */
+export function displayRollOutcome(outcome: RollOutcome): string {
+  if (outcome === 'Disengage') {
+    return 'Fate';
+  }
+
+  return outcome;
+}
+
 /** Map a 1–100 roll to a 1–20 face for player-facing UI. */
 export function displayRollAsD20(roll: number): number {
   return Math.min(20, Math.max(1, Math.round(roll / 5)));

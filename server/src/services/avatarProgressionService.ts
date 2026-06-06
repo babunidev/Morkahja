@@ -40,6 +40,27 @@ export function applyEncounterProgressionState(
   return { progression: progressed, leveledUp };
 }
 
+/** System reward encounters grant items only — never XP or a fresh level-up queue signal. */
+export function applyProgressionForEncounter(
+  existing: AvatarProgression,
+  encounterId: number,
+  levelUpEncounterId: number,
+  deathEncounterId: number,
+  selectedRollOutcome: RollOutcome | null,
+): EncounterProgressionResult {
+  if (encounterId === levelUpEncounterId || encounterId === deathEncounterId) {
+    return {
+      progression: {
+        ...existing,
+        lastPlayedAt: Date.now(),
+      },
+      leveledUp: false,
+    };
+  }
+
+  return applyEncounterProgressionState(existing, selectedRollOutcome);
+}
+
 function normalizeProgression(
   value: Partial<AvatarProgression> | undefined,
   now = Date.now(),
@@ -51,6 +72,7 @@ function normalizeProgression(
     encountersFailed: value?.encountersFailed ?? 0,
     createdAt: value?.createdAt ?? now,
     lastPlayedAt: value?.lastPlayedAt ?? now,
+    pendingLevelUpRewards: value?.pendingLevelUpRewards === true ? true : undefined,
   };
 }
 

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 
 export const FADE_DURATION_MS = 420;
 export const FADE_DURATION_SECONDS = FADE_DURATION_MS / 1000;
-export const ENCOUNTER_FADE_DURATION_MS = 720;
+export const ENCOUNTER_FADE_DURATION_MS = 1000;
 export const ENCOUNTER_ACTIONS_REVEAL_DELAY_MS = 280;
 export const ENCOUNTER_ACTIONS_FADE_DURATION_MS = 3000;
 

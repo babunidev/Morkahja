@@ -70,6 +70,30 @@ function localHasRevealedOutcome(room: EncounterRoomSnapshotDto): boolean {
   return true;
 }
 
+/** True when the server avatar inventory is authoritative (post-commit), not a pre-continue preview. */
+export function shouldApplyServerInventory(
+  room: EncounterRoomSnapshotDto,
+  localParticipant: RoomParticipantDto | undefined,
+): boolean {
+  if (!localParticipant) {
+    return false;
+  }
+
+  if (
+    room.roomState === 'system_event'
+    || room.roomState === 'advancing'
+    || room.roomState === 'active_encounter'
+  ) {
+    return true;
+  }
+
+  if (room.roomState === 'waiting_continue') {
+    return localParticipant.preparedResult === undefined;
+  }
+
+  return false;
+}
+
 /** Keep reward/loss UI visible until the room advances to the next encounter snapshot. */
 export function shouldDeferRewardDismiss(
   room: EncounterRoomSnapshotDto | null | undefined,

@@ -1,6 +1,11 @@
 import { interpretRoll } from '@shared/diceInterpreter';
+import {
+  DEATH_ENCOUNTER_ID,
+  isDeathEncounterSurvivalOutcome,
+} from '@shared/deathEncounter';
 
 export const LEVEL_UP_ENCOUNTER_ID = 2;
+export { DEATH_ENCOUNTER_ID } from '@shared/deathEncounter';
 
 export function visibleEncounterRewardIds({
   encounterId,
@@ -15,6 +20,12 @@ export function visibleEncounterRewardIds({
 }): number[] {
   if (encounterId === LEVEL_UP_ENCOUNTER_ID) {
     return rewardIds;
+  }
+
+  if (encounterId === DEATH_ENCOUNTER_ID) {
+    return outcome !== null && isDeathEncounterSurvivalOutcome(outcome)
+      ? rewardIds
+      : [];
   }
 
   if (outcome === null) {

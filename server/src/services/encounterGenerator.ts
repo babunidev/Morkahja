@@ -8,7 +8,10 @@
 import { resolveEncounter as runDeterministicResolver } from '../engine/encounterResolver.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import { interpretRoll, type RollOutcome } from '../engine/diceInterpreter.js';
-import { createInitialProgression } from '../domain/avatar/AvatarProgression.js';
+import {
+  applyPendingLevelUpRewardsFlag,
+  createInitialProgression,
+} from '../domain/avatar/AvatarProgression.js';
 import type { EncounterData, EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
@@ -39,6 +42,7 @@ import {
 import {
   applyEncounterProgression,
   applyEncounterProgressionState,
+  applyProgressionForEncounter,
   getAvatarEssenceSummary,
   initializeAvatarProgression,
   persistLastEncounter,
@@ -520,6 +524,29 @@ function currentEssence(inventory: AvatarInventory): number {
     .reduce((total, item) => total + item.uses, 0);
 }
 
+function shouldQueueDeathEncounterAfterFailure(
+  success: boolean,
+  encounterId: number,
+  selectedRollOutcome: RollOutcome | null,
+  encounterDifficulty: number,
+  inventoryAfterPenalty: AvatarInventory,
+): boolean {
+  if (
+    success ||
+    encounterId === DEATH_ENCOUNTER_NUMERIC_ID ||
+    encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+  ) {
+    return false;
+  }
+
+  const essenceCost = essenceCostForOutcome(selectedRollOutcome, encounterDifficulty);
+  if (essenceCost <= 0) {
+    return false;
+  }
+
+  return currentEssence(inventoryAfterPenalty) <= 0;
+}
+
 function selectedActionForSnapshot(
   snapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
@@ -681,6 +708,47 @@ function levelUpRewards(
 
 function isDeathEncounterFailureOutcome(outcome: RollOutcome | null): boolean {
   return outcome === 'Misery' || outcome === 'Hardship';
+}
+
+function applyDeathEncounterOutcome(
+  inventory: AvatarInventory,
+  avatar: AvatarDocument,
+  selectedRollOutcome: RollOutcome | null,
+): {
+  nextInventory: AvatarInventory;
+  rewardIds: number[];
+} {
+  if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
+    return {
+      nextInventory: createInitialAvatarInventory(avatar.profile),
+      rewardIds: [],
+    };
+  }
+
+  if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
+    const essenceReward = randomEssenceReward();
+    const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
+
+    if (!essenceReward || essenceUses <= 0) {
+      return { nextInventory: inventory, rewardIds: [] };
+    }
+
+    return {
+      nextInventory: addRewardToInventoryState(inventory, essenceReward, essenceUses),
+      rewardIds: [essenceReward],
+    };
+  }
+
+  return { nextInventory: inventory, rewardIds: [] };
+}
+
+function withDeathEncounterRewards(
+  resolution: EncounterResolution,
+  rewardIds: number[],
+): EncounterResolution {
+  return rewardIds.length > 0
+    ? { ...resolution, rewards: rewardIds }
+    : resolution;
 }
 
 function isDeathEncounterSurvivalOutcome(outcome: RollOutcome | null): boolean {
@@ -988,7 +1056,7 @@ export async function continueEncounter(
         encounterSnapshot.rewardIds,
       );
       const selectedRollOutcome = interpretRoll(baseResolution.selectedRoll);
-      const resolution = normalizeSystemEncounterResolution(
+      let resolution = normalizeSystemEncounterResolution(
         encounterSnapshot,
         avatar,
         withProsperityEssenceReward(
@@ -998,19 +1066,54 @@ export async function continueEncounter(
         ),
         selectedRollOutcome,
       );
-      const progressionResult = applyEncounterProgressionState(
+      const progressionResult = applyProgressionForEncounter(
         progression,
+        encounterSnapshot.encounterId,
+        LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+        DEATH_ENCOUNTER_NUMERIC_ID,
         selectedRollOutcome,
       );
-      const essenceCost = essenceCostForOutcome(
+      let nextInventory: AvatarInventory;
+
+      if (encounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
+        const deathOutcome = applyDeathEncounterOutcome(
+          inventory,
+          avatar,
+          selectedRollOutcome,
+        );
+        nextInventory = deathOutcome.nextInventory;
+        resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
+      } else if (encounterSnapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
+        nextInventory = applyLevelUpInventoryChanges(
+          inventory,
+          resolution.rewards,
+          progressionResult.progression.level,
+        );
+      } else {
+        const inventoryApply = applyEncounterInventoryChanges(
+          inventory,
+          resolution.usedInventorySolutions,
+          resolution.success ? resolution.rewards : [],
+          resolution.success,
+          selectedRollOutcome,
+          encounterSnapshot.encounterDifficulty,
+          encounterSnapshot.encounterRewardAmount,
+        );
+        nextInventory = inventoryApply.inventory;
+        resolution = {
+          ...resolution,
+          lostInventorySolutions: inventoryApply.lostInventorySolutions,
+        };
+      }
+
+      const deathTriggered = shouldQueueDeathEncounterAfterFailure(
+        resolution.success,
+        encounterSnapshot.encounterId,
         selectedRollOutcome,
         encounterSnapshot.encounterDifficulty,
+        nextInventory,
       );
-      const deathTriggered = !resolution.success &&
-        encounterSnapshot.encounterId !== DEATH_ENCOUNTER_NUMERIC_ID &&
-        encounterSnapshot.encounterId !== LEVEL_UP_ENCOUNTER_NUMERIC_ID &&
-        essenceCost > 0 &&
-        currentEssence(inventory) <= essenceCost;
+
       let resolvedSnapshot: EncounterSnapshot = {
         ...encounterSnapshot,
         resolved: true,
@@ -1055,37 +1158,7 @@ export async function continueEncounter(
         ),
         state: 'active',
       };
-      let nextInventory: AvatarInventory;
 
-      if (encounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
-        if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
-          nextInventory = createInitialAvatarInventory(avatar.profile);
-        } else if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
-          const essenceReward = randomEssenceReward();
-          const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
-          nextInventory = essenceReward && essenceUses > 0
-            ? addRewardToInventoryState(inventory, essenceReward, essenceUses)
-            : inventory;
-        } else {
-          nextInventory = inventory;
-        }
-      } else if (encounterSnapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
-        nextInventory = applyLevelUpInventoryChanges(
-          inventory,
-          resolution.rewards,
-          progressionResult.progression.level,
-        );
-      } else {
-        nextInventory = applyEncounterInventoryChanges(
-          inventory,
-          resolution.usedInventorySolutions,
-          resolution.success ? resolution.rewards : [],
-          resolution.success,
-          selectedRollOutcome,
-          encounterSnapshot.encounterDifficulty,
-          encounterSnapshot.encounterRewardAmount,
-        );
-      }
       const updatedAvatar: AvatarDocument = {
         ...avatar,
         id: avatar.id ?? avatarId,
@@ -1099,7 +1172,15 @@ export async function continueEncounter(
         },
       };
 
-      await transaction.setProgression(playerId, avatarId, progressionResult.progression);
+      await transaction.setProgression(
+        playerId,
+        avatarId,
+        applyPendingLevelUpRewardsFlag(progressionResult.progression, {
+          leveledUp: progressionResult.leveledUp,
+          resolvedEncounterId: encounterSnapshot.encounterId,
+          levelUpEncounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+        }),
+      );
       await transaction.setInventory(playerId, avatarId, nextInventory);
       await transaction.setAvatar(playerId, avatarId, updatedAvatar, { merge: true });
       await transaction.setActiveEncounter(playerId, avatarId, nextSnapshot);
@@ -1176,6 +1257,7 @@ export function preparedResultFromResolve(
     rewards: result.resolution.rewards,
     failurePenalty: result.resolution.failurePenalty,
     usedInventorySolutions: result.resolution.usedInventorySolutions,
+    lostInventorySolutions: result.resolution.lostInventorySolutions,
     deathTriggered: result.deathTriggered,
     avatarDied: result.avatarDied,
     leveledUp: result.eventContext.leveledUp,
@@ -1329,7 +1411,7 @@ function computeParticipantOutcome(
     snapshot.rewardIds,
   );
   const selectedRollOutcome = interpretRoll(baseResolution.selectedRoll);
-  const resolution = normalizeSystemEncounterResolution(
+  let resolution = normalizeSystemEncounterResolution(
     snapshot,
     avatar,
     withProsperityEssenceReward(
@@ -1339,35 +1421,27 @@ function computeParticipantOutcome(
     ),
     selectedRollOutcome,
   );
-  const progressionResult = applyEncounterProgressionState(
+  const progressionResult = applyProgressionForEncounter(
     progression,
+    snapshot.encounterId,
+    LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+    DEATH_ENCOUNTER_NUMERIC_ID,
     selectedRollOutcome,
   );
-  const gainedExperience = experienceForSelectedRollOutcome(selectedRollOutcome);
-  const essenceCost = essenceCostForOutcome(
-    selectedRollOutcome,
-    snapshot.encounterDifficulty,
-  );
-  const deathTriggered = !resolution.success &&
-    snapshot.encounterId !== DEATH_ENCOUNTER_NUMERIC_ID &&
-    snapshot.encounterId !== LEVEL_UP_ENCOUNTER_NUMERIC_ID &&
-    essenceCost > 0 &&
-    currentEssence(inventory) <= essenceCost;
-
+  const gainedExperience = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+    || snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID
+    ? 0
+    : experienceForSelectedRollOutcome(selectedRollOutcome);
   let nextInventory: AvatarInventory;
 
   if (snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
-    if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
-      nextInventory = createInitialAvatarInventory(avatar.profile);
-    } else if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
-      const essenceReward = randomEssenceReward();
-      const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
-      nextInventory = essenceReward && essenceUses > 0
-        ? addRewardToInventoryState(inventory, essenceReward, essenceUses)
-        : inventory;
-    } else {
-      nextInventory = inventory;
-    }
+    const deathOutcome = applyDeathEncounterOutcome(
+      inventory,
+      avatar,
+      selectedRollOutcome,
+    );
+    nextInventory = deathOutcome.nextInventory;
+    resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
   } else if (snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
     nextInventory = applyLevelUpInventoryChanges(
       inventory,
@@ -1375,7 +1449,7 @@ function computeParticipantOutcome(
       progressionResult.progression.level,
     );
   } else {
-    nextInventory = applyEncounterInventoryChanges(
+    const inventoryApply = applyEncounterInventoryChanges(
       inventory,
       resolution.usedInventorySolutions,
       resolution.success ? resolution.rewards : [],
@@ -1384,7 +1458,20 @@ function computeParticipantOutcome(
       snapshot.encounterDifficulty,
       snapshot.encounterRewardAmount,
     );
+    nextInventory = inventoryApply.inventory;
+    resolution = {
+      ...resolution,
+      lostInventorySolutions: inventoryApply.lostInventorySolutions,
+    };
   }
+
+  const deathTriggered = shouldQueueDeathEncounterAfterFailure(
+    resolution.success,
+    snapshot.encounterId,
+    selectedRollOutcome,
+    snapshot.encounterDifficulty,
+    nextInventory,
+  );
 
   const updatedAvatar: AvatarDocument = {
     ...avatar,
@@ -1489,7 +1576,15 @@ export async function commitPreparedOutcome(
   avatarId: string,
   bundle: PreparedCommitBundle,
 ): Promise<ResolveParticipantInRoomResult> {
-  await transaction.setProgression(playerId, avatarId, bundle.nextProgression);
+  await transaction.setProgression(
+    playerId,
+    avatarId,
+    applyPendingLevelUpRewardsFlag(bundle.nextProgression, {
+      leveledUp: bundle.eventContext.leveledUp,
+      resolvedEncounterId: bundle.eventContext.resolvedEncounterId,
+      levelUpEncounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+    }),
+  );
   await transaction.setInventory(playerId, avatarId, bundle.nextInventory);
   await transaction.setAvatar(playerId, avatarId, bundle.updatedAvatar, { merge: true });
 

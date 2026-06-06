@@ -457,6 +457,7 @@ export function EncounterImageBlock({
           rewardIds={witnessOutcome.rewards}
           roll={witnessOutcome.selectedRoll ?? null}
           usedSolutionIds={witnessOutcome.usedInventorySolutions ?? []}
+          lostSolutionIds={witnessOutcome.lostInventorySolutions ?? []}
         />
       ) : !isWitnessingLabel ? (
         <ResultBlock
@@ -486,6 +487,7 @@ export function EncounterImageBlock({
           rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
           roll={outcomeRoll ?? revealedRoll}
           usedSolutionIds={usedSolutionIds}
+          lostSolutionIds={serverResolution?.lostInventorySolutions ?? []}
         />
       ) : null}
       <SolutionBlock

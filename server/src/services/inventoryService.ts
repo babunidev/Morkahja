@@ -235,68 +235,116 @@ export function consumeSolutionFromInventoryState(
   solutionId: number,
   amount = 1,
 ): AvatarInventory {
-  const next = normalizeInventory(inventory);
+  let next = normalizeInventory(inventory);
   const solution = getSolution(solutionId);
   const container = resolveInventoryContainer(solution.mSolutionInventoryType);
-  const entries = next[container];
-  const index = entries.findIndex((item) => item.solutionId === solutionId);
 
-  if (index === -1) {
-    throw new Error(`Solution ${solutionId} not found in ${container}`);
-  }
+  for (let chargeIndex = 0; chargeIndex < amount; chargeIndex += 1) {
+    const entries = next[container];
+    const index = entries.findIndex((item) => item.solutionId === solutionId && item.uses > 0);
 
-  entries[index].uses = Math.max(entries[index].uses - amount, 0);
+    if (index === -1) {
+      throw new Error(
+        `Solution ${solutionId} is missing ${amount - chargeIndex} charge(s) in ${container}`,
+      );
+    }
 
-  if (entries[index].uses <= 0) {
-    entries.splice(index, 1);
+    entries[index].uses -= 1;
+
+    if (entries[index].uses <= 0) {
+      entries.splice(index, 1);
+    }
   }
 
   return next;
 }
 
-function consumeEssenceUseFromInventoryState(
+function flattenContainerChargeSolutionIds(
   inventory: AvatarInventory,
-  amount = 1,
-): AvatarInventory {
-  const essence = firstBySolutionId(inventory.essences);
-  return essence
-    ? consumeSolutionFromInventoryState(inventory, essence.solutionId, amount)
-    : normalizeInventory(inventory);
+  container: InventoryContainerName,
+): number[] {
+  return inventory[container].flatMap((item) =>
+    item.uses > 0 ? Array.from({ length: item.uses }, () => item.solutionId) : [],
+  );
 }
 
-function removeRandomItemFromInventoryState(
+function consumeRandomChargesFromContainerState(
   inventory: AvatarInventory,
-  amount = 1,
-): AvatarInventory {
-  const item = firstBySolutionId(inventory.items);
-  return item
-    ? consumeSolutionFromInventoryState(inventory, item.solutionId, amount)
-    : normalizeInventory(inventory);
+  container: InventoryContainerName,
+  amount: number,
+  randomInt: RandomIntFn = defaultRandomInt,
+): { inventory: AvatarInventory; lostSolutionIds: number[] } {
+  let next = normalizeInventory(inventory);
+  const lostSolutionIds: number[] = [];
+
+  for (let index = 0; index < amount; index += 1) {
+    const charges = flattenContainerChargeSolutionIds(next, container);
+    if (charges.length === 0) {
+      break;
+    }
+
+    const pickIndex = randomInt(0, charges.length - 1);
+    const solutionId = charges[pickIndex]!;
+    lostSolutionIds.push(solutionId);
+    next = consumeSolutionFromInventoryState(next, solutionId, 1);
+  }
+
+  return { inventory: next, lostSolutionIds };
+}
+
+export interface FailurePenaltyApplyResult {
+  inventory: AvatarInventory;
+  lostSolutionIds: number[];
 }
 
 export function applyFailurePenaltyToInventoryState(
   inventory: AvatarInventory,
   outcome: InventoryPenaltyOutcome,
   encounterDifficulty = 1,
-): AvatarInventory {
+  options: { randomInt?: RandomIntFn } = {},
+): FailurePenaltyApplyResult {
+  const randomInt = options.randomInt ?? defaultRandomInt;
   const amount = scaledUses(1, encounterDifficulty);
 
   if (amount <= 0) {
-    return normalizeInventory(inventory);
+    return { inventory: normalizeInventory(inventory), lostSolutionIds: [] };
   }
 
   if (outcome === 'Hardship') {
-    return consumeEssenceUseFromInventoryState(inventory, amount);
-  }
-
-  if (outcome === 'Misery') {
-    return removeRandomItemFromInventoryState(
-      consumeEssenceUseFromInventoryState(inventory, amount),
+    return consumeRandomChargesFromContainerState(
+      inventory,
+      'essences',
       amount,
+      randomInt,
     );
   }
 
-  return normalizeInventory(inventory);
+  if (outcome === 'Misery') {
+    const essenceLoss = consumeRandomChargesFromContainerState(
+      inventory,
+      'essences',
+      amount,
+      randomInt,
+    );
+    const itemLoss = consumeRandomChargesFromContainerState(
+      essenceLoss.inventory,
+      'items',
+      amount,
+      randomInt,
+    );
+
+    return {
+      inventory: itemLoss.inventory,
+      lostSolutionIds: [...essenceLoss.lostSolutionIds, ...itemLoss.lostSolutionIds],
+    };
+  }
+
+  return { inventory: normalizeInventory(inventory), lostSolutionIds: [] };
+}
+
+export interface EncounterInventoryApplyResult {
+  inventory: AvatarInventory;
+  lostInventorySolutions: number[];
 }
 
 export function applyEncounterInventoryChanges(
@@ -307,7 +355,8 @@ export function applyEncounterInventoryChanges(
   selectedRollOutcome: InventoryPenaltyOutcome | null,
   encounterDifficulty: number,
   rewardAmount: number,
-): AvatarInventory {
+  options: { randomInt?: RandomIntFn } = {},
+): EncounterInventoryApplyResult {
   let next = normalizeInventory(inventory);
 
   for (const solutionId of usedSolutionIds) {
@@ -324,12 +373,24 @@ export function applyEncounterInventoryChanges(
         Math.max(1, (solution.mSolutionUses ?? 1) * rewardMultiplier),
       );
     }
-    return next;
+    return { inventory: next, lostInventorySolutions: [] };
   }
 
-  return selectedRollOutcome
-    ? applyFailurePenaltyToInventoryState(next, selectedRollOutcome, encounterDifficulty)
-    : next;
+  if (!selectedRollOutcome) {
+    return { inventory: next, lostInventorySolutions: [] };
+  }
+
+  const penalty = applyFailurePenaltyToInventoryState(
+    next,
+    selectedRollOutcome,
+    encounterDifficulty,
+    options,
+  );
+
+  return {
+    inventory: penalty.inventory,
+    lostInventorySolutions: penalty.lostSolutionIds,
+  };
 }
 
 export function createInitialAvatarInventory(
@@ -394,24 +455,10 @@ export async function consumeSolution(
   solutionId: number,
   amount = 1,
 ): Promise<AvatarInventory> {
-  const solution = getSolution(solutionId);
-  const container = resolveInventoryContainer(solution.mSolutionInventoryType);
   const inventory = await loadInventory(playerId, avatarId);
-  const entries = inventory[container];
-  const index = entries.findIndex((item) => item.solutionId === solutionId);
-
-  if (index === -1) {
-    throw new Error(`Solution ${solutionId} not found in ${container}`);
-  }
-
-  entries[index].uses = Math.max(entries[index].uses - amount, 0);
-
-  if (entries[index].uses <= 0) {
-    entries.splice(index, 1);
-  }
-
-  await persistInventory(playerId, avatarId, inventory);
-  return inventory;
+  const next = consumeSolutionFromInventoryState(inventory, solutionId, amount);
+  await persistInventory(playerId, avatarId, next);
+  return next;
 }
 
 export async function consumeSolutions(
@@ -424,24 +471,15 @@ export async function consumeSolutions(
   }
 }
 
-function firstBySolutionId(items: InventoryItem[]): InventoryItem | null {
-  return [...items].filter((item) => item.uses > 0)
-    .sort((a, b) => a.solutionId - b.solutionId)[0] ?? null;
-}
-
 export async function consumeEssenceUse(
   playerId: string,
   avatarId: string,
   amount = 1,
 ): Promise<AvatarInventory> {
   const inventory = await loadInventory(playerId, avatarId);
-  const essence = firstBySolutionId(inventory.essences);
-
-  if (!essence) {
-    return inventory;
-  }
-
-  return consumeSolution(playerId, avatarId, essence.solutionId, amount);
+  const result = consumeRandomChargesFromContainerState(inventory, 'essences', amount);
+  await persistInventory(playerId, avatarId, result.inventory);
+  return result.inventory;
 }
 
 export async function removeRandomItem(
@@ -450,13 +488,9 @@ export async function removeRandomItem(
   amount = 1,
 ): Promise<AvatarInventory> {
   const inventory = await loadInventory(playerId, avatarId);
-  const item = firstBySolutionId(inventory.items);
-
-  if (!item) {
-    return inventory;
-  }
-
-  return consumeSolution(playerId, avatarId, item.solutionId, amount);
+  const result = consumeRandomChargesFromContainerState(inventory, 'items', amount);
+  await persistInventory(playerId, avatarId, result.inventory);
+  return result.inventory;
 }
 
 export async function addRewardsToInventory(
@@ -475,20 +509,18 @@ export async function applyFailurePenalty(
   outcome: InventoryPenaltyOutcome,
   encounterDifficulty = 1,
 ): Promise<void> {
-  const amount = scaledUses(1, encounterDifficulty);
+  const inventory = await loadInventory(playerId, avatarId);
+  const result = applyFailurePenaltyToInventoryState(
+    inventory,
+    outcome,
+    encounterDifficulty,
+  );
 
-  if (amount <= 0) {
+  if (result.lostSolutionIds.length === 0) {
     return;
   }
 
-  if (outcome === 'Hardship') {
-    await consumeEssenceUse(playerId, avatarId, amount);
-  }
-
-  if (outcome === 'Misery') {
-    await consumeEssenceUse(playerId, avatarId, amount);
-    await removeRandomItem(playerId, avatarId, amount);
-  }
+  await persistInventory(playerId, avatarId, result.inventory);
 }
 
 export async function initializeAvatarInventory(
