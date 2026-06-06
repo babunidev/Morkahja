@@ -6,7 +6,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
 | **Last updated** | 2026-06-07 (+0200) |
-| **Release** | **0.9.0-beta.2** (public beta, pre-1.0) |
+| **Release** | **0.9.0-beta.2.1** (public beta, pre-1.0) |
 
 Each entry is numbered chronologically. Dates and times are from git (`+0200`, Europe/Berlin) or the commit referenced in the entry.
 
@@ -177,3 +177,4 @@ Each entry is numbered chronologically. Dates and times are from git (`+0200`, E
 161. **2026-06-07 00:12 (+0200)** — **Level-up fix** — no double level-up XP; system-event inventory merge across room states; unified fades for normal ↔ system-event transitions.
 162. **2026-06-07 00:12 (+0200)** — **Party badges** — **62px** dice/solution/focus icons on portraits when choice is ready; per-player dice skin on badge; pulsing animation + hover tooltips.
 163. **2026-06-07 00:12 (+0200)** — **Tests** — solution consumption, system events, room orchestrator, inventory across continue paths.
+164. **2026-06-07 (+0200)** — **Version** — tagged **0.9.0-beta.2.1** for the 6–7 Jun multiplayer/charges patch; **0.9.0-beta.2** remains the late May – 2 Jun release in patch notes history.

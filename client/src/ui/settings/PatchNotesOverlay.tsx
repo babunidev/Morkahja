@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { APP_VERSION } from '../../appVersion.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import {
   protectedOverlaySurfaceProps,
@@ -7,78 +8,110 @@ import {
 
 const OVERLAY_FADE_MS = 300;
 
-const PATCH_VERSION = '0.9.0-beta.2';
-const PATCH_PERIOD = 'Late May – early June';
-
-interface PatchSection {
-  id: string;
+interface PatchNoteGroup {
   title: string;
   notes: string[];
 }
 
-const SECTIONS: PatchSection[] = [
+interface PatchRelease {
+  id: string;
+  version: string;
+  period: string;
+  /** Flat bullets when there are no topic groups. */
+  notes?: string[];
+  /** Topic groups for larger releases. */
+  groups?: PatchNoteGroup[];
+}
+
+/** Newest release first; oldest last. */
+const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'multiplayer',
-    title: 'Multiplayer',
+    id: 'beta-2-1-jun-6-7',
+    version: '0.9.0-beta.2.1',
+    period: '6–7 Jun 2026',
     notes: [
-      'Encounter rooms for up to 3 players — shared encounters, choices, and Continue.',
-      'Call for help — invite friends or other online players into your room.',
-      'Witness events — level-ups and Atranor visible to everyone in the room, not only the roller.',
-      'Party slots show who’s ready; improved join toasts and “waiting for party” flow.',
-      'Lore gems can be earned for the whole party in a room.',
+      'Solution charges — using a solution now costs charges based on encounter difficulty; tooltips show when your inventory is short.',
+      'Witness events — allies see the actor’s real roll and rewards on level-up and Atranor; outcomes wait for Continue.',
+      'Fate label — the middle roll tier displays as Fate (same mechanics as before).',
+      'Party choice badges — dice, solution, or focus icons on portraits when a player is ready (with hover details).',
+      'Level-up fixes — no double level-ups; inventory stays correct when a party moves into a level-up encounter.',
+      'Smoother party transitions — normal encounters and system events share the same fade flow.',
+      'Level-up sound plays once when a party level-up event appears.',
+      'Encounter tooltips on side party slots render above center portraits and the reward block.',
     ],
   },
   {
-    id: 'shop-support',
-    title: 'Shop & support',
-    notes: [
-      'Dice skins — unlock account-wide styles for your dice.',
-      'Expansions shop UI refreshed.',
-      'Stripe checkout for expansions and dice skins (optional; gems gameplay unchanged).',
-      'PayPal donation link still in About Us.',
+    id: 'beta-2-late-may-jun',
+    version: '0.9.0-beta.2',
+    period: 'late May – 2 Jun 2026',
+    groups: [
+      {
+        title: 'Multiplayer',
+        notes: [
+          'Encounter rooms for up to 3 players — shared encounters, choices, and Continue.',
+          'Call for help — invite friends or other online players into your room.',
+          'Witness events — level-ups and Atranor visible to everyone in the room, not only the roller.',
+          'Party slots show who’s ready; improved join toasts and “waiting for party” flow.',
+          'Lore gems can be earned for the whole party in a room.',
+          'Soul Link — permanently link your account to one Adventurer; Spiritguide achievement chain.',
+        ],
+      },
+      {
+        title: 'Shop & support',
+        notes: [
+          'Dice skins — unlock account-wide styles for your dice.',
+          'Expansions shop UI refreshed.',
+          'Stripe checkout for expansions and dice skins (optional; gems gameplay unchanged).',
+          'PayPal donation link still in About Us.',
+        ],
+      },
+      {
+        title: 'UI & gameplay',
+        notes: [
+          'Clearer result screen and reward fly animations.',
+          'Tooltips improved on touch; inventory and skillbook less likely to block taps.',
+          'Larger encounter titles; updated dice art.',
+          'Tooltips hide when the result layer is showing.',
+          'Privacy and Terms on signup.',
+        ],
+      },
+      {
+        title: 'Progression & social',
+        notes: [
+          'Daily rewards consider progress across achievement chains.',
+          'Scribes toasts for achievements; better lines for room joins and help.',
+          'Firestarter progress shows in Scribes.',
+        ],
+      },
+      {
+        title: 'Content',
+        notes: [
+          'Many new encounters and art (forests, meadows, mountains, Everwinter, Verdani, Liani, Ashen Revenant, and more).',
+        ],
+      },
+      {
+        title: 'Removed',
+        notes: [
+          'Seal of Norghor subscription removed from beta. Expansions unlock with gems as before.',
+        ],
+      },
+      {
+        title: 'Fixes',
+        notes: [
+          'Solo rooms no longer spam odd toasts.',
+          'Party Continue and ally choices sync more reliably.',
+          'Various room join, help, and server stability fixes.',
+        ],
+      },
     ],
   },
   {
-    id: 'ui-gameplay',
-    title: 'UI & gameplay',
+    id: 'beta-1',
+    version: '0.9.0-beta.1',
+    period: '26 May 2026',
     notes: [
-      'Clearer result screen and reward fly animations.',
-      'Tooltips improved on touch; inventory and skillbook less likely to block taps.',
-      'Larger encounter titles; updated dice art.',
-      'Tooltips hide when the result layer is showing.',
-      'Privacy and Terms on signup.',
-    ],
-  },
-  {
-    id: 'progression-social',
-    title: 'Progression & social',
-    notes: [
-      'Daily rewards consider progress across achievement chains.',
-      'Scribes toasts for achievements; better lines for room joins and help.',
-      'Firestarter progress shows in Scribes.',
-    ],
-  },
-  {
-    id: 'content',
-    title: 'Content',
-    notes: [
-      'Many new encounters and art (forests, meadows, mountains, Everwinter, Verdani, Liani, Ashen Revenant, and more).',
-    ],
-  },
-  {
-    id: 'removed',
-    title: 'Removed',
-    notes: [
-      'Seal of Norghor subscription removed from beta. Expansions unlock with gems as before.',
-    ],
-  },
-  {
-    id: 'fixes',
-    title: 'Fixes',
-    notes: [
-      'Solo rooms no longer spam odd toasts.',
-      'Party Continue and ally choices sync more reliably.',
-      'Various room join, help, and server stability fixes.',
+      'Public beta — first tagged beta release on https://arcanitebrothers.com.',
+      'Encounter rooms foundation — up to 3 players, server-backed party state, call for help.',
     ],
   },
 ];
@@ -152,23 +185,44 @@ const bodyStyle: CSSProperties = {
   ...protectedOverlayTextStyle,
 };
 
-const sectionListStyle: CSSProperties = {
+const releaseListStyle: CSSProperties = {
   display: 'grid',
-  gap: 16,
+  gap: 20,
 };
 
-const sectionStyle: CSSProperties = {
+const releaseBlockStyle: CSSProperties = {
   display: 'grid',
-  gap: 8,
+  gap: 10,
+  paddingBottom: 16,
+  borderBottom: '1px solid rgba(255, 204, 102, 0.22)',
 };
 
-const sectionTitleStyle: CSSProperties = {
+const releaseHeadingStyle: CSSProperties = {
   margin: 0,
   color: '#ffcc66',
-  fontSize: '1.05rem',
+  fontSize: '1.08rem',
   fontWeight: 400,
   fontFamily: 'Breathe Fire, Georgia, serif',
   letterSpacing: '0.05em',
+};
+
+const groupListStyle: CSSProperties = {
+  display: 'grid',
+  gap: 12,
+};
+
+const groupStyle: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+};
+
+const groupTitleStyle: CSSProperties = {
+  margin: 0,
+  color: 'rgba(255, 204, 102, 0.88)',
+  fontSize: '0.92rem',
+  fontWeight: 400,
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  letterSpacing: '0.04em',
 };
 
 const noteListStyle: CSSProperties = {
@@ -193,6 +247,18 @@ const footerNoteStyle: CSSProperties = {
   lineHeight: 1.5,
   textAlign: 'center',
 };
+
+function renderNoteList(notes: string[], keyPrefix: string) {
+  return (
+    <ul style={noteListStyle}>
+      {notes.map((note, index) => (
+        <li key={`${keyPrefix}-${index}`} style={noteItemStyle}>
+          {note}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function PatchNotesOverlay({
   onClose,
@@ -244,9 +310,9 @@ export function PatchNotesOverlay({
         <header style={headerStyle}>
           <div style={titleGroupStyle}>
             <h2 id="patch-notes-overlay-title" style={titleStyle}>
-              PATCH NOTES — {PATCH_VERSION}
+              PATCH NOTES — {APP_VERSION}
             </h2>
-            <p style={subtitleStyle}>{PATCH_PERIOD}</p>
+            <p style={subtitleStyle}>Newest first</p>
           </div>
           <ClosePanelButton onClose={onClose} pressKey="patch-notes-close" />
         </header>
@@ -254,18 +320,32 @@ export function PatchNotesOverlay({
           <style>
             {'[data-patch-notes-scroll]::-webkit-scrollbar { display: none; }'}
           </style>
-          <div style={sectionListStyle}>
-            {SECTIONS.map((section) => (
-              <section key={section.id} style={sectionStyle}>
-                <h3 style={sectionTitleStyle}>{section.title}</h3>
-                <ul style={noteListStyle}>
-                  {section.notes.map((note) => (
-                    <li key={note.slice(0, 32)} style={noteItemStyle}>
-                      {note}
-                    </li>
-                  ))}
-                </ul>
-              </section>
+          <div style={releaseListStyle}>
+            {PATCH_RELEASES.map((release, releaseIndex) => (
+              <article
+                key={release.id}
+                style={{
+                  ...releaseBlockStyle,
+                  ...(releaseIndex === PATCH_RELEASES.length - 1
+                    ? { borderBottom: 'none', paddingBottom: 0 }
+                    : {}),
+                }}
+              >
+                <h3 style={releaseHeadingStyle}>
+                  {release.version} · {release.period}
+                </h3>
+                {release.notes ? renderNoteList(release.notes, release.id) : null}
+                {release.groups ? (
+                  <div style={groupListStyle}>
+                    {release.groups.map((group) => (
+                      <section key={`${release.id}-${group.title}`} style={groupStyle}>
+                        <h4 style={groupTitleStyle}>{group.title}</h4>
+                        {renderNoteList(group.notes, `${release.id}-${group.title}`)}
+                      </section>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
             ))}
           </div>
         </div>
