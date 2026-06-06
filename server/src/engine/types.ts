@@ -56,6 +56,57 @@ export const EncounterType = {
   Trade: 5,
 } as const satisfies Record<string, EncounterType>;
 
+/** Elemental theme for encounters (lore / filtering). */
+export type EncounterElement =
+  | 'Core'
+  | 'Fire'
+  | 'Water'
+  | 'Earth'
+  | 'Air'
+  | 'Force'
+  | 'Arcana'
+  | 'Metal'
+  | 'Spirit'
+  | 'Nature'
+  | 'Void';
+
+export const EncounterElement = {
+  Core: 'Core',
+  Fire: 'Fire',
+  Water: 'Water',
+  Earth: 'Earth',
+  Air: 'Air',
+  Force: 'Force',
+  Arcana: 'Arcana',
+  Metal: 'Metal',
+  Spirit: 'Spirit',
+  Nature: 'Nature',
+  Void: 'Void',
+} as const satisfies Record<string, EncounterElement>;
+
+/** Solution-driven encounter sub-category (Hunt, Heal, Find, etc.). */
+export type EncounterSubtype =
+  | 'Combat'
+  | 'Hunt'
+  | 'Purge'
+  | 'Stealth'
+  | 'Find'
+  | 'OpenLock'
+  | 'Climb'
+  | 'Travel'
+  | 'RareFind'
+  | 'Heal'
+  | 'Protect'
+  | 'Nurture'
+  | 'Warmth'
+  | 'Inspiration'
+  | 'Speech'
+  | 'Learn'
+  | 'Trade'
+  | 'Treasure'
+  | 'Life'
+  | 'Resurrection';
+
 /**
  * Reward category when rolling rewards from the solution database (ludussolutio).
  * `mEncounterRewardAmount` controls how many rewards are granted.
@@ -296,6 +347,10 @@ export interface EncounterData {
   mEncounterTitle: string;
   /** Drives encounter-type achievements on continue after success. */
   mEncounterType: EncounterType;
+  /** Elemental theme inferred from encounter lore (Core, Fire, Nature, Void, etc.). */
+  mEncounterElement?: EncounterElement;
+  /** Dominant solution-type theme for this encounter (Hunt, Heal, Find, etc.). */
+  mEncounterSubtype?: EncounterSubtype;
 }
 
 export type SolutionDataMap = Record<DataKey, SolutionData>;
