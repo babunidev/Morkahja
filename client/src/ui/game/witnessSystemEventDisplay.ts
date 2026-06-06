@@ -11,27 +11,44 @@ export interface WitnessSystemEventDisplay {
   outcome: ParticipantPreparedResultDto | undefined;
   showWaitingLabel: boolean;
   showActorResult: boolean;
+  /** Witness may press Continue once the room is waiting for the party. */
+  witnessCanContinue: boolean;
 }
 
-/** Mirrors when the actor client would show a prepared/resolved system-event outcome. */
+function actorHasCommittedRoll(actor: RoomParticipantDto | undefined): boolean {
+  if (!actor) {
+    return false;
+  }
+
+  return (
+    actor.preparedResult !== undefined
+    || actor.resolutionSummary !== undefined
+    || actor.choiceState === 'ready_to_continue'
+    || actor.choiceState === 'resolved'
+  );
+}
+
+/** True when the actor has rolled and their outcome is visible to the actor client. */
 function actorOutcomeRevealed(
   room: EncounterRoomSnapshotDto,
   actor: RoomParticipantDto | undefined,
   outcome: ParticipantPreparedResultDto | undefined,
 ): boolean {
-  if (!actor || !hasWitnessableOutcome(outcome)) {
+  if (!hasWitnessableOutcome(outcome)) {
     return false;
   }
 
-  if (room.roomState === 'system_event') {
-    return (
-      actor.choiceState === 'ready_to_continue'
-      || actor.choiceState === 'resolved'
-    );
+  // Server pushes actorOutcome as soon as the actor rolls — trust it immediately.
+  if (room.systemEvent?.actorOutcome !== undefined) {
+    return true;
   }
 
-  if (room.roomState === 'waiting_continue') {
-    return room.systemEvent?.lastEventRecap !== undefined;
+  if (room.roomState === 'system_event') {
+    return actorHasCommittedRoll(actor);
+  }
+
+  if (room.roomState === 'waiting_continue' && room.systemEvent) {
+    return true;
   }
 
   return false;
@@ -50,6 +67,7 @@ export function witnessSystemEventDisplay(
     outcome: undefined,
     showWaitingLabel: false,
     showActorResult: false,
+    witnessCanContinue: false,
   };
 
   if (!room?.systemEvent) {
@@ -73,10 +91,11 @@ export function witnessSystemEventDisplay(
     ?? room.systemEvent.lastEventRecap;
 
   const inWitnessFlow = room.roomState === 'system_event'
-    || (room.roomState === 'waiting_continue' && room.systemEvent.lastEventRecap !== undefined);
+    || (room.roomState === 'waiting_continue' && room.systemEvent !== undefined);
 
   const showActorResult = inWitnessFlow && actorOutcomeRevealed(room, actor, outcome);
   const showWaitingLabel = inWitnessFlow && !showActorResult;
+  const witnessCanContinue = showActorResult && room.roomState === 'waiting_continue';
 
   return {
     isWitness,
@@ -84,5 +103,6 @@ export function witnessSystemEventDisplay(
     outcome,
     showWaitingLabel,
     showActorResult,
+    witnessCanContinue,
   };
 }

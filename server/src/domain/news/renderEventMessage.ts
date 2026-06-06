@@ -1,4 +1,5 @@
 import type { GameEvent } from '../events/GameEvent.js';
+import { formatAchievementUnlockMessage } from '@shared/achievementUnlockMessage.js';
 
 function readString(payload: Record<string, unknown>, key: string): string | undefined {
   const value = payload[key];
@@ -38,16 +39,6 @@ function avatarLabel(payload: Record<string, unknown>): string {
 
 function playerLabel(payload: Record<string, unknown>): string {
   return readString(payload, 'playerName') ?? 'Player';
-}
-
-function formatArticle(title: string): string {
-  const normalized = title.trim();
-  if (!normalized) {
-    return 'a new rank';
-  }
-
-  const article = /^[aeiou]/i.test(normalized) ? 'an' : 'a';
-  return `${article} ${normalized}`;
 }
 
 function encounterLabel(payload: Record<string, unknown>): string {
@@ -147,8 +138,8 @@ export function renderEventMessage(event: GameEvent): string {
     case 'support_appreciation_nudge':
       return 'If you\'re enjoying Morkahja, consider supporting us — donate gems, unlock an expansion, or pick up a dice skin. We\'d be super happy!';
     case 'achievement_unlocked': {
-      const rankTitle = readString(payload, 'rankTitle') ?? 'a new rank';
-      return `${playerLabel(payload)} became ${formatArticle(rankTitle)}.`;
+      const rankTitle = readString(payload, 'rankTitle');
+      return formatAchievementUnlockMessage(rankTitle, 'public', playerLabel(payload));
     }
     case 'hearth_blessing_ready': {
       const encountersRequired = readNumber(payload, 'encountersRequired') ?? 42;

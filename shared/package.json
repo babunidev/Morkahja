@@ -7,7 +7,8 @@
     "./contracts": "./src/contracts.ts",
     "./diceInterpreter": "./src/diceInterpreter.ts",
     "./diceCatalog": "./src/diceCatalog.ts",
-    "./recoveryKeyFilename": "./src/recoveryKeyFilename.ts"
+    "./recoveryKeyFilename": "./src/recoveryKeyFilename.ts",
+    "./achievementUnlockMessage": "./src/achievementUnlockMessage.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -212,6 +212,9 @@ const actorRollSystemRoom: EncounterRoom = {
 };
 await saveEncounterRoom(actorRollSystemRoom);
 const afterActorSystemRoll = await submitChoice(session.playerId, avatarId, 'dice');
+assert.equal(afterActorSystemRoll.roomState, 'system_event');
+assert.equal(afterActorSystemRoll.participants.find((p) => p.playerId === session.playerId)?.choiceState, 'ready_to_continue');
+assert.ok(afterActorSystemRoll.participants.find((p) => p.playerId === session.playerId)?.preparedResult);
 const witnessSystemDto = await toEncounterRoomSnapshotDto(
   afterActorSystemRoll,
   'RoomTesterWitness',
@@ -223,6 +226,9 @@ assert.ok(
   || (witnessSystemDto.systemEvent?.actorOutcome?.rewards?.length ?? 0) > 0,
   'witness DTO must include actor outcome after system-event roll',
 );
+const afterActorSystemContinue = await submitContinue(session.playerId, avatarId);
+assert.equal(afterActorSystemContinue.roomState, 'waiting_continue');
+assert.ok(afterActorSystemContinue.systemEvent?.lastEvent);
 await saveEncounterRoom(switchedAvatarRoom);
 
 const afterChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');

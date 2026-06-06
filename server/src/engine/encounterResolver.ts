@@ -64,7 +64,7 @@ interface SlotEvaluation {
   inventoryValid: boolean;
   lane: 'primary' | 'secondary' | null;
   roll: number | null;
-  usedSolutionId: EntityId | null;
+  usedSolutionIds: EntityId[];
 }
 
 export function createEncounterRollSnapshot(
@@ -121,25 +121,35 @@ function lookupSolution(
   return solutions[String(solutionId)];
 }
 
-function findSecondaryMatch(
+function pickUsedSolutionIdsForPrimary(
+  inventory: number[],
+  primarySolutionId: EntityId,
+  requiredUses: number,
+): EntityId[] {
+  const matches = inventory.filter((solutionId) => solutionId === primarySolutionId);
+
+  if (matches.length < requiredUses) {
+    return [];
+  }
+
+  return matches.slice(0, requiredUses);
+}
+
+function pickUsedSolutionIdsForSecondary(
   inventory: number[],
   solutions: SolutionDataMap,
   requiredType: number,
-): EntityId | null {
-  const matches: EntityId[] = [];
+  requiredUses: number,
+): EntityId[] {
+  const matches = inventory
+    .filter((solutionId) => lookupSolution(solutions, solutionId)?.mSolutionType === requiredType)
+    .sort((left, right) => left - right);
 
-  for (const solutionId of inventory) {
-    const definition = lookupSolution(solutions, solutionId);
-    if (definition && definition.mSolutionType === requiredType) {
-      matches.push(solutionId);
-    }
+  if (matches.length < requiredUses) {
+    return [];
   }
 
-  if (matches.length === 0) {
-    return null;
-  }
-
-  return Math.min(...matches);
+  return matches.slice(0, requiredUses);
 }
 
 function primaryRollForSlot(
@@ -175,13 +185,18 @@ function evaluatePrimaryLane(
   const { primarySolutionId } = requirement;
 
   if (primarySolutionId === 0) {
-    return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
+    return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
-  const inventoryValid = inventory.filter((solutionId) => solutionId === primarySolutionId).length >= requiredUses;
+  const usedSolutionIds = pickUsedSolutionIdsForPrimary(
+    inventory,
+    primarySolutionId,
+    requiredUses,
+  );
+  const inventoryValid = usedSolutionIds.length >= requiredUses;
 
   if (!inventoryValid) {
-    return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
+    return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
   return {
@@ -189,7 +204,7 @@ function evaluatePrimaryLane(
     inventoryValid: true,
     lane: 'primary',
     roll,
-    usedSolutionId: primarySolutionId,
+    usedSolutionIds,
   };
 }
 
@@ -203,14 +218,19 @@ function evaluateSecondaryLane(
   const { secondarySolutionType } = requirement;
 
   if (secondarySolutionType === 0) {
-    return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
+    return { satisfied: true, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
-  const matchedId = findSecondaryMatch(inventory, solutionMap, secondarySolutionType);
-  const inventoryValid = matchedId !== null;
+  const usedSolutionIds = pickUsedSolutionIdsForSecondary(
+    inventory,
+    solutionMap,
+    secondarySolutionType,
+    requiredUses,
+  );
+  const inventoryValid = usedSolutionIds.length >= requiredUses;
 
-  if (!inventoryValid || inventory.filter((solutionId) => solutionId === matchedId).length < requiredUses) {
-    return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionId: null };
+  if (!inventoryValid) {
+    return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
   return {
@@ -218,7 +238,7 @@ function evaluateSecondaryLane(
     inventoryValid: true,
     lane: 'secondary',
     roll,
-    usedSolutionId: matchedId,
+    usedSolutionIds,
   };
 }
 
@@ -438,9 +458,9 @@ export function resolveEncounter(
     success,
     selectedRoll,
     slotResults,
-    usedInventorySolutions: actionEvaluation.usedSolutionId === null
-      ? []
-      : [actionEvaluation.usedSolutionId],
+    usedInventorySolutions: actionEvaluation.inventoryValid
+      ? actionEvaluation.usedSolutionIds
+      : [],
     failurePenalty,
     rewards: success ? (rewardIds ?? pickRewards(encounter, solutionMap)) : [],
     message: buildMessage(

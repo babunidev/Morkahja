@@ -155,12 +155,28 @@ function solutionImagePath(solutionId: number): string | null {
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
 }
 
-function hasVisibleChoice(participant: RoomParticipantDto): boolean {
+function hasVisibleChoice(
+  participant: RoomParticipantDto,
+  roomState?: RoomStateDto,
+  systemEventActorPlayerId?: string,
+): boolean {
   if (
     participant.choiceState === 'disengaged'
     || participant.choiceState === 'witnessing'
   ) {
     return false;
+  }
+
+  if (
+    roomState === 'system_event'
+    && systemEventActorPlayerId === participant.playerId
+  ) {
+    return (
+      participant.preparedResult !== undefined
+      || participant.resolutionSummary !== undefined
+      || participant.choiceState === 'ready_to_continue'
+      || participant.choiceState === 'resolved'
+    );
   }
 
   if (
@@ -208,12 +224,14 @@ export function PartyMemberSlot({
   onKick,
   participant,
   roomState,
+  systemEventActorPlayerId,
   xpPulseToken,
 }: {
   canKick?: boolean;
   onKick?: (targetPlayerId: string) => void;
   participant: RoomParticipantDto;
   roomState?: RoomStateDto;
+  systemEventActorPlayerId?: string;
   xpPulseToken?: number;
 }) {
   const [portraitSrc, setPortraitSrc] = useState(participant.avatar.portrait);
@@ -223,7 +241,7 @@ export function PartyMemberSlot({
   const focusIconSrc = participant.focusState !== 'none'
     ? GAME_FOCUS_BUTTON_ICONS[participant.focusState as keyof typeof GAME_FOCUS_BUTTON_ICONS]
     : undefined;
-  const showChoice = hasVisibleChoice(participant) && !detailsOpen;
+  const showChoice = hasVisibleChoice(participant, roomState, systemEventActorPlayerId) && !detailsOpen;
   const choiceSolutionSrc = participant.selectedSolutionId
     ? solutionImagePath(participant.selectedSolutionId)
     : null;

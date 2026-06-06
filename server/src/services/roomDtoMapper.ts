@@ -224,10 +224,29 @@ function witnessActorOutcomeSummary(
   actorParticipant: RoomParticipant | undefined,
   context: RoomSystemEventContext,
 ): ParticipantResolutionSummary | undefined {
+  if (actorParticipant?.preparedResult) {
+    return actorParticipant.preparedResult;
+  }
+
+  if (actorParticipant?.resolutionSummary) {
+    return actorParticipant.resolutionSummary;
+  }
+
+  return context.lastEvent?.resolutionSummary;
+}
+
+function actorHasCommittedSystemEventRoll(
+  actorParticipant: RoomParticipant | undefined,
+): boolean {
+  if (!actorParticipant) {
+    return false;
+  }
+
   return (
-    actorParticipant?.preparedResult
-    ?? actorParticipant?.resolutionSummary
-    ?? context.lastEvent?.resolutionSummary
+    actorParticipant.preparedResult !== undefined
+    || actorParticipant.resolutionSummary !== undefined
+    || actorParticipant.choiceState === 'ready_to_continue'
+    || actorParticipant.choiceState === 'resolved'
   );
 }
 
@@ -268,7 +287,7 @@ function toSystemEventDto(
       || (room.roomState === 'waiting_continue' && context.lastEvent !== undefined)
     )
   ) || localParticipant?.choiceState === 'witnessing';
-  const actorOutcome = isWitness
+  const actorOutcome = isWitness && actorHasCommittedSystemEventRoll(actorParticipant)
     ? witnessActorOutcomeSummary(actorParticipant, context)
     : undefined;
 

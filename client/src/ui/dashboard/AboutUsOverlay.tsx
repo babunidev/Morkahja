@@ -16,13 +16,47 @@ interface CostLine {
   detail: string;
 }
 
+interface CostSection {
+  heading?: string;
+  lines: CostLine[];
+}
+
 interface CreditEntry {
   id: string;
   name: string;
   roles: string;
   paragraphs: string[];
-  costLines?: CostLine[];
+  costSections?: CostSection[];
+  totalToday?: string;
+  externalLink?: {
+    label: string;
+    url: string;
+  };
 }
+
+const NIKITA_INSTAGRAM_URL = 'https://www.instagram.com/nikitamalkomusic/';
+
+const OPERATIONAL_MONTHLY = {
+  server: 4.99,
+  cursor: 20,
+  midjourney: 20,
+  serverUsageMay: 2.18,
+  cursorOneTime: 189.69,
+  cursorTotalToDate: 209.69,
+} as const;
+
+const OPERATIONAL_MONTHLY_TOTAL = (
+  OPERATIONAL_MONTHLY.server
+  + OPERATIONAL_MONTHLY.midjourney
+  + OPERATIONAL_MONTHLY.cursor
+).toFixed(2);
+
+const OPERATIONAL_TOTAL_TODAY = (
+  OPERATIONAL_MONTHLY.server
+  + OPERATIONAL_MONTHLY.serverUsageMay
+  + OPERATIONAL_MONTHLY.midjourney
+  + OPERATIONAL_MONTHLY.cursorTotalToDate
+).toFixed(2);
 
 const CREDITS: CreditEntry[] = [
   {
@@ -40,6 +74,10 @@ const CREDITS: CreditEntry[] = [
     id: 'nikita-malko',
     name: 'Nikita Malko',
     roles: 'Video Game Composer · Music & Sound Design',
+    externalLink: {
+      label: 'Instagram',
+      url: NIKITA_INSTAGRAM_URL,
+    },
     paragraphs: [
       'Every world carries a hidden pulse, and music is what lets it breathe. It is what turns landscapes into memory, silence into emotion, and moments into something that stays with the player long after they\'ve stopped playing.',
       'Working with Nikita Malko has been a deeply inspiring part of this project. His approach to composition — treating music as an emotional architecture of a game world — aligns naturally with the vision behind Morkahja. Every track feels like it belongs, not added on top, but grown from within the world itself.',
@@ -49,29 +87,55 @@ const CREDITS: CreditEntry[] = [
   },
   {
     id: 'operational-costs',
-    name: 'Operational Costs · 201/mo',
+    name: `Operational Costs · ${OPERATIONAL_MONTHLY_TOTAL}€/mo`,
     roles: 'What keeps Morkahja running',
     paragraphs: [
-      'Monthly costs for keeping Morkahja alive and evolving:',
+      'Recurring costs for keeping Morkahja alive and evolving, plus separate usage and one-time expenses where noted:',
       'These expenses are personally covered to keep the game free, independent, and stable. Donations support ongoing development and world expansion rather than unlocking content or advantages.',
     ],
-    costLines: [
+    costSections: [
       {
-        amount: '5€',
-        title: 'Server hosting',
-        detail: 'Keeps the world running and scales as more adventurers join.',
+        heading: 'Monthly',
+        lines: [
+          {
+            amount: `${OPERATIONAL_MONTHLY.server}€/mo`,
+            title: 'Server hosting',
+            detail: 'Keeps the world running and scales as more adventurers join.',
+          },
+          {
+            amount: `${OPERATIONAL_MONTHLY.cursor}€/mo`,
+            title: 'Development tools (Cursor Pro)',
+            detail: 'Used to build, refine, and debug the game systems continuously.',
+          },
+          {
+            amount: `${OPERATIONAL_MONTHLY.midjourney}€/mo`,
+            title: 'Creative assets (Midjourney)',
+            detail: 'Generates encounter art, environments, and visual storytelling pieces.',
+          },
+        ],
       },
       {
-        amount: '176$',
-        title: 'Development tools (Cursor Pro + maintenance)',
-        detail: 'Used to build, refine, and debug the game systems continuously.',
+        heading: 'Usage (May)',
+        lines: [
+          {
+            amount: `${OPERATIONAL_MONTHLY.serverUsageMay}€`,
+            title: 'Server usage',
+            detail: 'Billed separately on top of the monthly hosting plan; varies with traffic.',
+          },
+        ],
       },
       {
-        amount: '20€',
-        title: 'Creative assets (Midjourney)',
-        detail: 'Generates encounter art, environments, and visual storytelling pieces.',
+        heading: 'One-time',
+        lines: [
+          {
+            amount: `${OPERATIONAL_MONTHLY.cursorOneTime}€`,
+            title: 'Cursor Pro (prepaid)',
+            detail: `One-time spend on top of the ${OPERATIONAL_MONTHLY.cursor}€/mo plan (${OPERATIONAL_MONTHLY.cursorTotalToDate}€ total to date).`,
+          },
+        ],
       },
     ],
+    totalToday: OPERATIONAL_TOTAL_TODAY,
   },
 ];
 
@@ -232,6 +296,41 @@ const costLineDetailStyle: CSSProperties = {
   margin: '0 0 14px',
 };
 
+const costSectionHeadingStyle: CSSProperties = {
+  ...bodyTextStyle,
+  margin: '4px 0 0',
+  color: 'rgba(255, 204, 102, 0.78)',
+  fontSize: '0.78rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+};
+
+const creditLinkFooterStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  paddingTop: 4,
+};
+
+const costTotalTodayStyle: CSSProperties = {
+  margin: '4px 0 0',
+  paddingTop: 12,
+  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+};
+
+const costTotalTodayLabelStyle: CSSProperties = {
+  ...costSectionHeadingStyle,
+  margin: '0 0 6px',
+};
+
+const costTotalTodayAmountStyle: CSSProperties = {
+  ...nameStyle,
+  fontSize: '1.1rem',
+};
+
+function openExternalLink(url: string): void {
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 function CreditCard({
   credit,
   expanded,
@@ -269,26 +368,57 @@ function CreditCard({
           style={creditBodyStyle}
         >
           <div style={creditBodyColumnStyle}>
-            {credit.paragraphs.slice(0, credit.costLines ? 1 : undefined).map((paragraph) => (
+            {credit.paragraphs.slice(0, credit.costSections ? 1 : undefined).map((paragraph) => (
               <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
                 {paragraph}
               </p>
             ))}
-            {credit.costLines?.map((line) => (
-              <div key={`${line.amount}-${line.title}`}>
-                <p style={costLineLabelStyle}>
-                  {line.amount} {line.title}
-                </p>
-                <p style={costLineDetailStyle}>{line.detail}</p>
+            {credit.costSections?.map((section) => (
+              <div key={section.heading ?? section.lines[0]?.title ?? 'cost-section'}>
+                {section.heading ? (
+                  <p style={costSectionHeadingStyle}>{section.heading}</p>
+                ) : null}
+                {section.lines.map((line) => (
+                  <div key={`${line.amount}-${line.title}`}>
+                    <p style={costLineLabelStyle}>
+                      {line.amount} {line.title}
+                    </p>
+                    <p style={costLineDetailStyle}>{line.detail}</p>
+                  </div>
+                ))}
               </div>
             ))}
-            {credit.costLines
+            {credit.costSections
               ? credit.paragraphs.slice(1).map((paragraph) => (
                   <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
                     {paragraph}
                   </p>
                 ))
-              : null}
+              : credit.paragraphs.map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
+                    {paragraph}
+                  </p>
+                ))}
+            {credit.totalToday ? (
+              <div style={costTotalTodayStyle}>
+                <p style={costTotalTodayLabelStyle}>Total today</p>
+                <p style={costTotalTodayAmountStyle}>{credit.totalToday}€</p>
+              </div>
+            ) : null}
+            {credit.externalLink ? (
+              <div style={creditLinkFooterStyle}>
+                <PanelButton
+                  onClick={() => {
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    openExternalLink(credit.externalLink!.url);
+                  }}
+                  pressKey={`about-link-${credit.id}`}
+                  visualStyle={overlayCloseButtonVisualStyle}
+                >
+                  {credit.externalLink.label}
+                </PanelButton>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -42,14 +42,14 @@ const alphaRankUp = achievementUnlockedEvent(
 );
 
 assert.equal(isVisibleInScribesFeed(adventurerRankUp, 'player-a'), true);
-assert.equal(isVisibleInScribesFeed(adventurerRankUp, 'player-b'), false);
+assert.equal(isVisibleInScribesFeed(adventurerRankUp, 'player-b'), true);
 assert.equal(
   renderEventMessage(adventurerRankUp),
-  'Babuni became an Explorer.',
+  'Babuni unlocked the "Explorer" achievement.',
 );
 assert.equal(
   renderEventMessage(alphaRankUp),
-  'Babuni became a Worldwalker.',
+  'Babuni unlocked the "Worldwalker" achievement.',
 );
 assert.equal(
   resolveScribesIconUrl(adventurerRankUp),

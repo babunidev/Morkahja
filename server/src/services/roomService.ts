@@ -1663,11 +1663,6 @@ export async function submitChoice(
     );
   });
 
-  if (updated.roomState === 'system_event') {
-    const resolved = await tryResolveSystemEventIfReady(roomId);
-    return resolved ?? updated;
-  }
-
   if (updated.roomState === 'waiting_continue') {
     await recordRoomEncounterResolvedEvent(updated);
   }
@@ -1800,10 +1795,37 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
 
   const now = nowMs();
   let room = await loadEncounterRoom(roomId);
-  if (
-    !room ||
-    (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing')
-  ) {
+  if (!room) {
+    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+  }
+
+  if (room.roomState === 'system_event') {
+    const systemEvent = room.systemEvent;
+    const currentItem = systemEvent?.queue[systemEvent.queueIndex];
+    const actor = currentItem ? findParticipant(room, currentItem.actorPlayerId) : undefined;
+    if (
+      !currentItem ||
+      currentItem.actorPlayerId !== playerId ||
+      !actor ||
+      actor.choiceState !== 'ready_to_continue' ||
+      !actor.preparedResult
+    ) {
+      throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
+    }
+
+    const resolved = await tryResolveSystemEventIfReady(roomId);
+    if (!resolved) {
+      throw new RoomError('System event not ready to resolve', 409, 'SYSTEM_EVENT_NOT_READY');
+    }
+
+    if (resolved.roomState === 'waiting_continue') {
+      await recordRoomEncounterResolvedEvent(resolved);
+    }
+
+    return resolved;
+  }
+
+  if (room.roomState !== 'waiting_continue' && room.roomState !== 'advancing') {
     throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
   }
 

@@ -413,7 +413,7 @@ export function GameEnvironment({
 
   useEffect(() => {
     let cancelled = false;
-    const pollMs = witnessPollActive ? 750 : ROOM_POLL_MS;
+    const pollMs = witnessPollActive ? 250 : ROOM_POLL_MS;
 
     async function ensureRoom(): Promise<void> {
       try {
@@ -601,6 +601,24 @@ export function GameEnvironment({
         return;
       }
 
+      if (currentRoom.roomState === 'system_event' && currentRoom.systemEvent?.isLocalActor) {
+        const localActor = currentRoom.participants.find((participant) => participant.isLocal);
+        if (
+          localActor?.choiceState === 'ready_to_continue'
+          && localActor.preparedResult !== undefined
+        ) {
+          const nextRoom = await submitRoomContinue(avatarRef.current.id);
+          applySnapshotOnly(nextRoom);
+          appendActionLog([
+            nextRoom.roomState === 'waiting_continue'
+              ? 'Continue: Shared moment resolved — waiting for the party.'
+              : 'Continue: Shared moment resolved.',
+          ]);
+          onAchievementCheck?.();
+          return;
+        }
+      }
+
       if (currentRoom.roomState === 'system_event' && witnessSystemEventDisplay(currentRoom).isWitness) {
         appendActionLog(['Only the actor can resolve this moment.']);
         return;
@@ -637,20 +655,6 @@ export function GameEnvironment({
         ]);
       } else {
         appendActionLog([`Continue: Room state is ${nextRoom.roomState}.`]);
-      }
-
-      const shouldAutoAcknowledgeSystemEvent =
-        currentRoom.roomState === 'system_event' &&
-        currentRoom.systemEvent?.isLocalActor === true &&
-        nextRoom.roomState === 'waiting_continue' &&
-        nextRoom.systemEvent?.lastEventRecap !== undefined;
-      if (shouldAutoAcknowledgeSystemEvent) {
-        nextRoom = await acknowledgeRoomContinue(nextRoom);
-        appendActionLog([
-          nextRoom.roomState === 'active_encounter'
-            ? 'Continue: Encounter advanced.'
-            : 'Continue: Ready — waiting for the party.',
-        ]);
       }
 
       if (summary?.avatarDied) {
@@ -798,7 +802,9 @@ export function GameEnvironment({
   const outcomeResolutionAction = witnessDisplay.isWitness
     ? systemEventActor?.selectedAction
     : undefined;
-  const deferRewardDismiss = shouldDeferRewardDismiss(room, resultRollVisible);
+  const deferRewardDismiss = witnessDisplay.isWitness
+    ? witnessDisplay.showActorResult
+    : shouldDeferRewardDismiss(room, resultRollVisible);
   const localHasContinuePressed = room ? localContinuePressed(room) : false;
   const continueGlow = continueGlowClassForRoom(room);
   const continueWaitingAfterPress = localWaitingForRoomAdvance(room);
@@ -810,7 +816,7 @@ export function GameEnvironment({
   const showLoreGemReward = roomLoreGemEarned
     || serverResolution?.loreGemGranted === true
     || localParticipant?.preparedResult?.loreGemGranted === true;
-  function applyLoreGemRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
+  function applyEncounterRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
     applyRoomSnapshot(
       nextRoom,
       setRoom,
@@ -862,7 +868,8 @@ export function GameEnvironment({
                 encounter={encounter}
                 holdResultRollReset={holdResultRollReset}
                 loreGemCollected={loreGemCollected}
-                onRoomSnapshot={applyLoreGemRoomSnapshot}
+                onRoomSnapshot={applyEncounterRoomSnapshot}
+                isSystemEventActor={room?.systemEvent?.isLocalActor === true}
                 showLoreGemReward={showLoreGemReward}
                 imageSrc={imagePath(encounterImageName)}
                 inventory={avatar.inventory}
@@ -877,6 +884,7 @@ export function GameEnvironment({
                 witnessSuppressLocalResolution={witnessDisplay.isWitness}
                 isWitnessingLabel={isWitnessingLabel}
                 showWitnessResult={showWitnessResult}
+                witnessCanContinue={witnessDisplay.witnessCanContinue}
                 witnessEncounterId={witnessEncounterId}
                 witnessOutcome={witnessActorOutcome ?? null}
                 witnessAvatarLevel={systemEventActor?.avatar.level}

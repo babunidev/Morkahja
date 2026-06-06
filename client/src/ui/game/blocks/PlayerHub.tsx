@@ -275,6 +275,7 @@ export function PlayerHub({
                   onKick={onKickParticipant}
                   participant={participant}
                   roomState={roomState}
+                  systemEventActorPlayerId={room?.systemEvent?.actorPlayerId}
                   xpPulseToken={partyXpPulseByPlayer[participant.playerId]}
                 />
               );

@@ -308,13 +308,10 @@ export function applyEncounterInventoryChanges(
   encounterDifficulty: number,
   rewardAmount: number,
 ): AvatarInventory {
-  const amount = scaledUses(1, encounterDifficulty);
   let next = normalizeInventory(inventory);
 
-  if (amount > 0) {
-    for (const solutionId of usedSolutionIds) {
-      next = consumeSolutionFromInventoryState(next, solutionId, amount);
-    }
+  for (const solutionId of usedSolutionIds) {
+    next = consumeSolutionFromInventoryState(next, solutionId, 1);
   }
 
   if (success) {
@@ -421,16 +418,9 @@ export async function consumeSolutions(
   playerId: string,
   avatarId: string,
   solutionIds: number[],
-  encounterDifficulty: number,
 ): Promise<void> {
-  const amount = scaledUses(1, encounterDifficulty);
-
-  if (amount <= 0) {
-    return;
-  }
-
   for (const solutionId of solutionIds) {
-    await consumeSolution(playerId, avatarId, solutionId, amount);
+    await consumeSolution(playerId, avatarId, solutionId, 1);
   }
 }
 

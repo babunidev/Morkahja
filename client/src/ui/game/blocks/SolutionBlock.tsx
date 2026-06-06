@@ -24,6 +24,7 @@ import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
 } from '../../transitions/fade.js';
+import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const DEFAULT_DICE_BUTTON = diceButtonAssetPath(DEFAULT_DICE_ID);
@@ -43,12 +44,15 @@ interface SolutionRecord {
 interface VisibleSolutionSlot {
   available: boolean;
   description: string;
+  displayedUses: number;
   imageSrc: string;
   isPrimary: boolean;
+  itemsUsed: number;
   name: string;
+  poolUses: number;
+  requiredUses: number;
   solutionId: number;
   slot: SlotLetter;
-  uses: number;
 }
 
 const UNAVAILABLE_SOLUTION_OPACITY = 0.37;
@@ -334,6 +338,11 @@ const solutionTooltipDescriptionStyle: CSSProperties = {
   whiteSpace: 'pre-wrap',
 };
 
+const solutionTooltipChargeDetailStyle: CSSProperties = {
+  margin: 0,
+  whiteSpace: 'pre-line',
+};
+
 const solutionsById = solutionData as Record<string, SolutionRecord>;
 
 function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[] {
@@ -409,6 +418,44 @@ function previewSolutionForRequirement(
   return null;
 }
 
+function formatSolutionChargeTooltipDetail(solution: VisibleSolutionSlot): string {
+  const {
+    available,
+    displayedUses,
+    isPrimary,
+    itemsUsed,
+    poolUses,
+    requiredUses,
+  } = solution;
+  const poolLabel = isPrimary ? 'Total available' : 'Total (same type)';
+
+  if (!available) {
+    if (poolUses <= 0) {
+      return 'Not in inventory';
+    }
+
+    return [
+      `Charges: ${displayedUses}`,
+      `${poolLabel}: ${poolUses} / ${requiredUses} needed`,
+    ].join('\n');
+  }
+
+  if (requiredUses <= 1 && itemsUsed <= 1) {
+    return `Charges: ${displayedUses}`;
+  }
+
+  const lines = [
+    `Charges: ${displayedUses}`,
+    `${poolLabel}: ${poolUses} (${requiredUses} needed)`,
+  ];
+
+  if (itemsUsed > 1) {
+    lines.push(`Items used: ${itemsUsed}`);
+  }
+
+  return lines.join('\n');
+}
+
 function solutionForSlot(
   encounter: EncounterSnapshot,
   inventory: AvatarInventory | undefined,
@@ -417,6 +464,7 @@ function solutionForSlot(
   const items = inventoryItems(inventory);
   const primaryId = primaryRequirement(encounter, slot);
   const secondaryType = secondaryRequirement(encounter, slot);
+  const chargeState = slotHasEnoughSolutionCharges({ encounter, inventory, slot });
 
   if (primaryId <= 0 && secondaryType <= 0) {
     return null;
@@ -430,9 +478,11 @@ function solutionForSlot(
         .filter((item) => item.solutionType === secondaryType)
         .sort((a, b) => a.solutionId - b.solutionId)[0]
     : undefined;
-  const matchedItem = primaryMatch ?? secondaryMatch;
+  const matchedItem = chargeState.isPrimary
+    ? primaryMatch ?? secondaryMatch
+    : secondaryMatch ?? primaryMatch;
 
-  if (matchedItem) {
+  if (matchedItem && chargeState.available) {
     const solution = solutionsById[String(matchedItem.solutionId)];
 
     if (!solution) {
@@ -442,12 +492,17 @@ function solutionForSlot(
     return {
       available: true,
       description: solution.mSolutionText,
+      displayedUses: matchedItem.uses,
       imageSrc: solutionImagePath(solution),
-      isPrimary: matchedItem.solutionId === primaryMatch?.solutionId,
+      isPrimary: chargeState.isPrimary,
+      itemsUsed: new Set(
+        predictUsedSolutionIds({ encounter, inventory, action: slot }),
+      ).size,
       name: solution.mSolutionName,
+      poolUses: chargeState.totalUses,
+      requiredUses: chargeState.requiredUses,
       solutionId: matchedItem.solutionId,
       slot,
-      uses: matchedItem.uses,
     };
   }
 
@@ -460,12 +515,15 @@ function solutionForSlot(
   return {
     available: false,
     description: preview.solution.mSolutionText,
+    displayedUses: 0,
     imageSrc: solutionImagePath(preview.solution),
     isPrimary: preview.isPrimary,
+    itemsUsed: 0,
     name: preview.solution.mSolutionName,
+    poolUses: chargeState.totalUses,
+    requiredUses: chargeState.requiredUses,
     solutionId: preview.solution.mSolutionID,
     slot,
-    uses: 0,
   };
 }
 
@@ -666,9 +724,7 @@ export function SolutionBlock({
     showActionTooltip(
       solution.name,
       solution.available ? solution.description : '',
-      solution.available
-        ? `Charges: ${solution.uses}`
-        : 'Not in inventory',
+      formatSolutionChargeTooltipDetail(solution),
       !solution.available,
       solutionTooltipAnchorX(solution.slot),
       event,
@@ -929,7 +985,7 @@ export function SolutionBlock({
               {solutionTooltip.description ? (
                 <div style={solutionTooltipDescriptionStyle}>{solutionTooltip.description}</div>
               ) : null}
-              <div>{solutionTooltip.detail}</div>
+              <div style={solutionTooltipChargeDetailStyle}>{solutionTooltip.detail}</div>
             </>
           )}
         </div>

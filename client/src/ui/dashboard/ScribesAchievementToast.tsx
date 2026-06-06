@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { AchievementProgressDto } from '@shared/contracts';
+import { formatAchievementUnlockMessage } from '@shared/achievementUnlockMessage.js';
 import {
   protectedImageProps,
   protectedOverlayTextStyle,
@@ -82,30 +83,18 @@ function toastButtonClass(phase: ToastPhase): string {
   return classes.join(' ');
 }
 
-function becameArticle(title: string): string {
-  const normalized = title.trim();
-  if (!normalized) {
-    return 'a new rank';
-  }
-
-  const article = /^[aeiou]/i.test(normalized) ? 'an' : 'a';
-  return `${article} ${normalized}`;
-}
-
 export function ScribesAchievementToast({
   achievement,
   onDismiss,
   onOpenAchievements,
-  playerName,
 }: {
   achievement: AchievementProgressDto;
   onDismiss: () => void;
   onOpenAchievements: () => void;
-  playerName: string;
 }) {
   const [phase, setPhase] = useState<ToastPhase>('enter');
   const rankTitle = rankTitleForAchievement(achievement);
-  const displayName = playerName.trim() || 'Player';
+  const message = formatAchievementUnlockMessage(rankTitle, 'self');
 
   useEffect(() => {
     const shownTimer = window.setTimeout(() => {
@@ -135,7 +124,7 @@ export function ScribesAchievementToast({
   return (
     <div aria-live="polite" style={rootStyle}>
       <button
-        aria-label={`Achievement unlocked: ${rankTitle}. Open achievements.`}
+        aria-label={`${message} Open achievements.`}
         className={toastButtonClass(phase)}
         onClick={() => {
           onOpenAchievements();
@@ -153,14 +142,7 @@ export function ScribesAchievementToast({
         />
         <span>
           <p style={labelStyle}>Scribes</p>
-          <p style={messageStyle}>
-            {displayName}
-            {' '}
-            became
-            {' '}
-            {becameArticle(rankTitle)}
-            .
-          </p>
+          <p style={messageStyle}>{message}</p>
         </span>
       </button>
     </div>

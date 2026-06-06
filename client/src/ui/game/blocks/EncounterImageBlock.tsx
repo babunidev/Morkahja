@@ -7,13 +7,14 @@ import type {
   ParticipantResolutionSummaryDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import { activateRoomLoreGem, submitRoomSelection } from '../../../api/http.js';
+import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection } from '../../../api/http.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
 import { ENCOUNTER_FADE_DURATION_MS, encounterFadeTransition } from '../../transitions/fade.js';
 import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
+import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
 
@@ -119,8 +120,10 @@ export function EncounterImageBlock({
   skillbookOpen,
   title,
   witnessSuppressLocalResolution = false,
+  isSystemEventActor = false,
   isWitnessingLabel = false,
   showWitnessResult = false,
+  witnessCanContinue = false,
   systemEventActorName,
   outcomeRoll,
   outcomeResolutionAction,
@@ -157,8 +160,10 @@ export function EncounterImageBlock({
   skillbookOpen: boolean;
   title: string;
   witnessSuppressLocalResolution?: boolean;
+  isSystemEventActor?: boolean;
   isWitnessingLabel?: boolean;
   showWitnessResult?: boolean;
+  witnessCanContinue?: boolean;
   systemEventActorName?: string;
   outcomeRoll?: number;
   outcomeResolutionAction?: EncounterAction;
@@ -244,8 +249,15 @@ export function EncounterImageBlock({
   }, [encounter.snapshotId, serverResolution?.selectedRoll, witnessSuppressLocalResolution]);
 
   useEffect(() => {
-    onResultsVisibleChange?.(revealedRoll !== null);
-  }, [onResultsVisibleChange, revealedRoll]);
+    if (showWitnessResult) {
+      onResultsVisibleChange?.(true);
+      return;
+    }
+
+    if (!witnessSuppressLocalResolution) {
+      onResultsVisibleChange?.(revealedRoll !== null);
+    }
+  }, [onResultsVisibleChange, revealedRoll, showWitnessResult, witnessSuppressLocalResolution]);
 
   async function handleContinue(): Promise<void> {
     if (roomState === 'waiting_continue') {
@@ -302,6 +314,25 @@ export function EncounterImageBlock({
       });
   }
 
+  function commitSystemEventChoice(
+    action: EncounterAction,
+    solutionId: number | undefined,
+  ): void {
+    if (selectionSyncInFlightRef.current) {
+      return;
+    }
+
+    selectionSyncInFlightRef.current = true;
+    void submitRoomChoice(avatarId, action, solutionId)
+      .then((nextRoom) => {
+        onRoomSnapshot?.(nextRoom);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        selectionSyncInFlightRef.current = false;
+      });
+  }
+
   function handleActionReveal(
     action: EncounterAction,
     roll: number | null,
@@ -311,6 +342,11 @@ export function EncounterImageBlock({
     setRevealedRoll(roll);
     setSelectedSolutionId(solutionId ?? null);
 
+    if (roll !== null && roomState === 'system_event' && isSystemEventActor) {
+      commitSystemEventChoice(action, solutionId);
+      return;
+    }
+
     const isSelectionMoment = roll === null && (
       solutionId !== undefined || action === 'dice'
     );
@@ -318,6 +354,15 @@ export function EncounterImageBlock({
       syncSelectionToRoom(action, solutionId);
     }
   }
+
+  const outcomeAction = outcomeRoll !== undefined
+    ? (outcomeResolutionAction ?? selectedAction)
+    : (revealedRoll !== null ? selectedAction : null);
+  const usedSolutionIds = serverResolution?.usedInventorySolutions?.length
+    ? serverResolution.usedInventorySolutions
+    : outcomeAction && outcomeAction !== 'dice'
+      ? predictUsedSolutionIds({ encounter, inventory, action: outcomeAction })
+      : [];
 
   return (
     <section aria-label="Encounter Image" style={blockStyle}>
@@ -392,17 +437,26 @@ export function EncounterImageBlock({
       {showWitnessResult && witnessOutcome ? (
         <ResultBlock
           readOnlyWitness
+          witnessShowContinue={witnessCanContinue}
+          continueGlowClass={continueGlowClass}
+          continueWaitingAfterPress={continueWaitingAfterPress}
+          deferRewardDismiss={deferRewardDismiss}
+          disabled={continuePending}
           diceOutcomeIcon={diceButtonAsset}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
           avatarLevel={witnessAvatarLevel ?? avatarLevel}
           encounterId={witnessEncounterId ?? encounter.encounterId}
           hidden={loreOpen || inventoryOpen || skillbookOpen}
-          onContinue={() => undefined}
+          localContinuePressed={localContinuePressed}
+          onContinue={() => {
+            void handleContinue();
+          }}
           prosperityRewardId={null}
           resolutionAction={outcomeResolutionAction ?? 'dice'}
           rewardIds={witnessOutcome.rewards}
           roll={witnessOutcome.selectedRoll ?? null}
+          usedSolutionIds={witnessOutcome.usedInventorySolutions ?? []}
         />
       ) : !isWitnessingLabel ? (
         <ResultBlock
@@ -431,7 +485,7 @@ export function EncounterImageBlock({
           }
           rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
           roll={outcomeRoll ?? revealedRoll}
-          usedSolutionId={selectedSolutionId}
+          usedSolutionIds={usedSolutionIds}
         />
       ) : null}
       <SolutionBlock

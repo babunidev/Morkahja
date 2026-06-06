@@ -12,8 +12,7 @@ import solutionData from '../../../data/game/solutiondata.json';
 import { displayRollAsD20, interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
 import {
   predictEncounterLosses,
-  scaledUses,
-  usedEncounterSolution,
+  usedEncounterSolutions,
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import {
@@ -423,10 +422,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     onContinue,
     prosperityRewardId,
     readOnlyWitness = false,
+    witnessShowContinue = false,
     resolutionAction = null,
     rewardIds = [],
     roll,
-    usedSolutionId = null,
+    usedSolutionIds = [],
   }: {
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
@@ -444,10 +444,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     onContinue: () => void | Promise<void>;
     prosperityRewardId?: number | null;
     readOnlyWitness?: boolean;
+    witnessShowContinue?: boolean;
     resolutionAction?: EncounterAction | null;
     rewardIds?: number[];
     roll: number | null;
-    usedSolutionId?: number | null;
+    usedSolutionIds?: number[];
   },
   ref,
 ) {
@@ -473,12 +474,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const outcome = roll === null ? null : interpretRoll(roll);
   const displayRoll = roll === null ? null : displayRollAsD20(roll);
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
-  const usedSolution = readOnlyWitness
-    ? undefined
-    : usedEncounterSolution({ inventory, solutionId: usedSolutionId });
-  const usedSolutionCost = usedSolutionId === null
-    ? 0
-    : scaledUses(1, encounterDifficulty);
+  const usedSolutions = readOnlyWitness
+    ? []
+    : usedEncounterSolutions({ inventory, usedSolutionIds });
   const losses = readOnlyWitness || isLevelUp
     ? []
     : predictEncounterLosses({
@@ -486,7 +484,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       inventory,
       outcome,
       success: roll !== null && isRollFavorable(roll),
-      usedSolutionId,
+      usedSolutionIds,
     });
   const rewards = visibleEncounterRewardIds({
     encounterId,
@@ -659,7 +657,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }, [roll, lossesKey, losses.length, visible]);
 
   useEffect(() => {
-    if (readOnlyWitness) {
+    if (readOnlyWitness && !witnessShowContinue) {
       setContinueRevealPlaying(false);
       setContinueInteractive(false);
       return undefined;
@@ -728,7 +726,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       setContinueInteractive(false);
       setContinueEnableRattle(false);
     };
-  }, [lossesSequenceDone, visible, readOnlyWitness]);
+  }, [lossesSequenceDone, visible, readOnlyWitness, witnessShowContinue]);
 
   function buildLossFlights(): LossBubbleTargetSpec[] {
     const flights: LossBubbleTargetSpec[] = [];
@@ -892,7 +890,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const x = blockRect ? itemRect.left - blockRect.left + itemRect.width / 2 : itemRect.width / 2;
     const y = blockRect ? itemRect.top - blockRect.top : 0;
     const quantityLabel = sign === 'used'
-      ? `Used (−${usedSolutionCost})`
+      ? `Used (−${change.quantity})`
       : `${sign}${change.quantity}`;
 
     const description = change.solution.mSolutionText?.trim();
@@ -1156,7 +1154,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           pointerEvents: resultInteractive ? 'auto' : 'none',
         }}
       />
-      {!readOnlyWitness ? (
+      {(!readOnlyWitness || witnessShowContinue) ? (
         <button
           aria-disabled={!continueInteractive}
           aria-label="Continue"
@@ -1240,14 +1238,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
             ...rewardDismissLayerStyle(rewardDismissInProgress),
           }}
         >
-          {usedSolution && usedSolutionCost > 0
-            ? renderSolutionIcon(
-              { ...usedSolution, quantity: usedSolutionCost },
-              'used',
-              usedSolutionImageStyle,
-              usedSolutionItemStyle,
-            )
-            : null}
+          {usedSolutions.map((usedSolution) => renderSolutionIcon(
+            usedSolution,
+            'used',
+            usedSolutionImageStyle,
+            usedSolutionItemStyle,
+          ))}
           {resolutionAction === 'dice' ? (
             <img
               alt=""

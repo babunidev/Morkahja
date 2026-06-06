@@ -900,7 +900,6 @@ export default function App() {
             onOpenAchievements={() => {
               setAchievementsOverlayOpen(true);
             }}
-            playerName={playerName}
           />
         ) : null}
         {isAchievementWatchScreen(screen) && hearthBlessingToast ? (
