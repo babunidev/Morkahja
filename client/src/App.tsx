@@ -208,7 +208,6 @@ export default function App() {
   const helpInviteAcceptPendingRef = useRef(false);
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
-  const playerName = session?.playerName ?? '';
   useMobileFullscreen();
   useProtectedImages();
 

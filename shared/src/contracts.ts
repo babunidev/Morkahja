@@ -435,6 +435,7 @@ export interface ParticipantResolutionSummaryDto {
   rewards: number[];
   failurePenalty?: number;
   usedInventorySolutions?: number[];
+  lostInventorySolutions?: number[];
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;
@@ -463,6 +464,7 @@ export interface ParticipantPreparedResultDto {
   rewards: number[];
   failurePenalty?: number;
   usedInventorySolutions?: number[];
+  lostInventorySolutions?: number[];
   deathTriggered?: boolean;
   avatarDied?: boolean;
   leveledUp?: boolean;
