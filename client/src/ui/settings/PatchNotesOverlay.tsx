@@ -7,7 +7,7 @@ import {
 
 const OVERLAY_FADE_MS = 300;
 
-const PATCH_VERSION = '0.9.0-beta.1';
+const PATCH_VERSION = '0.9.0-beta.2';
 const PATCH_PERIOD = 'Late May – early June';
 
 interface PatchSection {
