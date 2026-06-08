@@ -1,5 +1,5 @@
 import { recoveryKeyFilename } from '@shared/recoveryKeyFilename.js';
-import { getPlayer, setPlayer } from '../db/postgresDocumentStore.js';
+import { getPlayer, listAvatars, setPlayer } from '../db/postgresDocumentStore.js';
 import type { PlayerDocument } from '../types/player.js';
 import {
   recordAccountKeySecurityReminderEvent,
@@ -40,6 +40,11 @@ export async function ensureDailySupportAppreciationNudge(
   const storedDay = player?.scribeNudges?.supportReminderUtcDay;
 
   if (storedDay === utcDay) {
+    return;
+  }
+
+  const avatars = await listAvatars(playerId);
+  if (avatars.length === 0) {
     return;
   }
 

@@ -16,6 +16,8 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
+import { PanelButton } from '../common/PanelButton.js';
+import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 const OVERLAY_FADE_MS = 300;
@@ -257,6 +259,33 @@ const diceLabelStyle: CSSProperties = {
   color: 'rgba(247, 239, 224, 0.82)',
 };
 
+const diceAddPanelButtonStyle: CSSProperties = {
+  padding: 0,
+};
+
+const diceAddButtonVisualStyle: CSSProperties = {
+  display: 'grid',
+  gap: 6,
+  justifyItems: 'center',
+  padding: 8,
+  borderRadius: 10,
+  border: '1px dashed rgba(255, 204, 102, 0.45)',
+  background: 'rgba(8, 5, 4, 0.55)',
+  color: '#ffcc66',
+  minWidth: 72,
+  boxSizing: 'border-box',
+  fontFamily: 'Georgia, serif',
+};
+
+const diceAddIconStyle: CSSProperties = {
+  width: 56,
+  height: 56,
+  display: 'grid',
+  placeItems: 'center',
+  fontSize: '1.75rem',
+  lineHeight: 1,
+};
+
 const fameListStyle: CSSProperties = {
   display: 'grid',
   gap: 10,
@@ -400,12 +429,16 @@ export function PlayerProfileOverlay({
   fallbackPlayerName,
   onAvatarsChanged,
   onClose,
+  onContentUnlocked,
   open,
+  playerId,
 }: {
   fallbackPlayerName: string;
   onAvatarsChanged?: () => void;
   onClose: () => void;
+  onContentUnlocked?: () => void;
   open: boolean;
+  playerId: string;
 }) {
   const [visible, setVisible] = useState(false);
   const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
@@ -415,6 +448,7 @@ export function PlayerProfileOverlay({
   const [titleSavePendingId, setTitleSavePendingId] = useState<string | null>(null);
   const [diceSavePending, setDiceSavePending] = useState(false);
   const [diceSaveError, setDiceSaveError] = useState<string | null>(null);
+  const [diceShopOpen, setDiceShopOpen] = useState(false);
 
   const refreshProfile = useCallback(async (): Promise<void> => {
     setLoadPending(true);
@@ -440,6 +474,7 @@ export function PlayerProfileOverlay({
       setTitleSavePendingId(null);
       setDiceSavePending(false);
       setDiceSaveError(null);
+      setDiceShopOpen(false);
       setLoadPending(false);
       return;
     }
@@ -550,6 +585,7 @@ export function PlayerProfileOverlay({
   const displayName = profile?.playerName?.trim() || fallbackPlayerName.trim() || 'Adventurer';
 
   return (
+    <>
     <div
       aria-label="Player profile"
       onClick={onClose}
@@ -617,40 +653,52 @@ export function PlayerProfileOverlay({
                 <h3 style={sectionTitleStyle}>Dice</h3>
                 {unlockedDiceCatalog.length === 0 ? (
                   <p style={messageStyle}>No dice unlocked yet.</p>
-                ) : (
-                  <div style={diceGridStyle}>
-                    {unlockedDiceCatalog.map((entry) => {
-                      const selected = entry.id === selectedDiceId;
+                ) : null}
+                <div style={diceGridStyle}>
+                  {unlockedDiceCatalog.map((entry) => {
+                    const selected = entry.id === selectedDiceId;
 
-                      return (
-                        <button
-                          aria-label={`Use ${entry.label}`}
-                          aria-pressed={selected}
-                          disabled={diceSavePending}
-                          key={entry.id}
-                          onClick={() => {
-                            void handleDiceSelect(entry.id);
-                          }}
-                          style={{
-                            ...diceButtonBaseStyle,
-                            ...(selected ? diceButtonSelectedStyle : {}),
-                            opacity: diceSavePending && !selected ? 0.7 : 1,
-                          }}
-                          type="button"
-                        >
-                          <img
-                            alt=""
-                            aria-hidden="true"
-                            {...protectedImageProps}
-                            src={entry.assetPath}
-                            style={dicePreviewStyle}
-                          />
-                          <span style={diceLabelStyle}>{entry.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                    return (
+                      <button
+                        aria-label={`Use ${entry.label}`}
+                        aria-pressed={selected}
+                        disabled={diceSavePending}
+                        key={entry.id}
+                        onClick={() => {
+                          void handleDiceSelect(entry.id);
+                        }}
+                        style={{
+                          ...diceButtonBaseStyle,
+                          ...(selected ? diceButtonSelectedStyle : {}),
+                          opacity: diceSavePending && !selected ? 0.7 : 1,
+                        }}
+                        type="button"
+                      >
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          {...protectedImageProps}
+                          src={entry.assetPath}
+                          style={dicePreviewStyle}
+                        />
+                        <span style={diceLabelStyle}>{entry.label}</span>
+                      </button>
+                    );
+                  })}
+                  <PanelButton
+                    aria-label="Unlock more dice"
+                    onClick={() => {
+                      playSfx(DEFAULT_BUTTON_SOUND);
+                      setDiceShopOpen(true);
+                    }}
+                    pressKey="profile-open-dice-shop"
+                    style={diceAddPanelButtonStyle}
+                    visualStyle={diceAddButtonVisualStyle}
+                  >
+                    <span style={diceAddIconStyle}>+</span>
+                    <span style={diceLabelStyle}>Add</span>
+                  </PanelButton>
+                </div>
               </div>
               <div>
                 <h3 style={sectionTitleStyle}>Wall of fame</h3>
@@ -669,6 +717,18 @@ export function PlayerProfileOverlay({
         </div>
       </section>
     </div>
+    <DiceShopOverlay
+      onClose={() => {
+        setDiceShopOpen(false);
+      }}
+      onContentUnlocked={onContentUnlocked}
+      onPlayerUpdated={() => {
+        void refreshProfile();
+      }}
+      open={diceShopOpen}
+      playerId={playerId}
+    />
+    </>
   );
 }
 

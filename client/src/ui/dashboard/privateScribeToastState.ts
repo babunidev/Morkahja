@@ -3,6 +3,7 @@ const STORAGE_KEY_PREFIX = 'morkahja.scribeToastsShown';
 const PRIVATE_SCRIBE_TOAST_EVENT_TYPES = new Set([
   'account_key_security_reminder',
   'support_appreciation_nudge',
+  'gems_received',
 ]);
 
 export function isPrivateScribeToastEvent(eventType: string): boolean {

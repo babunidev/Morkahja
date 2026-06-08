@@ -10,7 +10,7 @@
     "test:inventory": "tsx src/tests/initialInventory.test.ts",
     "test:session-auth": "tsx src/services/sessionService.test.ts",
     "test:rooms": "tsx src/services/roomService.test.ts",
-    "test:achievements": "tsx src/domain/achievements/adventurerAchievement.test.ts && tsx src/domain/achievements/alphaPlayerAchievement.test.ts && tsx src/domain/achievements/firestarterAchievement.test.ts && tsx src/domain/achievements/blessedAchievement.test.ts && tsx src/domain/achievements/encounterSolveAchievements.test.ts && tsx src/domain/achievements/contributorAchievement.test.ts && tsx src/domain/achievements/spiritguideAchievement.test.ts && tsx src/domain/achievements/dailyRewardService.test.ts && tsx src/domain/achievements/achievementScribes.test.ts",
+    "test:achievements": "tsx src/domain/achievements/adventurerAchievement.test.ts && tsx src/domain/achievements/alphaPlayerAchievement.test.ts && tsx src/domain/achievements/firestarterAchievement.test.ts && tsx src/domain/achievements/blessedAchievement.test.ts && tsx src/domain/achievements/encounterSolveAchievements.test.ts && tsx src/domain/achievements/contributorAchievement.test.ts && tsx src/domain/achievements/spiritguideAchievement.test.ts && tsx src/domain/achievements/achievementTitles.test.ts && tsx src/domain/achievements/dailyRewardService.test.ts && tsx src/domain/achievements/achievementScribes.test.ts",
     "test:dice": "tsx src/engine/diceInterpreter.test.ts",
     "test:commerce": "tsx src/services/expansionUnlock.test.ts && tsx src/domain/commerce/catalog.test.ts",
     "stripe:test-catalog": "node scripts/create-stripe-test-catalog.mjs",

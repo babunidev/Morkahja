@@ -649,6 +649,29 @@ button:focus-visible {
   animation: morkahja-avatar-enter-center-glow 700ms ease-in-out 2;
 }
 
+/* Footer buttons rattle once the game has faded in, signalling it is ready. */
+@keyframes morkahja-footer-ready-rattle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  14% {
+    transform: rotate(-6deg) scale(1.06);
+  }
+  30% {
+    transform: rotate(5deg) scale(1.04);
+  }
+  46% {
+    transform: rotate(-4deg) scale(1.05);
+  }
+  62% {
+    transform: rotate(3deg) scale(1.03);
+  }
+  80% {
+    transform: rotate(-1.5deg) scale(1.02);
+  }
+}
+
 @keyframes morkahja-continue-reveal-spin {
   0% {
     opacity: 0;

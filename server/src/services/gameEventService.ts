@@ -66,6 +66,10 @@ export interface ActivityFeedJoinAction {
   fromPlayerId: string;
 }
 
+export interface ActivityFeedOpenAchievementsAction {
+  type: 'open_achievements';
+}
+
 export interface ActivityFeedEntry {
   eventId: string;
   timestamp: number;
@@ -78,6 +82,7 @@ export interface ActivityFeedEntry {
   avatarPortrait?: string;
   avatarFrame?: string;
   joinAction?: ActivityFeedJoinAction;
+  openAchievementsAction?: ActivityFeedOpenAchievementsAction;
 }
 
 function payloadString(payload: Record<string, unknown>, key: string): string | undefined {
@@ -533,6 +538,24 @@ export async function recordGemsReceivedEvent(
   });
 }
 
+async function resolveOpenAchievementsAction(
+  event: GameEvent,
+  viewingPlayerId: string,
+): Promise<ActivityFeedOpenAchievementsAction | undefined> {
+  if (event.playerId !== viewingPlayerId) {
+    return undefined;
+  }
+
+  if (
+    event.type === 'daily_reward_claimed'
+    || event.type === 'hearth_blessing_ready'
+  ) {
+    return { type: 'open_achievements' };
+  }
+
+  return undefined;
+}
+
 async function resolveJoinAction(
   event: GameEvent,
   viewingPlayerId: string,
@@ -601,6 +624,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
       joinAction: await resolveJoinAction(event, playerId),
+      openAchievementsAction: await resolveOpenAchievementsAction(event, playerId),
     };
   }));
 

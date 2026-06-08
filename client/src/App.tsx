@@ -10,7 +10,6 @@ import type {
 import {
   createAvatar,
   fetchAchievements,
-  fetchActiveEncounter,
   fetchAvatar,
   fetchPendingHelpInvitations,
   heartbeatSession,
@@ -48,6 +47,7 @@ import {
 } from './ui/dashboard/privateScribeToastState.js';
 import ScribesAchievementToast from './ui/dashboard/ScribesAchievementToast.js';
 import { BackgroundProvider, PersistentBackground } from './ui/background/BackgroundProvider.js';
+import SolutionStarfield from './ui/background/SolutionStarfield.js';
 import { preloadAvatarSelectionAssets } from './ui/avatar/avatarPreload.js';
 import {
   buildAvatarFromPreset,
@@ -71,6 +71,7 @@ import {
   leaveAllRoomsForDashboard,
 } from './ui/game/roomSession.js';
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
+import AvatarSolutionInflow from './ui/transitions/AvatarSolutionInflow.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
@@ -135,17 +136,6 @@ async function loadAvatarForBootstrap(
   } catch (error) {
     console.error('Avatar bootstrap failed', error);
     return {};
-  }
-}
-
-async function loadEncounterForBootstrap(
-  avatar: Awaited<ReturnType<typeof fetchAvatar>> | null,
-): Promise<Awaited<ReturnType<typeof fetchActiveEncounter>>> {
-  try {
-    return await fetchActiveEncounter(avatar);
-  } catch (error) {
-    console.error('Encounter bootstrap failed', error);
-    return null;
   }
 }
 
@@ -502,7 +492,6 @@ export default function App() {
       },
       loadPlayer: loadPlayerForBootstrap,
       loadAvatar: loadAvatarForBootstrap,
-      loadEncounter: loadEncounterForBootstrap,
       syncState: async () => {
         await fetchStaticGameDataStatus();
       },
@@ -609,6 +598,10 @@ export default function App() {
   return (
     <BackgroundProvider>
       <PersistentBackground />
+        {avatarEnterHandoff ? (
+          <SolutionStarfield fadingOut={avatarEnterHandoff.fading === true} />
+        ) : null}
+        {avatarEnterHandoff ? <AvatarSolutionInflow avatar={avatarEnterHandoff.avatar} /> : null}
       <MusicEngine
         ambientRace={screen === 'game' ? activeAvatar?.race : null}
         ambientRole={screen === 'game' ? activeAvatar?.role : null}
@@ -723,10 +716,10 @@ export default function App() {
             onJoinRoomFromScribes={(action) => {
               void handleJoinRoomFromScribes(action);
             }}
-            onPrepareGame={(avatar, encounter) => {
+            onPrepareGame={(avatar, room) => {
               setActiveAvatar(avatar);
-              setActiveEncounter(encounter);
-              setActiveRoom(null);
+              setActiveEncounter(room.activeEncounter);
+              setActiveRoom(room);
               setHandoffLanded(false);
               setGameEnterHandoff(true);
               setScreen('game');

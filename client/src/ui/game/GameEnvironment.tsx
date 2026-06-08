@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import encountersData from '../../data/game/encountersdata.json';
-import solutionData from '../../data/game/solutiondata.json';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -29,9 +28,9 @@ import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/ava
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
 import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
-import { interpretRoll } from './encounterInventoryPreview.js';
 import {
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
+  FADE_DURATION_MS,
   encounterFadeTransition,
   fadeStyle,
   waitForFade,
@@ -45,7 +44,6 @@ import GameMessageToast from './GameMessageToast.js';
 import {
   continueGlowClassForRoom,
   localContinuePressed,
-  localNeedsContinueAck,
   localWaitingForRoomAdvance,
   shouldApplyServerInventory,
   shouldDeferRewardDismiss,
@@ -64,13 +62,6 @@ interface EncounterDataRecord {
   mEncounterImageName: string;
   mEncounterTitle: string;
 }
-
-interface SolutionDataRecord {
-  mSolutionID: number;
-  mSolutionName: string;
-}
-
-const solutionsById = solutionData as Record<string, SolutionDataRecord>;
 
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -147,10 +138,6 @@ function imagePath(imageName: string): string {
   return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
 }
 
-function rewardName(rewardId: number): string {
-  return solutionsById[String(rewardId)]?.mSolutionName ?? `Reward ${rewardId}`;
-}
-
 function experienceRequiredForNextLevel(level: number): number {
   return 7 * 2 ** (Math.max(1, level) - 1);
 }
@@ -218,6 +205,8 @@ export function GameEnvironment({
   onHome,
 }: GameEnvironmentProps) {
   const [visible, setVisible] = useState(!deferReveal);
+  const [footerReadyToken, setFooterReadyToken] = useState(0);
+  const footerReadyFiredRef = useRef(false);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [encounter, setEncounter] = useState(initialEncounter);
   const [room, setRoom] = useState<EncounterRoomSnapshotDto | null>(initialRoom);
@@ -226,7 +215,6 @@ export function GameEnvironment({
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
   const [homeVisible, setHomeVisible] = useState(false);
-  const [actionLog, setActionLog] = useState<string[]>([]);
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
   const [resultRollVisible, setResultRollVisible] = useState(false);
   const [diceButtonAsset, setDiceButtonAsset] = useState(
@@ -442,20 +430,45 @@ export function GameEnvironment({
     return () => window.clearTimeout(timer);
   }, [deferReveal]);
 
+  // Once the game has finished fading in, rattle the footer buttons once to
+  // signal that the encounter is ready to be played.
+  useEffect(() => {
+    if (!visible || footerReadyFiredRef.current) {
+      return undefined;
+    }
+    footerReadyFiredRef.current = true;
+    const timer = window.setTimeout(() => {
+      setFooterReadyToken(Date.now());
+    }, FADE_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [visible]);
+
   const witnessPollActive = witnessSystemEventDisplay(room).isWitness;
 
   useEffect(() => {
     let cancelled = false;
     const pollMs = witnessPollActive ? 250 : ROOM_POLL_MS;
 
-    async function ensureRoom(): Promise<void> {
+    async function bootstrapRoom(): Promise<void> {
+      if (initialRoom) {
+        applyRoomSnapshot(
+          initialRoom,
+          setRoom,
+          setEncounter,
+          setAvatar,
+          avatarRef.current,
+          roomRef.current,
+        );
+        return;
+      }
+
       try {
-        const room = await ensureSoloLeaderRoom(avatarRef.current.id);
+        const nextRoom = await ensureSoloLeaderRoom(avatarRef.current.id);
         if (cancelled) {
           return;
         }
         applyRoomSnapshot(
-          room,
+          nextRoom,
           setRoom,
           setEncounter,
           setAvatar,
@@ -467,9 +480,7 @@ export function GameEnvironment({
       }
     }
 
-    if (!initialRoom) {
-      void ensureRoom();
-    }
+    void bootstrapRoom();
 
     const poll = window.setInterval(() => {
       void fetchActiveRoomState(avatarRef.current.id).then(async ({ room: nextRoom, partyEjection }) => {
@@ -505,12 +516,6 @@ export function GameEnvironment({
           await runEncounterAdvanceTransition(baseline, nextRoom, roomAdvanceHooks);
         } else {
           applySnapshotOnly(nextRoom);
-        }
-
-        const skipAutoContinueForWitness = witnessSystemEventDisplay(nextRoom).isWitness;
-        if (localNeedsContinueAck(nextRoom) && !skipAutoContinueForWitness) {
-          await acknowledgeRoomContinue(nextRoom);
-          return;
         }
 
         const local = nextRoom.participants.find((participant) => participant.isLocal);
@@ -569,10 +574,6 @@ export function GameEnvironment({
     return room;
   }
 
-  function appendActionLog(entries: string[]): void {
-    setActionLog((currentLog) => [...currentLog, ...entries].slice(-24));
-  }
-
   /** Submit continue (ready). Dismiss runs only when the server advances the encounter snapshot. */
   async function acknowledgeRoomContinue(
     currentRoom: EncounterRoomSnapshotDto,
@@ -606,7 +607,6 @@ export function GameEnvironment({
     selectedSolutionId: number | null,
   ): Promise<void> {
     if (continuePending || deathPending) {
-      appendActionLog(['Continue blocked: another action is in progress.']);
       return;
     }
 
@@ -619,17 +619,11 @@ export function GameEnvironment({
       }
 
       if (!currentRoom) {
-        appendActionLog(['Continue failed: Could not sync encounter room.']);
         return;
       }
 
       if (currentRoom.roomState === 'waiting_continue') {
-        const nextRoom = await acknowledgeRoomContinue(currentRoom);
-        appendActionLog([
-          nextRoom.roomState === 'active_encounter'
-            ? 'Continue: Encounter advanced.'
-            : 'Continue: Ready — waiting for the party.',
-        ]);
+        await acknowledgeRoomContinue(currentRoom);
         onAchievementCheck?.();
         return;
       }
@@ -642,18 +636,22 @@ export function GameEnvironment({
         ) {
           const nextRoom = await submitRoomContinue(avatarRef.current.id);
           await runEncounterAdvanceTransition(currentRoom, nextRoom, roomAdvanceHooks);
-          appendActionLog([
-            nextRoom.roomState === 'waiting_continue'
-              ? 'Continue: Shared moment resolved — waiting for the party.'
-              : 'Continue: Shared moment resolved.',
-          ]);
           onAchievementCheck?.();
           return;
         }
       }
 
       if (currentRoom.roomState === 'system_event' && witnessSystemEventDisplay(currentRoom).isWitness) {
-        appendActionLog(['Only the actor can resolve this moment.']);
+        return;
+      }
+
+      const localBeforeChoice = currentRoom.participants.find((participant) => participant.isLocal);
+      if (
+        localBeforeChoice?.choiceState === 'ready_to_continue'
+        && localBeforeChoice.preparedResult !== undefined
+      ) {
+        await acknowledgeRoomContinue(currentRoom);
+        onAchievementCheck?.();
         return;
       }
 
@@ -664,31 +662,8 @@ export function GameEnvironment({
       );
       applySnapshotOnly(nextRoom);
 
-      const localAfterChoice = nextRoom.participants.find((participant) => participant.isLocal);
-      if (
-        nextRoom.roomState === 'waiting_continue'
-        && localAfterChoice?.continuePressed !== true
-      ) {
-        nextRoom = await acknowledgeRoomContinue(nextRoom);
-      }
-
       const local = nextRoom.participants.find((participant) => participant.isLocal);
       const summary = local?.preparedResult ?? local?.resolutionSummary;
-      if (summary) {
-        const outcome = summary.selectedRoll === undefined
-          ? ''
-          : interpretRoll(summary.selectedRoll);
-        appendActionLog([
-          `Encounter: ${title}`,
-          selectedSolutionId ? `Solution: ${rewardName(selectedSolutionId)}` : 'Solution: Dice',
-          summary.selectedRoll !== undefined
-            ? `Roll: ${summary.selectedRoll}${outcome ? ` (${outcome})` : ''}`
-            : 'Roll: unknown',
-          summary.message ? `Result: ${summary.message}` : '',
-        ]);
-      } else {
-        appendActionLog([`Continue: Room state is ${nextRoom.roomState}.`]);
-      }
 
       if (summary?.avatarDied) {
         handleLocalAvatarDeath(local?.avatar ?? avatar);
@@ -696,8 +671,7 @@ export function GameEnvironment({
 
       onAchievementCheck?.();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not continue encounter.';
-      appendActionLog([`Continue failed: ${message}`]);
+      console.error('Continue encounter failed', error);
     } finally {
       setContinuePending(false);
     }
@@ -858,6 +832,7 @@ export function GameEnvironment({
         />
       ) : null}
       <GameLayout
+        raiseBottom={homeVisible}
         top={
           <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
             <div style={headerSlotStyle}>
@@ -926,7 +901,6 @@ export function GameEnvironment({
         bottom={
           <div style={{ width: '100%', height: '100%', ...bottomDelay }}>
             <PlayerHub
-              actionLog={actionLog}
               avatar={avatar}
               hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
@@ -978,6 +952,7 @@ export function GameEnvironment({
               roomState={room?.roomState}
               localXpGainAmount={localXpGainAmount}
               partyXpPulseByPlayer={partyXpPulseByPlayer}
+              readyRattleToken={footerReadyToken}
             />
           </div>
         }

@@ -37,7 +37,6 @@ import { registerAchievementHandlers } from './domain/achievements/registerAchie
 import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { roomRoutes } from './routes/roomRoutes.js';
-import { createEncounter } from './services/encounterGenerator.js';
 import { loadAvatar } from './services/encounterPersistence.js';
 import { loadInventory } from './services/inventoryService.js';
 import {
@@ -380,10 +379,9 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
     createdAt: typeof body.createdAt === 'number' ? body.createdAt : undefined,
     lastPlayedAt: typeof body.lastPlayedAt === 'number' ? body.lastPlayedAt : undefined,
   });
-  const encounter = await createEncounter(playerId, avatar.id ?? (body.id as string));
 
   const avatarDto = toPersistedAvatarDto(avatar);
-  res.json({ playerId, avatar: avatarDto ?? avatar, encounter });
+  res.json({ playerId, avatar: avatarDto ?? avatar });
 });
 
 app.use(

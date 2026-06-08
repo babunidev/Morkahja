@@ -1,11 +1,18 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from '../avatar/AvatarPortraitStack.js';
-import { AVATAR_ENTER_FADE_MS, boundsToStyle, type Bounds } from './avatarEnterTransition.js';
+import {
+  AVATAR_ENTER_FADE_MS,
+  AVATAR_ENTER_OVERLAY_ATTR,
+  boundsToStyle,
+  type Bounds,
+} from './avatarEnterTransition.js';
 
+// Ease-in-out: accelerates from rest, reaches top speed mid-flight, then brakes
+// and settles smoothly into the target instead of snapping to a stop.
 const motionStyle: CSSProperties = {
   transitionProperty: 'left, top, width, height',
-  transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.45, 1)',
+  transitionTimingFunction: 'cubic-bezier(0.66, 0, 0.34, 1)',
   willChange: 'left, top, width, height',
 };
 
@@ -54,6 +61,7 @@ export function AvatarEnterHandoff({
   return (
     <div
       aria-hidden="true"
+      {...{ [AVATAR_ENTER_OVERLAY_ATTR]: '' }}
       style={{
         ...boundsToStyle(animatedBounds),
         ...motionStyle,

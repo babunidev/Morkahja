@@ -185,6 +185,7 @@ export function EncounterImageBlock({
   const underlayVisible = underlayImageSrc !== undefined;
   const lastSyncedSelectionKeyRef = useRef<string | null>(null);
   const selectionSyncInFlightRef = useRef(false);
+  const choiceCommitInFlightRef = useRef(false);
 
   function markMissingImage(src: string): void {
     setMissingImageSrcs((currentMissingImageSrcs) => (
@@ -333,6 +334,25 @@ export function EncounterImageBlock({
       });
   }
 
+  function commitEncounterChoice(
+    action: EncounterAction,
+    solutionId: number | undefined,
+  ): void {
+    if (choiceCommitInFlightRef.current) {
+      return;
+    }
+
+    choiceCommitInFlightRef.current = true;
+    void submitRoomChoice(avatarId, action, solutionId)
+      .then((nextRoom) => {
+        onRoomSnapshot?.(nextRoom);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        choiceCommitInFlightRef.current = false;
+      });
+  }
+
   function handleActionReveal(
     action: EncounterAction,
     roll: number | null,
@@ -344,6 +364,11 @@ export function EncounterImageBlock({
 
     if (roll !== null && roomState === 'system_event' && isSystemEventActor) {
       commitSystemEventChoice(action, solutionId);
+      return;
+    }
+
+    if (roll !== null && roomState === 'active_encounter') {
+      commitEncounterChoice(action, solutionId);
       return;
     }
 

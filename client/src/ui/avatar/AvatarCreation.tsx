@@ -1,10 +1,12 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
-  type MouseEvent,
   type PointerEvent,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import framesData from '../../data/game/frames.json';
@@ -14,8 +16,14 @@ import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
 import {
   useTooltipRevealBinding,
   type TooltipRevealCallbacks,
+  type TooltipRevealHandlerProps,
 } from '../hooks/useTooltipReveal.js';
-import { useLayoutMode } from '../layout/useLayoutMode.js';
+import {
+  anchoredTooltipCoords,
+  clampAnchoredTooltipPlacement,
+  tooltipTransform,
+  type AnchoredTooltipCoords,
+} from '../hooks/anchoredTooltip.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
@@ -46,10 +54,10 @@ type AvatarRole = (typeof ROLES)[number];
 type AvatarGender = (typeof GENDERS)[number];
 
 const RACE_DESCRIPTIONS: Record<AvatarRace, string> = {
-  Grimnir: 'Grimnir are stoneborn dwellers of deep mountains, wielding earth and metal magic. They forge vast underground cities, living in clan unity guided by elders, celebrating life through craft, feast, and resilience.',
-  Verdani: 'Verdani (Bloomkin): Playful nature-bound beings with horned forms, master water magic, healing, and animal kinship. They live in harmony-driven societies guided by elders, rituals, music, and flowing seasonal balance.',
-  Aevis: 'Aevis are ethereal Windweavers, beings of living magic who dwell in skyborn cities. Graceful and intelligent, they shape air and essence into art, architecture, and arcane mastery while guarding magical balance.',
-  Rokur: 'Rokur - Embersworn. Towering beings infused with sacred fire, the Rokur thrive within the harsh northern mountains through mastery over heat and flame. They value honor, strength, kinship, and the simple life of their ancient warrior traditions.',
+  Grimnir: 'The Grimnir are earthborn stone-forgers of immense craft and resilience. With bodies of mineral and metal, they shape vast Skylands into drifting cities of carved rock, crystalline frameworks, and living architecture. Masters of creation and communal artistry, they build, travel, and thrive among the open skies of Morkahja.',
+  Verdani: 'The Verdani are water-born Bloomkin of graceful form and fluid spirit. Shaped from living water into elegant, horned humanoids, they move with flowing poise and shifting beauty. Masters of hydromancy, healing, and song, they cultivate oasis-gardens across Evergrove, shaping desert life into balanced, shimmering sanctuaries of harmony and renewal.',
+  Aevis: 'The Aevis are wind-born scholars of exquisite refinement, their forms light and ever-shifting like breath given shape. They dwell in vast subterranean cities where air is carefully guided through crystal channels and stone spires. Masters of magic, architecture, and thought, they live with disciplined grace beneath the world’s surface.',
+  Rokur: 'The Rokur, known as the Embersworn, are fire-born elemental beings manifested in towering humanoid form. With bodies of living flame shaped by will and discipline, they dwell in mountain citadels and hearth-lit halls. Masters of endurance and unity, they forge, endure, and thrive through communal strength and ritual firecraft rites.',
 };
 
 const ROLE_DESCRIPTIONS: Record<AvatarRole, string> = {
@@ -90,11 +98,12 @@ const overlayStyle: CSSProperties = {
 
 const panelStyle: CSSProperties = {
   width: 'min(92vw, 520px)',
-  maxHeight: 'min(88vh, 680px)',
+  maxHeight: 'min(92vh, 760px)',
+  minHeight: 'min(86vh, 640px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
-  gap: 12,
-  padding: '20px 18px 16px',
+  gap: 20,
+  padding: '22px 18px 20px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
   borderRadius: 14,
   background: 'rgba(12, 7, 5, 0.92)',
@@ -120,49 +129,42 @@ const titleStyle: CSSProperties = {
 
 const acceptButtonStyle: CSSProperties = {
   width: 'clamp(52px, 11vw, 76px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
 };
 
 const panelBodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
   display: 'grid',
-  gap: 16,
+  gap: 22,
   justifyItems: 'center',
-  padding: '2px 4px 0',
+  padding: '14px 10px 12px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
 };
 
 const previewStyle: CSSProperties = {
-  width: 'min(48vw, 230px)',
+  width: 'min(54vw, 268px)',
   aspectRatio: '1 / 1.18',
-  display: 'grid',
-  placeItems: 'center',
 };
 
-const previewButtonStyle: CSSProperties = {
-  ...previewStyle,
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
+const previewVisualStyle: CSSProperties = {
+  display: 'grid',
+  placeItems: 'center',
+  width: '100%',
+  aspectRatio: '1 / 1.18',
 };
 
 const previewImageStyle: CSSProperties = {
   gridArea: '1 / 1',
-  width: '88%',
-  height: '88%',
+  width: '92%',
+  height: '92%',
   objectFit: 'contain',
 };
 
 const previewFrameStyle: CSSProperties = {
   gridArea: '1 / 1',
-  width: '100%',
-  height: '100%',
+  width: '105%',
+  height: '105%',
   objectFit: 'contain',
 };
 
@@ -173,6 +175,14 @@ const rowStyle: CSSProperties = {
   justifyContent: 'center',
   gap: 10,
   flexWrap: 'wrap',
+  padding: '6px 8px',
+  boxSizing: 'border-box',
+};
+
+const raceRowStyle: CSSProperties = {
+  ...rowStyle,
+  flexWrap: 'nowrap',
+  gap: 8,
 };
 
 const sectionLabelStyle: CSSProperties = {
@@ -205,9 +215,11 @@ const avatarWorkbenchStyle: CSSProperties = {
   alignItems: 'center',
   justifyItems: 'center',
   columnGap: 'clamp(10px, 2.5vw, 18px)',
-  rowGap: 6,
+  rowGap: 18,
   width: '100%',
-  marginTop: -22,
+  marginTop: -4,
+  padding: '4px 8px 0',
+  boxSizing: 'border-box',
 };
 
 const frameColumnStyle: CSSProperties = {
@@ -227,8 +239,9 @@ const avatarCenterColumnStyle: CSSProperties = {
   alignSelf: 'start',
   display: 'grid',
   justifyItems: 'center',
-  gap: 2,
+  gap: 16,
   width: '100%',
+  paddingTop: 4,
 };
 
 const genderColumnStyle: CSSProperties = {
@@ -250,47 +263,43 @@ const buttonImageStyle: CSSProperties = {
 
 const arrowButtonStyle: CSSProperties = {
   width: 48,
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
 };
 
 const optionButtonStyle: CSSProperties = {
   width: 'clamp(72px, 18vw, 118px)',
-  padding: 0,
-  border: 0,
   borderRadius: 10,
-  background: 'transparent',
-  cursor: 'pointer',
 };
 
-const selectedOptionStyle: CSSProperties = {
-  filter: 'drop-shadow(0 0 10px rgba(255, 204, 102, 0.82))',
-  outline: '2px solid #ffcc66',
+const raceOptionButtonStyle: CSSProperties = {
+  width: 'clamp(56px, 14vw, 92px)',
+  borderRadius: 10,
+  flex: '0 1 auto',
 };
 
 const confirmSideButtonStyle: CSSProperties = {
   width: 'clamp(56px, 13vw, 88px)',
-  padding: 0,
-  border: 0,
   borderRadius: 10,
-  background: 'transparent',
-  cursor: 'pointer',
 };
 
 const genderButtonStyle: CSSProperties = {
   width: 'clamp(48px, 11vw, 72px)',
+  borderRadius: 10,
+};
+
+const workbenchActionButtonStyle: CSSProperties = {
+  alignSelf: 'end',
+  marginTop: 10,
+};
+
+const footerImageButtonShellStyle: CSSProperties = {
   padding: 0,
   border: 0,
-  borderRadius: 10,
   background: 'transparent',
-  cursor: 'pointer',
 };
 
 const nameInputStyle: CSSProperties = {
   width: 'min(100%, clamp(140px, 34vw, 230px))',
-  marginTop: -2,
+  marginTop: 4,
   padding: '6px 10px',
   border: '1px solid #ffcc66',
   borderRadius: 8,
@@ -305,23 +314,26 @@ const nameInputStyle: CSSProperties = {
   outline: 'none',
 };
 
-const CURSOR_TOOLTIP_OFFSET_PX = 14;
-const CURSOR_TOOLTIP_MAX_WIDTH_PX = 320;
-const CURSOR_TOOLTIP_ESTIMATED_HEIGHT_PX = 160;
-const CURSOR_TOOLTIP_Z_INDEX = 26;
+const OPTION_TOOLTIP_WIDTH_PX = 320;
+const OPTION_TOOLTIP_Z_INDEX = 26;
 
-interface CursorTooltipState {
+interface OptionTooltipState {
+  anchor: AnchoredTooltipCoords;
   text: string;
-  x: number;
-  y: number;
 }
 
 type OptionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 
-const cursorTooltipStyle: CSSProperties = {
-  position: 'fixed',
-  zIndex: CURSOR_TOOLTIP_Z_INDEX,
-  width: `min(${CURSOR_TOOLTIP_MAX_WIDTH_PX}px, calc(100vw - ${CURSOR_TOOLTIP_OFFSET_PX * 2}px))`,
+const optionTooltipShellStyle: CSSProperties = {
+  position: 'absolute',
+  zIndex: OPTION_TOOLTIP_Z_INDEX,
+  width: OPTION_TOOLTIP_WIDTH_PX,
+  maxWidth: `min(${OPTION_TOOLTIP_WIDTH_PX}px, calc(100% - 16px))`,
+  pointerEvents: 'none',
+  boxSizing: 'border-box',
+};
+
+const optionTooltipPanelStyle: CSSProperties = {
   margin: 0,
   padding: '10px 12px',
   border: '1px solid rgba(255, 204, 102, 0.78)',
@@ -331,43 +343,11 @@ const cursorTooltipStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   fontSize: '0.9rem',
   lineHeight: 1.4,
-  textAlign: 'left',
+  textAlign: 'center',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
   boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  pointerEvents: 'none',
   boxSizing: 'border-box',
 };
-
-function tooltipPositionFromPointer(clientX: number, clientY: number): Pick<CursorTooltipState, 'x' | 'y'> {
-  const x = Math.min(
-    clientX + CURSOR_TOOLTIP_OFFSET_PX,
-    window.innerWidth - CURSOR_TOOLTIP_MAX_WIDTH_PX - CURSOR_TOOLTIP_OFFSET_PX,
-  );
-  const y = Math.min(
-    clientY + CURSOR_TOOLTIP_OFFSET_PX,
-    window.innerHeight - CURSOR_TOOLTIP_ESTIMATED_HEIGHT_PX - CURSOR_TOOLTIP_OFFSET_PX,
-  );
-
-  return {
-    x: Math.max(CURSOR_TOOLTIP_OFFSET_PX, x),
-    y: Math.max(CURSOR_TOOLTIP_OFFSET_PX, y),
-  };
-}
-
-function tooltipPositionFromTarget(target: HTMLElement): Pick<CursorTooltipState, 'x' | 'y'> {
-  const rect = target.getBoundingClientRect();
-
-  return tooltipPositionFromPointer(
-    rect.left + rect.width / 2,
-    rect.bottom,
-  );
-}
-
-function hasPointerCoordinates(
-  event: OptionTooltipTriggerEvent,
-): event is PointerEvent<HTMLButtonElement> | MouseEvent<HTMLButtonElement> {
-  return 'clientX' in event && typeof event.clientX === 'number';
-}
 
 function wrapIndex(index: number, length: number): number {
   return (index + length) % length;
@@ -424,6 +404,84 @@ function currentTimestamp(): number {
   return Date.now();
 }
 
+type CreationTooltipHandlers = Partial<TooltipRevealHandlerProps>;
+
+function CreationImageButton({
+  ariaLabel,
+  children,
+  imageSrc,
+  imageStyle = buttonImageStyle,
+  isPressed,
+  onClick,
+  pressAnimation,
+  pressKey,
+  pulse,
+  selected = false,
+  style,
+  tooltipHandlers,
+  visualStyle,
+}: {
+  ariaLabel: string;
+  children?: ReactNode;
+  imageSrc?: string;
+  imageStyle?: CSSProperties;
+  isPressed: (key: string) => boolean;
+  onClick: () => void;
+  pressAnimation: (pressed: boolean) => string | undefined;
+  pressKey: string;
+  pulse: (key: string) => void;
+  selected?: boolean;
+  style?: CSSProperties;
+  tooltipHandlers?: CreationTooltipHandlers;
+  visualStyle?: CSSProperties;
+}) {
+  const pointerHandlers = tooltipHandlers
+    ? {
+        ...tooltipHandlers,
+        onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
+          pulse(pressKey);
+          tooltipHandlers.onPointerDown?.(event);
+        },
+      }
+    : {
+        onPointerDown: () => {
+          pulse(pressKey);
+        },
+      };
+
+  return (
+    <button
+      aria-label={ariaLabel}
+      className={`morkahja-footer-button${selected ? ' morkahja-footer-button--selected' : ''}`}
+      onClick={() => {
+        playSfx(DEFAULT_BUTTON_SOUND);
+        onClick();
+      }}
+      style={{ ...footerImageButtonShellStyle, ...style }}
+      type="button"
+      {...pointerHandlers}
+    >
+      <span
+        className="morkahja-footer-button-visual"
+        style={{
+          ...visualStyle,
+          animation: pressAnimation(isPressed(pressKey)),
+        }}
+      >
+        {children ?? (
+          <img
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            src={imageSrc}
+            style={imageStyle}
+          />
+        )}
+      </span>
+    </button>
+  );
+}
+
 export function AvatarCreation({
   onCancel,
   onConfirm,
@@ -470,17 +528,62 @@ export function AvatarCreation({
   const [portraitIndex, setPortraitIndex] = useState(initialPortraitIndex);
   const [frameIndex, setFrameIndex] = useState(initialFrameIndex);
   const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
-  const [optionTooltip, setOptionTooltip] = useState<CursorTooltipState | null>(null);
+  const [optionTooltip, setOptionTooltip] = useState<OptionTooltipState | null>(null);
+  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const activeTriggerRef = useRef<HTMLElement | null>(null);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
-  const { mode } = useLayoutMode();
-  const mobilePortrait = mode === 'mobile-portrait';
   const { bind: bindTooltipReveal } = useTooltipRevealBinding(visible);
 
   useEffect(() => {
     if (!visible) {
       setOptionTooltip(null);
+      setTooltipPlacement(null);
+      activeTriggerRef.current = null;
     }
   }, [visible]);
+
+  useLayoutEffect(() => {
+    if (!optionTooltip || !overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
+      return undefined;
+    }
+
+    const container = overlayRef.current;
+    const trigger = activeTriggerRef.current;
+    const tooltipElement = tooltipRef.current;
+    const tooltipAnchorX = optionTooltip.anchor.anchorX;
+
+    function measureAndPlace(): void {
+      if (!overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const tooltipRect = tooltipElement.getBoundingClientRect();
+
+      if (tooltipRect.width <= 0 || tooltipRect.height <= 0) {
+        return;
+      }
+
+      setTooltipPlacement(
+        clampAnchoredTooltipPlacement(
+          containerRect,
+          triggerRect,
+          tooltipRect,
+          tooltipAnchorX,
+        ),
+      );
+    }
+
+    measureAndPlace();
+    const remeasureFrame = window.requestAnimationFrame(measureAndPlace);
+
+    return () => {
+      window.cancelAnimationFrame(remeasureFrame);
+    };
+  }, [optionTooltip]);
   const portrait = portraits[portraitIndex];
   const frame = frames[frameIndex];
   const race = raceFromPortrait(portrait);
@@ -529,60 +632,33 @@ export function AvatarCreation({
     text: string,
     event: OptionTooltipTriggerEvent,
   ): void {
-    if (hasPointerCoordinates(event)) {
-      setOptionTooltip({
-        text,
-        ...tooltipPositionFromPointer(event.clientX, event.clientY),
-      });
+    const trigger = event.currentTarget;
+
+    if (!(trigger instanceof HTMLElement) || !overlayRef.current) {
       return;
     }
 
-    const target = event.currentTarget;
-
-    if (target instanceof HTMLElement) {
-      setOptionTooltip({
-        text,
-        ...tooltipPositionFromTarget(target),
-      });
-    }
-  }
-
-  function moveOptionTooltip(
-    text: string,
-    event: PointerEvent<HTMLButtonElement>,
-  ): void {
-    setOptionTooltip((current) => (
-      current?.text === text
-        ? {
-            text,
-            ...tooltipPositionFromPointer(event.clientX, event.clientY),
-          }
-        : current
-    ));
+    activeTriggerRef.current = trigger;
+    setTooltipPlacement(null);
+    setOptionTooltip({
+      text,
+      anchor: anchoredTooltipCoords(overlayRef.current, trigger, 'center'),
+    });
   }
 
   function hideOptionTooltips(): void {
     setOptionTooltip(null);
+    setTooltipPlacement(null);
+    activeTriggerRef.current = null;
   }
 
   function bindOptionTooltip(description: string) {
-    const handlers = bindTooltipReveal({
+    return bindTooltipReveal({
       onShow: (event) => {
         showOptionTooltip(description, event);
       },
       onHide: hideOptionTooltips,
     });
-
-    if (mobilePortrait) {
-      return handlers;
-    }
-
-    return {
-      ...handlers,
-      onPointerMove: (event: PointerEvent<HTMLButtonElement>) => {
-        moveOptionTooltip(description, event);
-      },
-    };
   }
 
   function confirmAvatar(): void {
@@ -610,6 +686,7 @@ export function AvatarCreation({
   return createPortal(
     <>
     <div
+      ref={overlayRef}
       aria-label="Create Avatar"
       role="presentation"
       style={{
@@ -634,45 +711,74 @@ export function AvatarCreation({
         </header>
         <div data-avatar-creation-scroll="" style={panelBodyStyle}>
           <style>
-            {'[data-avatar-creation-scroll]::-webkit-scrollbar { display: none; }'}
+            {`[data-avatar-creation-scroll]::-webkit-scrollbar { display: none; }
+[data-avatar-creation-scroll] .morkahja-footer-button--selected:not(:hover):not(:focus-visible) .morkahja-footer-button-visual {
+  filter: drop-shadow(0 0 10px rgba(255, 204, 102, 0.82));
+}
+.morkahja-avatar-randomize-preview {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+}
+.morkahja-avatar-randomize-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  opacity: 0;
+  color: rgba(255, 204, 102, 0.88);
+  font-family: Georgia, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.92);
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+.morkahja-avatar-randomize-preview:hover .morkahja-avatar-randomize-hint,
+.morkahja-avatar-randomize-preview:focus-within .morkahja-avatar-randomize-hint {
+  opacity: 1;
+}`}
           </style>
-        <div aria-label="Choose race" style={rowStyle}>
+        <div aria-label="Choose race" style={raceRowStyle}>
           {RACES.map((raceOption) => (
-            <button
-              aria-label={`Choose ${raceOption}`}
+            <CreationImageButton
+              ariaLabel={`Choose ${raceOption}`}
+              imageSrc={raceAsset(raceOption)}
+              isPressed={isPressed}
               key={raceOption}
               onClick={() => {
                 chooseRandomPortrait(raceOption, role, gender);
               }}
-              {...bindOptionTooltip(RACE_DESCRIPTIONS[raceOption])}
-              style={{
-                ...optionButtonStyle,
-                ...(race === raceOption ? selectedOptionStyle : {}),
-              }}
-              type="button"
-            >
-              <img alt="" aria-hidden="true" draggable={false} src={raceAsset(raceOption)} style={buttonImageStyle} />
-            </button>
+              pressAnimation={pressAnimation}
+              pressKey={`avatar-race-${raceOption}`}
+              pulse={pulse}
+              selected={race === raceOption}
+              style={raceOptionButtonStyle}
+              tooltipHandlers={bindOptionTooltip(RACE_DESCRIPTIONS[raceOption])}
+            />
           ))}
         </div>
 
         <div aria-label="Choose role" style={rowStyle}>
           {ROLES.map((roleOption) => (
-            <button
-              aria-label={`Choose ${roleOption}`}
+            <CreationImageButton
+              ariaLabel={`Choose ${roleOption}`}
+              imageSrc={roleAsset(roleOption)}
+              isPressed={isPressed}
               key={roleOption}
               onClick={() => {
                 chooseRandomPortrait(race, roleOption, gender);
               }}
-              {...bindOptionTooltip(ROLE_DESCRIPTIONS[roleOption])}
-              style={{
-                ...optionButtonStyle,
-                ...(role === roleOption ? selectedOptionStyle : {}),
-              }}
-              type="button"
-            >
-              <img alt="" aria-hidden="true" draggable={false} src={roleAsset(roleOption)} style={buttonImageStyle} />
-            </button>
+              pressAnimation={pressAnimation}
+              pressKey={`avatar-role-${roleOption}`}
+              pulse={pulse}
+              selected={role === roleOption}
+              style={optionButtonStyle}
+              tooltipHandlers={bindOptionTooltip(ROLE_DESCRIPTIONS[roleOption])}
+            />
           ))}
         </div>
 
@@ -680,33 +786,51 @@ export function AvatarCreation({
           <div aria-label="Choose frame" style={frameColumnStyle}>
             <span style={frameLabelStyle}>Frame</span>
             <div style={frameControlsStyle}>
-              <button
-                aria-label="Previous frame"
+              <CreationImageButton
+                ariaLabel="Previous frame"
+                imageSrc={`${UI_ROOT}/im_button_arrowb_left.webp`}
+                isPressed={isPressed}
                 onClick={() => {
                   setFrameIndex((current) => wrapIndex(current - 1, frames.length));
                 }}
+                pressAnimation={pressAnimation}
+                pressKey="avatar-frame-prev"
+                pulse={pulse}
                 style={arrowButtonStyle}
-                type="button"
-              >
-                <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_left.webp`} style={buttonImageStyle} />
-              </button>
-              <button
-                aria-label="Next frame"
+              />
+              <CreationImageButton
+                ariaLabel="Next frame"
+                imageSrc={`${UI_ROOT}/im_button_arrowb_right.webp`}
+                isPressed={isPressed}
                 onClick={() => {
                   setFrameIndex((current) => wrapIndex(current + 1, frames.length));
                 }}
+                pressAnimation={pressAnimation}
+                pressKey="avatar-frame-next"
+                pulse={pulse}
                 style={arrowButtonStyle}
-                type="button"
-              >
-                <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_arrowb_right.webp`} style={buttonImageStyle} />
-              </button>
+              />
             </div>
           </div>
           <div style={avatarCenterColumnStyle}>
-            <button aria-label="Randomize portrait" onClick={chooseRandomDifferentPortrait} style={previewButtonStyle} type="button">
-              <img alt="" aria-hidden="true" draggable={false} src={`${AVATAR_ASSET_ROOT}/avatar_${portrait.avatarID}.webp`} style={previewImageStyle} />
-              <img alt="" aria-hidden="true" draggable={false} src={`${FRAME_ASSET_ROOT}/frame_${frame.frameID}.webp`} style={previewFrameStyle} />
-            </button>
+            <div className="morkahja-avatar-randomize-preview">
+              <CreationImageButton
+                ariaLabel="Randomize portrait"
+                isPressed={isPressed}
+                onClick={chooseRandomDifferentPortrait}
+                pressAnimation={pressAnimation}
+                pressKey="avatar-randomize"
+                pulse={pulse}
+                style={previewStyle}
+                visualStyle={previewVisualStyle}
+              >
+                <img alt="" aria-hidden="true" draggable={false} src={`${AVATAR_ASSET_ROOT}/avatar_${portrait.avatarID}.webp`} style={previewImageStyle} />
+                <img alt="" aria-hidden="true" draggable={false} src={`${FRAME_ASSET_ROOT}/frame_${frame.frameID}.webp`} style={previewFrameStyle} />
+              </CreationImageButton>
+              <span aria-hidden="true" className="morkahja-avatar-randomize-hint">
+                Randomize
+              </span>
+            </div>
             <input
               aria-label="Avatar name"
               onChange={(event) => {
@@ -718,92 +842,73 @@ export function AvatarCreation({
             />
           </div>
           <div aria-label="Choose gender" style={genderColumnStyle}>
-            <button
-              aria-label="Choose Male"
+            <CreationImageButton
+              ariaLabel="Choose Male"
+              imageSrc={genderAsset('Male')}
+              isPressed={isPressed}
               onClick={() => {
                 chooseRandomPortrait(race, role, 'Male');
               }}
-              style={{
-                ...genderButtonStyle,
-                ...(gender === 'Male' ? selectedOptionStyle : {}),
-              }}
-              type="button"
-            >
-              <img alt="" aria-hidden="true" draggable={false} src={genderAsset('Male')} style={buttonImageStyle} />
-            </button>
-            <button
-              aria-label="Choose Female"
+              pressAnimation={pressAnimation}
+              pressKey="avatar-gender-male"
+              pulse={pulse}
+              selected={gender === 'Male'}
+              style={genderButtonStyle}
+            />
+            <CreationImageButton
+              ariaLabel="Choose Female"
+              imageSrc={genderAsset('Female')}
+              isPressed={isPressed}
               onClick={() => {
                 chooseRandomPortrait(race, role, 'Female');
               }}
-              style={{
-                ...genderButtonStyle,
-                ...(gender === 'Female' ? selectedOptionStyle : {}),
-              }}
-              type="button"
-            >
-              <img alt="" aria-hidden="true" draggable={false} src={genderAsset('Female')} style={buttonImageStyle} />
-            </button>
+              pressAnimation={pressAnimation}
+              pressKey="avatar-gender-female"
+              pulse={pulse}
+              selected={gender === 'Female'}
+              style={genderButtonStyle}
+            />
           </div>
-          <button
-            aria-label="Cancel avatar creation"
+          <CreationImageButton
+            ariaLabel="Cancel avatar creation"
+            imageSrc={`${UI_ROOT}/im_button_delete.webp`}
+            isPressed={isPressed}
             onClick={onCancel}
-            onPointerDown={() => {
-              pulse('avatar-cancel');
-            }}
-            style={{ ...confirmSideButtonStyle, gridColumn: 1, gridRow: 2, justifySelf: 'start', alignSelf: 'end' }}
-            type="button"
-          >
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={`${UI_ROOT}/im_button_delete.webp`}
-              style={{
-                ...buttonImageStyle,
-                animation: pressAnimation(isPressed('avatar-cancel')),
-              }}
-            />
-          </button>
-          <button
-            aria-label="Accept avatar creation"
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              confirmAvatar();
-            }}
-            onPointerDown={() => {
-              pulse('avatar-ok');
-            }}
-            style={{ ...acceptButtonStyle, gridColumn: 3, gridRow: 2, alignSelf: 'end' }}
-            type="button"
-          >
-            <img
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              src={`${UI_ROOT}/im_button_yes.webp`}
-              style={{
-                ...buttonImageStyle,
-                animation: pressAnimation(isPressed('avatar-ok')),
-              }}
-            />
-          </button>
+            pressAnimation={pressAnimation}
+            pressKey="avatar-cancel"
+            pulse={pulse}
+            style={{ ...confirmSideButtonStyle, ...workbenchActionButtonStyle, gridColumn: 1, gridRow: 2, justifySelf: 'start' }}
+          />
+          <CreationImageButton
+            ariaLabel="Accept avatar creation"
+            imageSrc={`${UI_ROOT}/im_button_yes.webp`}
+            isPressed={isPressed}
+            onClick={confirmAvatar}
+            pressAnimation={pressAnimation}
+            pressKey="avatar-ok"
+            pulse={pulse}
+            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, gridRow: 2 }}
+          />
         </div>
         </div>
       </section>
+      {optionTooltip ? (
+        <div
+          ref={tooltipRef}
+          role="tooltip"
+          style={{
+            ...optionTooltipShellStyle,
+            left: tooltipPlacement?.left ?? optionTooltip.anchor.x,
+            top: tooltipPlacement?.top ?? optionTooltip.anchor.y,
+            transform: tooltipPlacement
+              ? 'none'
+              : tooltipTransform(optionTooltip.anchor.anchorX),
+          }}
+        >
+          <p style={optionTooltipPanelStyle}>{optionTooltip.text}</p>
+        </div>
+      ) : null}
     </div>
-    {optionTooltip ? (
-      <p
-        role="tooltip"
-        style={{
-          ...cursorTooltipStyle,
-          left: optionTooltip.x,
-          top: optionTooltip.y,
-        }}
-      >
-        {optionTooltip.text}
-      </p>
-    ) : null}
     </>,
     document.body,
   );

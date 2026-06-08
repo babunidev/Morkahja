@@ -255,6 +255,10 @@ export interface ActivityFeedJoinRoomActionDto {
   fromPlayerId: string;
 }
 
+export interface ActivityFeedOpenAchievementsActionDto {
+  type: 'open_achievements';
+}
+
 export interface ActivityFeedEntryDto {
   eventId: string;
   timestamp: number;
@@ -271,6 +275,8 @@ export interface ActivityFeedEntryDto {
   avatarFrame?: string;
   /** When set, the scribe entry can open or join the caller's encounter room. */
   joinAction?: ActivityFeedJoinRoomActionDto;
+  /** When set, tapping the scribe entry opens the achievements panel. */
+  openAchievementsAction?: ActivityFeedOpenAchievementsActionDto;
 }
 
 export interface ActivityFeedResponse {

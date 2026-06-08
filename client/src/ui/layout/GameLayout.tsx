@@ -5,6 +5,7 @@ import PortraitStage from './PortraitStage.js';
 interface GameLayoutProps {
   top: ReactNode;
   bottom: ReactNode;
+  raiseBottom?: boolean;
 }
 
 const layoutStyle: CSSProperties = {
@@ -14,11 +15,11 @@ const layoutStyle: CSSProperties = {
   overflow: 'hidden',
 };
 
-export function GameLayout({ top, bottom }: GameLayoutProps) {
+export function GameLayout({ top, bottom, raiseBottom = false }: GameLayoutProps) {
   return (
     <PortraitStage>
       <div style={layoutStyle}>
-        <GoldenSplitLayout top={top} bottom={bottom} />
+        <GoldenSplitLayout raiseBottom={raiseBottom} top={top} bottom={bottom} />
       </div>
     </PortraitStage>
   );

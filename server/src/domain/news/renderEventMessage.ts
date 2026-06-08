@@ -86,16 +86,21 @@ export function renderEventMessage(event: GameEvent): string {
     case 'encounter_started':
       return `${avatarLabel(payload)} entered ${encounterLabel(payload)}.`;
     case 'encounter_resolved': {
-      const outcome = readString(payload, 'outcome');
-      const success = payload.success === true;
-      const base = `${avatarLabel(payload)} ${outcomeVerb(outcome, success)} ${encounterLabel(payload)}.`;
-      if (outcome?.toLowerCase() === 'prosperity') {
-        return `${base}${formatEncounterRewardSuffix(payload)}`;
+      const outcome = readString(payload, 'outcome')?.toLowerCase();
+      const label = encounterLabel(payload);
+      const avatar = avatarLabel(payload);
+      if (outcome === 'prosperity') {
+        return `${avatar} triumphed at ${label}.${formatEncounterRewardSuffix(payload)}`;
       }
+      if (outcome === 'misery') {
+        return `${avatar} failed at ${label}.`;
+      }
+      const success = payload.success === true;
+      const base = `${avatar} ${outcomeVerb(outcome, success)} ${label}.`;
       return base;
     }
     case 'encounter_failed':
-      return `${avatarLabel(payload)} failed against ${encounterLabel(payload)}.`;
+      return `${avatarLabel(payload)} failed at ${encounterLabel(payload)}.`;
     case 'level_up': {
       const level = readNumber(payload, 'level');
       return level !== undefined
@@ -145,11 +150,8 @@ export function renderEventMessage(event: GameEvent): string {
       const encountersRequired = readNumber(payload, 'encountersRequired') ?? 42;
       return `${playerLabel(payload)} filled the Hearth Blessing (${encountersRequired} encounters). It is ready to claim.`;
     }
-    case 'daily_reward_claimed': {
-      const amount = readNumber(payload, 'gemAmount') ?? 1;
-      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
-      return `${playerLabel(payload)} claimed the Hearth Blessing (${amount} ${gemLabel}).`;
-    }
+    case 'daily_reward_claimed':
+      return `${playerLabel(payload)} claimed the Hearth Blessing.`;
     case 'help_requested':
     case 'help_called':
       return `${avatarLabel(payload)} calls out for help.`;

@@ -6,6 +6,10 @@ import { BLESSED_ACHIEVEMENT_ID } from './blessedAchievement.js';
 import { COMBATANT_ACHIEVEMENT_ID } from './encounterSolveAchievements.js';
 import { renderEventMessage } from '../news/renderEventMessage.js';
 import { levelUpScribeVisibility } from '../news/levelUpScribeVisibility.js';
+import {
+  ROOM_ENCOUNTER_SCRIBE_INTERVAL,
+  shouldPublishRoomEncounterScribe,
+} from '../news/roomEncounterScribePolicy.js';
 import { isVisibleInScribesFeed } from '../news/scribesFeedFilter.js';
 import { resolveScribesIconUrl } from '../news/scribesFeedPresentation.js';
 import type { GameEvent } from '../events/GameEvent.js';
@@ -131,7 +135,7 @@ const prosperityTriumph = {
 
 assert.equal(
   renderEventMessage(prosperityTriumph),
-  'Babuni triumphed over Frozen Pass. Rewards: Iron Blade, Soul Essence.',
+  'Babuni triumphed at Frozen Pass. Rewards: Iron Blade, Soul Essence.',
 );
 assert.equal(
   resolveScribesIconUrl(prosperityTriumph),
@@ -215,6 +219,27 @@ assert.equal(
   '/UI/03_DASHBOARD/im_gems.webp',
 );
 
+const hearthBlessingClaimed = {
+  eventId: 'hearth-claimed-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  type: 'daily_reward_claimed',
+  visibility: 'global' as const,
+  importance: 'high' as const,
+  payload: {
+    playerName: 'Babuni',
+    gemAmount: 4,
+    utcDay: '2026-05-24',
+  },
+};
+
+assert.equal(isVisibleInScribesFeed(hearthBlessingClaimed, 'player-a'), true);
+assert.equal(isVisibleInScribesFeed(hearthBlessingClaimed, 'player-b'), true);
+assert.equal(
+  renderEventMessage(hearthBlessingClaimed),
+  'Babuni claimed the Hearth Blessing.',
+);
+
 const accountKeyReminder = {
   eventId: 'key-1',
   timestamp: Date.now(),
@@ -277,7 +302,7 @@ const encounterFailed = {
 
 assert.equal(
   renderEventMessage(encounterFailed),
-  'Lyra failed against Frozen Pass.',
+  'Lyra failed at Frozen Pass.',
 );
 assert.equal(
   resolveScribesIconUrl(encounterFailed),
@@ -340,6 +365,14 @@ assert.equal(
 assert.equal(isVisibleInScribesFeed(helpRequested, 'player-b'), true);
 assert.equal(isVisibleInScribesFeed(helpRequested, 'player-a'), false);
 assert.equal(isVisibleInScribesFeed(roomEncounterStarted, 'player-b'), true);
+
+assert.equal(ROOM_ENCOUNTER_SCRIBE_INTERVAL, 21);
+assert.equal(shouldPublishRoomEncounterScribe(undefined), false);
+assert.equal(shouldPublishRoomEncounterScribe(0), false);
+assert.equal(shouldPublishRoomEncounterScribe(19), false);
+assert.equal(shouldPublishRoomEncounterScribe(20), true);
+assert.equal(shouldPublishRoomEncounterScribe(41), true);
+assert.equal(shouldPublishRoomEncounterScribe(42), false);
 
 const levelUpFriends = {
   eventId: 'level-up-2',

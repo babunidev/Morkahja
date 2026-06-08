@@ -195,6 +195,7 @@ function buildEncounterSolveView(
     rankOverlayUrl: rankDefinition?.rankOverlayPath
       ? toPublicPath(rankDefinition.rankOverlayPath)
       : undefined,
+    chainTitle: config.chainTitle,
     title: rankDefinition?.title ?? (rank > 0 ? fallback.title : config.chainTitle),
     text: rankDefinition?.text ?? (rank > 0 ? fallback.text : config.chainText),
     ranks: config.ranks.map((entry) => ({

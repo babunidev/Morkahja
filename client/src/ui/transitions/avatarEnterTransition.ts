@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
-import type { EncounterSnapshot, PersistedAvatar } from '../../api/http.js';
+import type { EncounterRoomSnapshotDto, PersistedAvatar } from '../../api/http.js';
 import { selectAvatar } from '../../api/http.js';
+import { ensureSoloLeaderRoom } from '../game/roomSession.js';
 import { AVATAR_ENTER_TARGET_ATTR } from '../avatar/AvatarPortraitStack.js';
 import { waitForFade } from './fade.js';
 
@@ -8,7 +9,12 @@ export const AVATAR_ENTER_FADE_MS = 420;
 export const AVATAR_ENTER_TO_CENTER_MS = 580;
 export const AVATAR_ENTER_CENTER_GLOW_MS = 1400;
 export const AVATAR_ENTER_TO_GAME_MS = 680;
-export const AVATAR_ENTER_CENTER_SCALE = 1.12;
+// Avatar swells noticeably on its way to the middle, then shrinks down to the
+// in-game portrait size as it flies into the game.
+export const AVATAR_ENTER_CENTER_SCALE = 1.55;
+
+/** Marks the moving avatar overlay so other effects can track its live bounds. */
+export const AVATAR_ENTER_OVERLAY_ATTR = 'data-avatar-enter-overlay';
 
 export type AvatarEnterHandoffPhase = 'to-center' | 'at-center' | 'to-game';
 
@@ -119,7 +125,7 @@ export async function runAvatarEnterHandoff({
   candidate: PersistedAvatar;
   onEnterHandoffChange: (snapshot: AvatarEnterHandoffSnapshot | null) => void;
   onHandoffLand?: () => void;
-  onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
+  onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   sourceElement: HTMLElement;
 }): Promise<void> {
   const fromBounds = readBounds(sourceElement);
@@ -130,8 +136,9 @@ export async function runAvatarEnterHandoff({
     phase: 'to-center',
   });
 
-  const { avatar: selectedAvatar, encounter } = await selectAvatar(candidate);
-  onPrepareGame(selectedAvatar, encounter);
+  const { avatar: selectedAvatar } = await selectAvatar(candidate);
+  const room = await ensureSoloLeaderRoom(selectedAvatar.id);
+  onPrepareGame(selectedAvatar, room);
   await waitForNextPaint();
   await waitMs(80);
 

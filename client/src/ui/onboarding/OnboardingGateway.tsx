@@ -1,6 +1,8 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { bootstrapSession, type ClientSession } from '../../api/http.js';
 import { seedDefaultAudioVolumesIfUnset } from '../audioVolume.js';
+import { PanelButton } from '../common/PanelButton.js';
+import { protectedImageProps } from '../protectedImage.js';
 import {
   deviceKeypair,
   downloadRecoveryKey,
@@ -13,13 +15,20 @@ import {
   signChallenge,
 } from '../../sessionKeys.js';
 import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
+import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
+
+const ONBOARDING_FADE_MS = 730;
 
 const BACKGROUND = '/UI/01_2_Agreement/menuBGplayerCreation.webp';
 const FALLBACK_BACKGROUND = '/UI/01_1_SignIn/menuBG.webp';
-const AGREE_BUTTON = '/UI/01_2_Agreement/NEWAgreeButt.png';
+const JOURNEY_EMBLEM = '/UI/01_2_Agreement/NEWAgreeButt.png';
 
-type Mode = 'gateway' | 'new' | 'restore';
+type Mode = 'gateway' | 'new';
+
+const hiddenFileInputStyle: CSSProperties = {
+  display: 'none',
+};
 
 const screenStyle: CSSProperties = {
   position: 'fixed',
@@ -74,15 +83,56 @@ const welcomeStyle: CSSProperties = {
   lineHeight: 1.3,
 };
 
-const buttonStyle: CSSProperties = {
+const journeyEmblemStyle: CSSProperties = {
+  display: 'block',
+  width: 'min(100%, 340px)',
+  height: 'auto',
+  maxHeight: 120,
+  margin: '0 auto',
+  objectFit: 'contain',
+  filter: 'drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45))',
+};
+
+const stepContentStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 14,
+  width: '100%',
+};
+
+const panelButtonVisualStyle: CSSProperties = {
+  width: '100%',
   minHeight: 44,
+  padding: '10px 16px',
   border: '1px solid rgba(255, 204, 102, 0.7)',
   borderRadius: 10,
   background: 'rgba(51, 0, 0, 0.82)',
   color: '#ffcc66',
-  cursor: 'pointer',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
+  letterSpacing: '0.03em',
+  boxSizing: 'border-box',
+};
+
+const primaryPanelButtonVisualStyle: CSSProperties = {
+  ...panelButtonVisualStyle,
+  minHeight: 48,
+  fontSize: '1.02rem',
+};
+
+const infoPanelButtonVisualStyle: CSSProperties = {
+  ...panelButtonVisualStyle,
+  minHeight: 40,
+  width: 'auto',
+  minWidth: 120,
+  padding: '8px 18px',
+  fontSize: '0.92rem',
+};
+
+const fullWidthPanelButtonStyle: CSSProperties = {
+  display: 'block',
+  width: 'min(100%, 340px)',
+  margin: '0 auto',
 };
 
 const fieldStyle: CSSProperties = {
@@ -105,6 +155,7 @@ const checkboxLabelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   fontSize: '0.9rem',
   textAlign: 'center',
+  maxWidth: 360,
 };
 
 const policyLinkButtonStyle: CSSProperties = {
@@ -130,6 +181,7 @@ const newJourneyFormStyle: CSSProperties = {
   display: 'grid',
   justifyItems: 'center',
   gap: 14,
+  width: '100%',
 };
 
 const centeredFieldStyle: CSSProperties = {
@@ -138,24 +190,40 @@ const centeredFieldStyle: CSSProperties = {
   textAlign: 'center',
 };
 
-const keyNoticeStyle: CSSProperties = {
-  ...warningStyle,
-  maxWidth: 360,
-  lineHeight: 1.32,
-  textAlign: 'center',
+const agreementBlockStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 10,
+  width: '100%',
 };
 
-const keyFileNameStyle: CSSProperties = {
-  display: 'block',
-  marginTop: 4,
-  color: '#ffcc66',
-  fontWeight: 700,
-};
+function scheduleOnboardingFadeIn(onVisible: () => void): () => void {
+  let raf2 = 0;
+  const raf1 = requestAnimationFrame(() => {
+    raf2 = requestAnimationFrame(onVisible);
+  });
 
-const newJourneyButtonStyle: CSSProperties = {
-  ...buttonStyle,
-  width: 'min(100%, 340px)',
-};
+  return () => {
+    cancelAnimationFrame(raf1);
+    if (raf2) {
+      cancelAnimationFrame(raf2);
+    }
+  };
+}
+
+function waitForOnboardingFade(): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ONBOARDING_FADE_MS);
+  });
+}
+
+function onboardingFadeStyle(visible: boolean): CSSProperties {
+  return {
+    opacity: visible ? 1 : 0,
+    transition: `opacity ${ONBOARDING_FADE_MS}ms ease`,
+    willChange: 'opacity',
+  };
+}
 
 export function OnboardingGateway({
   onSessionReady,
@@ -169,11 +237,60 @@ export function OnboardingGateway({
   const [keyAcknowledged, setKeyAcknowledged] = useState(false);
   const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
   const [termsOfServiceOpen, setTermsOfServiceOpen] = useState(false);
+  const [recoveryInfoOpen, setRecoveryInfoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [screenVisible, setScreenVisible] = useState(false);
+  const [screenExiting, setScreenExiting] = useState(false);
+  const [stepVisible, setStepVisible] = useState(true);
+  const restoreInputRef = useRef<HTMLInputElement>(null);
+  const stepFadeInCleanupRef = useRef<(() => void) | null>(null);
   const trimmedPlayerName = playerName.trim();
   const recoveryFileName = recoveryKeyFilename(trimmedPlayerName);
   const canCreate = trimmedPlayerName.length > 0 && policyAccepted && termsAccepted && keyAcknowledged && !busy;
+
+  useEffect(() => {
+    setScreenVisible(false);
+    return scheduleOnboardingFadeIn(() => {
+      setScreenVisible(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stepFadeInCleanupRef.current?.();
+    };
+  }, []);
+
+  async function transitionToMode(next: Mode): Promise<void> {
+    if (busy || next === mode) {
+      return;
+    }
+
+    stepFadeInCleanupRef.current?.();
+    stepFadeInCleanupRef.current = null;
+    setStepVisible(false);
+    await waitForOnboardingFade();
+    setMode(next);
+    stepFadeInCleanupRef.current = scheduleOnboardingFadeIn(() => {
+      setStepVisible(true);
+      stepFadeInCleanupRef.current = null;
+    });
+  }
+
+  function openRestoreFilePicker(): void {
+    if (busy) {
+      return;
+    }
+
+    restoreInputRef.current?.click();
+  }
+
+  async function finishOnboarding(session: ClientSession): Promise<void> {
+    setScreenExiting(true);
+    await waitForOnboardingFade();
+    onSessionReady(session);
+  }
 
   async function startNewJourney(): Promise<void> {
     if (!canCreate) {
@@ -194,12 +311,10 @@ export function OnboardingGateway({
       saveIdentityKeypair(session.playerId, identity);
       downloadRecoveryKey(identity, session.playerName);
       seedDefaultAudioVolumesIfUnset();
-      setMessage(`Losing ${recoveryKeyFilename(session.playerName)} means permanent loss of access.`);
-      onSessionReady(session);
+      await finishOnboarding(session);
     } catch (error) {
       console.error('New journey bootstrap failed', error);
       setMessage('Could not create journey. Check the backend connection.');
-    } finally {
       setBusy(false);
     }
   }
@@ -228,30 +343,82 @@ export function OnboardingGateway({
         publicKey: recoveryKey.publicKey,
       });
       seedDefaultAudioVolumesIfUnset();
-      onSessionReady(session);
+      await finishOnboarding(session);
     } catch (error) {
       console.error('Restore journey failed', error);
       setMessage('Could not restore journey from this key.');
-    } finally {
       setBusy(false);
     }
   }
 
+  const screenOpacity = screenVisible && !screenExiting;
+
   return (
-    <main aria-label="Morkahja Onboarding" style={screenStyle}>
+    <main
+      aria-label="Morkahja Onboarding"
+      style={{
+        ...screenStyle,
+        ...onboardingFadeStyle(screenOpacity),
+        pointerEvents: screenOpacity ? 'auto' : 'none',
+      }}
+    >
+      <input
+        ref={restoreInputRef}
+        accept=".key,application/json"
+        aria-hidden="true"
+        disabled={busy}
+        onChange={(event) => {
+          const file = event.target.files?.[0] ?? null;
+          event.target.value = '';
+          void restoreJourney(file);
+        }}
+        style={hiddenFileInputStyle}
+        tabIndex={-1}
+        type="file"
+      />
       <section style={panelStyle}>
         <div style={titleGroupStyle}>
           <h1 style={titleStyle}>Morkahja</h1>
           <p style={welcomeStyle}>Welcome, Adventurer!</p>
         </div>
+        <div
+          style={{
+            ...stepContentStyle,
+            ...onboardingFadeStyle(stepVisible),
+            pointerEvents: stepVisible ? 'auto' : 'none',
+          }}
+        >
         {mode === 'gateway' ? (
           <>
-            <button onClick={() => setMode('new')} style={buttonStyle} type="button">Start New Journey</button>
-            <button onClick={() => setMode('restore')} style={buttonStyle} type="button">Restore Existing Journey</button>
+            <PanelButton
+              disabled={busy}
+              onClick={() => void transitionToMode('new')}
+              pressKey="onboarding-start-new"
+              style={fullWidthPanelButtonStyle}
+              visualStyle={panelButtonVisualStyle}
+            >
+              Start New Journey
+            </PanelButton>
+            <PanelButton
+              disabled={busy}
+              onClick={openRestoreFilePicker}
+              pressKey="onboarding-restore"
+              style={fullWidthPanelButtonStyle}
+              visualStyle={panelButtonVisualStyle}
+            >
+              Restore Existing Journey
+            </PanelButton>
           </>
         ) : null}
         {mode === 'new' ? (
           <div style={newJourneyFormStyle}>
+            <img
+              alt=""
+              aria-hidden="true"
+              {...protectedImageProps}
+              src={JOURNEY_EMBLEM}
+              style={journeyEmblemStyle}
+            />
             <input
               aria-label="Player Name"
               onChange={(event) => setPlayerName(event.target.value)}
@@ -259,85 +426,100 @@ export function OnboardingGateway({
               style={centeredFieldStyle}
               value={playerName}
             />
-            <label style={checkboxLabelStyle}>
-              <input checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} type="checkbox" />
-              <span>
-                I accept the{' '}
-                <button
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setPrivacyPolicyOpen(true);
-                  }}
-                  style={policyLinkButtonStyle}
-                  type="button"
-                >
-                  Privacy Policy
-                </button>
-                .
-              </span>
-            </label>
-            <label style={checkboxLabelStyle}>
-              <input checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} type="checkbox" />
-              <span>
-                I accept the{' '}
-                <button
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setTermsOfServiceOpen(true);
-                  }}
-                  style={policyLinkButtonStyle}
-                  type="button"
-                >
-                  Terms of Service
-                </button>
-                .
-              </span>
-            </label>
-            <label style={checkboxLabelStyle}>
-              <input checked={keyAcknowledged} onChange={(event) => setKeyAcknowledged(event.target.checked)} type="checkbox" />
-              I understand that my Morkahja recovery key is required to restore access.
-            </label>
-            <p style={keyNoticeStyle}>
-              Creating your journey will automatically download your recovery file.
-              <span style={keyFileNameStyle}>{recoveryFileName}</span>
-              Keep it somewhere safe.
-              Losing this file means permanent loss of access.
-            </p>
-            <button
+            <div style={agreementBlockStyle}>
+              <label style={checkboxLabelStyle}>
+                <input
+                  checked={keyAcknowledged}
+                  onChange={(event) => setKeyAcknowledged(event.target.checked)}
+                  type="checkbox"
+                />
+                I understand that my Morkahja recovery key is required to restore access.
+              </label>
+              <PanelButton
+                onClick={() => setRecoveryInfoOpen(true)}
+                pressKey="onboarding-recovery-info"
+                visualStyle={infoPanelButtonVisualStyle}
+              >
+                Info
+              </PanelButton>
+              <label style={checkboxLabelStyle}>
+                <input
+                  checked={policyAccepted}
+                  onChange={(event) => setPolicyAccepted(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  I accept the{' '}
+                  <button
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setPrivacyPolicyOpen(true);
+                    }}
+                    style={policyLinkButtonStyle}
+                    type="button"
+                  >
+                    Privacy Policy
+                  </button>
+                  .
+                </span>
+              </label>
+              <label style={checkboxLabelStyle}>
+                <input
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  I accept the{' '}
+                  <button
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setTermsOfServiceOpen(true);
+                    }}
+                    style={policyLinkButtonStyle}
+                    type="button"
+                  >
+                    Terms of Service
+                  </button>
+                  .
+                </span>
+              </label>
+            </div>
+            <PanelButton
               disabled={!canCreate}
               onClick={() => void startNewJourney()}
+              pressKey="onboarding-create-journey"
               style={{
-                ...newJourneyButtonStyle,
-                minHeight: 56,
+                ...fullWidthPanelButtonStyle,
                 opacity: canCreate ? 1 : 0.45,
-                backgroundImage: `url(${AGREE_BUTTON})`,
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'contain',
               }}
-              type="button"
+              visualStyle={primaryPanelButtonVisualStyle}
             >
               Create Journey
-            </button>
-            <button disabled={busy} onClick={() => setMode('gateway')} style={newJourneyButtonStyle} type="button">Back</button>
+            </PanelButton>
+            <PanelButton
+              disabled={busy}
+              onClick={() => void transitionToMode('gateway')}
+              pressKey="onboarding-back-new"
+              style={fullWidthPanelButtonStyle}
+              visualStyle={panelButtonVisualStyle}
+            >
+              Back
+            </PanelButton>
           </div>
         ) : null}
-        {mode === 'restore' ? (
-          <>
-            <input
-              accept=".key,application/json"
-              disabled={busy}
-              onChange={(event) => void restoreJourney(event.target.files?.[0] ?? null)}
-              style={fieldStyle}
-              type="file"
-            />
-            <button disabled={busy} onClick={() => setMode('gateway')} style={buttonStyle} type="button">Back</button>
-          </>
-        ) : null}
         {message ? <p style={warningStyle}>{message}</p> : null}
+        </div>
       </section>
+      <RecoveryKeyInfoOverlay
+        onClose={() => {
+          setRecoveryInfoOpen(false);
+        }}
+        open={recoveryInfoOpen}
+        recoveryFileName={recoveryFileName}
+      />
       <PrivacyPolicyOverlay
         onClose={() => {
           setPrivacyPolicyOpen(false);

@@ -5,6 +5,7 @@ import {
   readAvatarDisplayTitle,
 } from '../domain/achievements/achievementTitles.js';
 import { loadAvatar } from './encounterPersistence.js';
+import { shouldPublishRoomEncounterScribe } from '../domain/news/roomEncounterScribePolicy.js';
 import { recordGameEvent } from './gameEventService.js';
 
 async function leaderAvatarPayload(
@@ -95,6 +96,22 @@ export async function recordRoomEncounterStartedEvent(
       participantCount: room.participants.filter((p) => p.choiceState !== 'disengaged').length,
     },
   });
+}
+
+export async function maybeRecordRoomEncounterStartedEvent(
+  room: EncounterRoom,
+): Promise<void> {
+  const leader = room.participants.find((participant) => participant.playerId === room.leaderPlayerId);
+  if (!leader) {
+    return;
+  }
+
+  const avatar = await loadAvatar(room.leaderPlayerId, leader.avatarId);
+  if (!shouldPublishRoomEncounterScribe(avatar?.progression?.encountersCompleted)) {
+    return;
+  }
+
+  await recordRoomEncounterStartedEvent(room);
 }
 
 export async function recordRoomEncounterResolvedEvent(

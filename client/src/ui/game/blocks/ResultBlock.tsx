@@ -9,10 +9,9 @@ import {
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import solutionData from '../../../data/game/solutiondata.json';
-import { displayRollAsD20, displayRollOutcome, interpretRoll, isRollFavorable } from '@shared/diceInterpreter';
+import { displayRollAsD20, displayRollOutcome, interpretRoll } from '@shared/diceInterpreter';
 import {
   encounterLossesFromSolutionIds,
-  predictEncounterLosses,
   usedEncounterSolutions,
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
@@ -415,7 +414,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     diceOutcomeIcon = DEFAULT_DICE_OUTCOME_ICON,
     disabled = false,
     showLoreGemReward = false,
-    encounterDifficulty,
+    encounterDifficulty: _encounterDifficulty,
     encounterRewardAmount = 1,
     avatarLevel = 1,
     encounterId,
@@ -488,13 +487,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     ? []
     : lostSolutionIds.length > 0
       ? encounterLossesFromSolutionIds({ inventory, lostSolutionIds, usedSolutionIds })
-      : predictEncounterLosses({
-        encounterDifficulty,
-        inventory,
-        outcome,
-        success: roll !== null && isRollFavorable(roll),
-        usedSolutionIds,
-      });
+      : [];
   const rewards = visibleEncounterRewardIds({
     encounterId,
     prosperityRewardId,

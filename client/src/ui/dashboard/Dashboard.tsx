@@ -7,7 +7,7 @@ import {
   fetchAchievements,
   fetchRecentActivity,
   loadStoredSession,
-  type EncounterSnapshot,
+  type EncounterRoomSnapshotDto,
   type PersistedAvatar,
 } from '../../api/http.js';
 import { hasUnseenAchievements } from './achievementsAttentionState.js';
@@ -258,7 +258,7 @@ export function Dashboard({
   onJoinFriend?: (friend: FriendSummaryDto) => void | Promise<void>;
   onJoinRoomFromScribes?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
   onPlay?: () => Promise<boolean> | boolean;
-  onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
+  onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   onLogout: () => void;
 }) {
   const [visible, setVisible] = useState(false);
@@ -519,9 +519,9 @@ export function Dashboard({
             onAvatarEnter={onAvatarEnter}
             onCreationOpenChange={setAvatarCreationOpen}
             onEnteringGameChange={setEnteringGame}
-            onPrepareGame={(avatar, encounter) => {
+            onPrepareGame={(avatar, room) => {
               onAvatarSlotsVisibleChange?.(false);
-              onPrepareGame(avatar, encounter);
+              onPrepareGame(avatar, room);
             }}
             visible={avatarSlotsVisible}
           />
@@ -751,6 +751,10 @@ export function Dashboard({
             setActivityOpen(false);
           }}
           onJoinRoom={onJoinRoomFromScribes}
+          onOpenAchievements={() => {
+            setActivityOpen(false);
+            onAchievementsOpenChange?.(true);
+          }}
           onReadStateChange={() => {
             void refreshScribesUnread();
           }}
@@ -805,7 +809,9 @@ export function Dashboard({
           onClose={() => {
             setProfileOpen(false);
           }}
+          onContentUnlocked={onAchievementCheck}
           open={profileOpen}
+          playerId={playerId}
         />
       ) : null}
     </main>

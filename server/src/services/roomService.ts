@@ -93,7 +93,7 @@ import {
   recordHelpRequestedEvent,
   recordPlayerDisengagedEvent,
   recordRoomEncounterResolvedEvent,
-  recordRoomEncounterStartedEvent,
+  maybeRecordRoomEncounterStartedEvent,
 } from './roomGameEvents.js';
 import { isPlayerRecentlyActive } from './playerInteractionService.js';
 import {
@@ -343,12 +343,13 @@ async function loadPendingLevelUpFlagsForParticipants(
 ): Promise<Map<string, boolean>> {
   const flags = new Map<string, boolean>();
 
-  await Promise.all(participants.map(async (participant) => {
+  // One query at a time — readProgression may use a single transaction client.
+  for (const participant of participants) {
     const progression = await readProgression(participant.playerId, participant.avatarId);
     if (progression?.pendingLevelUpRewards === true) {
       flags.set(participant.playerId, true);
     }
-  }));
+  }
 
   return flags;
 }
@@ -1427,6 +1428,7 @@ export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
   }
 
   const roomId = room.roomId;
+  const previousSnapshotId = room.activeEncounterSnapshot.snapshotId;
   const advanced = await withDocumentTransaction(async (transaction) => {
     const current = await loadEncounterRoomFromTransaction(transaction, roomId);
     if (!current || current.roomState !== 'waiting_continue' || !canAdvanceRoom(current)) {
@@ -1436,7 +1438,16 @@ export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
     return advanceWaitingRoomInTransaction(transaction, current);
   });
 
-  return advanced ?? room;
+  const result = advanced ?? room;
+  if (
+    advanced
+    && advanced.roomState === 'active_encounter'
+    && advanced.activeEncounterSnapshot.snapshotId !== previousSnapshotId
+  ) {
+    await maybeRecordRoomEncounterStartedEvent(advanced);
+  }
+
+  return result;
 }
 
 async function tickRoomById(roomId: string): Promise<EncounterRoom | null> {
@@ -1779,7 +1790,7 @@ export async function createRoom(
   await saveEncounterRoom(room);
   await syncActiveEncountersForRoom(room);
   await setPresenceInRoom(playerId, roomId);
-  await recordRoomEncounterStartedEvent(room);
+  await maybeRecordRoomEncounterStartedEvent(room);
   return tickInactivity(await reconcilePendingLevelUpForRoom(room));
 }
 

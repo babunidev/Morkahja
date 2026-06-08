@@ -1,6 +1,5 @@
 import solutionData from '../../data/game/solutiondata.json';
 import type { AvatarInventory, EncounterAction, InventoryItem } from '../../api/http.js';
-import type { RollOutcome } from '@shared/diceInterpreter';
 export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
 
 interface SolutionRecord {
@@ -227,55 +226,6 @@ export function predictUsedSolutionIds({
     : [];
 }
 
-function cloneInventory(inventory: AvatarInventory): AvatarInventory {
-  return {
-    spellbook: inventory.spellbook.map((item) => ({ ...item })),
-    items: inventory.items.map((item) => ({ ...item })),
-    essences: inventory.essences.map((item) => ({ ...item })),
-  };
-}
-
-function consumeOneChargeFromContainer(
-  inventory: AvatarInventory,
-  container: 'spellbook' | 'items' | 'essences',
-  solutionId: number,
-): void {
-  const index = inventory[container].findIndex((item) => item.solutionId === solutionId);
-  if (index === -1) {
-    return;
-  }
-
-  inventory[container][index].uses -= 1;
-  if (inventory[container][index].uses <= 0) {
-    inventory[container].splice(index, 1);
-  }
-}
-
-function consumeRandomLossChargesFromContainer(
-  inventory: AvatarInventory,
-  container: 'essences' | 'items',
-  amount: number,
-): number[] {
-  const lostSolutionIds: number[] = [];
-
-  for (let index = 0; index < amount; index += 1) {
-    const charges = inventory[container]
-      .flatMap((item) =>
-        item.uses > 0 ? Array.from({ length: item.uses }, () => item.solutionId) : [],
-      );
-
-    if (charges.length === 0) {
-      break;
-    }
-
-    const solutionId = charges[0]!;
-    lostSolutionIds.push(solutionId);
-    consumeOneChargeFromContainer(inventory, container, solutionId);
-  }
-
-  return lostSolutionIds;
-}
-
 function inventoryChangesFromSolutionIds(
   inventory: AvatarInventory | undefined,
   solutionIds: number[],
@@ -334,54 +284,6 @@ function toChange(item: InventoryItem, quantity: number): EncounterInventoryChan
   }
 
   return { quantity, solution };
-}
-
-/**
- * Predict inventory losses shown on the result block (excludes the used encounter solution).
- */
-export function predictEncounterLosses({
-  encounterDifficulty,
-  inventory,
-  outcome,
-  success,
-  usedSolutionIds,
-}: {
-  encounterDifficulty: number;
-  inventory: AvatarInventory | undefined;
-  outcome: RollOutcome | null;
-  success: boolean;
-  usedSolutionIds: number[];
-}): EncounterInventoryChange[] {
-  if (!inventory || success || !outcome) {
-    return [];
-  }
-
-  const amount = scaledUses(1, encounterDifficulty);
-  if (amount <= 0) {
-    return [];
-  }
-
-  const working = cloneInventory(inventory);
-  const usedSolutionIdSet = new Set(usedSolutionIds);
-  const lostSolutionIds: number[] = [];
-
-  for (const solutionId of usedSolutionIds) {
-    consumeOneChargeFromContainer(working, 'spellbook', solutionId);
-    consumeOneChargeFromContainer(working, 'items', solutionId);
-    consumeOneChargeFromContainer(working, 'essences', solutionId);
-  }
-
-  if (outcome === 'Hardship') {
-    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'essences', amount));
-  }
-
-  if (outcome === 'Misery') {
-    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'essences', amount));
-    lostSolutionIds.push(...consumeRandomLossChargesFromContainer(working, 'items', amount));
-  }
-
-  const filtered = lostSolutionIds.filter((solutionId) => !usedSolutionIdSet.has(solutionId));
-  return inventoryChangesFromSolutionIds(inventory, filtered);
 }
 
 function usedSolutionChanges(

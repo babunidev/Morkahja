@@ -27,9 +27,7 @@ import type {
   EncounterSnapshotDto,
   JoinFriendRoomResponse,
   InventoryItemDto,
-  LoreGemClaimResponse,
   LoreGemOfferDto,
-  LoreGemOfferResponse,
   PersistedAvatarDto,
   PlayerProfileResponse,
   PlayerResponse,
@@ -226,23 +224,6 @@ export async function setAvatarDisplayTitle(
   };
 }
 
-export async function offerLoreGem(avatarId: string): Promise<LoreGemOfferResponse> {
-  return request<LoreGemOfferResponse>('/encounter/lore-gem/offer', {
-    method: 'POST',
-    body: JSON.stringify({ avatarId }),
-  });
-}
-
-export async function claimLoreGem(
-  avatarId: string,
-  encounterKey: string,
-): Promise<LoreGemClaimResponse> {
-  return request<LoreGemClaimResponse>('/encounter/lore-gem/claim', {
-    method: 'POST',
-    body: JSON.stringify({ avatarId, encounterKey }),
-  });
-}
-
 export async function activateRoomLoreGem(
   avatarId: string,
   encounterKey: string,
@@ -356,28 +337,6 @@ export async function fetchAvatar(
   }
 }
 
-export async function fetchActiveEncounter(
-  avatar: AvatarResponse | null,
-): Promise<EncounterSnapshot | null> {
-  if (!avatar?.avatar?.id) {
-    return null;
-  }
-
-  const params = new URLSearchParams({ avatarId: avatar.avatar.id });
-
-  try {
-    return await request<EncounterSnapshot>(
-      `/encounter/active?${params.toString()}`,
-    );
-  } catch (error) {
-    if (error instanceof ApiRequestError && error.status === 404) {
-      return null;
-    }
-
-    throw error;
-  }
-}
-
 export async function fetchAvatars(): Promise<PersistedAvatar[]> {
   const response = await request<AvatarsResponse>('/avatars');
   return response.avatars.map((avatar) => normalizePersistedAvatar(avatar));
@@ -400,84 +359,20 @@ export async function createAvatar(
 
 export async function selectAvatar(
   avatar: PersistedAvatar,
-): Promise<{ avatar: PersistedAvatar; encounter: EncounterSnapshot }> {
-  const response = await request<{ avatar: PersistedAvatar; encounter: EncounterSnapshot }>('/avatar/select', {
+): Promise<{ avatar: PersistedAvatar }> {
+  const response = await request<{ avatar: PersistedAvatar }>('/avatar/select', {
     method: 'POST',
     body: JSON.stringify(avatar),
   });
 
   return {
     avatar: normalizePersistedAvatar(response.avatar),
-    encounter: response.encounter,
   };
 }
 
 export async function deleteAvatar(avatarId: string): Promise<void> {
   await request<{ ok: true }>(`/avatar/${encodeURIComponent(avatarId)}`, {
     method: 'DELETE',
-  });
-}
-
-export async function fetchOrCreateActiveEncounter(
-  avatar: PersistedAvatar,
-): Promise<EncounterSnapshot> {
-  const params = new URLSearchParams({ avatarId: avatar.id });
-
-  try {
-    return await request<EncounterSnapshot>(`/encounter/active?${params.toString()}`);
-  } catch (error) {
-    if (!(error instanceof ApiRequestError) || error.status !== 404) {
-      throw error;
-    }
-  }
-
-  return request<EncounterSnapshot>('/encounter/create', {
-    method: 'POST',
-    body: JSON.stringify({
-      avatarId: avatar.id,
-    }),
-  });
-}
-
-export async function resolveEncounterAction(
-  action: EncounterAction,
-  avatarId: string,
-): Promise<ResolveEncounterResponse> {
-  const response = await request<ResolveEncounterResponse>('/encounter/continue', {
-    method: 'POST',
-    body: JSON.stringify({
-      avatarId,
-      action,
-    }),
-  });
-
-  if (!response.avatar) {
-    return response;
-  }
-
-  return {
-    ...response,
-    avatar: normalizePersistedAvatar(response.avatar),
-  };
-}
-
-export async function clearEncounter(avatarId: string): Promise<void> {
-  await request<{ ok: true }>('/encounter/clear', {
-    method: 'POST',
-    body: JSON.stringify({
-      avatarId,
-    }),
-  });
-}
-
-export async function createNextEncounter(
-  avatar: PersistedAvatar,
-): Promise<EncounterSnapshot> {
-  return request<EncounterSnapshot>('/encounter/create', {
-    method: 'POST',
-    body: JSON.stringify({
-      avatarId: avatar.id,
-    }),
   });
 }
 

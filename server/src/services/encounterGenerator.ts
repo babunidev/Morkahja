@@ -70,7 +70,6 @@ import {
 } from './playerService.js';
 import {
   recordEncounterContinuedEvents,
-  recordEncounterStartedEvent,
   type EncounterContinuedEventContext,
 } from './gameEventService.js';
 import type { RoomEncounterLineage } from '../domain/rooms/RoomSystemEvent.js';
@@ -943,7 +942,6 @@ export async function createEncounter(
   }
 
   await saveActiveEncounter(activeSnapshot);
-  await recordEncounterStartedEvent(playerId, avatar, activeSnapshot);
   return activeSnapshot;
 }
 

@@ -7,9 +7,9 @@ import {
   readAvatarDisplayTitle,
   type UnlockedTitleOption,
 } from '../domain/achievements/achievementTitles.js';
+import { loadAchievementTitleSourcesForPlayer } from '../domain/achievements/achievementTitleSources.js';
 import { getPlayer, listAvatars, setPlayer } from '../db/postgresDocumentStore.js';
 import { loadAvatar, saveAvatar } from './encounterPersistence.js';
-import { getAchievementsSnapshotReadOnly } from './achievementService.js';
 import { loadAvatarProgression } from './avatarProgressionService.js';
 import type { AvatarRace, AvatarRole } from './playerService.js';
 
@@ -97,7 +97,7 @@ function toProfileAvatarView(avatar: AvatarDocument): PlayerProfileAvatarView | 
 export async function listUnlockedAchievementTitles(
   playerId: string,
 ): Promise<UnlockedTitleOption[]> {
-  const achievements = await getAchievementsSnapshotReadOnly(playerId);
+  const achievements = await loadAchievementTitleSourcesForPlayer(playerId);
   return collectUnlockedTitlesFromAchievements(achievements);
 }
 

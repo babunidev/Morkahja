@@ -3,6 +3,8 @@ import type { CSSProperties, ReactNode } from 'react';
 interface GoldenSplitLayoutProps {
   top: ReactNode;
   bottom: ReactNode;
+  /** Lifts the player hub above the encounter zone (e.g. while avatar details are open). */
+  raiseBottom?: boolean;
 }
 
 const layoutStyle: CSSProperties = {
@@ -33,11 +35,19 @@ const bottomStyle: CSSProperties = {
   zIndex: 1,
 };
 
-export function GoldenSplitLayout({ top, bottom }: GoldenSplitLayoutProps) {
+export function GoldenSplitLayout({ top, bottom, raiseBottom = false }: GoldenSplitLayoutProps) {
   return (
     <div style={layoutStyle}>
       <section aria-label="Encounter Zone" style={topStyle}>{top}</section>
-      <section aria-label="Player Hub" style={bottomStyle}>{bottom}</section>
+      <section
+        aria-label="Player Hub"
+        style={{
+          ...bottomStyle,
+          zIndex: raiseBottom ? 4 : 1,
+        }}
+      >
+        {bottom}
+      </section>
     </div>
   );
 }

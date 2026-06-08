@@ -9,7 +9,7 @@ import {
 import {
   createAvatar,
   fetchAvatars,
-  type EncounterSnapshot,
+  type EncounterRoomSnapshotDto,
   type PersistedAvatar,
 } from '../../api/http.js';
 
@@ -266,7 +266,7 @@ export function AvatarSelectionPanel({
   onEnteringGameChange?: (entering: boolean) => void;
   onEnterWorldFailed?: () => void;
   onHandoffLand?: () => void;
-  onPrepareGame: (avatar: PersistedAvatar, encounter: EncounterSnapshot) => void;
+  onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   visible?: boolean;
 }) {
   const [clickable, setClickable] = useState(false);

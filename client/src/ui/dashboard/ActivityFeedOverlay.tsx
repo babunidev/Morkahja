@@ -242,12 +242,14 @@ function formatRelativeTime(timestamp: number): string {
 export function ActivityFeedOverlay({
   onClose,
   onJoinRoom,
+  onOpenAchievements,
   onReadStateChange,
   open,
   playerId,
 }: {
   onClose: () => void;
   onJoinRoom?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
+  onOpenAchievements?: () => void;
   onReadStateChange?: () => void;
   open: boolean;
   playerId: string;
@@ -382,6 +384,17 @@ export function ActivityFeedOverlay({
                         type="button"
                       >
                         {joinPendingId === entry.eventId ? 'Joining…' : 'Join'}
+                      </button>
+                    ) : null}
+                    {entry.openAchievementsAction && onOpenAchievements ? (
+                      <button
+                        onClick={() => {
+                          onOpenAchievements();
+                        }}
+                        style={joinButtonStyle}
+                        type="button"
+                      >
+                        Achievements
                       </button>
                     ) : null}
                   </div>
