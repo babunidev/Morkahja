@@ -1,15 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import type {
   ParticipantFocusStateDto,
   RoomParticipantDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import solutionData from '../../../data/game/solutiondata.json';
-import {
-  diceButtonAssetPath,
-  DEFAULT_DICE_ID,
-} from '@shared/diceCatalog.js';
-import { displayRollAsD20 } from '@shared/diceInterpreter.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
 import { formatAvatarDisplayName } from '../../avatar/avatarDisplayName.js';
 import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
@@ -21,24 +15,17 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
+import {
+  PARTY_BADGE_SIZE_PX,
+  PartyParticipantChoiceBadge,
+} from './partyParticipantChoiceBadge.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
-const PARTY_BADGE_SIZE_PX = 62;
 
 interface PartyBadgeTooltip {
   label: string;
   description?: string;
 }
-
-interface SolutionRecord {
-  mSolutionIconName: string;
-  mSolutionID: number;
-  mSolutionName: string;
-  mSolutionText: string;
-}
-
-const solutionsById = solutionData as Record<string, SolutionRecord>;
 
 const slotStyle: CSSProperties = {
   width: '100%',
@@ -185,43 +172,25 @@ function focusBadgeTooltip(focusState: ParticipantFocusStateDto): PartyBadgeTool
   }
 }
 
-function participantChoiceRoll(participant: RoomParticipantDto): number | undefined {
-  return participant.preparedResult?.selectedRoll
-    ?? participant.resolutionSummary?.selectedRoll;
-}
-
-function PartyMemberOverlayBadge({
+function PartyMemberFocusBadge({
   iconSrc,
   iconStyle = badgeIconStyle,
   overlayStyle = badgeOverlayInteractiveStyle,
-  rollDisplay,
   tooltip,
 }: {
   iconSrc: string;
   iconStyle?: CSSProperties;
   overlayStyle?: CSSProperties;
-  rollDisplay?: number | null;
   tooltip: PartyBadgeTooltip | null;
 }) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const [tooltipVisible, setTooltipVisible] = useState(false);
-  const mountedWithRollRef = useRef(rollDisplay !== null && rollDisplay !== undefined);
-  const revealRollSeparately = rollDisplay !== null
-    && rollDisplay !== undefined
-    && !mountedWithRollRef.current;
-
-  useEffect(() => {
-    if (rollDisplay !== null && rollDisplay !== undefined) {
-      mountedWithRollRef.current = true;
-    }
-  }, [rollDisplay]);
 
   return (
     <>
       <span
         ref={anchorRef}
         aria-hidden="true"
-        className="morkahja-party-choice-badge"
         onMouseEnter={() => {
           if (tooltip) {
             setTooltipVisible(true);
@@ -233,18 +202,6 @@ function PartyMemberOverlayBadge({
         style={overlayStyle}
       >
         <img alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
-        {rollDisplay !== null && rollDisplay !== undefined ? (
-          <span
-            aria-hidden="true"
-            className={
-              revealRollSeparately
-                ? 'morkahja-party-choice-roll morkahja-party-choice-roll--reveal morkahja-result-outcome'
-                : 'morkahja-party-choice-roll morkahja-result-outcome'
-            }
-          >
-            {displayRollAsD20(rollDisplay)}
-          </span>
-        ) : null}
       </span>
       {tooltip ? (
         <AnchoredEncounterTooltip
@@ -256,74 +213,6 @@ function PartyMemberOverlayBadge({
       ) : null}
     </>
   );
-}
-
-function solutionImagePath(solutionId: number): string | null {
-  const solution = solutionsById[String(solutionId)];
-  if (!solution) {
-    return null;
-  }
-
-  return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
-}
-
-function solutionTooltipForId(
-  solutionId: number | undefined,
-): PartyBadgeTooltip | null {
-  if (solutionId === undefined) {
-    return null;
-  }
-
-  const solution = solutionsById[String(solutionId)];
-  if (!solution) {
-    return null;
-  }
-
-  return {
-    label: solution.mSolutionName,
-    description: solution.mSolutionText,
-  };
-}
-
-function diceChoiceIcon(participant: RoomParticipantDto): string {
-  return diceButtonAssetPath(participant.selectedDiceId ?? DEFAULT_DICE_ID);
-}
-
-function hasVisibleChoice(
-  participant: RoomParticipantDto,
-  roomState?: RoomStateDto,
-  systemEventActorPlayerId?: string,
-): boolean {
-  if (
-    participant.choiceState === 'disengaged'
-    || participant.choiceState === 'witnessing'
-  ) {
-    return false;
-  }
-
-  if (roomState === 'system_event') {
-    if (systemEventActorPlayerId !== participant.playerId) {
-      return false;
-    }
-
-    return (
-      participant.preparedResult !== undefined
-      || participant.resolutionSummary !== undefined
-      || participant.choiceState === 'ready_to_continue'
-      || participant.choiceState === 'resolved'
-    );
-  }
-
-  if (
-    participant.selectedSolutionId !== undefined
-    || participant.selectedAction !== undefined
-  ) {
-    return true;
-  }
-
-  return participant.choiceState === 'ready'
-    || participant.choiceState === 'resolved'
-    || participant.choiceState === 'ready_to_continue';
 }
 
 function statusLabel(participant: RoomParticipantDto, roomState?: RoomStateDto): string {
@@ -378,15 +267,6 @@ export function PartyMemberSlot({
     ? GAME_FOCUS_BUTTON_ICONS[focusState as keyof typeof GAME_FOCUS_BUTTON_ICONS]
     : undefined;
   const focusTooltip = focusState !== 'none' ? focusBadgeTooltip(focusState) : null;
-  const showChoice = hasVisibleChoice(participant, roomState, systemEventActorPlayerId) && !detailsOpen;
-  const choiceSolutionSrc = participant.selectedSolutionId
-    ? solutionImagePath(participant.selectedSolutionId)
-    : null;
-  const choiceSolutionTooltip = solutionTooltipForId(participant.selectedSolutionId);
-  const showDiceChoice = showChoice && !choiceSolutionSrc && participant.selectedAction === 'dice';
-  const diceChoiceSrc = diceChoiceIcon(participant);
-  const choiceRoll = participantChoiceRoll(participant);
-  const choiceRollDisplay = choiceRoll !== undefined ? displayRollAsD20(choiceRoll) : null;
   const badge = statusLabel(participant, roomState);
   const avatarDisplayName = formatAvatarDisplayName(participant.avatar);
   const avatarMeta = participantAvatarMeta(participant.avatar);
@@ -424,21 +304,14 @@ export function PartyMemberSlot({
             }}
             portrait={portraitSrc}
           />
-          {showChoice && (choiceSolutionSrc || showDiceChoice) ? (
-            <PartyMemberOverlayBadge
-              iconSrc={choiceSolutionSrc ?? diceChoiceSrc}
-              rollDisplay={choiceRoll}
-              tooltip={
-                choiceSolutionTooltip
-                ?? (showDiceChoice ? { label: 'Dice' } : null)
-                ?? (choiceRollDisplay !== null
-                  ? { label: `Roll ${choiceRollDisplay}` }
-                  : null)
-              }
-            />
-          ) : null}
+          <PartyParticipantChoiceBadge
+            hidden={detailsOpen}
+            participant={participant}
+            roomState={roomState}
+            systemEventActorPlayerId={systemEventActorPlayerId}
+          />
           {focusIconSrc && !detailsOpen ? (
-            <PartyMemberOverlayBadge
+            <PartyMemberFocusBadge
               iconSrc={focusIconSrc}
               iconStyle={focusBadgeIconStyle}
               overlayStyle={focusBadgeOverlayStyle}

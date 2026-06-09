@@ -447,6 +447,12 @@ export function PlayerHub({
 
                       onHome={onHome}
 
+                      roomParticipant={participant}
+
+                      roomState={roomState}
+
+                      systemEventActorPlayerId={room?.systemEvent?.actorPlayerId}
+
                       xpGainAmount={localXpGainAmount}
 
                     />

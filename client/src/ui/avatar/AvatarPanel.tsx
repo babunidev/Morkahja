@@ -1,9 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import type { PersistedAvatar } from '../../api/http.js';
+import type { PersistedAvatar, RoomParticipantDto, RoomStateDto } from '../../api/http.js';
 import { formatAvatarDisplayName } from './avatarDisplayName.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
+import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 
@@ -27,6 +28,7 @@ const imageStackButtonStyle: CSSProperties = {
 };
 
 const imageStackInnerStyle: CSSProperties = {
+  position: 'relative',
   display: 'grid',
   placeItems: 'center',
   width: '100%',
@@ -171,6 +173,9 @@ export function AvatarPanel({
   homeVisible = false,
   onDetailsVisibleChange,
   onHome,
+  roomParticipant,
+  roomState,
+  systemEventActorPlayerId,
   xpGainAmount = 0,
 }: {
   avatar: PersistedAvatar;
@@ -178,6 +183,9 @@ export function AvatarPanel({
   homeVisible?: boolean;
   onDetailsVisibleChange?: (visible: boolean) => void;
   onHome?: () => void;
+  roomParticipant?: RoomParticipantDto;
+  roomState?: RoomStateDto;
+  systemEventActorPlayerId?: string;
   xpGainAmount?: number;
 }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -241,6 +249,14 @@ export function AvatarPanel({
                   />
                 </div>
               </div>
+              {roomParticipant ? (
+                <PartyParticipantChoiceBadge
+                  hidden={showDetails}
+                  participant={roomParticipant}
+                  roomState={roomState}
+                  systemEventActorPlayerId={systemEventActorPlayerId}
+                />
+              ) : null}
             </div>
           </span>
         </button>
