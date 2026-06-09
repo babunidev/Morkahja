@@ -10,6 +10,7 @@ import {
   getActiveRoomForPlayer,
   joinRoom,
   kickParticipant,
+  leaveAllRoomsForPlayer,
   leaveRoom,
   listPendingHelpInvitations,
   participantsAtSystemEventStart,
@@ -25,7 +26,7 @@ import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
-import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
+import { loadEncounterRoom, saveEncounterRoom, findActiveRoomIdForPlayerAvatar } from './roomPersistence.js';
 import { loadSoloRoomCheckpoint } from './soloRoomCheckpointService.js';
 
 function randomDeviceKey(): string {
@@ -1099,6 +1100,30 @@ assert.equal(localGuest?.preparedResult, undefined);
 assert.ok((localGuest?.resolutionSummary?.rewards?.length ?? 0) >= 0);
 
 await leaveRoom(guestSession.playerId, guestAvatarId);
+const guestSoloRoom = await createRoom(guestSession.playerId, guestAvatarId);
+assert.equal(guestSoloRoom.leaderPlayerId, guestSession.playerId);
+assert.equal(guestSoloRoom.participants.length, 1);
+assert.equal(guestSoloRoom.participants[0]?.avatarId, guestAvatarId);
+assert.equal(guestSoloRoom.participants[0]?.slotIndex, 0);
+const partyAfterGuestSoloPlay = await loadEncounterRoom(partyRoom.roomId);
+assert.ok(
+  !partyAfterGuestSoloPlay?.participants.some(
+    (participant) => participant.playerId === guestSession.playerId,
+  ),
+  'avatar selection solo play should fully depart the old party room',
+);
+
+await leaveRoom(guestSession.playerId, guestAvatarId);
+await leaveAllRoomsForPlayer(guestSession.playerId);
+const partyAfterGuestLeaveAll = await loadEncounterRoom(partyRoom.roomId);
+assert.ok(
+  !partyAfterGuestLeaveAll?.participants.some(
+    (participant) => participant.playerId === guestSession.playerId,
+  ),
+  'leave all should remove the player from party rooms instead of leaving a disengaged ghost',
+);
+assert.equal(await findActiveRoomIdForPlayerAvatar(guestSession.playerId, guestAvatarId), null);
+
 await submitContinue(session.playerId, avatarId);
 const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
 assert.equal(advancedWhileGuestAway?.roomState, 'active_encounter');
@@ -1156,6 +1181,25 @@ assert.ok(soloCheckpoint);
 assert.equal(soloCheckpoint.participant.preparedCommit, undefined);
 assert.equal(soloCheckpoint.participant.preparedResult, undefined);
 assert.ok(soloCheckpoint.participant.resolutionSummary);
+
+const countAdventureStartedEvents = (
+  entries: Awaited<ReturnType<typeof queryActivityFeed>>,
+): number => entries.filter((entry) => entry.eventType === 'adventure_started').length;
+
+const adventureStartedBeforeRestore = countAdventureStartedEvents(
+  await queryActivityFeed(soloCheckpointSession.playerId),
+);
+assert.ok(adventureStartedBeforeRestore >= 1);
+
+await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+const adventureStartedAfterRestore = countAdventureStartedEvents(
+  await queryActivityFeed(soloCheckpointSession.playerId),
+);
+assert.equal(
+  adventureStartedAfterRestore,
+  adventureStartedBeforeRestore + 1,
+  'restoring a solo checkpoint should publish adventure_started',
+);
 
 const kickGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const kickGuestIdentityJwk = JSON.stringify(kickGuestKeyPair.publicKey.export({ format: 'jwk' }));

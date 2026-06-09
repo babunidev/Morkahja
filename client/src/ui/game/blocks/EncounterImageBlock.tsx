@@ -8,6 +8,7 @@ import type {
   RoomStateDto,
 } from '../../../api/http.js';
 import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection } from '../../../api/http.js';
+import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
@@ -22,6 +23,8 @@ import SolutionBlock from './SolutionBlock.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
+const SYSTEM_EVENT_CHOICE_RETRY_MS = 400;
+const SYSTEM_EVENT_CHOICE_MAX_RETRIES = 12;
 
 const blockStyle: CSSProperties = {
   width: '100%',
@@ -195,6 +198,10 @@ export function EncounterImageBlock({
   const lastSyncedSelectionKeyRef = useRef<string | null>(null);
   const selectionSyncInFlightRef = useRef(false);
   const choiceCommitInFlightRef = useRef(false);
+  const pendingSystemEventChoiceRef = useRef<{
+    action: EncounterAction;
+    solutionId?: number;
+  } | null>(null);
   const showWitnessLabel = isWitnessingLabel && !showWitnessResult;
   const witnessLabelPresence = useOpacityPresence(showWitnessLabel);
   const witnessResultLatchRef = useRef(false);
@@ -279,6 +286,7 @@ export function EncounterImageBlock({
     setSelectedAction('dice');
     setSelectedSolutionId(null);
     lastSyncedSelectionKeyRef.current = null;
+    pendingSystemEventChoiceRef.current = null;
   }, [encounter.snapshotId, holdResultRollReset]);
 
   useEffect(() => {
@@ -363,6 +371,53 @@ export function EncounterImageBlock({
       .catch(() => undefined)
       .finally(() => {
         selectionSyncInFlightRef.current = false;
+        flushPendingSystemEventChoice();
+      });
+  }
+
+  async function submitSystemEventChoiceWithRetry(
+    action: EncounterAction,
+    solutionId: number | undefined,
+    attempt = 0,
+  ): Promise<void> {
+    try {
+      const nextRoom = await submitRoomChoice(avatarId, action, solutionId);
+      onRoomSnapshot?.(nextRoom);
+    } catch (error) {
+      if (
+        attempt < SYSTEM_EVENT_CHOICE_MAX_RETRIES
+        && isApiErrorCode(error, 'ACTION_NOT_READY')
+      ) {
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, SYSTEM_EVENT_CHOICE_RETRY_MS);
+        });
+        await submitSystemEventChoiceWithRetry(action, solutionId, attempt + 1);
+        return;
+      }
+
+      if (isApiErrorCode(error, 'OUTCOME_ALREADY_PREPARED')) {
+        return;
+      }
+
+      console.error('System event choice commit failed', error);
+    }
+  }
+
+  function flushPendingSystemEventChoice(): void {
+    const pending = pendingSystemEventChoiceRef.current;
+    if (!pending || choiceCommitInFlightRef.current || selectionSyncInFlightRef.current) {
+      return;
+    }
+
+    pendingSystemEventChoiceRef.current = null;
+    choiceCommitInFlightRef.current = true;
+
+    void submitSystemEventChoiceWithRetry(pending.action, pending.solutionId)
+      .finally(() => {
+        choiceCommitInFlightRef.current = false;
+        if (pendingSystemEventChoiceRef.current) {
+          flushPendingSystemEventChoice();
+        }
       });
   }
 
@@ -370,19 +425,8 @@ export function EncounterImageBlock({
     action: EncounterAction,
     solutionId: number | undefined,
   ): void {
-    if (selectionSyncInFlightRef.current) {
-      return;
-    }
-
-    selectionSyncInFlightRef.current = true;
-    void submitRoomChoice(avatarId, action, solutionId)
-      .then((nextRoom) => {
-        onRoomSnapshot?.(nextRoom);
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        selectionSyncInFlightRef.current = false;
-      });
+    pendingSystemEventChoiceRef.current = { action, solutionId };
+    flushPendingSystemEventChoice();
   }
 
   function commitEncounterChoice(

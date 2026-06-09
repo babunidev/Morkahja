@@ -155,6 +155,8 @@ export function renderEventMessage(event: GameEvent): string {
     case 'help_requested':
     case 'help_called':
       return `${avatarLabel(payload)} calls out for help.`;
+    case 'adventure_started':
+      return `${avatarLabel(payload)} starts an adventure.`;
     case 'room_created':
     case 'room_encounter_started':
       return `${avatarLabel(payload)} encounters ${encounterLabel(payload)}.`;

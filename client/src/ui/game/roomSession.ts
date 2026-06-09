@@ -1,8 +1,6 @@
 import {
   createEncounterRoom,
-  fetchActiveRoom,
   leaveAllEncounterRooms,
-  leaveEncounterRoom,
   type EncounterRoomSnapshotDto,
 } from '../../api/http.js';
 
@@ -24,27 +22,8 @@ export function isOwnLeaderRoom(room: EncounterRoomSnapshotDto): boolean {
   return local !== undefined && local.slotIndex === 0;
 }
 
-export async function leaveJoinedPartyRoomIfNeeded(avatarId: string): Promise<boolean> {
-  const room = await fetchActiveRoom(avatarId);
-  if (!room || !isJoinedPartyRoom(room)) {
-    return false;
-  }
-
-  await leaveEncounterRoom(avatarId);
-  return true;
-}
-
-/** Leave joined rooms and reuse or create a solo leader room on slot 0. */
+/** Avatar selection / solo Play — server createRoom owns leave + solo restore logic. */
 export async function ensureSoloLeaderRoom(avatarId: string): Promise<EncounterRoomSnapshotDto> {
-  const active = await fetchActiveRoom(avatarId);
-  if (active) {
-    if (isJoinedPartyRoom(active)) {
-      await leaveEncounterRoom(avatarId);
-    } else if (isOwnLeaderRoom(active)) {
-      return active;
-    }
-  }
-
   return createEncounterRoom(avatarId);
 }
 

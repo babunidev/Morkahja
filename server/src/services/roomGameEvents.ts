@@ -81,6 +81,23 @@ export async function recordPlayerDisengagedEvent(
   });
 }
 
+export async function recordAdventureStartedEvent(
+  room: EncounterRoom,
+): Promise<void> {
+  const leader = room.participants.find((participant) => participant.playerId === room.leaderPlayerId);
+  await recordGameEvent({
+    playerId: room.leaderPlayerId,
+    avatarId: leader?.avatarId,
+    type: 'adventure_started',
+    visibility: 'global',
+    importance: 'medium',
+    payload: {
+      ...(await leaderAvatarPayload(room, room.leaderPlayerId)),
+      participantCount: room.participants.filter((participant) => participant.choiceState !== 'disengaged').length,
+    },
+  });
+}
+
 export async function recordRoomEncounterStartedEvent(
   room: EncounterRoom,
 ): Promise<void> {

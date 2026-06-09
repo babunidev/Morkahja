@@ -46,6 +46,8 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
       return !viewingPlayerId || event.playerId === viewingPlayerId;
     case 'daily_reward_claimed':
       return true;
+    case 'adventure_started':
+      return true;
     case 'encounter_started':
       return false;
     case 'help_requested':

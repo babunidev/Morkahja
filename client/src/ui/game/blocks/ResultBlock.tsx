@@ -677,15 +677,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }, [roll, lossesKey, losses.length, visible]);
 
   useEffect(() => {
-    if (readOnlyWitness && !witnessShowContinue) {
-      setContinueRevealPlaying(false);
-      setContinueInteractive(false);
-      return undefined;
-    }
+    const continueGated = readOnlyWitness
+      ? !witnessShowContinue
+      : !actorShowContinue;
 
-    if (!readOnlyWitness && !actorShowContinue) {
+    if (continueGated) {
       setContinueRevealPlaying(false);
       setContinueInteractive(false);
+      if (!postPressContinueRef.current) {
+        activationRevealDoneRef.current = false;
+      }
       return undefined;
     }
 
@@ -700,6 +701,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     if (activationRevealDoneRef.current) {
+      setContinueInteractive(true);
       return undefined;
     }
 

@@ -78,6 +78,7 @@ export function MusicEngine({
   const restartTimerRef = useRef<number | null>(null);
   const volumeRef = useRef(storedMusicVolume());
   const zoneRef = useRef<MusicZone>(zone);
+  const committedZoneRef = useRef<MusicZone>(zone);
   const audioUnlockedRef = useRef(false);
   const pendingPlaybackRef = useRef(false);
   const menuExitFadeRef = useRef<Promise<void> | null>(null);
@@ -114,10 +115,6 @@ export function MusicEngine({
       clearRestartTimer();
     };
   }, []);
-
-  useEffect(() => {
-    zoneRef.current = zone;
-  }, [zone]);
 
   const ambientProfileKeyRef = useRef<string | null>(null);
 
@@ -214,7 +211,8 @@ export function MusicEngine({
 
   useEffect(() => {
     let cancelled = false;
-    const previousZone = zoneRef.current;
+    const previousZone = committedZoneRef.current;
+    committedZoneRef.current = zone;
     zoneRef.current = zone;
     clearRestartTimer();
 
@@ -261,12 +259,12 @@ export function MusicEngine({
   }, [zone, enabled]);
 
   useEffect(() => {
-    if (fadeOutSignal === 0) {
+    if (fadeOutSignal === 0 || zone !== 'menu') {
       return;
     }
 
     void fadeOutMenuMusic();
-  }, [fadeOutSignal]);
+  }, [fadeOutSignal, zone]);
 
   function randomLoopBreak(): number {
     return Math.floor(

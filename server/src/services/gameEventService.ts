@@ -82,6 +82,7 @@ export interface ActivityFeedEntry {
   avatarFrame?: string;
   joinAction?: ActivityFeedJoinAction;
   openAchievementsAction?: ActivityFeedOpenAchievementsAction;
+  notifyFriendJoinToast?: boolean;
 }
 
 function payloadString(payload: Record<string, unknown>, key: string): string | undefined {
@@ -564,8 +565,7 @@ async function resolveJoinAction(
       return undefined;
     }
   } else if (
-    event.type !== 'room_created'
-    && event.type !== 'room_encounter_started'
+    event.type !== 'adventure_started'
     && event.type !== 'help_called'
   ) {
     return undefined;
@@ -609,6 +609,10 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
 
   const entries = await Promise.all(visibleEvents.map(async (event) => {
     const avatarVisual = resolveScribesAvatarVisual(event);
+    const joinAction = await resolveJoinAction(event, playerId);
+    const notifyFriendJoinToast = event.type === 'adventure_started'
+      && joinAction !== undefined
+      && friendIds.includes(event.playerId);
 
     return {
       eventId: event.eventId,
@@ -621,8 +625,9 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       iconUrl: resolveScribesIconUrl(event),
       avatarPortrait: avatarVisual?.portrait,
       avatarFrame: avatarVisual?.frame,
-      joinAction: await resolveJoinAction(event, playerId),
+      joinAction,
       openAchievementsAction: await resolveOpenAchievementsAction(event, playerId),
+      notifyFriendJoinToast,
     };
   }));
 

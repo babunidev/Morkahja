@@ -29,7 +29,7 @@ function readNumber(payload: Record<string, unknown>, key: string): number | und
 export function resolveScribesAvatarVisual(
   event: GameEvent,
 ): { portrait: string; frame: string } | undefined {
-  if (event.type !== 'avatar_created') {
+  if (event.type !== 'avatar_created' && event.type !== 'adventure_started') {
     return undefined;
   }
 

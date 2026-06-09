@@ -298,6 +298,8 @@ export interface ActivityFeedEntryDto {
   joinAction?: ActivityFeedJoinRoomActionDto;
   /** When set, tapping the scribe entry opens the achievements panel. */
   openAchievementsAction?: ActivityFeedOpenAchievementsActionDto;
+  /** When true, eligible friends should receive a join toast for this entry. */
+  notifyFriendJoinToast?: boolean;
 }
 
 export interface ActivityFeedResponse {

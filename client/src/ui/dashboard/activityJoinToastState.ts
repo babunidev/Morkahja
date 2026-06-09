@@ -1,8 +1,7 @@
 const STORAGE_KEY_PREFIX = 'morkahja.activityJoinToastsShown';
 
 const ROOM_START_JOIN_TOAST_EVENT_TYPES = new Set([
-  'room_created',
-  'room_encounter_started',
+  'adventure_started',
 ]);
 
 const HELP_JOIN_TOAST_EVENT_TYPES = new Set([
@@ -10,21 +9,26 @@ const HELP_JOIN_TOAST_EVENT_TYPES = new Set([
   'help_called',
 ]);
 
-const ALL_JOIN_TOAST_EVENT_TYPES = new Set([
-  ...ROOM_START_JOIN_TOAST_EVENT_TYPES,
-  ...HELP_JOIN_TOAST_EVENT_TYPES,
-]);
-
 export function isActivityJoinToastCandidate(entry: {
   eventType: string;
   joinAction?: unknown;
+  notifyFriendJoinToast?: boolean;
 }): boolean {
-  return ALL_JOIN_TOAST_EVENT_TYPES.has(entry.eventType) && entry.joinAction != null;
+  if (ROOM_START_JOIN_TOAST_EVENT_TYPES.has(entry.eventType)) {
+    return entry.joinAction != null && entry.notifyFriendJoinToast === true;
+  }
+
+  return HELP_JOIN_TOAST_EVENT_TYPES.has(entry.eventType) && entry.joinAction != null;
 }
 
 /** Mark every current feed join entry seen so we only toast events that arrive later. */
 export function seedActivityJoinToastsSeen<
-  T extends { eventId: string; eventType: string; joinAction?: unknown },
+  T extends {
+    eventId: string;
+    eventType: string;
+    joinAction?: unknown;
+    notifyFriendJoinToast?: boolean;
+  },
 >(playerId: string, entries: T[]): void {
   for (const entry of entries) {
     if (isActivityJoinToastCandidate(entry)) {
@@ -87,6 +91,7 @@ export function findNextRoomStartJoinToastEntry<
     eventType: string;
     message: string;
     joinAction?: unknown;
+    notifyFriendJoinToast?: boolean;
   },
 >(playerId: string, entries: T[]): T | null {
   for (const entry of entries) {
@@ -95,6 +100,10 @@ export function findNextRoomStartJoinToastEntry<
     }
 
     if (!entry.joinAction) {
+      continue;
+    }
+
+    if (!entry.notifyFriendJoinToast) {
       continue;
     }
 

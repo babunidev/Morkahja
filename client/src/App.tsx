@@ -77,6 +77,7 @@ import {
   enterGameWithHandoff,
 } from './ui/transitions/avatarEnterTransition.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
+import { LEVEL_UP_SOUND, playSfx } from './ui/sfx.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
@@ -387,6 +388,7 @@ export default function App() {
     const source = sourceElement ?? fallbackElement ?? document.body;
 
     setMusicFadeOutSignal((signal) => signal + 1);
+    playSfx(LEVEL_UP_SOUND);
 
     await enterGameWithHandoff({
       avatar,

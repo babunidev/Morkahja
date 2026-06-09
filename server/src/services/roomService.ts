@@ -97,6 +97,7 @@ import {
   recordPlayerDisengagedEvent,
   recordRoomEncounterResolvedEvent,
   maybeRecordRoomEncounterStartedEvent,
+  recordAdventureStartedEvent,
 } from './roomGameEvents.js';
 import { isPlayerRecentlyActive } from './playerInteractionService.js';
 import {
@@ -228,6 +229,7 @@ async function restoreRoomFromCheckpoint(
   await saveEncounterRoom(room);
   await syncActiveEncountersForRoom(room);
   await setPresenceInRoom(playerId, room.roomId);
+  await notifyAdventureStartedForJoin(room);
   return tickInactivity(await reconcilePendingLevelUpForRoom(room));
 }
 
@@ -705,6 +707,14 @@ async function reengageParticipantIfNeeded(
 
   await saveEncounterRoom(updated);
   return updated;
+}
+
+async function notifyAdventureStartedForJoin(room: EncounterRoom): Promise<void> {
+  if (room.roomState === 'closed') {
+    return;
+  }
+
+  await recordAdventureStartedEvent(room);
 }
 
 async function reengageReturningParticipantIfNeeded(
@@ -1430,12 +1440,6 @@ async function reconcileSystemEventAfterParticipantDeparture(roomId: string): Pr
 
   if (reconciled && reconciled.roomState !== 'closed') {
     await syncActiveEncountersForRoom(reconciled);
-    if (
-      reconciled.roomState === 'active_encounter'
-      || reconciled.roomState === 'system_event'
-    ) {
-      await maybeRecordRoomEncounterStartedEvent(reconciled);
-    }
   }
 }
 
@@ -1619,9 +1623,6 @@ async function syncRoomAfterParticipantDeparture(room: EncounterRoom): Promise<v
   }
 
   await syncActiveEncountersForRoom(room);
-  if (room.roomState === 'active_encounter' || room.roomState === 'system_event') {
-    await maybeRecordRoomEncounterStartedEvent(room);
-  }
 }
 
 async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
@@ -2102,7 +2103,41 @@ async function applyParticipantPrepare(
   return workingRoom;
 }
 
-export async function leaveRoomById(playerId: string, roomId: string): Promise<void> {
+export type RoomLeaveMode = 'disengage' | 'depart';
+
+function shouldRemoveParticipantOnLeave(
+  participant: RoomParticipant,
+  playerId: string,
+  avatarId?: string,
+): boolean {
+  if (participant.playerId !== playerId) {
+    return false;
+  }
+
+  return !avatarId || participant.avatarId === avatarId;
+}
+
+function isOwnSoloLeaderSession(
+  room: EncounterRoom,
+  playerId: string,
+  avatarId: string,
+): boolean {
+  const participant = room.participants.find(
+    (entry) => entry.playerId === playerId && entry.avatarId === avatarId,
+  );
+  if (!participant || participant.slotIndex !== 0) {
+    return false;
+  }
+
+  return isSoloLeaderRoom(room) && room.leaderPlayerId === playerId;
+}
+
+export async function leaveRoomById(
+  playerId: string,
+  roomId: string,
+  options: { mode?: RoomLeaveMode; avatarId?: string } = {},
+): Promise<void> {
+  const leaveMode = options.mode ?? 'disengage';
   type LeaveResult =
     | { type: 'absent' }
     | { type: 'clear_only'; playerId: string }
@@ -2114,7 +2149,8 @@ export async function leaveRoomById(playerId: string, roomId: string): Promise<v
       room: EncounterRoom;
     }
     | { type: 'leader_left'; departingPlayerId: string; room: EncounterRoom }
-    | { type: 'disengaged'; departingPlayerId: string; room: EncounterRoom };
+    | { type: 'disengaged'; departingPlayerId: string; room: EncounterRoom }
+    | { type: 'departed'; departingPlayerId: string; room: EncounterRoom };
 
   const result = await withDocumentTransaction(async (transaction): Promise<LeaveResult> => {
     let room = await loadEncounterRoomFromTransaction(transaction, roomId);
@@ -2129,6 +2165,44 @@ export async function leaveRoomById(playerId: string, roomId: string): Promise<v
     room = await applyLeaveCommitToParticipantInRoom(transaction, room, playerId);
 
     const now = nowMs();
+
+    if (leaveMode === 'depart') {
+      const remaining = room.participants.filter(
+        (participant) => !shouldRemoveParticipantOnLeave(participant, playerId, options.avatarId),
+      );
+
+      if (remaining.length === 0) {
+        const parkCheckpoint = isSoloLeaderRoom(room);
+        const closed: EncounterRoom = {
+          ...room,
+          roomState: 'closed',
+          updatedAt: now,
+        };
+        await transaction.setEncounterRoom(roomId, closed);
+        return {
+          type: 'closed',
+          participantPlayerIds: room.participants.map((participant) => participant.playerId),
+          parkCheckpoint,
+          roomForCheckpoint: room,
+          room: closed,
+        };
+      }
+
+      let working: EncounterRoom = {
+        ...room,
+        participants: remaining,
+        updatedAt: now,
+      };
+
+      if (!remaining.some((participant) => participant.playerId === room.leaderPlayerId)) {
+        working = promoteHostAndReslot(working, room.leaderPlayerId);
+      }
+
+      working = await reconcileRoomAfterParticipantDepartureInTransaction(transaction, working);
+      await transaction.setEncounterRoom(roomId, working);
+      return { type: 'departed', departingPlayerId: playerId, room: working };
+    }
+
     const remainingAfterCommit = room.participants.filter(
       (participant) => participant.playerId !== playerId,
     );
@@ -2211,6 +2285,17 @@ export async function leaveRoomById(playerId: string, roomId: string): Promise<v
     return;
   }
 
+  if (result.type === 'departed') {
+    const withExpansions: EncounterRoom = {
+      ...result.room,
+      mergedExpansions: await expansionsForRoomLeader(result.room),
+    };
+    await saveEncounterRoom(withExpansions);
+    await syncRoomAfterParticipantDeparture(withExpansions);
+    await clearPresenceRoom(result.departingPlayerId);
+    return;
+  }
+
   await saveEncounterRoom(result.room);
   await syncRoomAfterParticipantDeparture(result.room);
   await clearPresenceRoom(result.departingPlayerId);
@@ -2226,14 +2311,14 @@ export async function leaveOtherOpenRooms(
     if (keepRoomId && roomId === keepRoomId) {
       continue;
     }
-    await leaveRoomById(playerId, roomId);
+    await leaveRoomById(playerId, roomId, { mode: 'depart' });
   }
 }
 
 export async function leaveAllRoomsForPlayer(playerId: string): Promise<void> {
   const roomIds = await listActiveRoomIdsForPlayer(playerId);
   for (const roomId of roomIds) {
-    await leaveRoomById(playerId, roomId);
+    await leaveRoomById(playerId, roomId, { mode: 'depart' });
   }
 }
 
@@ -2257,9 +2342,14 @@ export async function createRoom(
       && existing.roomState !== 'closed'
       && findParticipant(existing, playerId)
     ) {
-      const reengaged = await reengageReturningParticipantIfNeeded(existing, playerId);
-      await setPresenceInRoom(playerId, existing.roomId);
-      return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(reengaged)));
+      if (isOwnSoloLeaderSession(existing, playerId, avatarId)) {
+        const reengaged = await reengageReturningParticipantIfNeeded(existing, playerId);
+        await setPresenceInRoom(playerId, existing.roomId);
+        await notifyAdventureStartedForJoin(reengaged);
+        return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(reengaged)));
+      }
+
+      await leaveRoomById(playerId, existingRoomId, { mode: 'depart', avatarId });
     }
   }
 
@@ -2308,7 +2398,7 @@ export async function createRoom(
   await saveEncounterRoom(room);
   await syncActiveEncountersForRoom(room);
   await setPresenceInRoom(playerId, roomId);
-  await maybeRecordRoomEncounterStartedEvent(room);
+  await notifyAdventureStartedForJoin(room);
   return tickInactivity(await reconcilePendingLevelUpForRoom(room));
 }
 
@@ -3630,9 +3720,7 @@ export async function resumeRoomAfterSacrifice(
 
   await syncActiveEncountersForRoom(resumed);
   await setPresenceInRoom(playerId, resumed.roomId);
-  if (resumed.roomState === 'active_encounter' || resumed.roomState === 'system_event') {
-    await maybeRecordRoomEncounterStartedEvent(resumed);
-  }
+  await notifyAdventureStartedForJoin(resumed);
 
   return resumed;
 }

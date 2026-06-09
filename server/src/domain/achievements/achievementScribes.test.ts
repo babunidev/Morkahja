@@ -309,6 +309,30 @@ assert.equal(
   '/UI/06_SettingsMenu/No.webp',
 );
 
+const adventureStarted = {
+  eventId: 'adventure-started-1',
+  timestamp: Date.now(),
+  playerId: 'player-a',
+  avatarId: 'avatar-a',
+  type: 'adventure_started',
+  visibility: 'global' as const,
+  importance: 'medium' as const,
+  payload: {
+    avatarName: 'Lyra',
+    avatarPortrait: 'm_portrait_verdani_mage',
+    avatarFrame: 'm_frame_01',
+    encounterTitle: 'Frozen Pass',
+    encounterId: 12,
+    roomId: 'room-1',
+  },
+};
+
+assert.equal(isVisibleInScribesFeed(adventureStarted, 'player-b'), true);
+assert.equal(
+  renderEventMessage(adventureStarted),
+  'Lyra starts an adventure.',
+);
+
 const roomCreated = {
   eventId: 'room-created-1',
   timestamp: Date.now(),
