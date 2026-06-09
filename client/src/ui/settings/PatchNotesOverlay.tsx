@@ -26,6 +26,20 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-2-2-jun-9',
+    version: '0.9.10-beta.2.2',
+    period: '9 Jun 2026',
+    notes: [
+      'Room-only play — entering the game always goes through a party room; no separate solo encounter path.',
+      'Leave = Continue — leaving after a choice commits your inventory, XP, and events; disconnecting no longer dodges bad outcomes.',
+      'Party rejoin — same encounter restores your result summary; if the party advanced while you were away, you join fresh on the current encounter.',
+      'Death & Continue — Misery/Hardship death waits for Continue before the death overlay; fixes broken Continue and “No active room” toasts.',
+      'Solo checkpoints — leaving a solo room parks progress after commit; Play restores where you left off.',
+      'Sacrifice & Hall of Fame — failed avatars can sacrifice for gems or enter the Hall of Fame; deceased avatars use finalize-death instead of delete.',
+      'Party roll badges — choice badges show the revealed d20 roll on portrait icons.',
+    ],
+  },
+  {
     id: 'beta-2-1-jun-6-7',
     version: '0.9.0-beta.2.1',
     period: '6–7 Jun 2026',
