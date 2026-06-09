@@ -5,7 +5,7 @@ import type {
   FriendSummaryDto,
 } from '@shared/contracts';
 import { addFriend, fetchFriendAchievements, fetchFriends } from '../../api/http.js';
-import AvatarPortraitStack from '../avatar/AvatarPortraitStack.js';
+import AvatarPortraitStack, { AVATAR_ENTER_SOURCE_ATTR } from '../avatar/AvatarPortraitStack.js';
 import {
   protectedImageProps,
   protectedOverlaySurfaceProps,
@@ -346,13 +346,13 @@ function FriendRow({
 }: {
   friend: FriendSummaryDto;
   joinPending: boolean;
-  onJoin?: () => void;
+  onJoin?: (sourceElement: HTMLElement) => void;
   onSelect: () => void;
 }) {
   const showJoin = Boolean(friend.joinableRoom && onJoin);
 
   return (
-    <div style={friendRowStyle}>
+    <div data-friend-row="" style={friendRowStyle}>
       <button
         onClick={() => {
           playSfx(DEFAULT_BUTTON_SOUND);
@@ -392,7 +392,10 @@ function FriendRow({
           onClick={(event) => {
             event.stopPropagation();
             playSfx(DEFAULT_BUTTON_SOUND);
-            onJoin?.();
+            const portrait = event.currentTarget
+              .closest('[data-friend-row]')
+              ?.querySelector(`[${AVATAR_ENTER_SOURCE_ATTR}]`);
+            onJoin?.(portrait instanceof HTMLElement ? portrait : event.currentTarget);
           }}
           style={{
             ...joinFriendButtonStyle,
@@ -425,7 +428,7 @@ export function FriendsOverlay({
   playerName,
 }: {
   onClose: () => void;
-  onJoinFriend?: (friend: FriendSummaryDto) => void | Promise<void>;
+  onJoinFriend?: (friend: FriendSummaryDto, sourceElement: HTMLElement) => void | Promise<void>;
   open: boolean;
   playerId: string;
   playerName: string;
@@ -767,9 +770,9 @@ export function FriendsOverlay({
                     joinPending={joiningFriendId === friend.playerId}
                     key={friend.playerId}
                     onJoin={friend.joinableRoom && onJoinFriend
-                      ? () => {
+                      ? (sourceElement) => {
                           setJoiningFriendId(friend.playerId);
-                          void Promise.resolve(onJoinFriend(friend))
+                          void Promise.resolve(onJoinFriend(friend, sourceElement))
                             .finally(() => {
                               setJoiningFriendId(null);
                             });

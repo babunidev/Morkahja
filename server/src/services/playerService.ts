@@ -1,4 +1,5 @@
 import type { AvatarDocument } from '../types/avatar.js';
+import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { PlayerDocument } from '../types/player.js';
 import { loadAvatar, saveAvatar } from './encounterPersistence.js';
 import {
@@ -448,7 +449,12 @@ export async function savePlayerAvatar(
   const existing = await loadAvatar(playerId, payload.id);
 
   if (!existing) {
-    const avatarCount = (await listAvatars(playerId)).length;
+    const avatarCount = (await listAvatars<AvatarDocument>(playerId))
+      .filter((entry) => {
+        const status = readAvatarLifeStatus(entry.data);
+        return status !== 'deceased' && status !== 'failed';
+      })
+      .length;
     if (avatarCount >= MAX_PLAYER_AVATARS) {
       throw new AvatarLimitReachedError();
     }

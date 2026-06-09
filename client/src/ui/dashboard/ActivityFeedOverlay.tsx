@@ -248,7 +248,10 @@ export function ActivityFeedOverlay({
   playerId,
 }: {
   onClose: () => void;
-  onJoinRoom?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
+  onJoinRoom?: (
+    action: ActivityFeedJoinRoomActionDto,
+    sourceElement: HTMLElement,
+  ) => void | Promise<void>;
   onOpenAchievements?: () => void;
   onReadStateChange?: () => void;
   open: boolean;
@@ -373,9 +376,9 @@ export function ActivityFeedOverlay({
                     {entry.joinAction && onJoinRoom ? (
                       <button
                         disabled={joinPendingId === entry.eventId}
-                        onClick={() => {
+                        onClick={(event) => {
                           setJoinPendingId(entry.eventId);
-                          void Promise.resolve(onJoinRoom(entry.joinAction!))
+                          void Promise.resolve(onJoinRoom(entry.joinAction!, event.currentTarget))
                             .finally(() => {
                               setJoinPendingId(null);
                             });

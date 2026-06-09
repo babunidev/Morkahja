@@ -107,7 +107,9 @@ export async function maybeRecordRoomEncounterStartedEvent(
   }
 
   const avatar = await loadAvatar(room.leaderPlayerId, leader.avatarId);
-  if (!shouldPublishRoomEncounterScribe(avatar?.progression?.encountersCompleted)) {
+  const encountersCompleted = avatar?.progression?.encountersCompleted;
+  const completedCount = typeof encountersCompleted === 'number' ? encountersCompleted : undefined;
+  if (!shouldPublishRoomEncounterScribe(completedCount)) {
     return;
   }
 

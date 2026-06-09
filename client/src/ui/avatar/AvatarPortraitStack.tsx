@@ -45,6 +45,7 @@ export function AvatarPortraitStack({
   frameScale = 1,
   enterSource = false,
   enterTarget = false,
+  enterSourceAvatarId,
   onPortraitError,
   style,
 }: {
@@ -53,6 +54,7 @@ export function AvatarPortraitStack({
   frameScale?: number;
   enterSource?: boolean;
   enterTarget?: boolean;
+  enterSourceAvatarId?: string;
   onPortraitError?: () => void;
   style?: CSSProperties;
 }) {
@@ -60,6 +62,7 @@ export function AvatarPortraitStack({
   return (
     <div
       {...(enterSource ? { [AVATAR_ENTER_SOURCE_ATTR]: '' } : {})}
+      {...(enterSource && enterSourceAvatarId ? { 'data-avatar-id': enterSourceAvatarId } : {})}
       {...(enterTarget ? { [AVATAR_ENTER_TARGET_ATTR]: '' } : {})}
       style={{ ...stackStyle, ...style }}
     >

@@ -22,16 +22,12 @@ export function buildAvatarFromPreset(
 
 export function resolveCreationSlotIndex(
   avatars: PersistedAvatar[],
-  excludedAvatarIds: string[],
 ): number {
-  const excluded = new Set(excludedAvatarIds);
-  const living = avatars.filter((avatar) => !excluded.has(avatar.id));
-
   for (let index = 0; index < 3; index += 1) {
-    if (!living[index]) {
+    if (!avatars[index]) {
       return index;
     }
   }
 
-  return Math.min(living.length, 2);
+  return Math.min(avatars.length, 2);
 }

@@ -100,10 +100,14 @@ switchedAvatarRoom = {
 };
 await saveEncounterRoom(switchedAvatarRoom);
 const originalAvatarRoomAgain = await createRoom(session.playerId, avatarId);
-assert.notEqual(originalAvatarRoomAgain.roomId, switchedAvatarRoom.roomId);
+assert.equal(originalAvatarRoomAgain.roomId, room.roomId);
+assert.equal(
+  originalAvatarRoomAgain.activeEncounterSnapshot.snapshotId,
+  room.activeEncounterSnapshot.snapshotId,
+);
 assert.equal(originalAvatarRoomAgain.participants[0]?.avatarId, avatarId);
 const firstRoomAfterSwitch = await loadEncounterRoom(room.roomId);
-assert.equal(firstRoomAfterSwitch?.roomState, 'closed');
+assert.equal(firstRoomAfterSwitch?.roomState, 'active_encounter');
 
 const witnessSystemRoom: EncounterRoom = {
   ...switchedAvatarRoom,
@@ -277,6 +281,49 @@ await saveEncounterRoom({
 
 const followUpChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
 assert.equal(followUpChoice.roomState, 'waiting_continue');
+
+const ghostChoiceRoom: EncounterRoom = {
+  ...followUpChoice,
+  roomState: 'active_encounter',
+  participants: [
+    {
+      ...followUpChoice.participants[0]!,
+      choiceState: 'choosing',
+      preparedResult: undefined,
+      preparedCommit: undefined,
+      continuePressed: false,
+    },
+    {
+      playerId: 'DisconnectedGhost',
+      avatarId: `${avatarId}-ghost`,
+      slotIndex: 1,
+      joinedAt: Date.now(),
+      choiceState: 'choosing',
+      focusState: 'none',
+      continuePressed: false,
+      lastInteractionAt: Date.now(),
+      disconnectedAt: Date.now() - 1000,
+    },
+  ],
+  activeEncounterSnapshot: {
+    ...followUpChoice.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(ghostChoiceRoom);
+const ghostReady = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
+assert.equal(
+  ghostReady.roomState,
+  'waiting_continue',
+  'solo should enter waiting_continue when only disconnected ghosts remain choosing',
+);
+const ghostAdvanced = await submitContinue(session.playerId, switchedAvatarRoom.participants[0]!.avatarId);
+assert.equal(
+  ghostAdvanced.roomState,
+  'active_encounter',
+  'continue should advance when solo is the only engaged participant',
+);
 
 const withIdleJoiner: EncounterRoom = {
   ...followUpChoice,

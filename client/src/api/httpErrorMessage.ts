@@ -88,3 +88,15 @@ export class ApiRequestError extends Error {
 export function isApiErrorCode(error: unknown, code: string): boolean {
   return error instanceof ApiRequestError && error.code === code;
 }
+
+export function userFacingApiErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiRequestError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return fallback;
+}

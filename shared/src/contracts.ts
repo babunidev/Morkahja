@@ -4,6 +4,7 @@ export type EncounterState = 'created' | 'active' | 'resolving' | 'resolved';
 export type EncounterFollowMode = 'follow' | 'random' | 'system';
 export type AvatarRace = 'Rokur' | 'Verdani' | 'Aevis' | 'Grimnir';
 export type AvatarRole = 'Mage' | 'Warrior' | 'Rogue';
+export type AvatarLifeStatus = 'active' | 'failed' | 'deceased';
 export type DiceId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f';
 
 export interface ClientSession {
@@ -52,6 +53,7 @@ export interface PlayerProfileAvatarDto {
   frame: string;
   createdAt: number;
   displayTitle: string | null;
+  status?: AvatarLifeStatus;
 }
 
 export interface PlayerProfileResponse {
@@ -59,6 +61,7 @@ export interface PlayerProfileResponse {
   playerName: string;
   joinedAt: number;
   avatars: PlayerProfileAvatarDto[];
+  deceasedAvatars?: PlayerProfileAvatarDto[];
   wallOfFame: WallOfFameEntryDto[];
   unlockedTitles: UnlockedTitleOptionDto[];
   unlockedDiceIds: DiceId[];
@@ -211,6 +214,25 @@ export interface PersistedAvatarDto {
   createdAt?: number;
   lastPlayedAt?: number;
   displayTitle?: string | null;
+  status?: AvatarLifeStatus;
+  /** Gems required to sacrifice and restore this avatar when status is failed. */
+  sacrificeGemCost?: number;
+}
+
+export interface SacrificeAvatarResponse {
+  playerId: string;
+  avatar: PersistedAvatarDto;
+  spent: number;
+  currencies: {
+    yellow_red_gem?: number;
+    [key: string]: number | undefined;
+  };
+}
+
+export interface FinalizeAvatarDeathResponse {
+  playerId: string;
+  avatarId: string;
+  status: AvatarLifeStatus;
 }
 
 export interface AvatarResponse {

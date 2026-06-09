@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { AvatarDocument } from '../types/avatar.js';
 import { formatAvatarDisplayName, readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
-import { recordWallOfFameEntry } from './playerProfileService.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
@@ -279,7 +278,6 @@ export async function recordEncounterContinuedEvents(
         actualDeath: true,
       }),
     });
-    await recordWallOfFameEntry(playerId, avatar);
     return;
   }
 
@@ -300,7 +298,7 @@ export async function recordEncounterContinuedEvents(
   });
 
   if (context.leveledUp) {
-    const level = avatar.level;
+    const level = typeof avatar.level === 'number' ? avatar.level : 1;
     await recordGameEvent({
       playerId,
       avatarId,

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import type { EncounterRoomSnapshotDto, PersistedAvatar } from '../../api/http.js';
 import { selectAvatar } from '../../api/http.js';
 import { ensureSoloLeaderRoom } from '../game/roomSession.js';
-import { AVATAR_ENTER_TARGET_ATTR } from '../avatar/AvatarPortraitStack.js';
+import { AVATAR_ENTER_SOURCE_ATTR, AVATAR_ENTER_TARGET_ATTR } from '../avatar/AvatarPortraitStack.js';
 import { waitForFade } from './fade.js';
 
 export const AVATAR_ENTER_FADE_MS = 420;
@@ -40,6 +40,44 @@ export function readBounds(element: Element): Bounds {
     top: rect.top,
     width: rect.width,
     height: rect.height,
+  };
+}
+
+const MIN_HANDOFF_SOURCE_SIZE_PX = 48;
+const DASHBOARD_SLOT_WIDTH_PX = 200;
+const DASHBOARD_SLOT_ASPECT = 1 / 1.25;
+
+/** Prefer the dashboard avatar-slot portrait so join handoffs match solo Play sizing. */
+export function resolveAvatarEnterSourceBounds(
+  fallbackElement: HTMLElement,
+  avatarId?: string,
+): Bounds {
+  const preferred = avatarId
+    ? document.querySelector(`[${AVATAR_ENTER_SOURCE_ATTR}][data-avatar-id="${avatarId}"]`)
+    : document.querySelector(`[${AVATAR_ENTER_SOURCE_ATTR}]`);
+
+  if (preferred instanceof HTMLElement) {
+    const bounds = readBounds(preferred);
+    if (bounds.width >= MIN_HANDOFF_SOURCE_SIZE_PX && bounds.height >= MIN_HANDOFF_SOURCE_SIZE_PX) {
+      return bounds;
+    }
+  }
+
+  const fallbackBounds = readBounds(fallbackElement);
+  if (
+    fallbackBounds.width >= MIN_HANDOFF_SOURCE_SIZE_PX
+    && fallbackBounds.height >= MIN_HANDOFF_SOURCE_SIZE_PX
+  ) {
+    return fallbackBounds;
+  }
+
+  const width = Math.min(window.innerWidth * 0.28, DASHBOARD_SLOT_WIDTH_PX);
+  const height = width / DASHBOARD_SLOT_ASPECT;
+  return {
+    left: (window.innerWidth - width) / 2,
+    top: window.innerHeight * 0.58 - height / 2,
+    width,
+    height,
   };
 }
 
@@ -128,24 +166,49 @@ export async function runAvatarEnterHandoff({
   onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   sourceElement: HTMLElement;
 }): Promise<void> {
-  const fromBounds = readBounds(sourceElement);
+  const { avatar: selectedAvatar } = await selectAvatar(candidate);
+  const room = await ensureSoloLeaderRoom(selectedAvatar.id);
+  await enterGameWithHandoff({
+    avatar: selectedAvatar,
+    room,
+    sourceElement,
+    onEnterHandoffChange,
+    onHandoffLand,
+    onPrepareGame,
+  });
+}
+
+export async function enterGameWithHandoff({
+  avatar,
+  room,
+  sourceElement,
+  onEnterHandoffChange,
+  onHandoffLand,
+  onPrepareGame,
+}: {
+  avatar: PersistedAvatar;
+  room: EncounterRoomSnapshotDto;
+  sourceElement: HTMLElement;
+  onEnterHandoffChange: (snapshot: AvatarEnterHandoffSnapshot | null) => void;
+  onHandoffLand?: () => void;
+  onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
+}): Promise<void> {
+  const fromBounds = resolveAvatarEnterSourceBounds(sourceElement, avatar.id);
   onEnterHandoffChange({
-    avatar: candidate,
+    avatar,
     bounds: fromBounds,
     moveDurationMs: 0,
     phase: 'to-center',
   });
 
-  const { avatar: selectedAvatar } = await selectAvatar(candidate);
-  const room = await ensureSoloLeaderRoom(selectedAvatar.id);
-  onPrepareGame(selectedAvatar, room);
+  onPrepareGame(avatar, room);
   await waitForNextPaint();
   await waitMs(80);
 
   const centerTarget = centerBounds(fromBounds);
   await waitForNextPaint();
   onEnterHandoffChange({
-    avatar: selectedAvatar,
+    avatar,
     bounds: centerTarget,
     moveDurationMs: AVATAR_ENTER_TO_CENTER_MS,
     phase: 'to-center',
@@ -153,7 +216,7 @@ export async function runAvatarEnterHandoff({
   await waitMs(AVATAR_ENTER_TO_CENTER_MS);
 
   onEnterHandoffChange({
-    avatar: selectedAvatar,
+    avatar,
     bounds: centerTarget,
     moveDurationMs: 0,
     phase: 'at-center',
@@ -164,7 +227,7 @@ export async function runAvatarEnterHandoff({
   if (gameTarget) {
     await waitForNextPaint();
     onEnterHandoffChange({
-      avatar: selectedAvatar,
+      avatar,
       bounds: gameTarget,
       moveDurationMs: AVATAR_ENTER_TO_GAME_MS,
       phase: 'to-game',
@@ -174,7 +237,7 @@ export async function runAvatarEnterHandoff({
 
   onHandoffLand?.();
   onEnterHandoffChange({
-    avatar: selectedAvatar,
+    avatar,
     bounds: gameTarget ?? centerTarget,
     moveDurationMs: AVATAR_ENTER_FADE_MS,
     phase: 'to-game',

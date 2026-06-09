@@ -225,7 +225,7 @@ function AvatarSlot({
             animation: pressAnimation(isPressed(pressKey)),
           }}
         >
-          <AvatarCard avatar={avatar} enterSource hideLabels />
+          <AvatarCard avatar={avatar} enterSource enterSourceAvatarId={avatar.id} hideLabels />
         </div>
       </span>
     </button>
@@ -247,6 +247,7 @@ export function AvatarSelectionPanel({
   onEnterHandoffChange,
   onEnteringGameChange,
   onEnterWorldFailed,
+  onFailedAvatarSelect,
   onHandoffLand,
   onPrepareGame,
   visible = false,
@@ -265,6 +266,7 @@ export function AvatarSelectionPanel({
   onEnterHandoffChange?: (snapshot: AvatarEnterHandoffSnapshot | null) => void;
   onEnteringGameChange?: (entering: boolean) => void;
   onEnterWorldFailed?: () => void;
+  onFailedAvatarSelect?: (avatar: PersistedAvatar) => void;
   onHandoffLand?: () => void;
   onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   visible?: boolean;
@@ -366,6 +368,11 @@ export function AvatarSelectionPanel({
       setCreationVisible(false);
       await waitForNextPaint();
       setCreationVisible(true);
+      return;
+    }
+
+    if (candidate.status === 'failed') {
+      onFailedAvatarSelect?.(candidate);
       return;
     }
 

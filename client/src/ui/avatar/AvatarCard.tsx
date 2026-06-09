@@ -42,10 +42,12 @@ const metaStyle: CSSProperties = {
 export function AvatarCard({
   avatar,
   enterSource = false,
+  enterSourceAvatarId,
   hideLabels = false,
 }: {
-  avatar: AvatarCardData;
+  avatar: AvatarCardData & { id?: string };
   enterSource?: boolean;
+  enterSourceAvatarId?: string;
   hideLabels?: boolean;
 }) {
   return (
@@ -53,6 +55,7 @@ export function AvatarCard({
       <div style={compositionStyle}>
         <AvatarPortraitStack
           enterSource={enterSource}
+          enterSourceAvatarId={enterSourceAvatarId ?? avatar.id}
           frame={avatar.frame}
           portrait={avatar.portrait}
           style={{ width: '100%', height: '100%', aspectRatio: '1 / 1.25' }}

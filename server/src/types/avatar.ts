@@ -27,6 +27,17 @@ export interface AvatarDocumentProgression {
   [key: string]: unknown;
 }
 
+export type AvatarLifeStatus = 'active' | 'failed' | 'deceased';
+
+export interface AvatarPreDeathSnapshot {
+  level: number;
+  experience: number;
+  inventory: AvatarInventory;
+  progression: AvatarDocumentProgression;
+  lastPlayedAt?: number;
+  failedAt: number;
+}
+
 /**
  * Avatar document at `/players/{playerId}/avatars/{avatarId}`.
  * Active encounter snapshot lives in the `activeEncounter/current` subdocument.
@@ -42,6 +53,10 @@ export interface AvatarDocument {
   frame?: string;
   createdAt?: number;
   lastPlayedAt?: number;
+  /** Living avatars default to active when omitted. */
+  status?: AvatarLifeStatus;
+  /** Captured on Atranor Misery/Hardship before the player chooses sacrifice or final death. */
+  preDeathSnapshot?: AvatarPreDeathSnapshot;
   /** Denormalized cache only; authoritative inventory lives in inventory/current. */
   inventory?: AvatarInventory;
   profile: AvatarProfile;

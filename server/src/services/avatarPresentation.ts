@@ -1,5 +1,9 @@
 import type { AvatarDocument } from '../types/avatar.js';
 import {
+  readAvatarLifeStatus,
+  sacrificeCostForLevel,
+} from './avatarDeathService.js';
+import {
   formatAvatarDisplayName,
   readAvatarDisplayTitle,
 } from '../domain/achievements/achievementTitles.js';
@@ -19,6 +23,8 @@ export interface PersistedAvatarDtoShape {
   createdAt?: number;
   lastPlayedAt?: number;
   displayTitle: string | null;
+  status?: AvatarDocument['status'];
+  sacrificeGemCost?: number;
 }
 
 export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDtoShape | null {
@@ -27,6 +33,7 @@ export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDto
   }
 
   const displayTitle = readAvatarDisplayTitle(avatar);
+  const status = readAvatarLifeStatus(avatar);
   const dto: PersistedAvatarDtoShape = {
     id: avatar.id,
     name: avatar.name?.trim() || 'Adventurer',
@@ -39,7 +46,12 @@ export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDto
     createdAt: avatar.createdAt,
     lastPlayedAt: avatar.lastPlayedAt,
     displayTitle,
+    status,
   };
+
+  if (status === 'failed' && avatar.preDeathSnapshot) {
+    dto.sacrificeGemCost = sacrificeCostForLevel(avatar.preDeathSnapshot.level);
+  }
 
   if (avatar.inventory) {
     dto.inventory = avatar.inventory;

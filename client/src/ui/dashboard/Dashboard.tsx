@@ -227,6 +227,7 @@ export function Dashboard({
   onEnterGameComplete,
   onEnterHandoffChange,
   onEnterWorldFailed,
+  onFailedAvatarSelect,
   onHandoffLand,
   onAvatarEnter,
   onJoinFriend,
@@ -253,10 +254,14 @@ export function Dashboard({
   onEnterGameComplete?: () => void;
   onEnterHandoffChange?: (snapshot: import('../transitions/avatarEnterTransition.js').AvatarEnterHandoffSnapshot | null) => void;
   onEnterWorldFailed?: () => void;
+  onFailedAvatarSelect?: (avatar: PersistedAvatar) => void;
   onHandoffLand?: () => void;
   onAvatarEnter?: () => void;
-  onJoinFriend?: (friend: FriendSummaryDto) => void | Promise<void>;
-  onJoinRoomFromScribes?: (action: ActivityFeedJoinRoomActionDto) => void | Promise<void>;
+  onJoinFriend?: (friend: FriendSummaryDto, sourceElement: HTMLElement) => void | Promise<void>;
+  onJoinRoomFromScribes?: (
+    action: ActivityFeedJoinRoomActionDto,
+    sourceElement: HTMLElement,
+  ) => void | Promise<void>;
   onPlay?: () => Promise<boolean> | boolean;
   onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
   onLogout: () => void;
@@ -455,6 +460,7 @@ export function Dashboard({
                     : 'Play'
               }
               className="morkahja-play-button"
+              data-dashboard-play-button=""
               disabled={!clickable || navOpen || avatarCreationOpen || playPreparePending}
               onClick={() => {
                 if (avatarSlotsVisible) {
@@ -515,6 +521,7 @@ export function Dashboard({
             }}
             onEnterHandoffChange={onEnterHandoffChange}
             onEnterWorldFailed={onEnterWorldFailed}
+            onFailedAvatarSelect={onFailedAvatarSelect}
             onHandoffLand={onHandoffLand}
             onAvatarEnter={onAvatarEnter}
             onCreationOpenChange={setAvatarCreationOpen}

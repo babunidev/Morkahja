@@ -370,6 +370,35 @@ export async function selectAvatar(
   };
 }
 
+export async function sacrificeAvatar(
+  avatarId: string,
+): Promise<{
+  avatar: PersistedAvatar;
+  spent: number;
+  currencies: { yellow_red_gem?: number; [key: string]: number | undefined };
+}> {
+  const response = await request<{
+    avatar: PersistedAvatar;
+    spent: number;
+    currencies: { yellow_red_gem?: number; [key: string]: number | undefined };
+  }>(`/avatar/${encodeURIComponent(avatarId)}/sacrifice`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
+  });
+
+  return {
+    ...response,
+    avatar: normalizePersistedAvatar(response.avatar),
+  };
+}
+
+export async function finalizeAvatarDeath(avatarId: string): Promise<void> {
+  await request<{ avatarId: string; status: string }>(
+    `/avatar/${encodeURIComponent(avatarId)}/finalize-death`,
+    { method: 'POST', body: JSON.stringify({}) },
+  );
+}
+
 export async function deleteAvatar(avatarId: string): Promise<void> {
   await request<{ ok: true }>(`/avatar/${encodeURIComponent(avatarId)}`, {
     method: 'DELETE',

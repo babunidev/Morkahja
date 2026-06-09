@@ -10,6 +10,7 @@ import {
 } from '../protectedImage.js';
 
 const DEATH_OVERLAY_ASSET = '/UI/09_GAME/im_overlay_death.webp';
+const GEM_ICON_ASSET = '/UI/03_DASHBOARD/im_button_credits_b.webp';
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',
@@ -85,12 +86,18 @@ const hopeStyle: CSSProperties = {
   textShadow: '0 2px 10px rgba(0, 0, 0, 0.88)',
 };
 
+const actionsGridStyle: CSSProperties = {
+  display: 'grid',
+  gap: 12,
+  width: '100%',
+  marginTop: 8,
+};
+
 const actionsRowStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
   gap: 12,
   width: '100%',
-  marginTop: 8,
 };
 
 const actionButtonVisualStyle: CSSProperties = {
@@ -102,34 +109,77 @@ const actionButtonVisualStyle: CSSProperties = {
   lineHeight: 1.2,
 };
 
-type DeathAction = 'same-soul' | 'new-avatar';
+const sacrificeButtonStyle: CSSProperties = {
+  ...actionButtonVisualStyle,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+};
+
+const gemIconStyle: CSSProperties = {
+  width: 18,
+  height: 18,
+  objectFit: 'contain',
+};
+
+const confirmBackdropStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 11,
+  display: 'grid',
+  placeItems: 'center',
+  padding: 16,
+  background: 'rgba(0, 0, 0, 0.72)',
+};
+
+const confirmPanelStyle: CSSProperties = {
+  width: 'min(92vw, 360px)',
+  display: 'grid',
+  gap: 16,
+  padding: '20px 18px',
+  borderRadius: 12,
+  background: 'rgba(18, 10, 6, 0.96)',
+  color: '#f7efe0',
+  textAlign: 'center',
+};
+
+type DeathAction = 'same-soul' | 'new-avatar' | 'sacrifice';
 
 export function AvatarDeathOverlay({
   avatarName,
+  gemBalance = 0,
   onHandoffComplete,
   onNewAvatar,
   onOptionsVisible,
+  onSacrifice,
   onSameSoul,
   open,
+  sacrificeGemCost = 0,
 }: {
   avatarName: string;
+  gemBalance?: number;
   onHandoffComplete: () => void;
   onNewAvatar: () => void | Promise<void>;
-  /** Fires once when Same Soul / New Avatar are shown (after fade-in). */
   onOptionsVisible?: () => void | Promise<void>;
+  onSacrifice?: () => void | Promise<void>;
   onSameSoul: () => void | Promise<void>;
   open: boolean;
+  sacrificeGemCost?: number;
 }) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [pendingAction, setPendingAction] = useState<DeathAction | null>(null);
+  const [confirmSacrificeOpen, setConfirmSacrificeOpen] = useState(false);
   const optionsVisibleNotifiedRef = useRef(false);
+  const canAffordSacrifice = sacrificeGemCost > 0 && gemBalance >= sacrificeGemCost;
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       setExiting(false);
       setPendingAction(null);
+      setConfirmSacrificeOpen(false);
       optionsVisibleNotifiedRef.current = false;
       return;
     }
@@ -192,6 +242,7 @@ export function AvatarDeathOverlay({
     await waitForFade();
     onHandoffComplete();
     setPendingAction(null);
+    setConfirmSacrificeOpen(false);
   }
 
   if (!open) {
@@ -202,63 +253,114 @@ export function AvatarDeathOverlay({
   const actionsDisabled = pendingAction !== null;
 
   return (
-    <div
-      aria-label="Avatar death"
-      role="presentation"
-      style={{
-        ...backdropStyle,
-        opacity: showOverlay ? 1 : 0,
-        pointerEvents: showOverlay ? 'auto' : 'none',
-      }}
-    >
-      <section
-        aria-labelledby="avatar-death-title"
-        style={panelStyle}
-        {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+    <>
+      <div
+        aria-label="Avatar death"
+        role="presentation"
+        style={{
+          ...backdropStyle,
+          opacity: showOverlay ? 1 : 0,
+          pointerEvents: showOverlay ? 'auto' : 'none',
+        }}
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          {...protectedImageProps}
-          src={DEATH_OVERLAY_ASSET}
-          style={deathArtStyle}
-        />
-        <div style={panelContentStyle}>
-          <h2 id="avatar-death-title" style={titleStyle}>Your journey has ended.</h2>
-          <p style={messageStyle}>
-            {avatarName} didn&apos;t get the blessing of the gods.
-          </p>
-          <p style={hopeStyle}>
-            Return as the same soul with a fresh start, or shape a new avatar and walk
-            a different path.
-          </p>
-          <div style={actionsRowStyle}>
-            <PanelButton
-              aria-disabled={actionsDisabled}
-              disabled={actionsDisabled}
-              onClick={() => {
-                void handleAction('same-soul', onSameSoul);
-              }}
-              pressKey="death-same-soul"
-              visualStyle={actionButtonVisualStyle}
-            >
-              Same Soul
-            </PanelButton>
-            <PanelButton
-              aria-disabled={actionsDisabled}
-              disabled={actionsDisabled}
-              onClick={() => {
-                void handleAction('new-avatar', onNewAvatar);
-              }}
-              pressKey="death-new-avatar"
-              visualStyle={actionButtonVisualStyle}
-            >
-              New Avatar
-            </PanelButton>
+        <section
+          aria-labelledby="avatar-death-title"
+          style={panelStyle}
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+        >
+          <img
+            alt=""
+            aria-hidden="true"
+            {...protectedImageProps}
+            src={DEATH_OVERLAY_ASSET}
+            style={deathArtStyle}
+          />
+          <div style={panelContentStyle}>
+            <h2 id="avatar-death-title" style={titleStyle}>Your journey has ended.</h2>
+            <p style={messageStyle}>
+              {avatarName} didn&apos;t get the blessing of the gods.
+            </p>
+            <p style={hopeStyle}>
+              Return as the same soul with a fresh start, shape a new avatar, or sacrifice gems
+              to restore this life exactly as it was.
+            </p>
+            <div style={actionsGridStyle}>
+              <div style={actionsRowStyle}>
+                <PanelButton
+                  aria-disabled={actionsDisabled}
+                  disabled={actionsDisabled}
+                  onClick={() => {
+                    void handleAction('same-soul', onSameSoul);
+                  }}
+                  pressKey="death-same-soul"
+                  visualStyle={actionButtonVisualStyle}
+                >
+                  Same Soul
+                </PanelButton>
+                <PanelButton
+                  aria-disabled={actionsDisabled}
+                  disabled={actionsDisabled}
+                  onClick={() => {
+                    void handleAction('new-avatar', onNewAvatar);
+                  }}
+                  pressKey="death-new-avatar"
+                  visualStyle={actionButtonVisualStyle}
+                >
+                  New Avatar
+                </PanelButton>
+              </div>
+              {onSacrifice && sacrificeGemCost > 0 ? (
+                <PanelButton
+                  aria-disabled={actionsDisabled || !canAffordSacrifice}
+                  disabled={actionsDisabled || !canAffordSacrifice}
+                  onClick={() => {
+                    if (!canAffordSacrifice) {
+                      return;
+                    }
+                    setConfirmSacrificeOpen(true);
+                  }}
+                  pressKey="death-sacrifice"
+                  visualStyle={sacrificeButtonStyle}
+                >
+                  <img alt="" aria-hidden="true" src={GEM_ICON_ASSET} style={gemIconStyle} />
+                  Sacrifice {sacrificeGemCost}
+                </PanelButton>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      </div>
+      {confirmSacrificeOpen && onSacrifice ? (
+        <div role="dialog" aria-modal="true" style={confirmBackdropStyle}>
+          <div style={confirmPanelStyle}>
+            <p style={messageStyle}>
+              Are you sure you want to sacrifice {sacrificeGemCost} gems to restore {avatarName}?
+            </p>
+            <div style={actionsRowStyle}>
+              <PanelButton
+                onClick={() => {
+                  setConfirmSacrificeOpen(false);
+                }}
+                pressKey="death-sacrifice-cancel"
+                visualStyle={actionButtonVisualStyle}
+              >
+                Cancel
+              </PanelButton>
+              <PanelButton
+                disabled={actionsDisabled}
+                onClick={() => {
+                  void handleAction('sacrifice', onSacrifice);
+                }}
+                pressKey="death-sacrifice-confirm"
+                visualStyle={actionButtonVisualStyle}
+              >
+                Sacrifice
+              </PanelButton>
+            </div>
           </div>
         </div>
-      </section>
-    </div>
+      ) : null}
+    </>
   );
 }
 

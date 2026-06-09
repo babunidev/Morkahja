@@ -1,4 +1,5 @@
 import type { AvatarDocument } from '../types/avatar.js';
+import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { DiceId } from '@shared/diceCatalog.js';
 import { readPlayerDiceState } from './diceService.js';
 import type { PlayerDocument, WallOfFameEntry } from '../types/player.js';
@@ -25,6 +26,7 @@ export interface PlayerProfileAvatarView {
   frame: string;
   createdAt: number;
   displayTitle: string | null;
+  status?: AvatarDocument['status'];
 }
 
 export interface PlayerProfile {
@@ -32,6 +34,7 @@ export interface PlayerProfile {
   playerName: string;
   joinedAt: number;
   avatars: PlayerProfileAvatarView[];
+  deceasedAvatars: PlayerProfileAvatarView[];
   wallOfFame: WallOfFameEntry[];
   unlockedTitles: UnlockedTitleOption[];
   unlockedDiceIds: DiceId[];
@@ -91,6 +94,7 @@ function toProfileAvatarView(avatar: AvatarDocument): PlayerProfileAvatarView | 
     frame: avatar.frame,
     createdAt,
     displayTitle: readAvatarDisplayTitle(avatar),
+    status: readAvatarLifeStatus(avatar),
   };
 }
 
@@ -202,27 +206,33 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
     return null;
   }
 
-  const [avatars, unlockedTitles, dice] = await Promise.all([
+  const [avatarRecords, unlockedTitles, dice] = await Promise.all([
     listAvatars<AvatarDocument>(playerId).then((records) => (
-      records
-        .map((record) => ({
-          ...record.data,
-          id: record.data.id ?? record.id,
-        }))
+      records.map((record) => ({
+        ...record.data,
+        id: record.data.id ?? record.id,
+      }))
         .map(toProfileAvatarView)
         .filter((avatar): avatar is PlayerProfileAvatarView => avatar !== null)
-        .sort((left, right) => left.createdAt - right.createdAt)
-        .slice(0, 3)
     )),
     listUnlockedAchievementTitles(playerId),
     readPlayerDiceState(playerId),
   ]);
 
+  const livingAvatars = avatarRecords
+    .filter((avatar) => avatar.status !== 'deceased')
+    .sort((left, right) => left.createdAt - right.createdAt)
+    .slice(0, 3);
+  const deceasedAvatars = avatarRecords
+    .filter((avatar) => avatar.status === 'deceased')
+    .sort((left, right) => right.createdAt - left.createdAt);
+
   return {
     playerId,
     playerName: player.playerName,
     joinedAt: player.createdAt,
-    avatars,
+    avatars: livingAvatars,
+    deceasedAvatars,
     wallOfFame: player.wallOfFame,
     unlockedTitles,
     unlockedDiceIds: dice.unlockedDiceIds,

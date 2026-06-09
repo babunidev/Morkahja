@@ -23,12 +23,14 @@ import {
   fetchRecentActivity,
   fetchSession,
   fetchStaticGameDataStatus,
+  finalizeAvatarDeath,
   respondHelpInvite,
+  sacrificeAvatar,
   selectAvatar,
   type EncounterSnapshot,
   type PersistedAvatar,
 } from './api/http.js';
-import { ApiRequestError, isApiErrorCode } from './api/httpErrorMessage.js';
+import { ApiRequestError, isApiErrorCode, userFacingApiErrorMessage } from './api/httpErrorMessage.js';
 import AchievementsOverlay from './ui/dashboard/AchievementsOverlay.js';
 import {
   findNewRankUnlocks,
@@ -54,10 +56,8 @@ import {
   resolveCreationSlotIndex,
 } from './ui/avatar/avatarFromPreset.js';
 import {
-  loadDeadAvatarIds,
   prepareAvatarSelection,
   refreshAvatarSelectionAfterHome,
-  saveDeadAvatarIds,
 } from './ui/avatar/avatarSelectionPrepare.js';
 import { formatAvatarDisplayName, normalizePersistedAvatar } from './ui/avatar/avatarDisplayName.js';
 import GameMessageToast from './ui/game/GameMessageToast.js';
@@ -73,6 +73,9 @@ import {
 import AvatarEnterHandoff from './ui/transitions/AvatarEnterHandoff.js';
 import AvatarSolutionInflow from './ui/transitions/AvatarSolutionInflow.js';
 import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTransition.js';
+import {
+  enterGameWithHandoff,
+} from './ui/transitions/avatarEnterTransition.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
@@ -146,7 +149,6 @@ export default function App() {
   const [activeRoom, setActiveRoom] = useState<EncounterRoomSnapshotDto | null>(null);
   const [avatarSelectionAvatars, setAvatarSelectionAvatars] = useState<PersistedAvatar[]>([]);
   const [avatarCreationPreset, setAvatarCreationPreset] = useState<PersistedAvatar | null>(null);
-  const [excludedAvatarIds, setExcludedAvatarIds] = useState(loadDeadAvatarIds);
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
   const [avatarSlotsVisible, setAvatarSlotsVisible] = useState(false);
   const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
@@ -155,6 +157,7 @@ export default function App() {
     useState<AvatarEnterHandoffSnapshot | null>(null);
   const [handoffLanded, setHandoffLanded] = useState(false);
   const [deathOverlayAvatar, setDeathOverlayAvatar] = useState<PersistedAvatar | null>(null);
+  const [playerGemBalance, setPlayerGemBalance] = useState(0);
   const [partyKickToast, setPartyKickToast] = useState<string | null>(null);
   const deathLeaveDoneRef = useRef(false);
   const [deathCreationHandoff, setDeathCreationHandoff] = useState(false);
@@ -333,6 +336,70 @@ export default function App() {
     setScreen('game');
   }, []);
 
+  const applyPreparedGameEntry = useCallback((
+    preparedAvatar: PersistedAvatar,
+    preparedRoom: EncounterRoomSnapshotDto,
+    options?: { incrementEntryKey?: boolean; hideAvatarSlots?: boolean },
+  ) => {
+    setActiveAvatar(preparedAvatar);
+    setActiveEncounter(preparedRoom.activeEncounter);
+    setActiveRoom(preparedRoom);
+    setHandoffLanded(false);
+    setGameEnterHandoff(true);
+    if (options?.incrementEntryKey !== false) {
+      setGameEntryKey((current) => current + 1);
+    }
+    if (options?.hideAvatarSlots !== false) {
+      setAvatarSlotsVisible(false);
+    }
+    setScreen('game');
+  }, []);
+
+  const runEnterGameHandoff = useCallback(async (
+    avatar: PersistedAvatar,
+    room: EncounterRoomSnapshotDto,
+    sourceElement?: HTMLElement | null,
+    options?: { incrementEntryKey?: boolean; hideAvatarSlots?: boolean },
+  ) => {
+    const fallbackElement = document.querySelector('[data-dashboard-play-button]') as HTMLElement | null;
+    const source = sourceElement ?? fallbackElement ?? document.body;
+
+    setMusicFadeOutSignal((signal) => signal + 1);
+
+    await enterGameWithHandoff({
+      avatar,
+      room,
+      sourceElement: source,
+      onEnterHandoffChange: setAvatarEnterHandoff,
+      onHandoffLand: () => {
+        setHandoffLanded(true);
+      },
+      onPrepareGame: (preparedAvatar, preparedRoom) => {
+        applyPreparedGameEntry(preparedAvatar, preparedRoom, options);
+      },
+    });
+    resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
+  }, [applyPreparedGameEntry]);
+
+  const enterGameWithHandoffFromRoom = useCallback(async (
+    joinedRoom: EncounterRoomSnapshotDto,
+    sourceElement?: HTMLElement | null,
+  ) => {
+    const localParticipant = joinedRoom.participants.find((participant) => participant.isLocal);
+    if (!localParticipant?.avatar) {
+      return;
+    }
+
+    const avatar = normalizePersistedAvatar(localParticipant.avatar);
+
+    try {
+      await runEnterGameHandoff(avatar, joinedRoom, sourceElement);
+    } catch (error) {
+      console.error('Join handoff failed', error);
+      enterGameFromRoom(joinedRoom);
+    }
+  }, [enterGameFromRoom, runEnterGameHandoff]);
+
   const resolveJoinAvatar = useCallback(async (): Promise<PersistedAvatar | null> => {
     const response = await fetchAvatar(null);
     return response.avatar ? normalizePersistedAvatar(response.avatar) : null;
@@ -372,6 +439,7 @@ export default function App() {
   const joinFriendEncounter = useCallback(async (
     friendPlayerId: string,
     inviteId?: string,
+    sourceElement?: HTMLElement | null,
   ): Promise<void> => {
     if (helpInviteAcceptPendingRef.current) {
       return;
@@ -386,7 +454,7 @@ export default function App() {
         try {
           const response = await respondHelpInvite(inviteId);
           if (response.room) {
-            enterGameFromRoom(response.room);
+            await enterGameWithHandoffFromRoom(response.room, sourceElement);
           }
           return;
         } catch (error) {
@@ -397,7 +465,7 @@ export default function App() {
       }
 
       const response = await joinFriendRoom(friendPlayerId);
-      enterGameFromRoom(response.room);
+      await enterGameWithHandoffFromRoom(response.room, sourceElement);
     } catch (error) {
       if (isApiErrorCode(error, 'ROOM_FULL')) {
         await showRoomFullPrompt();
@@ -407,13 +475,19 @@ export default function App() {
     } finally {
       helpInviteAcceptPendingRef.current = false;
     }
-  }, [enterGameFromRoom, showRoomFullPrompt]);
+  }, [enterGameWithHandoffFromRoom, showRoomFullPrompt]);
 
-  const acceptHelpInvite = useCallback(async (invite: RoomHelpInvitationDto) => {
-    await joinFriendEncounter(invite.fromPlayerId, invite.inviteId);
+  const acceptHelpInvite = useCallback(async (
+    invite: RoomHelpInvitationDto,
+    sourceElement?: HTMLElement | null,
+  ) => {
+    await joinFriendEncounter(invite.fromPlayerId, invite.inviteId, sourceElement);
   }, [joinFriendEncounter]);
 
-  const handleJoinFriend = useCallback(async (friend: FriendSummaryDto) => {
+  const handleJoinFriend = useCallback(async (
+    friend: FriendSummaryDto,
+    sourceElement?: HTMLElement | null,
+  ) => {
     if (!friend.joinableRoom) {
       return;
     }
@@ -421,11 +495,15 @@ export default function App() {
     await joinFriendEncounter(
       friend.playerId,
       friend.joinableRoom.inviteId,
+      sourceElement,
     );
   }, [joinFriendEncounter]);
 
-  const handleJoinRoomFromScribes = useCallback(async (action: ActivityFeedJoinRoomActionDto) => {
-    await joinFriendEncounter(action.fromPlayerId, action.inviteId);
+  const handleJoinRoomFromScribes = useCallback(async (
+    action: ActivityFeedJoinRoomActionDto,
+    sourceElement?: HTMLElement | null,
+  ) => {
+    await joinFriendEncounter(action.fromPlayerId, action.inviteId, sourceElement);
   }, [joinFriendEncounter]);
 
   useEffect(() => {
@@ -521,15 +599,10 @@ export default function App() {
   }
 
   async function syncAvatarSelectionAfterHomeState(): Promise<void> {
-    const { avatars, purge } = await refreshAvatarSelectionAfterHome();
+    const { avatars } = await refreshAvatarSelectionAfterHome();
     setAvatarSelectionAvatars(avatars);
-    setExcludedAvatarIds(purge.failedIds);
     setAvatarSelectionPrepared(true);
-    setAvatarSelectionNotice(
-      purge.failedIds.length > 0
-        ? 'Could not remove fallen avatar; try Home again.'
-        : null,
-    );
+    setAvatarSelectionNotice(null);
   }
 
   async function applyAvatarSelectionFromHome(): Promise<void> {
@@ -594,6 +667,20 @@ export default function App() {
       window.clearInterval(interval);
     };
   }, [screen]);
+
+  useEffect(() => {
+    if (!deathOverlayAvatar || !session?.accessToken) {
+      return;
+    }
+
+    void fetchPlayer(session)
+      .then((player) => {
+        setPlayerGemBalance(player.currencies?.yellow_red_gem ?? 0);
+      })
+      .catch((error) => {
+        console.error('Failed to load gem balance for death overlay', error);
+      });
+  }, [deathOverlayAvatar, session?.accessToken]);
 
   return (
     <BackgroundProvider>
@@ -668,7 +755,6 @@ export default function App() {
             onAchievementsOpenChange={setAchievementsOverlayOpen}
             creationPreset={avatarCreationPreset}
             creationRevealDelayMs={deathCreationHandoff ? FADE_DURATION_MS : 0}
-            excludedAvatarIds={excludedAvatarIds}
             hidden={gameEnterHandoff}
             selectionNotice={avatarSelectionNotice}
             onAvatarSlotsVisibleChange={setAvatarSlotsVisible}
@@ -710,19 +796,20 @@ export default function App() {
             onAvatarEnter={() => {
               setMusicFadeOutSignal((signal) => signal + 1);
             }}
-            onJoinFriend={(friend) => {
-              void handleJoinFriend(friend);
+            onJoinFriend={(friend, sourceElement) => {
+              void handleJoinFriend(friend, sourceElement);
             }}
-            onJoinRoomFromScribes={(action) => {
-              void handleJoinRoomFromScribes(action);
+            onJoinRoomFromScribes={(action, sourceElement) => {
+              void handleJoinRoomFromScribes(action, sourceElement);
+            }}
+            onFailedAvatarSelect={(avatar) => {
+              setDeathOverlayAvatar(avatar);
             }}
             onPrepareGame={(avatar, room) => {
-              setActiveAvatar(avatar);
-              setActiveEncounter(room.activeEncounter);
-              setActiveRoom(room);
-              setHandoffLanded(false);
-              setGameEnterHandoff(true);
-              setScreen('game');
+              applyPreparedGameEntry(avatar, room, {
+                incrementEntryKey: false,
+                hideAvatarSlots: false,
+              });
             }}
             onLogout={() => {
               void logoutSession()
@@ -768,17 +855,14 @@ export default function App() {
             }}
             onAvatarDeath={(presetAvatar) => {
               deathLeaveDoneRef.current = false;
-              setExcludedAvatarIds((currentIds) => {
-                const nextIds = currentIds.includes(presetAvatar.id)
-                  ? currentIds
-                  : [...currentIds, presetAvatar.id];
-                saveDeadAvatarIds(nextIds);
-                return nextIds;
-              });
-              setAvatarSelectionAvatars((currentAvatars) => (
-                currentAvatars.filter((avatar) => avatar.id !== presetAvatar.id)
-              ));
               setDeathOverlayAvatar(presetAvatar);
+              setAvatarSelectionAvatars((currentAvatars) => (
+                currentAvatars.map((avatar) => (
+                  avatar.id === presetAvatar.id
+                    ? { ...avatar, status: 'failed', sacrificeGemCost: presetAvatar.sacrificeGemCost ?? avatar.sacrificeGemCost }
+                    : avatar
+                ))
+              ));
             }}
             onKickedFromParty={handleKickedFromParty}
           />
@@ -786,6 +870,7 @@ export default function App() {
         {deathOverlayAvatar ? (
           <AvatarDeathOverlay
             avatarName={formatAvatarDisplayName(deathOverlayAvatar)}
+            gemBalance={playerGemBalance}
             onHandoffComplete={() => {
               deathLeaveDoneRef.current = false;
               setDeathOverlayAvatar(null);
@@ -796,11 +881,37 @@ export default function App() {
                 void completeDeathRoomLeave(preset);
               }
             }}
+            onSacrifice={async () => {
+              const preset = deathOverlayAvatar;
+              if (!preset) {
+                return;
+              }
+
+              try {
+                const result = await sacrificeAvatar(preset.id);
+                setPlayerGemBalance(result.currencies.yellow_red_gem ?? 0);
+                setAvatarSelectionAvatars((currentAvatars) => (
+                  currentAvatars.map((avatar) => (
+                    avatar.id === preset.id ? result.avatar : avatar
+                  ))
+                ));
+                setDeathOverlayAvatar(null);
+
+                const { avatar: selectedAvatar } = await selectAvatar(result.avatar);
+                const room = await ensureSoloLeaderRoom(selectedAvatar.id);
+                await runEnterGameHandoff(selectedAvatar, room, document.body);
+              } catch (error) {
+                console.error('Sacrifice failed', error);
+                setAvatarSelectionNotice(userFacingApiErrorMessage(error, 'Sacrifice failed. Try again.'));
+              }
+            }}
             onNewAvatar={async () => {
               const preset = deathOverlayAvatar;
               if (!preset) {
                 return;
               }
+
+              await finalizeAvatarDeath(preset.id);
 
               try {
                 await syncAvatarSelectionAfterHomeState();
@@ -828,21 +939,16 @@ export default function App() {
                 return;
               }
 
+              await finalizeAvatarDeath(preset.id);
+
               let avatars: PersistedAvatar[];
-              let purgeFailedIds: string[];
 
               try {
                 const refresh = await refreshAvatarSelectionAfterHome();
                 avatars = refresh.avatars;
-                purgeFailedIds = refresh.purge.failedIds;
                 setAvatarSelectionAvatars(avatars);
-                setExcludedAvatarIds(purgeFailedIds);
                 setAvatarSelectionPrepared(true);
-                setAvatarSelectionNotice(
-                  purgeFailedIds.length > 0
-                    ? 'Could not remove fallen avatar; try again.'
-                    : null,
-                );
+                setAvatarSelectionNotice(null);
               } catch (error) {
                 console.error('Death overlay same soul prepare failed', error);
                 setAvatarSelectionPrepared(false);
@@ -850,7 +956,7 @@ export default function App() {
                 throw error;
               }
 
-              const slotIndex = resolveCreationSlotIndex(avatars, purgeFailedIds);
+              const slotIndex = resolveCreationSlotIndex(avatars);
 
               try {
                 await createAvatar(buildAvatarFromPreset(preset, slotIndex));
@@ -872,6 +978,7 @@ export default function App() {
               setAvatarSlotsVisible(true);
             }}
             open
+            sacrificeGemCost={deathOverlayAvatar.sacrificeGemCost ?? 0}
           />
         ) : null}
         {avatarEnterHandoff ? (

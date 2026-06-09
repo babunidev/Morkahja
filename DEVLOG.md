@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-06-07 (+0200) |
+| **Last updated** | 2026-06-08 (+0200) |
 | **Release** | **0.9.0-beta.2.1** (public beta, pre-1.0) |
 
 Each entry is numbered chronologically. Dates and times are from git (`+0200`, Europe/Berlin) or the commit referenced in the entry.
@@ -178,3 +178,25 @@ Each entry is numbered chronologically. Dates and times are from git (`+0200`, E
 162. **2026-06-07 00:12 (+0200)** — **Party badges** — **62px** dice/solution/focus icons on portraits when choice is ready; per-player dice skin on badge; pulsing animation + hover tooltips.
 163. **2026-06-07 00:12 (+0200)** — **Tests** — solution consumption, system events, room orchestrator, inventory across continue paths.
 164. **2026-06-07 (+0200)** — **Version** — tagged **0.9.0-beta.2.1** for the 6–7 Jun multiplayer/charges patch; **0.9.0-beta.2** remains the late May – 2 Jun release in patch notes history.
+165. **2026-06-07 01:21 (+0200)** — **Admin content** — Weakened Grimnir encounter + art (`ec1c598`, `e20eb5f`).
+166. **2026-06-07 01:30 (+0200)** — **Patch notes** — Settings overlay history restructured for **0.9.0-beta.2.1** (`d9f7813`).
+167. **2026-06-07 01:53 (+0200)** — **Production build** (`5564886`) — client `tsc -b` fixes (`lostInventorySolutions` on DTOs, `ParticipantFocusStateDto` export, test exclude); deploy bundle picks up current patch notes.
+168. **2026-06-07 21:04 (+0200)** — **Admin content** — thunderhoof encounter image; **Feral Hollow** encounter **20046** (`ee49ccf`, `3275b24`).
+169. **2026-06-07 22:29 (+0200)** — **Admin content** — portrait **5** refresh (`3a8fe24`, `53e0ae8`).
+170. **2026-06-08 (+0200)** — **Room-only play entry** (`85e8343`) — `/avatar/select` no longer rolls a solo encounter; play handoff creates or reuses the **room** once (`ensureSoloLeaderRoom`); removed unused client `/encounter/*` helpers from the live UI path.
+171. **2026-06-08 (+0200)** — **Misery / Hardship losses** (`85e8343`) — choice commits on roll reveal (`submitRoomChoice`); result row uses server `lostInventorySolutions` only (removed client `predictEncounterLosses` guess); inventory removal matches what the player sees.
+172. **2026-06-08 (+0200)** — **Continue gate** (`85e8343`) — removed poll and post-choice **auto-continue**; room advances only after an explicit **Continue** press (`submitRoomContinue`).
+173. **2026-06-08 (+0200)** — **Welcome / onboarding** (`85e8343`) — reordered create-journey steps (emblem, name, legal checkboxes); **PanelButton** hover/press; **RecoveryKeyInfoOverlay**; step fades; restore opens file picker from the restore button; gateway actions centered.
+174. **2026-06-08 (+0200)** — **Avatar creation** (`85e8343`) — creation panel layout/tooltip polish; **SolutionStarfield** background; **AvatarSolutionInflow** handoff into the hub; **PlayerHub** footer rework (inventory/skillbook/lore/home affordances).
+175. **2026-06-08 (+0200)** — **Profile & titles** (`85e8343`) — **PlayerProfileOverlay** refresh; achievement **display titles** sourced via `achievementTitleSources.ts` + tests; profile/API wiring for selectable titles.
+176. **2026-06-08 (+0200)** — **Scribes** (`85e8343`) — **room encounter scribe policy** (`roomEncounterScribePolicy.ts`); feed filter/render tweaks; private scribe toast state; activity feed join rows.
+177. **2026-06-08 (+0200)** — **Room events** (`85e8343`) — system-event prepare clears stale `preparedResult` / resolution fields for all participants before the next actor roll; witness result row parity with actor (Fate label, portaled tooltips, shared `ResultBlock` path).
+178. **2026-06-09 (+0200)** — **System-event Continue** — solo actor resolve sets `continuePressed: true` and auto-advances when the room is ready; removes the extra `waiting_continue` ack after each system-event outcome.
+179. **2026-06-09 (+0200)** — **Solo room checkpoints** — `solo_room_checkpoints` store; park on solo leave; restore on `createRoom`; choice lock by `snapshotId` (`409 CHOICE_LOCKED`).
+180. **2026-06-09 (+0200)** — **Death `failed` state** — Atranor Misery/Hardship saves `preDeathSnapshot` and `status: failed` without inventory wipe or Hall of Fame; death overlay persists across refresh when selecting a failed avatar.
+181. **2026-06-09 (+0200)** — **Sacrifice** — `POST /avatar/:id/sacrifice` (level × 10 gems, confirm); full restore from snapshot; Sacrifice button + confirmation on **AvatarDeathOverlay**; re-enters game via restored solo checkpoint.
+182. **2026-06-09 (+0200)** — **Hall of Fame** — `POST /avatar/:id/finalize-death` marks avatars **deceased** (no DELETE); profile **Hall of Fame** lists deceased avatars + legacy wall entries; avatar slot limit counts active + failed only.
+183. **2026-06-09 (+0200)** — **Join handoff** — friends list, Scribes Join, and help-invite paths use `enterGameWithHandoff` (same portrait flight as solo Play) instead of instant `enterGameFromRoom`.
+184. **2026-06-09 (+0200)** — **Death UX cleanup** — removed client `purgeDeadAvatarsOnServer` / `localStorage` dead-id purge; server `status` is authoritative for failed and deceased avatars.
+185. **2026-06-09 (+0200)** — **Continue regression fix** — `canEnterWaitingContinue` uses connected (`engaged`) participants only; disconnected or solo-ghost choosers auto-disengage on choice so solo rooms reach `waiting_continue`; client no longer calls continue while room is still `active_encounter`; death overlay parks solo checkpoint via `leaveEncounterRoom` before the overlay opens.
+186. **2026-06-09 (+0200)** — **Death/sacrifice polish** — `finalizeAvatarDeath` / `actionsEqual` type fixes; sacrifice uses server `sacrificeGemCost` only; failed avatars excluded from the 3-slot creation cap; shared `runEnterGameHandoff` helper in **App.tsx**; tests for sacrifice, finalize-death, solo checkpoint restore, and `CHOICE_LOCKED`.

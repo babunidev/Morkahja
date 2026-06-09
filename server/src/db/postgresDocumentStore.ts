@@ -84,6 +84,13 @@ async function ensureSchema(client: PgPool | PoolClient = pool): Promise<void> {
       player_id text PRIMARY KEY,
       data jsonb NOT NULL DEFAULT '{}'::jsonb
     );
+
+    CREATE TABLE IF NOT EXISTS solo_room_checkpoints (
+      player_id text NOT NULL,
+      avatar_id text NOT NULL,
+      data jsonb NOT NULL DEFAULT '{}'::jsonb,
+      PRIMARY KEY (player_id, avatar_id)
+    );
   `).then(() => undefined);
 
   await schemaReady;
@@ -679,4 +686,42 @@ export async function withDocumentTransaction<T>(
   } finally {
     client.release();
   }
+}
+
+export async function getSoloRoomCheckpoint<T>(
+  playerId: string,
+  avatarId: string,
+): Promise<T | null> {
+  await ensureSchema();
+  const result = await pool.query<{ data: T }>(
+    'SELECT data FROM solo_room_checkpoints WHERE player_id = $1 AND avatar_id = $2',
+    [playerId, avatarId],
+  );
+  return result.rows[0]?.data ?? null;
+}
+
+export async function setSoloRoomCheckpoint(
+  playerId: string,
+  avatarId: string,
+  data: unknown,
+): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO solo_room_checkpoints (player_id, avatar_id, data)
+     VALUES ($1, $2, $3::jsonb)
+     ON CONFLICT (player_id, avatar_id)
+     DO UPDATE SET data = EXCLUDED.data`,
+    [playerId, avatarId, JSON.stringify(data)],
+  );
+}
+
+export async function clearSoloRoomCheckpoint(
+  playerId: string,
+  avatarId: string,
+): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    'DELETE FROM solo_room_checkpoints WHERE player_id = $1 AND avatar_id = $2',
+    [playerId, avatarId],
+  );
 }

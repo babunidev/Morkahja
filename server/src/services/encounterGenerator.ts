@@ -15,6 +15,7 @@ import {
 import type { EncounterData, EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
+import { applyFailedDeathState } from './avatarDeathService.js';
 import {
   withDocumentTransaction,
   type DocumentTransaction,
@@ -719,7 +720,7 @@ function applyDeathEncounterOutcome(
 } {
   if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
     return {
-      nextInventory: createInitialAvatarInventory(avatar.profile),
+      nextInventory: inventory,
       rewardIds: [],
     };
   }
@@ -1157,7 +1158,7 @@ export async function continueEncounter(
         state: 'active',
       };
 
-      const updatedAvatar: AvatarDocument = {
+      let updatedAvatar: AvatarDocument = {
         ...avatar,
         id: avatar.id ?? avatarId,
         level: progressionResult.progression.level,
@@ -1170,19 +1171,6 @@ export async function continueEncounter(
         },
       };
 
-      await transaction.setProgression(
-        playerId,
-        avatarId,
-        applyPendingLevelUpRewardsFlag(progressionResult.progression, {
-          leveledUp: progressionResult.leveledUp,
-          resolvedEncounterId: encounterSnapshot.encounterId,
-          levelUpEncounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
-        }),
-      );
-      await transaction.setInventory(playerId, avatarId, nextInventory);
-      await transaction.setAvatar(playerId, avatarId, updatedAvatar, { merge: true });
-      await transaction.setActiveEncounter(playerId, avatarId, nextSnapshot);
-
       eventContext = {
         resolvedEncounterId: encounterSnapshot.encounterId,
         resolvedEncounterTitle: encounterSnapshot.encounterTitle,
@@ -1192,10 +1180,37 @@ export async function continueEncounter(
         isDeathEncounterResolution: encounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID,
       };
       encounterDeathTriggered = deathTriggered;
-      // deathTriggered only queues Atranor; actual death is decided on that encounter's roll.
       encounterAvatarDied =
         eventContext.isDeathEncounterResolution &&
         isDeathEncounterFailureOutcome(selectedRollOutcome);
+
+      if (encounterAvatarDied) {
+        updatedAvatar = applyFailedDeathState(
+          updatedAvatar,
+          inventory,
+          {
+            ...progressionResult.progression,
+            lastEncounterId: encounterSnapshot.encounterId,
+          },
+        );
+      }
+
+      await transaction.setProgression(
+        playerId,
+        avatarId,
+        applyPendingLevelUpRewardsFlag(progressionResult.progression, {
+          leveledUp: progressionResult.leveledUp,
+          resolvedEncounterId: encounterSnapshot.encounterId,
+          levelUpEncounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+        }),
+      );
+      await transaction.setInventory(
+        playerId,
+        avatarId,
+        updatedAvatar.inventory ?? nextInventory,
+      );
+      await transaction.setAvatar(playerId, avatarId, updatedAvatar, { merge: true });
+      await transaction.setActiveEncounter(playerId, avatarId, nextSnapshot);
 
       return {
         avatar: updatedAvatar,
@@ -1497,8 +1512,20 @@ function computeParticipantOutcome(
     eventContext.isDeathEncounterResolution &&
     isDeathEncounterFailureOutcome(selectedRollOutcome);
 
+  let finalAvatar = updatedAvatar;
+  if (avatarDied) {
+    finalAvatar = applyFailedDeathState(
+      updatedAvatar,
+      inventory,
+      {
+        ...progressionResult.progression,
+        lastEncounterId: snapshot.encounterId,
+      },
+    );
+  }
+
   const resolveResult: ResolveParticipantInRoomResult = {
-    avatar: updatedAvatar,
+    avatar: finalAvatar,
     resolution,
     selectedRollOutcome,
     deathTriggered,
@@ -1514,9 +1541,9 @@ function computeParticipantOutcome(
     avatarDied,
     gainedExperience,
     eventContext,
-    nextInventory,
+    nextInventory: finalAvatar.inventory ?? nextInventory,
     nextProgression: progressionResult.progression,
-    updatedAvatar,
+    updatedAvatar: finalAvatar,
   };
 
   return {

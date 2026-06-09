@@ -701,11 +701,24 @@ export function PlayerProfileOverlay({
                 </div>
               </div>
               <div>
-                <h3 style={sectionTitleStyle}>Wall of fame</h3>
-                {(profile?.wallOfFame ?? []).length === 0 ? (
+                <h3 style={sectionTitleStyle}>Hall of Fame</h3>
+                {(profile?.wallOfFame ?? []).length === 0 && (profile?.deceasedAvatars ?? []).length === 0 ? (
                   <p style={messageStyle}>No fallen avatars yet.</p>
                 ) : (
                   <div style={fameListStyle}>
+                    {(profile?.deceasedAvatars ?? []).map((avatar) => (
+                      <article key={`deceased-${avatar.id}`} style={fameCardStyle}>
+                        <div style={famePortraitStyle}>
+                          <AvatarPortraitStack frame={avatar.frame} portrait={avatar.portrait} />
+                        </div>
+                        <div>
+                          <p style={fameNameStyle}>{avatar.name}</p>
+                          <p style={fameMetaStyle}>
+                            Level {avatar.level} · Deceased
+                          </p>
+                        </div>
+                      </article>
+                    ))}
                     {(profile?.wallOfFame ?? []).map((entry) => (
                       <WallOfFameCard entry={entry} key={`${entry.id}-${entry.diedAt}`} />
                     ))}

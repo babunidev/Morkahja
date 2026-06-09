@@ -33,6 +33,13 @@ import {
   setAvatarDisplayTitleController,
 } from './controllers/playerProfileController.js';
 import { toPersistedAvatarDto } from './services/avatarPresentation.js';
+import {
+  AvatarDeathError,
+  finalizeAvatarDeath,
+  InsufficientGemsForSacrificeError,
+  readAvatarLifeStatus,
+  sacrificeFailedAvatar,
+} from './services/avatarDeathService.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
@@ -289,6 +296,7 @@ app.get('/avatar', async (req: Request, res: Response) => {
 app.get('/avatars', async (req: Request, res: Response) => {
   const { playerId } = requireAuth(req);
   const avatars = (await loadPlayerAvatars(playerId))
+    .filter((avatar) => readAvatarLifeStatus(avatar) !== 'deceased')
     .map(toPersistedAvatarDto)
     .filter((avatar): avatar is NonNullable<ReturnType<typeof toPersistedAvatarDto>> => avatar !== null);
   res.json({ playerId, avatars });
@@ -382,6 +390,79 @@ app.post('/avatar/select', async (req: Request, res: Response) => {
 
   const avatarDto = toPersistedAvatarDto(avatar);
   res.json({ playerId, avatar: avatarDto ?? avatar });
+});
+
+app.post('/avatar/:avatarId/sacrifice', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatarId = Array.isArray(req.params.avatarId)
+    ? req.params.avatarId[0]
+    : req.params.avatarId;
+
+  if (!avatarId) {
+    res.status(400).json({ error: 'avatarId is required' });
+    return;
+  }
+
+  const body = req.body as Record<string, unknown>;
+  if (body.confirm !== true) {
+    res.status(400).json({ error: 'confirm must be true', code: 'CONFIRMATION_REQUIRED' });
+    return;
+  }
+
+  try {
+    const result = await sacrificeFailedAvatar(playerId, avatarId);
+    const avatarDto = toPersistedAvatarDto(result.avatar);
+    if (!avatarDto) {
+      res.status(500).json({ error: 'Sacrifice succeeded but avatar could not be serialized' });
+      return;
+    }
+
+    res.json({
+      playerId,
+      avatar: avatarDto,
+      spent: result.spent,
+      currencies: result.currencies,
+    });
+  } catch (error) {
+    if (error instanceof InsufficientGemsForSacrificeError) {
+      res.status(error.statusCode).json({ error: error.message, code: error.code });
+      return;
+    }
+    if (error instanceof AvatarDeathError) {
+      res.status(error.statusCode).json({ error: error.message, code: error.code });
+      return;
+    }
+
+    throw error;
+  }
+});
+
+app.post('/avatar/:avatarId/finalize-death', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatarId = Array.isArray(req.params.avatarId)
+    ? req.params.avatarId[0]
+    : req.params.avatarId;
+
+  if (!avatarId) {
+    res.status(400).json({ error: 'avatarId is required' });
+    return;
+  }
+
+  try {
+    const avatar = await finalizeAvatarDeath(playerId, avatarId);
+    res.json({
+      playerId,
+      avatarId: avatar.id ?? avatarId,
+      status: readAvatarLifeStatus(avatar),
+    });
+  } catch (error) {
+    if (error instanceof AvatarDeathError) {
+      res.status(error.statusCode).json({ error: error.message, code: error.code });
+      return;
+    }
+
+    throw error;
+  }
 });
 
 app.use(

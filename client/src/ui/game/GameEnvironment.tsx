@@ -17,13 +17,14 @@ import {
   submitRoomSlotState,
   kickRoomParticipant,
   leaveAllEncounterRooms,
+  leaveEncounterRoom,
   type EncounterAction,
   type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
   type PersistedAvatar,
   type SlotStateDto,
 } from '../../api/http.js';
-import { ApiRequestError } from '../../api/httpErrorMessage.js';
+import { ApiRequestError, userFacingApiErrorMessage } from '../../api/httpErrorMessage.js';
 import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
@@ -243,11 +244,16 @@ export function GameEnvironment({
   avatarRef.current = avatar;
   roomRef.current = room;
 
-  const handleLocalAvatarDeath = useCallback((deadAvatar: PersistedAvatar) => {
+  const handleLocalAvatarDeath = useCallback(async (deadAvatar: PersistedAvatar) => {
     if (deathLeaveHandledRef.current === deadAvatar.id) {
       return;
     }
     deathLeaveHandledRef.current = deadAvatar.id;
+    try {
+      await leaveEncounterRoom(deadAvatar.id);
+    } catch (error) {
+      console.error('Failed to leave encounter room before death overlay', error);
+    }
     onAvatarDeath(deadAvatar);
   }, [onAvatarDeath]);
 
@@ -645,16 +651,6 @@ export function GameEnvironment({
         return;
       }
 
-      const localBeforeChoice = currentRoom.participants.find((participant) => participant.isLocal);
-      if (
-        localBeforeChoice?.choiceState === 'ready_to_continue'
-        && localBeforeChoice.preparedResult !== undefined
-      ) {
-        await acknowledgeRoomContinue(currentRoom);
-        onAchievementCheck?.();
-        return;
-      }
-
       let nextRoom = await submitRoomChoice(
         avatarRef.current.id,
         action,
@@ -672,6 +668,7 @@ export function GameEnvironment({
       onAchievementCheck?.();
     } catch (error) {
       console.error('Continue encounter failed', error);
+      setHelpToastMessage(userFacingApiErrorMessage(error, 'Could not continue. Try again.'));
     } finally {
       setContinuePending(false);
     }
