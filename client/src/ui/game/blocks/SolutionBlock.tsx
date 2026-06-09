@@ -23,6 +23,7 @@ import {
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
+  fadeTransition,
 } from '../../transitions/fade.js';
 import {
   encounterTooltipDescriptionStyle,
@@ -790,7 +791,7 @@ export function SolutionBlock({
           ...solutionActionsLayerStyle,
           opacity: hidden ? 0 : 1,
           pointerEvents: hidden || !actionsReady ? 'none' : 'auto',
-          transition: hidden ? 'opacity 0ms' : undefined,
+          transition: fadeTransition,
         }}
       >
         {solutionSlots.map((slot) => {

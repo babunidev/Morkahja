@@ -11,7 +11,12 @@ import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection } from '../.
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
-import { ENCOUNTER_FADE_DURATION_MS, encounterFadeTransition } from '../../transitions/fade.js';
+import {
+  ENCOUNTER_FADE_DURATION_MS,
+  encounterFadeTransition,
+  fadeStyle,
+} from '../../transitions/fade.js';
+import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
@@ -125,6 +130,7 @@ export function EncounterImageBlock({
   isWitnessingLabel = false,
   showWitnessResult = false,
   witnessCanContinue = false,
+  actorShowContinue = true,
   systemEventActorName,
   outcomeRoll,
   outcomeResolutionAction,
@@ -166,6 +172,7 @@ export function EncounterImageBlock({
   isWitnessingLabel?: boolean;
   showWitnessResult?: boolean;
   witnessCanContinue?: boolean;
+  actorShowContinue?: boolean;
   systemEventActorName?: string;
   outcomeRoll?: number;
   outcomeResolutionAction?: EncounterAction;
@@ -188,6 +195,39 @@ export function EncounterImageBlock({
   const lastSyncedSelectionKeyRef = useRef<string | null>(null);
   const selectionSyncInFlightRef = useRef(false);
   const choiceCommitInFlightRef = useRef(false);
+  const showWitnessLabel = isWitnessingLabel && !showWitnessResult;
+  const witnessLabelPresence = useOpacityPresence(showWitnessLabel);
+  const witnessResultLatchRef = useRef(false);
+  const witnessResultSnapRef = useRef<{
+    outcome: ParticipantResolutionSummaryDto;
+    encounterId: number;
+    avatarLevel: number;
+    resolutionAction: EncounterAction;
+  } | null>(null);
+
+  if (showWitnessResult && witnessOutcome) {
+    witnessResultLatchRef.current = true;
+  }
+
+  useEffect(() => {
+    if (!witnessSuppressLocalResolution) {
+      witnessResultLatchRef.current = false;
+      witnessResultSnapRef.current = null;
+    }
+  }, [witnessSuppressLocalResolution]);
+
+  if (witnessResultLatchRef.current && witnessOutcome) {
+    witnessResultSnapRef.current = {
+      outcome: witnessOutcome,
+      encounterId: witnessEncounterId ?? encounter.encounterId,
+      avatarLevel: witnessAvatarLevel ?? avatarLevel,
+      resolutionAction: outcomeResolutionAction ?? 'dice',
+    };
+  }
+
+  const witnessResultActive = witnessResultLatchRef.current
+    && witnessResultSnapRef.current != null;
+  const witnessResultPresence = useOpacityPresence(witnessResultActive);
 
   function markMissingImage(src: string): void {
     setMissingImageSrcs((currentMissingImageSrcs) => (
@@ -463,14 +503,21 @@ export function EncounterImageBlock({
           }}
         />
       )}
-      {isWitnessingLabel && !showWitnessResult ? (
-        <div aria-live="polite" style={witnessFloatingLabelStyle}>
+      {witnessLabelPresence.mounted ? (
+        <div
+          aria-live="polite"
+          className="morkahja-result-outcome"
+          style={{
+            ...witnessFloatingLabelStyle,
+            ...fadeStyle(witnessLabelPresence.visible),
+          }}
+        >
           {systemEventActorName
             ? `Witnessing ${systemEventActorName}'s fate…`
             : 'Witnessing a shared moment…'}
         </div>
       ) : null}
-      {showWitnessResult && witnessOutcome ? (
+      {witnessResultPresence.mounted && witnessResultSnapRef.current ? (
         <ResultBlock
           readOnlyWitness
           witnessShowContinue={witnessCanContinue}
@@ -481,24 +528,27 @@ export function EncounterImageBlock({
           diceOutcomeIcon={diceButtonAsset}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
-          avatarLevel={witnessAvatarLevel ?? avatarLevel}
-          encounterId={witnessEncounterId ?? encounter.encounterId}
+          avatarLevel={witnessResultSnapRef.current.avatarLevel}
+          encounterId={witnessResultSnapRef.current.encounterId}
           hidden={loreOpen || inventoryOpen || skillbookOpen}
           localContinuePressed={localContinuePressed}
           onContinue={() => {
             void handleContinue();
           }}
+          presenceVisible={witnessResultPresence.visible}
           prosperityRewardId={null}
-          resolutionAction={outcomeResolutionAction ?? 'dice'}
-          rewardIds={witnessOutcome.rewards}
-          roll={witnessOutcome.selectedRoll ?? null}
-          usedSolutionIds={witnessOutcome.usedInventorySolutions ?? []}
-          lostSolutionIds={witnessOutcome.lostInventorySolutions ?? []}
+          resolutionAction={witnessResultSnapRef.current.resolutionAction}
+          rewardIds={witnessResultSnapRef.current.outcome.rewards}
+          roll={witnessResultSnapRef.current.outcome.selectedRoll ?? null}
+          usedSolutionIds={witnessResultSnapRef.current.outcome.usedInventorySolutions ?? []}
+          lostSolutionIds={witnessResultSnapRef.current.outcome.lostInventorySolutions ?? []}
         />
       ) : !isWitnessingLabel ? (
         <ResultBlock
           diceOutcomeIcon={diceButtonAsset}
+          actorShowContinue={isSystemEventActor ? actorShowContinue : true}
           continueGlowClass={continueGlowClass}
+          encounterSnapshotId={encounter.snapshotId}
           continueWaitingAfterPress={continueWaitingAfterPress}
           deferRewardDismiss={deferRewardDismiss}
           disabled={continuePending}

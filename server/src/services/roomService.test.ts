@@ -112,6 +112,52 @@ assert.equal(originalAvatarRoomAgain.participants[0]?.avatarId, avatarId);
 const firstRoomAfterSwitch = await loadEncounterRoom(room.roomId);
 assert.equal(firstRoomAfterSwitch?.roomState, 'active_encounter');
 
+const soloSystemRoom: EncounterRoom = {
+  ...room,
+  roomState: 'system_event',
+  activeEncounterSnapshot: {
+    ...room.activeEncounterSnapshot,
+    encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+    encounterTitle: 'Level Up',
+    actionReadyAt: Date.now() - 1,
+  },
+  systemEvent: {
+    queue: [{
+      actorPlayerId: session.playerId,
+      encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
+    }],
+    queueIndex: 0,
+    lineage: {
+      originEncounterId: room.activeEncounterSnapshot.encounterId,
+      originEncounterFollow: room.activeEncounterSnapshot.encounterFollow,
+      originRollOutcome: 'Fortune',
+      originSuccess: true,
+    },
+  },
+  participants: [{
+    ...room.participants[0]!,
+    choiceState: 'choosing',
+    continuePressed: false,
+    focusState: 'none',
+    lastInteractionAt: Date.now(),
+  }],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(soloSystemRoom);
+const afterSoloSystemRoll = await submitChoice(session.playerId, avatarId, 'dice');
+assert.equal(afterSoloSystemRoll.roomState, 'system_event');
+assert.equal(
+  afterSoloSystemRoll.participants.find((participant) => participant.playerId === session.playerId)?.choiceState,
+  'ready_to_continue',
+);
+const afterSoloSystemContinue = await submitContinue(session.playerId, avatarId);
+assert.equal(
+  afterSoloSystemContinue.roomState,
+  'active_encounter',
+  'solo system-event should advance after one continue',
+);
+await saveEncounterRoom(room);
+
 const witnessSystemRoom: EncounterRoom = {
   ...switchedAvatarRoom,
   roomState: 'system_event',

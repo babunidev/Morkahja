@@ -275,10 +275,8 @@ button:focus-visible {
   }
 }
 
-.morkahja-party-choice-badge {
-  animation:
-    morkahja-party-choice-reveal 420ms ease forwards,
-    morkahja-party-choice-pulse 2.4s ease-in-out 420ms infinite;
+.morkahja-party-choice-badge--pulse {
+  animation: morkahja-party-choice-pulse 2.4s ease-in-out infinite;
   transform-origin: center center;
 }
 

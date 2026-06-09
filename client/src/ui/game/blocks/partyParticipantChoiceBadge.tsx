@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { fadeStyle } from '../../transitions/fade.js';
+import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import type {
   RoomParticipantDto,
   RoomStateDto,
@@ -143,17 +145,17 @@ function participantChoiceRoll(participant: RoomParticipantDto): number | undefi
 }
 
 function PartyChoiceOverlayBadge({
-  animateReveal = false,
   iconSrc,
   iconStyle = badgeIconStyle,
   overlayStyle = choiceBadgeOverlayInteractiveStyle,
+  pulseVisible = false,
   rollDisplay,
   tooltip,
 }: {
-  animateReveal?: boolean;
   iconSrc: string;
   iconStyle?: CSSProperties;
   overlayStyle?: CSSProperties;
+  pulseVisible?: boolean;
   rollDisplay?: number | null;
   tooltip: PartyBadgeTooltip | null;
 }) {
@@ -186,7 +188,7 @@ function PartyChoiceOverlayBadge({
         style={overlayStyle}
       >
         <span
-          className={animateReveal ? 'morkahja-party-choice-badge' : undefined}
+          className={pulseVisible ? 'morkahja-party-choice-badge--pulse' : undefined}
           style={badgeContentStyle}
         >
           <img alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
@@ -216,6 +218,12 @@ function PartyChoiceOverlayBadge({
   );
 }
 
+interface ChoiceBadgeSnapshot {
+  iconSrc: string;
+  rollDisplay?: number;
+  tooltip: PartyBadgeTooltip | null;
+}
+
 export function PartyParticipantChoiceBadge({
   hidden = false,
   overlayStyle = choiceBadgeOverlayInteractiveStyle,
@@ -242,24 +250,37 @@ export function PartyParticipantChoiceBadge({
   const diceChoiceSrc = diceChoiceIcon(participant);
   const choiceRoll = participantChoiceRoll(participant);
   const choiceRollDisplay = choiceRoll !== undefined ? displayRollAsD20(choiceRoll) : null;
+  const badgeActive = showChoice && (choiceSolutionSrc !== null || showDiceChoice);
+  const presence = useOpacityPresence(badgeActive);
+  const snapshotRef = useRef<ChoiceBadgeSnapshot | null>(null);
 
-  if (!showChoice || !(choiceSolutionSrc || showDiceChoice)) {
+  if (badgeActive) {
+    snapshotRef.current = {
+      iconSrc: choiceSolutionSrc ?? diceChoiceSrc,
+      rollDisplay: choiceRoll,
+      tooltip:
+        choiceSolutionTooltip
+        ?? (showDiceChoice ? { label: 'Dice' } : null)
+        ?? (choiceRollDisplay !== null
+          ? { label: `Roll ${choiceRollDisplay}` }
+          : null),
+    };
+  }
+
+  if (!presence.mounted || !snapshotRef.current) {
     return null;
   }
 
   return (
     <PartyChoiceOverlayBadge
-      animateReveal
-      iconSrc={choiceSolutionSrc ?? diceChoiceSrc}
-      overlayStyle={overlayStyle}
-      rollDisplay={choiceRoll}
-      tooltip={
-        choiceSolutionTooltip
-        ?? (showDiceChoice ? { label: 'Dice' } : null)
-        ?? (choiceRollDisplay !== null
-          ? { label: `Roll ${choiceRollDisplay}` }
-          : null)
-      }
+      iconSrc={snapshotRef.current.iconSrc}
+      overlayStyle={{
+        ...overlayStyle,
+        ...fadeStyle(presence.visible),
+      }}
+      pulseVisible={presence.visible}
+      rollDisplay={snapshotRef.current.rollDisplay}
+      tooltip={snapshotRef.current.tooltip}
     />
   );
 }

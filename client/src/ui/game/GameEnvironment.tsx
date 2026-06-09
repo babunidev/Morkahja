@@ -46,8 +46,11 @@ import type { ResultBlockHandle } from './blocks/ResultBlock.js';
 import PlayerHub from './blocks/PlayerHub.js';
 import GameMessageToast from './GameMessageToast.js';
 import {
+  actorCanPressContinue,
+  canAdvanceRoomHint,
   continueGlowClassForRoom,
   localContinuePressed,
+  localOutcomeCommitted,
   localWaitingForRoomAdvance,
   shouldApplyServerInventory,
   shouldDeferRewardDismiss,
@@ -587,6 +590,28 @@ export function GameEnvironment({
     return room;
   }
 
+  function actorReadyToCommitSystemEvent(
+    currentRoom: EncounterRoomSnapshotDto,
+  ): boolean {
+    if (currentRoom.roomState !== 'system_event' || !currentRoom.systemEvent?.isLocalActor) {
+      return false;
+    }
+
+    const localActor = currentRoom.participants.find((participant) => participant.isLocal);
+    return (
+      localActor?.choiceState === 'ready_to_continue'
+      && localActor.preparedResult !== undefined
+    );
+  }
+
+  function canAcknowledgeRoomContinue(currentRoom: EncounterRoomSnapshotDto): boolean {
+    return (
+      currentRoom.roomState === 'waiting_continue'
+      || currentRoom.roomState === 'advancing'
+      || actorReadyToCommitSystemEvent(currentRoom)
+    );
+  }
+
   /** Submit continue (ready). Dismiss runs only when the server advances the encounter snapshot. */
   async function acknowledgeRoomContinue(
     currentRoom: EncounterRoomSnapshotDto,
@@ -606,8 +631,29 @@ export function GameEnvironment({
         applySnapshotOnly(workingRoom);
       }
 
-      const roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
-      await runEncounterAdvanceTransition(workingRoom, roomAfterContinue, roomAdvanceHooks);
+      const transitionBaseline = workingRoom;
+      let roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
+
+      const shouldChainSystemEventAdvance = (
+        transitionBaseline.roomState === 'system_event'
+        && roomAfterContinue.roomState === 'waiting_continue'
+        && canAdvanceRoomHint(roomAfterContinue)
+        && !encounterSnapshotAdvanced(transitionBaseline, roomAfterContinue)
+      );
+
+      if (shouldChainSystemEventAdvance) {
+        try {
+          roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
+        } catch (chainError) {
+          console.error('System-event advance chain failed; refreshing room', chainError);
+          const refreshed = await fetchActiveRoom(avatarRef.current.id);
+          if (refreshed) {
+            roomAfterContinue = refreshed;
+          }
+        }
+      }
+
+      await runEncounterAdvanceTransition(transitionBaseline, roomAfterContinue, roomAdvanceHooks);
       await completeAvatarDeathFlow(roomAfterContinue);
       return roomAfterContinue;
     } finally {
@@ -636,27 +682,23 @@ export function GameEnvironment({
         return;
       }
 
-      if (currentRoom.roomState === 'waiting_continue') {
+      if (canAcknowledgeRoomContinue(currentRoom)) {
         await acknowledgeRoomContinue(currentRoom);
         onAchievementCheck?.();
         return;
       }
 
-      if (currentRoom.roomState === 'system_event' && currentRoom.systemEvent?.isLocalActor) {
-        const localActor = currentRoom.participants.find((participant) => participant.isLocal);
-        if (
-          localActor?.choiceState === 'ready_to_continue'
-          && localActor.preparedResult !== undefined
-        ) {
-          const nextRoom = await submitRoomContinue(avatarRef.current.id);
-          await runEncounterAdvanceTransition(currentRoom, nextRoom, roomAdvanceHooks);
-          await completeAvatarDeathFlow(nextRoom);
-          onAchievementCheck?.();
-          return;
-        }
+      if (currentRoom.roomState === 'system_event' && witnessSystemEventDisplay(currentRoom).isWitness) {
+        return;
       }
 
-      if (currentRoom.roomState === 'system_event' && witnessSystemEventDisplay(currentRoom).isWitness) {
+      if (
+        currentRoom.roomState === 'system_event'
+        && (
+          currentRoom.systemEvent?.isLocalActor === true
+          || localOutcomeCommitted(currentRoom)
+        )
+      ) {
         return;
       }
 
@@ -823,6 +865,9 @@ export function GameEnvironment({
     ? witnessDisplay.showActorResult
     : shouldDeferRewardDismiss(room, resultRollVisible);
   const localHasContinuePressed = room ? localContinuePressed(room) : false;
+  const actorShowContinue = room?.systemEvent?.isLocalActor === true
+    ? actorCanPressContinue(room) || localWaitingForRoomAdvance(room)
+    : true;
   const continueGlow = continueGlowClassForRoom(room);
   const continueWaitingAfterPress = localWaitingForRoomAdvance(room);
   const roomLoreGemEarned = encounter.loreGemOffer?.eligible === true
@@ -898,6 +943,7 @@ export function GameEnvironment({
                 isWitnessingLabel={isWitnessingLabel}
                 showWitnessResult={showWitnessResult}
                 witnessCanContinue={witnessDisplay.witnessCanContinue}
+                actorShowContinue={actorShowContinue}
                 witnessEncounterId={witnessEncounterId}
                 witnessOutcome={witnessActorOutcome ?? null}
                 witnessAvatarLevel={systemEventActor?.avatar.level}

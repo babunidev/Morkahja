@@ -188,3 +188,30 @@ export function localWaitingForRoomAdvance(
 
   return room.roomState === 'waiting_continue' || room.roomState === 'advancing';
 }
+
+/** True when the system-event actor may press Continue on the result row. */
+export function actorCanPressContinue(
+  room: EncounterRoomSnapshotDto | null | undefined,
+): boolean {
+  if (!room || room.systemEvent?.isLocalActor !== true) {
+    return false;
+  }
+
+  const local = room.participants.find((participant) => participant.isLocal);
+  if (!local) {
+    return false;
+  }
+
+  if (room.roomState === 'system_event') {
+    return (
+      local.choiceState === 'ready_to_continue'
+      && local.preparedResult !== undefined
+    );
+  }
+
+  if (room.roomState === 'waiting_continue' || room.roomState === 'advancing') {
+    return localNeedsContinueAck(room);
+  }
+
+  return false;
+}

@@ -418,6 +418,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     encounterRewardAmount = 1,
     avatarLevel = 1,
     encounterId,
+    encounterSnapshotId,
     hidden = false,
     inventory,
     localContinuePressed = false,
@@ -425,6 +426,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     prosperityRewardId,
     readOnlyWitness = false,
     witnessShowContinue = false,
+    actorShowContinue = true,
+    presenceVisible,
     resolutionAction = null,
     rewardIds = [],
     roll,
@@ -441,6 +444,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     encounterRewardAmount?: number;
     avatarLevel?: number;
     encounterId: number;
+    encounterSnapshotId?: string;
     hidden?: boolean;
     inventory?: AvatarInventory;
     localContinuePressed?: boolean;
@@ -448,6 +452,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
     prosperityRewardId?: number | null;
     readOnlyWitness?: boolean;
     witnessShowContinue?: boolean;
+    /** When false, hides Continue for system-event actors until the server is ready. */
+    actorShowContinue?: boolean;
+    /** When set, drives fade in/out instead of the internal entrance fade (witness mount). */
+    presenceVisible?: boolean;
     resolutionAction?: EncounterAction | null;
     rewardIds?: number[];
     roll: number | null;
@@ -475,6 +483,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
+  const activationRevealDoneRef = useRef(false);
+  const postPressContinueRef = useRef(false);
   const outcome = roll === null ? null : interpretRoll(roll);
   const outcomeLabel = outcome === null ? null : displayRollOutcome(outcome);
   const displayRoll = roll === null ? null : displayRollAsD20(roll);
@@ -519,10 +529,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const visible = roll !== null || (readOnlyWitness && (rewards.length > 0 || isLevelUp));
 
   const showContinueFloat = continuePressAnimationDone
-    && (continueFloatingAfterPress || continueWaitingAfterPress)
+    && continueFloatingAfterPress
     && !continueRevealPlaying
     && !continueEnableRattle
-    && !continueSubmitInFlight;
+    && !continuePressAnimating;
+
+  const continueButtonVisible = continueRevealPlaying
+    || continueInteractive
+    || continueEnableRattle
+    || continuePressAnimating
+    || showContinueFloat;
 
   const lossesKey = useMemo(
     () => losses.map((loss) => `${loss.solution.mSolutionID}:${loss.quantity}`).join('|'),
@@ -542,9 +558,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setContinueFloatingAfterPress(false);
     setLoreGemPopupVisible(false);
     setLoreGemActivating(false);
+    activationRevealDoneRef.current = false;
+    postPressContinueRef.current = false;
     rewardButtonRefs.current.clear();
     lossButtonRefs.current.clear();
-  }, [roll, losses.length]);
+  }, [roll, losses.length, encounterSnapshotId]);
 
   useEffect(() => {
     if (readOnlyWitness || !showLoreGemReward || roll === null || hidden) {
@@ -570,16 +588,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }, [hidden, roll, showLoreGemReward]);
 
   useEffect(() => {
-    if (localContinuePressed && continueWaitingAfterPress) {
-      setContinuePressAnimationDone(true);
-      setContinueFloatingAfterPress(true);
+    if (!localContinuePressed || !continueWaitingAfterPress) {
+      return;
     }
-  }, [continueWaitingAfterPress, localContinuePressed]);
 
-  useEffect(() => {
-    if (!continueWaitingAfterPress && !localContinuePressed) {
-      setContinueFloatingAfterPress(false);
-    }
+    postPressContinueRef.current = true;
+    setContinuePressAnimationDone(true);
+    setContinueFloatingAfterPress(true);
+    setContinueInteractive(false);
   }, [continueWaitingAfterPress, localContinuePressed]);
 
   useEffect(() => {
@@ -667,16 +683,27 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return undefined;
     }
 
+    if (!readOnlyWitness && !actorShowContinue) {
+      setContinueRevealPlaying(false);
+      setContinueInteractive(false);
+      return undefined;
+    }
+
+    if (postPressContinueRef.current) {
+      return undefined;
+    }
+
     if (!visible || !lossesSequenceDone) {
       setContinueRevealPlaying(false);
       setContinueInteractive(false);
       return undefined;
     }
 
+    if (activationRevealDoneRef.current) {
+      return undefined;
+    }
+
     let cancelled = false;
-    setContinueRevealPlaying(false);
-    setContinueInteractive(false);
-    setContinueEnableRattle(false);
 
     async function revealContinue(): Promise<void> {
       if (CONTINUE_REVEAL_DELAY_MS > 0) {
@@ -684,20 +711,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
           window.setTimeout(resolve, CONTINUE_REVEAL_DELAY_MS);
         });
 
-        if (cancelled) {
+        if (cancelled || postPressContinueRef.current) {
           return;
         }
       }
 
       await waitForNextPaint();
-      if (cancelled) {
+      if (cancelled || postPressContinueRef.current) {
         return;
       }
 
       setContinueRevealPlaying(true);
 
       await waitForNextPaint();
-      if (cancelled) {
+      if (cancelled || postPressContinueRef.current) {
         return;
       }
 
@@ -705,19 +732,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
         window.setTimeout(resolve, CONTINUE_REVEAL_TOTAL_MS);
       });
 
-      if (cancelled) {
+      if (cancelled || postPressContinueRef.current) {
         return;
       }
 
       setContinueRevealPlaying(false);
       setContinueEnableRattle(true);
       setContinueInteractive(true);
+      activationRevealDoneRef.current = true;
 
       await new Promise<void>((resolve) => {
         window.setTimeout(resolve, CONTINUE_ENABLE_RATTLE_MS);
       });
 
-      if (!cancelled) {
+      if (!cancelled && !postPressContinueRef.current) {
         setContinueEnableRattle(false);
       }
     }
@@ -726,11 +754,15 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     return () => {
       cancelled = true;
-      setContinueRevealPlaying(false);
-      setContinueInteractive(false);
-      setContinueEnableRattle(false);
     };
-  }, [lossesSequenceDone, visible, readOnlyWitness, witnessShowContinue]);
+  }, [
+    actorShowContinue,
+    encounterSnapshotId,
+    lossesSequenceDone,
+    visible,
+    readOnlyWitness,
+    witnessShowContinue,
+  ]);
 
   function buildLossFlights(): LossBubbleTargetSpec[] {
     const flights: LossBubbleTargetSpec[] = [];
@@ -864,6 +896,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
     playSfx(CONTINUE_SOUND);
     hideItemTooltip();
 
+    postPressContinueRef.current = true;
+    activationRevealDoneRef.current = true;
+    setContinueRevealPlaying(false);
+    setContinueEnableRattle(false);
+    setContinueInteractive(false);
+    setContinuePressAnimationDone(true);
+    setContinueFloatingAfterPress(true);
     setContinueSubmitInFlight(true);
     setContinuePressAnimating(true);
     const pressAnimTimer = window.setTimeout(() => {
@@ -871,12 +910,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }, CONTINUE_BOUNCE_MS);
 
     try {
-      setContinuePressAnimationDone(true);
-      setContinueFloatingAfterPress(true);
       await waitContinueBounce();
       await Promise.resolve(onContinue());
     } catch {
-      // Parent logs failures; keep results visible for retry.
+      postPressContinueRef.current = false;
+      activationRevealDoneRef.current = false;
+      setContinueFloatingAfterPress(false);
+      setContinuePressAnimationDone(false);
+      setContinueInteractive(true);
     } finally {
       window.clearTimeout(pressAnimTimer);
       setContinuePressAnimating(false);
@@ -1081,17 +1122,45 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   const resultInteractive = visible && !hidden;
+  const [resultFadedIn, setResultFadedIn] = useState(false);
+
+  useEffect(() => {
+    if (!resultInteractive) {
+      setResultFadedIn(false);
+      return undefined;
+    }
+
+    if (presenceVisible !== undefined) {
+      setResultFadedIn(true);
+      return undefined;
+    }
+
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        setResultFadedIn(true);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [presenceVisible, resultInteractive]);
+
+  const resultShown = resultInteractive && (
+    presenceVisible !== undefined ? presenceVisible : resultFadedIn
+  );
 
   return (
     <div
       aria-hidden={roll === null}
-      inert={resultInteractive ? undefined : true}
+      inert={resultShown ? undefined : true}
       ref={blockRef}
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       style={{
         ...resultBlockStyle,
-        opacity: resultInteractive ? 1 : 0,
-        pointerEvents: resultInteractive ? 'auto' : 'none',
+        opacity: resultShown ? 1 : 0,
+        pointerEvents: resultShown ? 'auto' : 'none',
       }}
     >
       <style>
@@ -1158,7 +1227,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           pointerEvents: resultInteractive ? 'auto' : 'none',
         }}
       />
-      {(!readOnlyWitness || witnessShowContinue) ? (
+      {(!readOnlyWitness || visible) ? (
         <button
           aria-disabled={!continueInteractive}
           aria-label="Continue"
@@ -1167,6 +1236,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
             disabled
             || continueSubmitInFlight
             || !continueInteractive
+            || (readOnlyWitness && !witnessShowContinue)
+            || (!readOnlyWitness && !actorShowContinue)
             || (deferRewardDismiss && localContinuePressed)
           }
           onClick={() => {
@@ -1179,12 +1250,19 @@ export const ResultBlock = forwardRef(function ResultBlock(
               disabled
               || continueSubmitInFlight
               || !continueInteractive
+              || (readOnlyWitness && !witnessShowContinue)
+              || (!readOnlyWitness && !actorShowContinue)
               || (deferRewardDismiss && localContinuePressed)
                 ? 'default'
                 : 'pointer',
-            pointerEvents: resultInteractive && continueInteractive && !continueSubmitInFlight
-              ? 'auto'
-              : 'none',
+            pointerEvents:
+              resultInteractive
+              && continueInteractive
+              && !continueSubmitInFlight
+              && !(readOnlyWitness && !witnessShowContinue)
+              && !(!readOnlyWitness && !actorShowContinue)
+                ? 'auto'
+                : 'none',
           }}
           type="button"
         >
@@ -1194,7 +1272,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             style={{
               ...(continueRevealPlaying
                 ? continueRevealSpinStyle()
-                : continueInteractive || continueEnableRattle
+                : continueButtonVisible
                   ? continueSettledStyle
                   : continueHiddenStyle),
               ...(continuePressAnimating && !showContinueFloat ? continueAnimatingStyle : {}),

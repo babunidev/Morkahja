@@ -37,6 +37,9 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Continue is yours to press — outcomes no longer auto-advance after a choice.',
           'Misery and Hardship losses match the server — the items you see leave are the items that leave.',
           'Solo checkpoints — leave a solo room and Play picks up where you left off.',
+          'Join from friends, Scribes, or help invites uses the same portrait handoff as solo Play.',
+          'Level-up and Atranor (solo) — one Continue step when the room is ready; no extra waiting ack.',
+          'Continue sync — misleading “isn’t ready to continue” toasts removed; the room quietly catches up instead.',
         ],
       },
       {
@@ -44,16 +47,19 @@ const PATCH_RELEASES: PatchRelease[] = [
         notes: [
           'Leaving after a choice still counts — inventory, XP, and events commit even if you disconnect.',
           'Rejoin the same encounter and your result is waiting; if the party moved on, you join the current one.',
-          'Ally portrait badges now show the revealed d20 roll over their dice or solution icon.',
+          'Choice badges on every portrait — including your own — with dice/solution icon and revealed d20 roll bottom-right.',
+          'Badges fade in at their final corner (no center snap); pulse animation stays smooth when the roll arrives late.',
         ],
       },
       {
         title: 'Death & fallen souls',
         notes: [
           'A fatal Atranor roll marks your avatar as failed — not deleted. Progress survives a refresh.',
-          'Sacrifice — offer a fallen soul for gems (level × 10) and restore them from before death.',
-          'Hall of Fame — lay a soul to rest; deceased avatars appear on your profile wall.',
-          'The death screen waits until you press Continue — no more broken flows or “No active room” toasts.',
+          'Sacrifice — offer a fallen soul for gems (level × 10); restores Fortune-tier essence and steps past Atranor in one go.',
+          'Hall of Fame — lay a soul to rest with Same Soul / New Avatar; deceased avatars join your profile wall.',
+          'Finalizing death clears solo rooms, leaves parties, and blocks that soul from play until you start anew.',
+          'The death screen waits until you press Continue — checkpoint parks when the overlay opens.',
+          'Deceased avatars cannot create, join, select, or re-enter rooms; friendlier messages when the server blocks an action.',
         ],
       },
       {
@@ -61,7 +67,8 @@ const PATCH_RELEASES: PatchRelease[] = [
         notes: [
           'Refreshed create-journey steps, recovery key info, and a cleaner welcome gateway.',
           'New avatar creation atmosphere — starfield backdrop and solution inflow into the hub.',
-          'Profile and achievement titles polished; selectable display titles on your wall.',
+          'Profile wall of fame — one deduped list per avatar; failed souls stay out of living slots; cards show level, encounters, and fallen date.',
+          'Selectable achievement display titles on your profile.',
         ],
       },
     ],

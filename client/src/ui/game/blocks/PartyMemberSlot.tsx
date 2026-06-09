@@ -1,4 +1,6 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { fadeStyle } from '../../transitions/fade.js';
+import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import type {
   ParticipantFocusStateDto,
   RoomParticipantDto,
@@ -173,11 +175,13 @@ function focusBadgeTooltip(focusState: ParticipantFocusStateDto): PartyBadgeTool
 }
 
 function PartyMemberFocusBadge({
+  fadeVisible = true,
   iconSrc,
   iconStyle = badgeIconStyle,
   overlayStyle = badgeOverlayInteractiveStyle,
   tooltip,
 }: {
+  fadeVisible?: boolean;
   iconSrc: string;
   iconStyle?: CSSProperties;
   overlayStyle?: CSSProperties;
@@ -199,7 +203,10 @@ function PartyMemberFocusBadge({
         onMouseLeave={() => {
           setTooltipVisible(false);
         }}
-        style={overlayStyle}
+        style={{
+          ...overlayStyle,
+          ...fadeStyle(fadeVisible),
+        }}
       >
         <img alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
       </span>
@@ -208,7 +215,7 @@ function PartyMemberFocusBadge({
           anchorRef={anchorRef}
           description={tooltip.description}
           label={tooltip.label}
-          visible={tooltipVisible}
+          visible={tooltipVisible && fadeVisible}
         />
       ) : null}
     </>
@@ -267,6 +274,20 @@ export function PartyMemberSlot({
     ? GAME_FOCUS_BUTTON_ICONS[focusState as keyof typeof GAME_FOCUS_BUTTON_ICONS]
     : undefined;
   const focusTooltip = focusState !== 'none' ? focusBadgeTooltip(focusState) : null;
+  const showFocusBadge = Boolean(focusIconSrc && !detailsOpen);
+  const focusPresence = useOpacityPresence(showFocusBadge);
+  const [displayFocusIcon, setDisplayFocusIcon] = useState(focusIconSrc);
+  const [displayFocusTooltip, setDisplayFocusTooltip] = useState(focusTooltip);
+
+  useEffect(() => {
+    if (focusIconSrc) {
+      setDisplayFocusIcon(focusIconSrc);
+    }
+    if (focusTooltip) {
+      setDisplayFocusTooltip(focusTooltip);
+    }
+  }, [focusIconSrc, focusTooltip]);
+
   const badge = statusLabel(participant, roomState);
   const avatarDisplayName = formatAvatarDisplayName(participant.avatar);
   const avatarMeta = participantAvatarMeta(participant.avatar);
@@ -310,12 +331,13 @@ export function PartyMemberSlot({
             roomState={roomState}
             systemEventActorPlayerId={systemEventActorPlayerId}
           />
-          {focusIconSrc && !detailsOpen ? (
+          {focusPresence.mounted && displayFocusIcon ? (
             <PartyMemberFocusBadge
-              iconSrc={focusIconSrc}
+              fadeVisible={focusPresence.visible}
+              iconSrc={displayFocusIcon}
               iconStyle={focusBadgeIconStyle}
               overlayStyle={focusBadgeOverlayStyle}
-              tooltip={focusTooltip}
+              tooltip={displayFocusTooltip}
             />
           ) : null}
           {detailsOpen ? (
