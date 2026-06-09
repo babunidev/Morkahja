@@ -768,6 +768,14 @@ function deathEncounterEssenceUses(outcome: RollOutcome | null): number {
   }
 }
 
+/** Gem sacrifice on Atranor failure — Fortune-tier essence reward on restored inventory. */
+export function applyFortuneSacrificeReward(
+  inventory: AvatarInventory,
+  avatar: AvatarDocument,
+): AvatarInventory {
+  return applyDeathEncounterOutcome(inventory, avatar, 'Fortune').nextInventory;
+}
+
 function normalizeSystemEncounterResolution(
   snapshot: EncounterSnapshot,
   avatar: AvatarDocument,

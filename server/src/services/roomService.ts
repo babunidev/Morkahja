@@ -30,6 +30,8 @@ import {
   withDocumentTransaction,
   getProgression,
   listPlayerIdsWithLiveSessions,
+  setSoloRoomCheckpoint,
+  deleteActiveEncounter,
   type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import type { PlayerDocument } from '../types/player.js';
@@ -84,6 +86,7 @@ import {
   loadPendingInvitations,
   loadPlayerPresence,
   normalizeEncounterRoom,
+  removeEncounterRoom,
   saveEncounterRoom,
   savePlayerPresence,
   saveRoomInvitation,
@@ -105,6 +108,8 @@ import {
 } from './loreGemService.js';
 import {
   ChoiceLockedError,
+  checkpointFromRoom,
+  clearSoloCheckpointForAvatar,
   enforceOrLockSoloChoice,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
@@ -131,6 +136,20 @@ export class RoomError extends Error {
   ) {
     super(message);
     this.name = 'RoomError';
+  }
+}
+
+function readAvatarLifeStatus(avatar: AvatarDocument): NonNullable<AvatarDocument['status']> | 'active' {
+  return avatar.status ?? 'active';
+}
+
+export function assertAvatarCanEnterRoom(avatar: AvatarDocument): void {
+  const status = readAvatarLifeStatus(avatar);
+  if (status === 'deceased') {
+    throw new RoomError('Avatar is deceased', 403, 'AVATAR_DECEASED');
+  }
+  if (status === 'failed') {
+    throw new RoomError('Avatar cannot enter a room while failed', 403, 'AVATAR_FAILED');
   }
 }
 
@@ -694,6 +713,11 @@ async function reengageReturningParticipantIfNeeded(
 ): Promise<EncounterRoom> {
   const participant = findParticipant(room, playerId);
   if (!participant || participant.choiceState !== 'disengaged') {
+    return room;
+  }
+
+  const avatar = await loadAvatar(playerId, participant.avatarId);
+  if (!avatar || readAvatarLifeStatus(avatar) !== 'active') {
     return room;
   }
 
@@ -1910,12 +1934,15 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
       entry.playerId === actor.playerId
         ? {
             ...entry,
-            choiceState: actorDied ? 'disengaged' as const : 'resolved' as const,
+            choiceState: actorDied
+              ? (isSoloPartyRoom(room) ? 'resolved' as const : 'disengaged' as const)
+              : 'resolved' as const,
             resolutionSummary: actorSummary,
             preparedResult: undefined,
             preparedCommit: undefined,
             outcomeSnapshotId: undefined,
-            ...(actorDied ? { disconnectedAt: now } : {}),
+            continuePressed: actorDied && isSoloPartyRoom(room) ? true : entry.continuePressed,
+            ...(actorDied && !isSoloPartyRoom(room) ? { disconnectedAt: now } : {}),
           }
         : entry,
     );
@@ -2218,6 +2245,7 @@ export async function createRoom(
   if (!avatar) {
     throw new RoomError('Avatar not found', 404, 'AVATAR_NOT_FOUND');
   }
+  assertAvatarCanEnterRoom(avatar);
 
   const existingRoomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   await leaveOtherOpenRooms(playerId, existingRoomId ?? undefined);
@@ -2321,6 +2349,7 @@ export async function joinRoom(
   if (!avatar) {
     throw new RoomError('Avatar not found', 404, 'AVATAR_NOT_FOUND');
   }
+  assertAvatarCanEnterRoom(avatar);
 
   await leaveOtherOpenRooms(playerId, roomId);
 
@@ -3362,4 +3391,248 @@ export async function resolveActivityFeedJoinAction(
     ...joinable,
     ...(helpInvite ? { inviteId: helpInvite.inviteId } : {}),
   };
+}
+
+function buildRoomFromCheckpoint(
+  playerId: string,
+  avatarId: string,
+  checkpoint: SoloRoomCheckpoint,
+): EncounterRoom {
+  const baseParticipant = createParticipant(playerId, avatarId, 0);
+  const mergedParticipant: RoomParticipant = {
+    ...baseParticipant,
+    ...checkpoint.participant,
+    playerId,
+    avatarId,
+    slotIndex: 0,
+  };
+
+  return {
+    roomId: checkpoint.roomId,
+    leaderPlayerId: playerId,
+    participants: [mergedParticipant],
+    slotStates: checkpoint.slotStates,
+    mergedExpansions: checkpoint.mergedExpansions,
+    activeEncounterSnapshot: checkpoint.activeEncounterSnapshot,
+    slotEncounterSnapshots: checkpoint.slotEncounterSnapshots,
+    roomState: checkpoint.roomState,
+    systemEvent: checkpoint.systemEvent,
+    lastEncounterId: checkpoint.lastEncounterId,
+    helpCalledSnapshotId: checkpoint.helpCalledSnapshotId,
+    loreGemActivated: checkpoint.loreGemActivated,
+    loreGemActivatedSnapshotId: checkpoint.loreGemActivatedSnapshotId,
+    createdAt: checkpoint.createdAt,
+    updatedAt: nowMs(),
+  };
+}
+
+function prepareParticipantForSacrificeResume(participant: RoomParticipant): RoomParticipant {
+  return {
+    ...participant,
+    choiceState: 'resolved',
+    continuePressed: true,
+    disconnectedAt: undefined,
+    focusState: 'none',
+    preparedResult: undefined,
+    preparedCommit: undefined,
+    outcomeSnapshotId: undefined,
+  };
+}
+
+function roomNeedsAdvanceAfterSacrifice(room: EncounterRoom): boolean {
+  if (room.roomState === 'waiting_continue' || room.roomState === 'system_event') {
+    return true;
+  }
+
+  return room.activeEncounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID;
+}
+
+function roomParticipantsForAvatar(
+  room: EncounterRoom,
+  playerId: string,
+  avatarId: string,
+): RoomParticipant[] {
+  return room.participants.filter(
+    (participant) => participant.playerId === playerId && participant.avatarId === avatarId,
+  );
+}
+
+function isSoloRoomForAvatar(
+  room: EncounterRoom,
+  playerId: string,
+  avatarId: string,
+): boolean {
+  if (roomParticipantsForAvatar(room, playerId, avatarId).length === 0) {
+    return false;
+  }
+
+  return room.participants.every(
+    (participant) => participant.playerId === playerId && participant.avatarId === avatarId,
+  );
+}
+
+async function purgeAvatarFromRoom(
+  playerId: string,
+  avatarId: string,
+  roomId: string,
+): Promise<void> {
+  const result = await withDocumentTransaction(async (transaction) => {
+    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      return { type: 'noop' as const };
+    }
+
+    if (roomParticipantsForAvatar(room, playerId, avatarId).length === 0) {
+      return { type: 'noop' as const };
+    }
+
+    if (isSoloRoomForAvatar(room, playerId, avatarId)) {
+      return { type: 'solo_purge' as const, roomId };
+    }
+
+    const remaining = room.participants.filter(
+      (participant) => !(participant.playerId === playerId && participant.avatarId === avatarId),
+    );
+    const now = nowMs();
+
+    if (remaining.length === 0) {
+      return { type: 'solo_purge' as const, roomId };
+    }
+
+    let working: EncounterRoom = {
+      ...room,
+      participants: remaining,
+      updatedAt: now,
+    };
+
+    if (!remaining.some((participant) => participant.playerId === room.leaderPlayerId)) {
+      working = promoteHostAndReslot(working, room.leaderPlayerId);
+    }
+
+    working = await reconcileRoomAfterParticipantDepartureInTransaction(transaction, working);
+    await transaction.setEncounterRoom(roomId, working);
+    return { type: 'party_updated' as const, room: working };
+  });
+
+  if (result.type === 'solo_purge') {
+    await removeEncounterRoom(result.roomId);
+    await clearPresenceRoom(playerId);
+    return;
+  }
+
+  if (result.type === 'party_updated') {
+    await saveEncounterRoom(result.room);
+    await syncRoomAfterParticipantDeparture(result.room);
+    await clearPresenceRoom(playerId);
+  }
+}
+
+/** Remove a deceased or retired avatar from all rooms without parking solo checkpoints. */
+export async function leaveAllRoomsForAvatar(playerId: string, avatarId: string): Promise<void> {
+  await clearSoloCheckpointForAvatar(playerId, avatarId);
+
+  const visited = new Set<string>();
+  let roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  while (roomId && !visited.has(roomId)) {
+    visited.add(roomId);
+    await purgeAvatarFromRoom(playerId, avatarId, roomId);
+    roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  }
+
+  for (const openRoomId of await listActiveRoomIdsForPlayer(playerId)) {
+    if (visited.has(openRoomId)) {
+      continue;
+    }
+
+    const room = await loadEncounterRoom(openRoomId);
+    if (
+      room
+      && room.roomState !== 'closed'
+      && roomParticipantsForAvatar(room, playerId, avatarId).length > 0
+    ) {
+      await purgeAvatarFromRoom(playerId, avatarId, openRoomId);
+    }
+  }
+
+  await deleteActiveEncounter(playerId, avatarId);
+  await clearPresenceRoom(playerId);
+}
+
+export async function resumeRoomAfterSacrifice(
+  playerId: string,
+  avatarId: string,
+): Promise<EncounterRoom | null> {
+  const checkpoint = await loadSoloRoomCheckpoint(playerId, avatarId);
+  const existingRoomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+
+  const resumed = await withDocumentTransaction(async (transaction) => {
+    let room: EncounterRoom | null = null;
+
+    if (existingRoomId) {
+      room = await loadEncounterRoomFromTransaction(transaction, existingRoomId);
+    }
+
+    if ((!room || room.roomState === 'closed') && checkpoint) {
+      room = buildRoomFromCheckpoint(playerId, avatarId, checkpoint);
+    }
+
+    if (!room || room.roomState === 'closed') {
+      return null;
+    }
+
+    let working: EncounterRoom = {
+      ...room,
+      participants: room.participants.map((participant) =>
+        participant.playerId === playerId && participant.avatarId === avatarId
+          ? prepareParticipantForSacrificeResume(participant)
+          : participant,
+      ),
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(working.roomId, working);
+
+    if (roomNeedsAdvanceAfterSacrifice(working)) {
+      working = {
+        ...working,
+        participants: applyAutoContinueForDisengaged(
+          working.participants.map((participant) => ({
+            ...participant,
+            continuePressed: true,
+            focusState: 'none' as const,
+          })),
+        ),
+        updatedAt: nowMs(),
+      };
+      await transaction.setEncounterRoom(working.roomId, working);
+
+      if (canAdvanceRoom(working)) {
+        const advanced = await advanceWaitingRoomInTransaction(transaction, working);
+        if (advanced) {
+          working = advanced;
+        }
+      }
+    }
+
+    const nextCheckpoint = checkpointFromRoom(working);
+    if (nextCheckpoint) {
+      nextCheckpoint.lockedChoice = undefined;
+      await setSoloRoomCheckpoint(playerId, avatarId, nextCheckpoint);
+    } else {
+      await clearSoloCheckpointForAvatar(playerId, avatarId);
+    }
+
+    return working.roomState === 'closed' ? null : working;
+  });
+
+  if (!resumed) {
+    return null;
+  }
+
+  await syncActiveEncountersForRoom(resumed);
+  await setPresenceInRoom(playerId, resumed.roomId);
+  if (resumed.roomState === 'active_encounter' || resumed.roomState === 'system_event') {
+    await maybeRecordRoomEncounterStartedEvent(resumed);
+  }
+
+  return resumed;
 }

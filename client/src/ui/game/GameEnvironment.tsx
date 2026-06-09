@@ -17,14 +17,17 @@ import {
   submitRoomSlotState,
   kickRoomParticipant,
   leaveAllEncounterRooms,
-  leaveEncounterRoom,
   type EncounterAction,
   type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
   type PersistedAvatar,
   type SlotStateDto,
 } from '../../api/http.js';
-import { ApiRequestError, userFacingApiErrorMessage } from '../../api/httpErrorMessage.js';
+import {
+  ApiRequestError,
+  isApiErrorCode,
+  userFacingApiErrorMessage,
+} from '../../api/httpErrorMessage.js';
 import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
@@ -249,11 +252,6 @@ export function GameEnvironment({
       return;
     }
     deathLeaveHandledRef.current = deadAvatar.id;
-    try {
-      await leaveEncounterRoom(deadAvatar.id);
-    } catch (error) {
-      console.error('Failed to leave encounter room after death continue', error);
-    }
     onAvatarDeath(normalizePersistedAvatar(deadAvatar));
   }, [onAvatarDeath]);
 
@@ -672,6 +670,20 @@ export function GameEnvironment({
       onAchievementCheck?.();
     } catch (error) {
       console.error('Continue encounter failed', error);
+      if (
+        isApiErrorCode(error, 'INVALID_ROOM_STATE')
+        || isApiErrorCode(error, 'NOT_READY_TO_CONTINUE')
+      ) {
+        try {
+          const nextRoom = await fetchActiveRoom(avatarRef.current.id);
+          if (nextRoom) {
+            applySnapshotOnly(nextRoom);
+          }
+        } catch {
+          // Room poll will reconcile state shortly.
+        }
+        return;
+      }
       setHelpToastMessage(userFacingApiErrorMessage(error, 'Could not continue. Try again.'));
     } finally {
       setContinuePending(false);

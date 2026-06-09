@@ -14,6 +14,8 @@ const ROOM_ERROR_MESSAGES: Record<string, string> = {
   FRIEND_NOT_IN_ROOM: 'Your friend is no longer in a room.',
   ROOM_NOT_JOINABLE: 'You cannot join this room right now.',
   INVITE_EXPIRED: 'That invitation has expired.',
+  INVALID_ROOM_STATE: 'This encounter isn\u2019t ready to continue yet.',
+  CHOICE_LOCKED: 'That choice was already locked in \u2014 refresh or rejoin the room.',
 };
 
 function tryParseJsonError(body: string): { code?: string; message: string } | null {
@@ -30,12 +32,16 @@ function tryParseJsonError(body: string): { code?: string; message: string } | n
     }
 
     const trimmed = error.trim();
-    const knownMessage = ROOM_ERROR_MESSAGES[trimmed];
+    const explicitCode = 'code' in parsed && typeof (parsed as { code: unknown }).code === 'string'
+      ? (parsed as { code: string }).code.trim()
+      : undefined;
+    const lookupCode = explicitCode ?? trimmed;
+    const knownMessage = ROOM_ERROR_MESSAGES[lookupCode];
     if (knownMessage) {
-      return { code: trimmed, message: knownMessage };
+      return { code: lookupCode, message: knownMessage };
     }
 
-    return { message: trimmed };
+    return { code: explicitCode, message: trimmed };
   } catch {
     return null;
   }

@@ -123,6 +123,16 @@ const gemIconStyle: CSSProperties = {
   objectFit: 'contain',
 };
 
+const sacrificeButtonDisabledVisualStyle: CSSProperties = {
+  ...sacrificeButtonStyle,
+  opacity: 0.42,
+};
+
+const sacrificeGemIconDisabledStyle: CSSProperties = {
+  ...gemIconStyle,
+  opacity: 0.42,
+};
+
 const confirmBackdropStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
@@ -320,9 +330,18 @@ export function AvatarDeathOverlay({
                     setConfirmSacrificeOpen(true);
                   }}
                   pressKey="death-sacrifice"
-                  visualStyle={sacrificeButtonStyle}
+                  visualStyle={
+                    canAffordSacrifice
+                      ? sacrificeButtonStyle
+                      : sacrificeButtonDisabledVisualStyle
+                  }
                 >
-                  <img alt="" aria-hidden="true" src={GEM_ICON_ASSET} style={gemIconStyle} />
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    src={GEM_ICON_ASSET}
+                    style={canAffordSacrifice ? gemIconStyle : sacrificeGemIconDisabledStyle}
+                  />
                   Sacrifice {sacrificeGemCost}
                 </PanelButton>
               ) : null}

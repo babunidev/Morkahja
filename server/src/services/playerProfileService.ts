@@ -34,7 +34,6 @@ export interface PlayerProfile {
   playerName: string;
   joinedAt: number;
   avatars: PlayerProfileAvatarView[];
-  deceasedAvatars: PlayerProfileAvatarView[];
   wallOfFame: WallOfFameEntry[];
   unlockedTitles: UnlockedTitleOption[];
   unlockedDiceIds: DiceId[];
@@ -74,7 +73,10 @@ function normalizeWallOfFame(value: unknown): WallOfFameEntry[] {
       && typeof (entry as WallOfFameEntry).encountersPlayed === 'number'
       && typeof (entry as WallOfFameEntry).diedAt === 'number'
     ))
-    .sort((left, right) => right.diedAt - left.diedAt);
+    .sort((left, right) => right.diedAt - left.diedAt)
+    .filter((entry, index, entries) => (
+      entries.findIndex((candidate) => candidate.id === entry.id) === index
+    ));
 }
 
 function toProfileAvatarView(avatar: AvatarDocument): PlayerProfileAvatarView | null {
@@ -220,19 +222,15 @@ export async function getPlayerProfile(playerId: string): Promise<PlayerProfile 
   ]);
 
   const livingAvatars = avatarRecords
-    .filter((avatar) => avatar.status !== 'deceased')
+    .filter((avatar) => avatar.status !== 'deceased' && avatar.status !== 'failed')
     .sort((left, right) => left.createdAt - right.createdAt)
     .slice(0, 3);
-  const deceasedAvatars = avatarRecords
-    .filter((avatar) => avatar.status === 'deceased')
-    .sort((left, right) => right.createdAt - left.createdAt);
 
   return {
     playerId,
     playerName: player.playerName,
     joinedAt: player.createdAt,
     avatars: livingAvatars,
-    deceasedAvatars,
     wallOfFame: player.wallOfFame,
     unlockedTitles,
     unlockedDiceIds: dice.unlockedDiceIds,

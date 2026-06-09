@@ -513,6 +513,17 @@ export async function selectPlayerAvatar(
   playerId: string,
   payload: PersistedAvatarPayload,
 ): Promise<AvatarDocument> {
+  const existing = await loadAvatar(playerId, payload.id);
+  if (existing) {
+    const status = existing.status ?? 'active';
+    if (status === 'deceased') {
+      throw new Error('Avatar is deceased');
+    }
+    if (status === 'failed') {
+      throw new Error('Avatar cannot be selected while failed');
+    }
+  }
+
   const avatar = await savePlayerAvatar(playerId, payload);
 
   await setPlayer(
@@ -560,7 +571,7 @@ export async function loadPlayerActiveAvatar(playerId: string): Promise<AvatarDo
 
   const avatar = await loadAvatar(playerId, activeAvatarId);
 
-  if (!avatar) {
+  if (!avatar || readAvatarLifeStatus(avatar) === 'deceased') {
     return null;
   }
 

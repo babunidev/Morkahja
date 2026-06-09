@@ -4,11 +4,16 @@ import { loadAvatar, saveAvatar } from './encounterPersistence.js';
 import { loadInventory } from './inventoryService.js';
 import { loadAvatarProgression } from './avatarProgressionService.js';
 import { recordWallOfFameEntry } from './playerProfileService.js';
-import { clearSoloCheckpointForAvatar } from './soloRoomCheckpointService.js';
 import {
   readYellowRedGemBalance,
+  loadPlayer,
 } from './playerService.js';
+import { setPlayer } from '../db/postgresDocumentStore.js';
 import type { PlayerDocument } from '../types/player.js';
+import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
+import { applyFortuneSacrificeReward } from './encounterGenerator.js';
+import { leaveAllRoomsForAvatar, resumeRoomAfterSacrifice } from './roomService.js';
+import { loadPlayerPresence, savePlayerPresence } from './roomPersistence.js';
 
 export class AvatarDeathError extends Error {
   constructor(
@@ -65,6 +70,16 @@ export function applyFailedDeathState(
   };
 }
 
+async function clearPlayerPresenceRoom(playerId: string): Promise<void> {
+  const existing = await loadPlayerPresence(playerId);
+  await savePlayerPresence({
+    playerId,
+    lastSeenAt: Date.now(),
+    activeRoomId: undefined,
+    state: existing?.state === 'offline' ? 'offline' : 'online',
+  });
+}
+
 export async function sacrificeFailedAvatar(
   playerId: string,
   avatarId: string,
@@ -72,6 +87,7 @@ export async function sacrificeFailedAvatar(
   avatar: AvatarDocument;
   spent: number;
   currencies: NonNullable<PlayerDocument['currencies']>;
+  room: EncounterRoom | null;
 }> {
   const avatar = await loadAvatar(playerId, avatarId);
   if (!avatar || readAvatarLifeStatus(avatar) !== 'failed' || !avatar.preDeathSnapshot) {
@@ -92,18 +108,19 @@ export async function sacrificeFailedAvatar(
     }
 
     const snapshot = avatar.preDeathSnapshot!;
+    const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar);
     const restoredAvatar: AvatarDocument = {
       ...avatar,
       status: 'active',
       level: snapshot.level,
       experience: snapshot.experience,
-      inventory: snapshot.inventory,
+      inventory: fortuneInventory,
       lastPlayedAt: snapshot.lastPlayedAt,
       progression: snapshot.progression,
       preDeathSnapshot: undefined,
     };
 
-    await transaction.setInventory(playerId, avatarId, snapshot.inventory);
+    await transaction.setInventory(playerId, avatarId, fortuneInventory);
     await transaction.setProgression(playerId, avatarId, snapshot.progression);
     await transaction.setAvatar(playerId, avatarId, restoredAvatar, { merge: true });
     await transaction.setPlayer(
@@ -128,7 +145,12 @@ export async function sacrificeFailedAvatar(
     };
   });
 
-  return result;
+  const room = await resumeRoomAfterSacrifice(playerId, avatarId);
+
+  return {
+    ...result,
+    room,
+  };
 }
 
 export async function finalizeAvatarDeath(
@@ -152,7 +174,20 @@ export async function finalizeAvatarDeath(
 
   await saveAvatar(playerId, avatarId, deceasedAvatar);
   await recordWallOfFameEntry(playerId, deceasedAvatar);
-  await clearSoloCheckpointForAvatar(playerId, avatarId);
+  await leaveAllRoomsForAvatar(playerId, avatarId);
+
+  const player = await loadPlayer(playerId);
+  if (player?.activeAvatarId === avatarId) {
+    await setPlayer(
+      playerId,
+      {
+        activeAvatarId: null,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+  }
+  await clearPlayerPresenceRoom(playerId);
 
   return deceasedAvatar;
 }

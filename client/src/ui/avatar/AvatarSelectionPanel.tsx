@@ -371,7 +371,7 @@ export function AvatarSelectionPanel({
       return;
     }
 
-    if (candidate.status === 'failed') {
+    if (candidate.status === 'failed' || candidate.status === 'deceased') {
       onFailedAvatarSelect?.(candidate);
       return;
     }

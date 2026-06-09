@@ -417,11 +417,17 @@ app.post('/avatar/:avatarId/sacrifice', async (req: Request, res: Response) => {
       return;
     }
 
+    const { toEncounterRoomSnapshotDto } = await import('./services/roomDtoMapper.js');
+    const roomDto = result.room
+      ? await toEncounterRoomSnapshotDto(result.room, playerId)
+      : null;
+
     res.json({
       playerId,
       avatar: avatarDto,
       spent: result.spent,
       currencies: result.currencies,
+      room: roomDto,
     });
   } catch (error) {
     if (error instanceof InsufficientGemsForSacrificeError) {

@@ -61,7 +61,6 @@ export interface PlayerProfileResponse {
   playerName: string;
   joinedAt: number;
   avatars: PlayerProfileAvatarDto[];
-  deceasedAvatars?: PlayerProfileAvatarDto[];
   wallOfFame: WallOfFameEntryDto[];
   unlockedTitles: UnlockedTitleOptionDto[];
   unlockedDiceIds: DiceId[];

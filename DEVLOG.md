@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-06-09 (+0200) |
+| **Last updated** | 2026-06-07 (+0200) |
 | **Release** | **0.9.0-beta.2.2** (public beta, pre-1.0) |
 
 Each entry is numbered chronologically. Dates and times are from git (`+0200`, Europe/Berlin) or the commit referenced in the entry.
@@ -208,3 +208,5 @@ Each entry is numbered chronologically. Dates and times are from git (`+0200`, E
 192. **2026-06-02 (+0200)** — **Death/sacrifice resume** — gem sacrifice restores Fortune-tier essence, advances the solo room past Atranor in one step (API returns room DTO); death overlay parks the checkpoint on open instead of on Continue; deceased avatars leave all rooms, clear active avatar, and cannot create/join/select/reengage; friendly copy for `INVALID_ROOM_STATE` and `CHOICE_LOCKED`.
 193. **2026-06-02 (+0200)** — **Deceased room purge** — Same Soul / New Avatar finalization deletes solo-only rooms for the fallen avatar (no checkpoint re-park), removes party participants, clears active encounter bindings, and the client calls leave-all after finalize.
 194. **2026-06-09 (+0200)** — **Party choice badge UX** — shared `PartyParticipantChoiceBadge` on every portrait including your own; solution/dice + rounded d20 roll anchored bottom-right; positioning layer split from pulse animation so the badge fades in smoothly at its final corner without a center snap.
+195. **2026-06-07 (+0200)** — **Hall of Fame dedup** — profile wall lists `wallOfFame` only (removed parallel `deceasedAvatars` list); dedupe by avatar id; failed avatars excluded from living profile slots; cards show level, encounters, and fallen date.
+196. **2026-06-07 (+0200)** — **Continue sync toast** — suppress misleading “isn’t ready to continue” toast on `INVALID_ROOM_STATE` / `NOT_READY_TO_CONTINUE`; silently refresh the room snapshot so the UI catches up to the server.

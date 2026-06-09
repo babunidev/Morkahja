@@ -196,6 +196,28 @@ export default function App() {
     setActiveRoom(null);
   }, []);
 
+  const finalizeDeathWithRoomCleanup = useCallback(async (avatarId: string) => {
+    if (!deathLeaveDoneRef.current) {
+      deathLeaveDoneRef.current = true;
+      try {
+        await leaveEncounterRoom(avatarId);
+      } catch (error) {
+        console.error('Failed to leave encounter room before death finalization', error);
+      }
+    }
+
+    await finalizeAvatarDeath(avatarId);
+
+    try {
+      await leaveAllEncounterRooms();
+    } catch (error) {
+      console.error('Failed to leave all rooms after death finalization', error);
+    }
+
+    setActiveRoom(null);
+    setActiveEncounter(null);
+  }, []);
+
   const seenHelpInviteIdsRef = useRef<Set<string>>(new Set());
   const helpInvitesSeededRef = useRef(false);
   const helpInviteAcceptPendingRef = useRef(false);
@@ -898,7 +920,7 @@ export default function App() {
                 setDeathOverlayAvatar(null);
 
                 const { avatar: selectedAvatar } = await selectAvatar(result.avatar);
-                const room = await ensureSoloLeaderRoom(selectedAvatar.id);
+                const room = result.room ?? await ensureSoloLeaderRoom(selectedAvatar.id);
                 await runEnterGameHandoff(selectedAvatar, room, document.body);
               } catch (error) {
                 console.error('Sacrifice failed', error);
@@ -911,7 +933,7 @@ export default function App() {
                 return;
               }
 
-              await finalizeAvatarDeath(preset.id);
+              await finalizeDeathWithRoomCleanup(preset.id);
 
               try {
                 await syncAvatarSelectionAfterHomeState();
@@ -939,7 +961,7 @@ export default function App() {
                 return;
               }
 
-              await finalizeAvatarDeath(preset.id);
+              await finalizeDeathWithRoomCleanup(preset.id);
 
               let avatars: PersistedAvatar[];
 

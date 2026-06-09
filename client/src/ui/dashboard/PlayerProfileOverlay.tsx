@@ -321,6 +321,13 @@ const fameMetaStyle: CSSProperties = {
   lineHeight: 1.4,
 };
 
+const fameDateStyle: CSSProperties = {
+  margin: '2px 0 0',
+  color: 'rgba(247, 239, 224, 0.62)',
+  fontSize: '0.8rem',
+  lineHeight: 1.35,
+};
+
 const messageStyle: CSSProperties = {
   margin: 0,
   color: 'rgba(247, 239, 224, 0.78)',
@@ -332,12 +339,12 @@ const errorMessageStyle: CSSProperties = {
   color: '#ffb4a8',
 };
 
-function formatJoinedAt(joinedAt: number): string {
-  if (!Number.isFinite(joinedAt) || joinedAt <= 0) {
+function formatProfileDate(timestamp: number): string {
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
     return 'Unknown';
   }
 
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(joinedAt));
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(timestamp));
 }
 
 function CurrentAvatarSlot({
@@ -410,6 +417,8 @@ function EmptyAvatarSlot() {
 }
 
 function WallOfFameCard({ entry }: { entry: WallOfFameEntryDto }) {
+  const encounterLabel = entry.encountersPlayed === 1 ? 'encounter' : 'encounters';
+
   return (
     <article style={fameCardStyle}>
       <div style={famePortraitStyle}>
@@ -418,8 +427,9 @@ function WallOfFameCard({ entry }: { entry: WallOfFameEntryDto }) {
       <div>
         <p style={fameNameStyle}>{entry.name}</p>
         <p style={fameMetaStyle}>
-          Level {entry.level} · {entry.encountersPlayed} encounters
+          Level {entry.level} · {entry.encountersPlayed} {encounterLabel} · Deceased
         </p>
+        <p style={fameDateStyle}>Fallen {formatProfileDate(entry.diedAt)}</p>
       </div>
     </article>
   );
@@ -620,7 +630,7 @@ export function PlayerProfileOverlay({
             {'[data-player-profile-scroll]::-webkit-scrollbar { display: none; }'}
           </style>
           <p style={playerMetaStyle}>
-            Joined {profile ? formatJoinedAt(profile.joinedAt) : '…'}
+            Joined {profile ? formatProfileDate(profile.joinedAt) : '…'}
           </p>
           {loadError ? <p style={errorMessageStyle}>{loadError}</p> : null}
           {titleSaveError ? <p style={errorMessageStyle}>{titleSaveError}</p> : null}
@@ -702,25 +712,12 @@ export function PlayerProfileOverlay({
               </div>
               <div>
                 <h3 style={sectionTitleStyle}>Hall of Fame</h3>
-                {(profile?.wallOfFame ?? []).length === 0 && (profile?.deceasedAvatars ?? []).length === 0 ? (
+                {(profile?.wallOfFame ?? []).length === 0 ? (
                   <p style={messageStyle}>No fallen avatars yet.</p>
                 ) : (
                   <div style={fameListStyle}>
-                    {(profile?.deceasedAvatars ?? []).map((avatar) => (
-                      <article key={`deceased-${avatar.id}`} style={fameCardStyle}>
-                        <div style={famePortraitStyle}>
-                          <AvatarPortraitStack frame={avatar.frame} portrait={avatar.portrait} />
-                        </div>
-                        <div>
-                          <p style={fameNameStyle}>{avatar.name}</p>
-                          <p style={fameMetaStyle}>
-                            Level {avatar.level} · Deceased
-                          </p>
-                        </div>
-                      </article>
-                    ))}
                     {(profile?.wallOfFame ?? []).map((entry) => (
-                      <WallOfFameCard entry={entry} key={`${entry.id}-${entry.diedAt}`} />
+                      <WallOfFameCard entry={entry} key={entry.id} />
                     ))}
                   </div>
                 )}

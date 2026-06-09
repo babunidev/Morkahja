@@ -26,17 +26,44 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-2-2-jun-9',
+    id: 'beta-2-2-jun-8-9',
     version: '0.9.0-beta.2.2',
-    period: '9 Jun 2026',
-    notes: [
-      'Room-only play — entering the game always goes through a party room; no separate solo encounter path.',
-      'Leave = Continue — leaving after a choice commits your inventory, XP, and events; disconnecting no longer dodges bad outcomes.',
-      'Party rejoin — same encounter restores your result summary; if the party advanced while you were away, you join fresh on the current encounter.',
-      'Death & Continue — Misery/Hardship death waits for Continue before the death overlay; fixes broken Continue and “No active room” toasts.',
-      'Solo checkpoints — leaving a solo room parks progress after commit; Play restores where you left off.',
-      'Sacrifice & Hall of Fame — failed avatars can sacrifice for gems or enter the Hall of Fame; deceased avatars use finalize-death instead of delete.',
-      'Party roll badges — choice badges show the revealed d20 roll on portrait icons.',
+    period: '8–9 Jun 2026',
+    groups: [
+      {
+        title: 'How you play',
+        notes: [
+          'Play always opens a room — solo or party, one path. Your encounter is rolled when you enter.',
+          'Continue is yours to press — outcomes no longer auto-advance after a choice.',
+          'Misery and Hardship losses match the server — the items you see leave are the items that leave.',
+          'Solo checkpoints — leave a solo room and Play picks up where you left off.',
+        ],
+      },
+      {
+        title: 'Party fairness',
+        notes: [
+          'Leaving after a choice still counts — inventory, XP, and events commit even if you disconnect.',
+          'Rejoin the same encounter and your result is waiting; if the party moved on, you join the current one.',
+          'Ally portrait badges now show the revealed d20 roll over their dice or solution icon.',
+        ],
+      },
+      {
+        title: 'Death & fallen souls',
+        notes: [
+          'A fatal Atranor roll marks your avatar as failed — not deleted. Progress survives a refresh.',
+          'Sacrifice — offer a fallen soul for gems (level × 10) and restore them from before death.',
+          'Hall of Fame — lay a soul to rest; deceased avatars appear on your profile wall.',
+          'The death screen waits until you press Continue — no more broken flows or “No active room” toasts.',
+        ],
+      },
+      {
+        title: 'Welcome & creation',
+        notes: [
+          'Refreshed create-journey steps, recovery key info, and a cleaner welcome gateway.',
+          'New avatar creation atmosphere — starfield backdrop and solution inflow into the hub.',
+          'Profile and achievement titles polished; selectable display titles on your wall.',
+        ],
+      },
     ],
   },
   {

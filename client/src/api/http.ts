@@ -327,7 +327,12 @@ export async function fetchAvatar(
   void player;
 
   try {
-    return await request<AvatarResponse>('/avatar/active');
+    const response = await request<AvatarResponse>('/avatar/active');
+    if (response.avatar?.status === 'deceased') {
+      return {};
+    }
+
+    return response;
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 404) {
       return {};
@@ -376,11 +381,13 @@ export async function sacrificeAvatar(
   avatar: PersistedAvatar;
   spent: number;
   currencies: { yellow_red_gem?: number; [key: string]: number | undefined };
+  room: EncounterRoomSnapshotDto | null;
 }> {
   const response = await request<{
     avatar: PersistedAvatar;
     spent: number;
     currencies: { yellow_red_gem?: number; [key: string]: number | undefined };
+    room: EncounterRoomSnapshotDto | null;
   }>(`/avatar/${encodeURIComponent(avatarId)}/sacrifice`, {
     method: 'POST',
     body: JSON.stringify({ confirm: true }),
@@ -389,6 +396,7 @@ export async function sacrificeAvatar(
   return {
     ...response,
     avatar: normalizePersistedAvatar(response.avatar),
+    room: response.room ?? null,
   };
 }
 
