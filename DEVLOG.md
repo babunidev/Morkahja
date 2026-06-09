@@ -6,7 +6,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
 | **Last updated** | 2026-06-09 (+0200) |
-| **Release** | **0.9.10-beta.2.2** (public beta, pre-1.0) |
+| **Release** | **0.9.0-beta.2.2** (public beta, pre-1.0) |
 
 Each entry is numbered chronologically. Dates and times are from git (`+0200`, Europe/Berlin) or the commit referenced in the entry.
 
@@ -204,4 +204,4 @@ Each entry is numbered chronologically. Dates and times are from git (`+0200`, E
 188. **2026-06-09 (+0200)** — **Death continue fix** — defer `leaveEncounterRoom` and death overlay until after **Continue** commits (`resolutionSummary.avatarDied`); fixes “No active room” toast and broken continue on Atranor Misery/Hardship rolls.
 189. **2026-06-09 (+0200)** — **Leave = Continue (anti-cheat)** — any leave/kick/solo park after a choice commits inventory/XP/events like **Continue**; voluntary leave disengages with `resolutionSummary` only; rejoin restores outcome UI on the same encounter snapshot and clears stale choices when the room advanced while away.
 190. **2026-06-09 (+0200)** — **Party roll badges** — multiplayer portrait choice badge shows the rounded d20 roll (`displayRollAsD20`) centered over the solution/dice icon once `preparedResult` / `resolutionSummary` is known; badge and roll fade in together (420ms reveal, then pulse); rolls that arrive after the icon was already visible fade in on their own.
-191. **2026-06-09 (+0200)** — **Version** — tagged **0.9.10-beta.2.2** for room-only play, death/sacrifice/checkpoints, and leave/rejoin anti-cheat; settings patch notes updated (`beta.2.2`).
+191. **2026-06-09 (+0200)** — **Version** — tagged **0.9.0-beta.2.2** for room-only play, death/sacrifice/checkpoints, and leave/rejoin anti-cheat; settings patch notes updated (`beta.2.2`).

@@ -27,7 +27,7 @@ interface PatchRelease {
 const PATCH_RELEASES: PatchRelease[] = [
   {
     id: 'beta-2-2-jun-9',
-    version: '0.9.10-beta.2.2',
+    version: '0.9.0-beta.2.2',
     period: '9 Jun 2026',
     notes: [
       'Room-only play — entering the game always goes through a party room; no separate solo encounter path.',

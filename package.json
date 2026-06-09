@@ -1,6 +1,6 @@
 {
   "name": "morkahja",
-  "version": "0.9.10-beta.2.2",
+  "version": "0.9.0-beta.2.2",
   "private": true,
   "workspaces": [
     "client",
