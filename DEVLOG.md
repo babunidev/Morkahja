@@ -5,7 +5,7 @@ Brief chronological overview of the web app from first commit to present. Newest
 | | |
 |---|---|
 | **Started** | 2026-05-16 22:21 (+0200) |
-| **Last updated** | 2026-06-08 (+0200) |
+| **Last updated** | 2026-06-09 (+0200) |
 | **Release** | **0.9.0-beta.2.1** (public beta, pre-1.0) |
 
 Each entry is numbered chronologically. Dates and times are from git (`+0200`, Europe/Berlin) or the commit referenced in the entry.
@@ -200,3 +200,7 @@ Each entry is numbered chronologically. Dates and times are from git (`+0200`, E
 184. **2026-06-09 (+0200)** — **Death UX cleanup** — removed client `purgeDeadAvatarsOnServer` / `localStorage` dead-id purge; server `status` is authoritative for failed and deceased avatars.
 185. **2026-06-09 (+0200)** — **Continue regression fix** — `canEnterWaitingContinue` uses connected (`engaged`) participants only; disconnected or solo-ghost choosers auto-disengage on choice so solo rooms reach `waiting_continue`; client no longer calls continue while room is still `active_encounter`; death overlay parks solo checkpoint via `leaveEncounterRoom` before the overlay opens.
 186. **2026-06-09 (+0200)** — **Death/sacrifice polish** — `finalizeAvatarDeath` / `actionsEqual` type fixes; sacrifice uses server `sacrificeGemCost` only; failed avatars excluded from the 3-slot creation cap; shared `runEnterGameHandoff` helper in **App.tsx**; tests for sacrifice, finalize-death, solo checkpoint restore, and `CHOICE_LOCKED`.
+187. **2026-06-09 (+0200)** — **Party leave/rejoin outcomes** — voluntary leave disengages instead of removing the participant, preserving `preparedResult`; rejoin restores `ready_to_continue` and reward display from server snapshot.
+188. **2026-06-09 (+0200)** — **Death continue fix** — defer `leaveEncounterRoom` and death overlay until after **Continue** commits (`resolutionSummary.avatarDied`); fixes “No active room” toast and broken continue on Atranor Misery/Hardship rolls.
+189. **2026-06-09 (+0200)** — **Leave = Continue (anti-cheat)** — any leave/kick/solo park after a choice commits inventory/XP/events like **Continue**; voluntary leave disengages with `resolutionSummary` only; rejoin restores outcome UI on the same encounter snapshot and clears stale choices when the room advanced while away.
+190. **2026-06-09 (+0200)** — **Party roll badges** — multiplayer portrait choice badge shows the rounded d20 roll (`displayRollAsD20`) centered over the solution/dice icon once `preparedResult` / `resolutionSummary` is known; badge and roll fade in together (420ms reveal, then pulse); rolls that arrive after the icon was already visible fade in on their own.

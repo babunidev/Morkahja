@@ -117,6 +117,7 @@ export function EncounterImageBlock({
   resultBlockRef,
   roomState = 'active_encounter',
   serverResolution,
+  serverCommittedAction,
   skillbookOpen,
   title,
   witnessSuppressLocalResolution = false,
@@ -157,6 +158,7 @@ export function EncounterImageBlock({
   resultBlockRef?: Ref<ResultBlockHandle>;
   roomState?: RoomStateDto;
   serverResolution?: ParticipantResolutionSummaryDto;
+  serverCommittedAction?: EncounterAction;
   skillbookOpen: boolean;
   title: string;
   witnessSuppressLocalResolution?: boolean;
@@ -246,8 +248,17 @@ export function EncounterImageBlock({
 
     if (serverResolution?.selectedRoll !== undefined) {
       setRevealedRoll(serverResolution.selectedRoll);
+      if (serverCommittedAction) {
+        setSelectedAction(serverCommittedAction);
+      }
     }
-  }, [encounter.snapshotId, serverResolution?.selectedRoll, witnessSuppressLocalResolution]);
+  }, [
+    encounter.snapshotId,
+    serverCommittedAction,
+    serverResolution?.selectedRoll,
+    serverResolution?.rewards,
+    witnessSuppressLocalResolution,
+  ]);
 
   useEffect(() => {
     if (showWitnessResult) {

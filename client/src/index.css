@@ -254,6 +254,15 @@ button:focus-visible {
   animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
 }
 
+@keyframes morkahja-party-choice-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes morkahja-party-choice-pulse {
   0%,
   100% {
@@ -267,8 +276,26 @@ button:focus-visible {
 }
 
 .morkahja-party-choice-badge {
-  animation: morkahja-party-choice-pulse 2.4s ease-in-out infinite;
+  animation:
+    morkahja-party-choice-reveal 420ms ease forwards,
+    morkahja-party-choice-pulse 2.4s ease-in-out 420ms infinite;
   transform-origin: center center;
+}
+
+.morkahja-party-choice-roll {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  font-size: clamp(16px, 3.6vw, 22px);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.morkahja-party-choice-roll--reveal {
+  opacity: 0;
+  animation: morkahja-party-choice-reveal 420ms ease forwards;
 }
 
 .morkahja-party-status-badge {

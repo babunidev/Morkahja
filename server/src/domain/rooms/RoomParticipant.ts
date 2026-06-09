@@ -72,6 +72,8 @@ export interface RoomParticipant {
   preparedResult?: ParticipantPreparedResult;
   /** Persisted only on commit tick — not exposed on DTO. */
   preparedCommit?: PreparedCommitBundle;
+  /** Encounter snapshot id when the current prepared outcome was rolled (leave/rejoin guard). */
+  outcomeSnapshotId?: string;
   /** Player collected the lore gem UI for the current encounter (grant on room commit). */
   loreGemCollected?: boolean;
 }

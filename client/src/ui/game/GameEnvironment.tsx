@@ -252,10 +252,22 @@ export function GameEnvironment({
     try {
       await leaveEncounterRoom(deadAvatar.id);
     } catch (error) {
-      console.error('Failed to leave encounter room before death overlay', error);
+      console.error('Failed to leave encounter room after death continue', error);
     }
-    onAvatarDeath(deadAvatar);
+    onAvatarDeath(normalizePersistedAvatar(deadAvatar));
   }, [onAvatarDeath]);
+
+  const completeAvatarDeathFlow = useCallback(async (
+    roomSnapshot: EncounterRoomSnapshotDto,
+  ): Promise<void> => {
+    const local = roomSnapshot.participants.find((participant) => participant.isLocal);
+    const summary = local?.resolutionSummary;
+    if (!summary?.avatarDied || !local?.avatar) {
+      return;
+    }
+
+    await handleLocalAvatarDeath(local.avatar);
+  }, [handleLocalAvatarDeath]);
 
   const playLevelUpSoundIfNeeded = useCallback((
     previousRoom: EncounterRoomSnapshotDto | null,
@@ -524,11 +536,7 @@ export function GameEnvironment({
           applySnapshotOnly(nextRoom);
         }
 
-        const local = nextRoom.participants.find((participant) => participant.isLocal);
-        const deathSummary = local?.preparedResult ?? local?.resolutionSummary;
-        if (deathSummary?.avatarDied && local) {
-          handleLocalAvatarDeath(local.avatar);
-        }
+        void completeAvatarDeathFlow(nextRoom);
       }).catch(() => undefined);
     }, pollMs);
 
@@ -539,6 +547,7 @@ export function GameEnvironment({
   }, [
     applySnapshotOnly,
     handleLocalAvatarDeath,
+    completeAvatarDeathFlow,
     initialRoom,
     onKickedFromParty,
     roomAdvanceHooks,
@@ -601,6 +610,7 @@ export function GameEnvironment({
 
       const roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
       await runEncounterAdvanceTransition(workingRoom, roomAfterContinue, roomAdvanceHooks);
+      await completeAvatarDeathFlow(roomAfterContinue);
       return roomAfterContinue;
     } finally {
       continueSubmitInFlightRef.current = false;
@@ -642,6 +652,7 @@ export function GameEnvironment({
         ) {
           const nextRoom = await submitRoomContinue(avatarRef.current.id);
           await runEncounterAdvanceTransition(currentRoom, nextRoom, roomAdvanceHooks);
+          await completeAvatarDeathFlow(nextRoom);
           onAchievementCheck?.();
           return;
         }
@@ -651,19 +662,12 @@ export function GameEnvironment({
         return;
       }
 
-      let nextRoom = await submitRoomChoice(
+      const nextRoom = await submitRoomChoice(
         avatarRef.current.id,
         action,
         selectedSolutionId ?? undefined,
       );
       applySnapshotOnly(nextRoom);
-
-      const local = nextRoom.participants.find((participant) => participant.isLocal);
-      const summary = local?.preparedResult ?? local?.resolutionSummary;
-
-      if (summary?.avatarDied) {
-        handleLocalAvatarDeath(local?.avatar ?? avatar);
-      }
 
       onAchievementCheck?.();
     } catch (error) {
@@ -794,7 +798,8 @@ export function GameEnvironment({
     : displayResolution !== undefined && (
       room?.roomState === 'waiting_continue' ||
       room?.roomState === 'advancing' ||
-      localParticipant?.preparedResult !== undefined
+      localParticipant?.preparedResult !== undefined ||
+      localParticipant?.resolutionSummary !== undefined
     );
   const outcomeRollForDisplay = witnessDisplay.isWitness
     ? witnessActorOutcome?.selectedRoll
@@ -815,7 +820,8 @@ export function GameEnvironment({
   const loreGemCollected = localParticipant?.loreGemCollected === true || roomLoreGemEarned;
   const showLoreGemReward = roomLoreGemEarned
     || serverResolution?.loreGemGranted === true
-    || localParticipant?.preparedResult?.loreGemGranted === true;
+    || localParticipant?.preparedResult?.loreGemGranted === true
+    || localParticipant?.resolutionSummary?.loreGemGranted === true;
   function applyEncounterRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
     applySnapshotOnly(nextRoom);
   }
@@ -875,6 +881,7 @@ export function GameEnvironment({
                 resultBlockRef={resultBlockRef}
                 roomState={room?.roomState ?? 'active_encounter'}
                 serverResolution={showServerResult ? displayResolution : undefined}
+                serverCommittedAction={localParticipant?.selectedAction}
                 witnessSuppressLocalResolution={witnessDisplay.isWitness}
                 isWitnessingLabel={isWitnessingLabel}
                 showWitnessResult={showWitnessResult}

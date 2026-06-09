@@ -9,6 +9,8 @@ import {
   createRoom,
   getActiveRoomForPlayer,
   joinRoom,
+  kickParticipant,
+  leaveRoom,
   listPendingHelpInvitations,
   participantsAtSystemEventStart,
   RoomError,
@@ -17,13 +19,14 @@ import {
   submitContinue,
   tickInactivity,
 } from './roomService.js';
-import { setPlayer } from '../db/postgresDocumentStore.js';
+import { getProgression, setPlayer } from '../db/postgresDocumentStore.js';
 import { queryActivityFeed } from './gameEventService.js';
 import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
+import { loadSoloRoomCheckpoint } from './soloRoomCheckpointService.js';
 
 function randomDeviceKey(): string {
   return `device-${Math.random().toString(36).slice(2)}-${Date.now()}`;
@@ -967,5 +970,212 @@ if (strangerInvites.some((invite) => invite.fromPlayerId === helpCallerSession.p
   assert.ok(strangerHelpEntry);
   assert.equal(strangerHelpEntry.message, 'Help Caller calls out for help.');
 }
+
+const guestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const guestIdentityJwk = JSON.stringify(guestKeyPair.publicKey.export({ format: 'jwk' }));
+const guestSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: guestIdentityJwk,
+  playerName: `room-guest-${Date.now()}`,
+});
+const guestAvatarId = `guest-avatar-${Date.now()}`;
+await savePlayerAvatar(guestSession.playerId, {
+  id: guestAvatarId,
+  name: 'Room Guest',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+let partyRoom = await createRoom(session.playerId, avatarId);
+partyRoom = {
+  ...partyRoom,
+  activeEncounterSnapshot: {
+    ...partyRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(partyRoom);
+await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+
+await submitChoice(session.playerId, avatarId, 'dice');
+const guestChoiceRoom = await submitChoice(guestSession.playerId, guestAvatarId, 'dice');
+assert.equal(guestChoiceRoom.roomState, 'waiting_continue');
+const guestBeforeLeave = guestChoiceRoom.participants.find(
+  (participant) => participant.playerId === guestSession.playerId,
+);
+assert.equal(guestBeforeLeave?.choiceState, 'ready_to_continue');
+assert.ok(guestBeforeLeave?.preparedResult);
+assert.ok(guestBeforeLeave?.outcomeSnapshotId);
+
+const guestProgressionBefore = await getProgression<{ experience: number; level: number }>(
+  guestSession.playerId,
+  guestAvatarId,
+);
+
+await leaveRoom(guestSession.playerId, guestAvatarId);
+const roomAfterGuestLeave = await loadEncounterRoom(partyRoom.roomId);
+const guestDisengaged = roomAfterGuestLeave?.participants.find(
+  (participant) => participant.playerId === guestSession.playerId,
+);
+assert.equal(guestDisengaged?.choiceState, 'disengaged');
+assert.equal(guestDisengaged?.preparedResult, undefined);
+assert.equal(guestDisengaged?.preparedCommit, undefined);
+assert.ok(guestDisengaged?.resolutionSummary);
+assert.equal(guestDisengaged?.continuePressed, true);
+assert.equal(guestDisengaged?.outcomeSnapshotId, undefined);
+
+const guestProgressionAfterLeave = await getProgression<{ experience: number; level: number }>(
+  guestSession.playerId,
+  guestAvatarId,
+);
+assert.ok(
+  (guestProgressionAfterLeave?.experience ?? 0) > (guestProgressionBefore?.experience ?? 0)
+  || (guestProgressionAfterLeave?.level ?? 1) > (guestProgressionBefore?.level ?? 1)
+  || (guestDisengaged?.resolutionSummary?.gainedExperience ?? 0) > 0,
+);
+
+const guestRejoinedRoom = await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+const guestRestored = guestRejoinedRoom.participants.find(
+  (participant) => participant.playerId === guestSession.playerId,
+);
+assert.equal(guestRestored?.choiceState, 'resolved');
+assert.ok(guestRestored?.resolutionSummary?.selectedRoll !== undefined);
+assert.equal(guestRestored?.preparedResult, undefined);
+
+const guestSnapshot = await toEncounterRoomSnapshotDto(guestRejoinedRoom, guestSession.playerId);
+const localGuest = guestSnapshot.participants.find((participant) => participant.isLocal);
+assert.ok(localGuest?.resolutionSummary);
+assert.equal(localGuest?.preparedResult, undefined);
+assert.ok((localGuest?.resolutionSummary?.rewards?.length ?? 0) >= 0);
+
+await leaveRoom(guestSession.playerId, guestAvatarId);
+await submitContinue(session.playerId, avatarId);
+const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
+assert.equal(advancedWhileGuestAway?.roomState, 'active_encounter');
+
+const guestAfterAdvance = await joinRoom(
+  guestSession.playerId,
+  guestAvatarId,
+  partyRoom.roomId,
+);
+const guestFreshChooser = guestAfterAdvance.participants.find(
+  (participant) => participant.playerId === guestSession.playerId,
+);
+assert.equal(guestFreshChooser?.choiceState, 'choosing');
+assert.equal(guestFreshChooser?.preparedResult, undefined);
+assert.equal(guestFreshChooser?.resolutionSummary, undefined);
+
+const soloCheckpointKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const soloCheckpointIdentityJwk = JSON.stringify(soloCheckpointKeyPair.publicKey.export({ format: 'jwk' }));
+const soloCheckpointSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: soloCheckpointIdentityJwk,
+  playerName: `solo-checkpoint-${Date.now()}`,
+});
+const soloCheckpointAvatarId = `solo-checkpoint-${Date.now()}`;
+await savePlayerAvatar(soloCheckpointSession.playerId, {
+  id: soloCheckpointAvatarId,
+  name: 'Solo Checkpoint',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+let soloRoom = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+soloRoom = {
+  ...soloRoom,
+  activeEncounterSnapshot: {
+    ...soloRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: soloRoom.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(soloRoom);
+await submitChoice(soloCheckpointSession.playerId, soloCheckpointAvatarId, 'dice');
+await leaveRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+const soloCheckpoint = await loadSoloRoomCheckpoint(
+  soloCheckpointSession.playerId,
+  soloCheckpointAvatarId,
+);
+assert.ok(soloCheckpoint);
+assert.equal(soloCheckpoint.participant.preparedCommit, undefined);
+assert.equal(soloCheckpoint.participant.preparedResult, undefined);
+assert.ok(soloCheckpoint.participant.resolutionSummary);
+
+const kickGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const kickGuestIdentityJwk = JSON.stringify(kickGuestKeyPair.publicKey.export({ format: 'jwk' }));
+const kickGuestSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: kickGuestIdentityJwk,
+  playerName: `room-kick-guest-${Date.now()}`,
+});
+const kickGuestAvatarId = `kick-guest-${Date.now()}`;
+await savePlayerAvatar(kickGuestSession.playerId, {
+  id: kickGuestAvatarId,
+  name: 'Kick Guest',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+const kickHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const kickHostIdentityJwk = JSON.stringify(kickHostKeyPair.publicKey.export({ format: 'jwk' }));
+const kickHostSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: kickHostIdentityJwk,
+  playerName: `room-kick-host-${Date.now()}`,
+});
+const kickHostAvatarId = `kick-host-${Date.now()}`;
+await savePlayerAvatar(kickHostSession.playerId, {
+  id: kickHostAvatarId,
+  name: 'Kick Host',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+let kickPartyRoom = await createRoom(kickHostSession.playerId, kickHostAvatarId);
+kickPartyRoom = {
+  ...kickPartyRoom,
+  activeEncounterSnapshot: {
+    ...kickPartyRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(kickPartyRoom);
+await joinRoom(kickGuestSession.playerId, kickGuestAvatarId, kickPartyRoom.roomId);
+await submitChoice(kickHostSession.playerId, kickHostAvatarId, 'dice');
+await submitChoice(kickGuestSession.playerId, kickGuestAvatarId, 'dice');
+const kickGuestProgressionBefore = await getProgression<{ experience: number; level: number }>(
+  kickGuestSession.playerId,
+  kickGuestAvatarId,
+);
+await kickParticipant(kickHostSession.playerId, kickHostAvatarId, kickGuestSession.playerId);
+const kickGuestProgressionAfter = await getProgression<{ experience: number; level: number }>(
+  kickGuestSession.playerId,
+  kickGuestAvatarId,
+);
+assert.ok(
+  (kickGuestProgressionAfter?.experience ?? 0) > (kickGuestProgressionBefore?.experience ?? 0)
+  || (kickGuestProgressionAfter?.level ?? 1) > (kickGuestProgressionBefore?.level ?? 1),
+);
+const kickRoomAfter = await loadEncounterRoom(kickPartyRoom.roomId);
+assert.ok(
+  !kickRoomAfter?.participants.some(
+    (participant) => participant.playerId === kickGuestSession.playerId,
+  ),
+);
 
 console.log('roomService.test.ts passed');

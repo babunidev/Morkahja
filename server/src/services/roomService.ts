@@ -537,6 +537,59 @@ function isInactivePreparedResult(participant: RoomParticipant): boolean {
   return participant.preparedResult?.message === INACTIVE_OUTCOME_MESSAGE;
 }
 
+function currentSnapshotIdForParticipant(
+  room: EncounterRoom,
+  participant: RoomParticipant,
+): string {
+  return room.slotEncounterSnapshots[participant.slotIndex]?.snapshotId
+    ?? room.activeEncounterSnapshot.snapshotId;
+}
+
+function participantHasStaleUncommittedOutcome(
+  room: EncounterRoom,
+  participant: RoomParticipant,
+): boolean {
+  if (
+    participant.preparedResult === undefined
+    && participant.preparedCommit === undefined
+  ) {
+    return false;
+  }
+
+  const outcomeSnapshotId = participant.outcomeSnapshotId;
+  if (outcomeSnapshotId === undefined) {
+    return false;
+  }
+
+  return outcomeSnapshotId !== currentSnapshotIdForParticipant(room, participant);
+}
+
+function participantHasCommittedLeaveOutcome(participant: RoomParticipant): boolean {
+  return participant.resolutionSummary !== undefined
+    && participant.preparedResult === undefined
+    && participant.preparedCommit === undefined;
+}
+
+function clearParticipantEncounterOutcome(
+  participant: RoomParticipant,
+  now: number,
+): RoomParticipant {
+  return {
+    ...participant,
+    choiceState: 'choosing',
+    disconnectedAt: undefined,
+    focusState: 'none',
+    lastInteractionAt: now,
+    selectedAction: undefined,
+    selectedSolutionId: undefined,
+    preparedResult: undefined,
+    preparedCommit: undefined,
+    resolutionSummary: undefined,
+    outcomeSnapshotId: undefined,
+    continuePressed: false,
+  };
+}
+
 function reengageFromInactivity(
   room: EncounterRoom,
   playerId: string,
@@ -547,14 +600,47 @@ function reengageFromInactivity(
     return room;
   }
 
+  if (participantHasStaleUncommittedOutcome(room, participant)) {
+    return {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? clearParticipantEncounterOutcome(entry, now)
+          : entry,
+      ),
+      updatedAt: now,
+    };
+  }
+
+  if (
+    participantHasCommittedLeaveOutcome(participant)
+    && room.roomState !== 'waiting_continue'
+    && !(room.systemEvent?.lastEvent !== undefined
+      && room.systemEvent.lastEvent.actorPlayerId !== participant.playerId)
+  ) {
+    return {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? clearParticipantEncounterOutcome(entry, now)
+          : entry,
+      ),
+      updatedAt: now,
+    };
+  }
+
   const inactiveDisengage = isInactivePreparedResult(participant);
   const hasRealPreparedOutcome = participant.preparedResult !== undefined && !inactiveDisengage;
   const wasWitnessToSystemEvent =
     room.systemEvent?.lastEvent !== undefined &&
     room.systemEvent.lastEvent.actorPlayerId !== participant.playerId;
+  const hasCommittedSummaryOnSameEncounter =
+    participantHasCommittedLeaveOutcome(participant)
+    && room.roomState === 'waiting_continue';
   const restoredChoiceState =
     room.roomState === 'waiting_continue' &&
     (hasRealPreparedOutcome ||
+      hasCommittedSummaryOnSameEncounter ||
       participant.resolutionSummary !== undefined ||
       wasWitnessToSystemEvent)
       ? (hasRealPreparedOutcome
@@ -579,6 +665,7 @@ function reengageFromInactivity(
                   selectedAction: undefined,
                   selectedSolutionId: undefined,
                   continuePressed: false,
+                  outcomeSnapshotId: undefined,
                 }
               : {}),
           }
@@ -601,11 +688,21 @@ async function reengageParticipantIfNeeded(
   return updated;
 }
 
-async function reengageSoloParticipantIfNeeded(
+async function reengageReturningParticipantIfNeeded(
   room: EncounterRoom,
   playerId: string,
 ): Promise<EncounterRoom> {
-  if (!isSoloPartyRoom(room)) {
+  const participant = findParticipant(room, playerId);
+  if (!participant || participant.choiceState !== 'disengaged') {
+    return room;
+  }
+
+  const hasRestorableOutcome =
+    (participant.preparedResult !== undefined && !isInactivePreparedResult(participant)) ||
+    participant.resolutionSummary !== undefined ||
+    participant.preparedCommit !== undefined;
+
+  if (!hasRestorableOutcome && !isSoloPartyRoom(room)) {
     return room;
   }
 
@@ -662,6 +759,7 @@ function resetParticipantsForNewEncounter(participants: RoomParticipant[]): Room
     resolutionSummary: undefined,
     preparedResult: undefined,
     preparedCommit: undefined,
+    outcomeSnapshotId: undefined,
     loreGemCollected: undefined,
     lastInteractionAt: now,
   }));
@@ -791,6 +889,18 @@ function preparedInactiveOutcome(): ParticipantPreparedResult {
     success: false,
     message: INACTIVE_OUTCOME_MESSAGE,
     rewards: [],
+  };
+}
+
+function disengageParticipantOnVoluntaryLeave(
+  participant: RoomParticipant,
+  now: number,
+): RoomParticipant {
+  return {
+    ...participant,
+    choiceState: 'disengaged',
+    disconnectedAt: now,
+    focusState: 'none',
   };
 }
 
@@ -1384,6 +1494,112 @@ function applyRoomXpBonusToCommitBundle(
   };
 }
 
+function participantHasCommittableLeaveOutcome(
+  room: EncounterRoom,
+  participant: RoomParticipant,
+): boolean {
+  if (!participant.preparedCommit || !participant.selectedAction) {
+    return false;
+  }
+
+  if (participant.choiceState !== 'ready_to_continue') {
+    return false;
+  }
+
+  if (room.roomState === 'system_event') {
+    const currentItem = currentSystemEventQueueItem(room);
+    return currentItem?.actorPlayerId === participant.playerId;
+  }
+
+  return true;
+}
+
+async function commitParticipantOutcomeOnLeave(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  participant: RoomParticipant,
+): Promise<RoomParticipant> {
+  if (!participantHasCommittableLeaveOutcome(room, participant)) {
+    return participant;
+  }
+
+  const activeParticipantCount = activeParticipants(room).length;
+  const commitBundle = applyRoomXpBonusToCommitBundle(
+    participant.preparedCommit!,
+    activeParticipantCount,
+  );
+  const result = await commitPreparedOutcome(
+    transaction,
+    participant.playerId,
+    participant.avatarId,
+    commitBundle,
+  );
+  const summary = withRoomLoreGemOnResolutionSummary(
+    room,
+    participant,
+    participantSummaryFromResolve(result),
+  );
+  const now = nowMs();
+
+  return {
+    ...participant,
+    choiceState: result.avatarDied ? 'disengaged' as const : 'resolved' as const,
+    disconnectedAt: result.avatarDied ? now : participant.disconnectedAt,
+    resolutionSummary: summary,
+    preparedResult: undefined,
+    preparedCommit: undefined,
+    outcomeSnapshotId: undefined,
+    continuePressed: true,
+    loreGemCollected: summary.loreGemGranted === true ? true : participant.loreGemCollected,
+  };
+}
+
+async function applyLeaveCommitToParticipantInRoom(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+  playerId: string,
+): Promise<EncounterRoom> {
+  const participant = findParticipant(room, playerId);
+  if (!participant) {
+    return room;
+  }
+
+  const committed = await commitParticipantOutcomeOnLeave(transaction, room, participant);
+  if (committed === participant) {
+    return room;
+  }
+
+  const updated: EncounterRoom = {
+    ...room,
+    participants: room.participants.map((entry) =>
+      entry.playerId === playerId ? committed : entry,
+    ),
+    updatedAt: nowMs(),
+  };
+  await transaction.setEncounterRoom(room.roomId, updated);
+  return updated;
+}
+
+async function reconcileRoomAfterParticipantDepartureInTransaction(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<EncounterRoom> {
+  let working = await reconcileSystemEventIfActorUnavailableInTransaction(transaction, room);
+  working = await reconcileWaitingContinueAfterParticipantDeparture(transaction, working);
+  return working;
+}
+
+async function syncRoomAfterParticipantDeparture(room: EncounterRoom): Promise<void> {
+  if (room.roomState === 'closed') {
+    return;
+  }
+
+  await syncActiveEncountersForRoom(room);
+  if (room.roomState === 'active_encounter' || room.roomState === 'system_event') {
+    await maybeRecordRoomEncounterStartedEvent(room);
+  }
+}
+
 async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
   const recipients = participantsEarnedRoomLoreGem(room, snapshotId);
@@ -1442,6 +1658,7 @@ async function commitPreparedResultsForRoom(
               resolutionSummary: summary,
               preparedResult: undefined,
               preparedCommit: undefined,
+              outcomeSnapshotId: undefined,
               loreGemCollected: summary.loreGemGranted === true ? true : entry.loreGemCollected,
             }
           : entry,
@@ -1697,6 +1914,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
             resolutionSummary: actorSummary,
             preparedResult: undefined,
             preparedCommit: undefined,
+            outcomeSnapshotId: undefined,
             ...(actorDied ? { disconnectedAt: now } : {}),
           }
         : entry,
@@ -1826,6 +2044,7 @@ async function applyParticipantPrepare(
             prepared.preparedResult,
           ),
           preparedCommit: prepared.preparedCommit,
+          outcomeSnapshotId: snapshotForParticipant(room, participant).snapshotId,
           resolutionSummary: undefined,
           lastInteractionAt: now,
         }
@@ -1857,54 +2076,117 @@ async function applyParticipantPrepare(
 }
 
 export async function leaveRoomById(playerId: string, roomId: string): Promise<void> {
-  const room = await loadEncounterRoom(roomId);
-  if (!room || room.roomState === 'closed') {
-    await clearPresenceRoom(playerId);
-    return;
-  }
-
-  if (!room.participants.some((participant) => participant.playerId === playerId)) {
-    return;
-  }
-
-  const remaining = room.participants.filter((participant) => participant.playerId !== playerId);
-  if (remaining.length === 0) {
-    if (isSoloLeaderRoom(room)) {
-      await parkSoloRoomCheckpoint(room);
+  type LeaveResult =
+    | { type: 'absent' }
+    | { type: 'clear_only'; playerId: string }
+    | {
+      type: 'closed';
+      participantPlayerIds: string[];
+      parkCheckpoint: boolean;
+      roomForCheckpoint: EncounterRoom;
+      room: EncounterRoom;
     }
-    const closed: EncounterRoom = {
+    | { type: 'leader_left'; departingPlayerId: string; room: EncounterRoom }
+    | { type: 'disengaged'; departingPlayerId: string; room: EncounterRoom };
+
+  const result = await withDocumentTransaction(async (transaction): Promise<LeaveResult> => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      return { type: 'clear_only', playerId };
+    }
+
+    if (!findParticipant(room, playerId)) {
+      return { type: 'absent' };
+    }
+
+    room = await applyLeaveCommitToParticipantInRoom(transaction, room, playerId);
+
+    const now = nowMs();
+    const remainingAfterCommit = room.participants.filter(
+      (participant) => participant.playerId !== playerId,
+    );
+
+    if (remainingAfterCommit.length === 0) {
+      const parkCheckpoint = isSoloLeaderRoom(room);
+      const closed: EncounterRoom = {
+        ...room,
+        roomState: 'closed',
+        updatedAt: now,
+      };
+      await transaction.setEncounterRoom(roomId, closed);
+      return {
+        type: 'closed',
+        participantPlayerIds: room.participants.map((participant) => participant.playerId),
+        parkCheckpoint,
+        roomForCheckpoint: room,
+        room: closed,
+      };
+    }
+
+    if (playerId === room.leaderPlayerId) {
+      const promoted = promoteHostAndReslot(room, playerId);
+      const working: EncounterRoom = {
+        ...promoted,
+        updatedAt: now,
+      };
+      await transaction.setEncounterRoom(roomId, working);
+      const reconciled = await reconcileRoomAfterParticipantDepartureInTransaction(
+        transaction,
+        working,
+      );
+      return { type: 'leader_left', departingPlayerId: playerId, room: reconciled };
+    }
+
+    const disengaged: EncounterRoom = {
       ...room,
-      roomState: 'closed',
-      updatedAt: nowMs(),
+      participants: room.participants.map((participant) =>
+        participant.playerId === playerId
+          ? disengageParticipantOnVoluntaryLeave(participant, now)
+          : participant,
+      ),
+      updatedAt: now,
     };
-    await saveEncounterRoom(closed);
-    for (const participant of room.participants) {
-      await clearPresenceRoom(participant.playerId);
+    await transaction.setEncounterRoom(roomId, disengaged);
+    const reconciled = await reconcileRoomAfterParticipantDepartureInTransaction(
+      transaction,
+      disengaged,
+    );
+    return { type: 'disengaged', departingPlayerId: playerId, room: reconciled };
+  });
+
+  if (result.type === 'clear_only') {
+    await clearPresenceRoom(result.playerId);
+    return;
+  }
+
+  if (result.type === 'absent') {
+    return;
+  }
+
+  if (result.type === 'closed') {
+    if (result.parkCheckpoint) {
+      await parkSoloRoomCheckpoint(result.roomForCheckpoint);
+    }
+    for (const participantPlayerId of result.participantPlayerIds) {
+      await clearPresenceRoom(participantPlayerId);
     }
     return;
   }
 
-  if (playerId === room.leaderPlayerId) {
-    const promoted = promoteHostAndReslot(room, playerId);
-    const updated: EncounterRoom = {
-      ...promoted,
-      mergedExpansions: await expansionsForRoomLeader(promoted),
+  if (result.type === 'leader_left') {
+    const withExpansions: EncounterRoom = {
+      ...result.room,
+      mergedExpansions: await expansionsForRoomLeader(result.room),
     };
-    await saveEncounterRoom(updated);
-    await syncActiveEncountersForRoom(updated);
-    await clearPresenceRoom(playerId);
-    await reconcileSystemEventAfterParticipantDeparture(roomId);
+    await saveEncounterRoom(withExpansions);
+    await syncRoomAfterParticipantDeparture(withExpansions);
+    await clearPresenceRoom(result.departingPlayerId);
     return;
   }
 
-  const updated: EncounterRoom = {
-    ...room,
-    participants: remaining,
-    updatedAt: nowMs(),
-  };
-  await saveEncounterRoom(updated);
-  await clearPresenceRoom(playerId);
-  await reconcileSystemEventAfterParticipantDeparture(roomId);
+  await saveEncounterRoom(result.room);
+  await syncRoomAfterParticipantDeparture(result.room);
+  await clearPresenceRoom(result.departingPlayerId);
 }
 
 /** Leave every open room except an optional room the player is entering or reusing. */
@@ -1947,7 +2229,9 @@ export async function createRoom(
       && existing.roomState !== 'closed'
       && findParticipant(existing, playerId)
     ) {
-      return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(existing)));
+      const reengaged = await reengageReturningParticipantIfNeeded(existing, playerId);
+      await setPresenceInRoom(playerId, existing.roomId);
+      return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(reengaged)));
     }
   }
 
@@ -2016,7 +2300,7 @@ export async function getActiveRoomForPlayer(
     return null;
   }
 
-  room = await reengageSoloParticipantIfNeeded(room, playerId);
+  room = await reengageReturningParticipantIfNeeded(room, playerId);
   if (!findParticipant(room, playerId)) {
     return null;
   }
@@ -2046,7 +2330,9 @@ export async function joinRoom(
   }
 
   if (room.participants.some((participant) => participant.playerId === playerId)) {
-    return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(room)));
+    const reengaged = await reengageReturningParticipantIfNeeded(room, playerId);
+    await setPresenceInRoom(playerId, roomId);
+    return tickInactivity(await reconcilePendingLevelUpForRoom(await tickInactivity(reengaged)));
   }
 
   const slotIndex = findOpenSlot(room);
@@ -2121,32 +2407,54 @@ export async function kickParticipant(
     throw new RoomError('Cannot kick yourself', 400, 'CANNOT_KICK_SELF');
   }
 
-  const remaining = room.participants.filter((participant) => participant.playerId !== targetPlayerId);
-  if (remaining.length === room.participants.length) {
+  const targetParticipant = findParticipant(room, targetPlayerId);
+  if (!targetParticipant) {
     throw new RoomError('Player is not in this room', 404, 'NOT_IN_ROOM');
   }
 
-  if (remaining.length === 0) {
-    const closed: EncounterRoom = {
-      ...room,
+  const result = await withDocumentTransaction(async (transaction) => {
+    let working = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!working || working.roomState === 'closed') {
+      return null;
+    }
+
+    working = await applyLeaveCommitToParticipantInRoom(transaction, working, targetPlayerId);
+
+    const remaining = working.participants.filter(
+      (participant) => participant.playerId !== targetPlayerId,
+    );
+    const now = nowMs();
+
+    if (remaining.length === 0) {
+      const closed: EncounterRoom = {
+        ...working,
+        participants: remaining,
+        roomState: 'closed',
+        updatedAt: now,
+      };
+      await transaction.setEncounterRoom(room.roomId, closed);
+      return closed;
+    }
+
+    const updated: EncounterRoom = {
+      ...working,
       participants: remaining,
-      roomState: 'closed',
-      updatedAt: nowMs(),
+      updatedAt: now,
     };
-    await saveEncounterRoom(closed);
-    await markPlayerKickedFromParty(targetPlayerId, room.roomId);
-    return closed;
+    await transaction.setEncounterRoom(room.roomId, updated);
+    return reconcileRoomAfterParticipantDepartureInTransaction(transaction, updated);
+  });
+
+  if (!result) {
+    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
   }
 
-  const updated: EncounterRoom = {
-    ...room,
-    participants: remaining,
-    updatedAt: nowMs(),
-  };
-  await saveEncounterRoom(updated);
+  await saveEncounterRoom(result);
   await markPlayerKickedFromParty(targetPlayerId, room.roomId);
-  await reconcileSystemEventAfterParticipantDeparture(room.roomId);
-  return updated;
+  if (result.roomState !== 'closed') {
+    await syncRoomAfterParticipantDeparture(result);
+  }
+  return result;
 }
 
 export async function setSlotState(
