@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import type { EncounterRoomSnapshotDto, PersistedAvatar } from '../../api/http.js';
-import { localAvatarDeathPending } from './roomContinue.js';
+import { localAvatarDeathPending, sacrificeGemCostForAvatar } from './roomContinue.js';
 
 const avatar: PersistedAvatar = {
   id: 'avatar-1',
@@ -109,13 +109,23 @@ function roomWithLocal(
     slotIndex: 0,
     playerName: 'Tester',
     avatar,
-    choiceState: 'choosing',
+    choiceState: 'ready_to_continue',
     focusState: 'none',
     continuePressed: false,
     isLocal: true,
-    resolutionSummary: undefined,
+    preparedResult: {
+      success: false,
+      message: 'Misery',
+      rewards: [],
+      avatarDied: true,
+    },
   }));
   assert.equal(pending, null);
+}
+
+{
+  assert.equal(sacrificeGemCostForAvatar({ ...avatar, level: 3 }), 30);
+  assert.equal(sacrificeGemCostForAvatar({ ...avatar, sacrificeGemCost: 50 }), 50);
 }
 
 console.log('roomContinue.test.ts passed');

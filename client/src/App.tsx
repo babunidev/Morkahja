@@ -11,6 +11,7 @@ import {
   createAvatar,
   fetchAchievements,
   fetchAvatar,
+  fetchAvatars,
   fetchPendingHelpInvitations,
   heartbeatSession,
   joinFriendRoom,
@@ -76,6 +77,7 @@ import type { AvatarEnterHandoffSnapshot } from './ui/transitions/avatarEnterTra
 import {
   enterGameWithHandoff,
 } from './ui/transitions/avatarEnterTransition.js';
+import { enrichDeathOverlayAvatar } from './ui/game/roomContinue.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
 import { LEVEL_UP_SOUND, playSfx } from './ui/sfx.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
@@ -879,14 +881,34 @@ export default function App() {
             }}
             onAvatarDeath={(presetAvatar) => {
               deathLeaveDoneRef.current = false;
-              setDeathOverlayAvatar(presetAvatar);
+              const enriched = enrichDeathOverlayAvatar(presetAvatar);
+              setDeathOverlayAvatar(enriched);
               setAvatarSelectionAvatars((currentAvatars) => (
                 currentAvatars.map((avatar) => (
-                  avatar.id === presetAvatar.id
-                    ? { ...avatar, status: 'failed', sacrificeGemCost: presetAvatar.sacrificeGemCost ?? avatar.sacrificeGemCost }
+                  avatar.id === enriched.id
+                    ? { ...avatar, status: 'failed', sacrificeGemCost: enriched.sacrificeGemCost ?? avatar.sacrificeGemCost }
                     : avatar
                 ))
               ));
+              void fetchAvatars()
+                .then((avatars) => {
+                  const fresh = avatars.find((avatar) => avatar.id === enriched.id);
+                  if (!fresh) {
+                    return;
+                  }
+                  const refreshed = enrichDeathOverlayAvatar(fresh);
+                  setDeathOverlayAvatar(refreshed);
+                  setAvatarSelectionAvatars((currentAvatars) => (
+                    currentAvatars.map((avatar) => (
+                      avatar.id === refreshed.id
+                        ? { ...avatar, ...refreshed }
+                        : avatar
+                    ))
+                  ));
+                })
+                .catch((error) => {
+                  console.error('Failed to refresh failed avatar for death overlay', error);
+                });
             }}
             onKickedFromParty={handleKickedFromParty}
           />

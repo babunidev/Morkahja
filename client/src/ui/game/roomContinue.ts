@@ -182,10 +182,6 @@ function localDeathSummary(
     return local.resolutionSummary;
   }
 
-  if (local.preparedResult?.avatarDied === true) {
-    return local.preparedResult;
-  }
-
   if (
     room.systemEvent?.isLocalActor === true
     && room.systemEvent.lastEventRecap?.avatarDied === true
@@ -194,6 +190,23 @@ function localDeathSummary(
   }
 
   return undefined;
+}
+
+/** Mirrors server `sacrificeCostForLevel` for death-overlay display. */
+export function sacrificeGemCostForAvatar(avatar: PersistedAvatar): number {
+  if (typeof avatar.sacrificeGemCost === 'number' && avatar.sacrificeGemCost > 0) {
+    return avatar.sacrificeGemCost;
+  }
+
+  return Math.max(1, avatar.level) * 10;
+}
+
+export function enrichDeathOverlayAvatar(avatar: PersistedAvatar): PersistedAvatar {
+  return {
+    ...avatar,
+    status: avatar.status ?? 'failed',
+    sacrificeGemCost: sacrificeGemCostForAvatar(avatar),
+  };
 }
 
 /** Local avatar is in a fatal Atranor outcome (committed or persisted as failed). */
@@ -210,11 +223,11 @@ export function localAvatarDeathPending(
   }
 
   if (localDeathSummary(local, room) !== undefined) {
-    return local.avatar;
+    return enrichDeathOverlayAvatar(local.avatar);
   }
 
   if (local.avatar.status === 'failed') {
-    return local.avatar;
+    return enrichDeathOverlayAvatar(local.avatar);
   }
 
   return null;
