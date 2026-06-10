@@ -49,6 +49,7 @@ import {
   actorCanPressContinue,
   canAdvanceRoomHint,
   continueGlowClassForRoom,
+  localAvatarDeathPending,
   localContinuePressed,
   localOutcomeCommitted,
   localWaitingForRoomAdvance,
@@ -261,13 +262,12 @@ export function GameEnvironment({
   const completeAvatarDeathFlow = useCallback(async (
     roomSnapshot: EncounterRoomSnapshotDto,
   ): Promise<void> => {
-    const local = roomSnapshot.participants.find((participant) => participant.isLocal);
-    const summary = local?.resolutionSummary;
-    if (!summary?.avatarDied || !local?.avatar) {
+    const deadAvatar = localAvatarDeathPending(roomSnapshot);
+    if (!deadAvatar) {
       return;
     }
 
-    await handleLocalAvatarDeath(local.avatar);
+    await handleLocalAvatarDeath(deadAvatar);
   }, [handleLocalAvatarDeath]);
 
   const playLevelUpSoundIfNeeded = useCallback((
@@ -633,6 +633,11 @@ export function GameEnvironment({
 
       const transitionBaseline = workingRoom;
       let roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
+
+      if (localAvatarDeathPending(roomAfterContinue)) {
+        await completeAvatarDeathFlow(roomAfterContinue);
+        return roomAfterContinue;
+      }
 
       const shouldChainSystemEventAdvance = (
         transitionBaseline.roomState === 'system_event'

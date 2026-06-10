@@ -2,6 +2,7 @@ import type {
   ContinueReadinessDto,
   EncounterRoomSnapshotDto,
   ParticipantPreparedResultDto,
+  PersistedAvatar,
   RoomParticipantDto,
 } from '../../api/http.js';
 
@@ -167,6 +168,56 @@ export function continueGlowClassForRoom(
   }
 
   return continueReadinessClass(room.continueReadiness);
+}
+
+function localDeathSummary(
+  local: RoomParticipantDto | undefined,
+  room: EncounterRoomSnapshotDto,
+): ParticipantPreparedResultDto | undefined {
+  if (!local) {
+    return undefined;
+  }
+
+  if (local.resolutionSummary?.avatarDied === true) {
+    return local.resolutionSummary;
+  }
+
+  if (local.preparedResult?.avatarDied === true) {
+    return local.preparedResult;
+  }
+
+  if (
+    room.systemEvent?.isLocalActor === true
+    && room.systemEvent.lastEventRecap?.avatarDied === true
+  ) {
+    return room.systemEvent.lastEventRecap;
+  }
+
+  return undefined;
+}
+
+/** Local avatar is in a fatal Atranor outcome (committed or persisted as failed). */
+export function localAvatarDeathPending(
+  room: EncounterRoomSnapshotDto | null | undefined,
+): PersistedAvatar | null {
+  if (!room) {
+    return null;
+  }
+
+  const local = room.participants.find((participant) => participant.isLocal);
+  if (!local?.avatar) {
+    return null;
+  }
+
+  if (localDeathSummary(local, room) !== undefined) {
+    return local.avatar;
+  }
+
+  if (local.avatar.status === 'failed') {
+    return local.avatar;
+  }
+
+  return null;
 }
 
 /** UI-only mirror of server `canAdvanceRoom` — not authoritative. */
