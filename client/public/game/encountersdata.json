@@ -4048,12 +4048,12 @@
     "mEncounterSubtype": "Combat"
   },
   "20177": {
-    "mEncounterDifficulty": 2,
+    "mEncounterDifficulty": 3,
     "mEncounterExpansion": 1001,
     "mEncounterFollow": 0,
     "mEncounterID": 20177,
     "mEncounterImageName": "shadowmarket_mystic",
-    "mEncounterRewardAmount": 1,
+    "mEncounterRewardAmount": 2,
     "mEncounterRewardType": 3,
     "mEncounterSolutiuonA": 0,
     "mEncounterSolutiuonB": 10227,
