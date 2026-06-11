@@ -1345,7 +1345,7 @@
     "mSolutionInventoryType": 2,
     "mSolutionName": "Duskwhisper Crossbow",
     "mSolutionRewardType": 2,
-    "mSolutionText": "A sleek, ebony crossbow, inlaid with moonstone. Its design features sound-dampening components for silent shots, ideal for neutralizing alarm-creatures like the Firecrest Bloodbeak.",
+    "mSolutionText": "A sleek, ebony crossbow, inlaid with moonstone. Its design features sound-dampening components for silent shots, ideal for neutralizing alarmed creatures.",
     "mSolutionType": 30,
     "mSolutionUses": 1
   },
