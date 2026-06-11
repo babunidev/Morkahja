@@ -3773,15 +3773,15 @@
     "mEncounterSolutiuonB": 10214,
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 28,
-    "mEncounterSolutiuonTypeB": 10,
-    "mEncounterSolutiuonTypeC": 9,
-    "mEncounterSolutiuonTypeD": 27,
+    "mEncounterSolutiuonTypeA": 10,
+    "mEncounterSolutiuonTypeB": 28,
+    "mEncounterSolutiuonTypeC": 27,
+    "mEncounterSolutiuonTypeD": 9,
     "mEncounterText": "Within the stygian realms of Keldor's Cursed Forest, the Flamecrazed Wanderer, an Ashen Revenant, treads a path of destruction. Her movements are languid, almost hypnotic, as she walks barefoot, leaving smoldering footprints in her wake. Each step sets the decayed forest floor ablaze, her hands trailing flames that lick hungrily at the dead wood. The trees, brittle and lifeless, are consumed quickly, sending plumes of acrid smoke into the air. This revenant, once a formidable force of rage, now moves with a bizarre, unsettling whimsy. She hums a dissonant melody, punctuated by bizarre, nonsensical sounds that echo through the forest. Her insanity, fueled by dark magic, renders her a capricious and unpredictable threat. Controlled by the malevolent energy of the forest, she is a puppet dancing to a tune only she can hear, her presence a chilling reminder of the forest's power to corrupt and twist even the strongest of wills.",
     "mEncounterTitle": "Flamecrazed Wanderer",
     "mEncounterType": 1,
-    "mEncounterElement": "Void",
-    "mEncounterSubtype": "Combat"
+    "mEncounterElement": "Arcana",
+    "mEncounterSubtype": "Purge"
   },
   "20165": {
     "mEncounterDifficulty": 2,
