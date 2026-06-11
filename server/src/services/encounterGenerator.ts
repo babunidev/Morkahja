@@ -5,6 +5,7 @@
  * Client must NOT call selection, roll generation, or validation.
  * Client sends actions only; server owns all fate via persisted snapshots.
  */
+import { generateEncounterRollSnapshot } from '../engine/encounterRollGenerator.js';
 import { resolveEncounter as runDeterministicResolver } from '../engine/encounterResolver.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import { interpretRoll, type RollOutcome } from '../engine/diceInterpreter.js';
@@ -264,30 +265,7 @@ export function generateSnapshotRolls(): Pick<
   | 'rollSecondaryD'
   | 'rollE'
 > {
-  const rollPrimaryA = randomInt(61, 100);
-  const rollPrimaryB = randomInt(61, 100);
-  const rollPrimaryC = randomInt(61, 100);
-  const rollPrimaryD = randomInt(61, 100);
-  const rollSecondaryA = randomInt(40, 100);
-  const rollSecondaryB = randomInt(40, 100);
-  const rollSecondaryC = randomInt(40, 100);
-  const rollSecondaryD = randomInt(40, 100);
-
-  return {
-    rollA: rollPrimaryA,
-    rollB: rollSecondaryB,
-    rollC: rollPrimaryC,
-    rollD: rollSecondaryD,
-    rollPrimaryA,
-    rollPrimaryB,
-    rollPrimaryC,
-    rollPrimaryD,
-    rollSecondaryA,
-    rollSecondaryB,
-    rollSecondaryC,
-    rollSecondaryD,
-    rollE: randomInt(1, 100),
-  };
+  return generateEncounterRollSnapshot();
 }
 
 export function randomRewardsForEncounter(
