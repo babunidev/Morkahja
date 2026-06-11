@@ -2125,8 +2125,8 @@
     "mSolutionInventoryType": 2,
     "mSolutionName": "Frostveil Blade",
     "mSolutionRewardType": 2,
-    "mSolutionText": "This ethereal sword, shimmering with a frosty aura, is designed to counteract fiery wrath, its icy touch capable of quelling even the fiercest flames.",
-    "mSolutionType": 10,
+    "mSolutionText": "This ethereal sword, shimmering with a frosty aura, is designed to counteract fire, its icy touch capable of quelling even the fiercest magic.",
+    "mSolutionType": 28,
     "mSolutionUses": 1
   },
   "10214": {
