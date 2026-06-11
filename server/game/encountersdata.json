@@ -22,12 +22,12 @@
     "mEncounterSubtype": "Heal"
   },
   "19444": {
-    "mEncounterDifficulty": 1,
+    "mEncounterDifficulty": 2,
     "mEncounterExpansion": 0,
     "mEncounterFollow": 0,
     "mEncounterID": 19444,
     "mEncounterImageName": "hearthguard_sanctuary",
-    "mEncounterRewardAmount": 1,
+    "mEncounterRewardAmount": 2,
     "mEncounterRewardType": 3,
     "mEncounterSolutiuonA": 0,
     "mEncounterSolutiuonB": 10239,
