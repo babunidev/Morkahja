@@ -3355,15 +3355,15 @@
     "mEncounterSolutiuonB": 10162,
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 2,
-    "mEncounterSolutiuonTypeB": 18,
-    "mEncounterSolutiuonTypeC": 17,
-    "mEncounterSolutiuonTypeD": 1,
+    "mEncounterSolutiuonTypeA": 18,
+    "mEncounterSolutiuonTypeB": 2,
+    "mEncounterSolutiuonTypeC": 1,
+    "mEncounterSolutiuonTypeD": 17,
     "mEncounterText": "Amid the biting cold and white expanse of the Everwinter Valley, a solitary figure stands out against the snow-blanketed terrain. Jorvald, the Frostweaver Scholar, is draped in deep blue robes adorned with intricate silver patterns resembling frosty tendrils. His ice-blue eyes, filled with a mixture of determination and inner turmoil, survey the surroundings. Around him, scrolls and ancient tomes are scattered, hinting at his relentless pursuit of knowledge. He raises a hand in caution, his voice echoing softly yet firmly in the quiet of the valley. 'Halt! This place bears secrets not meant for all. Tell me, what drives one to these sacred grounds? Knowledge, or something more?",
     "mEncounterTitle": "The Scholar",
-    "mEncounterType": 2,
-    "mEncounterElement": "Water",
-    "mEncounterSubtype": "Speech"
+    "mEncounterType": 4,
+    "mEncounterElement": "Core",
+    "mEncounterSubtype": "Learn"
   },
   "20145": {
     "mEncounterDifficulty": 2,
