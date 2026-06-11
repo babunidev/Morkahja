@@ -133,9 +133,9 @@
     "mSolutionID": 10014,
     "mSolutionIconName": "tool_heal_linen_bandage",
     "mSolutionInventoryType": 2,
-    "mSolutionName": "Soothing Linen Wrap",
+    "mSolutionName": "Soothing Wrap",
     "mSolutionRewardType": 2,
-    "mSolutionText": "This soft and gentle linen wrap is designed to aid in the healing of wounds. It provides comfort and support during the recovery process.",
+    "mSolutionText": "This soft and gentle wrap is designed to aid in the healing of wounds. It provides comfort and support during the recovery process.",
     "mSolutionType": 22,
     "mSolutionUses": 1
   },
