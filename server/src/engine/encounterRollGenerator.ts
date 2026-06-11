@@ -8,17 +8,17 @@ export function randomInt(min: number, max: number): number {
 
 /**
  * Generate a constrained 5-roll snapshot at encounter creation.
- * Primary lanes (A, C): 61–100 · Secondary lanes (B, D): 40–100 · Dice (E): 1–100
+ * Primary lanes (A, C): 61–100 · Secondary lanes (B, D): 50–100 · Dice (E): 1–100
  */
 export function generateEncounterRollSnapshot(): EncounterRollSnapshot {
   const rollPrimaryA = randomInt(61, 100);
   const rollPrimaryB = randomInt(61, 100);
   const rollPrimaryC = randomInt(61, 100);
   const rollPrimaryD = randomInt(61, 100);
-  const rollSecondaryA = randomInt(40, 100);
-  const rollSecondaryB = randomInt(40, 100);
-  const rollSecondaryC = randomInt(40, 100);
-  const rollSecondaryD = randomInt(40, 100);
+  const rollSecondaryA = randomInt(50, 100);
+  const rollSecondaryB = randomInt(50, 100);
+  const rollSecondaryC = randomInt(50, 100);
+  const rollSecondaryD = randomInt(50, 100);
 
   return createEncounterRollSnapshot({
     rollA: rollPrimaryA,
