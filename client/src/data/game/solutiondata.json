@@ -2225,7 +2225,7 @@
     "mSolutionInventoryType": 2,
     "mSolutionName": "Guardian Wisp Lantern",
     "mSolutionRewardType": 2,
-    "mSolutionText": "This lantern emits a protective aura, its light pulsing with a calming energy that deters malevolent creatures, providing safety for those who heal the forest.",
+    "mSolutionText": "This lantern emits a protective aura, its light pulsing with a calming energy that deters malevolent creatures, providing safety.",
     "mSolutionType": 26,
     "mSolutionUses": 1
   },
