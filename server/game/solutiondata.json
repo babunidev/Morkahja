@@ -845,7 +845,7 @@
     "mSolutionInventoryType": 2,
     "mSolutionName": "Stellaris Amulet",
     "mSolutionRewardType": 2,
-    "mSolutionText": "A luminous gem pendant, pulsating with celestial energy. Upon activation, it forms an ethereal shield, disrupting all life-absorbing magic.",
+    "mSolutionText": "A luminous gem pendant, pulsating with celestial energy. Upon activation, it forms an ethereal shield, disrupting all magic.",
     "mSolutionType": 28,
     "mSolutionUses": 1
   },
