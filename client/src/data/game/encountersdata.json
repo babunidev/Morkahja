@@ -3751,15 +3751,15 @@
     "mEncounterSolutiuonB": 10213,
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 28,
-    "mEncounterSolutiuonTypeB": 10,
-    "mEncounterSolutiuonTypeC": 9,
-    "mEncounterSolutiuonTypeD": 27,
+    "mEncounterSolutiuonTypeA": 10,
+    "mEncounterSolutiuonTypeB": 28,
+    "mEncounterSolutiuonTypeC": 27,
+    "mEncounterSolutiuonTypeD": 9,
     "mEncounterText": "In the shadowy depths of the Cursed Forest of Keldor, the Emberlost Wraith, a tormented Ashen Revenant, drifts eerily. Her form, a haunting silhouette against the darkness, is a tragic sight. Charred and cracked, her once-majestic body now exudes an aura of desolation, consumed by relentless flames that leave a trail of destruction in her wake. The rotten trees of the forest catch fire briefly before collapsing, emitting a sickening smoke that blankets the area in a choking haze. Unlike her kin, this revenant moves with a somber, mindless grace, seemingly controlled by a malevolent force beyond her understanding. Her eyes, once bright with fury, now glow dully, reflecting a soul devoid of will, enslaved by the forest's dark magic. She roams the forest, a puppet of the corrupt energy that dictates her every move, her presence a warning of the consuming power of the cursed land.",
     "mEncounterTitle": "Emberlost Wraith",
     "mEncounterType": 1,
-    "mEncounterElement": "Void",
-    "mEncounterSubtype": "Combat"
+    "mEncounterElement": "Arcana",
+    "mEncounterSubtype": "Purge"
   },
   "20164": {
     "mEncounterDifficulty": 2,
