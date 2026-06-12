@@ -51,7 +51,17 @@ export function continueTargets(room: EncounterRoomSnapshotDto): RoomParticipant
   return awaitingContinue.length > 0 ? awaitingContinue : engagedParticipants(room);
 }
 
-const INACTIVE_OUTCOME_MESSAGE = 'Inactive';
+const PAUSE_FOCUS_STATES = new Set(['lore', 'inventory', 'skillbook']);
+
+function isPauseFocusState(
+  focusState: RoomParticipantDto['focusState'],
+): boolean {
+  return PAUSE_FOCUS_STATES.has(focusState);
+}
+
+function participantBlocksAdvance(participant: RoomParticipantDto): boolean {
+  return isPauseFocusState(participant.focusState);
+}
 
 function localHasRevealedOutcome(room: EncounterRoomSnapshotDto): boolean {
   const local = room.participants.find((participant) => participant.isLocal);
@@ -60,15 +70,7 @@ function localHasRevealedOutcome(room: EncounterRoomSnapshotDto): boolean {
   }
 
   const summary = local.preparedResult ?? local.resolutionSummary;
-  if (!summary) {
-    return false;
-  }
-
-  if (summary.message === INACTIVE_OUTCOME_MESSAGE && local.choiceState === 'disengaged') {
-    return false;
-  }
-
-  return true;
+  return summary !== undefined;
 }
 
 /** True when the server avatar inventory is authoritative (post-commit), not a pre-continue preview. */
@@ -236,7 +238,7 @@ export function localAvatarDeathPending(
 /** UI-only mirror of server `canAdvanceRoom` — not authoritative. */
 export function canAdvanceRoomHint(room: EncounterRoomSnapshotDto): boolean {
   const targets = continueTargets(room);
-  if (targets.some((participant) => participant.focusState !== 'none')) {
+  if (targets.some(participantBlocksAdvance)) {
     return false;
   }
   return targets.every((participant) => participant.continuePressed);

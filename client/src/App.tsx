@@ -17,6 +17,7 @@ import {
   joinFriendRoom,
   leaveAllEncounterRooms,
   leaveEncounterRoom,
+  processRoomAwayKeepalive,
   loadStoredSession,
   logoutSession,
   clearStoredSession,
@@ -336,8 +337,26 @@ export default function App() {
       return;
     }
 
-    void leaveAllRoomsForDashboard();
-  }, [screen]);
+    void leaveAllRoomsForDashboard(activeAvatar?.id);
+  }, [screen, activeAvatar?.id]);
+
+  useEffect(() => {
+    if (screen !== 'game' || !activeAvatar) {
+      return;
+    }
+
+    const handleUnload = () => {
+      processRoomAwayKeepalive(activeAvatar.id);
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+    };
+  }, [screen, activeAvatar]);
 
   const dismissHelpInviteToast = useCallback((invite: RoomHelpInvitationDto | null) => {
     if (invite) {
@@ -872,7 +891,7 @@ export default function App() {
               resetEnterHandoffState(setGameEnterHandoff, setHandoffLanded, setAvatarEnterHandoff);
               setScreen('dashboard');
               void (async () => {
-                await leaveAllRoomsForDashboard();
+                await leaveAllRoomsForDashboard(activeAvatar?.id);
                 await applyAvatarSelectionFromHome();
               })();
             }}

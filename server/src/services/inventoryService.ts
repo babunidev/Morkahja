@@ -364,13 +364,12 @@ export function applyEncounterInventoryChanges(
   }
 
   if (success) {
-    const rewardMultiplier = Math.max(1, rewardAmount);
     for (const reward of rewards) {
       const solution = getSolution(reward);
       next = addRewardToInventoryState(
         next,
         reward,
-        Math.max(1, (solution.mSolutionUses ?? 1) * rewardMultiplier),
+        Math.max(1, solution.mSolutionUses ?? 1),
       );
     }
     return { inventory: next, lostInventorySolutions: [] };

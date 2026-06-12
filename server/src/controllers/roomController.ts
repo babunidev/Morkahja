@@ -17,6 +17,7 @@ import {
   RoomError,
   setFocusState,
   setSlotState,
+  processRoomAway,
   submitChoice,
   submitContinue,
   submitSelection,
@@ -177,6 +178,21 @@ export async function leaveAllRoomsController(
   }
 }
 
+export async function processRoomAwayController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const avatarId = requireAvatarId(req);
+    await processRoomAway(playerId, avatarId);
+    res.json({ ok: true });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
 export async function setSlotStateController(
   req: Request,
   res: Response,
@@ -263,8 +279,7 @@ export async function submitRoomFocusController(
       focusState !== 'none' &&
       focusState !== 'lore' &&
       focusState !== 'inventory' &&
-      focusState !== 'skillbook' &&
-      focusState !== 'avatar_details'
+      focusState !== 'skillbook'
     ) {
       throw new RequestError('Invalid focusState');
     }

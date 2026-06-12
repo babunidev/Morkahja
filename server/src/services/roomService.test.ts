@@ -18,7 +18,6 @@ import {
   setFocusState,
   submitChoice,
   submitContinue,
-  tickInactivity,
 } from './roomService.js';
 import { getProgression, setPlayer } from '../db/postgresDocumentStore.js';
 import { queryActivityFeed } from './gameEventService.js';
@@ -27,7 +26,6 @@ import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom, findActiveRoomIdForPlayerAvatar } from './roomPersistence.js';
-import { loadSoloRoomCheckpoint } from './soloRoomCheckpointService.js';
 
 function randomDeviceKey(): string {
   return `device-${Math.random().toString(36).slice(2)}-${Date.now()}`;
@@ -315,6 +313,15 @@ const blocked = await setFocusState(session.playerId, switchedAvatarRoom.partici
 assert.equal(blocked.participants[0]?.focusState, 'lore');
 
 await submitContinue(session.playerId, switchedAvatarRoom.participants[0]!.avatarId);
+const stillWaitingWithLore = await getActiveRoomForPlayer(
+  session.playerId,
+  switchedAvatarRoom.participants[0]!.avatarId,
+);
+assert.equal(stillWaitingWithLore?.roomState, 'waiting_continue');
+assert.equal(stillWaitingWithLore?.participants[0]?.focusState, 'lore');
+assert.equal(stillWaitingWithLore?.participants[0]?.continuePressed, true);
+
+await setFocusState(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'none');
 const advancedAfterFocus = await getActiveRoomForPlayer(
   session.playerId,
   switchedAvatarRoom.participants[0]!.avatarId,
@@ -425,8 +432,12 @@ const soloInactivityRoom: EncounterRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(soloInactivityRoom);
-const soloStillActive = await tickInactivity(soloInactivityRoom);
-assert.equal(soloStillActive.participants[0]?.choiceState, 'choosing');
+assert.equal(
+  soloInactivityRoom.participants[0]?.choiceState,
+  'choosing',
+  'idle solo participants stay choosing (inactivity disengage removed)',
+);
+assert.equal(ROOM_INACTIVITY_ENABLED, false);
 
 const multiInactivityRoom: EncounterRoom = {
   ...room,
@@ -453,34 +464,25 @@ const multiInactivityRoom: EncounterRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(multiInactivityRoom);
-const afterInactivityTick = await tickInactivity(multiInactivityRoom);
 assert.equal(
-  afterInactivityTick.participants[0]?.choiceState,
-  ROOM_INACTIVITY_ENABLED ? 'disengaged' : 'choosing',
+  multiInactivityRoom.participants.every((participant) => participant.choiceState === 'choosing'),
+  true,
+  'idle multiplayer participants stay choosing (inactivity disengage removed)',
 );
 
-const roomForReengage: EncounterRoom = ROOM_INACTIVITY_ENABLED
-  ? afterInactivityTick
-  : {
-    ...afterInactivityTick,
-    participants: afterInactivityTick.participants.map((participant, index) => (
-      index === 0
-        ? {
-            ...participant,
-            choiceState: 'disengaged' as const,
-            disconnectedAt: Date.now(),
-            preparedResult: {
-              success: false,
-              message: 'Inactive',
-              rewards: [],
-            },
-          }
-        : participant
-    )),
-  };
-if (!ROOM_INACTIVITY_ENABLED) {
-  await saveEncounterRoom(roomForReengage);
-}
+const roomForReengage: EncounterRoom = {
+  ...multiInactivityRoom,
+  participants: multiInactivityRoom.participants.map((participant, index) => (
+    index === 0
+      ? {
+          ...participant,
+          choiceState: 'disengaged' as const,
+          disconnectedAt: Date.now(),
+        }
+      : participant
+  )),
+};
+await saveEncounterRoom(roomForReengage);
 
 const reengagedByFocus = await setFocusState(
   session.playerId,
@@ -491,7 +493,6 @@ const reengagedParticipant = reengagedByFocus.participants.find(
   (participant) => participant.playerId === session.playerId,
 );
 assert.equal(reengagedParticipant?.choiceState, 'choosing');
-assert.notEqual(reengagedParticipant?.preparedResult?.message, 'Inactive');
 
 const activeBeforePostSystem = await getActiveRoomForPlayer(
   session.playerId,
@@ -740,6 +741,141 @@ const focusClearedRoom: EncounterRoom = {
 await saveEncounterRoom(focusClearedRoom);
 const advancedAfterFocusClear = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
 assert.equal(advancedAfterFocusClear?.roomState, 'active_encounter');
+
+const avatarDetailsNoPauseRoom: EncounterRoom = {
+  ...focusBlocksAdvanceRoom,
+  participants: focusBlocksAdvanceRoom.participants.map((participant, index) =>
+    index === 1
+      ? { ...participant, focusState: 'avatar_details' as const }
+      : participant,
+  ),
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(avatarDetailsNoPauseRoom);
+const advancedDespiteAvatarDetails = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(advancedDespiteAvatarDetails?.roomState, 'active_encounter');
+
+const concurrentHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const concurrentHostIdentityJwk = JSON.stringify(
+  concurrentHostKeyPair.publicKey.export({ format: 'jwk' }),
+);
+const concurrentHostSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: concurrentHostIdentityJwk,
+  playerName: `concurrent-host-${Date.now()}`,
+});
+const concurrentHostAvatarId = `concurrent-host-${Date.now()}`;
+await savePlayerAvatar(concurrentHostSession.playerId, {
+  id: concurrentHostAvatarId,
+  name: 'Concurrent Host',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+const concurrentGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const concurrentGuestIdentityJwk = JSON.stringify(
+  concurrentGuestKeyPair.publicKey.export({ format: 'jwk' }),
+);
+const concurrentGuestSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: concurrentGuestIdentityJwk,
+  playerName: `concurrent-guest-${Date.now()}`,
+});
+const concurrentGuestAvatarId = `concurrent-guest-${Date.now()}`;
+await savePlayerAvatar(concurrentGuestSession.playerId, {
+  id: concurrentGuestAvatarId,
+  name: 'Concurrent Guest',
+  race: 'Verdani',
+  role: 'Mage',
+  portrait: 'm_portrait_verdani_mage',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+let concurrentPartyRoom = await createRoom(
+  concurrentHostSession.playerId,
+  concurrentHostAvatarId,
+);
+concurrentPartyRoom = {
+  ...concurrentPartyRoom,
+  activeEncounterSnapshot: {
+    ...concurrentPartyRoom.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(concurrentPartyRoom);
+await joinRoom(
+  concurrentGuestSession.playerId,
+  concurrentGuestAvatarId,
+  concurrentPartyRoom.roomId,
+);
+
+await submitChoice(concurrentHostSession.playerId, concurrentHostAvatarId, 'dice');
+await submitChoice(concurrentGuestSession.playerId, concurrentGuestAvatarId, 'dice');
+const concurrentSnapshotBefore = concurrentPartyRoom.activeEncounterSnapshot.snapshotId;
+
+const [hostContinue, guestContinue] = await Promise.all([
+  submitContinue(concurrentHostSession.playerId, concurrentHostAvatarId),
+  submitContinue(concurrentGuestSession.playerId, concurrentGuestAvatarId),
+]);
+const concurrentAfterBoth = await loadEncounterRoom(concurrentPartyRoom.roomId);
+assert.equal(concurrentAfterBoth?.roomState, 'active_encounter');
+assert.notEqual(
+  concurrentAfterBoth?.activeEncounterSnapshot.snapshotId,
+  concurrentSnapshotBefore,
+);
+assert.equal(concurrentAfterBoth?.participants[0]?.continuePressed, false);
+assert.equal(
+  concurrentAfterBoth?.participants.find(
+    (participant) => participant.playerId === concurrentGuestSession.playerId,
+  )?.continuePressed,
+  false,
+);
+assert.ok(
+  hostContinue.roomState === 'active_encounter'
+  || guestContinue.roomState === 'active_encounter',
+);
+
+const pauseInventoryRoom: EncounterRoom = {
+  ...hostContinue,
+  roomState: 'waiting_continue',
+  activeEncounterSnapshot: {
+    ...hostContinue.activeEncounterSnapshot,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: hostContinue.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  participants: hostContinue.participants.map((participant) => ({
+    ...participant,
+    choiceState: participant.playerId === concurrentHostSession.playerId
+      ? 'ready_to_continue' as const
+      : 'ready_to_continue' as const,
+    continuePressed: true,
+    preparedResult: {
+      success: true,
+      message: 'ok',
+      rewards: [],
+    },
+    preparedCommit: undefined,
+    resolutionSummary: undefined,
+    focusState: participant.playerId === concurrentHostSession.playerId
+      ? 'inventory' as const
+      : 'none' as const,
+  })),
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(pauseInventoryRoom);
+const pausedByInventory = await getActiveRoomForPlayer(
+  concurrentHostSession.playerId,
+  concurrentHostAvatarId,
+);
+assert.equal(pausedByInventory?.roomState, 'waiting_continue');
 
 assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 70 }), true);
 assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 20 }), false);
@@ -1065,15 +1201,12 @@ const guestProgressionBefore = await getProgression<{ experience: number; level:
 
 await leaveRoom(guestSession.playerId, guestAvatarId);
 const roomAfterGuestLeave = await loadEncounterRoom(partyRoom.roomId);
-const guestDisengaged = roomAfterGuestLeave?.participants.find(
-  (participant) => participant.playerId === guestSession.playerId,
+assert.ok(
+  !roomAfterGuestLeave?.participants.some(
+    (participant) => participant.playerId === guestSession.playerId,
+  ),
+  'guest hard depart should remove player from party',
 );
-assert.equal(guestDisengaged?.choiceState, 'disengaged');
-assert.equal(guestDisengaged?.preparedResult, undefined);
-assert.equal(guestDisengaged?.preparedCommit, undefined);
-assert.ok(guestDisengaged?.resolutionSummary);
-assert.equal(guestDisengaged?.continuePressed, true);
-assert.equal(guestDisengaged?.outcomeSnapshotId, undefined);
 
 const guestProgressionAfterLeave = await getProgression<{ experience: number; level: number }>(
   guestSession.playerId,
@@ -1081,23 +1214,17 @@ const guestProgressionAfterLeave = await getProgression<{ experience: number; le
 );
 assert.ok(
   (guestProgressionAfterLeave?.experience ?? 0) > (guestProgressionBefore?.experience ?? 0)
-  || (guestProgressionAfterLeave?.level ?? 1) > (guestProgressionBefore?.level ?? 1)
-  || (guestDisengaged?.resolutionSummary?.gainedExperience ?? 0) > 0,
+  || (guestProgressionAfterLeave?.level ?? 1) > (guestProgressionBefore?.level ?? 1),
+  'guest leave with prepared choice should commit progression',
 );
 
 const guestRejoinedRoom = await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
 const guestRestored = guestRejoinedRoom.participants.find(
   (participant) => participant.playerId === guestSession.playerId,
 );
-assert.equal(guestRestored?.choiceState, 'resolved');
-assert.ok(guestRestored?.resolutionSummary?.selectedRoll !== undefined);
+assert.equal(guestRestored?.choiceState, 'choosing');
 assert.equal(guestRestored?.preparedResult, undefined);
-
-const guestSnapshot = await toEncounterRoomSnapshotDto(guestRejoinedRoom, guestSession.playerId);
-const localGuest = guestSnapshot.participants.find((participant) => participant.isLocal);
-assert.ok(localGuest?.resolutionSummary);
-assert.equal(localGuest?.preparedResult, undefined);
-assert.ok((localGuest?.resolutionSummary?.rewards?.length ?? 0) >= 0);
+assert.equal(guestRestored?.resolutionSummary, undefined);
 
 await leaveRoom(guestSession.playerId, guestAvatarId);
 const guestSoloRoom = await createRoom(guestSession.playerId, guestAvatarId);
@@ -1122,11 +1249,20 @@ assert.ok(
   ),
   'leave all should remove the player from party rooms instead of leaving a disengaged ghost',
 );
-assert.equal(await findActiveRoomIdForPlayerAvatar(guestSession.playerId, guestAvatarId), null);
+const guestOpenRoomId = await findActiveRoomIdForPlayerAvatar(
+  guestSession.playerId,
+  guestAvatarId,
+);
+assert.ok(guestOpenRoomId);
+assert.notEqual(guestOpenRoomId, partyRoom.roomId);
 
 await submitContinue(session.playerId, avatarId);
 const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
-assert.equal(advancedWhileGuestAway?.roomState, 'active_encounter');
+assert.ok(
+  advancedWhileGuestAway?.roomState === 'active_encounter'
+  || advancedWhileGuestAway?.roomState === 'system_event',
+  'host should advance after guest departs with choice committed',
+);
 
 const guestAfterAdvance = await joinRoom(
   guestSession.playerId,
@@ -1158,6 +1294,7 @@ await savePlayerAvatar(soloCheckpointSession.playerId, {
   createdAt: Date.now(),
 });
 let soloRoom = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+const snapshotIdBeforeLeave = soloRoom.activeEncounterSnapshot.snapshotId;
 soloRoom = {
   ...soloRoom,
   activeEncounterSnapshot: {
@@ -1173,14 +1310,17 @@ soloRoom = {
 await saveEncounterRoom(soloRoom);
 await submitChoice(soloCheckpointSession.playerId, soloCheckpointAvatarId, 'dice');
 await leaveRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
-const soloCheckpoint = await loadSoloRoomCheckpoint(
-  soloCheckpointSession.playerId,
-  soloCheckpointAvatarId,
+const openSoloRoom = await loadEncounterRoom(soloRoom.roomId);
+assert.ok(openSoloRoom && openSoloRoom.roomState !== 'closed');
+assert.equal(openSoloRoom.participants.length, 1);
+assert.equal(
+  await findActiveRoomIdForPlayerAvatar(
+    soloCheckpointSession.playerId,
+    soloCheckpointAvatarId,
+  ),
+  soloRoom.roomId,
+  'solo away should keep the open room indexed for rejoin',
 );
-assert.ok(soloCheckpoint);
-assert.equal(soloCheckpoint.participant.preparedCommit, undefined);
-assert.equal(soloCheckpoint.participant.preparedResult, undefined);
-assert.ok(soloCheckpoint.participant.resolutionSummary);
 
 const countAdventureStartedEvents = (
   entries: Awaited<ReturnType<typeof queryActivityFeed>>,
@@ -1191,14 +1331,48 @@ const adventureStartedBeforeRestore = countAdventureStartedEvents(
 );
 assert.ok(adventureStartedBeforeRestore >= 1);
 
-await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+const restored = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
+assert.equal(restored.roomId, soloRoom.roomId);
+assert.notEqual(
+  restored.activeEncounterSnapshot.snapshotId,
+  snapshotIdBeforeLeave,
+  'solo leave with choice should advance before rejoin',
+);
 const adventureStartedAfterRestore = countAdventureStartedEvents(
   await queryActivityFeed(soloCheckpointSession.playerId),
 );
 assert.equal(
   adventureStartedAfterRestore,
   adventureStartedBeforeRestore + 1,
-  'restoring a solo checkpoint should publish adventure_started',
+  'rejoining an open solo room should publish adventure_started',
+);
+
+const soloNoChoiceKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const soloNoChoiceIdentityJwk = JSON.stringify(soloNoChoiceKeyPair.publicKey.export({ format: 'jwk' }));
+const soloNoChoiceSession = await bootstrapSession({
+  devicePublicKey: randomDeviceKey(),
+  identityPublicKey: soloNoChoiceIdentityJwk,
+  playerName: `solo-no-choice-${Date.now()}`,
+});
+const soloNoChoiceAvatarId = `solo-no-choice-${Date.now()}`;
+await savePlayerAvatar(soloNoChoiceSession.playerId, {
+  id: soloNoChoiceAvatarId,
+  name: 'Solo No Choice',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+const soloNoChoiceRoom = await createRoom(soloNoChoiceSession.playerId, soloNoChoiceAvatarId);
+const snapshotBeforeNoChoiceLeave = soloNoChoiceRoom.activeEncounterSnapshot.snapshotId;
+await leaveRoom(soloNoChoiceSession.playerId, soloNoChoiceAvatarId);
+const soloNoChoiceRestored = await createRoom(soloNoChoiceSession.playerId, soloNoChoiceAvatarId);
+assert.equal(soloNoChoiceRestored.roomId, soloNoChoiceRoom.roomId);
+assert.equal(
+  soloNoChoiceRestored.activeEncounterSnapshot.snapshotId,
+  snapshotBeforeNoChoiceLeave,
+  'solo leave without choice should preserve the same encounter on rejoin',
 );
 
 const kickGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });

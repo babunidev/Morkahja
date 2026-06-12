@@ -552,6 +552,32 @@ export async function leaveAllEncounterRooms(): Promise<void> {
   });
 }
 
+/** Commit and continue a prepared choice without leaving the room (refresh / away). */
+export async function processRoomAway(avatarId: string): Promise<void> {
+  await request<{ ok: true }>('/room/away', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
+}
+
+/** Best-effort away processing during page unload (keepalive fetch). */
+export function processRoomAwayKeepalive(avatarId: string): void {
+  const token = accessToken();
+  if (!token) {
+    return;
+  }
+
+  void fetch(`${API_BASE_URL}/room/away`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ avatarId }),
+    keepalive: true,
+  });
+}
+
 export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {
   return request<ActivityFeedResponse>('/activity/recent');
 }

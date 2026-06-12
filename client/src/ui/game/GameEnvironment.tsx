@@ -17,6 +17,7 @@ import {
   submitRoomSlotState,
   kickRoomParticipant,
   leaveAllEncounterRooms,
+  processRoomAway,
   type EncounterAction,
   type EncounterRoomSnapshotDto,
   type EncounterSnapshot,
@@ -187,16 +188,14 @@ function applyRoomSnapshot(
   return true;
 }
 
-function currentFocusState(
+function currentPauseFocusState(
   loreOpen: boolean,
   inventoryOpen: boolean,
   skillbookOpen: boolean,
-  avatarDetailsOpen: boolean,
-): 'none' | 'lore' | 'inventory' | 'skillbook' | 'avatar_details' {
+): 'none' | 'lore' | 'inventory' | 'skillbook' {
   if (loreOpen) return 'lore';
   if (inventoryOpen) return 'inventory';
   if (skillbookOpen) return 'skillbook';
-  if (avatarDetailsOpen) return 'avatar_details';
   return 'none';
 }
 
@@ -559,7 +558,7 @@ export function GameEnvironment({
     if (!room) {
       return;
     }
-    const focusState = currentFocusState(loreOpen, inventoryOpen, skillbookOpen, homeVisible);
+    const focusState = currentPauseFocusState(loreOpen, inventoryOpen, skillbookOpen);
     if (localParticipant?.focusState === focusState) {
       return;
     }
@@ -575,7 +574,7 @@ export function GameEnvironment({
         );
       })
       .catch(() => undefined);
-  }, [homeVisible, loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
+  }, [loreOpen, inventoryOpen, skillbookOpen, room?.roomId, localParticipant?.focusState]);
 
   async function syncEncounterRoom(): Promise<EncounterRoomSnapshotDto | null> {
     const room = await ensureSoloLeaderRoom(avatarRef.current.id);
@@ -616,54 +615,64 @@ export function GameEnvironment({
   async function acknowledgeRoomContinue(
     currentRoom: EncounterRoomSnapshotDto,
   ): Promise<EncounterRoomSnapshotDto> {
-    setLoreOpen(false);
-    setInventoryOpen(false);
-    setSkillbookOpen(false);
-    setHomeVisible(false);
+    const transitionBaseline = currentRoom;
 
+    let roomAfterContinue: EncounterRoomSnapshotDto;
     continueSubmitInFlightRef.current = true;
-
     try {
-      let workingRoom = currentRoom;
-      const local = workingRoom.participants.find((participant) => participant.isLocal);
-      if (local?.focusState !== 'none') {
-        workingRoom = await submitRoomFocus(avatarRef.current.id, 'none');
-        applySnapshotOnly(workingRoom);
-      }
-
-      const transitionBaseline = workingRoom;
-      let roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
-
-      if (localAvatarDeathPending(roomAfterContinue)) {
-        await completeAvatarDeathFlow(roomAfterContinue);
-        return roomAfterContinue;
-      }
-
-      const shouldChainSystemEventAdvance = (
-        transitionBaseline.roomState === 'system_event'
-        && roomAfterContinue.roomState === 'waiting_continue'
-        && canAdvanceRoomHint(roomAfterContinue)
-        && !encounterSnapshotAdvanced(transitionBaseline, roomAfterContinue)
-      );
-
-      if (shouldChainSystemEventAdvance) {
-        try {
-          roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
-        } catch (chainError) {
-          console.error('System-event advance chain failed; refreshing room', chainError);
-          const refreshed = await fetchActiveRoom(avatarRef.current.id);
-          if (refreshed) {
-            roomAfterContinue = refreshed;
-          }
-        }
-      }
-
-      await runEncounterAdvanceTransition(transitionBaseline, roomAfterContinue, roomAdvanceHooks);
-      await completeAvatarDeathFlow(roomAfterContinue);
-      return roomAfterContinue;
+      roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
     } finally {
       continueSubmitInFlightRef.current = false;
     }
+
+    if (localAvatarDeathPending(roomAfterContinue)) {
+      await completeAvatarDeathFlow(roomAfterContinue);
+      return roomAfterContinue;
+    }
+
+    if (
+      canAdvanceRoomHint(roomAfterContinue)
+      && (
+        roomAfterContinue.roomState === 'waiting_continue'
+        || roomAfterContinue.roomState === 'advancing'
+      )
+      && !encounterSnapshotAdvanced(transitionBaseline, roomAfterContinue)
+    ) {
+      try {
+        const refreshed = await fetchActiveRoom(avatarRef.current.id);
+        if (refreshed) {
+          roomAfterContinue = refreshed;
+        }
+      } catch (refreshError) {
+        console.error('Continue advance refresh failed', refreshError);
+      }
+    }
+
+    const shouldChainSystemEventAdvance = (
+      transitionBaseline.roomState === 'system_event'
+      && roomAfterContinue.roomState === 'waiting_continue'
+      && canAdvanceRoomHint(roomAfterContinue)
+      && !encounterSnapshotAdvanced(transitionBaseline, roomAfterContinue)
+    );
+
+    if (shouldChainSystemEventAdvance) {
+      continueSubmitInFlightRef.current = true;
+      try {
+        roomAfterContinue = await submitRoomContinue(avatarRef.current.id);
+      } catch (chainError) {
+        console.error('System-event advance chain failed; refreshing room', chainError);
+        const refreshed = await fetchActiveRoom(avatarRef.current.id);
+        if (refreshed) {
+          roomAfterContinue = refreshed;
+        }
+      } finally {
+        continueSubmitInFlightRef.current = false;
+      }
+    }
+
+    await runEncounterAdvanceTransition(transitionBaseline, roomAfterContinue, roomAdvanceHooks);
+    await completeAvatarDeathFlow(roomAfterContinue);
+    return roomAfterContinue;
   }
 
   async function handleContinueEncounter(
@@ -825,6 +834,7 @@ export function GameEnvironment({
     setVisible(false);
     await waitForFade();
     try {
+      await processRoomAway(avatarRef.current.id);
       await leaveAllEncounterRooms();
     } catch (error) {
       console.error('Failed to leave all rooms on home', error);

@@ -240,4 +240,21 @@ function secondaryEncounter(secondaryType: number, difficulty = 2): EncounterDat
   );
 }
 
+{
+  const rewardIds = [10001, 10002];
+  const usesPerReward = Math.max(1, getSolutionMap()['10001']!.mSolutionUses ?? 1);
+  const apply = applyEncounterInventoryChanges(
+    inventoryFromEntries(),
+    [],
+    rewardIds,
+    true,
+    null,
+    2,
+    2,
+  );
+
+  assert.equal(countSolutionCharges(apply.inventory, 10001), usesPerReward);
+  assert.equal(countSolutionCharges(apply.inventory, 10002), usesPerReward);
+}
+
 console.log('solutionConsumption.test.ts: all assertions passed');

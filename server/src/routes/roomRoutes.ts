@@ -7,6 +7,7 @@ import {
   leaveAllRoomsController,
   leaveRoomController,
   listPendingHelpController,
+  processRoomAwayController,
   requestHelpController,
   respondHelpController,
   setSlotStateController,
@@ -26,6 +27,7 @@ roomRoutes.post('/join', joinRoomController);
 roomRoutes.post('/join/friend', joinFriendRoomController);
 roomRoutes.post('/leave', leaveRoomController);
 roomRoutes.post('/leave/all', leaveAllRoomsController);
+roomRoutes.post('/away', processRoomAwayController);
 roomRoutes.post('/kick', kickRoomParticipantController);
 roomRoutes.post('/slot', setSlotStateController);
 roomRoutes.post('/choice', submitRoomChoiceController);
