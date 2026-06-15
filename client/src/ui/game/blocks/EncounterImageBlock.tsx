@@ -571,7 +571,6 @@ export function EncounterImageBlock({
           disabled={continuePending}
           diceOutcomeIcon={diceButtonAsset}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
-          encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
           avatarLevel={witnessResultSnapRef.current.avatarLevel}
           encounterId={witnessResultSnapRef.current.encounterId}
           hidden={loreOpen || inventoryOpen || skillbookOpen}
@@ -599,7 +598,6 @@ export function EncounterImageBlock({
           showLoreGemReward={showLoreGemReward}
           encounterId={encounter.encounterId}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
-          encounterRewardAmount={encounter.encounterRewardAmount ?? 1}
           avatarLevel={avatarLevel}
           hidden={loreOpen || inventoryOpen || skillbookOpen}
           inventory={inventory}

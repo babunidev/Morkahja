@@ -39,10 +39,8 @@ import {
 } from '@shared/diceCatalog.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
-  DEATH_ENCOUNTER_ID,
-  visibleEncounterRewardIds,
+  visibleEncounterRewards,
 } from '../visibleEncounterRewards.js';
-import { deathEncounterEssenceUses } from '@shared/deathEncounter';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   FADE_DURATION_MS,
@@ -415,7 +413,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     disabled = false,
     showLoreGemReward = false,
     encounterDifficulty: _encounterDifficulty,
-    encounterRewardAmount = 1,
     avatarLevel = 1,
     encounterId,
     encounterSnapshotId,
@@ -441,7 +438,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     disabled?: boolean;
     showLoreGemReward?: boolean;
     encounterDifficulty: number;
-    encounterRewardAmount?: number;
     avatarLevel?: number;
     encounterId: number;
     encounterSnapshotId?: string;
@@ -489,7 +485,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const outcomeLabel = outcome === null ? null : displayRollOutcome(outcome);
   const displayRoll = roll === null ? null : displayRollAsD20(roll);
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
-  const isDeathEncounter = encounterId === DEATH_ENCOUNTER_ID;
   const usedSolutions = readOnlyWitness
     ? []
     : usedEncounterSolutions({ inventory, usedSolutionIds });
@@ -498,33 +493,22 @@ export const ResultBlock = forwardRef(function ResultBlock(
     : lostSolutionIds.length > 0
       ? encounterLossesFromSolutionIds({ inventory, lostSolutionIds, usedSolutionIds })
       : [];
-  const rewards = visibleEncounterRewardIds({
+  const rewards = visibleEncounterRewards({
     encounterId,
     prosperityRewardId,
     rewardIds,
     outcome,
-  }).reduce<VisibleReward[]>((visibleRewards, rewardId) => {
-    const solution = solutionsById[String(rewardId)];
+    avatarLevel,
+    getSolutionUses: (rewardId) => solutionsById[String(rewardId)]?.mSolutionUses,
+  }).flatMap(({ solutionId, quantity }) => {
+    const solution = solutionsById[String(solutionId)];
 
     if (!solution) {
-      return visibleRewards;
+      return [];
     }
 
-    const quantity = isLevelUp
-      ? Math.max(1, (solution.mSolutionUses ?? 1) + (avatarLevel + 1))
-      : isDeathEncounter && outcome
-        ? deathEncounterEssenceUses(outcome)
-        : Math.max(1, (solution.mSolutionUses ?? 1) * Math.max(1, encounterRewardAmount));
-    const existing = visibleRewards.find((reward) => reward.solution.mSolutionID === rewardId);
-
-    if (existing) {
-      existing.quantity += quantity;
-      return visibleRewards;
-    }
-
-    visibleRewards.push({ quantity, solution });
-    return visibleRewards;
-  }, []);
+    return [{ quantity, solution }];
+  });
 
   const visible = roll !== null || (readOnlyWitness && (rewards.length > 0 || isLevelUp));
 
