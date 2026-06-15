@@ -3267,15 +3267,15 @@
     "mEncounterSolutiuonB": 10158,
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 0,
-    "mEncounterSolutiuonTypeB": 10,
-    "mEncounterSolutiuonTypeC": 9,
-    "mEncounterSolutiuonTypeD": 0,
+    "mEncounterSolutiuonTypeA": 30,
+    "mEncounterSolutiuonTypeB": 40,
+    "mEncounterSolutiuonTypeC": 39,
+    "mEncounterSolutiuonTypeD": 29,
     "mEncounterText": "This wolf, draped in ethereal, translucent fur, prowls the fog-enshrouded corners of Everwinter Valley, her presence almost as intangible as the mists themselves. Her ghostly silhouette, barely distinguishable from the swirling fog, moves with a haunting grace. Those fortunate—or unfortunate—enough to cross her path are met with luminescent eyes, which seem to hold the weight of countless ages. As the chill of the valley deepens, Misthowl's eerie, melancholic howls pierce the stillness, echoing with premonitions of nature's wrath. To many, her mournful cries serve as a forewarning—a spectral siren signaling the imminent fury of storms or the ruthless descent of avalanches upon the valley's icy expanses.",
     "mEncounterTitle": "Misthowl",
-    "mEncounterType": 1,
+    "mEncounterType": 3,
     "mEncounterElement": "Spirit",
-    "mEncounterSubtype": "Combat"
+    "mEncounterSubtype": "Inspiration"
   },
   "20141": {
     "mEncounterDifficulty": 2,
