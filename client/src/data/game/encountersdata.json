@@ -605,15 +605,15 @@
     "mEncounterSolutiuonB": 10024,
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
-    "mEncounterSolutiuonTypeA": 0,
-    "mEncounterSolutiuonTypeB": 10,
-    "mEncounterSolutiuonTypeC": 9,
-    "mEncounterSolutiuonTypeD": 0,
+    "mEncounterSolutiuonTypeA": 10,
+    "mEncounterSolutiuonTypeB": 28,
+    "mEncounterSolutiuonTypeC": 27,
+    "mEncounterSolutiuonTypeD": 9,
     "mEncounterText": "Amidst the scorched ruins of a once-thriving land, an Ashen Revenant Witch casts her toxic spells, a sinister figure shrouded in death and decay. Her charred and cracked form is enveloped by a stream of pulsating green poisonous magic, weaving and coiling around her body like a sinister second skin. The swirling energies form shapes that almost resemble garments, granting her an air of dark majesty and dread. As the Ashen Revenant Witch weaves her wicked enchantments, a sickly cloud of toxic energies emanates from her, filling the air with a choking miasma. Her surroundings wither and rot under her malevolent gaze, the very earth itself seeming to recoil in horror at her twisted presence. Hostility seethes from the Ashen Revenant Witch, a palpable force of malice that threatens to consume all who dare to cross her path. With every hissed incantation, her power grows, the venomous magic she commands eager to spread its deadly embrace. This fearsome sorceress is an agent of ruin and despair, her very existence a herald of the darkness that threatens to swallow the world whole.",
     "mEncounterTitle": "Ashen Revenant Witch",
     "mEncounterType": 1,
     "mEncounterElement": "Arcana",
-    "mEncounterSubtype": "Combat"
+    "mEncounterSubtype": "Purge"
   },
   "20020": {
     "mEncounterDifficulty": 1,
