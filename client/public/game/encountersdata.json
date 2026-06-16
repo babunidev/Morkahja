@@ -2476,14 +2476,14 @@
     "mEncounterSolutiuonC": 0,
     "mEncounterSolutiuonD": 0,
     "mEncounterSolutiuonTypeA": 0,
-    "mEncounterSolutiuonTypeB": 32,
-    "mEncounterSolutiuonTypeC": 13,
+    "mEncounterSolutiuonTypeB": 26,
+    "mEncounterSolutiuonTypeC": 25,
     "mEncounterSolutiuonTypeD": 0,
     "mEncounterText": "High in the Frostwind Mountains, a deafening crack resonates, the ominous precursor to a sudden, colossal rockslide. Huge boulders, dislodged from their millennia-old resting places, begin to descend with an unstoppable momentum, churning up clouds of fine dust and snow as they crash down the rugged slopes. The ground beneath reverberates with the sheer power of the avalanche of stone, a visceral reminder of nature's formidable might. The air fills with the echoing rumble of tumbling rocks, the sound bouncing off the mountain walls, making the very atmosphere shudder. As the final echoes slowly fade, a hazy cloud of dust and snowflakes hangs in the air, painting an eerie tableau of destruction. The once accessible pathway is now an insurmountable mound of stone and debris, the landscape irrevocably altered by the mountain's sudden, dramatic release.",
     "mEncounterTitle": "Sudden Rockslide",
-    "mEncounterType": 2,
+    "mEncounterType": 3,
     "mEncounterElement": "Earth",
-    "mEncounterSubtype": "RareFind"
+    "mEncounterSubtype": "Protect"
   },
   "20105": {
     "mEncounterDifficulty": 1,
