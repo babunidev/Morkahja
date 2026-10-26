@@ -202,7 +202,7 @@ function DirectDeveloperDonateSection() {
           visualStyle={donateButtonVisualStyle}
           {...tooltipHandlers}
         >
-          Donate directly to Babunigaming
+          Donate directly to Babuni.dev
         </PanelButton>
       </div>
     </div>
