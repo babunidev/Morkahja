@@ -60,9 +60,9 @@ const OPERATIONAL_TOTAL_TODAY = (
 
 const CREDITS: CreditEntry[] = [
   {
-    id: 'alexander-ludwig',
-    name: 'Alexander Ludwig',
-    roles: 'Game Design · Visual Design · Worldbuilding · Software Development',
+    id: 'babuni-dev',
+    name: 'Babuni.dev',
+    roles: 'Author · Game Design · Visual Design · Worldbuilding · Software Development',
     paragraphs: [
       'This project is created out of a deep love for worldbuilding, game design, and creative expression. It is a way of bringing ideas to life and shaping imagined worlds into something playable and real. Every part of the process — from visuals to systems to narrative to implementation — is driven by a clear personal vision and a strong desire to explore and realize those ideas fully.',
       'The game is made first and foremost for myself, guided by a defined creative direction, with the hope that others can find joy in it as well. Nothing means more than knowing that players enjoy it, even if only a fraction as much as the enjoyment that goes into creating it.',
