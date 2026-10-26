@@ -1,5 +1,6 @@
 {
   "name": "@morkahja/shared",
+  "author": "Babuni.dev",
   "private": true,
   "version": "0.9.0-beta.2.2",
   "type": "module",
