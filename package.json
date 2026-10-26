@@ -1,5 +1,6 @@
 {
   "name": "morkahja",
+  "author": "Babuni.dev",
   "version": "0.9.0-beta.2.2",
   "private": true,
   "workspaces": [
