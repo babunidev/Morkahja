@@ -8,13 +8,13 @@ Hold: confirm redistribution permission for contributed music, artwork and histo
 
 Reviewed baseline: `fb4ca379dc6f109de30f29e3ba3debf65b95477e`; 1494 reachable commits. Gitleaks v8.30.1 scanned all fetched refs with fully redacted reporting; a separate pass inspected unique historical blobs for credential markers and sensitive filenames. The three Morkahja scanner alerts were catalogue identifiers, not credentials. No confirmed credential leak was found by these checks. Automated checks cannot establish asset ownership or prove the absence of every secret or personal detail in binary material.
 
-No repository visibility was changed. No live service, player account, database or deployment was accessed. Private review details remain outside the public portfolio repository. No application behavior was changed or runtime/build test claimed.
+Repository visibility is now public, verified on 31 October 2026. The agent did not change visibility. Media/license review items below remain unresolved by that visibility change. No live service, player account, database or deployment was accessed. Private review details remain outside the public portfolio repository. No application behavior was changed or runtime/build test claimed.
 
 ## Remaining publication steps
 
 1. Resolve any repository-specific hold above and review the exact final commit before publishing.
 2. Babuni.dev chooses a license for original code/documentation and confirms separate permissions for contributed or third-party media. No root project license was found in this baseline. Public visibility and open-source licensing are separate decisions; do not apply a blanket license to third-party assets.
-3. Babuni.dev changes visibility when ready. Then verify anonymous access, update the portfolio's source mapping and import/build its documentation snapshot.
+3. Public visibility is now observed. Verify anonymous document access, then update the portfolio's source mapping and import/build its documentation snapshot.
 4. Keep the current public documentation edition connected until the replacement is verified. Retire the duplicate edition afterwards; deleting repository history is not part of this preparation.
 
 ## Direction and alternatives
