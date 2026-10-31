@@ -16,3 +16,7 @@ Historical change details are in [DEVLOG.md](DEVLOG.md); do not reinterpret all 
 - Added missing `docs/DESIGN.md` and `docs/CONTENT.md` to document visual evolution and content provenance.
 - Preserved the original `DEVLOG.md`, application code, game assets, contributor credits and historical notes unchanged.
 - Static documentation inspection only; no new browser, server, release or production test was executed.
+
+## 2026-10-31 — Publication preparation
+
+Recorded Babuni.dev’s direction to publish the actual project after review and retire its separate documentation edition afterwards. Confirmed the existing standard document structure; added `docs/PUBLISHING.md`. No runtime or visibility changes.

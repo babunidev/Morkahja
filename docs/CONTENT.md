@@ -23,3 +23,7 @@ For each featured encounter, illustration, mechanic or worldbuilding entry, reco
 ## Unresolved
 
 A full canon index, rights inventory, approved visual gallery, playable deployment status and historical authorship of individual reconstructed assets require separately sourced review.
+
+## 2026-10-31 — Publication boundaries
+
+The existing standard documentation is the project source for the future portfolio connection. See [publication preparation](PUBLISHING.md). Preserve contributor credits, canonical-source boundaries and original journals. No private findings, live records or secret values are copied into the portfolio.

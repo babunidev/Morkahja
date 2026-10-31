@@ -21,3 +21,7 @@ The May 23 journal reports a Hetzner-hosted public alpha, HTTPS/nginx/PM2 archit
 ## D-005 — Documentation audit #30
 
 **Babuni.dev direction:** Continue the GitHub documentation sequence, preserving creative ownership and keeping code untouched. **AI implementation:** Create missing design/content records and cross-reference chronological evidence. **Status:** Documentation committed; no source/runtime changes and no new game test results.
+
+## 2026-10-31 — Canonical repository publication direction
+
+Babuni.dev chose the actual project repository as the intended public source, replacing the earlier documentation-only edition once review and anonymous access succeed. Retain the current public edition during the transition. License and third-party redistribution decisions remain explicit author decisions.

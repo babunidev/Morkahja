@@ -23,3 +23,7 @@ The project's **primary development record** is the [original dated DEVLOG](DEVL
 The original record follows the move from structured encounter/solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It traces the encounter loop, SCRIBES event feed, avatar lifecycle, achievement/reward systems, expansion unlocks, friends and social surfaces, plus later deployment and security considerations. These stages are historical **development claims from the journal**, not new tests performed in this audit.
 
 **Additional documentation:** [Visual and interaction design](docs/DESIGN.md) · [Content and provenance](docs/CONTENT.md) · [AI collaboration](docs/AI_COLLABORATION.md). The audit preserves Babuni.dev's authorship, separately credits music contributor Nikita Malko, and does not modify the original journal, game code or player data.
+
+## Public repository preparation — 31 October 2026
+
+The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
