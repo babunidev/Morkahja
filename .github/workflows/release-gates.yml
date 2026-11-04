@@ -45,6 +45,12 @@ jobs:
         run: npm run test:dice --prefix server
       - name: Server room regression tests
         run: npm run test:rooms --prefix server
+      - name: Encounter resolution smoke test
+        run: npm run test:encounter
+      - name: Encounter lifecycle regression
+        run: npm run test:lifecycle
+      - name: Client visible rewards unit test
+        run: npm run test:visible-rewards
       - name: Client build
         run: npm run build --prefix client
       - name: Typecheck

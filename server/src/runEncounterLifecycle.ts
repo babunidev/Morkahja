@@ -1,12 +1,12 @@
 /**
  * End-to-end authoritative loop (server-only):
- * createEncounter → getActiveEncounter → resolveEncounter → clearEncounter
+ * createEncounter → getActiveEncounter → resolveEncounter → next active encounter
  *
  * Usage: npm run test:lifecycle
  */
+import { randomUUID } from 'node:crypto';
 import { interpretRoll } from './engine/diceInterpreter.js';
 import {
-  clearEncounter,
   createEncounter,
   ensureAvatar,
   getActiveEncounter,
@@ -16,8 +16,9 @@ import type { PlayerEncounterAction } from './types/encounterSnapshot.js';
 import type { AvatarDocument } from './types/avatar.js';
 import { getEncounterById } from './services/gameData.js';
 
-const PLAYER_ID = process.env.MORKAHJA_PLAYER_ID ?? 'test-player';
-const AVATAR_ID = process.env.MORKAHJA_AVATAR_ID ?? 'test-avatar';
+// Avoid overwriting persistent test/player records when rerunning the smoke test.
+const PLAYER_ID = process.env.MORKAHJA_PLAYER_ID ?? `lifecycle-test-${randomUUID()}`;
+const AVATAR_ID = process.env.MORKAHJA_AVATAR_ID ?? `lifecycle-avatar-${randomUUID()}`;
 
 const TEST_AVATAR: AvatarDocument = {
   profile: { roleRewardType: 37, raceRewardType: 40 },
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
   if (loaded.state !== 'active') {
     throw new Error(`Expected active snapshot, got ${loaded.state}`);
   }
-  console.log('3. getActiveEncounter → active snapshot matches Firebase');
+  console.log('3. getActiveEncounter → active snapshot matches PostgreSQL');
 
   const encounter = getEncounterById(loaded.encounterId);
   console.log(
@@ -69,14 +70,14 @@ async function main(): Promise<void> {
   console.log(`   rollC → ${interpretRoll(loaded.rollC)}`);
   console.log(`   ${resolution.message}`);
 
-  const after = await getActiveEncounter(PLAYER_ID, AVATAR_ID);
-
-  if (!after || after.state !== 'resolved') {
-    throw new Error('Expected resolved snapshot to remain after resolution');
+  if (snapshot.resolved || snapshot.state !== 'active' || snapshot.snapshotId === created.snapshotId) {
+    throw new Error('Expected a different active snapshot after resolution');
   }
-  console.log('5. getActiveEncounter → resolved snapshot retained');
-  await clearEncounter(PLAYER_ID, AVATAR_ID);
-  console.log('6. clearEncounter → manual cleanup after resolution');
+  const after = await getActiveEncounter(PLAYER_ID, AVATAR_ID);
+  if (!after || after.snapshotId !== snapshot.snapshotId || after.state !== 'active') {
+    throw new Error('Expected the next active encounter to persist after resolution');
+  }
+  console.log('5. getActiveEncounter → next active snapshot retained');
 
   console.log('\n=== Loop complete ===');
 }

@@ -32,6 +32,10 @@ This section describes the implementation on the PR branches, **not yet `main` o
 
 **Safeguard:** Keep the developer's original worktree and data separate from PR test worktrees. Database/schema, session data, purchase flows, rewards and active rooms warrant targeted concurrency tests before merging into a production deployment.
 
+### Standalone encounter/lifecycle test assumptions (PR #6)
+
+`runEncounterTest.ts` accepts an optional local player JSON fixture but supplies a deterministic in-memory dice fixture when it is absent, so a clean checkout can execute it. `runEncounterLifecycle.ts` now checks the actual `continueEncounter` contract: resolve/commit and persist a *different active* encounter snapshot, rather than retaining a resolved snapshot and invoking intentionally disabled `clearEncounter()`. Its generated test IDs avoid changing the pre-existing `test-player` test account by default. The client rewards unit test requires the `client/tsconfig.app.json` `@shared` path aliases when run through `tsx`. These are test-only adaptations; original runtime behavior and manual gameplay remain unverified.
+
 ### Release-gate type maintenance (PR #6)
 
 The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. GitHub Actions release-gates run #69 passed all steps on PR #6 at commit `c9a1c311`. The integrated local worktree and production have not been validated.

@@ -16,6 +16,7 @@
     "verify:static-data": "node scripts/verify-static-game-data.mjs",
     "test:encounter": "npm run test:encounter --prefix server",
     "test:lifecycle": "npm run test:lifecycle --prefix server",
+    "test:visible-rewards": "tsx --tsconfig client/tsconfig.app.json client/src/ui/game/visibleEncounterRewards.test.ts",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",
     "release:check": "npm run verify:static-data && npm run test:session-auth --prefix server && npm run test:achievements --prefix server && npm run test:dice --prefix server && npm run typecheck"
   },
