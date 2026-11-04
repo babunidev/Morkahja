@@ -31,3 +31,7 @@ This section describes the implementation on the PR branches, **not yet `main` o
 - **Session tabs:** Multiple browser tabs may share one player session and operate on different avatars. This is observed and intentionally left unchanged, not validated as a complete multi-avatar concurrency design.
 
 **Safeguard:** Keep the developer's original worktree and data separate from PR test worktrees. Database/schema, session data, purchase flows, rewards and active rooms warrant targeted concurrency tests before merging into a production deployment.
+
+### Release-gate type maintenance (PR #6)
+
+The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. A complete CI run is required before claiming the release gate is restored.

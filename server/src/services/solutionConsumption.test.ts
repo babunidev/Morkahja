@@ -4,7 +4,7 @@ import {
   createEncounterRollSnapshot,
   resolveEncounter,
 } from '../engine/encounterResolver.js';
-import type { EncounterData } from '../engine/types.js';
+import type { EncounterData, EncounterDifficulty } from '../engine/types.js';
 import type { AvatarInventory } from '../types/avatar.js';
 import {
   applyEncounterInventoryChanges,
@@ -70,12 +70,17 @@ const unfavorableRolls = createEncounterRollSnapshot({
   rollE: 10,
 });
 
-function primaryEncounter(primarySolutionId: number, difficulty = 2): EncounterData {
+function primaryEncounter(primarySolutionId: number, difficulty: EncounterDifficulty = 2): EncounterData {
   return {
     mEncounterID: 20001,
     mEncounterTitle: 'Solution consumption test',
     mEncounterDifficulty: difficulty,
-    mEncounterRewardType: 0,
+    mEncounterExpansion: 0,
+    mEncounterFollow: 0,
+    mEncounterImageName: 'test_encounter',
+    mEncounterText: 'Test encounter',
+    mEncounterType: 2,
+    mEncounterRewardType: 1,
     mEncounterRewardAmount: 0,
     mEncounterSolutiuonA: primarySolutionId,
     mEncounterSolutiuonTypeA: getSolutionMap()[String(primarySolutionId)]!.mSolutionType,
@@ -85,15 +90,20 @@ function primaryEncounter(primarySolutionId: number, difficulty = 2): EncounterD
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  } as EncounterData;
+  } satisfies EncounterData;
 }
 
-function secondaryEncounter(secondaryType: number, difficulty = 2): EncounterData {
+function secondaryEncounter(secondaryType: number, difficulty: EncounterDifficulty = 2): EncounterData {
   return {
     mEncounterID: 20001,
     mEncounterTitle: 'Secondary consumption test',
     mEncounterDifficulty: difficulty,
-    mEncounterRewardType: 0,
+    mEncounterExpansion: 0,
+    mEncounterFollow: 0,
+    mEncounterImageName: 'test_encounter',
+    mEncounterText: 'Test encounter',
+    mEncounterType: 2,
+    mEncounterRewardType: 1,
     mEncounterRewardAmount: 0,
     mEncounterSolutiuonA: 99999,
     mEncounterSolutiuonTypeA: secondaryType,
@@ -103,7 +113,7 @@ function secondaryEncounter(secondaryType: number, difficulty = 2): EncounterDat
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  } as EncounterData;
+  } satisfies EncounterData;
 }
 
 {

@@ -109,6 +109,7 @@ import {
   clearSoloCheckpointForAvatar,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
+  type SoloRoomCheckpoint,
 } from './soloRoomCheckpointService.js';
 
 /**

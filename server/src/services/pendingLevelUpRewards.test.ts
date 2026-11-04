@@ -9,6 +9,7 @@ import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type { RoomParticipant } from '../domain/rooms/RoomParticipant.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { getProgression, setProgression } from '../db/postgresDocumentStore.js';
+import type { AvatarProgression } from '../domain/avatar/AvatarProgression.js';
 import { ensureAvatar } from './encounterGenerator.js';
 import { savePlayerAvatar } from './playerService.js';
 import {
@@ -152,7 +153,7 @@ await ensureAvatar(session.playerId, avatarId, {
   assert.equal(afterContinue.roomState, 'system_event');
   assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
-  const progressionAfterCommit = await getProgression(session.playerId, avatarId);
+  const progressionAfterCommit = await getProgression<AvatarProgression>(session.playerId, avatarId);
   assert.equal(progressionAfterCommit?.pendingLevelUpRewards, true);
 
   await leaveRoom(session.playerId, avatarId);
@@ -189,7 +190,7 @@ await ensureAvatar(session.playerId, avatarId, {
 
   await submitContinue(session.playerId, avatarId);
 
-  const progressionAfterRewards = await getProgression(session.playerId, avatarId);
+  const progressionAfterRewards = await getProgression<AvatarProgression>(session.playerId, avatarId);
   assert.equal(progressionAfterRewards?.pendingLevelUpRewards, false);
 }
 
