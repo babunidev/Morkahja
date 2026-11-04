@@ -1440,4 +1440,57 @@ assert.ok(
   ),
 );
 
+
+// Concurrent joiners compete for two party slots. Both may join once, but a
+// third must fail without overwriting either committed participant.
+const joinRaceHostId = `join-race-host-${Date.now()}`;
+const joinRaceHostAvatarId = `join-race-host-avatar-${Date.now()}`;
+await savePlayerAvatar(joinRaceHostId, {
+  id: joinRaceHostAvatarId, name: 'Join Race Host', race: 'Rokur', role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior', frame: 'm_frame_01', createdAt: Date.now(),
+});
+const joinRaceRoom = await createRoom(joinRaceHostId, joinRaceHostAvatarId);
+const raceGuests = Array.from({ length: 3 }, (_, index) => ({
+  playerId: `join-race-guest-${index}-${Date.now()}`,
+  avatarId: `join-race-avatar-${index}-${Date.now()}`,
+}));
+for (const guest of raceGuests) {
+  await savePlayerAvatar(guest.playerId, {
+    id: guest.avatarId, name: 'Join Race Guest', race: 'Verdani', role: 'Mage',
+    portrait: 'm_portrait_verdani_mage', frame: 'm_frame_01', createdAt: Date.now(),
+  });
+}
+const joinedRace = await Promise.allSettled(
+  raceGuests.map((guest) => joinRoom(guest.playerId, guest.avatarId, joinRaceRoom.roomId)),
+);
+const successfulJoins = joinedRace.filter((entry) => entry.status === 'fulfilled');
+const deniedJoins = joinedRace.filter((entry) => entry.status === 'rejected');
+assert.equal(successfulJoins.length, 2, 'exactly two open party slots must be awarded');
+assert.equal(deniedJoins.length, 1);
+assert.ok(deniedJoins[0]?.status === 'rejected' && deniedJoins[0].reason instanceof RoomError);
+const storedJoinRaceRoom = await loadEncounterRoom(joinRaceRoom.roomId);
+assert.equal(storedJoinRaceRoom?.participants.length, 3);
+assert.deepEqual(
+  storedJoinRaceRoom?.participants.map((participant) => participant.slotIndex).sort(),
+  [0, 1, 2],
+  'concurrent arrivals cannot share a slot',
+);
+const storedGuestIds = new Set(
+  storedJoinRaceRoom?.participants.map((participant) => participant.playerId),
+);
+for (let index = 0; index < raceGuests.length; index += 1) {
+  if (joinedRace[index]?.status === 'fulfilled') {
+    assert.ok(storedGuestIds.has(raceGuests[index]!.playerId));
+  } else {
+    assert.ok(!storedGuestIds.has(raceGuests[index]!.playerId));
+  }
+}
+// Repeated parallel requests from a member must not create duplicate entries.
+const winningGuest = raceGuests[joinedRace.findIndex((entry) => entry.status === 'fulfilled')]!;
+await Promise.all([
+  joinRoom(winningGuest.playerId, winningGuest.avatarId, joinRaceRoom.roomId),
+  joinRoom(winningGuest.playerId, winningGuest.avatarId, joinRaceRoom.roomId),
+]);
+assert.equal((await loadEncounterRoom(joinRaceRoom.roomId))?.participants.length, 3);
+
 console.log('roomService.test.ts passed');

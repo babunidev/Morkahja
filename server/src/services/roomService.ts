@@ -2150,57 +2150,75 @@ export async function joinRoom(
 
   await leaveOtherOpenRooms(playerId, roomId);
 
-  const room = await loadEncounterRoom(roomId);
-  if (!room || room.roomState === 'closed') {
-    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
-  }
+  // Slot selection, membership checks and the room update must share a row
+  // lock. Otherwise two simultaneous joiners can reserve the same slot and
+  // overwrite one another's entire room document.
+  const result = await withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
 
-  if (room.participants.some((participant) => participant.playerId === playerId)) {
-    const reengaged = await reengageReturningParticipantIfNeeded(room, playerId);
+    if (room.participants.some((participant) => participant.playerId === playerId)) {
+      return { room, rejoin: true };
+    }
+
+    const slotIndex = findOpenSlot(room);
+    if (slotIndex === null) {
+      throw new RoomError('Room is full', 409, 'ROOM_FULL');
+    }
+
+    const slotState = room.slotStates[slotIndex];
+    if (slotState === 'locked') {
+      throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
+    }
+    if (slotState === 'friends_only') {
+      const leader = await loadPlayer(room.leaderPlayerId);
+      if (!(leader?.friendIds ?? []).includes(playerId)) {
+        throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
+      }
+    }
+
+    if (room.roomState !== 'system_event' && room.slotEncounterSnapshots?.length !== 3) {
+      // Legacy rooms may not yet have per-slot rolls. Seed while holding the
+      // room lock; never save a stale room snapshot outside the transaction.
+      const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId);
+      if (!encounter) {
+        throw new RoomError('Room encounter is unavailable', 409, 'ROOM_NOT_READY');
+      }
+      const prepared = room.activeEncounterSnapshot.preparedEncounter
+        ?? prepareNextEncounter(encounter, room.mergedExpansions);
+      room = await seedAllSlotEncountersForRoom(room, encounter, prepared);
+    }
+
+    const updated: EncounterRoom = {
+      ...room,
+      participants: [
+        ...room.participants,
+        createParticipantForRoomJoin(room, playerId, avatarId, slotIndex),
+      ],
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    const snapshot = updated.slotEncounterSnapshots[slotIndex];
+    if (snapshot) {
+      await transaction.setActiveEncounter(
+        playerId,
+        avatarId,
+        bindSnapshotToParticipant(snapshot, playerId, avatarId),
+      );
+    }
+    return { room: updated, rejoin: false };
+  });
+
+  if (result.rejoin) {
+    const reengaged = await reengageReturningParticipantIfNeeded(result.room, playerId);
     await setPresenceInRoom(playerId, roomId);
     return reconcilePendingLevelUpForRoom(reengaged);
   }
 
-  const slotIndex = findOpenSlot(room);
-  if (slotIndex === null) {
-    throw new RoomError('Room is full', 409, 'ROOM_FULL');
-  }
-
-  const slotState = room.slotStates[slotIndex];
-  if (slotState === 'locked') {
-    throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
-  }
-
-  if (slotState === 'friends_only') {
-    const leader = await loadPlayer(room.leaderPlayerId);
-    const friendIds = leader?.friendIds ?? [];
-    if (!friendIds.includes(playerId)) {
-      throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
-    }
-  }
-
-  const roomWithJoiner = room.roomState === 'system_event'
-    ? room
-    : await ensureSlotEncounterSnapshots(room);
-  const updated: EncounterRoom = {
-    ...roomWithJoiner,
-    participants: [
-      ...roomWithJoiner.participants,
-      createParticipantForRoomJoin(roomWithJoiner, playerId, avatarId, slotIndex),
-    ],
-    updatedAt: nowMs(),
-  };
-
-  await saveEncounterRoom(updated);
-  await saveActiveEncounter(
-    bindSnapshotToParticipant(
-      updated.slotEncounterSnapshots[slotIndex],
-      playerId,
-      avatarId,
-    ),
-  );
   await setPresenceInRoom(playerId, roomId);
-  return reconcilePendingLevelUpForRoom(updated);
+  return reconcilePendingLevelUpForRoom(result.room);
 }
 
 export async function leaveRoom(playerId: string, avatarId?: string): Promise<void> {
