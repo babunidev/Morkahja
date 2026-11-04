@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-04 — Unreleased: integration/typecheck and regression-test repair (PR #7)
+
+- Brought legacy encounter and solution test fixtures into alignment with current `EncounterData`/`SolutionData` types; typed pending-level-up progression reads and imported the existing checkpoint type in `roomService.ts`.
+- Corrected initial avatar creation to persist matching starting inventory and avatar contents in one transaction; refined Hearth Blessing notification deduplication.
+- Added targeted encounter, level-up, room, and inventory tests to GitHub Actions; updated tests to isolate distinct solo scenarios, acknowledge the existing one-Continue level-up flow and verify fresh room rejoin events by ID within the bounded Scribes feed.
+- **Status:** Prepared as a stacked unmerged PR, not integrated with unpublished local changes, and not deployed. Initial PR #7 CI typecheck passed; expanded regression-suite validation and manual gameplay acceptance remain separate tasks.
+
 ## 2026-11-04 — Unreleased: authentication and persistence hardening (PRs #5 and #6)
 
 - **PR #5** (`security/one-time-session-challenges`): Added short-lived, single-use server-issued authentication challenges, bound to identity, device and registration/restoration purpose, with PostgreSQL-backed consumption and dual signatures. Updated client onboarding/recovery and authentication integration fixtures. **Open; not merged or deployed.**

@@ -38,3 +38,14 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] **Deferred, intentionally unchanged:** Smooth multi-tab, multi-avatar gameplay as an eventual supported feature. Existing simultaneous tabs are acceptable for now; verify independent encounter/inventory/progression state, reward conservation and session consistency before promising full support.
 
 **Evidence boundary:** The Nobara developer reported the isolated game working and both automated security/persistence tests passing on 4 November. GitHub Actions checks succeeded individually but the complete typecheck failed; neither PR was merged or deployed.
+
+## Integration review in progress — 4 November 2026
+
+- [x] **Prepared on PR #7 (unmerged):** Fix the previously failing TypeScript fixtures and missing `SoloRoomCheckpoint` import. An initial CI run passed full server/shared typechecking; an expanded suite is under validation.
+- [x] **Review correction (unmerged):** Persist initial avatar items and avatar state in the same PostgreSQL transaction; assert the returned inventory matches stored items. Deduplicate the daily blessing readiness notification under concurrent claims.
+- [x] **Added to CI:** Encounter resolver/solution-consumption/level-up, room and starting-inventory test commands. Tests exposed stale assumptions about solo checkpoints, single-Continue level-ups, and bounded Scribes-feed counts; their expectations were corrected without changing intended rules.
+- [ ] **Full expanded CI release gate:** Confirm the newest branch head passes all steps, including room suite and server typecheck.
+- [ ] **Original local integration:** Reconcile unpublished commits and uncommitted changes safely in a separate worktree. Do not mark the original checkout integrated until done.
+- [ ] **Manual acceptance:** Execute the [integration regression protocol](docs/REGRESSION.md) and record real player, avatar, room, reward and death results. No production deployment has occurred.
+
+**Previous October audit headings are historical** and do not override the more recent status above.

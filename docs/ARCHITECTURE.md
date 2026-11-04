@@ -31,3 +31,10 @@ This section describes the implementation on the PR branches, **not yet `main` o
 - **Session tabs:** Multiple browser tabs may share one player session and operate on different avatars. This is observed and intentionally left unchanged, not validated as a complete multi-avatar concurrency design.
 
 **Safeguard:** Keep the developer's original worktree and data separate from PR test worktrees. Database/schema, session data, purchase flows, rewards and active rooms warrant targeted concurrency tests before merging into a production deployment.
+
+## Integration review corrections — PR #7 (unmerged, 4 November 2026)
+
+- Current `savePlayerAvatar` integration code constructs the avatar and its initial inventory from the locked database state and writes both together in one PostgreSQL transaction. The returned starting inventory must equal the persisted inventory; tests assert this equality to prevent transient empty starter items.
+- The existing solo system-event path advances after a single successful Continue; regression fixtures use independent avatars to avoid restoring the previous system-event checkpoint. Scribes activity feeds are bounded, so tests check newly recorded event IDs rather than counting every historical event in the window.
+- The test runner now covers session authentication, atomic persistence, achievements, dice, encounter/solution, level-up, room and inventory cases. The comprehensive manual browser acceptance remains **unverified**. See [regression protocol](REGRESSION.md).
+- Existing `pg` warnings about concurrent `client.query()` on the same transaction client warrant separate future maintenance; do not confuse a deprecation warning with verified data loss.

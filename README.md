@@ -35,3 +35,7 @@ Recent security and persistence work is under review, **not merged into `main` o
 On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
 
 Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
+
+## Integration regression preparation — 4 November 2026
+
+The stacked [release-gate integration review (PR #7)](https://github.com/babunidev/Morkahja/pull/7) builds on PRs #5 and #6, correcting outdated TypeScript test fixtures, room/regression-test expectations and initial-avatar inventory consistency. It is still unmerged; local unpublished work is not reconciled. The [regression protocol](docs/REGRESSION.md) separates CI checks from manual gameplay acceptance.
