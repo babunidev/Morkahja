@@ -1135,7 +1135,24 @@ partyRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(partyRoom);
-await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+const joinedPartyRoom = await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+// The test verifies leave/continue bookkeeping, not random fate. Favorable
+// dice avoid a random death or other special outcome changing the room state.
+const favorablePartyRoom: EncounterRoom = {
+  ...joinedPartyRoom,
+  activeEncounterSnapshot: {
+    ...joinedPartyRoom.activeEncounterSnapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: joinedPartyRoom.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(favorablePartyRoom);
 
 await submitChoice(session.playerId, avatarId, 'dice');
 const guestChoiceRoom = await submitChoice(guestSession.playerId, guestAvatarId, 'dice');
@@ -1209,12 +1226,12 @@ const guestOpenRoomId = await findActiveRoomIdForPlayerAvatar(
 assert.ok(guestOpenRoomId);
 assert.notEqual(guestOpenRoomId, partyRoom.roomId);
 
-await submitContinue(session.playerId, avatarId);
+const hostContinueAfterGuestLeaves = await submitContinue(session.playerId, avatarId);
 const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
 assert.ok(
   advancedWhileGuestAway?.roomState === 'active_encounter'
   || advancedWhileGuestAway?.roomState === 'system_event',
-  'host should advance after guest departs with choice committed',
+  `host should advance after guest departs with choice committed (submit: ${hostContinueAfterGuestLeaves.roomState}; loaded: ${advancedWhileGuestAway?.roomState}; participants: ${JSON.stringify(advancedWhileGuestAway?.participants.map(({ playerId, choiceState, continuePressed }) => ({ playerId, choiceState, continuePressed })))}; snapshotChanged: ${advancedWhileGuestAway?.activeEncounterSnapshot.snapshotId !== partyRoom.activeEncounterSnapshot.snapshotId})`,
 );
 
 const guestAfterAdvance = await joinRoom(
@@ -1271,14 +1288,14 @@ assert.equal(
   'solo away should keep the open room indexed for rejoin',
 );
 
-const countAdventureStartedEvents = (
-  entries: Awaited<ReturnType<typeof queryActivityFeed>>,
-): number => entries.filter((entry) => entry.eventType === 'adventure_started').length;
-
-const adventureStartedBeforeRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
+// The Scribes feed returns a bounded recent window. An old adventure_started
+// event may drop out when a fresh event is added; compare unique event IDs.
+const adventureStartedBeforeRestore = new Set(
+  (await queryActivityFeed(soloCheckpointSession.playerId))
+    .filter((entry) => entry.eventType === 'adventure_started')
+    .map((entry) => entry.eventId),
 );
-assert.ok(adventureStartedBeforeRestore >= 1);
+assert.ok(adventureStartedBeforeRestore.size >= 1);
 
 const restored = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
 assert.equal(restored.roomId, soloRoom.roomId);
@@ -1287,13 +1304,11 @@ assert.notEqual(
   snapshotIdBeforeLeave,
   'solo leave with choice should advance before rejoin',
 );
-const adventureStartedAfterRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
-assert.equal(
-  adventureStartedAfterRestore,
-  adventureStartedBeforeRestore + 1,
-  'rejoining an open solo room should publish adventure_started',
+const adventureStartedAfterRestore = (await queryActivityFeed(soloCheckpointSession.playerId))
+  .filter((entry) => entry.eventType === 'adventure_started');
+assert.ok(
+  adventureStartedAfterRestore.some((entry) => !adventureStartedBeforeRestore.has(entry.eventId)),
+  'rejoining an open solo room should publish a new adventure_started event',
 );
 
 const soloNoChoiceKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });

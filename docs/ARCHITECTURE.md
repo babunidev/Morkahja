@@ -32,6 +32,17 @@ This section describes the implementation on the PR branches, **not yet `main` o
 
 **Safeguard:** Keep the developer's original worktree and data separate from PR test worktrees. Database/schema, session data, purchase flows, rewards and active rooms warrant targeted concurrency tests before merging into a production deployment.
 
-### Release-gate type maintenance (PR #6)
+## Integration review corrections — PR #7 (unmerged, 4 November 2026)
 
-The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. GitHub Actions release-gates run #69 passed all steps on PR #6 at commit `c9a1c311`. The integrated local worktree and production have not been validated.
+- Current `savePlayerAvatar` integration code constructs the avatar and its initial inventory from the locked database state and writes both together in one PostgreSQL transaction. The returned starting inventory must equal the persisted inventory; tests assert this equality to prevent transient empty starter items.
+- The existing solo system-event path advances after a single successful Continue; regression fixtures use independent avatars to avoid restoring the previous system-event checkpoint. Scribes activity feeds are bounded, so tests check newly recorded event IDs rather than counting every historical event in the window.
+- The test runner now covers session authentication, atomic persistence, achievements, dice, encounter/solution, level-up, room and inventory cases. The comprehensive manual browser acceptance remains **unverified**. See [regression protocol](REGRESSION.md).
+- Existing `pg` warnings about concurrent `client.query()` on the same transaction client warrant separate future maintenance; do not confuse a deprecation warning with verified data loss.
+
+## Expanded integration CI evidence — 4 November 2026
+
+The [PR #7 release-gates workflow run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) passed static data, signed session and concurrent persistence suites, achievements, dice, encounter/solution/level-up, room/solo checkpoint/avatar death, initial inventory, client build, and shared/server typecheck at `b2aac235`. This result belongs to the remote integration branch, which already contains the updated PR #6 TypeScript maintenance via a reviewed two-parent merge commit.
+
+Tests revealed that `flattenInventorySolutionIds` expands each inventory entry once per usable charge; it must not be used to assert the number of distinct seeded starter entries. Existing gameplay inventory quantities were unchanged by fixing the test.
+
+A prior room test intermittently failed when the host continued after the guest departed; the root cause has not been established. A successful later run is not proof of stress-test reliability. Original unpublished local commits/changes, manual browser acceptance and production deployment remain unverified.

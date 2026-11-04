@@ -36,4 +36,10 @@ On the isolated Nobara test checkout, `npm run test:session-auth --prefix server
 
 Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
 
-**4 November release-gate update:** On PR #6, GitHub Actions release-gates run [#69](https://github.com/babunidev/Morkahja/actions/runs/41765724614) passed authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. PRs #5 and #6 are still open; the developer's unpublished local work and complete manual regression have not been integrated or tested.
+## Integration regression preparation — 4 November 2026
+
+The stacked [release-gate integration review (PR #7)](https://github.com/babunidev/Morkahja/pull/7) builds on PRs #5 and #6, correcting outdated TypeScript test fixtures, room/regression-test expectations and initial-avatar inventory consistency. It is still unmerged; local unpublished work is not reconciled. The [regression protocol](docs/REGRESSION.md) separates CI checks from manual gameplay acceptance.
+
+PR #6's original release-gate check passed in [run #69](https://github.com/babunidev/Morkahja/actions/runs/41765724614); the broader PR #7 regression checks were subsequently added and must be independently verified before any merge or deployment.
+
+**Expanded CI result (4 November 2026):** [Run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) passed the authentication, persistence, achievements, dice, encounter/level-up, room/starting-inventory, static-data, frontend build and shared/server typecheck steps on integration commit `b2aac235`. This is a **CI result**, not manual gameplay acceptance or a deployed release. An intermittent guest-departure room assertion occurred on an earlier run; its cause remains open.
