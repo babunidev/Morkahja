@@ -19,10 +19,11 @@ jobs:
         run: npm install
       - name: Verify static data sync
         run: npm run verify:static-data
-      - name: Server session auth test
-        run: npm run test:session-auth --prefix server
+      # Run achievement regressions even when an unrelated auth/database gate fails.
       - name: Server achievements test
         run: npm run test:achievements --prefix server
+      - name: Server session auth test
+        run: npm run test:session-auth --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
       - name: Typecheck and client build
