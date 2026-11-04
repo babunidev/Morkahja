@@ -38,7 +38,7 @@ The historic server typecheck diagnostics came from tests using outdated fixture
 
 ### Solo-room Scribes event regression
 
-The public Scribes feed queries a rolling window of up to 50 events across global and player-relevant traffic. On an existing database, asserting that a particular event type grows by exactly one in that feed can fail when an older entry leaves the window. The solo-room rejoin regression uses a parameterized `game_events` table count filtered by test player, avatar and event type, checking persisted behavior without changing the feed presentation policy. The correction still requires CI and populated-database verification.
+The public Scribes feed queries a rolling window of up to 50 events across global and player-relevant traffic. On an existing database, asserting that a particular event type grows by exactly one in that feed can fail when an older entry leaves the window. The solo-room rejoin regression uses a parameterized `game_events` table count filtered by test player, avatar and event type, checking persisted behavior without changing the feed presentation policy. The corrected PR branch passed GitHub Actions run #84, including the complete room suite. Verification against the existing populated Nobara database remains pending.
 
 ### Joining during an active system event (PR #6 regression test)
 
