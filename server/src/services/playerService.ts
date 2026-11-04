@@ -181,7 +181,12 @@ export async function getPlayerUnlockedExpansions(
   return base;
 }
 
-export async function addPlayerYellowRedGems(
+/**
+ * A lore-gem claim key is unique per player and encounter. Uses the caller's
+ * transaction and row lock, so a room commit and its gem grant cannot diverge.
+ */
+export async function grantPlayerYellowRedGemsInTransaction(
+  transaction: DocumentTransaction,
   playerId: string,
   amount: number,
   loreGemClaimKey?: string,
@@ -189,47 +194,42 @@ export async function addPlayerYellowRedGems(
   if (amount > 0 && !loreGemClaimKey?.trim()) {
     throw new Error('loreGemClaimKey is required when granting yellow_red_gem');
   }
+  const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+  const currentCurrencies = player?.currencies ?? {};
+  const claims = player?.loreGemClaims ?? {};
+  const alreadyClaimed = Boolean(loreGemClaimKey && claims[loreGemClaimKey] === true);
+  const currentAmount = readYellowRedGemBalance(currentCurrencies);
+  const granted = amount > 0 && !alreadyClaimed;
+  const currencies = {
+    ...currentCurrencies,
+    yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
+  };
 
-  const { currencies, granted } = await withDocumentTransaction(async (transaction) => {
-    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
-    const currentCurrencies = player?.currencies ?? {};
-    const loreGemClaims = player?.loreGemClaims ?? {};
-    const alreadyClaimed = loreGemClaimKey ? loreGemClaims[loreGemClaimKey] === true : false;
-    const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
-      ? currentCurrencies.yellow_red_gem
-      : 0;
-    const nextCurrencies = {
-      ...currentCurrencies,
-      yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
-    };
-    const grantedNow = !alreadyClaimed && amount > 0;
-
-    await transaction.setPlayer(
-      playerId,
-      {
-        currencies: nextCurrencies,
-        ...(loreGemClaimKey ? {
-          loreGemClaims: {
-            ...loreGemClaims,
-            [loreGemClaimKey]: true,
-          },
-        } : {}),
-        updatedAt: Date.now(),
-      },
-      { merge: true },
-    );
-
-    return { currencies: nextCurrencies, granted: grantedNow };
-  });
+  if (!alreadyClaimed || amount !== 0) {
+    await transaction.setPlayer(playerId, {
+      currencies,
+      ...(loreGemClaimKey ? { loreGemClaims: { ...claims, [loreGemClaimKey]: true } } : {}),
+      updatedAt: Date.now(),
+    }, { merge: true });
+  }
 
   if (granted) {
-    await recordGemsReceivedEvent(playerId, amount, {
+    transaction.onCommit(() => recordGemsReceivedEvent(playerId, amount, {
       encounterKey: loreGemClaimKey,
       source: loreGemClaimKey ? 'lore_gem' : 'general',
-    });
+    }));
   }
 
   return { currencies, granted };
+}
+
+export async function addPlayerYellowRedGems(
+  playerId: string,
+  amount: number,
+  loreGemClaimKey?: string,
+): Promise<{ currencies: NonNullable<PlayerDocument['currencies']>; granted: boolean }> {
+  return withDocumentTransaction((transaction) =>
+    grantPlayerYellowRedGemsInTransaction(transaction, playerId, amount, loreGemClaimKey));
 }
 
 export async function donatePlayerYellowRedGems(

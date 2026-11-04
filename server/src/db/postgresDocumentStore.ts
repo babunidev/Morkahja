@@ -614,6 +614,8 @@ export async function listPendingInvitationsForPlayer<T>(playerId: string): Prom
 }
 
 export interface DocumentTransaction {
+  /** Optional side effects run after a successful COMMIT, never on rollback. */
+  onCommit(callback: () => Promise<void>): void;
   /** SQL needed by other atomic workflows, executed on the same checked-out client. */
   query<R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]): Promise<QueryResult<R>>;
   getPlayer<T>(playerId: string): Promise<T | null>;
@@ -637,11 +639,14 @@ export async function withDocumentTransaction<T>(
 ): Promise<T> {
   await ensureSchema();
   const client = await pool.connect();
+  const postCommit: Array<() => Promise<void>> = [];
+  let result!: T;
 
   try {
     await client.query('BEGIN');
 
     const transaction: DocumentTransaction = {
+      onCommit: (callback) => { postCommit.push(callback); },
       query: <R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]) =>
         client.query<R>(sql, values),
       getPlayer: async <R>(playerId: string) =>
@@ -759,15 +764,25 @@ export async function withDocumentTransaction<T>(
       },
     };
 
-    const result = await callback(transaction);
+    result = await callback(transaction);
     await client.query('COMMIT');
-    return result;
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
     client.release();
   }
+
+  for (const callback of postCommit) {
+    try {
+      await callback();
+    } catch (error) {
+      // The transaction is already committed: Scribe/event failures must not
+      // make callers retry completed currency or purchase mutations.
+      console.error('Post-commit notification failed', error);
+    }
+  }
+  return result;
 }
 
 export async function getSoloRoomCheckpoint<T>(

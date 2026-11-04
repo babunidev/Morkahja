@@ -12,6 +12,7 @@ import {
   localSlotSnapshotForPlayer,
 } from './roomEncounterSeeding.js';
 import { addPlayerYellowRedGems, loadPlayer } from './playerService.js';
+import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 import {
   findActiveRoomIdForPlayerAvatar,
   loadEncounterRoom,
@@ -285,6 +286,16 @@ export async function offerLoreGem(
   };
 }
 
+function assertLoreGemReady(offer: EncounterSnapshot['loreGemOffer'], now: number): void {
+  if (!offer || !offer.eligible || offer.claimableAt === null
+    || loreGemOfferDurationMs(offer) <= 0) {
+    throw new LoreGemError('No lore gem is available for this encounter', 409);
+  }
+  if (now < offer.claimableAt) {
+    throw new LoreGemError('Lore gem is not yet claimable', 409);
+  }
+}
+
 /** Room sessions: mark gem collected; currency grants on room commit tick. */
 export async function activateRoomLoreGem(
   playerId: string,
@@ -295,64 +306,51 @@ export async function activateRoomLoreGem(
     throw new LoreGemError('encounterKey is required');
   }
 
-  const { snapshot, room } = await loadAuthoritativeSnapshot(playerId, avatarId);
-  if (!room) {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
     throw new LoreGemError('Room lore gem activation requires an active room', 409);
   }
 
-  const activeSnapshot = assertLoreGemCollectibleForRoom(snapshot, room, encounterKey);
+  return withDocumentTransaction(async (transaction) => {
+    const room = await transaction.getEncounterRoom<EncounterRoom>(roomId);
+    if (!room || room.roomState === 'closed') {
+      throw new LoreGemError('No active room', 404);
+    }
+    const participant = room.participants.find((entry) =>
+      entry.playerId === playerId && entry.avatarId === avatarId);
+    if (!participant || participant.choiceState === 'disengaged') {
+      throw new LoreGemError('Inactive players cannot collect lore gems', 403);
+    }
 
-  if (!activeSnapshot.loreGemOffer) {
-    throw new LoreGemError('Lore gem has not been offered for this encounter');
-  }
+    const snapshot = room.slotEncounterSnapshots[participant.slotIndex]
+      ?? room.activeEncounterSnapshot;
+    const activeSnapshot = assertLoreGemCollectibleForRoom(snapshot, room, encounterKey);
+    assertLoreGemReady(activeSnapshot.loreGemOffer, Date.now());
 
-  if (
-    !activeSnapshot.loreGemOffer.eligible
-    || loreGemOfferDurationMs(activeSnapshot.loreGemOffer) <= 0
-  ) {
-    throw new LoreGemError('No lore gem is available for this encounter', 409);
-  }
+    if (
+      room.loreGemActivated === true &&
+      room.loreGemActivatedSnapshotId === activeSnapshot.snapshotId &&
+      participant.loreGemCollected === true
+    ) {
+      return { activated: true, encounterKey: activeSnapshot.snapshotId, room };
+    }
 
-  const nowMs = Date.now();
-
-  if (
-    room.loreGemActivated === true &&
-    room.loreGemActivatedSnapshotId === activeSnapshot.snapshotId &&
-    room.participants.some(
-      (participant) =>
-        participant.playerId === playerId && participant.loreGemCollected === true,
-    )
-  ) {
-    return {
-      activated: true,
-      encounterKey: activeSnapshot.snapshotId,
-      room,
+    // This is a shared-room gem: one valid activation marks all engaged
+    // participants eligible for the single grant at room commit.
+    const updatedRoom: EncounterRoom = {
+      ...room,
+      loreGemActivated: true,
+      loreGemActivatedSnapshotId: activeSnapshot.snapshotId,
+      participants: room.participants.map((entry) =>
+        entry.choiceState === 'disengaged'
+          ? entry
+          : { ...entry, loreGemCollected: true },
+      ),
+      updatedAt: Date.now(),
     };
-  }
-
-  const localParticipant = room.participants.find((participant) => participant.playerId === playerId);
-  if (!localParticipant || localParticipant.choiceState === 'disengaged') {
-    throw new LoreGemError('Inactive players cannot collect lore gems', 403);
-  }
-
-  const updatedRoom: EncounterRoom = {
-    ...room,
-    loreGemActivated: true,
-    loreGemActivatedSnapshotId: activeSnapshot.snapshotId,
-    participants: room.participants.map((participant) =>
-      participant.choiceState === 'disengaged'
-        ? participant
-        : { ...participant, loreGemCollected: true },
-    ),
-    updatedAt: nowMs,
-  };
-  await saveEncounterRoom(updatedRoom);
-
-  return {
-    activated: true,
-    encounterKey: activeSnapshot.snapshotId,
-    room: updatedRoom,
-  };
+    await transaction.setEncounterRoom(roomId, updatedRoom);
+    return { activated: true, encounterKey: activeSnapshot.snapshotId, room: updatedRoom };
+  });
 }
 
 export async function claimLoreGem(
@@ -369,20 +367,15 @@ export async function claimLoreGem(
   }
 
   const { snapshot, room } = await loadAuthoritativeSnapshot(playerId, avatarId);
-  const activeSnapshot = assertActiveEncounterForLore(snapshot, encounterKey);
+  const activeSnapshot = room
+    ? assertLoreGemCollectibleForRoom(snapshot, room, encounterKey)
+    : assertActiveEncounterForLore(snapshot, encounterKey);
 
   if (!activeSnapshot.loreGemOffer) {
     throw new LoreGemError('Lore gem has not been offered for this encounter');
   }
 
-  if (
-    !activeSnapshot.loreGemOffer.eligible
-    || loreGemOfferDurationMs(activeSnapshot.loreGemOffer) <= 0
-  ) {
-    throw new LoreGemError('No lore gem is available for this encounter', 409);
-  }
-
-  const nowMs = Date.now();
+  assertLoreGemReady(activeSnapshot.loreGemOffer, Date.now());
 
   if (room) {
     const activation = await activateRoomLoreGem(playerId, avatarId, encounterKey);

@@ -71,6 +71,7 @@ import {
 import { getEncounterById, getEncounters } from './gameData.js';
 import {
   addPlayerYellowRedGems,
+  grantPlayerYellowRedGemsInTransaction,
   getPlayerUnlockedExpansions,
   loadPlayer,
   loadPlayerActiveAvatar,
@@ -1237,7 +1238,8 @@ function withRoomLoreGemOnResolutionSummary(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)) {
+  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)
+    || participant.loreGemCollected !== true) {
     return summary;
   }
 
@@ -1412,17 +1414,16 @@ async function syncRoomAfterParticipantDeparture(room: EncounterRoom): Promise<v
   await syncActiveEncountersForRoom(room);
 }
 
-async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
+async function grantRoomLoreGemsOnCommit(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<void> {
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
   const recipients = participantsEarnedRoomLoreGem(room, snapshotId);
 
   for (const participant of recipients) {
     const claimKey = `${snapshotId}:${participant.playerId}`;
-    const player = await loadPlayer(participant.playerId);
-    if (player?.loreGemClaims?.[claimKey] === true) {
-      continue;
-    }
-    await addPlayerYellowRedGems(participant.playerId, 1, claimKey);
+    await grantPlayerYellowRedGemsInTransaction(transaction, participant.playerId, 1, claimKey);
   }
 }
 
@@ -1505,7 +1506,7 @@ async function advanceWaitingRoomInTransaction(
     participants: commitResult.participants,
   };
 
-  await grantRoomLoreGemsOnCommit(committedRoom);
+  await grantRoomLoreGemsOnCommit(transaction, committedRoom);
 
   return advanceRoomAfterCommit(
     transaction,
