@@ -16,7 +16,7 @@ const helperStarted = collectUnlockedTitlesFromAchievements([{
 
 assert.deepEqual(
   helperStarted.map((entry) => entry.title),
-  ['Helper'],
+  [],
 );
 
 const helperRankOne = collectUnlockedTitlesFromAchievements([{
@@ -48,7 +48,7 @@ const spiritguideStarted = collectUnlockedTitlesFromAchievements([{
 
 assert.deepEqual(
   spiritguideStarted.map((entry) => entry.title),
-  ['Spiritguide'],
+  [],
 );
 
 const spiritguideRankOne = collectUnlockedTitlesFromAchievements([{

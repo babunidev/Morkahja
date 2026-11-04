@@ -35,7 +35,7 @@ export function mergeFirestarterPeaks(
   const peakAvatarCount = Math.max(peaks.peakAvatarCount, liveAvatarCount);
   const peakTotalLevels = Math.max(peaks.peakTotalLevels, liveTotalLevels);
   const computedRank = firestarterRankFromState(peakAvatarCount, peakTotalLevels);
-  const rank = Math.max(storedRank ?? 0, computedRank);
+  const rank = computedRank;
 
   return {
     peakAvatarCount,
@@ -86,7 +86,9 @@ export async function syncFirestarterAchievementProgress(
     rank: merged.rank,
     progress: merged.progress,
     updatedAt: timestamp,
-    unlockedAt: existing?.unlockedAt ?? (merged.rank >= 1 ? timestamp : undefined),
+    unlockedAt: merged.rank >= 1
+      ? existing?.unlockedAt ?? timestamp
+      : undefined,
   };
 
   await saveAchievementProgress(updated);

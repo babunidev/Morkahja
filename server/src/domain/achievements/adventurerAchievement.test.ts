@@ -25,7 +25,8 @@ assert.equal(adventurerProgressBand(50).progressInBand, 0.5);
 assert.equal(adventurerProgressBand(800).progressInBand, 1);
 assert.equal(adventurerProgressBand(800).bandEnd, null);
 
-assert.equal(adventurerDailyRewardGems(0), 1);
-assert.equal(adventurerDailyRewardGems(4), 5);
+assert.equal(adventurerDailyRewardGems(0), 0);
+assert.equal(adventurerDailyRewardGems(1), 1);
+assert.equal(adventurerDailyRewardGems(4), 4);
 
 console.log('adventurerAchievement.test.ts passed');

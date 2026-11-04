@@ -68,18 +68,24 @@ export function achievementRankFromProgress(achievementId: string, progress: num
 export async function reconcileAchievementProgress(
   record: AchievementProgress,
 ): Promise<AchievementProgress> {
-  const derivedRank = achievementRankFromProgress(record.achievementId, record.progress);
-  const rank = record.achievementId === FIRESTARTER_ACHIEVEMENT_ID
-    ? Math.max(record.rank, derivedRank)
-    : derivedRank;
+  let rank = achievementRankFromProgress(record.achievementId, record.progress);
+  if (record.achievementId === FIRESTARTER_ACHIEVEMENT_ID) {
+    // Preserve historic rank-4 encoding while applying current rank milestones.
+    const { peakAvatarCount, peakTotalLevels } = decodeFirestarterProgress(
+      record.progress,
+      record.rank,
+    );
+    rank = firestarterRankFromState(peakAvatarCount, peakTotalLevels);
+  }
 
-  if (record.rank === rank) {
+  if (record.rank === rank && (rank > 0 || record.unlockedAt === undefined)) {
     return record;
   }
 
   const updated: AchievementProgress = {
     ...record,
     rank,
+    unlockedAt: rank > 0 ? record.unlockedAt ?? Date.now() : undefined,
     updatedAt: Date.now(),
   };
 
@@ -187,7 +193,11 @@ export async function saveAchievementProgress(progress: AchievementProgress): Pr
     ON CONFLICT (player_id, achievement_id) DO UPDATE SET
       rank = EXCLUDED.rank,
       progress = EXCLUDED.progress,
-      unlocked_at = COALESCE(player_achievements.unlocked_at, EXCLUDED.unlocked_at),
+      unlocked_at = CASE
+        WHEN EXCLUDED.rank > 0
+          THEN COALESCE(player_achievements.unlocked_at, EXCLUDED.unlocked_at)
+        ELSE NULL
+      END,
       updated_at = EXCLUDED.updated_at`,
     [
       progress.playerId,
