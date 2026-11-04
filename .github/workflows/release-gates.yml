@@ -43,8 +43,11 @@ jobs:
         run: npm run test:achievements --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
-      - name: Server room regression tests
-        run: npm run test:rooms --prefix server
+      - name: Server room regression tests (repeat to check room lookup stability)
+        run: |
+          for attempt in 1 2 3; do
+            npm run test:rooms --prefix server
+          done
       - name: Encounter resolution smoke test
         run: npm run test:encounter
       - name: Encounter lifecycle regression

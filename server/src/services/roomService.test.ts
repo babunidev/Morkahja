@@ -1125,7 +1125,25 @@ await savePlayerAvatar(guestSession.playerId, {
   createdAt: Date.now(),
 });
 
-let partyRoom = await createRoom(session.playerId, avatarId);
+// Keep this departure/rejoin scenario independent of the earlier fixtures,
+// which intentionally create several open rooms for the original test avatar.
+const partyHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const partyHostIdentityJwk = JSON.stringify(partyHostKeyPair.publicKey.export({ format: 'jwk' }));
+const partyHostSession = await bootstrapTestSession(
+  partyHostKeyPair, partyHostIdentityJwk, `room-party-host-${Date.now()}`,
+);
+const partyHostAvatarId = `party-host-avatar-${Date.now()}`;
+await savePlayerAvatar(partyHostSession.playerId, {
+  id: partyHostAvatarId,
+  name: 'Room Party Host',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+let partyRoom = await createRoom(partyHostSession.playerId, partyHostAvatarId);
 partyRoom = {
   ...partyRoom,
   activeEncounterSnapshot: {
@@ -1137,7 +1155,7 @@ partyRoom = {
 await saveEncounterRoom(partyRoom);
 await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
 
-await submitChoice(session.playerId, avatarId, 'dice');
+await submitChoice(partyHostSession.playerId, partyHostAvatarId, 'dice');
 const guestChoiceRoom = await submitChoice(guestSession.playerId, guestAvatarId, 'dice');
 assert.equal(guestChoiceRoom.roomState, 'waiting_continue');
 const guestBeforeLeave = guestChoiceRoom.participants.find(
@@ -1209,8 +1227,28 @@ const guestOpenRoomId = await findActiveRoomIdForPlayerAvatar(
 assert.ok(guestOpenRoomId);
 assert.notEqual(guestOpenRoomId, partyRoom.roomId);
 
-await submitContinue(session.playerId, avatarId);
-const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
+// Verify the host is the sole engaged participant in the *intended* party room
+// before checking that Continue advances. A previous fixture must not win the
+// avatar-room lookup when several room updatedAt values share a millisecond.
+assert.equal(
+  await findActiveRoomIdForPlayerAvatar(partyHostSession.playerId, partyHostAvatarId),
+  partyRoom.roomId,
+);
+const hostWaitingRoom = await loadEncounterRoom(partyRoom.roomId);
+assert.equal(hostWaitingRoom?.roomState, 'waiting_continue');
+assert.deepEqual(hostWaitingRoom?.participants.map((participant) => participant.playerId), [
+  partyHostSession.playerId,
+]);
+assert.equal(hostWaitingRoom?.participants[0]?.choiceState, 'ready_to_continue');
+assert.equal(hostWaitingRoom?.participants[0]?.focusState, 'none');
+
+const hostContinued = await submitContinue(partyHostSession.playerId, partyHostAvatarId);
+assert.ok(
+  hostContinued.roomState === 'active_encounter'
+  || hostContinued.roomState === 'system_event',
+  `host Continue should advance the intended room, got ${hostContinued.roomState}`,
+);
+const advancedWhileGuestAway = await getActiveRoomForPlayer(partyHostSession.playerId, partyHostAvatarId);
 assert.ok(
   advancedWhileGuestAway?.roomState === 'active_encounter'
   || advancedWhileGuestAway?.roomState === 'system_event',

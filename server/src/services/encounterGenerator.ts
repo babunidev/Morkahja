@@ -1002,17 +1002,13 @@ export async function continueEncounter(
         expectedSnapshotId,
       );
 
-      const [
-        avatar,
-        inventoryDocument,
-        progressionDocument,
-        playerData,
-      ] = await Promise.all([
-        transaction.getAvatar<AvatarDocument>(playerId, avatarId),
-        transaction.getInventory<AvatarInventory>(playerId, avatarId),
-        transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
-        transaction.getPlayer<{ unlockedExpansions?: number[] }>(playerId),
-      ]);
+      // A transaction uses one PostgreSQL client: query it sequentially.
+      const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+      const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
+      const progressionDocument = await transaction.getProgression<ReturnType<typeof createInitialProgression>>(
+        playerId, avatarId,
+      );
+      const playerData = await transaction.getPlayer<{ unlockedExpansions?: number[] }>(playerId);
 
       if (!avatar) {
         throw new Error(`Avatar not found: ${avatarId}`);
@@ -1549,15 +1545,12 @@ export async function prepareParticipantOutcome(
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
 ): Promise<PrepareParticipantOutcomeResult> {
-  const [
-    avatar,
-    inventoryDocument,
-    progressionDocument,
-  ] = await Promise.all([
-    transaction.getAvatar<AvatarDocument>(playerId, avatarId),
-    transaction.getInventory<AvatarInventory>(playerId, avatarId),
-    transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
-  ]);
+  // The transaction's row-locked reads share a single client.
+  const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+  const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
+  const progressionDocument = await transaction.getProgression<ReturnType<typeof createInitialProgression>>(
+    playerId, avatarId,
+  );
 
   if (!avatar) {
     throw new Error(`Avatar not found: ${avatarId}`);
