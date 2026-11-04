@@ -39,3 +39,5 @@ Separate browser tabs can presently use the same account, including different av
 ## Integration regression preparation — 4 November 2026
 
 The stacked [release-gate integration review (PR #7)](https://github.com/babunidev/Morkahja/pull/7) builds on PRs #5 and #6, correcting outdated TypeScript test fixtures, room/regression-test expectations and initial-avatar inventory consistency. It is still unmerged; local unpublished work is not reconciled. The [regression protocol](docs/REGRESSION.md) separates CI checks from manual gameplay acceptance.
+
+PR #6's original release-gate check passed in [run #69](https://github.com/babunidev/Morkahja/actions/runs/41765724614); the broader PR #7 regression checks were subsequently added and must be independently verified before any merge or deployment.

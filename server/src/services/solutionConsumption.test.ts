@@ -35,7 +35,7 @@ function inventoryFromEntries(
     spellbook: toItems(spellbook),
     items: toItems(items),
     essences: toItems(essences),
-  };
+  } satisfies EncounterData;
 }
 
 const favorableRolls = createEncounterRollSnapshot({
@@ -90,7 +90,7 @@ function primaryEncounter(primarySolutionId: number, difficulty: EncounterDiffic
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  };
+  } satisfies EncounterData;
 }
 
 function secondaryEncounter(secondaryType: number, difficulty: EncounterDifficulty = 2): EncounterData {
@@ -113,7 +113,7 @@ function secondaryEncounter(secondaryType: number, difficulty: EncounterDifficul
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  };
+  } satisfies EncounterData;
 }
 
 {

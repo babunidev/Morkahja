@@ -59,7 +59,7 @@ function baseEncounter(difficulty: EncounterDifficulty): EncounterData {
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  };
+  } satisfies EncounterData;
 }
 
 const favorableRolls = createEncounterRollSnapshot({
