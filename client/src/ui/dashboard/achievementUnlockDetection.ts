@@ -22,26 +22,12 @@ export function findNewRankUnlocks(
     const prior = previousById.get(achievement.achievementId);
 
     if (!prior) {
-      if (achievement.progress > 0 || achievement.rank > 0) {
-        return [{
-          achievement,
-          previousRank: 0,
-          newRank: achievement.rank,
-        }];
-      }
-
-      return [];
+      return achievement.rank > 0
+        ? [{ achievement, previousRank: 0, newRank: achievement.rank }]
+        : [];
     }
 
     if (achievement.rank > prior.rank) {
-      return [{
-        achievement,
-        previousRank: prior.rank,
-        newRank: achievement.rank,
-      }];
-    }
-
-    if (prior.progress <= 0 && achievement.progress > 0) {
       return [{
         achievement,
         previousRank: prior.rank,
