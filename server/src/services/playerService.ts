@@ -442,9 +442,9 @@ export async function savePlayerAvatar(
   payload: PersistedAvatarPayload,
 ): Promise<AvatarDocument> {
   const now = Date.now();
-  const existing = await loadAvatar(playerId, payload.id);
+  const priorAvatar = await loadAvatar(playerId, payload.id);
 
-  if (!existing) {
+  if (!priorAvatar) {
     const avatarCount = (await listAvatars<AvatarDocument>(playerId))
       .filter((entry) => {
         const status = readAvatarLifeStatus(entry.data);
@@ -455,44 +455,49 @@ export async function savePlayerAvatar(
       throw new AvatarLimitReachedError();
     }
   }
-  const profile: AvatarDocument['profile'] = {
-    ...existing?.profile,
-    raceRewardType: raceRewardType(payload.race),
-    roleRewardType: roleRewardType(payload.role),
-    displayTitle: Object.prototype.hasOwnProperty.call(payload, 'displayTitle')
-      ? (typeof payload.displayTitle === 'string'
-        ? payload.displayTitle.trim() || null
-        : null)
-      : readAvatarDisplayTitle(existing ?? {}),
-  };
-  const storedInventory = await loadInventory(playerId, payload.id);
-  const inventory = existing?.inventory
-    ?? storedInventory
-    ?? createInitialAvatarInventory(profile);
-  const avatar: AvatarDocument = {
-    ...existing,
-    id: payload.id,
-    name: payload.name,
-    race: payload.race,
-    role: payload.role,
-    level: typeof existing?.level === 'number' ? existing.level : 1,
-    experience: typeof existing?.experience === 'number' ? existing.experience : 0,
-    portrait: payload.portrait,
-    frame: payload.frame,
-    createdAt: payload.createdAt ?? existing?.createdAt ?? now,
-    lastPlayedAt: now,
-    profile,
-    progression: existing?.progression ?? {},
-    activeEncounter: existing?.activeEncounter ?? null,
-  };
-
-  if (inventory) {
-    avatar.inventory = inventory;
-  }
 
   await ensurePlayerUnlockedExpansions(playerId);
-  await saveAvatar(playerId, payload.id, avatar);
-  if (!existing) {
+
+  // Construct the full avatar only after locking its latest row. The previous
+  // read was solely for the avatar cap, not a document snapshot to write back.
+  const { avatar, created } = await withDocumentTransaction(async (transaction) => {
+    const existing = await transaction.getAvatar<AvatarDocument>(playerId, payload.id);
+    const profile: AvatarDocument['profile'] = {
+      ...existing?.profile,
+      raceRewardType: raceRewardType(payload.race),
+      roleRewardType: roleRewardType(payload.role),
+      displayTitle: Object.prototype.hasOwnProperty.call(payload, 'displayTitle')
+        ? (typeof payload.displayTitle === 'string'
+          ? payload.displayTitle.trim() || null
+          : null)
+        : readAvatarDisplayTitle(existing ?? {}),
+    };
+    const storedInventory = await transaction.getInventory<AvatarInventory>(playerId, payload.id);
+    const inventory = existing?.inventory
+      ?? storedInventory
+      ?? createInitialAvatarInventory(profile);
+    const avatar: AvatarDocument = {
+      ...existing,
+      id: payload.id,
+      name: payload.name,
+      race: payload.race,
+      role: payload.role,
+      level: typeof existing?.level === 'number' ? existing.level : 1,
+      experience: typeof existing?.experience === 'number' ? existing.experience : 0,
+      portrait: payload.portrait,
+      frame: payload.frame,
+      createdAt: payload.createdAt ?? existing?.createdAt ?? now,
+      lastPlayedAt: now,
+      profile,
+      progression: existing?.progression ?? {},
+      activeEncounter: existing?.activeEncounter ?? null,
+      inventory,
+    };
+    await transaction.setAvatar(playerId, payload.id, avatar, { merge: true });
+    return { avatar, created: !existing };
+  });
+
+  if (created) {
     await initializeAvatarInventory(playerId, payload.id, avatar.profile);
     await recordAvatarCreatedEvent(playerId, avatar);
   }
