@@ -1,7 +1,7 @@
-import type { AvatarDocument } from '../types/avatar.js';
+import type { AvatarDocument, AvatarInventory } from '../types/avatar.js';
 import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { PlayerDocument } from '../types/player.js';
-import { loadAvatar, saveAvatar } from './encounterPersistence.js';
+import { loadAvatar } from './encounterPersistence.js';
 import {
   createInitialAvatarInventory,
   initializeAvatarInventory,
