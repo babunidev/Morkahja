@@ -1209,12 +1209,12 @@ const guestOpenRoomId = await findActiveRoomIdForPlayerAvatar(
 assert.ok(guestOpenRoomId);
 assert.notEqual(guestOpenRoomId, partyRoom.roomId);
 
-await submitContinue(session.playerId, avatarId);
+const hostContinueAfterGuestLeaves = await submitContinue(session.playerId, avatarId);
 const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
 assert.ok(
   advancedWhileGuestAway?.roomState === 'active_encounter'
   || advancedWhileGuestAway?.roomState === 'system_event',
-  'host should advance after guest departs with choice committed',
+  `host should advance after guest departs with choice committed (submit: ${hostContinueAfterGuestLeaves.roomState}; loaded: ${advancedWhileGuestAway?.roomState}; participants: ${JSON.stringify(advancedWhileGuestAway?.participants.map(({ playerId, choiceState, continuePressed }) => ({ playerId, choiceState, continuePressed })))}; snapshotChanged: ${advancedWhileGuestAway?.activeEncounterSnapshot.snapshotId !== partyRoom.activeEncounterSnapshot.snapshotId})`,
 );
 
 const guestAfterAdvance = await joinRoom(
