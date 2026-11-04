@@ -35,3 +35,7 @@ This section describes the implementation on the PR branches, **not yet `main` o
 ### Release-gate type maintenance (PR #6)
 
 The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. GitHub Actions release-gates run #69 passed all steps on PR #6 at commit `c9a1c311`. The integrated local worktree and production have not been validated.
+
+### Joining during an active system event (PR #6 regression test)
+
+`roomService.ts:createParticipantForRoomJoin` returns a regular `choosing` participant for ordinary rooms and for the system event's acting player. A non-acting participant joining while `roomState === 'system_event'` is placed in `witnessing` and receives no prior prepared result. This behavior predates the November test correction. `roomService.test.ts` now asserts the correct phase-aware state instead of assuming every fresh rejoiner is choosing. GitHub Actions run #82 executed and passed the room suite with this assertion; it does not establish that every multi-tab or concurrent room transition is safe.
