@@ -31,4 +31,4 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Separated started achievement chains from earned avatar titles and Hearth Blessing bonuses. Daily payout now has one base gem plus the bonuses from achieved ranks.
 - Realigned Firestarter/Pathfinder milestones: one avatar starts visible progress, two avatars earn Firestarter, three earn Pathfinder, followed by 15 and 30 combined levels.
 - Reconciled stored Firestarter ranks against the revised milestones while retaining legacy rank-4 decoding and correcting stale unlock timestamps.
-- Added threshold, reward, title and Scribes notification regression tests. CI and gameplay verification are distinct from adding tests; this change is not recorded as a deployment.
+- Added threshold, reward, title and Scribes notification regression tests; all 11 achievement tests passed in GitHub Actions run 41766029656. Overall CI remained blocked by an existing unavailable PostgreSQL endpoint in the session-auth test; no gameplay deployment is claimed.
