@@ -5,9 +5,9 @@ import {
   type AvatarProgression,
 } from '../domain/avatar/AvatarProgression.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
-import { loadAvatar, saveAvatar } from './encounterPersistence.js';
+import type { AvatarDocument } from '../types/avatar.js';
 import { loadInventory } from './inventoryService.js';
-import { getProgression, setProgression } from '../db/postgresDocumentStore.js';
+import { getProgression, setProgression, withDocumentTransaction } from '../db/postgresDocumentStore.js';
 
 export interface AvatarEssenceSummary {
   currentEssence: number;
@@ -154,18 +154,17 @@ export async function persistLastEncounter(
   avatarId: string,
   encounterId: number,
 ): Promise<void> {
-  const avatar = await loadAvatar(playerId, avatarId);
-
-  if (!avatar) {
-    throw new Error(`Avatar not found: ${avatarId}`);
-  }
-
-  await saveAvatar(playerId, avatarId, {
-    ...avatar,
-    progression: {
-      ...avatar.progression,
-      lastEncounterId: encounterId,
-    },
+  await withDocumentTransaction(async (transaction) => {
+    const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+    if (!avatar) {
+      throw new Error(`Avatar not found: ${avatarId}`);
+    }
+    await transaction.setAvatar(
+      playerId,
+      avatarId,
+      { progression: { ...avatar.progression, lastEncounterId: encounterId } },
+      { merge: true },
+    );
   });
 }
 

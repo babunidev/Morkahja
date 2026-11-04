@@ -9,8 +9,8 @@ import {
   type UnlockedTitleOption,
 } from '../domain/achievements/achievementTitles.js';
 import { loadAchievementTitleSourcesForPlayer } from '../domain/achievements/achievementTitleSources.js';
-import { getPlayer, listAvatars, setPlayer } from '../db/postgresDocumentStore.js';
-import { loadAvatar, saveAvatar } from './encounterPersistence.js';
+import { getPlayer, listAvatars, withDocumentTransaction } from '../db/postgresDocumentStore.js';
+import { loadAvatar } from './encounterPersistence.js';
 import { loadAvatarProgression } from './avatarProgressionService.js';
 import type { AvatarRace, AvatarRole } from './playerService.js';
 
@@ -131,16 +131,15 @@ export async function setAvatarDisplayTitle(
     }
   }
 
-  const nextAvatar: AvatarDocument = {
-    ...avatar,
-    profile: {
-      ...avatar.profile,
-      displayTitle: normalized,
-    },
-  };
-
-  await saveAvatar(playerId, avatarId, nextAvatar);
-  return nextAvatar;
+  return withDocumentTransaction(async (transaction) => {
+    const freshAvatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+    if (!freshAvatar) {
+      throw new AvatarProfileNotFoundError();
+    }
+    const profile = { ...freshAvatar.profile, displayTitle: normalized };
+    await transaction.setAvatar(playerId, avatarId, { profile }, { merge: true });
+    return { ...freshAvatar, profile };
+  });
 }
 
 export async function recordWallOfFameEntry(
@@ -166,19 +165,20 @@ export async function recordWallOfFameEntry(
     diedAt: Date.now(),
   };
 
-  const player = await getPlayer<Partial<PlayerDocument>>(playerId);
-  const existing = normalizeWallOfFame(player?.wallOfFame);
-  const withoutDuplicate = existing.filter((current) => current.id !== entry.id);
-  const next = [entry, ...withoutDuplicate].slice(0, MAX_WALL_OF_FAME_ENTRIES);
-
-  await setPlayer(
-    playerId,
-    {
-      wallOfFame: next,
-      updatedAt: Date.now(),
-    } satisfies Partial<PlayerDocument>,
-    { merge: true },
-  );
+  await withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    if (!player) {
+      return;
+    }
+    const existing = normalizeWallOfFame(player.wallOfFame);
+    const withoutDuplicate = existing.filter((current) => current.id !== entry.id);
+    const next = [entry, ...withoutDuplicate].slice(0, MAX_WALL_OF_FAME_ENTRIES);
+    await transaction.setPlayer(
+      playerId,
+      { wallOfFame: next, updatedAt: Date.now() } satisfies Partial<PlayerDocument>,
+      { merge: true },
+    );
+  });
 }
 
 async function readPlayerSummary(playerId: string): Promise<{
