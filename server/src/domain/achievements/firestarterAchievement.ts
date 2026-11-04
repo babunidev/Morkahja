@@ -2,7 +2,8 @@ import type { AchievementRankDefinition } from './adventurerAchievement.js';
 
 export const FIRESTARTER_ACHIEVEMENT_ID = 'firestarter';
 export const FIRESTARTER_BASE_ICON = 'UI/04_ACHIEVEMENTS/im_glyph_created_avatar.webp';
-export const FIRESTARTER_AVATAR_RANK_THRESHOLDS = [1, 2, 3] as const;
+export const FIRESTARTER_AVATAR_RANK_THRESHOLDS = [2, 3] as const;
+export const FIRESTARTER_TOTAL_LEVELS_RANK3 = 15;
 export const FIRESTARTER_TOTAL_LEVELS_RANK4 = 30;
 export const FIRESTARTER_MAX_RANK = 4;
 
@@ -70,11 +71,15 @@ export function firestarterRankFromState(
   avatarCount: number,
   totalLevels: number,
 ): number {
+  // Rank 0 is visible progress, not an earned rank.
   if (totalLevels >= FIRESTARTER_TOTAL_LEVELS_RANK4) {
     return FIRESTARTER_MAX_RANK;
   }
 
-  if (avatarCount >= FIRESTARTER_AVATAR_RANK_THRESHOLDS[2]) {
+  if (
+    avatarCount >= FIRESTARTER_AVATAR_RANK_THRESHOLDS[1]
+    && totalLevels >= FIRESTARTER_TOTAL_LEVELS_RANK3
+  ) {
     return 3;
   }
 
@@ -115,25 +120,33 @@ export function firestarterProgressBand(
     };
   }
 
-  if (rank === 3) {
-    const span = FIRESTARTER_TOTAL_LEVELS_RANK4 - FIRESTARTER_AVATAR_RANK_THRESHOLDS[2];
+  if (rank >= 2) {
+    const bandStart = rank === 2
+      ? FIRESTARTER_AVATAR_RANK_THRESHOLDS[1]
+      : FIRESTARTER_TOTAL_LEVELS_RANK3;
+    const bandEnd = rank === 2
+      ? FIRESTARTER_TOTAL_LEVELS_RANK3
+      : FIRESTARTER_TOTAL_LEVELS_RANK4;
+    const span = bandEnd - bandStart;
 
     return {
-      bandStart: FIRESTARTER_AVATAR_RANK_THRESHOLDS[2],
-      bandEnd: FIRESTARTER_TOTAL_LEVELS_RANK4,
+      bandStart,
+      bandEnd,
       progressInBand: span > 0
-        ? Math.min(1, Math.max(0, (totalLevels - FIRESTARTER_AVATAR_RANK_THRESHOLDS[2]) / span))
+        ? Math.min(1, Math.max(0, (totalLevels - bandStart) / span))
         : 0,
     };
   }
 
-  const avatarBandEnd = FIRESTARTER_AVATAR_RANK_THRESHOLDS[2];
+  const bandStart = rank === 0 ? 0 : FIRESTARTER_AVATAR_RANK_THRESHOLDS[0];
+  const bandEnd = FIRESTARTER_AVATAR_RANK_THRESHOLDS[rank];
+  const span = bandEnd - bandStart;
 
   return {
-    bandStart: 0,
-    bandEnd: avatarBandEnd,
-    progressInBand: avatarBandEnd > 0
-      ? Math.min(1, Math.max(0, avatarCount / avatarBandEnd))
+    bandStart,
+    bandEnd,
+    progressInBand: span > 0
+      ? Math.min(1, Math.max(0, (avatarCount - bandStart) / span))
       : 0,
   };
 }
