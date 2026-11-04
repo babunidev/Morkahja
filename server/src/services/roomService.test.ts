@@ -799,7 +799,19 @@ await joinRoom(
   concurrentPartyRoom.roomId,
 );
 
-await submitChoice(concurrentHostSession.playerId, concurrentHostAvatarId, 'dice');
+const roomAfterHostChoice = await submitChoice(
+  concurrentHostSession.playerId, concurrentHostAvatarId, 'dice',
+);
+const guestBeforeOwnChoice = await toEncounterRoomSnapshotDto(
+  roomAfterHostChoice, concurrentGuestSession.playerId,
+);
+assert.equal(guestBeforeOwnChoice.activeEncounter.rollE, undefined);
+assert.equal(guestBeforeOwnChoice.activeEncounter.rewardIds, undefined);
+const otherPlayerBeforeReveal = guestBeforeOwnChoice.participants.find(
+  (participant) => participant.playerId === concurrentHostSession.playerId,
+);
+assert.equal(otherPlayerBeforeReveal?.preparedResult, undefined);
+assert.equal(otherPlayerBeforeReveal?.selectedAction, undefined);
 await submitChoice(concurrentGuestSession.playerId, concurrentGuestAvatarId, 'dice');
 const concurrentSnapshotBefore = concurrentPartyRoom.activeEncounterSnapshot.snapshotId;
 

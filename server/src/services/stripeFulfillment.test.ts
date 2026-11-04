@@ -35,6 +35,11 @@ assert.equal((await pool.query('SELECT id FROM processed_stripe_events WHERE id=
 assert.equal(await fulfill(session, event), true);
 assert.equal(await fulfill(session, event), false);
 assert.equal(await fulfill(session, `evt_${randomUUID()}`), false, 'new event for same session must be ignored');
+await assert.rejects(
+  fulfill(`cs_test_${randomUUID()}`, event),
+  /already processed for another checkout session/,
+  'one signed event must never be reused to grant a second checkout session',
+);
 
 // Recover an event marked processed by the old code before it recorded a
 // purchase: the new grant is idempotent and its session is still unique.
