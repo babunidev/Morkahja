@@ -209,7 +209,7 @@ async function maybeRecordHearthBlessingReady(
     return next;
   }
 
-  const current = await withDocumentTransaction(async (transaction) => {
+  const { current, newlyNotified } = await withDocumentTransaction(async (transaction) => {
     const freshPlayer = await transaction.getPlayer<PlayerDocument>(playerId);
     const freshState = readDailyRewardState(freshPlayer);
     if (
@@ -217,7 +217,7 @@ async function maybeRecordHearthBlessingReady(
       freshState.readyNotifiedAt !== undefined ||
       isDailyRewardClaimedForDay(freshPlayer, next.utcDay)
     ) {
-      return freshState;
+      return { current: freshState, newlyNotified: false };
     }
 
     const updated = { ...freshState, readyNotifiedAt: timestamp };
@@ -226,9 +226,9 @@ async function maybeRecordHearthBlessingReady(
       { dailyReward: updated, updatedAt: Date.now() },
       { merge: true },
     );
-    return updated;
+    return { current: updated, newlyNotified: true };
   });
-  if (current.readyNotifiedAt === timestamp) {
+  if (newlyNotified) {
     await recordHearthBlessingReadyEvent(
       playerId,
       next.utcDay,

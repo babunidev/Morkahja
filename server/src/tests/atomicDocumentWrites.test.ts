@@ -3,6 +3,7 @@ import { generateKeyPairSync, randomUUID } from 'node:crypto';
 
 import {
   getAvatar,
+  getInventory,
   getPlayer,
   setAvatar,
   setPlayer,
@@ -17,6 +18,7 @@ import {
 import { heartbeatSession, logoutSession, SessionError } from '../services/sessionService.js';
 import { bootstrapTestSession } from './sessionAuthTestHelpers.js';
 import type { PlayerDocument } from '../types/player.js';
+import type { AvatarInventory } from '../types/avatar.js';
 
 const identity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicKey = JSON.stringify(identity.publicKey.export({ format: 'jwk' }));
@@ -82,7 +84,15 @@ const payload = {
   portrait: 'm_portrait_rokur_warrior',
   frame: 'm_frame_01',
 };
-await savePlayerAvatar(playerId, payload);
+const initiallyCreatedAvatar = await savePlayerAvatar(playerId, payload);
+const initiallyStoredInventory = await getInventory<AvatarInventory>(playerId, serviceAvatarId);
+assert.ok(initiallyStoredInventory);
+assert.deepEqual(initiallyCreatedAvatar.inventory, initiallyStoredInventory);
+assert.ok(
+  initiallyStoredInventory.spellbook.length +
+  initiallyStoredInventory.items.length +
+  initiallyStoredInventory.essences.length > 0,
+);
 await Promise.all([
   ...Array.from({ length: 8 }, () => savePlayerAvatar(playerId, payload)),
   ...Array.from({ length: 16 }, (_, index) =>
