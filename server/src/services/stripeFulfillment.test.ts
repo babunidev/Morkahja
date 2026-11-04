@@ -36,6 +36,17 @@ assert.equal(await fulfill(session, event), true);
 assert.equal(await fulfill(session, event), false);
 assert.equal(await fulfill(session, `evt_${randomUUID()}`), false, 'new event for same session must be ignored');
 
+// Recover an event marked processed by the old code before it recorded a
+// purchase: the new grant is idempotent and its session is still unique.
+const legacySession = `cs_test_${randomUUID()}`;
+const legacyEvent = `evt_${randomUUID()}`;
+await pool.query(
+  'INSERT INTO processed_stripe_events (id, created_at) VALUES ($1, $2)',
+  [legacyEvent, Date.now()],
+);
+assert.equal(await fulfill(legacySession, legacyEvent), true);
+assert.equal(await fulfill(legacySession, legacyEvent), false);
+
 const concurrentSession = `cs_test_${randomUUID()}`;
 const concurrentlyFulfilled = await Promise.all([
   fulfill(concurrentSession, `evt_${randomUUID()}`),
@@ -52,8 +63,8 @@ for (const die of ['b','c','d','e','f']) {
 }
 const rows = await pool.query(
   'SELECT id FROM purchases WHERE id=ANY($1::text[])',
-  [[session, concurrentSession]],
+  [[session, concurrentSession, legacySession]],
 );
-assert.equal(rows.rowCount, 2);
+assert.equal(rows.rowCount, 3);
 await pool.end();
 console.log('stripeFulfillment.test.ts passed');

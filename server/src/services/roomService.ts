@@ -2828,9 +2828,23 @@ export async function broadcastCallForHelp(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (room.helpCalledSnapshotId === snapshotId) {
-    throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
-  }
+  // Reserve this room's help flag BEFORE sending invitations. The locked
+  // update preserves simultaneous joins and stops duplicate help requests.
+  await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed'
+      || current.activeEncounterSnapshot.snapshotId !== snapshotId) {
+      throw new RoomError('Encounter changed while requesting help', 409, 'INVALID_ROOM_STATE');
+    }
+    if (current.helpCalledSnapshotId === snapshotId) {
+      throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
+    }
+    await transaction.setEncounterRoom(current.roomId, {
+      ...current,
+      helpCalledSnapshotId: snapshotId,
+      updatedAt: nowMs(),
+    });
+  });
 
   const now = nowMs();
   const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions(now);
@@ -2901,13 +2915,6 @@ export async function broadcastCallForHelp(
       avatarVisual,
     );
   }
-
-  const updatedRoom: EncounterRoom = {
-    ...room,
-    helpCalledSnapshotId: snapshotId,
-    updatedAt: now,
-  };
-  await saveEncounterRoom(updatedRoom);
 
   const invitedCount = eligibleFriendIds.length + strangerTargetIds.length;
   const targetMode: BroadcastCallForHelpResult['targetMode'] = strangerTargetIds.length > 0

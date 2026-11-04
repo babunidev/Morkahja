@@ -63,7 +63,16 @@ export async function fulfillStripePurchase(
       [purchase.eventId, now],
     );
     if (event.rowCount === 0) {
-      throw new Error('Stripe event already processed for another checkout session');
+      // Before the atomic fulfillment change, the event could be marked
+      // processed before grants or purchase recording finished. Permit a
+      // recovery delivery only if no other session owns this event.
+      const owningPurchase = await transaction.query<{ id: string }>(
+        'SELECT id FROM purchases WHERE event_id = $1 LIMIT 1',
+        [purchase.eventId],
+      );
+      if (owningPurchase.rows.length > 0 && owningPurchase.rows[0]?.id !== purchase.id) {
+        throw new Error('Stripe event already processed for another checkout session');
+      }
     }
 
     await grant(transaction);
