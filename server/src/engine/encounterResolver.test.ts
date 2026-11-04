@@ -4,7 +4,7 @@ import {
   createEncounterRollSnapshot,
   resolveEncounter,
 } from './encounterResolver.js';
-import type { EncounterData, SolutionDataMap } from './types.js';
+import type { EncounterData, EncounterDifficulty, SolutionDataMap } from './types.js';
 
 const solutionMap: SolutionDataMap = {
   '10': {
@@ -13,7 +13,8 @@ const solutionMap: SolutionDataMap = {
     mSolutionName: 'Primary A',
     mSolutionIconName: 'test_primary',
     mSolutionInventoryType: 1,
-    mSolutionRewardType: 0,
+    mSolutionRewardType: 1,
+    mSolutionText: 'Test solution',
     mSolutionUses: 1,
   },
   '20': {
@@ -22,7 +23,8 @@ const solutionMap: SolutionDataMap = {
     mSolutionName: 'Secondary low',
     mSolutionIconName: 'test_secondary_low',
     mSolutionInventoryType: 1,
-    mSolutionRewardType: 0,
+    mSolutionRewardType: 1,
+    mSolutionText: 'Test solution',
     mSolutionUses: 1,
   },
   '21': {
@@ -31,17 +33,23 @@ const solutionMap: SolutionDataMap = {
     mSolutionName: 'Secondary high',
     mSolutionIconName: 'test_secondary_high',
     mSolutionInventoryType: 1,
-    mSolutionRewardType: 0,
+    mSolutionRewardType: 1,
+    mSolutionText: 'Test solution',
     mSolutionUses: 1,
   },
 };
 
-function baseEncounter(difficulty: number): EncounterData {
+function baseEncounter(difficulty: EncounterDifficulty): EncounterData {
   return {
     mEncounterID: 1,
     mEncounterTitle: 'Charge test',
     mEncounterDifficulty: difficulty,
-    mEncounterRewardType: 0,
+    mEncounterExpansion: 0,
+    mEncounterFollow: 0,
+    mEncounterImageName: 'test_encounter',
+    mEncounterText: 'Test encounter',
+    mEncounterType: 2,
+    mEncounterRewardType: 1,
     mEncounterRewardAmount: 0,
     mEncounterSolutiuonA: 10,
     mEncounterSolutiuonTypeA: 5,
@@ -51,7 +59,7 @@ function baseEncounter(difficulty: number): EncounterData {
     mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
     mEncounterSolutiuonTypeD: 0,
-  } as EncounterData;
+  };
 }
 
 const favorableRolls = createEncounterRollSnapshot({
