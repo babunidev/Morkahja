@@ -12,7 +12,6 @@ import {
 } from './encounterGenerator.js';
 import { loadAvatar, saveActiveEncounter } from './encounterPersistence.js';
 import { getEncounterById } from './gameData.js';
-import { saveEncounterRoom } from './roomPersistence.js';
 import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 
 function nowMs(): number {

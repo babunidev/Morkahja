@@ -16,7 +16,6 @@ import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 import {
   findActiveRoomIdForPlayerAvatar,
   loadEncounterRoom,
-  saveEncounterRoom,
 } from './roomPersistence.js';
 
 export class LoreGemError extends Error {

@@ -70,7 +70,6 @@ import {
 } from './encounterPersistence.js';
 import { getEncounterById, getEncounters } from './gameData.js';
 import {
-  addPlayerYellowRedGems,
   grantPlayerYellowRedGemsInTransaction,
   getPlayerUnlockedExpansions,
   loadPlayer,
