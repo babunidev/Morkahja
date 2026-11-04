@@ -193,13 +193,13 @@ await ensureAvatar(session.playerId, avatarId, {
 
   await submitChoice(session.playerId, avatarId, 'dice');
   const afterLevelUpRoll = await submitContinue(session.playerId, avatarId);
-  assert.equal(afterLevelUpRoll.roomState, 'waiting_continue');
+  // Current solo system-event Continue commits the reward and advances in one
+  // action. There is no second waiting_continue acknowledgement.
+  assert.equal(afterLevelUpRoll.roomState, 'active_encounter');
 
   const activeAfterRewards = await getActiveRoomForPlayer(session.playerId, avatarId);
-  assert.equal(activeAfterRewards?.roomState, 'waiting_continue');
+  assert.equal(activeAfterRewards?.roomState, 'active_encounter');
   assert.notEqual(activeAfterRewards?.roomState, 'system_event');
-
-  await submitContinue(session.playerId, avatarId);
 
   const progressionAfterRewards = await getProgression<AvatarProgression>(session.playerId, avatarId);
   assert.equal(progressionAfterRewards?.pendingLevelUpRewards, false);
