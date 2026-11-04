@@ -41,5 +41,7 @@ jobs:
         run: npm run test:achievements --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
-      - name: Typecheck and client build
-        run: npm run typecheck
+      - name: Client build
+        run: npm run build --prefix client
+      - name: Typecheck
+        run: npm run typecheck --prefix shared && npm run typecheck --prefix server
