@@ -1003,9 +1003,17 @@ assert.equal(
 
 const leaderDto = await toEncounterRoomSnapshotDto(leaderPoolRoom, leaderPoolSession.playerId);
 const joinerDto = await toEncounterRoomSnapshotDto(joinedRoom, joinerSession.playerId);
-assert.equal(leaderDto.activeEncounter.rollA, leaderPoolRoom.slotEncounterSnapshots[0].rollA);
-assert.equal(joinerDto.activeEncounter.rollA, joinedRoom.slotEncounterSnapshots[1].rollA);
-assert.notEqual(leaderDto.activeEncounter.rollA, joinerDto.activeEncounter.rollA);
+assert.equal(leaderDto.activeEncounter.rollA, undefined, 'unplayed host must not receive pre-rolled fate');
+assert.equal(joinerDto.activeEncounter.rollA, undefined, 'unplayed guest must not receive pre-rolled fate');
+assert.equal(joinerDto.activeEncounter.rollE, undefined);
+assert.equal(joinerDto.activeEncounter.rewardIds, undefined);
+assert.equal(joinerDto.activeEncounter.prosperityRewardId, undefined);
+assert.equal(leaderDto.activeEncounter.rewardIds, undefined);
+assert.notEqual(
+  leaderPoolRoom.slotEncounterSnapshots[0].rollA,
+  joinedRoom.slotEncounterSnapshots[1].rollA,
+  'server still holds independent per-slot rolls',
+);
 
 const slotChoiceRoom = await createRoom(joinerSession.playerId, joinerAvatarId);
 const slotChoiceReady: EncounterRoom = {
@@ -1022,6 +1030,9 @@ const slotChoiceReady: EncounterRoom = {
 };
 await saveEncounterRoom(slotChoiceReady);
 const afterSlotChoice = await submitChoice(joinerSession.playerId, joinerAvatarId, 'C');
+const resolvedDto = await toEncounterRoomSnapshotDto(afterSlotChoice, joinerSession.playerId);
+assert.equal(resolvedDto.activeEncounter.rollA, slotChoiceReady.slotEncounterSnapshots[1].rollA);
+assert.deepEqual(resolvedDto.activeEncounter.rewardIds, slotChoiceReady.slotEncounterSnapshots[1].rewardIds);
 const slotChoiceParticipant = afterSlotChoice.participants.find(
   (participant) => participant.playerId === joinerSession.playerId,
 );
