@@ -616,6 +616,8 @@ export async function listPendingInvitationsForPlayer<T>(playerId: string): Prom
 export interface DocumentTransaction {
   getPlayer<T>(playerId: string): Promise<T | null>;
   getAvatar<T>(playerId: string, avatarId: string): Promise<T | null>;
+  setSession<T extends JsonObject & { accessToken: string; playerId: string }>(sessionId: string, data: T): Promise<void>;
+  deleteSession(sessionId: string): Promise<void>;
   getActiveEncounter<T>(playerId: string, avatarId: string): Promise<T | null>;
   getEncounterRoom<T>(roomId: string): Promise<T | null>;
   getInventory<T>(playerId: string, avatarId: string): Promise<T | null>;
@@ -640,6 +642,23 @@ export async function withDocumentTransaction<T>(
     const transaction: DocumentTransaction = {
       getPlayer: async <R>(playerId: string) =>
         one(client.query('SELECT data FROM players WHERE id = $1 FOR UPDATE', [playerId])) as Promise<R | null>,
+      setSession: async <R extends JsonObject & { accessToken: string; playerId: string }>(
+        sessionId: string,
+        data: R,
+      ) => {
+        await client.query(
+          `INSERT INTO sessions (id, access_token, player_id, data)
+           VALUES ($1, $2, $3, $4::jsonb)
+           ON CONFLICT (id) DO UPDATE SET
+             access_token = EXCLUDED.access_token,
+             player_id = EXCLUDED.player_id,
+             data = EXCLUDED.data`,
+          [sessionId, data.accessToken, data.playerId, JSON.stringify(data)],
+        );
+      },
+      deleteSession: async (sessionId: string) => {
+        await client.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+      },
       getAvatar: async <R>(playerId: string, avatarId: string) =>
         one(client.query(
           'SELECT data FROM avatars WHERE player_id = $1 AND id = $2 FOR UPDATE',
