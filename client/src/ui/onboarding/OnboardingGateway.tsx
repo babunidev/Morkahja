@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { bootstrapSession, type ClientSession } from '../../api/http.js';
+import {
+  bootstrapSession,
+  requestSessionChallenge,
+  type ClientSession,
+  type SessionChallengePurpose,
+} from '../../api/http.js';
 import { seedDefaultAudioVolumesIfUnset } from '../audioVolume.js';
 import { PanelButton } from '../common/PanelButton.js';
 import { protectedImageProps } from '../protectedImage.js';
@@ -11,12 +16,39 @@ import {
   readRecoveryKey,
   recoveryKeyFilename,
   saveIdentityKeypair,
-  RESTORE_CHALLENGE_PREFIX,
   signChallenge,
+  type StoredKeypair,
 } from '../../sessionKeys.js';
 import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
 import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
+
+async function signedBootstrapInput(
+  device: StoredKeypair,
+  identity: StoredKeypair,
+  purpose: SessionChallengePurpose,
+) {
+  const devicePublicKey = publicKeyString(device.publicKey);
+  const identityPublicKey = publicKeyString(identity.publicKey);
+  const { challenge } = await requestSessionChallenge({
+    devicePublicKey,
+    identityPublicKey,
+    purpose,
+  });
+
+  const [identitySignature, deviceSignature] = await Promise.all([
+    signChallenge(identity.privateKey, challenge),
+    signChallenge(device.privateKey, challenge),
+  ]);
+
+  return {
+    devicePublicKey,
+    identityPublicKey,
+    purpose,
+    signedIdentityChallenge: { challenge, signature: identitySignature },
+    signedDeviceChallenge: { challenge, signature: deviceSignature },
+  };
+}
 
 const ONBOARDING_FADE_MS = 730;
 
@@ -302,9 +334,9 @@ export function OnboardingGateway({
 
     try {
       const [device, identity] = await Promise.all([deviceKeypair(), generateKeypair()]);
+      const signedInput = await signedBootstrapInput(device, identity, 'register');
       const session = await bootstrapSession({
-        devicePublicKey: publicKeyString(device.publicKey),
-        identityPublicKey: publicKeyString(identity.publicKey),
+        ...signedInput,
         playerName: trimmedPlayerName,
       });
 
@@ -329,14 +361,8 @@ export function OnboardingGateway({
 
     try {
       const [device, recoveryKey] = await Promise.all([deviceKeypair(), readRecoveryKey(file)]);
-      const identityPublicKey = publicKeyString(recoveryKey.publicKey);
-      const challenge = `${RESTORE_CHALLENGE_PREFIX}${identityPublicKey}`;
-      const signature = await signChallenge(recoveryKey.privateKey, challenge);
-      const session = await bootstrapSession({
-        devicePublicKey: publicKeyString(device.publicKey),
-        identityPublicKey,
-        signedIdentityChallenge: { challenge, signature },
-      });
+      const signedInput = await signedBootstrapInput(device, recoveryKey, 'restore');
+      const session = await bootstrapSession(signedInput);
 
       saveIdentityKeypair(session.playerId, {
         privateKey: recoveryKey.privateKey,

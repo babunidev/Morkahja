@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
-import { bootstrapSession } from './sessionService.js';
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 import { submitChoice, submitContinue } from './roomService.js';
 import { savePlayerAvatar } from './playerService.js';
 import { loadInventory } from './inventoryService.js';
@@ -13,10 +13,6 @@ import {
 import { createRoom } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
 import { ensureAvatar } from './encounterGenerator.js';
-
-function randomDeviceKey(): string {
-  return `device-atranor-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
 
 function totalEssenceUses(inventory: AvatarInventory): number {
   return inventory.essences.reduce((total, item) => total + item.uses, 0);
@@ -32,18 +28,7 @@ function totalInventoryUses(inventory: AvatarInventory): number {
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-const signature = sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `atranor-test-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `atranor-test-${Date.now()}`);
 
 const actorAvatarId = `avatar-actor-${Date.now()}`;
 const witnessAvatarId = `avatar-witness-${Date.now()}`;

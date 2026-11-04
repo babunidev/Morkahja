@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
 import {
   applyPendingLevelUpRewardsFlag,
@@ -21,11 +21,7 @@ import {
   submitContinue,
 } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
-import { bootstrapSession } from './sessionService.js';
-
-function randomDeviceKey(): string {
-  return `device-pending-lvl-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
 function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRoom {
   return {
@@ -93,18 +89,7 @@ function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRo
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `pending-level-up-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `pending-level-up-${Date.now()}`);
 
 const avatarId = `avatar-pending-lvl-${Date.now()}`;
 
