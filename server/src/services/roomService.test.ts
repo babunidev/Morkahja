@@ -1271,14 +1271,14 @@ assert.equal(
   'solo away should keep the open room indexed for rejoin',
 );
 
-const countAdventureStartedEvents = (
-  entries: Awaited<ReturnType<typeof queryActivityFeed>>,
-): number => entries.filter((entry) => entry.eventType === 'adventure_started').length;
-
-const adventureStartedBeforeRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
+// The Scribes feed returns a bounded recent window. An old adventure_started
+// event may drop out when a fresh event is added; compare unique event IDs.
+const adventureStartedBeforeRestore = new Set(
+  (await queryActivityFeed(soloCheckpointSession.playerId))
+    .filter((entry) => entry.eventType === 'adventure_started')
+    .map((entry) => entry.eventId),
 );
-assert.ok(adventureStartedBeforeRestore >= 1);
+assert.ok(adventureStartedBeforeRestore.size >= 1);
 
 const restored = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
 assert.equal(restored.roomId, soloRoom.roomId);
@@ -1287,13 +1287,11 @@ assert.notEqual(
   snapshotIdBeforeLeave,
   'solo leave with choice should advance before rejoin',
 );
-const adventureStartedAfterRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
-assert.equal(
-  adventureStartedAfterRestore,
-  adventureStartedBeforeRestore + 1,
-  'rejoining an open solo room should publish adventure_started',
+const adventureStartedAfterRestore = (await queryActivityFeed(soloCheckpointSession.playerId))
+  .filter((entry) => entry.eventType === 'adventure_started');
+assert.ok(
+  adventureStartedAfterRestore.some((entry) => !adventureStartedBeforeRestore.has(entry.eventId)),
+  'rejoining an open solo room should publish a new adventure_started event',
 );
 
 const soloNoChoiceKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
