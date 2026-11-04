@@ -37,6 +37,8 @@ jobs:
         run: npm run verify:static-data
       - name: Server session auth test
         run: npm run test:session-auth --prefix server
+      - name: Server persistence concurrency test
+        run: npm run test:persistence --prefix server
       - name: Server achievements test
         run: npm run test:achievements --prefix server
       - name: Server dice test
