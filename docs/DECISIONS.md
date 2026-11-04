@@ -33,3 +33,11 @@ Babuni.dev chose the actual project repository as the intended public source, re
 Babuni.dev clarified that project artwork was generated with AI and then manually cut out, arranged and composed in Photoshop/GIMP, including portraits, frames, item images and substantial UI work. Babuni.dev also manually entered project data. The music has a separate human author credited in About Us. This describes creative provenance; permission to redistribute contributed music is not inferred. The fuller development history remains a living work in progress.
 
 **AI contribution:** Recorded the author’s decision and clarification, separately from observed GitHub visibility. Earlier documentation-only publication was considered and is superseded as the intended long-term source. No root license was selected by this update; public visibility, open-source reuse permissions, media rights and production readiness are separate matters. No runtime testing or behavior change is claimed.
+
+## D-006 — Visible progress is not an earned achievement (2026-11-04)
+
+**Babuni's direction:** An achievement chain becomes visible when progress exceeds zero. Neither a bonus nor an achievement-unlocked notice is earned until a defined milestone is reached. Combatant must complete 50 successful combat encounters for its first rank; Pathfinder should correspond to three created avatars rather than the first avatar.
+
+**AI implementation for review:** The client watches for rank increases, rather than first visibility. The server grants rank-based Hearth Blessing bonuses and avatar display titles only for earned ranks. Firestarter's four milestones were arranged as two avatars (Firestarter), three avatars (Pathfinder), 15 combined avatar levels (Wayseeker), and 30 combined levels (Fateforger). The 15-level threshold is an AI-chosen intermediate value, **not an independently confirmed creative decision**, and remains subject to review. Stored Firestarter progress is retained; effective ranks are re-evaluated against the revised milestones, with legacy max-rank encoding preserved.
+
+**Verification boundary:** Source edits and focused tests were added on a separate GitHub review branch. Full gameplay, deployment, and database-backed regression have not been verified by this documentation entry.
