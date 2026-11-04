@@ -16,6 +16,7 @@ import {
   listAvatars,
   setPlayer,
   withDocumentTransaction,
+  type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import { getExpansionById } from './gameData.js';
 import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
@@ -354,6 +355,7 @@ export async function unlockPlayerExpansion(
 export async function grantPlayerExpansion(
   playerId: string,
   expansionId: number,
+  transaction?: DocumentTransaction,
 ): Promise<{
   unlockedExpansions: number[];
   expansionId: number;
@@ -369,8 +371,8 @@ export async function grantPlayerExpansion(
     throw new ExpansionNotFoundError();
   }
 
-  return withDocumentTransaction(async (transaction) => {
-    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+  const applyGrant = async (currentTransaction: DocumentTransaction) => {
+    const player = await currentTransaction.getPlayer<Partial<PlayerDocument>>(playerId);
     if (!player) {
       throw new Error(`Player not found: ${playerId}`);
     }
@@ -384,7 +386,7 @@ export async function grantPlayerExpansion(
 
     const nextUnlocked = uniqueSorted([...unlockedExpansions, expansionId]);
 
-    await transaction.setPlayer(
+    await currentTransaction.setPlayer(
       playerId,
       {
         unlockedExpansions: nextUnlocked,
@@ -394,7 +396,8 @@ export async function grantPlayerExpansion(
     );
 
     return { unlockedExpansions: nextUnlocked, expansionId, alreadyUnlocked: false };
-  });
+  };
+  return transaction ? applyGrant(transaction) : withDocumentTransaction(applyGrant);
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(

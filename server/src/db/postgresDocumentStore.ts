@@ -1,7 +1,7 @@
 import './loadDatabaseConfig.js';
 
 import pg from 'pg';
-import type { Pool as PgPool, PoolClient, QueryResult } from 'pg';
+import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 const { Pool } = pg;
 
@@ -614,6 +614,8 @@ export async function listPendingInvitationsForPlayer<T>(playerId: string): Prom
 }
 
 export interface DocumentTransaction {
+  /** SQL needed by other atomic workflows, executed on the same checked-out client. */
+  query<R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]): Promise<QueryResult<R>>;
   getPlayer<T>(playerId: string): Promise<T | null>;
   getAvatar<T>(playerId: string, avatarId: string): Promise<T | null>;
   setSession<T extends JsonObject & { accessToken: string; playerId: string }>(sessionId: string, data: T): Promise<void>;
@@ -640,6 +642,8 @@ export async function withDocumentTransaction<T>(
     await client.query('BEGIN');
 
     const transaction: DocumentTransaction = {
+      query: <R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]) =>
+        client.query<R>(sql, values),
       getPlayer: async <R>(playerId: string) =>
         one(client.query('SELECT data FROM players WHERE id = $1 FOR UPDATE', [playerId])) as Promise<R | null>,
       setSession: async <R extends JsonObject & { accessToken: string; playerId: string }>(

@@ -43,6 +43,8 @@ jobs:
         run: npm run test:achievements --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
+      - name: Stripe fulfillment retry and concurrency test
+        run: npm run test:commerce --prefix server
       - name: Server room regression tests (repeat to check room lookup stability)
         run: |
           for attempt in 1 2 3; do
