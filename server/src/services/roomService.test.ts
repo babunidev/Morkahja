@@ -19,7 +19,7 @@ import {
   submitChoice,
   submitContinue,
 } from './roomService.js';
-import { getProgression, setPlayer } from '../db/postgresDocumentStore.js';
+import { getProgression, pool, setPlayer } from '../db/postgresDocumentStore.js';
 import { queryActivityFeed } from './gameEventService.js';
 import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
@@ -1280,13 +1280,18 @@ assert.equal(
   'solo away should keep the open room indexed for rejoin',
 );
 
-const countAdventureStartedEvents = (
-  entries: Awaited<ReturnType<typeof queryActivityFeed>>,
-): number => entries.filter((entry) => entry.eventType === 'adventure_started').length;
+// Scribes shows at most 50 events across public and player-relevant traffic.
+// On a reused development database, that rolling window is not an event count.
+const countStoredAdventureStarts = async (): Promise<number> => {
+  const result = await pool.query<{ count: number }>(
+    `SELECT COUNT(*)::integer AS count FROM game_events
+     WHERE player_id = $1 AND avatar_id = $2 AND type = 'adventure_started'`,
+    [soloCheckpointSession.playerId, soloCheckpointAvatarId],
+  );
+  return result.rows[0]?.count ?? 0;
+};
 
-const adventureStartedBeforeRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
+const adventureStartedBeforeRestore = await countStoredAdventureStarts();
 assert.ok(adventureStartedBeforeRestore >= 1);
 
 const restored = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
@@ -1296,9 +1301,7 @@ assert.notEqual(
   snapshotIdBeforeLeave,
   'solo leave with choice should advance before rejoin',
 );
-const adventureStartedAfterRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
+const adventureStartedAfterRestore = await countStoredAdventureStarts();
 assert.equal(
   adventureStartedAfterRestore,
   adventureStartedBeforeRestore + 1,
