@@ -1225,7 +1225,16 @@ const guestAfterAdvance = await joinRoom(
 const guestFreshChooser = guestAfterAdvance.participants.find(
   (participant) => participant.playerId === guestSession.playerId,
 );
-assert.equal(guestFreshChooser?.choiceState, 'choosing');
+// A late joiner witnesses the current system event, but may choose normally
+// if the host advanced to a regular encounter while the guest was away.
+const currentEvent = guestAfterAdvance.systemEvent;
+const systemEventActorId = currentEvent?.queue[currentEvent.queueIndex]?.actorPlayerId
+  ?? currentEvent?.lastEvent?.actorPlayerId;
+const guestExpectedChoiceState = guestAfterAdvance.roomState === 'system_event'
+  && currentEvent
+  && systemEventActorId !== guestSession.playerId
+  ? 'witnessing' : 'choosing';
+assert.equal(guestFreshChooser?.choiceState, guestExpectedChoiceState);
 assert.equal(guestFreshChooser?.preparedResult, undefined);
 assert.equal(guestFreshChooser?.resolutionSummary, undefined);
 

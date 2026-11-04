@@ -43,6 +43,8 @@ jobs:
         run: npm run test:achievements --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
+      - name: Server room regression tests
+        run: npm run test:rooms --prefix server
       - name: Client build
         run: npm run build --prefix client
       - name: Typecheck
