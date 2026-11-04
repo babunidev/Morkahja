@@ -152,8 +152,20 @@ await ensureAvatar(session.playerId, avatarId, {
   };
   await saveEncounterRoom(room);
 
-  await submitChoice(session.playerId, avatarId, 'A');
+  const afterChoice = await submitChoice(session.playerId, avatarId, 'A');
+  console.log('Pending level-up diagnostic: before continue', {
+    initialRoomState: room.roomState,
+    choiceRoomState: afterChoice.roomState,
+    participant: afterChoice.participants[0]?.choiceState,
+    prepared: afterChoice.participants[0]?.preparedCommit?.eventContext,
+    progression: await getProgression<AvatarProgression>(session.playerId, avatarId),
+  });
   const afterContinue = await submitContinue(session.playerId, avatarId);
+  console.log('Pending level-up diagnostic: after continue', {
+    roomState: afterContinue.roomState,
+    queue: afterContinue.systemEvent?.queue,
+    progression: await getProgression<AvatarProgression>(session.playerId, avatarId),
+  });
   assert.equal(afterContinue.roomState, 'system_event');
   assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
