@@ -27,3 +27,9 @@ The original record follows the move from structured encounter/solution data int
 ## Public repository preparation — 31 October 2026
 
 The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
+
+## Achievement progression
+
+Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
+
+The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. These values are part of a reviewable gameplay change, not a claim that the branch has been deployed.
