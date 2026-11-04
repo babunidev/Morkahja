@@ -167,12 +167,15 @@ export async function setPlayer<T extends JsonObject>(
   options: { merge?: boolean } = {},
 ): Promise<void> {
   await ensureSchema();
-  const existing = options.merge ? await getPlayer<T>(playerId) : null;
+  // PostgreSQL performs the merge against the current locked row; no stale read/merge/write.
   await pool.query(
     `INSERT INTO players (id, data)
      VALUES ($1, $2::jsonb)
-     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
-    [playerId, JSON.stringify(mergeData(existing, data, options.merge))],
+     ON CONFLICT (id) DO UPDATE
+     SET data = CASE WHEN $3::boolean
+       THEN players.data || EXCLUDED.data
+       ELSE EXCLUDED.data END`,
+    [playerId, JSON.stringify(data), options.merge === true],
   );
 }
 
@@ -393,12 +396,14 @@ export async function setAvatar<T extends JsonObject>(
   options: { merge?: boolean } = {},
 ): Promise<void> {
   await ensureSchema();
-  const existing = options.merge ? await getAvatar<T>(playerId, avatarId) : null;
   await pool.query(
     `INSERT INTO avatars (player_id, id, data)
      VALUES ($1, $2, $3::jsonb)
-     ON CONFLICT (player_id, id) DO UPDATE SET data = EXCLUDED.data`,
-    [playerId, avatarId, JSON.stringify(mergeData(existing, data, options.merge))],
+     ON CONFLICT (player_id, id) DO UPDATE
+     SET data = CASE WHEN $4::boolean
+       THEN avatars.data || EXCLUDED.data
+       ELSE EXCLUDED.data END`,
+    [playerId, avatarId, JSON.stringify(data), options.merge === true],
   );
 }
 
@@ -671,12 +676,14 @@ export async function withDocumentTransaction<T>(
         data: R,
         options: { merge?: boolean } = {},
       ) => {
-        const existing = options.merge ? await transaction.getPlayer<R>(playerId) : null;
         await client.query(
           `INSERT INTO players (id, data)
            VALUES ($1, $2::jsonb)
-           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
-          [playerId, JSON.stringify(mergeData(existing, data, options.merge))],
+           ON CONFLICT (id) DO UPDATE
+           SET data = CASE WHEN $3::boolean
+             THEN players.data || EXCLUDED.data
+             ELSE EXCLUDED.data END`,
+          [playerId, JSON.stringify(data), options.merge === true],
         );
       },
       setAvatar: async <R extends JsonObject>(
@@ -685,12 +692,14 @@ export async function withDocumentTransaction<T>(
         data: R,
         options: { merge?: boolean } = {},
       ) => {
-        const existing = options.merge ? await transaction.getAvatar<R>(playerId, avatarId) : null;
         await client.query(
           `INSERT INTO avatars (player_id, id, data)
            VALUES ($1, $2, $3::jsonb)
-           ON CONFLICT (player_id, id) DO UPDATE SET data = EXCLUDED.data`,
-          [playerId, avatarId, JSON.stringify(mergeData(existing, data, options.merge))],
+           ON CONFLICT (player_id, id) DO UPDATE
+           SET data = CASE WHEN $4::boolean
+             THEN avatars.data || EXCLUDED.data
+             ELSE EXCLUDED.data END`,
+          [playerId, avatarId, JSON.stringify(data), options.merge === true],
         );
       },
       setActiveEncounter: async <R extends JsonObject>(playerId: string, avatarId: string, data: R) => {

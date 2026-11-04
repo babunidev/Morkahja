@@ -156,21 +156,17 @@ export async function ensurePlayerUnlockedExpansions(
   playerId: string,
   unlockedExpansions = DEFAULT_UNLOCKED_EXPANSIONS,
 ): Promise<number[]> {
-  const player = await loadPlayer(playerId);
-  const merged = uniqueSorted([
-    ...(player?.unlockedExpansions ?? []),
-    ...unlockedExpansions,
-  ]);
-
-  await setPlayer(
-    playerId,
-    {
-      unlockedExpansions: merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS,
-    },
-    { merge: true },
-  );
-
-  return merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS;
+  // Merge unlocked expansions while holding the player row lock so purchases cannot be lost.
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const merged = uniqueSorted([
+      ...normalizeUnlockedExpansions(player?.unlockedExpansions),
+      ...unlockedExpansions,
+    ]);
+    const next = merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS;
+    await transaction.setPlayer(playerId, { unlockedExpansions: next }, { merge: true });
+    return next;
+  });
 }
 
 export async function getPlayerUnlockedExpansions(

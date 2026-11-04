@@ -297,11 +297,11 @@ export async function bootstrapSession(
   await setPlayer(
     player.playerId,
     {
-      ...player,
       activeSessionId: sessionId,
       activeSessionExpiresAt: expiresAt,
       lastPlayedAt: now,
     },
+    { merge: true },
   );
 
   return {
@@ -368,11 +368,11 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
   await setPlayer(
     player.playerId,
     {
-      ...player,
       activeSessionExpiresAt: expiresAt,
       lastPlayedAt: now,
       lastInteractionAt: now,
     },
+    { merge: true },
   );
 
   const { touchPlayerPresence } = await import('./roomService.js');
@@ -388,11 +388,11 @@ export async function logoutSession(accessToken: string): Promise<void> {
   await setPlayer(
     player.playerId,
     {
-      ...player,
       activeSessionId: null,
       activeSessionExpiresAt: null,
       lastPlayedAt: Date.now(),
     },
+    { merge: true },
   );
 }
 
