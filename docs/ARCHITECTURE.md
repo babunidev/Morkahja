@@ -38,3 +38,11 @@ This section describes the implementation on the PR branches, **not yet `main` o
 - The existing solo system-event path advances after a single successful Continue; regression fixtures use independent avatars to avoid restoring the previous system-event checkpoint. Scribes activity feeds are bounded, so tests check newly recorded event IDs rather than counting every historical event in the window.
 - The test runner now covers session authentication, atomic persistence, achievements, dice, encounter/solution, level-up, room and inventory cases. The comprehensive manual browser acceptance remains **unverified**. See [regression protocol](REGRESSION.md).
 - Existing `pg` warnings about concurrent `client.query()` on the same transaction client warrant separate future maintenance; do not confuse a deprecation warning with verified data loss.
+
+## Expanded integration CI evidence — 4 November 2026
+
+The [PR #7 release-gates workflow run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) passed static data, signed session and concurrent persistence suites, achievements, dice, encounter/solution/level-up, room/solo checkpoint/avatar death, initial inventory, client build, and shared/server typecheck at `b2aac235`. This result belongs to the remote integration branch, which already contains the updated PR #6 TypeScript maintenance via a reviewed two-parent merge commit.
+
+Tests revealed that `flattenInventorySolutionIds` expands each inventory entry once per usable charge; it must not be used to assert the number of distinct seeded starter entries. Existing gameplay inventory quantities were unchanged by fixing the test.
+
+A prior room test intermittently failed when the host continued after the guest departed; the root cause has not been established. A successful later run is not proof of stress-test reliability. Original unpublished local commits/changes, manual browser acceptance and production deployment remain unverified.

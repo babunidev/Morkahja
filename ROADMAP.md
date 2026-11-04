@@ -49,3 +49,10 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] **Manual acceptance:** Execute the [integration regression protocol](docs/REGRESSION.md) and record real player, avatar, room, reward and death results. No production deployment has occurred.
 
 **Previous October audit headings are historical** and do not override the more recent status above.
+
+### Verified integration CI result — 4 November 2026
+
+- [x] **Expanded release gates on PR #7:** GitHub Actions [run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) passed all listed workflow steps at `b2aac235`, including TypeScript, client build, room/inventory, level-up, security and persistence tests.
+- [ ] **Investigate intermittent room test:** An earlier run occasionally observed an unexpected room state after a guest departed with its prepared choice committed. The later run passed; the precise race or fixture precondition remains unverified.
+- [ ] **Original Nobara working-tree integration:** PRs #5, #6 and #7 remain unmerged; unpublished local commits and uncommitted changes have not been reconciled.
+- [ ] **Full manual browser acceptance:** The steps in [docs/REGRESSION.md](docs/REGRESSION.md) must be executed against the actual combined local checkout. No deployment is certified.

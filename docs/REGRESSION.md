@@ -47,3 +47,7 @@ Record a pass only after checking persisted server state and visible behavior. I
 - Authentication and persistence tests were previously reported passing on the isolated Nobara/Podman checkout; those tests did **not** include integration of unpublished local edits.
 - Initial PR #7 CI passed the static data, authentication, persistence, achievement, dice, client-build and TypeScript steps. Expanding the CI run exposed previously unexecuted room/level-up regression assumptions, addressed separately on this branch. Final expanded-suite status must be confirmed from GitHub Actions.
 - The comprehensive browser checklist and original-local-checkout merge are not yet verified.
+
+## Current automated evidence — 4 November 2026
+
+[GitHub Actions release-gates run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) completed successfully at integration commit `b2aac235`: static data, auth, persistence, achievements, dice, encounter/solution/level-up, rooms/solo checkpoints/death, starter inventory, client build and TypeScript checks. Prior runs exposed outdated tests and one intermittent host-after-guest-departure assertion. Its underlying cause remains open despite the later pass. No browser step in this protocol has been performed on the developer's combined local unpublished worktree; all manual cases remain **not yet verified**.

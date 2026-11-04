@@ -40,3 +40,10 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 ## 2026-10-31 — Changed: publication decision record
 
 - Recorded Babuni.dev’s open-development decision and verified current visibility in Decisions and Development journal; retained licensing, media-rights and deployment distinctions.
+
+## 2026-11-04 — Unreleased: expanded release gate passes on integration branch
+
+- Corrected an old starter-inventory test that confused **13 Mage / 14 Warrior distinct seeded entries** with the greater number of individual item uses. Production starting items and their uses were not changed by this test correction.
+- Expanded CI now exercises authentication, concurrency, achievements, dice, encounter/solution/level-up, room/death/checkpoint, inventory, static-data, client build and shared/server typechecks. All steps passed in [workflow run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723), integration commit `b2aac235`.
+- An intermittent room test failure was also observed in an earlier CI run after a guest left; a more informative assertion records the room state when it fails. The root cause is not yet verified.
+- **Unreleased:** No PR merged, original unpublished local changes not reconciled, manual browser regression and production deployment not verified.
