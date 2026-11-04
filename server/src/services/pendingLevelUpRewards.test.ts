@@ -23,6 +23,7 @@ import {
 } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
+import { clearSoloCheckpointForAvatar } from './soloRoomCheckpointService.js';
 
 function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRoom {
   return {
@@ -126,6 +127,9 @@ await ensureAvatar(session.playerId, avatarId, {
 
 {
   await leaveAllRoomsForPlayer(session.playerId);
+  // The previous case intentionally parked a level-up system event. This case
+  // needs a fresh ordinary encounter instead of restoring that checkpoint.
+  await clearSoloCheckpointForAvatar(session.playerId, avatarId);
   await setProgression(session.playerId, avatarId, {
     ...createInitialProgression(),
     experience: 6,
