@@ -51,3 +51,5 @@ Record a pass only after checking persisted server state and visible behavior. I
 ## Current automated evidence — 4 November 2026
 
 [GitHub Actions release-gates run #78](https://github.com/babunidev/Morkahja/actions/runs/41766441723) completed successfully at integration commit `b2aac235`: static data, auth, persistence, achievements, dice, encounter/solution/level-up, rooms/solo checkpoints/death, starter inventory, client build and TypeScript checks. Prior runs exposed outdated tests and one intermittent host-after-guest-departure assertion. Its underlying cause remains open despite the later pass. No browser step in this protocol has been performed on the developer's combined local unpublished worktree; all manual cases remain **not yet verified**.
+
+**Latest CI verification:** [Run #80](https://github.com/babunidev/Morkahja/actions/runs/41766927692) succeeded at `e434b78` after making the guest-departure room regression use deterministic favorable dice. The earlier intermittent behavior on random outcomes remains an unverified edge case, not an accepted gameplay change. Local integration and manual browser checks remain pending.

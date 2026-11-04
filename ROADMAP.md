@@ -56,3 +56,6 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] **Investigate intermittent room test:** An earlier run occasionally observed an unexpected room state after a guest departed with its prepared choice committed. The later run passed; the precise race or fixture precondition remains unverified.
 - [ ] **Original Nobara working-tree integration:** PRs #5, #6 and #7 remain unmerged; unpublished local commits and uncommitted changes have not been reconciled.
 - [ ] **Full manual browser acceptance:** The steps in [docs/REGRESSION.md](docs/REGRESSION.md) must be executed against the actual combined local checkout. No deployment is certified.
+
+- [x] **Latest expanded CI after room-fixture stabilization:** [Run #80](https://github.com/babunidev/Morkahja/actions/runs/41766927692) passed all steps on integration commit `e434b78`.
+- [ ] **Further room-stress verification:** Randomized guest-leave testing had an intermittent failure before the fixture was constrained to favorable dice. The fixture now verifies its intended state transition; investigate the broader randomized edge case separately. This does not block the verified deterministic regression, but it does not certify every random encounter path.
