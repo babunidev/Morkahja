@@ -1135,7 +1135,24 @@ partyRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(partyRoom);
-await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+const joinedPartyRoom = await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+// The test verifies leave/continue bookkeeping, not random fate. Favorable
+// dice avoid a random death or other special outcome changing the room state.
+const favorablePartyRoom: EncounterRoom = {
+  ...joinedPartyRoom,
+  activeEncounterSnapshot: {
+    ...joinedPartyRoom.activeEncounterSnapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: joinedPartyRoom.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(favorablePartyRoom);
 
 await submitChoice(session.playerId, avatarId, 'dice');
 const guestChoiceRoom = await submitChoice(guestSession.playerId, guestAvatarId, 'dice');
