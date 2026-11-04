@@ -12,6 +12,7 @@ import { recordDailyEncounterPlayed } from '../domain/achievements/dailyRewardSe
 import {
   addPlayerYellowRedGems,
   donatePlayerYellowRedGems,
+  savePlayerAvatar,
 } from '../services/playerService.js';
 import { heartbeatSession, logoutSession, SessionError } from '../services/sessionService.js';
 import { bootstrapTestSession } from './sessionAuthTestHelpers.js';
@@ -69,6 +70,29 @@ const countedAvatar = await getAvatar<{ progression?: { experience?: number } }>
   avatarId,
 );
 assert.equal(countedAvatar?.progression?.experience, 24);
+
+// Full avatar saves must rebuild their snapshots from a locked row rather
+// than overwriting concurrent independent avatar changes.
+const serviceAvatarId = `atomic-save-avatar-${randomUUID()}`;
+const payload = {
+  id: serviceAvatarId,
+  name: 'Atomic Adventurer',
+  race: 'Rokur' as const,
+  role: 'Warrior' as const,
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+};
+await savePlayerAvatar(playerId, payload);
+await Promise.all([
+  ...Array.from({ length: 8 }, () => savePlayerAvatar(playerId, payload)),
+  ...Array.from({ length: 16 }, (_, index) =>
+    setAvatar(playerId, serviceAvatarId, { [`independentField${index}`]: index }, { merge: true })),
+]);
+const savedAvatar = await getAvatar<Record<string, unknown>>(playerId, serviceAvatarId);
+assert.ok(savedAvatar);
+for (let index = 0; index < 16; index += 1) {
+  assert.equal(savedAvatar[`independentField${index}`], index);
+}
 
 // Encounter progress must not drop any simultaneous updates.
 await Promise.all(Array.from({ length: 24 }, () => recordDailyEncounterPlayed(playerId)));
