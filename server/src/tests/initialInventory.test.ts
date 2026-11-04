@@ -127,6 +127,24 @@ function testRandomSampleWithoutReplacement(): void {
   assertEqual(exhaustivePool.join(','), '10062', 'single-candidate pool');
 }
 
+function assertSeededEntriesAndUses(
+  inventory: ReturnType<typeof createInitialAvatarInventory>,
+  seedIds: number[],
+  expectedEntries: number,
+  role: string,
+): void {
+  const entries = [...inventory.spellbook, ...inventory.items, ...inventory.essences];
+  assertEqual(seedIds.length, expectedEntries, `${role} seed id count`);
+  assertEqual(entries.length, expectedEntries, `${role} inventory entry count`);
+  const totalUses = entries.reduce((sum, item) => sum + item.uses, 0);
+  assertEqual(
+    flattenInventorySolutionIds(inventory).length,
+    totalUses,
+    `${role} flattened inventory must count each use, not each entry`,
+  );
+  assert(totalUses >= entries.length, `${role} should have at least one use per entry`);
+}
+
 function testDeterministicMageStarterPack(): void {
   const profile: AvatarProfile = {
     roleRewardType: 37,
@@ -137,11 +155,7 @@ function testDeterministicMageStarterPack(): void {
 
   assert(!seedIds.includes(WARRIOR_IMPROVISED_WEAPON_ID), 'mage starter must not include improvised weapon');
   assertInventoryShape(profile, inventory);
-  assertEqual(
-    flattenInventorySolutionIds(inventory).length,
-    13,
-    'mage total seeded solutions',
-  );
+  assertSeededEntriesAndUses(inventory, seedIds, 13, 'mage');
 }
 
 function testWarriorGetsImprovisedWeapon(): void {
@@ -158,11 +172,7 @@ function testWarriorGetsImprovisedWeapon(): void {
     'warrior inventory must contain improvised weapon in items',
   );
   assertInventoryShape(profile, inventory);
-  assertEqual(
-    flattenInventorySolutionIds(inventory).length,
-    14,
-    'warrior total seeded solutions',
-  );
+  assertSeededEntriesAndUses(inventory, seedIds, 14, 'warrior');
 }
 
 function testLiveRandomizationVaries(): void {
