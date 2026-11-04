@@ -22,11 +22,7 @@ import {
   submitChoice,
   submitContinue,
 } from './roomService.js';
-import { bootstrapSession } from './sessionService.js';
-
-function randomDeviceKey(): string {
-  return `device-system-inv-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
 function countSolutionCharges(
   inventory: Awaited<ReturnType<typeof loadInventory>>,
@@ -74,11 +70,7 @@ sign(
   { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
 ).toString('base64url');
 
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `system-event-inventory-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `system-event-inventory-${Date.now()}`);
 
 const avatarId = `avatar-system-inv-${Date.now()}`;
 

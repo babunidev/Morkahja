@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
-import { bootstrapSession } from './sessionService.js';
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 import { shouldUseEncounterFollow } from './encounterGenerator.js';
 import {
   broadcastCallForHelp,
@@ -27,27 +27,12 @@ import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomCons
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom, findActiveRoomIdForPlayerAvatar } from './roomPersistence.js';
 
-function randomDeviceKey(): string {
-  return `device-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
-
 assert.deepEqual(clientActionToPlayerAction('C'), { type: 'primaryC' });
 assert.deepEqual(clientActionToPlayerAction('dice'), { type: 'dice' });
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-const signature = sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `room-test-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `room-test-${Date.now()}`);
 
 const avatarId = `avatar-${Date.now()}`;
 const { savePlayerAvatar } = await import('./playerService.js');
@@ -759,11 +744,7 @@ const concurrentHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' })
 const concurrentHostIdentityJwk = JSON.stringify(
   concurrentHostKeyPair.publicKey.export({ format: 'jwk' }),
 );
-const concurrentHostSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: concurrentHostIdentityJwk,
-  playerName: `concurrent-host-${Date.now()}`,
-});
+const concurrentHostSession = await bootstrapTestSession(concurrentHostKeyPair, concurrentHostIdentityJwk, `concurrent-host-${Date.now()}`);
 const concurrentHostAvatarId = `concurrent-host-${Date.now()}`;
 await savePlayerAvatar(concurrentHostSession.playerId, {
   id: concurrentHostAvatarId,
@@ -779,11 +760,7 @@ const concurrentGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' }
 const concurrentGuestIdentityJwk = JSON.stringify(
   concurrentGuestKeyPair.publicKey.export({ format: 'jwk' }),
 );
-const concurrentGuestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: concurrentGuestIdentityJwk,
-  playerName: `concurrent-guest-${Date.now()}`,
-});
+const concurrentGuestSession = await bootstrapTestSession(concurrentGuestKeyPair, concurrentGuestIdentityJwk, `concurrent-guest-${Date.now()}`);
 const concurrentGuestAvatarId = `concurrent-guest-${Date.now()}`;
 await savePlayerAvatar(concurrentGuestSession.playerId, {
   id: concurrentGuestAvatarId,
@@ -979,11 +956,7 @@ assert.equal(
 
 const leaderPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const leaderPoolIdentityJwk = JSON.stringify(leaderPoolKeyPair.publicKey.export({ format: 'jwk' }));
-const leaderPoolSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: leaderPoolIdentityJwk,
-  playerName: `room-leader-pool-${Date.now()}`,
-});
+const leaderPoolSession = await bootstrapTestSession(leaderPoolKeyPair, leaderPoolIdentityJwk, `room-leader-pool-${Date.now()}`);
 const leaderPoolAvatarId = `leader-pool-${Date.now()}`;
 await savePlayerAvatar(leaderPoolSession.playerId, {
   id: leaderPoolAvatarId,
@@ -999,11 +972,7 @@ const leaderExpansionsBeforeJoin = [...leaderPoolRoom.mergedExpansions];
 
 const joinerPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const joinerPoolIdentityJwk = JSON.stringify(joinerPoolKeyPair.publicKey.export({ format: 'jwk' }));
-const joinerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: joinerPoolIdentityJwk,
-  playerName: `room-joiner-pool-${Date.now()}`,
-});
+const joinerSession = await bootstrapTestSession(joinerPoolKeyPair, joinerPoolIdentityJwk, `room-joiner-pool-${Date.now()}`);
 const joinerAvatarId = `joiner-pool-${Date.now()}`;
 await savePlayerAvatar(joinerSession.playerId, {
   id: joinerAvatarId,
@@ -1068,11 +1037,7 @@ assert.ok(
 
 const helpCallerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpCallerIdentityJwk = JSON.stringify(helpCallerKeyPair.publicKey.export({ format: 'jwk' }));
-const helpCallerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpCallerIdentityJwk,
-  playerName: `room-help-caller-${Date.now()}`,
-});
+const helpCallerSession = await bootstrapTestSession(helpCallerKeyPair, helpCallerIdentityJwk, `room-help-caller-${Date.now()}`);
 const helpCallerAvatarId = `help-caller-${Date.now()}`;
 await savePlayerAvatar(helpCallerSession.playerId, {
   id: helpCallerAvatarId,
@@ -1087,11 +1052,7 @@ await createRoom(helpCallerSession.playerId, helpCallerAvatarId);
 
 const helpFriendKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpFriendIdentityJwk = JSON.stringify(helpFriendKeyPair.publicKey.export({ format: 'jwk' }));
-const helpFriendSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpFriendIdentityJwk,
-  playerName: `room-help-friend-${Date.now()}`,
-});
+const helpFriendSession = await bootstrapTestSession(helpFriendKeyPair, helpFriendIdentityJwk, `room-help-friend-${Date.now()}`);
 await savePlayerAvatar(helpFriendSession.playerId, {
   id: `help-friend-${Date.now()}`,
   name: 'Help Friend',
@@ -1104,11 +1065,7 @@ await savePlayerAvatar(helpFriendSession.playerId, {
 
 const helpStrangerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpStrangerIdentityJwk = JSON.stringify(helpStrangerKeyPair.publicKey.export({ format: 'jwk' }));
-const helpStrangerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpStrangerIdentityJwk,
-  playerName: `room-help-stranger-${Date.now()}`,
-});
+const helpStrangerSession = await bootstrapTestSession(helpStrangerKeyPair, helpStrangerIdentityJwk, `room-help-stranger-${Date.now()}`);
 await savePlayerAvatar(helpStrangerSession.playerId, {
   id: `help-stranger-${Date.now()}`,
   name: 'Help Stranger',
@@ -1156,11 +1113,7 @@ if (strangerInvites.some((invite) => invite.fromPlayerId === helpCallerSession.p
 
 const guestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const guestIdentityJwk = JSON.stringify(guestKeyPair.publicKey.export({ format: 'jwk' }));
-const guestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: guestIdentityJwk,
-  playerName: `room-guest-${Date.now()}`,
-});
+const guestSession = await bootstrapTestSession(guestKeyPair, guestIdentityJwk, `room-guest-${Date.now()}`);
 const guestAvatarId = `guest-avatar-${Date.now()}`;
 await savePlayerAvatar(guestSession.playerId, {
   id: guestAvatarId,
@@ -1278,11 +1231,7 @@ assert.equal(guestFreshChooser?.resolutionSummary, undefined);
 
 const soloCheckpointKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const soloCheckpointIdentityJwk = JSON.stringify(soloCheckpointKeyPair.publicKey.export({ format: 'jwk' }));
-const soloCheckpointSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: soloCheckpointIdentityJwk,
-  playerName: `solo-checkpoint-${Date.now()}`,
-});
+const soloCheckpointSession = await bootstrapTestSession(soloCheckpointKeyPair, soloCheckpointIdentityJwk, `solo-checkpoint-${Date.now()}`);
 const soloCheckpointAvatarId = `solo-checkpoint-${Date.now()}`;
 await savePlayerAvatar(soloCheckpointSession.playerId, {
   id: soloCheckpointAvatarId,
@@ -1349,11 +1298,7 @@ assert.equal(
 
 const soloNoChoiceKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const soloNoChoiceIdentityJwk = JSON.stringify(soloNoChoiceKeyPair.publicKey.export({ format: 'jwk' }));
-const soloNoChoiceSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: soloNoChoiceIdentityJwk,
-  playerName: `solo-no-choice-${Date.now()}`,
-});
+const soloNoChoiceSession = await bootstrapTestSession(soloNoChoiceKeyPair, soloNoChoiceIdentityJwk, `solo-no-choice-${Date.now()}`);
 const soloNoChoiceAvatarId = `solo-no-choice-${Date.now()}`;
 await savePlayerAvatar(soloNoChoiceSession.playerId, {
   id: soloNoChoiceAvatarId,
@@ -1377,11 +1322,7 @@ assert.equal(
 
 const kickGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const kickGuestIdentityJwk = JSON.stringify(kickGuestKeyPair.publicKey.export({ format: 'jwk' }));
-const kickGuestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: kickGuestIdentityJwk,
-  playerName: `room-kick-guest-${Date.now()}`,
-});
+const kickGuestSession = await bootstrapTestSession(kickGuestKeyPair, kickGuestIdentityJwk, `room-kick-guest-${Date.now()}`);
 const kickGuestAvatarId = `kick-guest-${Date.now()}`;
 await savePlayerAvatar(kickGuestSession.playerId, {
   id: kickGuestAvatarId,
@@ -1394,11 +1335,7 @@ await savePlayerAvatar(kickGuestSession.playerId, {
 });
 const kickHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const kickHostIdentityJwk = JSON.stringify(kickHostKeyPair.publicKey.export({ format: 'jwk' }));
-const kickHostSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: kickHostIdentityJwk,
-  playerName: `room-kick-host-${Date.now()}`,
-});
+const kickHostSession = await bootstrapTestSession(kickHostKeyPair, kickHostIdentityJwk, `room-kick-host-${Date.now()}`);
 const kickHostAvatarId = `kick-host-${Date.now()}`;
 await savePlayerAvatar(kickHostSession.playerId, {
   id: kickHostAvatarId,

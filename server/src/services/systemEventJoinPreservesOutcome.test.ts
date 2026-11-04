@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import { DEATH_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
@@ -12,38 +12,22 @@ import {
   RoomError,
   submitChoice,
 } from './roomService.js';
-import { bootstrapSession } from './sessionService.js';
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
-function randomDeviceKey(): string {
-  return `device-sys-join-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
+const actorIdentity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const witnessIdentity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 
-function bootstrapIdentity() {
-  const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
-  const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-  const challenge = `morkahja-restore:${identityPublicJwk}`;
-  sign(
-    'sha256',
-    Buffer.from(challenge, 'utf8'),
-    { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-  ).toString('base64url');
-  return identityPublicJwk;
-}
+const actorSession = await bootstrapTestSession(
+  actorIdentity,
+  JSON.stringify(actorIdentity.publicKey.export({ format: 'jwk' })),
+  `sys-join-actor-${Date.now()}`,
+);
 
-const actorIdentity = bootstrapIdentity();
-const witnessIdentity = bootstrapIdentity();
-
-const actorSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: actorIdentity,
-  playerName: `sys-join-actor-${Date.now()}`,
-});
-
-const witnessSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: witnessIdentity,
-  playerName: `sys-join-witness-${Date.now()}`,
-});
+const witnessSession = await bootstrapTestSession(
+  witnessIdentity,
+  JSON.stringify(witnessIdentity.publicKey.export({ format: 'jwk' })),
+  `sys-join-witness-${Date.now()}`,
+);
 
 const actorAvatarId = `avatar-sys-join-actor-${Date.now()}`;
 const witnessAvatarId = `avatar-sys-join-witness-${Date.now()}`;

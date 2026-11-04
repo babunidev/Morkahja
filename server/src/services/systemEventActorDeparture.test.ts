@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
-import { bootstrapSession } from './sessionService.js';
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 import {
   createRoom,
   getActiveRoomForPlayer,
@@ -19,27 +19,10 @@ import {
   LEVEL_UP_ENCOUNTER_NUMERIC_ID,
 } from '../domain/rooms/RoomSystemEvent.js';
 
-function randomDeviceKey(): string {
-  return `device-departure-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
-
 async function bootstrapPlayer(namePrefix: string) {
   const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
   const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-  const challenge = `morkahja-restore:${identityPublicJwk}`;
-  sign(
-    'sha256',
-    Buffer.from(challenge, 'utf8'),
-    { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-  ).toString('base64url');
-
-  const session = await bootstrapSession({
-    devicePublicKey: randomDeviceKey(),
-    identityPublicKey: identityPublicJwk,
-    playerName: `${namePrefix}-${Date.now()}`,
-  });
-
-  return session;
+  return bootstrapTestSession(identityKeyPair, identityPublicJwk, `${namePrefix}-${Date.now()}`);
 }
 
 const actorSession = await bootstrapPlayer('actor-departure');
