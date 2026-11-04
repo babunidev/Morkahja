@@ -47,3 +47,7 @@ The public Scribes feed queries a rolling window of up to 50 events across globa
 ### Joining during an active system event (PR #6 regression test)
 
 `roomService.ts:createParticipantForRoomJoin` returns a regular `choosing` participant for ordinary rooms and for the system event's acting player. A non-acting participant joining while `roomState === 'system_event'` is placed in `witnessing` and receives no prior prepared result. This behavior predates the November test correction. `roomService.test.ts` now asserts the correct phase-aware state instead of assuming every fresh rejoiner is choosing. GitHub Actions run #82 executed and passed the room suite with this assertion; it does not establish that every multi-tab or concurrent room transition is safe.
+
+### CI room-test intermittency (4 November 2026)
+
+GitHub Actions run #87 attempt 1 failed the pre-existing host-advancement assertion in `roomService.test.ts:1214`; attempt 2 passed with unchanged source and the newly added smoke checks. The exact timing/state condition is not yet isolated. Room advancement depends on participant choice/continue status, focus and pending system events. Preserve the failing invariant and investigate its intermittent outcome before considering the full multiplayer transition coverage deterministic. The CI retry is proof of one successful run, not of race freedom.
