@@ -26,3 +26,15 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] Cross-reference material design decisions in dated source/commits; do not infer author acceptance of every implementation detail.
 
 **Audit boundaries:** Documentation-only source review. No builds, tests, live server calls or production data access.
+
+## Active engineering priorities — 2026-11-04 (separate from October documentation audit)
+
+- [x] **Implemented in PR #5; unmerged:** Server-issued, single-use signed authentication challenges. CI session-auth tests and Nobara local session-auth tests passed. Existing-account recovery against a populated player database and production deployment remain unverified.
+- [x] **Implemented in PR #6; unmerged:** Atomic top-level PostgreSQL player/avatar JSONB writes and row-locked state mutations; concurrency regression test passed in CI and locally using Nobara + Podman + PostgreSQL.
+- [ ] **Integrate safely:** Review/merge PR #5, then PR #6 (PR #6 targets PR #5), reconcile with the developer's unpublished local commits and modified files, and test the resulting combined codebase before release.
+- [ ] **Restore release gate:** Address existing server TypeScript errors in encounter/solution tests, pending-level-up tests, and `roomService.ts` before calling the whole workflow green.
+- [ ] **Manual acceptance:** Verify registration/recovery, gameplay, death/sacrifice, room reconnect, currency and reward conservation, and sessions after integration; do not claim this from focused automated tests alone.
+- [ ] **Further integrity and security work:** Investigate Stripe fulfillment idempotency, room joins under contention, client-visible unrevealed dice/rewards, lore gem claiming, rate limiting and token/key handling.
+- [ ] **Deferred, intentionally unchanged:** Smooth multi-tab, multi-avatar gameplay as an eventual supported feature. Existing simultaneous tabs are acceptable for now; verify independent encounter/inventory/progression state, reward conservation and session consistency before promising full support.
+
+**Evidence boundary:** The Nobara developer reported the isolated game working and both automated security/persistence tests passing on 4 November. GitHub Actions checks succeeded individually but the complete typecheck failed; neither PR was merged or deployed.

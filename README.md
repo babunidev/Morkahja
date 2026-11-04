@@ -27,3 +27,11 @@ The original record follows the move from structured encounter/solution data int
 ## Public repository preparation — 31 October 2026
 
 The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
+
+## Current development notes — 4 November 2026
+
+Recent security and persistence work is under review, **not merged into `main` or deployed**: [PR #5 — single-use session authentication challenges](https://github.com/babunidev/Morkahja/pull/5) and [PR #6 — atomic player/avatar persistence](https://github.com/babunidev/Morkahja/pull/6). PR #6 builds on PR #5.
+
+On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
+
+Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
