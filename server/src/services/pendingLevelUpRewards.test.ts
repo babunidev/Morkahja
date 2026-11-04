@@ -23,7 +23,6 @@ import {
 } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
-import { clearSoloCheckpointForAvatar } from './soloRoomCheckpointService.js';
 
 function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRoom {
   return {
@@ -126,16 +125,24 @@ await ensureAvatar(session.playerId, avatarId, {
 }
 
 {
+  // A separate avatar prevents the preceding system event from being restored.
+  const avatarId = `avatar-pending-from-xp-${Date.now()}`;
+  await savePlayerAvatar(session.playerId, {
+    id: avatarId,
+    name: 'Level Up Through XP',
+    race: 'Rokur',
+    role: 'Warrior',
+    portrait: 'm_portrait_rokur_warrior',
+    frame: 'm_frame_01',
+  });
   await leaveAllRoomsForPlayer(session.playerId);
-  // The previous case intentionally parked a level-up system event. This case
-  // needs a fresh ordinary encounter instead of restoring that checkpoint.
-  await clearSoloCheckpointForAvatar(session.playerId, avatarId);
   await setProgression(session.playerId, avatarId, {
     ...createInitialProgression(),
     experience: 6,
   });
 
   let room = await createRoom(session.playerId, avatarId);
+  assert.equal(room.roomState, 'active_encounter');
   const slotIndex = room.participants[0]!.slotIndex;
   room = {
     ...readyEncounterRoom(room, slotIndex),
@@ -152,20 +159,8 @@ await ensureAvatar(session.playerId, avatarId, {
   };
   await saveEncounterRoom(room);
 
-  const afterChoice = await submitChoice(session.playerId, avatarId, 'A');
-  console.log('Pending level-up diagnostic: before continue', {
-    initialRoomState: room.roomState,
-    choiceRoomState: afterChoice.roomState,
-    participant: afterChoice.participants[0]?.choiceState,
-    prepared: afterChoice.participants[0]?.preparedCommit?.eventContext,
-    progression: await getProgression<AvatarProgression>(session.playerId, avatarId),
-  });
+  await submitChoice(session.playerId, avatarId, 'A');
   const afterContinue = await submitContinue(session.playerId, avatarId);
-  console.log('Pending level-up diagnostic: after continue', {
-    roomState: afterContinue.roomState,
-    queue: afterContinue.systemEvent?.queue,
-    progression: await getProgression<AvatarProgression>(session.playerId, avatarId),
-  });
   assert.equal(afterContinue.roomState, 'system_event');
   assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
@@ -211,6 +206,16 @@ await ensureAvatar(session.playerId, avatarId, {
 }
 
 {
+  // Reconciliation uses a third avatar, not a parked checkpoint from earlier.
+  const avatarId = `avatar-pending-reconcile-${Date.now()}`;
+  await savePlayerAvatar(session.playerId, {
+    id: avatarId,
+    name: 'Pending Level Up Reconcile',
+    race: 'Rokur',
+    role: 'Warrior',
+    portrait: 'm_portrait_rokur_warrior',
+    frame: 'm_frame_01',
+  });
   await leaveAllRoomsForPlayer(session.playerId);
   await setProgression(session.playerId, avatarId, {
     ...createInitialProgression(),
