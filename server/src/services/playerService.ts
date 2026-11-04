@@ -3,7 +3,7 @@ import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { PlayerDocument } from '../types/player.js';
 import { loadAvatar } from './encounterPersistence.js';
 import {
-  createInitialAvatarInventory,
+  createEmptyInventory,
   initializeAvatarInventory,
   loadInventory,
 } from './inventoryService.js';
@@ -473,9 +473,11 @@ export async function savePlayerAvatar(
         : readAvatarDisplayTitle(existing ?? {}),
     };
     const storedInventory = await transaction.getInventory<AvatarInventory>(playerId, payload.id);
+    // Keep the historical initial-inventory lifecycle: initialization occurs
+    // only after a new avatar document is committed.
     const inventory = existing?.inventory
       ?? storedInventory
-      ?? createInitialAvatarInventory(profile);
+      ?? createEmptyInventory();
     const avatar: AvatarDocument = {
       ...existing,
       id: payload.id,
