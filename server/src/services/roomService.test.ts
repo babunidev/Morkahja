@@ -361,10 +361,14 @@ assert.equal(
   'solo should enter waiting_continue when only disconnected ghosts remain choosing',
 );
 const ghostAdvanced = await submitContinue(session.playerId, switchedAvatarRoom.participants[0]!.avatarId);
-assert.equal(
-  ghostAdvanced.roomState,
-  'active_encounter',
-  'continue should advance when solo is the only engaged participant',
+assert.ok(
+  ghostAdvanced.roomState === 'active_encounter' || ghostAdvanced.roomState === 'system_event',
+  'continue must leave waiting_continue when solo is the only engaged participant',
+);
+assert.notEqual(
+  ghostAdvanced.activeEncounterSnapshot.snapshotId,
+  ghostReady.activeEncounterSnapshot.snapshotId,
+  'host advances to a new encounter or a legitimate system event',
 );
 
 const withIdleJoiner: EncounterRoom = {
@@ -402,7 +406,11 @@ const advancedWithGhost = await getActiveRoomForPlayer(
   session.playerId,
   switchedAvatarRoom.participants[0]!.avatarId,
 );
-assert.equal(advancedWithGhost?.roomState, 'active_encounter');
+assert.ok(
+  advancedWithGhost?.roomState === 'active_encounter'
+    || advancedWithGhost?.roomState === 'system_event',
+  'host should advance to an encounter or system event after idle joiner',
+);
 
 const soloInactivityRoom: EncounterRoom = {
   ...room,

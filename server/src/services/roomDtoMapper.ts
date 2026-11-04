@@ -53,7 +53,7 @@ function playerActionToClientAction(
 
 const loggedParticipantFallbacks = new Set<string>();
 
-function toEncounterSnapshotDto(snapshot: EncounterSnapshot, revealFate: boolean): EncounterSnapshotDto {
+export function toEncounterSnapshotDto(snapshot: EncounterSnapshot, revealFate: boolean): EncounterSnapshotDto {
   return {
     snapshotId: snapshot.snapshotId,
     encounterId: snapshot.encounterId,
