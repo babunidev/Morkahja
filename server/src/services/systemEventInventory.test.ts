@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
 import { createInitialProgression } from '../domain/avatar/AvatarProgression.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
@@ -63,13 +63,6 @@ function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRo
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
 const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `system-event-inventory-${Date.now()}`);
 
 const avatarId = `avatar-system-inv-${Date.now()}`;
