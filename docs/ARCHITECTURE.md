@@ -34,4 +34,4 @@ This section describes the implementation on the PR branches, **not yet `main` o
 
 ### Release-gate type maintenance (PR #6)
 
-The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. A complete CI run is required before claiming the release gate is restored.
+The historic server typecheck diagnostics came from tests using outdated fixture shapes (encounter/solution reward types and required metadata), untyped `getProgression` values and a missing `SoloRoomCheckpoint` type import. The PR updates those declarations without changing encounter resolution or room runtime semantics. GitHub Actions release-gates run #69 passed all steps on PR #6 at commit `c9a1c311`. The integrated local worktree and production have not been validated.
