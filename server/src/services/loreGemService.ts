@@ -169,30 +169,31 @@ export async function ensureRoomLoreGemOffer(room: EncounterRoom): Promise<Encou
     return room;
   }
 
-  const nowMs = Date.now();
-  const shellSnapshot = withEncounterLoreGemOffer(room.activeEncounterSnapshot, nowMs);
-  const loreGemOffer = shellSnapshot.loreGemOffer;
-  if (!loreGemOffer) {
-    return room;
-  }
-
-  const updatedRoom: EncounterRoom = {
-    ...applyLoreGemOfferToRoom(room, loreGemOffer),
-    updatedAt: nowMs,
-  };
-  await saveEncounterRoom(updatedRoom);
-  await Promise.all(
-    activeRoomParticipants(updatedRoom).map((participant) =>
-      saveActiveEncounter(
+  return withDocumentTransaction(async (transaction) => {
+    const current = await transaction.getEncounterRoom<EncounterRoom>(room.roomId);
+    if (!current || current.roomState === 'closed') {
+      return room;
+    }
+    if (current.activeEncounterSnapshot.loreGemOffer) {
+      return current;
+    }
+    const offer = createLoreGemOffer(Date.now());
+    const updated: EncounterRoom = {
+      ...applyLoreGemOfferToRoom(current, offer),
+      updatedAt: Date.now(),
+    };
+    await transaction.setEncounterRoom(updated.roomId, updated);
+    for (const participant of activeRoomParticipants(updated)) {
+      await transaction.setActiveEncounter(
+        participant.playerId, participant.avatarId,
         bindSnapshotToParticipant(
-          updatedRoom.slotEncounterSnapshots[participant.slotIndex],
-          participant.playerId,
-          participant.avatarId,
+          updated.slotEncounterSnapshots[participant.slotIndex],
+          participant.playerId, participant.avatarId,
         ),
-      ),
-    ),
-  );
-  return updatedRoom;
+      );
+    }
+    return updated;
+  });
 }
 
 async function loadAuthoritativeSnapshot(
@@ -231,22 +232,9 @@ async function persistSnapshotWithOffer(
   };
 
   if (room) {
-    const updatedRoom: EncounterRoom = {
-      ...applyLoreGemOfferToRoom(room, loreGemOffer),
-      updatedAt: Date.now(),
-    };
-    await saveEncounterRoom(updatedRoom);
-    await Promise.all(
-      activeRoomParticipants(updatedRoom).map((participant) =>
-        saveActiveEncounter(
-          bindSnapshotToParticipant(
-            updatedRoom.slotEncounterSnapshots[participant.slotIndex],
-            participant.playerId,
-            participant.avatarId,
-          ),
-        ),
-      ),
-    );
+    // Preserve any concurrently joined participants rather than overwriting
+    // the whole room from a previously loaded snapshot.
+    await ensureRoomLoreGemOffer(room);
     return;
   }
 

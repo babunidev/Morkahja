@@ -13,6 +13,7 @@ import {
 import { loadAvatar, saveActiveEncounter } from './encounterPersistence.js';
 import { getEncounterById } from './gameData.js';
 import { saveEncounterRoom } from './roomPersistence.js';
+import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
 
 function nowMs(): number {
   return Date.now();
@@ -129,17 +130,35 @@ export async function ensureSlotEncounterSnapshots(room: EncounterRoom): Promise
     return room;
   }
 
-  const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId);
-  if (!encounter) {
-    return room;
-  }
-
-  const preparedEncounter = room.activeEncounterSnapshot.preparedEncounter
-    ?? prepareNextEncounter(encounter, room.mergedExpansions);
-  const seeded = await seedAllSlotEncountersForRoom(room, encounter, preparedEncounter);
-  await saveEncounterRoom(seeded);
-  await syncActiveEncountersForRoom(seeded);
-  return seeded;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await transaction.getEncounterRoom<EncounterRoom>(room.roomId);
+    if (!current || current.roomState === 'closed') {
+      return room;
+    }
+    if (current.roomState === 'system_event' || current.slotEncounterSnapshots?.length === 3) {
+      return current;
+    }
+    const encounter = getEncounterById(current.activeEncounterSnapshot.encounterId);
+    if (!encounter) {
+      return current;
+    }
+    const prepared = current.activeEncounterSnapshot.preparedEncounter
+      ?? prepareNextEncounter(encounter, current.mergedExpansions);
+    const seeded = await seedAllSlotEncountersForRoom(current, encounter, prepared);
+    await transaction.setEncounterRoom(seeded.roomId, seeded);
+    for (const participant of seeded.participants) {
+      if (participant.choiceState !== 'disengaged') {
+        await transaction.setActiveEncounter(
+          participant.playerId, participant.avatarId,
+          bindSnapshotToParticipant(
+            seeded.slotEncounterSnapshots[participant.slotIndex],
+            participant.playerId, participant.avatarId,
+          ),
+        );
+      }
+    }
+    return seeded;
+  });
 }
 
 export function snapshotForParticipant(

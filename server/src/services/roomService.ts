@@ -618,13 +618,17 @@ async function reengageParticipantIfNeeded(
   room: EncounterRoom,
   playerId: string,
 ): Promise<EncounterRoom> {
-  const updated = reengageFromInactivity(room, playerId, nowMs());
-  if (updated === room) {
-    return room;
-  }
-
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      return room;
+    }
+    const updated = reengageFromInactivity(current, playerId, nowMs());
+    if (updated !== current) {
+      await transaction.setEncounterRoom(updated.roomId, updated);
+    }
+    return updated;
+  });
 }
 
 async function notifyAdventureStartedForJoin(room: EncounterRoom): Promise<void> {
@@ -1957,31 +1961,29 @@ export async function leaveRoomById(
   }
 
   if (result.type === 'solo_away') {
-    await saveEncounterRoom(result.room);
+    // The departing room was already persisted in the locked transaction.
     await syncActiveEncountersForRoom(result.room);
     await tickRoomById(result.room.roomId);
     await clearPresenceRoom(result.playerId);
     return;
   }
 
-  if (result.type === 'leader_left') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
-    await clearPresenceRoom(result.departingPlayerId);
-    return;
-  }
-
-  if (result.type === 'departed') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
+  if (result.type === 'leader_left' || result.type === 'departed') {
+    const roomAfterLeave = await withDocumentTransaction(async (transaction) => {
+      const current = await loadEncounterRoomFromTransaction(transaction, result.room.roomId);
+      if (!current || current.roomState === 'closed') {
+        return current;
+      }
+      // Merge only the expansion field into the latest locked room, preserving
+      // any joins that completed after the participant departed.
+      const mergedExpansions = await expansionsForRoomLeader(current);
+      const updated = { ...current, mergedExpansions, updatedAt: nowMs() };
+      await transaction.setEncounterRoom(current.roomId, updated);
+      return updated;
+    });
+    if (roomAfterLeave) {
+      await syncRoomAfterParticipantDeparture(roomAfterLeave);
+    }
     await clearPresenceRoom(result.departingPlayerId);
     return;
   }
@@ -2293,7 +2295,8 @@ export async function kickParticipant(
     throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
   }
 
-  await saveEncounterRoom(result);
+  // The transaction already stored result. Re-saving a stale copy can
+  // overwrite a participant who joined immediately after the kick.
   await markPlayerKickedFromParty(targetPlayerId, room.roomId);
   if (result.roomState !== 'closed') {
     await syncRoomAfterParticipantDeparture(result);
@@ -2311,25 +2314,28 @@ export async function setSlotState(
   if (!room) {
     throw new RoomError('No active room', 404, 'NO_ROOM');
   }
-
-  if (room.leaderPlayerId !== playerId) {
-    throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
-  }
-
   if (slotIndex < 1 || slotIndex >= MAX_PARTICIPANTS) {
     throw new RoomError('Invalid slot index');
   }
 
-  const nextSlotStates = [...room.slotStates] as [SlotState, SlotState, SlotState];
-  nextSlotStates[slotIndex] = slotState;
-
-  const updated: EncounterRoom = {
-    ...room,
-    slotStates: nextSlotStates,
-    updatedAt: nowMs(),
-  };
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      throw new RoomError('No active room', 404, 'NO_ROOM');
+    }
+    if (current.leaderPlayerId !== playerId ||
+      !current.participants.some((participant) =>
+        participant.playerId === playerId && participant.avatarId === avatarId)) {
+      throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
+    }
+    const slotStates = [...current.slotStates] as [SlotState, SlotState, SlotState];
+    slotStates[slotIndex] = slotState;
+    const updated: EncounterRoom = {
+      ...current, slotStates, updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(current.roomId, updated);
+    return updated;
+  });
 }
 
 export async function submitChoice(
@@ -3364,7 +3370,7 @@ async function purgeAvatarFromRoom(
   }
 
   if (result.type === 'party_updated') {
-    await saveEncounterRoom(result.room);
+    // Room was already saved inside the locked removal transaction.
     await syncRoomAfterParticipantDeparture(result.room);
     await clearPresenceRoom(playerId);
   }
