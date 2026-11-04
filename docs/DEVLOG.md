@@ -29,3 +29,11 @@ Babuni.dev requested review of the actual private repository and its documentati
 Babuni.dev clarified that project artwork was generated with AI and then manually cut out, arranged and composed in Photoshop/GIMP, including portraits, frames, item images and substantial UI work. Babuni.dev also manually entered project data. The music has a separate human author credited in About Us. This describes creative provenance; permission to redistribute contributed music is not inferred. The fuller development history remains a living work in progress.
 
 **AI contribution:** Recorded the author’s decision and clarification, separately from observed GitHub visibility. Earlier documentation-only publication was considered and is superseded as the intended long-term source. No root license was selected by this update; public visibility, open-source reuse permissions, media rights and production readiness are separate matters. No runtime testing or behavior change is claimed.
+
+## 2026-11-04 — Let the progress bar finish before the Scribes celebrate
+
+The first point in an achievement chain was being treated like a completed triumph. Babuni directed a clearer distinction: starting an achievement should reveal its progress, while only a completed milestone should grant recognition and a bonus. Pathfinder was singled out as a three-avatar milestone.
+
+AI traced the dashboard's unlock detection, the server's rank thresholds, Hearth Blessing reward calculation, display-title permissions, and persisted Firestarter state. The review-branch implementation distinguishes progress from rank, makes unearned ranks bonus-free, and realigns the four Firestarter milestones without replacing historical player-progress records. Tests now cover the early-progress boundary, rank transitions, titles, and reward math. The intermediate 15-level Wayseeker threshold is an AI-selected detail for review, not an attributed author decision.
+
+**Verification:** Source review and committed regression-test additions only at the time of this entry. No local client build, database integration, browser acceptance, or production deployment is claimed. The pre-existing integration PR stack and the developer's unpublished local work remain untouched.
