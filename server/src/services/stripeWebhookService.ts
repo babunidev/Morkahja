@@ -1,7 +1,7 @@
 import type Stripe from 'stripe';
 import { getStripeWebhookSecret } from '../config/stripeConfig.js';
 import { getCatalogEntry } from '../domain/commerce/catalog.js';
-import { claimStripeEvent, recordPurchase } from '../db/commerceStore.js';
+import { fulfillStripePurchase } from '../db/commerceStore.js';
 import { recordSupportPurchaseEvent } from './gameEventService.js';
 import { recordAccountKeySecurityReminder } from './privateScribeService.js';
 import { getStripeClient } from './stripeClient.js';
@@ -22,8 +22,8 @@ export class WebhookSignatureError extends Error {
 
 /**
  * Verify the Stripe signature, then handle the event. Currently only
- * `checkout.session.completed` grants unlocks. Grants are idempotent and the
- * event id is claimed atomically, so duplicate deliveries are safe.
+ * paid checkout events grant entitlements atomically with purchase/event claims,
+ * deduplicated by checkout session rather than event id alone.
  */
 export async function handleStripeWebhook(
   rawBody: Buffer | string,
@@ -49,7 +49,7 @@ export async function handleStripeWebhook(
     );
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     await handleCheckoutCompleted(event);
   }
 
@@ -84,28 +84,26 @@ async function handleCheckoutCompleted(event: Stripe.Event): Promise<void> {
     return;
   }
 
-  // Claim the event id first; if already claimed, this delivery is a duplicate.
-  const isFirstDelivery = await claimStripeEvent(event.id);
-  if (!isFirstDelivery) {
+  if (session.mode !== 'payment') {
     return;
   }
 
   const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : null;
   const currency = session.currency ?? null;
-
-  await entry.grant(playerId);
-  await recordPurchase({
+  const newlyFulfilled = await fulfillStripePurchase({
     id: session.id,
     eventId: event.id,
     playerId,
     sku,
     amountTotal,
     currency,
-  });
+  }, (transaction) => entry.grant(playerId, transaction));
+  if (!newlyFulfilled) {
+    return;
+  }
 
-  // Record a personal "thank you" scribe entry. Non-fatal: a failure here must
-  // not fail the webhook (the event id is already claimed and the grant is
-  // done, so a Stripe retry would skip fulfillment entirely).
+  // Optional Scribes run after the entitlement transaction commits.
+  // They must not trigger a second payment fulfillment when they fail.
   try {
     await recordSupportPurchaseEvent(playerId, {
       sku,

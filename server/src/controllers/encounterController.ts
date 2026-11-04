@@ -15,6 +15,7 @@ import {
 } from '../services/loreGemService.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { toPersistedAvatarDto } from '../services/avatarPresentation.js';
+import { toEncounterSnapshotDto } from '../services/roomDtoMapper.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 
 class RequestError extends Error {
@@ -84,7 +85,7 @@ export async function createEncounterController(
     const { playerId, avatarId } = requireIdentity(req);
     const snapshot = await createEncounter(playerId, avatarId);
 
-    res.status(201).json(snapshot);
+    res.status(201).json(toEncounterSnapshotDto(snapshot, false));
   } catch (error) {
     handleControllerError(error, next);
   }
@@ -104,7 +105,7 @@ export async function getActiveEncounterController(
       return;
     }
 
-    res.json(snapshot);
+    res.json(toEncounterSnapshotDto(snapshot, false));
   } catch (error) {
     handleControllerError(error, next);
   }
@@ -133,7 +134,7 @@ export async function resolveEncounterController(
       message: resolution.message,
       failurePenalty: resolution.failurePenalty,
       usedInventorySolutions: resolution.usedInventorySolutions,
-      snapshot,
+      snapshot: toEncounterSnapshotDto(snapshot, false),
     });
   } catch (error) {
     handleControllerError(error, next);
@@ -159,7 +160,7 @@ export async function continueEncounterController(
 
     res.json({
       avatar: avatarDto ?? undefined,
-      snapshot,
+      snapshot: toEncounterSnapshotDto(snapshot, false),
       success: resolution.success,
       selectedRoll: resolution.selectedRoll,
       slotResults: resolution.slotResults,

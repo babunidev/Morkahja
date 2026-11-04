@@ -3,7 +3,6 @@ import { createHash, randomBytes, randomUUID, verify } from 'node:crypto';
 import {
   consumeSessionAuthChallenge,
   deleteAllSessionsForPlayer,
-  deleteSession,
   findPlayerByIdentityPublicKey,
   findSessionByAccessToken,
   getDevice,
@@ -11,8 +10,8 @@ import {
   getSession,
   setDevice,
   setPlayer,
-  setSession,
   storeSessionAuthChallenge,
+  withDocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import { assertPlayerCanPlay } from './adminPlayerService.js';
 import type { PlayerDocument } from '../types/player.js';
@@ -289,20 +288,33 @@ export async function bootstrapSession(
     lastHeartbeatAt: now,
   };
 
-  if (player.activeSessionId) {
-    await deleteSession(player.activeSessionId);
-  }
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer) {
+      throw new SessionError('Player not found', 404);
+    }
 
-  await setSession(sessionId, session);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionId: sessionId,
-      activeSessionExpiresAt: expiresAt,
-      lastPlayedAt: now,
-    },
-  );
+    try {
+      assertPlayerCanPlay(currentPlayer);
+    } catch (error) {
+      throw new SessionError(error instanceof Error ? error.message : 'SESSION_INVALID', 403);
+    }
+
+    if (currentPlayer.activeSessionId) {
+      await transaction.deleteSession(currentPlayer.activeSessionId);
+    }
+
+    await transaction.setSession(sessionId, session);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionId: sessionId,
+        activeSessionExpiresAt: expiresAt,
+        lastPlayedAt: now,
+      },
+      { merge: true },
+    );
+  });
 
   return {
     playerId: player.playerId,
@@ -364,16 +376,23 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
     lastHeartbeatAt: now,
   };
 
-  await setSession(nextSession.sessionId, nextSession);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionExpiresAt: expiresAt,
-      lastPlayedAt: now,
-      lastInteractionAt: now,
-    },
-  );
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer || currentPlayer.activeSessionId !== session.sessionId) {
+      throw new SessionError();
+    }
+    assertPlayerCanPlay(currentPlayer);
+    await transaction.setSession(nextSession.sessionId, nextSession);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionExpiresAt: expiresAt,
+        lastPlayedAt: now,
+        lastInteractionAt: now,
+      },
+      { merge: true },
+    );
+  });
 
   const { touchPlayerPresence } = await import('./roomService.js');
   await touchPlayerPresence(player.playerId, 'online');
@@ -384,16 +403,22 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
 export async function logoutSession(accessToken: string): Promise<void> {
   const { player, session } = await authenticateAccessToken(accessToken);
 
-  await deleteSession(session.sessionId);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionId: null,
-      activeSessionExpiresAt: null,
-      lastPlayedAt: Date.now(),
-    },
-  );
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer || currentPlayer.activeSessionId !== session.sessionId) {
+      throw new SessionError();
+    }
+    await transaction.deleteSession(session.sessionId);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionId: null,
+        activeSessionExpiresAt: null,
+        lastPlayedAt: Date.now(),
+      },
+      { merge: true },
+    );
+  });
 }
 
 export async function loadSession(sessionId: string): Promise<SessionDocument | null> {

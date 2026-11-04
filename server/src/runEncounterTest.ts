@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -119,7 +119,30 @@ function main(): void {
   const solutionsRaw = loadJson<Record<string, SolutionData>>(
     'game/solutiondata.json',
   );
-  const testPlayer = loadJson<TestPlayerFile>('game/player/testPlayer.json');
+  // The optional player fixture is deliberately not required in a fresh checkout.
+  // Keep this deterministic default independent of real player files and database records.
+  const testPlayerPath = 'game/player/testPlayer.json';
+  const testPlayer: TestPlayerFile = existsSync(join(projectRoot, testPlayerPath))
+    ? loadJson<TestPlayerFile>(testPlayerPath)
+    : {
+      inventory: [],
+      selectedAction: { mode: 'dice' },
+      rolls: createEncounterRollSnapshot({
+        rollA: 80,
+        rollB: 75,
+        rollC: 80,
+        rollD: 75,
+        rollPrimaryA: 80,
+        rollPrimaryB: 80,
+        rollPrimaryC: 80,
+        rollPrimaryD: 80,
+        rollSecondaryA: 75,
+        rollSecondaryB: 75,
+        rollSecondaryC: 75,
+        rollSecondaryD: 75,
+        rollE: 80,
+      }),
+    };
 
   const encounter = selectEncounter(encounters, testPlayer.encounterId);
   const solutionMap = buildSolutionMap(solutionsRaw);

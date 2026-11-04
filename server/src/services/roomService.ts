@@ -70,7 +70,7 @@ import {
 } from './encounterPersistence.js';
 import { getEncounterById, getEncounters } from './gameData.js';
 import {
-  addPlayerYellowRedGems,
+  grantPlayerYellowRedGemsInTransaction,
   getPlayerUnlockedExpansions,
   loadPlayer,
   loadPlayerActiveAvatar,
@@ -109,6 +109,7 @@ import {
   clearSoloCheckpointForAvatar,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
+  type SoloRoomCheckpoint,
 } from './soloRoomCheckpointService.js';
 
 /**
@@ -616,13 +617,17 @@ async function reengageParticipantIfNeeded(
   room: EncounterRoom,
   playerId: string,
 ): Promise<EncounterRoom> {
-  const updated = reengageFromInactivity(room, playerId, nowMs());
-  if (updated === room) {
-    return room;
-  }
-
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      return room;
+    }
+    const updated = reengageFromInactivity(current, playerId, nowMs());
+    if (updated !== current) {
+      await transaction.setEncounterRoom(updated.roomId, updated);
+    }
+    return updated;
+  });
 }
 
 async function notifyAdventureStartedForJoin(room: EncounterRoom): Promise<void> {
@@ -1236,7 +1241,8 @@ function withRoomLoreGemOnResolutionSummary(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)) {
+  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)
+    || participant.loreGemCollected !== true) {
     return summary;
   }
 
@@ -1411,17 +1417,16 @@ async function syncRoomAfterParticipantDeparture(room: EncounterRoom): Promise<v
   await syncActiveEncountersForRoom(room);
 }
 
-async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
+async function grantRoomLoreGemsOnCommit(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<void> {
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
   const recipients = participantsEarnedRoomLoreGem(room, snapshotId);
 
   for (const participant of recipients) {
     const claimKey = `${snapshotId}:${participant.playerId}`;
-    const player = await loadPlayer(participant.playerId);
-    if (player?.loreGemClaims?.[claimKey] === true) {
-      continue;
-    }
-    await addPlayerYellowRedGems(participant.playerId, 1, claimKey);
+    await grantPlayerYellowRedGemsInTransaction(transaction, participant.playerId, 1, claimKey);
   }
 }
 
@@ -1504,7 +1509,7 @@ async function advanceWaitingRoomInTransaction(
     participants: commitResult.participants,
   };
 
-  await grantRoomLoreGemsOnCommit(committedRoom);
+  await grantRoomLoreGemsOnCommit(transaction, committedRoom);
 
   return advanceRoomAfterCommit(
     transaction,
@@ -1955,31 +1960,29 @@ export async function leaveRoomById(
   }
 
   if (result.type === 'solo_away') {
-    await saveEncounterRoom(result.room);
+    // The departing room was already persisted in the locked transaction.
     await syncActiveEncountersForRoom(result.room);
     await tickRoomById(result.room.roomId);
     await clearPresenceRoom(result.playerId);
     return;
   }
 
-  if (result.type === 'leader_left') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
-    await clearPresenceRoom(result.departingPlayerId);
-    return;
-  }
-
-  if (result.type === 'departed') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
+  if (result.type === 'leader_left' || result.type === 'departed') {
+    const roomAfterLeave = await withDocumentTransaction(async (transaction) => {
+      const current = await loadEncounterRoomFromTransaction(transaction, result.room.roomId);
+      if (!current || current.roomState === 'closed') {
+        return current;
+      }
+      // Merge only the expansion field into the latest locked room, preserving
+      // any joins that completed after the participant departed.
+      const mergedExpansions = await expansionsForRoomLeader(current);
+      const updated = { ...current, mergedExpansions, updatedAt: nowMs() };
+      await transaction.setEncounterRoom(current.roomId, updated);
+      return updated;
+    });
+    if (roomAfterLeave) {
+      await syncRoomAfterParticipantDeparture(roomAfterLeave);
+    }
     await clearPresenceRoom(result.departingPlayerId);
     return;
   }
@@ -2148,57 +2151,75 @@ export async function joinRoom(
 
   await leaveOtherOpenRooms(playerId, roomId);
 
-  const room = await loadEncounterRoom(roomId);
-  if (!room || room.roomState === 'closed') {
-    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
-  }
+  // Slot selection, membership checks and the room update must share a row
+  // lock. Otherwise two simultaneous joiners can reserve the same slot and
+  // overwrite one another's entire room document.
+  const result = await withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
 
-  if (room.participants.some((participant) => participant.playerId === playerId)) {
-    const reengaged = await reengageReturningParticipantIfNeeded(room, playerId);
+    if (room.participants.some((participant) => participant.playerId === playerId)) {
+      return { room, rejoin: true };
+    }
+
+    const slotIndex = findOpenSlot(room);
+    if (slotIndex === null) {
+      throw new RoomError('Room is full', 409, 'ROOM_FULL');
+    }
+
+    const slotState = room.slotStates[slotIndex];
+    if (slotState === 'locked') {
+      throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
+    }
+    if (slotState === 'friends_only') {
+      const leader = await loadPlayer(room.leaderPlayerId);
+      if (!(leader?.friendIds ?? []).includes(playerId)) {
+        throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
+      }
+    }
+
+    if (room.roomState !== 'system_event' && room.slotEncounterSnapshots?.length !== 3) {
+      // Legacy rooms may not yet have per-slot rolls. Seed while holding the
+      // room lock; never save a stale room snapshot outside the transaction.
+      const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId);
+      if (!encounter) {
+        throw new RoomError('Room encounter is unavailable', 409, 'ROOM_NOT_READY');
+      }
+      const prepared = room.activeEncounterSnapshot.preparedEncounter
+        ?? prepareNextEncounter(encounter, room.mergedExpansions);
+      room = await seedAllSlotEncountersForRoom(room, encounter, prepared);
+    }
+
+    const updated: EncounterRoom = {
+      ...room,
+      participants: [
+        ...room.participants,
+        createParticipantForRoomJoin(room, playerId, avatarId, slotIndex),
+      ],
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    const snapshot = updated.slotEncounterSnapshots[slotIndex];
+    if (snapshot) {
+      await transaction.setActiveEncounter(
+        playerId,
+        avatarId,
+        bindSnapshotToParticipant(snapshot, playerId, avatarId),
+      );
+    }
+    return { room: updated, rejoin: false };
+  });
+
+  if (result.rejoin) {
+    const reengaged = await reengageReturningParticipantIfNeeded(result.room, playerId);
     await setPresenceInRoom(playerId, roomId);
     return reconcilePendingLevelUpForRoom(reengaged);
   }
 
-  const slotIndex = findOpenSlot(room);
-  if (slotIndex === null) {
-    throw new RoomError('Room is full', 409, 'ROOM_FULL');
-  }
-
-  const slotState = room.slotStates[slotIndex];
-  if (slotState === 'locked') {
-    throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
-  }
-
-  if (slotState === 'friends_only') {
-    const leader = await loadPlayer(room.leaderPlayerId);
-    const friendIds = leader?.friendIds ?? [];
-    if (!friendIds.includes(playerId)) {
-      throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
-    }
-  }
-
-  const roomWithJoiner = room.roomState === 'system_event'
-    ? room
-    : await ensureSlotEncounterSnapshots(room);
-  const updated: EncounterRoom = {
-    ...roomWithJoiner,
-    participants: [
-      ...roomWithJoiner.participants,
-      createParticipantForRoomJoin(roomWithJoiner, playerId, avatarId, slotIndex),
-    ],
-    updatedAt: nowMs(),
-  };
-
-  await saveEncounterRoom(updated);
-  await saveActiveEncounter(
-    bindSnapshotToParticipant(
-      updated.slotEncounterSnapshots[slotIndex],
-      playerId,
-      avatarId,
-    ),
-  );
   await setPresenceInRoom(playerId, roomId);
-  return reconcilePendingLevelUpForRoom(updated);
+  return reconcilePendingLevelUpForRoom(result.room);
 }
 
 export async function leaveRoom(playerId: string, avatarId?: string): Promise<void> {
@@ -2273,7 +2294,8 @@ export async function kickParticipant(
     throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
   }
 
-  await saveEncounterRoom(result);
+  // The transaction already stored result. Re-saving a stale copy can
+  // overwrite a participant who joined immediately after the kick.
   await markPlayerKickedFromParty(targetPlayerId, room.roomId);
   if (result.roomState !== 'closed') {
     await syncRoomAfterParticipantDeparture(result);
@@ -2291,25 +2313,28 @@ export async function setSlotState(
   if (!room) {
     throw new RoomError('No active room', 404, 'NO_ROOM');
   }
-
-  if (room.leaderPlayerId !== playerId) {
-    throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
-  }
-
   if (slotIndex < 1 || slotIndex >= MAX_PARTICIPANTS) {
     throw new RoomError('Invalid slot index');
   }
 
-  const nextSlotStates = [...room.slotStates] as [SlotState, SlotState, SlotState];
-  nextSlotStates[slotIndex] = slotState;
-
-  const updated: EncounterRoom = {
-    ...room,
-    slotStates: nextSlotStates,
-    updatedAt: nowMs(),
-  };
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      throw new RoomError('No active room', 404, 'NO_ROOM');
+    }
+    if (current.leaderPlayerId !== playerId ||
+      !current.participants.some((participant) =>
+        participant.playerId === playerId && participant.avatarId === avatarId)) {
+      throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
+    }
+    const slotStates = [...current.slotStates] as [SlotState, SlotState, SlotState];
+    slotStates[slotIndex] = slotState;
+    const updated: EncounterRoom = {
+      ...current, slotStates, updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(current.roomId, updated);
+    return updated;
+  });
 }
 
 export async function submitChoice(
@@ -2803,9 +2828,23 @@ export async function broadcastCallForHelp(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (room.helpCalledSnapshotId === snapshotId) {
-    throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
-  }
+  // Reserve this room's help flag BEFORE sending invitations. The locked
+  // update preserves simultaneous joins and stops duplicate help requests.
+  await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed'
+      || current.activeEncounterSnapshot.snapshotId !== snapshotId) {
+      throw new RoomError('Encounter changed while requesting help', 409, 'INVALID_ROOM_STATE');
+    }
+    if (current.helpCalledSnapshotId === snapshotId) {
+      throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
+    }
+    await transaction.setEncounterRoom(current.roomId, {
+      ...current,
+      helpCalledSnapshotId: snapshotId,
+      updatedAt: nowMs(),
+    });
+  });
 
   const now = nowMs();
   const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions(now);
@@ -2876,13 +2915,6 @@ export async function broadcastCallForHelp(
       avatarVisual,
     );
   }
-
-  const updatedRoom: EncounterRoom = {
-    ...room,
-    helpCalledSnapshotId: snapshotId,
-    updatedAt: now,
-  };
-  await saveEncounterRoom(updatedRoom);
 
   const invitedCount = eligibleFriendIds.length + strangerTargetIds.length;
   const targetMode: BroadcastCallForHelpResult['targetMode'] = strangerTargetIds.length > 0
@@ -3344,7 +3376,7 @@ async function purgeAvatarFromRoom(
   }
 
   if (result.type === 'party_updated') {
-    await saveEncounterRoom(result.room);
+    // Room was already saved inside the locked removal transaction.
     await syncRoomAfterParticipantDeparture(result.room);
     await clearPresenceRoom(playerId);
   }

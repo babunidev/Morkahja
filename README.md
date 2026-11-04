@@ -27,3 +27,15 @@ The original record follows the move from structured encounter/solution data int
 ## Public repository preparation — 31 October 2026
 
 The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
+
+## Current development notes — 4 November 2026
+
+Recent security and persistence work is under review, **not merged into `main` or deployed**: [PR #5 — single-use session authentication challenges](https://github.com/babunidev/Morkahja/pull/5) and [PR #6 — atomic player/avatar persistence](https://github.com/babunidev/Morkahja/pull/6). PR #6 builds on PR #5.
+
+On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
+
+Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
+
+**4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
+
+**Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
