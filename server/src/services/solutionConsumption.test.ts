@@ -35,7 +35,7 @@ function inventoryFromEntries(
     spellbook: toItems(spellbook),
     items: toItems(items),
     essences: toItems(essences),
-  } satisfies EncounterData;
+  };
 }
 
 const favorableRolls = createEncounterRollSnapshot({
