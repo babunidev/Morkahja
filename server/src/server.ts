@@ -49,6 +49,7 @@ import { loadInventory } from './services/inventoryService.js';
 import {
   bootstrapSession,
   heartbeatSession,
+  issueSessionChallenge,
   logoutSession,
 } from './services/sessionService.js';
 import {
@@ -163,6 +164,16 @@ app.get('/game-data/status', (_req: Request, res: Response) => {
   });
 });
 
+app.post('/session/challenge', authRateLimit, async (req: Request, res: Response) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const challenge = await issueSessionChallenge({
+    devicePublicKey: typeof body.devicePublicKey === 'string' ? body.devicePublicKey : '',
+    identityPublicKey: typeof body.identityPublicKey === 'string' ? body.identityPublicKey : '',
+    purpose: body.purpose as 'register' | 'restore',
+  });
+  res.status(201).json(challenge);
+});
+
 app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response) => {
   const body = req.body as Record<string, unknown>;
   const devicePublicKey = typeof body.devicePublicKey === 'string'
@@ -183,6 +194,15 @@ app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response
     ? body.signedIdentityChallenge as { challenge: string; signature: string }
     : undefined;
 
+  const signedDeviceChallenge = (
+    body.signedDeviceChallenge &&
+    typeof body.signedDeviceChallenge === 'object' &&
+    typeof (body.signedDeviceChallenge as Record<string, unknown>).challenge === 'string' &&
+    typeof (body.signedDeviceChallenge as Record<string, unknown>).signature === 'string'
+  )
+    ? body.signedDeviceChallenge as { challenge: string; signature: string }
+    : undefined;
+
   if (!devicePublicKey) {
     res.status(400).json({ error: 'devicePublicKey is required' });
     return;
@@ -192,7 +212,9 @@ app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response
     devicePublicKey,
     identityPublicKey,
     playerName,
+    purpose: body.purpose as 'register' | 'restore',
     signedIdentityChallenge,
+    signedDeviceChallenge,
   });
 
   res.status(201).json(session);

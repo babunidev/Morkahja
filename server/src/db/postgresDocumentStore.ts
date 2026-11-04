@@ -39,6 +39,17 @@ async function ensureSchema(client: PgPool | PoolClient = pool): Promise<void> {
       data jsonb NOT NULL DEFAULT '{}'::jsonb
     );
 
+    CREATE TABLE IF NOT EXISTS session_auth_challenges (
+      challenge_hash text PRIMARY KEY,
+      device_public_key text NOT NULL,
+      identity_public_key text NOT NULL,
+      purpose text NOT NULL CHECK (purpose IN ('register', 'restore')),
+      expires_at bigint NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS session_auth_challenges_expires_at_idx
+      ON session_auth_challenges (expires_at);
+
     CREATE TABLE IF NOT EXISTS avatars (
       player_id text NOT NULL,
       id text NOT NULL,
@@ -223,6 +234,45 @@ export async function setDevice<T extends JsonObject>(
      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
     [deviceId, JSON.stringify(mergeData(existing, data, options.merge))],
   );
+}
+
+export interface SessionAuthChallengeRecord {
+  challengeHash: string;
+  devicePublicKey: string;
+  identityPublicKey: string;
+  purpose: 'register' | 'restore';
+  expiresAt: number;
+}
+
+/** Challenges live in PostgreSQL so replay protection works across server processes. */
+export async function storeSessionAuthChallenge(record: SessionAuthChallengeRecord): Promise<void> {
+  await ensureSchema();
+  await pool.query('DELETE FROM session_auth_challenges WHERE expires_at <= $1', [Date.now()]);
+  await pool.query(
+    `INSERT INTO session_auth_challenges
+      (challenge_hash, device_public_key, identity_public_key, purpose, expires_at)
+      VALUES ($1, $2, $3, $4, $5)`,
+    [record.challengeHash, record.devicePublicKey, record.identityPublicKey, record.purpose, record.expiresAt],
+  );
+}
+
+/** Atomic delete: exactly one bootstrap can consume this challenge, even concurrently. */
+export async function consumeSessionAuthChallenge(
+  record: Omit<SessionAuthChallengeRecord, 'expiresAt'>,
+  now = Date.now(),
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await pool.query(
+    `DELETE FROM session_auth_challenges
+      WHERE challenge_hash = $1
+        AND device_public_key = $2
+        AND identity_public_key = $3
+        AND purpose = $4
+        AND expires_at > $5
+      RETURNING challenge_hash`,
+    [record.challengeHash, record.devicePublicKey, record.identityPublicKey, record.purpose, now],
+  );
+  return result.rowCount === 1;
 }
 
 export async function getSession<T>(sessionId: string): Promise<T | null> {
