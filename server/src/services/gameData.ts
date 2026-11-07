@@ -117,10 +117,14 @@ function loadJson<T>(relativePath: string): T {
   return JSON.parse(readFileSync(gameFilePath(relativePath), 'utf8')) as T;
 }
 
-function saveJson(relativePath: string, data: unknown): void {
+function assertLegacyWritable(): void {
   if (publishedContentRoot()) {
     throw new Error('CONTENT_PUBLISH_REQUIRED: legacy direct writes are disabled for published content');
   }
+}
+
+function saveJson(relativePath: string, data: unknown): void {
+  assertLegacyWritable();
   writeFileSync(gameFilePath(relativePath), `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
@@ -229,6 +233,7 @@ export function loadStaticGameEnvironment(): void {
 }
 
 export function saveEncounterEntry(key: string, entry: EncounterData): void {
+  assertLegacyWritable();
   const file = loadJson<EncounterDataMap>('game/encountersdata.json');
   file[key] = entry;
   saveJson('game/encountersdata.json', file);
@@ -236,6 +241,7 @@ export function saveEncounterEntry(key: string, entry: EncounterData): void {
 }
 
 export function saveSolutionEntry(key: string, entry: SolutionData): void {
+  assertLegacyWritable();
   const file = loadJson<Record<string, SolutionData>>('game/solutiondata.json');
   file[key] = entry;
   saveJson('game/solutiondata.json', file);
@@ -243,6 +249,7 @@ export function saveSolutionEntry(key: string, entry: SolutionData): void {
 }
 
 export function saveExpansionEntry(key: string, entry: ExpansionData): void {
+  assertLegacyWritable();
   const file = loadJson<ExpansionDataFile>('game/expansiondata.json');
   file.expansions[key] = entry;
   saveJson('game/expansiondata.json', file);
@@ -250,6 +257,7 @@ export function saveExpansionEntry(key: string, entry: ExpansionData): void {
 }
 
 export function saveFrameEntry(entry: FrameData): void {
+  assertLegacyWritable();
   const file = getFramesData();
   const next = [...file.Frames];
   next[entry.frameID] = entry;
@@ -258,6 +266,7 @@ export function saveFrameEntry(entry: FrameData): void {
 }
 
 export function savePortraitEntry(entry: PortraitData): void {
+  assertLegacyWritable();
   const file = getPortraitsData();
   const next = [...file.Avatar];
   next[entry.avatarID] = entry;
