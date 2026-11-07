@@ -53,6 +53,7 @@ function buildPreDeathSnapshot(
     progression,
     lastPlayedAt: avatar.lastPlayedAt,
     failedAt: Date.now(),
+    contentRevision,
   };
 }
 
