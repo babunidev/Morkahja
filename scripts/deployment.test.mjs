@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
-import { verifyDeploymentIsolation } from './verify-deployment-isolation.mjs';
-import { repositoryRoot as repoRootForTest } from './verify-deployment-isolation.mjs';
+import { repositoryRoot as repoRootForTest, verifyDeploymentIsolation } from './verify-deployment-isolation.mjs';
 import { deployApplication } from './deploy-application.mjs';
 
 test('deployment preflight accepts four independent existing roots', () => {
@@ -15,6 +14,7 @@ test('deployment preflight accepts four independent existing roots', () => {
     const web = join(root, 'static-web');
     const backup = join(root, 'remote-backup');
     for (const path of [repo, content, web, backup]) mkdirSync(path);
+    writeFileSync(join(web, '.morkahja-static-root'), 'morkahja-static-root-v1\\n');
     const result = verifyDeploymentIsolation({ repoRoot: repo, contentRoot: content, webRoot: web, backupRoot: backup });
     assert.throws(() => verifyDeploymentIsolation({
       repoRoot: repo, contentRoot: content, webRoot: web, backupRoot: backup, requireBackupMount: true,
@@ -69,6 +69,20 @@ test('deployment preflight rejects symlinked roots and missing configuration', (
       /DEPLOY_CONTENT_ROOT_REQUIRED/);
     assert.throws(() => verifyDeploymentIsolation({ repoRoot: repo, contentRoot: content, webRoot: web }),
       /DEPLOY_BACKUP_ROOT_REQUIRED/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('deployment preflight refuses an unmarked static web root', () => {
+  const root = mkdtempSync(join(tmpdir(), 'morkahja-deploy-unmarked-web-'));
+  try {
+    const repo = join(root, 'application');
+    const content = join(root, 'content');
+    const web = join(root, 'web');
+    const backup = join(root, 'backup');
+    for (const path of [repo, content, web, backup]) mkdirSync(path);
+    assert.throws(() => verifyDeploymentIsolation({
+      repoRoot: repo, contentRoot: content, webRoot: web, backupRoot: backup,
+    }), /DEPLOY_WEB_ROOT_NOT_MARKED/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
