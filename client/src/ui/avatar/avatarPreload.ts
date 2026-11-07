@@ -1,7 +1,6 @@
 import type { PersistedAvatar } from '../../api/http.js';
+import { contentImageUrl } from '../../content/clientContent.js';
 
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
 const CREATE_AVATAR_ASSET = '/UI/03_DASHBOARD/CreateAvatar.webp';
 const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
 const PRELOAD_TIMEOUT_MS = 1200;
@@ -30,15 +29,15 @@ function preloadImage(src: string): Promise<void> {
 
 export async function preloadAvatarPortraitAssets(avatar: PersistedAvatar): Promise<void> {
   await Promise.all([
-    preloadImage(`${AVATAR_ASSET_ROOT}/${avatar.portrait}`),
-    preloadImage(`${FRAME_ASSET_ROOT}/${avatar.frame}`),
+    preloadImage(contentImageUrl('portraits', avatar.portrait)),
+    preloadImage(contentImageUrl('frames', avatar.frame)),
   ]);
 }
 
 export async function preloadAvatarSelectionAssets(avatars: PersistedAvatar[]): Promise<void> {
   const avatarAssetPaths = avatars.flatMap((avatar) => [
-    `${AVATAR_ASSET_ROOT}/${avatar.portrait}`,
-    `${FRAME_ASSET_ROOT}/${avatar.frame}`,
+    contentImageUrl('portraits', avatar.portrait),
+    contentImageUrl('frames', avatar.frame),
   ]);
 
   await Promise.all([
