@@ -25,6 +25,8 @@ jobs:
         run: npm run test:content-runtime
       - name: Secure admin content API test
         run: npm run test:content-admin
+      - name: Managed content artwork test
+        run: npm run test:content-artwork
       - name: Typecheck and client build
         run: npm run typecheck
       - name: Server session auth test

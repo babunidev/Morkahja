@@ -87,8 +87,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match');
-  res.header('Access-Control-Expose-Headers', 'ETag');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match, X-Asset-Kind, X-Asset-Name, X-Asset-Intent, X-Asset-Base-Revision');
+  res.header('Access-Control-Expose-Headers', 'ETag, X-Content-Revision');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);

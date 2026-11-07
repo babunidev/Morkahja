@@ -43,3 +43,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **Safety rationale:** Explicit base revisions avoid silent overwrites and permit reproducible retries. A separate `MORKAHJA_ENABLE_CONTENT_PUBLISHING` flag defaults to off so the unpinned active-encounter and room systems cannot be exposed to publishing by mere code deployment. A private audit log adds operator traceability within the limits of one shared credential.
 
 **Open items:** Per-operator identities, production TLS/proxy enforcement, durable off-host audit backups, media file existence checks, image staging and active encounter revision pinning are not completed. The implementation remains in draft PR #12 and does not attest to a production security review.
+
+## D-007 — Immutable, revision-addressed artwork (2026-11-07; review-stage implementation)
+
+**Human direction:** Artwork editing should preserve encounter, solution, portrait and frame filenames, validate uploads, prevent accidental collisions, keep data outside deployments, publish with JSON, refresh replacements and retain history.
+
+**AI implementation choice, pending repository review:** WebP files are staged as private SHA-256 objects; a content revision manifest associates stable logical image names with immutable hashes. Public URLs contain the revision and logical name. The single JSON/content-pointer swap is the visibility boundary for related data and artwork; unchanged legacy artwork is not forcibly migrated. Administrative upload requires an authenticated WebP request and the existing explicit publishing opt-in. Create and replace are distinct intents.
+
+**Rationale and limits:** This avoids rewriting image bytes while a player or client references an earlier revision, and allows safe retries and rollback. Actual production legacy-file existence, full WebP pixel decoding, external image backups, browser runtime asset selection and active-encounter pinning are not verified. These are review and deployment blockers rather than implicitly approved functionality.

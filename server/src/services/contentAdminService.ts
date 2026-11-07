@@ -17,12 +17,6 @@ const ID_FIELDS: Record<ContentKind, string> = {
   encounters: 'mEncounterID', solutions: 'mSolutionID', expansions: 'mExtensioID',
   frames: 'frameID', portraits: 'avatarID',
 };
-const IMAGE_FIELDS: Record<ContentKind, readonly string[]> = {
-  encounters: ['mEncounterImageName'],
-  solutions: ['mSolutionIconName'],
-  expansions: ['mExtensioCollectionImage', 'mExtensioHeaderImage', 'mExtensioUnlockButton'],
-  frames: [], portraits: [],
-};
 function fail(code: string): never { throw new ContentPublicationError(code); }
 function object(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -33,31 +27,13 @@ function entries(bundle: ContentBundle, kind: ContentKind): Record<string, unkno
   if (kind === 'portraits') return (bundle.portraits as { Avatar: unknown[] }).Avatar;
   return bundle[kind] as Record<string, unknown>;
 }
-function assertExistingAssetReferences(previous: ContentBundle, next: ContentBundle): void {
-  // Until the managed WebP publisher is ready, existing artwork identifiers are
-  // the only allowed references. This is NOT a check that files exist on disk.
-  for (const kind of KINDS) {
-    const fields = IMAGE_FIELDS[kind];
-    if (!fields.length) continue;
-    const oldRecords = Object.values(entries(previous, kind));
-    const nextRecords = Object.values(entries(next, kind));
-    for (const field of fields) {
-      const known = new Set(oldRecords.filter(object).map(value => value[field]));
-      for (const value of nextRecords) {
-        if (!object(value) || !known.has(value[field])) {
-          fail('CONTENT_UNSTAGED_ASSET_REFERENCE');
-        }
-      }
-    }
-  }
-}
 /**
  * Stateless record editor. Never write in-place: apply changes to a cloned
  * revision and validate the complete resulting bundle before publication.
  */
-export function applyContentRecordChanges(base: ContentBundle, changes: unknown): ContentBundle {
+export function applyContentRecordChanges(base: ContentBundle, changes: unknown, allowArtworkOnly = false): ContentBundle {
   validateContentBundle(base);
-  if (!Array.isArray(changes) || changes.length < 1 || changes.length > 100) {
+  if (!Array.isArray(changes) || (changes.length < 1 && !allowArtworkOnly) || changes.length > 100) {
     fail('CONTENT_INVALID_CHANGES');
   }
   const next = structuredClone(base) as ContentBundle;
@@ -95,12 +71,12 @@ export function applyContentRecordChanges(base: ContentBundle, changes: unknown)
     }
   }
   validateContentBundle(next);
-  assertExistingAssetReferences(base, next);
+  // JSON/artwork cross-references are checked together by prepareArtworkForPublication.
   return next;
 }
 
 export interface ContentAdminAudit {
-  action: 'validate' | 'publish' | 'rollback';
+  action: 'validate' | 'publish' | 'rollback' | 'stage';
   outcome: 'attempt' | 'success' | 'rejected';
   publicationId?: string;
   revision?: string;

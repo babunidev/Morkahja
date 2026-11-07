@@ -94,3 +94,8 @@ After commit, the API verifies the resulting current pointer before acknowledgin
 Run `npm run test:content-admin` from the repository root. HTTP tests use local loopback, temporary external roots and original Git-tracked JSON as test fixtures. They cover key/no-key authorization, permanent direct-write removal, all five categories, newly created records, validation, revision-based conflicts, idempotency, rollback, read-back receipts, body limits and anonymous audit entries. Verify results from the actual CI run rather than assuming tests passed from their presence in the repository.
 
 Production blockers remain: real admin client integration, independent TLS/proxy access review, content-root permissions and backups, managed WebP uploads and asset existence checks, current active/room snapshot revision pinning, and completion of the existing TypeScript/release-gate failures. Deployment, client cutover and configuration changes were not part of this PR.
+
+
+## Phase 5 addendum (draft PR #13)
+
+The earlier Phase 4 statement that POST /content/assets/stage returns HTTP 501 describes PR #12 in isolation. The stacked Phase 5 implementation replaces that placeholder with authenticated, bounded raw-WebP staging and adds assetStages to validation/publication requests. Its complete contract, conditions and remaining production gates are in [managed artwork](CONTENT_ARTWORK.md). This does not change the earlier Phase 4 authentication and publication safety switch.

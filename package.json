@@ -17,6 +17,7 @@
     "test:content-publication": "npm run test:content-publication --prefix server",
     "test:content-runtime": "npm run test:content-runtime --prefix server",
     "test:content-admin": "npm run test:content-admin --prefix server",
+    "test:content-artwork": "npm run test:content-artwork --prefix server",
     "test:encounter": "npm run test:encounter --prefix server",
     "test:lifecycle": "npm run test:lifecycle --prefix server",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",

@@ -1,4 +1,5 @@
 import { Router, type Request, type RequestHandler, type Response } from 'express';
+import express from 'express';
 import {
   ContentPublicationError, type ContentBundle, listContentRevisions,
   publishContentRevision, readContentRevision, readPublishedContent,
@@ -6,11 +7,12 @@ import {
 } from '../services/contentPublication.js';
 import { getConfiguredContentRoot, getPublishedContentSnapshot } from '../services/gameData.js';
 import { appendContentAdminAudit, applyContentRecordChanges } from '../services/contentAdminService.js';
+import { prepareArtworkForPublication, stageWebpArtwork, type ArtworkKind } from '../services/contentArtwork.js';
 
 export const adminContentRoutes = Router();
 const revisionPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const publicationPattern = /^[a-zA-Z0-9_-]{8,100}$/;
-type AdminOperation = 'validate' | 'publish' | 'rollback';
+type AdminOperation = 'validate' | 'publish' | 'rollback' | 'stage';
 
 function error(code: string): never { throw new ContentPublicationError(code); }
 function requiredRoot(): string {
@@ -57,12 +59,19 @@ function respondError(res: Response, err: unknown): void {
       code === 'CONTENT_INVALID_MANIFEST' || code === 'CONTENT_INVALID_JSON') {
     status = 503;
   } else if (code === 'CONTENT_REVISION_CONFLICT' || code === 'CONTENT_EDIT_CONFLICT' ||
-             code === 'CONTENT_PUBLICATION_ID_REUSED' || code === 'CONTENT_PUBLICATION_LOCKED') {
+             code === 'CONTENT_PUBLICATION_ID_REUSED' || code === 'CONTENT_PUBLICATION_LOCKED' ||
+             code === 'CONTENT_ASSET_COLLISION' || code === 'CONTENT_ASSET_REPLACEMENT_NOT_FOUND' ||
+             code === 'CONTENT_ASSET_STAGE_STALE' || code === 'CONTENT_DUPLICATE_ASSET_NAME') {
     status = 409;
   } else if (code === 'CONTENT_INVALID_REQUEST' || code === 'CONTENT_INVALID_REVISION' ||
              code === 'CONTENT_INVALID_PUBLICATION_ID' || code === 'CONTENT_INVALID_CHANGES' ||
-             code === 'CONTENT_INVALID_CHANGE' || code === 'CONTENT_INVALID_CHANGE_ID') {
+             code === 'CONTENT_INVALID_CHANGE' || code === 'CONTENT_INVALID_CHANGE_ID' ||
+             code === 'CONTENT_INVALID_ASSET_STAGES' || code === 'CONTENT_INVALID_ASSET_STAGE' ||
+             code === 'CONTENT_INVALID_ASSET_INTENT' || code === 'CONTENT_INVALID_ASSET_NAME') {
     status = 400;
+  } else if (code.startsWith('CONTENT_ARTWORK_') || code.startsWith('CONTENT_UNSAFE_ARTWORK_') ||
+             code === 'CONTENT_INVALID_ASSET_MANIFEST') {
+    status = 503;
   } else if (code === 'CONTENT_FILE_TOO_LARGE') {
     status = 413;
   }
@@ -104,10 +113,14 @@ function prepareChanges(req: Request, allowIdempotentRetry: boolean) {
         published.manifest.previousRevision === baseRevision)) {
     error('CONTENT_REVISION_CONFLICT');
   }
-  const base = published.revision === baseRevision
-    ? published.content : readContentRevision(root, baseRevision).content;
-  const next: ContentBundle = applyContentRecordChanges(base, body.changes);
-  return { root, body, baseRevision, next, published, publicationId };
+  const source = published.revision === baseRevision
+    ? published : readContentRevision(root, baseRevision);
+  const assetStages = body.assetStages ?? [];
+  if (!Array.isArray(assetStages)) error('CONTENT_INVALID_ASSET_STAGES');
+  const next: ContentBundle = applyContentRecordChanges(source.content, body.changes,
+    assetStages.length > 0);
+  prepareArtworkForPublication(root, source, next, assetStages as string[]);
+  return { root, body, baseRevision, next, published, publicationId, assetStages: assetStages as string[] };
 }
 
 /** Authenticate before these routes are mounted; all content reads fail closed without a store. */
@@ -176,10 +189,10 @@ adminContentRoutes.post('/validate', safe((req, res) => {
 
 adminContentRoutes.post('/publish', safe((req, res) => {
   requirePublishingEnabled();
-  const { root, baseRevision, next, publicationId } = prepareChanges(req, true);
+  const { root, baseRevision, next, publicationId, assetStages } = prepareChanges(req, true);
   appendContentAdminAudit(root, { action: 'publish', outcome: 'attempt', publicationId: publicationId! });
   const result = publishContentRevision(root, {
-    baseRevision, publicationId: publicationId!, content: next,
+    baseRevision, publicationId: publicationId!, content: next, assetStages,
   });
   // Confirm pointer, checksum and full data after publication before returning 201.
   const verified = readPublishedContent(root);
@@ -221,7 +234,34 @@ adminContentRoutes.post('/rollback', safe((req, res) => {
   });
 }, 'rollback'));
 
-// Media is deliberately not accepted before the validated managed-WebP pipeline exists.
-adminContentRoutes.post('/assets/stage', (_req, res) => {
-  res.status(501).json({ error: 'CONTENT_ASSET_UPLOAD_NOT_IMPLEMENTED' });
-});
+/**
+ * Authenticated raw WebP upload. The outer admin router applies the API-key
+ * check and rate limiter BEFORE this binary parser runs.
+ */
+adminContentRoutes.post('/assets/stage',
+  express.raw({ type: 'image/webp', limit: '4mb' }),
+  safe((req, res) => {
+    requirePublishingEnabled();
+    const root = requiredRoot();
+    const current = currentContent();
+    const kind = req.headers['x-asset-kind'];
+    const name = req.headers['x-asset-name'];
+    const intent = req.headers['x-asset-intent'];
+    const baseRevision = req.headers['x-asset-base-revision'];
+    if (typeof kind !== 'string' || typeof name !== 'string' ||
+        (intent !== 'create' && intent !== 'replace') ||
+        typeof baseRevision !== 'string' || !Buffer.isBuffer(req.body)) {
+      error('CONTENT_INVALID_REQUEST');
+    }
+    appendContentAdminAudit(root, { action: 'stage', outcome: 'attempt', revision: current.revision });
+    const stage = stageWebpArtwork(root, current, {
+      kind: kind as ArtworkKind, name, intent, baseRevision, bytes: req.body as Buffer,
+    });
+    appendContentAdminAudit(root, { action: 'stage', outcome: 'success', revision: stage.baseRevision });
+    res.status(201).json({
+      stageId: stage.id, kind: stage.kind, name: stage.name, intent: stage.intent,
+      sha256: stage.sha256, bytes: stage.bytes, width: stage.width, height: stage.height,
+      baseRevision: stage.baseRevision,
+    });
+  }, 'stage'),
+);

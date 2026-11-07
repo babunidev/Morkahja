@@ -54,3 +54,8 @@ The legacy `/game-data/status` endpoint now reports counts from one runtime snap
 The new `npm run test:content-runtime` suite uses a loopback Express server, isolated temporary roots and the real checked-in JSON datasets. It tests no-root 503, read-only semantics, complete five-category response, ETag/304, new encounter/solution records on the next fetch, preservation of already captured snapshots, selected-pointer race behavior, and invalid-pointer failure without repository fallback. CI runs this suite after Phase 2 storage tests and before the existing typecheck and database-dependent suites.
 
 **No production checks:** No Nginx/PM2, backup files, live endpoints, active players, database operations or deployments were changed or queried. Approval and the separate media/client/snapshot compatibility stages remain required before any production activation.
+
+
+## Phase 5 addendum (draft PR #13)
+
+The earlier description of an empty assets object describes Phase 3 alone. The stacked Phase 5 implementation adds managed image URL maps to the public content response and a revision-specific public WebP route. Existing browser assets are not migrated automatically. See [managed artwork](CONTENT_ARTWORK.md).
