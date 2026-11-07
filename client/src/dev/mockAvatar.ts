@@ -1,5 +1,4 @@
-import framesData from '../data/game/frames.json';
-import portraitsData from '../data/game/portraits.json';
+import { getClientContent } from '../content/clientContent.js';
 
 const RACES = ['Rokur', 'Verdani', 'Aevis', 'Grimnir'] as const;
 const ROLES = ['Mage', 'Warrior', 'Rogue'] as const;
@@ -40,13 +39,13 @@ function randomEntry<T>(items: T[]): T {
 }
 
 function portraitPool(): PortraitRecord[] {
-  return portraitsData.Avatar.filter(
+  return getClientContent().portraits.Avatar.filter(
     (portrait): portrait is PortraitRecord => portrait !== null,
   );
 }
 
 function framePool(): FrameRecord[] {
-  return framesData.Frames.filter(
+  return getClientContent().frames.Frames.filter(
     (frame): frame is FrameRecord => frame !== null,
   );
 }
