@@ -193,6 +193,16 @@ test('five-category record edits, validation, publication, current read, idempot
   });
 });
 
+test('oversized admin bodies are rejected before storage writes', async () => {
+  await setup(async ({ root, base, fetchAdmin }) => {
+    const res = await fetchAdmin('/content/validate', post({
+      baseRevision: base, changes: [], padding: 'x'.repeat(300_000),
+    }));
+    assert.equal(res.status, 413);
+    assert.equal(readPublishedContent(root).revision, base);
+  });
+});
+
 test('validation rejects missing relations, mismatched IDs and unknown asset references', async () => {
   await setup(async ({ root, base, fetchAdmin }) => {
     const changes = updateAllFive().slice(0, 5);
@@ -258,16 +268,6 @@ test('rollback creates a new checked revision, preserves immutable history and r
     }));
     assert.equal(blocked.status, 422);
     assert.equal(readPublishedContent(root).revision, afterAdd);
-  });
-});
-
-test('oversized admin bodies are rejected before storage writes', async () => {
-  await setup(async ({ root, base, fetchAdmin }) => {
-    const res = await fetchAdmin('/content/validate', post({
-      baseRevision: base, changes: [], padding: 'x'.repeat(300_000),
-    }));
-    assert.equal(res.status, 413);
-    assert.equal(readPublishedContent(root).revision, base);
   });
 });
 
