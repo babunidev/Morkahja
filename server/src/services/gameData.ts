@@ -104,7 +104,7 @@ function gameFilePath(relativePath: string): string {
 function loadJson<T>(relativePath: string): T {
   const current = publishedBundle();
   if (current) {
-    const key = relativePath.replace(/^game\\//, '');
+    const key = relativePath.startsWith('game/') ? relativePath.slice(5) : relativePath;
     switch (key) {
       case 'encountersdata.json': return current.content.encounters as T;
       case 'solutiondata.json': return current.content.solutions as T;
