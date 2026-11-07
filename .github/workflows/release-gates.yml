@@ -19,11 +19,13 @@ jobs:
         run: npm install
       - name: Verify static data sync
         run: npm run verify:static-data
+      - name: Content publication storage test
+        run: npm run test:content-publication
+      - name: Typecheck and client build
+        run: npm run typecheck
       - name: Server session auth test
         run: npm run test:session-auth --prefix server
       - name: Server achievements test
         run: npm run test:achievements --prefix server
       - name: Server dice test
         run: npm run test:dice --prefix server
-      - name: Typecheck and client build
-        run: npm run typecheck

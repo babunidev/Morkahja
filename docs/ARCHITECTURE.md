@@ -19,3 +19,7 @@ The current root package declares **`0.9.0-beta.2.2`** with npm workspaces `clie
 In the historical May 23 entries, the project gained PM2/nginx deployment configuration, a same-origin API default and documented HTTPS requirements for Web Crypto-based onboarding. The journal notes a Hetzner public alpha. That historic deployment evidence does **not** verify current availability, credentials, backup policy or security. The pre-invite review itself records additional safeguards as needed before wider launch.
 
 **Boundary:** This is a static examination of repository metadata and historical journal, not a penetration test, live-environment audit, database migration or deployment verification.
+
+## Phase 2 — opt-in revisioned content storage (implementation branch, 2026-11-07)
+
+The server now has a proposed, review-stage implementation of durable JSON content revisions in `server/src/services/contentPublication.ts`. Explicit `MORKAHJA_CONTENT_ROOT` activation makes `gameData.ts` read external published content, with direct file writes disabled in that mode. The client remains build-time JSON-backed and production cutover is not authorized. See [content storage](CONTENT_STORAGE.md). Source/CI verification status is tracked in the review PR.

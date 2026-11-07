@@ -14,6 +14,7 @@
     "dev:client": "npm run dev --prefix client",
     "start": "npm run start --prefix server",
     "verify:static-data": "node scripts/verify-static-game-data.mjs",
+    "test:content-publication": "npm run test:content-publication --prefix server",
     "test:encounter": "npm run test:encounter --prefix server",
     "test:lifecycle": "npm run test:lifecycle --prefix server",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",
