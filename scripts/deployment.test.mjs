@@ -14,6 +14,9 @@ test('deployment preflight accepts four independent existing roots', () => {
     const backup = join(root, 'remote-backup');
     for (const path of [repo, content, web, backup]) mkdirSync(path);
     const result = verifyDeploymentIsolation({ repoRoot: repo, contentRoot: content, webRoot: web, backupRoot: backup });
+    assert.throws(() => verifyDeploymentIsolation({
+      repoRoot: repo, contentRoot: content, webRoot: web, backupRoot: backup, requireBackupMount: true,
+    }), /DEPLOY_BACKUP_ROOT_NOT_MOUNTPOINT/);
     assert.equal(result.content, content);
     assert.equal(result.web, web);
     assert.equal(result.backup, backup);
