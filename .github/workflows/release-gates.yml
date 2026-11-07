@@ -34,7 +34,7 @@ jobs:
       - name: Versioned content backup and restore test
         run: npm run test:content-backup
       - name: Deployment path isolation test
-        run: node --test scripts/deployment.test.mjs
+        run: npm run test:deployment
       - name: Client typecheck and production build
         run: npm run build --prefix client
       - name: Typecheck and client build
