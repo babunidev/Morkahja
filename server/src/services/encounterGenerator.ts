@@ -601,8 +601,8 @@ function randomEssenceReward(solutions = getSolutionMap()): number | null {
   );
 }
 
-function randomSolutionsByRewardType(rewardType: number, count: number): number[] {
-  const candidates = Object.values(getSolutionMap()).filter(
+function randomSolutionsByRewardType(rewardType: number, count: number, solutions = getSolutionMap()): number[] {
+  const candidates = Object.values(solutions).filter(
     (solution) => solution.mSolutionRewardType === rewardType,
   );
 
@@ -619,14 +619,14 @@ function randomSolutionsByRewardType(rewardType: number, count: number): number[
   return rewards;
 }
 
-function randomSolutionType15Item(): number | null {
-  return randomSolutionByPredicate((solution) => solution.mSolutionType === 15);
+function randomSolutionType15Item(solutions = getSolutionMap()): number | null {
+  return randomSolutionByPredicate((solution) => solution.mSolutionType === 15, solutions);
 }
 
-function levelUpFortuneRewards(avatar: AvatarDocument): number[] {
+function levelUpFortuneRewards(avatar: AvatarDocument, solutions = getSolutionMap()): number[] {
   return [
-    ...randomSolutionsByRewardType(raceRewardTypeForAvatar(avatar), 2),
-    ...randomSolutionsByRewardType(roleRewardTypeForAvatar(avatar), 2),
+    ...randomSolutionsByRewardType(raceRewardTypeForAvatar(avatar), 2, solutions),
+    ...randomSolutionsByRewardType(roleRewardTypeForAvatar(avatar), 2, solutions),
   ];
 }
 
@@ -634,9 +634,9 @@ function applyLevelUpInventoryChanges(
   inventory: AvatarInventory,
   rewardIds: number[],
   newLevel: number,
+  solutionMap = getSolutionMap(),
 ): AvatarInventory {
   let next = inventory;
-  const solutionMap = getSolutionMap();
 
   for (const rewardId of rewardIds) {
     const solution = solutionMap[String(rewardId)];
@@ -658,45 +658,47 @@ function applyLevelUpInventoryChanges(
 function levelUpRewardIdsForSnapshot(
   avatar: AvatarDocument | undefined,
   rollE: number | undefined,
+  solutions = getSolutionMap(),
 ): number[] {
   if (!avatar || rollE === undefined) {
     return [];
   }
 
-  return levelUpRewards(avatar, interpretRoll(rollE));
+  return levelUpRewards(avatar, interpretRoll(rollE), solutions);
 }
 
 function levelUpRewards(
   avatar: AvatarDocument,
   selectedRollOutcome: RollOutcome | null,
+  solutions = getSolutionMap(),
 ): number[] {
   const raceType = raceRewardTypeForAvatar(avatar);
   const roleType = roleRewardTypeForAvatar(avatar);
 
   switch (selectedRollOutcome) {
     case 'Misery':
-      return randomSolutionsByRewardType(raceType, 1);
+      return randomSolutionsByRewardType(raceType, 1, solutions);
     case 'Hardship':
       return [
         ...randomSolutionsByRewardType(raceType, 1),
-        ...randomSolutionsByRewardType(roleType, 1),
+        ...randomSolutionsByRewardType(roleType, 1, solutions),
       ];
     case 'Disengage':
       return [
-        ...randomSolutionsByRewardType(raceType, 2),
-        ...randomSolutionsByRewardType(roleType, 1),
+        ...randomSolutionsByRewardType(raceType, 2, solutions),
+        ...randomSolutionsByRewardType(roleType, 1, solutions),
       ];
     case 'Fortune':
-      return levelUpFortuneRewards(avatar);
+      return levelUpFortuneRewards(avatar, solutions);
     case 'Prosperity': {
-      const type15Item = randomSolutionType15Item();
+      const type15Item = randomSolutionType15Item(solutions);
       return [
-        ...levelUpFortuneRewards(avatar),
+        ...levelUpFortuneRewards(avatar, solutions),
         ...(type15Item === null ? [] : [type15Item]),
       ];
     }
     default:
-      return randomSolutionsByRewardType(raceType, 1);
+      return randomSolutionsByRewardType(raceType, 1, solutions);
   }
 }
 
@@ -708,6 +710,7 @@ function applyDeathEncounterOutcome(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
   selectedRollOutcome: RollOutcome | null,
+  solutions = getSolutionMap(),
 ): {
   nextInventory: AvatarInventory;
   rewardIds: number[];
@@ -720,7 +723,7 @@ function applyDeathEncounterOutcome(
   }
 
   if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
-    const essenceReward = randomEssenceReward();
+    const essenceReward = randomEssenceReward(solutions);
     const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
 
     if (!essenceReward || essenceUses <= 0) {
@@ -766,8 +769,10 @@ function deathEncounterEssenceUses(outcome: RollOutcome | null): number {
 export function applyFortuneSacrificeReward(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
+  contentRevision: string | null = null,
 ): AvatarInventory {
-  return applyDeathEncounterOutcome(inventory, avatar, 'Fortune').nextInventory;
+  const content = getGameRuntimeContentSnapshotForRevision(contentRevision);
+  return applyDeathEncounterOutcome(inventory, avatar, 'Fortune', content.solutions).nextInventory;
 }
 
 function normalizeSystemEncounterResolution(
@@ -775,11 +780,12 @@ function normalizeSystemEncounterResolution(
   avatar: AvatarDocument,
   resolution: EncounterResolution,
   selectedRollOutcome: RollOutcome | null,
+  solutions = getGameRuntimeContentSnapshotForRevision(snapshot.contentRevision).solutions,
 ): EncounterResolution {
   if (snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
     const rewards = snapshot.rewardIds.length > 0
       ? snapshot.rewardIds
-      : levelUpRewards(avatar, selectedRollOutcome);
+      : levelUpRewards(avatar, selectedRollOutcome, solutions);
 
     return {
       ...resolution,
@@ -812,6 +818,7 @@ function withProsperityEssenceReward(
   snapshot: EncounterSnapshot,
   resolution: EncounterResolution,
   selectedRollOutcome: ReturnType<typeof interpretRoll>,
+  solutions = getGameRuntimeContentSnapshotForRevision(snapshot.contentRevision).solutions,
 ): EncounterResolution {
   if (
     !resolution.success ||
@@ -822,7 +829,7 @@ function withProsperityEssenceReward(
     return resolution;
   }
 
-  const essenceReward = snapshot.prosperityRewardId ?? randomEssenceReward();
+  const essenceReward = snapshot.prosperityRewardId ?? randomEssenceReward(solutions);
 
   if (essenceReward === null) {
     return resolution;
