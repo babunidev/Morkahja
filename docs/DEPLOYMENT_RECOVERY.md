@@ -69,7 +69,7 @@ Host integration remains a manual deployment task:
 3. Reload Nginx only after the syntax test passes.
 4. Request a current managed image URL and an old revision URL over HTTPS; verify 200, WebP content type, ETag and immutable cache headers. Confirm unknown revisions/names do not expose filesystem paths.
 
-No Nginx binary, site configuration or live image URL was available for this repository change, so these host checks have not been claimed as completed.
+The repository does not include a production Nginx site configuration, and no production-host access was available to run nginx -t or request a live image. These host checks remain unverified.
 
 ## Versioned content backups
 
