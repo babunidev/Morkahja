@@ -22,7 +22,7 @@ The existing ecosystem.config.cjs runs the API through PM2 and loads the private
 
 Root scripts:
 
-- npm run deploy:preflight checks that the content root, static web root and backup root exist, are real directories, and do not overlap one another or the Git checkout.
+- npm run deploy:preflight checks that the content root, static web root and backup root exist, are real directories, do not overlap one another or the Git checkout, and that the backup root itself is a mounted filesystem.
 - npm run deploy:application runs the guarded deployment workflow.
 
 The deployment runner:
