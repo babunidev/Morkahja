@@ -9,7 +9,7 @@ import {
   CONTENT_FILES, listContentRevisions, readContentPointer, readContentRevision,
   readPublishedContent,
 } from '../src/services/contentPublication.js';
-import { readArtworkObject, type ArtworkEntry } from '../server/src/services/contentArtwork.js';
+import { readArtworkObject, type ArtworkEntry } from '../src/services/contentArtwork.js';
 
 const FORMAT = 'morkahja-content-backup-v1';
 const MAX_BACKUP_MANIFEST_BYTES = 32 * 1024 * 1024;
