@@ -81,9 +81,10 @@ function validFields(
     booleans.every(key => typeof row[key] === 'boolean'));
 }
 function validIndexedFields(
-  value: Record<string, unknown>, wrapper: string,
+  value: unknown, wrapper: string,
   numbers: readonly string[], strings: readonly string[],
 ): boolean {
+  if (!object(value) || !Array.isArray(value[wrapper])) return false;
   return (value[wrapper] as unknown[]).every(row =>
     row === null || (object(row) && validFields({ record: row }, numbers, strings)));
 }
