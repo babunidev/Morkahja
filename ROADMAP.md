@@ -48,7 +48,7 @@ Implementation details: [Phase 2 storage](docs/CONTENT_STORAGE.md). None of thes
 - [x] Use one captured revision when selecting new solo encounters and regular rewards; updated solution records and new encounter IDs appear on later reads.
 - [x] Add read-only, revision-consistent `GET /game-data/content` with ETag/304 and no-cache semantics.
 - [x] Add selected-pointer consistency and generic 503 failure handling for missing/invalid published roots.
-- [x] Verify temporary-directory HTTP tests against the real repository JSON (4/4 on [CI run 42332713643](https://github.com/babunidev/Morkahja/actions/runs/42332713643)); latest follow-up test result may differ.
+- [x] Verify 7/7 storage and 4/4 temporary-directory HTTP runtime tests (including newly published encounter IDs) against real repository JSON on [CI run 42332861255](https://github.com/babunidev/Morkahja/actions/runs/42332861255).
 - [ ] Review and merge the stacked backend PRs when authorized; full release CI remains blocked by existing TypeScript errors outside these changes.
 - [ ] Pin active encounters and room resolution to their content revision before live publication.
 - [ ] Add authenticated publishing, managed WebP, frontend dynamic content and a reviewed production migration.
