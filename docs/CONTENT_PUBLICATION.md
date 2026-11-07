@@ -110,4 +110,4 @@ Do not delete old Git copies or rewrite old scripts before the new source and te
 - Current Stripe/pricing, achievement, reward, and inventory dependencies on mutable expansions/solutions require a focused audit before enabling destructive edits.
 - The proposed content root, API route shapes and revisioned media URL are **design choices for review**, not evidence of already deployed functionality.
 
-**Verification status:** Repository source and documentation inspection only. No automated checks executed; no files, active sessions, production data, or live services changed.
+**Verification status:** Repository source and documentation inspection only. No automated checks executed; no production files, active sessions, player data, or live services changed.
