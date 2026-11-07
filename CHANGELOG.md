@@ -67,3 +67,12 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Preserved explicit legacy-configuration compatibility while rejecting corrupt, incomplete or unexpected server content without partial publication.
 - Added bootstrap/screen-entry refresh, periodic revalidation, focused client regression tests and a standalone frontend build CI gate.
 - No production content, VPS, player records or current main branch were changed.
+
+## 2026-11-07 — Active gameplay content-revision protection (draft PR #15)
+
+- Persisted an immutable content revision on new encounter snapshots, prepared follow-ups, all multiplayer room slots and their room shell, solo checkpoints, and pre-death snapshots.
+- Migrated solo and room encounter selection, action resolution and reward/inventory calculations to read the snapshot's exact historical encounter and solution definitions.
+- Added checked-in baseline compatibility for untagged pre-publication snapshots and fail-closed handling when explicitly pinned history is unavailable.
+- Strengthened publication and admin validation against deletions and semantic repurposing of established content IDs, independently of personal player data.
+- Added isolated tests that publish new content while simulated solo/multiplayer snapshots remain active, including historical lookup, reward behavior, legacy compatibility and corrupt history.
+- No player/database migration, live publishing, frontend historical presentation pinning or production deployment was performed.
