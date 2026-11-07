@@ -226,10 +226,11 @@ test('new JSON, portraits and frames publish together; versioned URLs refresh an
 });
 
 test('staged object hashes are checked at publish time, failed commit does not reveal new art', async () => {
-  await withServer(async ({ root, base, stage, admin, public: get }) => {
-    const upload = await stage('encounters', 'unpublished_scene', 'create', base, red);
-    assert.equal(upload.status, 201);
-    const id = (await upload.json() as any).stageId;
+  await withServer(async ({ root, base, public: get }) => {
+    const id = stageWebpArtwork(root, readPublishedContent(root), {
+      kind: 'encounters', name: 'unpublished_scene', intent: 'create',
+      baseRevision: base, bytes: red,
+    }).id;
     const edits = [{
       kind: 'encounters', key: '20001', operation: 'update',
       data: { ...fixture().encounters['20001'], mEncounterImageName: 'unpublished_scene' },
@@ -237,10 +238,14 @@ test('staged object hashes are checked at publish time, failed commit does not r
     // Invalid JSON relationship has no chance to publish an image.
     const invalid = structuredClone(edits);
     (invalid[0].data as any).mEncounterFollow = 999999;
-    const rejected = await admin('/content/publish', post({
-      baseRevision: base, changes: invalid, assetStages: [id], publicationId: 'managed_invalid_0001',
-    }));
-    assert.equal(rejected.status, 422);
+    const current = readPublishedContent(root);
+    assert.throws(() => publishContentRevision(root, {
+      baseRevision: base, publicationId: 'managed_invalid_0001',
+      content: { ...current.content, encounters: {
+        ...(current.content.encounters as Record<string, unknown>),
+        '20001': invalid[0].data,
+      } }, assetStages: [id],
+    }), /CONTENT_MISSING_FOLLOW/);
     assert.equal(readContentPointer(root).revision, base);
     assert.equal((await get('/game-data/media/' + base + '/encounters/unpublished_scene.webp')).status, 404);
 
