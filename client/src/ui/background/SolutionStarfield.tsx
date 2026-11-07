@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import solutionData from '../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../content/clientContent.js';
 import { useLayoutMode } from '../layout/useLayoutMode.js';
 import { FADE_DURATION_MS } from '../transitions/fade.js';
-
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
 
 /** How many solution icons twinkle at once. */
 const STAR_COUNT = 28;
@@ -15,13 +13,13 @@ interface SolutionRecord {
   mSolutionIconName?: string;
 }
 
-const ICON_NAMES: string[] = Array.from(
-  new Set(
-    Object.values(solutionData as Record<string, SolutionRecord>)
-      .map((record) => record.mSolutionIconName)
+function iconNames(): string[] {
+  return Array.from(new Set(
+    Object.values(getClientContent().solutions as Record<string, SolutionRecord>)
+      .map(record => record.mSolutionIconName)
       .filter((name): name is string => typeof name === 'string' && name.length > 0),
-  ),
-);
+  ));
+}
 
 // Full-viewport shell that centres the play-area stage, mirroring PortraitStage.
 const shellStyle: CSSProperties = {
@@ -74,11 +72,8 @@ function randomBetween(min: number, max: number): number {
 }
 
 function randomIcon(): string {
-  if (ICON_NAMES.length === 0) {
-    return '';
-  }
-
-  return ICON_NAMES[Math.floor(Math.random() * ICON_NAMES.length)];
+  const names = iconNames();
+  return names.length ? names[Math.floor(Math.random() * names.length)] : '';
 }
 
 interface StarState {
@@ -115,11 +110,12 @@ function createStar(id: number): StarState {
 }
 
 export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }) {
+  const content = useClientContent();
   const [stars, setStars] = useState<StarState[]>(() =>
     Array.from({ length: STAR_COUNT }, (_, index) => createStar(index)),
   );
   const timersRef = useRef<Map<number, number>>(new Map());
-  const hasIcons = useMemo(() => ICON_NAMES.length > 0, []);
+  const hasIcons = useMemo(() => iconNames().length > 0, [content.revision]);
   const { mode } = useLayoutMode();
   const mobilePortrait = mode === 'mobile-portrait';
 
@@ -165,7 +161,7 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
       timers.forEach((handle) => window.clearTimeout(handle));
       timers.clear();
     };
-  }, [hasIcons]);
+  }, [hasIcons, content.revision]);
 
   if (!hasIcons) {
     return null;
@@ -187,7 +183,7 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
             aria-hidden="true"
             draggable={false}
             key={star.id}
-            src={`${SOLUTION_IMAGE_ROOT}/${star.icon}.webp`}
+            src={star.icon ? contentImageUrl('solutions', star.icon) : ''}
             style={{
               ...starBaseStyle,
               left: `${star.left}%`,
