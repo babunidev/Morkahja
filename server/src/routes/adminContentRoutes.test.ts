@@ -113,6 +113,12 @@ test('admin endpoints require a configured bearer key, reject wrong keys, and ne
     const notConfigured = await fetchAdmin('/content');
     assert.equal(notConfigured.status, 503);
     process.env.ADMIN_API_KEY = key;
+    delete process.env.MORKAHJA_CONTENT_ROOT;
+    invalidateGameDataCaches();
+    const noRoot = await fetchAdmin('/content');
+    assert.equal(noRoot.status, 503); // never read Git data through admin
+    process.env.MORKAHJA_CONTENT_ROOT = root;
+    invalidateGameDataCaches();
 
     for (const kind of ['encounters', 'solutions', 'expansions', 'frames', 'portraits']) {
       const deprecated = await fetchAdmin(`/content/${kind}`, post({ key: '1', data: {} }));
@@ -241,6 +247,25 @@ test('oversized admin bodies are rejected before storage writes', async () => {
       baseRevision: base, changes: [], padding: 'x'.repeat(300_000),
     }));
     assert.equal(res.status, 413);
+    assert.equal(readPublishedContent(root).revision, base);
+  });
+});
+
+test('admin mutation requests are rate limited before parsing, and media upload remains disabled', async () => {
+  await setup(async ({ root, base, fetchAdmin }) => {
+    const media = await fetchAdmin('/content/assets/stage', post({ filename: 'new.webp' }));
+    assert.ok([429, 501].includes(media.status)); // earlier tests share the test-process bucket
+    let observedLimit = media.status === 429;
+    for (let i = 0; i < 25; i += 1) {
+      const response = await fetchAdmin('/content/encounters', post({ key: '20001', data: {} }));
+      if (response.status === 429) {
+        observedLimit = true;
+        assert.ok(Number(response.headers.get('retry-after')) > 0);
+        break;
+      }
+      assert.equal(response.status, 410);
+    }
+    assert.equal(observedLimit, true);
     assert.equal(readPublishedContent(root).revision, base);
   });
 });
