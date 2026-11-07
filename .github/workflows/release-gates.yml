@@ -23,6 +23,8 @@ jobs:
         run: npm run test:content-publication
       - name: Content runtime integration test
         run: npm run test:content-runtime
+      - name: Secure admin content API test
+        run: npm run test:content-admin
       - name: Typecheck and client build
         run: npm run typecheck
       - name: Server session auth test
