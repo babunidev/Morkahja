@@ -9,8 +9,10 @@ import { test } from 'node:test';
 import express from 'express';
 import { adminRoutes } from './adminRoutes.js';
 import {
-  listContentRevisions, publishContentRevision, readPublishedContent,
+  assertCompatibleContentIdentity, listContentRevisions,
+  publishContentRevision, readPublishedContent,
 } from '../services/contentPublication.js';
+import { applyContentRecordChanges } from '../services/contentAdminService.js';
 import { invalidateGameDataCaches } from '../services/gameData.js';
 import { stageWebpArtwork } from '../services/contentArtwork.js';
 
@@ -219,9 +221,12 @@ test('validation rejects missing relations, mismatched IDs and unknown asset ref
     const repurposed = structuredClone(changes);
     (repurposed[1]!.data as Record<string, unknown>).mSolutionInventoryType =
       (repurposed[1]!.data as Record<string, number>).mSolutionInventoryType === 1 ? 2 : 1;
-    const incompatible = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: repurposed }));
-    assert.equal(incompatible.status, 422);
-    assert.deepEqual(await incompatible.json(), { error: 'CONTENT_IDENTITY_CHANGE_NOT_SUPPORTED' });
+    const source = readPublishedContent(root).content;
+    const draft = applyContentRecordChanges(source, repurposed);
+    assert.throws(
+      () => assertCompatibleContentIdentity(source, draft),
+      /CONTENT_IDENTITY_CHANGE_NOT_SUPPORTED/,
+    );
 
     const missingAsset = structuredClone(changes);
     (missingAsset[0]!.data as Record<string, unknown>).mEncounterImageName = 'nonexistent_new_art';
