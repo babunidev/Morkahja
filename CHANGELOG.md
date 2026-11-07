@@ -24,3 +24,9 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 ## 2026-10-31 — Changed: publication decision record
 
 - Recorded Babuni.dev’s open-development decision and verified current visibility in Decisions and Development journal; retained licensing, media-rights and deployment distinctions.
+
+## 2026-11-07 — Content publication architecture proposal
+
+- Added a source-backed, review-stage design for Babuni Admin integration in docs/CONTENT_PUBLICATION.md and linked it from the architecture, roadmap and README.
+- Recorded the required client JSON import migration, server-side revisioned publication, media staging, snapshot compatibility, deployment separation and rollback checks.
+- Documentation-only GitHub branch; no runtime implementation, automated tests, production content change or deployment is claimed.

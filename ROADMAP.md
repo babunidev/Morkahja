@@ -26,3 +26,17 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] Cross-reference material design decisions in dated source/commits; do not infer author acceptance of every implementation detail.
 
 **Audit boundaries:** Documentation-only source review. No builds, tests, live server calls or production data access.
+
+## Proposed — independent content administration (2026-11-07)
+
+See [dynamic content publication design](docs/CONTENT_PUBLICATION.md). These tasks are proposals, not implemented features or accepted deployment decisions.
+
+- [x] Inspect the repository's content loading, frontend JSON imports, admin routes, tracked game JSON/media and historical deployment documentation (static source review only; see [Phase 1 audit](docs/CONTENT_PUBLICATION_PHASE1_AUDIT.md)).
+- [x] Draft a revisioned content architecture and staging/rollback procedure for review (documentation only).
+- [ ] Approve and test the authoritative storage location and HTTP/media contract with Babuni Admin.
+- [ ] Implement immutable content revisions, validation and transactional publishing with automated tests.
+- [ ] Harden authenticated admin publishing and handle conflict/idempotent retry safely.
+- [ ] Replace all runtime-relevant frontend JSON imports with one server-provided content bundle.
+- [ ] Protect ongoing encounters and room snapshots with explicit content-revision pinning.
+- [ ] Add managed WebP uploads, versioned delivery, cache refresh and tested rollback.
+- [ ] Rehearse the deployment boundary, backups, migration and rollback before separately authorized production cutover.
