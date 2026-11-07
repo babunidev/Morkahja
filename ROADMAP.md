@@ -34,7 +34,8 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [x] Implement immutable revision directories, a current pointer, SHA-256 checksums, validation and an exclusive publication lock.
 - [x] Add revision conflict handling, publication IDs, audit metadata, pre-pointer failure safety and rollback-as-new-revision.
 - [x] Add a focused temporary-directory regression suite and register it in release CI (CI results must be verified separately).
-- [ ] Obtain reviews/approval and verify new tests plus the full existing release gates.
+- [x] Verify 7/7 focused content publication tests and current JSON fixture import on GitHub Actions run `42331816271`.
+- [ ] Obtain review/approval and pass the complete release gates (existing TypeScript errors and database-dependent CI remain blockers).
 - [ ] Implement protected admin publishing, revision-aware media and client runtime content loading in subsequent stages.
 - [ ] Verify live Nginx, PM2, backup configuration and production content parity before any independent deployment or live migration.
 
