@@ -250,12 +250,23 @@ export function publishContentRevision(root: string, request: PublicationRequest
   try {
     mkdirSync(join(root, 'revisions'), { recursive: true });
     const current = existsSync(join(root, 'current.json')) ? readPublishedContent(root) : null;
-    if (current?.manifest.publicationId === request.publicationId) return current;
+    // Idempotency is bound to exactly the same request, not merely a reused ID.
+    const normalized = parse(JSON.stringify(request.content ?? null));
+    validateContentBundle(normalized);
+    if (current?.manifest.publicationId === request.publicationId) {
+      if (current.manifest.previousRevision !== request.baseRevision ||
+          JSON.stringify(current.content) !== JSON.stringify(normalized) ||
+          (request.operation === 'rollback' &&
+            (current.manifest.operation !== 'rollback' ||
+             current.manifest.restoredFrom !== request.restoredFrom)) ||
+          (request.operation !== 'rollback' && current.manifest.operation === 'rollback')) {
+        fail('CONTENT_PUBLICATION_ID_REUSED');
+      }
+      return current;
+    }
     const existing = listContentRevisions(root).find(m => m.publicationId === request.publicationId);
     if (existing) fail('CONTENT_PUBLICATION_ID_REUSED');
     if ((current?.revision ?? null) !== request.baseRevision) fail('CONTENT_REVISION_CONFLICT');
-    const normalized = parse(JSON.stringify(request.content ?? null));
-    validateContentBundle(normalized);
     if (current) preserveIds(current.content, normalized);
 
     const revision = randomUUID();
@@ -267,6 +278,7 @@ export function publishContentRevision(root: string, request: PublicationRequest
       const files = {} as ContentManifest['files'];
       for (const kind of Object.keys(CONTENT_FILES) as ContentKind[]) {
         const data = JSON.stringify(normalized[kind], null, 2) + '\n';
+        if (Buffer.byteLength(data) > 8 * 1024 * 1024) fail('CONTENT_FILE_TOO_LARGE');
         files[kind] = { sha256: digest(data), bytes: Buffer.byteLength(data) };
         durableWrite(join(staged, CONTENT_FILES[kind]), data);
       }
