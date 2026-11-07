@@ -19,6 +19,8 @@ jobs:
         run: npm install
       - name: Verify static data sync
         run: npm run verify:static-data
+      - name: Content publication storage test
+        run: npm run test:content-publication
       - name: Server session auth test
         run: npm run test:session-auth --prefix server
       - name: Server achievements test
