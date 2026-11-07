@@ -16,6 +16,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     if (!backup || !isAbsolute(backup)) throw new Error('CONTENT_BACKUP_PATH_MUST_BE_ABSOLUTE');
     if (!destination || !isAbsolute(destination)) throw new Error('CONTENT_RESTORE_DESTINATION_MUST_BE_ABSOLUTE');
     if (!args.includes('--create-new-root')) throw new Error('CONTENT_RESTORE_NEW_ROOT_CONFIRMATION_REQUIRED');
+    if (!process.env.MORKAHJA_DEPLOY_WEB_ROOT) throw new Error('MORKAHJA_DEPLOY_WEB_ROOT_REQUIRED');
     const restored = restoreContentBackup(backup, destination);
     process.stdout.write(
       'Restored and verified content root: ' + restored.destination +
