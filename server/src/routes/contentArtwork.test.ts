@@ -31,7 +31,7 @@ function fixture(): any {
 interface Context {
   root: string; base: string;
   admin: (path: string, init?: RequestInit, authenticated?: boolean) => Promise<Response>;
-  public: (path: string) => Promise<Response>;
+  public: (path: string, init?: RequestInit) => Promise<Response>;
   stage: (kind: string, name: string, intent: string, revision: string, bytes?: Buffer, authenticated?: boolean) => Promise<Response>;
 }
 async function withServer(run: (context: Context) => Promise<void>): Promise<void> {
@@ -69,10 +69,10 @@ async function withServer(run: (context: Context) => Promise<void>): Promise<voi
           'Content-Type': 'image/webp',
           'X-Asset-Kind': kind, 'X-Asset-Name': name,
           'X-Asset-Intent': intent, 'X-Asset-Base-Revision': revision,
-        }, body: bytes,
+        }, body: bytes as unknown as BodyInit,
       }, authenticated);
     try {
-      await run({ root, base, admin, stage, public: path => fetch(url + path) });
+      await run({ root, base, admin, stage, public: (path, init) => fetch(url + path, init) });
     } finally {
       await new Promise<void>((resolve, reject) => server.close(err => err ? reject(err) : resolve()));
     }
@@ -111,8 +111,8 @@ test('WebP inspection validates RIFF, actual chunk dimensions, size and rejects 
   mismatch.writeUInt32LE(mismatch.length + 1, 4);
   assert.throws(() => inspectWebp(mismatch), /CONTENT_INVALID_WEBP/);
   const tooWide = Buffer.from(red);
-  tooWide[25] = 0xff;
-  tooWide[26] = 0x3f; // VP8L width=16384, exceeds policy
+  tooWide[21] = 0xff;
+  tooWide[22] = 0x3f; // VP8L width=16384, exceeds policy
   assert.throws(() => inspectWebp(tooWide), /CONTENT_INVALID_WEBP_DIMENSIONS/);
 });
 
@@ -154,8 +154,8 @@ test('new JSON, portraits and frames publish together; versioned URLs refresh an
     const stages: string[] = [];
     for (const [kind, name] of mediaRequests) {
       const response = await stage(kind, name, 'create', base, red);
-      assert.equal(response.status, 201, await response.text());
-      stages.push((await response.clone().json() as any).stageId);
+      assert.equal(response.status, 201, await response.clone().text());
+      stages.push((await response.json() as any).stageId);
     }
     const edits = newManagedRecords();
     const incomplete = await admin('/content/validate', post({
@@ -203,8 +203,9 @@ test('new JSON, portraits and frames publish together; versioned URLs refresh an
     const replaced = await get(secondUrl);
     assert.deepEqual(Buffer.from(await replaced.arrayBuffer()), blue);
     const tag = replaced.headers.get('etag');
-    const cached = await fetch(new URL(secondUrl, 'http://example.invalid')); // replaced below by local fetch test
-    void cached; void tag;
+    const cached = await get(secondUrl, { headers: { 'If-None-Match': tag! } });
+    assert.equal(cached.status, 304);
+    assert.equal(await cached.text(), '');
 
     const replay = await admin('/content/publish', post({
       baseRevision: first, changes: [], assetStages: [replacementId], publicationId: 'managed_replace_0001',
