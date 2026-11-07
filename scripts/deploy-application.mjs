@@ -58,6 +58,7 @@ export function deployApplication(env = loadEnvironment()) {
     'test:client-content',
     'test:content-gameplay',
     'test:content-backup',
+    'test:deployment',
   ]) run('npm', ['run', script], repositoryRoot, env);
   run('npm', ['run', 'build', '--prefix', 'client'], repositoryRoot, env);
   // Includes the complete project release checks and server/client typecheck.
