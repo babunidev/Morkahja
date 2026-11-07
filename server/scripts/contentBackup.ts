@@ -281,7 +281,9 @@ export function restoreContentBackup(
   const repo = realpathSync(options.repoRoot ?? repositoryRoot);
   if (overlaps(destination, repo) || overlaps(destination, backup)) fail('CONTENT_RESTORE_PATH_OVERLAP');
   const activeRoot = process.env.MORKAHJA_CONTENT_ROOT;
-  if (activeRoot && overlaps(destination, resolve(activeRoot))) fail('CONTENT_RESTORE_PATH_OVERLAP');
+  if (activeRoot && existsSync(activeRoot) && overlaps(destination, realpathSync(activeRoot))) {
+    fail('CONTENT_RESTORE_PATH_OVERLAP');
+  }
   const webRoot = process.env.MORKAHJA_DEPLOY_WEB_ROOT;
   if (webRoot && overlaps(destination, realDirectory(webRoot, 'CONTENT_WEB_ROOT_UNAVAILABLE'))) {
     fail('CONTENT_RESTORE_PATH_OVERLAP');
