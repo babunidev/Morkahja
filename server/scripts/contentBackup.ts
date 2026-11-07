@@ -105,6 +105,14 @@ function allFiles(root: string, prefix = ''): string[] {
   }
   return found.sort();
 }
+function syncTreeDirectories(root: string): void {
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (entry.isDirectory()) syncTreeDirectories(join(root, entry.name));
+    else if (!entry.isFile()) fail('CONTENT_BACKUP_UNSAFE_FILE');
+  }
+  const fd = openSync(root, 'r');
+  try { fsyncSync(fd); } finally { closeSync(fd); }
+}
 function writeBackupManifest(root: string, manifest: ContentBackupManifest): void {
   const bytes = Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
   writeDurable(join(root, 'backup.json'), bytes);
@@ -234,6 +242,7 @@ export function createContentBackup(
       revisions: revisions.map(item => item.revision).sort(), files,
     };
     writeBackupManifest(temporaryPath, backupManifest);
+    syncTreeDirectories(temporaryPath);
     verifyContentBackup(temporaryPath);
     renameSync(temporaryPath, finalPath);
     const directoryFd = openSync(destination, 'r');
@@ -278,6 +287,7 @@ export function restoreContentBackup(
       const bytes = readSafe(join(backup, ...file.path.split('/')));
       writeDurable(join(destination, ...file.path.split('/')), bytes);
     }
+    syncTreeDirectories(destination);
     const pointer = readContentPointer(destination);
     const restored = readPublishedContent(destination, pointer);
     const revisions = listContentRevisions(destination).map(item => item.revision).sort();
