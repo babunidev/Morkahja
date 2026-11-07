@@ -21,6 +21,7 @@ export function deployApplication(env = loadEnvironment()) {
     contentRoot: env.MORKAHJA_CONTENT_ROOT,
     webRoot: env.MORKAHJA_DEPLOY_WEB_ROOT,
     backupRoot: env.MORKAHJA_CONTENT_BACKUP_ROOT,
+    requireBackupMount: true,
   });
   if (env.MORKAHJA_BACKUP_OFF_HOST_CONFIRMED !== '1') {
     throw new Error('DEPLOY_OFF_HOST_BACKUP_CONFIRMATION_REQUIRED');
@@ -44,6 +45,7 @@ export function deployApplication(env = loadEnvironment()) {
     contentRoot: env.MORKAHJA_CONTENT_ROOT,
     webRoot: env.MORKAHJA_DEPLOY_WEB_ROOT,
     backupRoot: env.MORKAHJA_CONTENT_BACKUP_ROOT,
+    requireBackupMount: true,
   });
   run('npm', ['ci'], repositoryRoot, env);
 
