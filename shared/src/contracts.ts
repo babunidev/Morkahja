@@ -152,6 +152,7 @@ export interface PreparedEncounterDto {
 }
 
 export interface EncounterSnapshotDto {
+  contentRevision?: string | null;
   snapshotId: string;
   encounterId: number;
   encounterTitle?: string;
