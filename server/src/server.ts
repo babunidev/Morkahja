@@ -42,6 +42,7 @@ import {
 } from './services/avatarDeathService.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
+import { publicContentRoutes } from './routes/publicContentRoutes.js';
 import { encounterRoutes } from './routes/encounterRoutes.js';
 import { roomRoutes } from './routes/roomRoutes.js';
 import { loadAvatar } from './services/encounterPersistence.js';
@@ -52,10 +53,7 @@ import {
   logoutSession,
 } from './services/sessionService.js';
 import {
-  getEncounters,
-  getFramesData,
-  getPortraitsData,
-  getSolutionMap,
+  getGameRuntimeContentSnapshot,
   loadStaticGameEnvironment,
 } from './services/gameData.js';
 import {
@@ -89,7 +87,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match');
+  res.header('Access-Control-Expose-Headers', 'ETag');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);
@@ -138,6 +137,7 @@ function authRateLimit(req: Request, res: Response, next: NextFunction): void {
 
 /** Uses existing nginx proxy for `/game-data` — no extra nginx rules needed */
 app.use('/game-data/admin', adminRoutes);
+app.use('/game-data', publicContentRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
@@ -149,17 +149,16 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.get('/game-data/status', (_req: Request, res: Response) => {
-  const encounters = getEncounters();
-  const solutions = getSolutionMap();
-  const frames = getFramesData();
-  const portraits = getPortraitsData();
-
+  // Take one revision snapshot for all reported counts.
+  const content = getGameRuntimeContentSnapshot();
+  res.setHeader('Cache-Control', 'no-cache');
   res.json({
     status: 'ok',
-    encounters: Object.keys(encounters).length,
-    solutions: Object.keys(solutions).length,
-    frames: frames.Frames.length,
-    portraits: portraits.Avatar.length,
+    revision: content.revision,
+    encounters: Object.keys(content.encounters).length,
+    solutions: Object.keys(content.solutions).length,
+    frames: content.frames.Frames.length,
+    portraits: content.portraits.Avatar.length,
   });
 });
 
