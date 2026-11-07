@@ -102,6 +102,13 @@ test('public content is one canonical revision; ETag revalidation and immediate 
       const encounters = altered.encounters as Record<string, Record<string, unknown>>;
       const solutions = altered.solutions as Record<string, Record<string, unknown>>;
       encounters['20001']!.mEncounterTitle = 'Fresh content without restart';
+      // New content shares existing artwork until the managed-media stage.
+      encounters['20999'] = {
+        ...encounters['20001']!,
+        mEncounterID: 20999,
+        mEncounterFollow: 0,
+        mEncounterTitle: 'Newly published encounter',
+      };
       solutions['10001']!.mSolutionName = 'Fresh skill without restart';
 
       const second = publishContentRevision(root, {
@@ -112,11 +119,14 @@ test('public content is one canonical revision; ETag revalidation and immediate 
       assert.equal(changedResponse.headers.get('etag'), `"${second.revision}"`);
       const changed = await changedResponse.json() as Record<string, any>;
       assert.equal(changed.encounters['20001'].mEncounterTitle, 'Fresh content without restart');
+      assert.equal(changed.encounters['20999'].mEncounterTitle, 'Newly published encounter');
       assert.equal(changed.solutions['10001'].mSolutionName, 'Fresh skill without restart');
 
       assert.equal(getGameRuntimeContentSnapshot().revision, second.revision);
       assert.equal(getEncounters()['20001']?.mEncounterTitle, 'Fresh content without restart');
+      assert.equal(getEncounters()['20999']?.mEncounterTitle, 'Newly published encounter');
       assert.equal(getSolutionMap()['10001']?.mSolutionName, 'Fresh skill without restart');
+      assert.equal(capturedBefore.encounters['20999'], undefined);
       assert.equal(capturedBefore.encounters['20001']?.mEncounterTitle,
         (baseline.encounters as Record<string, Record<string, unknown>>)['20001']?.mEncounterTitle);
     });
