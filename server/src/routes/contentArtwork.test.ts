@@ -63,7 +63,7 @@ async function withServer(run: (context: Context) => Promise<void>): Promise<voi
         ...(init.headers ?? {}),
       } },
     );
-    const stage = (kind: string, name: string, intent: string, revision: string, bytes = red, authenticated = true) =>
+    const stage = (kind: string, name: string, intent: string, revision: string, bytes: Buffer = red, authenticated = true) =>
       admin('/content/assets/stage', {
         method: 'POST', headers: {
           'Content-Type': 'image/webp',
