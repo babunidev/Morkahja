@@ -36,6 +36,8 @@ export interface AvatarPreDeathSnapshot {
   progression: AvatarDocumentProgression;
   lastPlayedAt?: number;
   failedAt: number;
+  /** Fate/content revision used by the fatal encounter, if published. */
+  contentRevision?: string | null;
 }
 
 /**
