@@ -116,7 +116,7 @@ See [Phase 6 client content](docs/CONTENT_CLIENT.md). This work is in a draft br
 - [x] Preserve room revision across system events, waiting/advance boundaries and participant reseeding.
 - [x] Support old untagged snapshots against the checked-in legacy baseline without silently assigning the current published revision; requires pre-cutover production parity verification.
 - [x] Forbid deletion and gameplay-identity repurposing of previously published encounter, solution, expansion, portrait and frame IDs; reject during admin validation and publication.
-- [x] Verify publication-during-gameplay simulations: 5/5 new tests, 26/26 total focused tests, static JSON sync and standalone frontend build on [CI run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970); full server typecheck still fails on eight pre-existing test-file errors.
+- [x] Verify publication-during-gameplay simulations: 5/5 new tests, 30/30 total focused tests, static JSON sync and standalone frontend build on [CI run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970); full server typecheck still fails on eight pre-existing test-file errors.
 - [ ] Exercise real PostgreSQL-backed solo/party lifecycle, concurrent publication during transactions, reconnect, death/sacrifice and historical artwork in a staging environment.
 - [ ] Reconcile client active-game presentations with server-pinned historical content (the Phase 6 browser store still follows the newest revision).
 - [ ] Audit live legacy snapshots and inventory IDs before any production migration; do not enable live publishing until cutover checks and full release gates pass.
