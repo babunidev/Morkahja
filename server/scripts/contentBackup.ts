@@ -11,6 +11,7 @@ import {
   readPublishedContent,
 } from '../src/services/contentPublication.js';
 import { readArtworkObject, type ArtworkEntry } from '../src/services/contentArtwork.js';
+import { loadEnvironment } from '../../scripts/verify-deployment-isolation.mjs';
 
 const FORMAT = 'morkahja-content-backup-v1';
 const MAX_BACKUP_MANIFEST_BYTES = 32 * 1024 * 1024;
@@ -312,6 +313,7 @@ function option(args: string[], name: string): string | undefined {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try {
+    Object.assign(process.env, loadEnvironment());
     const destination = option(process.argv.slice(2), '--destination');
     const source = process.env.MORKAHJA_CONTENT_ROOT;
     const confirmOffHost = process.argv.includes('--confirm-off-host');
