@@ -12,8 +12,10 @@ import {
   listContentRevisions, publishContentRevision, readPublishedContent,
 } from '../services/contentPublication.js';
 import { invalidateGameDataCaches } from '../services/gameData.js';
+import { stageWebpArtwork } from '../services/contentArtwork.js';
 
 const key = 'admin-content-test-only-secret-do-not-deploy';
+const sampleWebp = Buffer.from('UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA', 'base64');
 const paths = {
   encounters: 'encountersdata.json', solutions: 'solutiondata.json',
   expansions: 'expansiondata.json', frames: 'frames.json', portraits: 'portraits.json',
@@ -73,6 +75,15 @@ async function setup(run: (ctx: {
     invalidateGameDataCaches();
     rmSync(root, { recursive: true, force: true });
   }
+}
+function stageNewAvatarAndFrame(root: string, base: string): string[] {
+  const current = readPublishedContent(root);
+  return ([
+    ['frames', 'frame_100'],
+    ['portraits', 'avatar_682'],
+  ] as const).map(([kind, name]) => stageWebpArtwork(root, current, {
+    baseRevision: base, kind, name, intent: 'create', bytes: sampleWebp,
+  }).id);
 }
 function post(body: unknown): RequestInit {
   return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
@@ -135,7 +146,8 @@ test('five-category record edits, validation, publication, current read, idempot
     assert.equal((await current.json() as any).revision, base);
 
     const changes = updateAllFive();
-    const edit = { baseRevision: base, changes };
+    const assetStages = stageNewAvatarAndFrame(root, base);
+    const edit = { baseRevision: base, changes, assetStages };
     const validated = await fetchAdmin('/content/validate', post(edit));
     assert.equal(validated.status, 200, await validated.text());
     const disabled = await fetchAdmin('/content/publish', post({ ...edit, publicationId: 'admin_publish_0001' }));
@@ -183,7 +195,7 @@ test('five-category record edits, validation, publication, current read, idempot
 
 test('validation rejects missing relations, mismatched IDs and unknown asset references', async () => {
   await setup(async ({ root, base, fetchAdmin }) => {
-    const changes = updateAllFive();
+    const changes = updateAllFive().slice(0, 5);
     const badRelationship = structuredClone(changes);
     (badRelationship[0]!.data as Record<string, unknown>).mEncounterFollow = 999999;
     const bad = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: badRelationship }));
@@ -228,8 +240,9 @@ test('rollback creates a new checked revision, preserves immutable history and r
     assert.equal(listContentRevisions(root).length, 3);
 
     const changes = updateAllFive().slice(5); // create five new IDs
+    const assetStages = stageNewAvatarAndFrame(root, restored.revision);
     const added = await fetchAdmin('/content/publish', post({
-      baseRevision: restored.revision, publicationId: 'create_after_restore_01', changes,
+      baseRevision: restored.revision, publicationId: 'create_after_restore_01', changes, assetStages,
     }));
     assert.equal(added.status, 200, await added.text());
     const afterAdd = readPublishedContent(root).revision;
@@ -254,7 +267,7 @@ test('oversized admin bodies are rejected before storage writes', async () => {
 test('admin mutation requests are rate limited before parsing, and media upload remains disabled', async () => {
   await setup(async ({ root, base, fetchAdmin }) => {
     const media = await fetchAdmin('/content/assets/stage', post({ filename: 'new.webp' }));
-    assert.ok([429, 501].includes(media.status)); // earlier tests share the test-process bucket
+    assert.ok([429, 503].includes(media.status)); // disabled until the explicit publishing flag is enabled
     let observedLimit = media.status === 429;
     for (let i = 0; i < 25; i += 1) {
       const response = await fetchAdmin('/content/encounters', post({ key: '20001', data: {} }));
