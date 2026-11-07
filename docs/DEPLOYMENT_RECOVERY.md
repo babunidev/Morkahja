@@ -41,11 +41,11 @@ The preflight deliberately refuses overlapping paths. In particular, rsync --del
 
 Example operator environment (paths must be adapted to the real host):
 
-    MORKAHJA_CONTENT_ROOT=/var/lib/morkahja/content
-    MORKAHJA_DEPLOY_WEB_ROOT=/var/www/morkahja
-    MORKAHJA_CONTENT_BACKUP_ROOT=/mnt/off-host-backups
-    MORKAHJA_BACKUP_OFF_HOST_CONFIRMED=1
-    MORKAHJA_DEPLOY_BRANCH=main
+    export MORKAHJA_CONTENT_ROOT=/var/lib/morkahja/content
+    export MORKAHJA_DEPLOY_WEB_ROOT=/var/www/morkahja
+    export MORKAHJA_CONTENT_BACKUP_ROOT=/mnt/off-host-backups
+    export MORKAHJA_BACKUP_OFF_HOST_CONFIRMED=1
+    export MORKAHJA_DEPLOY_BRANCH=main
 
 After provisioning the directories and exporting those variables, run:
 
