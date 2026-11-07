@@ -146,6 +146,7 @@ export interface DonateGemsResponse {
 }
 
 export interface PreparedEncounterDto {
+  contentRevision?: string | null;
   encounterId: number;
   followMode: EncounterFollowMode;
 }
