@@ -175,7 +175,12 @@ export function getGameRuntimeContentSnapshotForRevision(
   if (!root) throw new Error('CONTENT_PINNED_REVISION_UNAVAILABLE');
   const current = getPublishedContentSnapshot();
   if (current?.revision === revision) return getGameRuntimeContentSnapshot();
-  return runtimeFromPublished(readContentRevision(root, revision));
+  try {
+    return runtimeFromPublished(readContentRevision(root, revision));
+  } catch {
+    // Never leak the private storage root through a gameplay error response.
+    throw new Error('CONTENT_PINNED_REVISION_UNAVAILABLE');
+  }
 }
 
 
