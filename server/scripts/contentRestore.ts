@@ -1,6 +1,7 @@
 import { isAbsolute, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { restoreContentBackup, verifyContentBackup } from './contentBackup.js';
+import { loadEnvironment } from '../../scripts/verify-deployment-isolation.mjs';
 
 function option(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -8,6 +9,7 @@ function option(args: string[], name: string): string | undefined {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try {
+    Object.assign(process.env, loadEnvironment());
     const args = process.argv.slice(2);
     const backup = option(args, '--backup');
     const destination = option(args, '--destination');
