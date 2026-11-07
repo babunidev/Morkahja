@@ -101,7 +101,7 @@ interface Flier {
 }
 
 export function AvatarSolutionInflow({ avatar }: { avatar: PersistedAvatar }) {
-  const content = useClientContent();
+  useClientContent();
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Capture the inventory once when the animation begins.
   const inventoryRef = useRef<AvatarInventory | undefined>(avatar.inventory);
