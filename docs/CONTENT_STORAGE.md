@@ -1,6 +1,6 @@
 # Morkahja — Phase 2 content revision storage
 
-**Status:** Implemented in isolated review branch; not deployed, not enabled by default and not a complete Babuni Admin publishing interface. Runtime checks must be reported separately from source review and CI results.
+**Status:** Implemented and validated in isolated review branch; not deployed, not enabled by default and not a complete Babuni Admin publishing interface. GitHub Actions on source commit `34ed798d` reported **7/7 new content-publication tests passing**, including current `gameData` revision refresh and blocked legacy mutation. The overall release workflow did **not** pass: pre-existing TypeScript errors in encounter test fixtures, pending-level-up tests and `roomService.ts` prevented the full typecheck/client build (run `42331816271`). Earlier runs also failed on the existing session-auth check when CI PostgreSQL was unavailable. These are independent release blockers, not a verified complete build.
 
 ## Storage authority
 
