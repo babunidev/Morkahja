@@ -115,7 +115,7 @@ Code/content compatibility is not automatically guaranteed across arbitrary hist
 
 New tests:
 - npm run test:content-backup covers versioned backup creation, historical revision retention, managed artwork retention, audit preservation, checksum failure, publication-lock exclusion and fresh-root restore without overwriting.
-- node --test scripts/deployment.test.mjs covers path isolation, overlap and symlink rejection.
+- npm run test:deployment covers path isolation, overlap, symlink rejection and the mounted-backup-root requirement.
 
 The GitHub Actions release workflow runs both checks. The complete release gate still includes the existing server typecheck and database-dependent tests; the current Phase 7 branch has eight pre-existing TypeScript errors in unrelated test files. The deployment runner therefore fails closed before static sync/PM2 reload until the full release check passes.
 
