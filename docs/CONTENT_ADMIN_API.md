@@ -1,6 +1,6 @@
 # Morkahja — Phase 4 secure administration API
 
-**Status:** Draft implementation in [PR #12](https://github.com/babunidev/Morkahja/pull/12), stacked on the unmerged Phase 3 PR #11 and Phase 2 PR #10. **No changes have been merged, deployed or enabled against live data.** Focused CI results and known limitations must be assessed before merge; this is not an authorization to enable live publishing.
+**Status:** Draft implementation in [PR #12](https://github.com/babunidev/Morkahja/pull/12), stacked on the unmerged Phase 3 PR #11 and Phase 2 PR #10. **No changes have been merged, deployed or enabled against live data.** On [GitHub Actions run 42334602021](https://github.com/babunidev/Morkahja/actions/runs/42334602021), static JSON sync, **7/7 storage tests, 4/4 runtime tests and 6/6 admin security/API tests passed**. The overall workflow still fails on the same nine pre-existing TypeScript errors in four unrelated files. This is not an authorization to enable live publishing.
 
 ## Authentication and request boundaries
 
