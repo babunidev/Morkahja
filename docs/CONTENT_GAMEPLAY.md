@@ -1,6 +1,6 @@
 # Phase 7 — active gameplay content-revision protection
 
-**Status:** Implemented in isolated draft [PR #15](https://github.com/babunidev/Morkahja/pull/15), stacked on unmerged draft PRs #10–14. [GitHub Actions run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970) verified 5/5 new gameplay, 7/7 storage, 4/4 runtime, 6/6 admin, 4/4 artwork and 4/4 client tests (**26/26** focused checks), static data sync and the standalone frontend build. The complete release workflow still fails on eight pre-existing TypeScript errors in three unrelated server test files; no Phase 7 TypeScript errors appeared. No production deployment, database migration, publishing opt-in or modification of live player data.
+**Status:** Implemented in isolated draft [PR #15](https://github.com/babunidev/Morkahja/pull/15), stacked on unmerged draft PRs #10–14. [GitHub Actions run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970) verified 5/5 new gameplay, 7/7 storage, 4/4 runtime, 6/6 admin, 4/4 artwork and 4/4 client tests (**30/30** focused checks), static data sync and the standalone frontend build. The complete release workflow still fails on eight pre-existing TypeScript errors in three unrelated server test files; no Phase 7 TypeScript errors appeared. No production deployment, database migration, publishing opt-in or modification of live player data.
 
 ## The consistency boundary
 
@@ -49,3 +49,7 @@ Release blockers remain: full root typecheck, complete server/database-backed en
 ## Attribution
 
 The human creative directed preservation of ongoing adventures and player-owned IDs during content updates. AI assistance implemented the revision-pinning approach, changes to the resolution and inventory paths, tests and technical documentation. This branch does not represent approval to migrate or deploy.
+
+## Phase 8 recovery boundary (draft PR #16)
+
+Content backups preserve all committed revisions required by pinned active encounters, including the historical artwork objects referenced by those manifests. A disaster restore must create a new content root containing the complete retained history; pruning old revisions would break active snapshots. Application rollback must leave the content pointer unchanged and use a code version that understands the current revision, media and snapshot metadata. This policy is documented but has not yet been exercised against a production backup or an older application release.

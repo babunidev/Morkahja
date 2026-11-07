@@ -56,3 +56,7 @@ Not yet covered: media existence, WebP validation, complete business rules/seman
 `npm run test:content-publication` exercises temporary-directory publication, reload, checksum detection, revision locking, stale-writer conflicts, bad references, failed pointer swaps and explicit restoration. The release CI workflow now includes these checks and the existing TypeScript/client build. Report passing results only from actual executions.
 
 Required before any live activation: inspect Nginx, PM2 and backup configuration; compare production content and artwork with the repository baseline; rehearse the import in staging; add protected admin endpoints and revision-aware media; migrate all client imports; pin active gameplay; document a separately approved production cutover and rollback. This Phase 2 implementation alone does not meet the full Babuni Admin integration acceptance criteria.
+
+## Phase 8 deployment and recovery addendum (draft PR #16)
+
+The external content root is now treated as a separate persistence boundary. See [deployment and recovery](DEPLOYMENT_RECOVERY.md) for path-isolation preflight, application-only deployment, verified versioned backup and restore into a fresh root. Backups include committed revisions and referenced artwork objects, not transient upload stages. The backup destination must be an operator-confirmed off-host mount; no production mount or restore has been verified.

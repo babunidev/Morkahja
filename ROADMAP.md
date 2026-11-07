@@ -116,9 +116,25 @@ See [Phase 6 client content](docs/CONTENT_CLIENT.md). This work is in a draft br
 - [x] Preserve room revision across system events, waiting/advance boundaries and participant reseeding.
 - [x] Support old untagged snapshots against the checked-in legacy baseline without silently assigning the current published revision; requires pre-cutover production parity verification.
 - [x] Forbid deletion and gameplay-identity repurposing of previously published encounter, solution, expansion, portrait and frame IDs; reject during admin validation and publication.
-- [x] Verify publication-during-gameplay simulations: 5/5 new tests, 26/26 total focused tests, static JSON sync and standalone frontend build on [CI run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970); full server typecheck still fails on eight pre-existing test-file errors.
+- [x] Verify publication-during-gameplay simulations: 5/5 new tests, 30/30 total focused tests, static JSON sync and standalone frontend build on [CI run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970); full server typecheck still fails on eight pre-existing test-file errors.
 - [ ] Exercise real PostgreSQL-backed solo/party lifecycle, concurrent publication during transactions, reconnect, death/sacrifice and historical artwork in a staging environment.
 - [ ] Reconcile client active-game presentations with server-pinned historical content (the Phase 6 browser store still follows the newest revision).
 - [ ] Audit live legacy snapshots and inventory IDs before any production migration; do not enable live publishing until cutover checks and full release gates pass.
 
 Details: [Phase 7 gameplay revisions](docs/CONTENT_GAMEPLAY.md). Draft implementation is not a deployed or approved feature.
+
+## Phase 8 — deployment and recovery (draft PR #16, 2026-11-07)
+
+- [x] Separate the application-only deployment workflow from content publication; the runner never calls admin publish or changes the content pointer.
+- [x] Add preflight guards requiring distinct external application, persistent content, static web and backup roots, a marked dedicated web root and a mounted backup destination before Git pull or rsync.
+- [x] Scope rsync --delete-delay to the marked dedicated client web root, preserving /.well-known/ and the marker; verify the reloaded API health before sync and never target content or backup roots.
+- [x] Add versioned content backups with file inventory, SHA-256 verification, all committed historical JSON revisions, referenced artwork objects and admin audit history.
+- [x] Block backup during an active publication lock; restore only into a new, non-existing content root and verify it before returning.
+- [x] Add an Nginx media proxy include that preserves revision-aware API cache headers without exposing the private content directory.
+- [x] Document application rollback separately from content rollback and define the compatibility checks required for old application versions.
+- [x] Verify 4/4 backup/restore and 6/6 deployment-isolation tests; all 40 focused content/deployment tests, static-data verification and the standalone frontend build passed on [CI run 42342330337](https://github.com/babunidev/Morkahja/actions/runs/42342376803). The complete release gate still fails on eight pre-existing TypeScript errors in three server test files.
+- [ ] Provision a real off-host backup mount, encryption, retention and scheduled backup operation; rehearse a complete restore.
+- [ ] Integrate the Nginx include on the actual HTTPS host, run nginx -t, reload, and verify current/historical media requests and headers.
+- [ ] Pass the complete release gate, test the exact application rollback target against a restored content copy, and approve a staged production cutover.
+
+Details: [Deployment and recovery](docs/DEPLOYMENT_RECOVERY.md). The deployment runner is guarded but has not been run against a production host. The Phase 8 branch and all preceding content stages remain draft review work.
