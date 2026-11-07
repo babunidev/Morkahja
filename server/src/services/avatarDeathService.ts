@@ -44,6 +44,7 @@ function buildPreDeathSnapshot(
   avatar: AvatarDocument,
   inventory: AvatarDocument['inventory'],
   progression: AvatarPreDeathSnapshot['progression'],
+  contentRevision?: string | null,
 ): AvatarPreDeathSnapshot {
   return {
     level: typeof avatar.level === 'number' ? avatar.level : 1,
