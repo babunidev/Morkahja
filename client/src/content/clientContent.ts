@@ -69,6 +69,24 @@ function map(value: unknown, idField: string): value is Record<string, Record<st
     Object.entries(value).every(([key, row]) =>
       /^[0-9]{1,9}$/.test(key) && object(row) && Number(key) === row[idField]);
 }
+function validFields(
+  entries: Record<string, Record<string, unknown>>,
+  numbers: readonly string[],
+  strings: readonly string[],
+  booleans: readonly string[] = [],
+): boolean {
+  return Object.values(entries).every(row =>
+    numbers.every(key => Number.isSafeInteger(row[key]) && (row[key] as number) >= 0) &&
+    strings.every(key => typeof row[key] === 'string' && (row[key] as string).length <= 16_384) &&
+    booleans.every(key => typeof row[key] === 'boolean'));
+}
+function validIndexedFields(
+  value: Record<string, unknown>, wrapper: string,
+  numbers: readonly string[], strings: readonly string[],
+): boolean {
+  return (value[wrapper] as unknown[]).every(row =>
+    row === null || (object(row) && validFields({ record: row }, numbers, strings)));
+}
 function indexed(value: unknown, wrapper: string, idField: string): boolean {
   if (!object(value) || !Array.isArray(value[wrapper])) return false;
   const rows = value[wrapper] as unknown[];
@@ -117,6 +135,47 @@ function validateResponse(data: unknown): ClientContent {
       !object(data.assets)) {
     throw Error('Incomplete or invalid published game content');
   }
+  if (!validFields(data.encounters,
+      ['mEncounterDifficulty', 'mEncounterExpansion', 'mEncounterFollow',
+        'mEncounterRewardAmount', 'mEncounterRewardType', 'mEncounterSolutiuonA',
+        'mEncounterSolutiuonB', 'mEncounterSolutiuonC', 'mEncounterSolutiuonD',
+        'mEncounterSolutiuonTypeA', 'mEncounterSolutiuonTypeB',
+        'mEncounterSolutiuonTypeC', 'mEncounterSolutiuonTypeD', 'mEncounterType'],
+      ['mEncounterImageName', 'mEncounterText', 'mEncounterTitle']) ||
+      !validFields(data.solutions,
+        ['mSolutionInventoryType', 'mSolutionRewardType', 'mSolutionType', 'mSolutionUses'],
+        ['mSolutionIconName', 'mSolutionName', 'mSolutionText']) ||
+      !validFields(data.expansions.expansions,
+        ['mExtensioCost', 'mExtensioReward'],
+        ['mExtensioCollectionImage', 'mExtensioHeaderImage', 'mExtensioName',
+          'mExtensioSummaryText', 'mExtensioText', 'mExtensioUnlockButton'],
+        ['mExtensioActive']) ||
+      !validIndexedFields(data.frames, 'Frames',
+        ['frameGem', 'frameRace', 'frameRole', 'frameType'], []) ||
+      !validIndexedFields(data.portraits, 'Avatar',
+        ['avatarGems', 'avatarGenderID', 'avatarRace', 'avatarRole', 'avatarType'],
+        ['avatarName']) ||
+      Object.values(data.expansions.expansions).some(entry =>
+        entry.mExtensioPriceEurCents !== undefined &&
+          (!Number.isSafeInteger(entry.mExtensioPriceEurCents) ||
+           (entry.mExtensioPriceEurCents as number) < 0))) {
+    throw Error('Incomplete or invalid published game records');
+  }
+  const encounterIds = new Set(Object.values(data.encounters).map(e => e.mEncounterID));
+  const expansionIds = new Set(Object.values(data.expansions.expansions).map(e => e.mExtensioID));
+  const solutionIds = new Set(Object.values(data.solutions).map(e => e.mSolutionID));
+  for (const encounter of Object.values(data.encounters)) {
+    if ((encounter.mEncounterFollow as number) > 0 &&
+          !encounterIds.has(encounter.mEncounterFollow) ||
+        (encounter.mEncounterExpansion as number) > 0 &&
+          !expansionIds.has(encounter.mEncounterExpansion) ||
+        ['A', 'B', 'C', 'D'].some(letter => {
+          const id = encounter['mEncounterSolutiuon' + letter];
+          return typeof id === 'number' && id > 0 && !solutionIds.has(id);
+        })) {
+      throw Error('Published encounter references incomplete content');
+    }
+  }
   const assets: Record<string, Record<string, string>> = {};
   for (const [kind, list] of Object.entries(data.assets)) {
     if (!KINDS.includes(kind as ArtworkKind) || !object(list)) throw Error('Invalid artwork index');
@@ -163,7 +222,9 @@ export function refreshClientContent(): Promise<ClientContent> {
         cache: 'no-cache',
       });
       if (response.status === 304 && previous.source === 'published') {
-        emit({ status: 'ready', content: previous, error: null });
+        if (current.status !== 'ready' || current.error !== null) {
+          emit({ status: 'ready', content: previous, error: null });
+        }
         return previous;
       }
       if (response.status === 503) {
@@ -176,6 +237,12 @@ export function refreshClientContent(): Promise<ClientContent> {
       }
       if (!response.ok) throw Error('Game content request failed (' + response.status + ')');
       const candidate = validateResponse(await response.json() as unknown);
+      if (candidate.revision === previous.revision && previous.source === 'published') {
+        if (current.status !== 'ready' || current.error !== null) {
+          emit({ status: 'ready', content: previous, error: null });
+        }
+        return previous;
+      }
       emit({ status: 'ready', content: candidate, error: null });
       return candidate;
     } catch (error) {
