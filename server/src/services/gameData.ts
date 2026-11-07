@@ -66,6 +66,7 @@ let framesCache: FramesDataFile | null = null;
 let portraitsCache: PortraitsDataFile | null = null;
 let expansionCache: ExpansionDataFile | null = null;
 let publishedCache: PublishedContent | null = null;
+let publishedSolutionCache: { revision: string; map: SolutionDataMap } | null = null;
 
 /** Explicit activation only. Never automatically migrate or initialize production content. */
 function publishedContentRoot(): string | null {
@@ -125,6 +126,7 @@ function saveJson(relativePath: string, data: unknown): void {
 
 export function invalidateGameDataCaches(): void {
   publishedCache = null;
+  publishedSolutionCache = null;
   encounterCache = null;
   solutionCache = null;
   framesCache = null;
@@ -147,8 +149,15 @@ export function getEncounterById(encounterId: number): EncounterData | undefined
 
 export function getSolutionMap(): SolutionDataMap {
   if (publishedContentRoot()) {
-    const raw = publishedBundle()!.content.solutions as Record<string, SolutionData>;
-    return Object.fromEntries(Object.values(raw).map(entry => [String(entry.mSolutionID), entry]));
+    const revision = publishedBundle()!;
+    if (!publishedSolutionCache || publishedSolutionCache.revision !== revision.revision) {
+      const raw = revision.content.solutions as Record<string, SolutionData>;
+      publishedSolutionCache = {
+        revision: revision.revision,
+        map: Object.fromEntries(Object.values(raw).map(entry => [String(entry.mSolutionID), entry])),
+      };
+    }
+    return publishedSolutionCache.map;
   }
   if (!solutionCache) {
     const raw = loadJson<Record<string, SolutionData>>(
