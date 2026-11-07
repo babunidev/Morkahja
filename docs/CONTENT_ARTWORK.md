@@ -65,3 +65,7 @@ Still unimplemented or unverified: full WebP decoder verification of all pixel p
 ## Phase 6 browser addendum (draft PR #14)
 
 The statement above that the browser still uses exclusively static art describes the Phase 5 branch in isolation. Phase 6 now provides a client-wide revision-aware resolver that prefers published managed image URLs and falls back to the original static asset URL only for known legacy identifiers. Avatar creation, portrait/frame composition, encounter imagery, expansion art and solution/reward displays use the resolver. Real production asset migration/parity and browser device verification remain separate.
+
+## Phase 8 media delivery addendum (draft PR #16)
+
+The repository now includes deploy/nginx/content-media-location.conf, a proxy location for the immutable /game-data/media/ endpoint. It preserves the API's WebP content type, ETag and revision-specific immutable cache headers without exposing the private content root. No live Nginx site file was available, so this snippet has not been installed or syntax-tested on the production host. Versioned content backups retain every artwork object referenced by committed historical revisions; pending upload stages are intentionally excluded and must be uploaded again after recovery. See [deployment and recovery](DEPLOYMENT_RECOVERY.md).
