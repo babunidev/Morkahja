@@ -31,6 +31,8 @@ export interface EncounterSnapshot {
   avatarId: string;
   /** When set, the encounter is owned by an EncounterRoom. */
   roomId?: string;
+  /** Immutable published content revision; absent/null on pre-publication snapshots. */
+  contentRevision?: string | null;
   encounterId: number;
 
   // Metadata copied from the selected encounter definition at creation time.
