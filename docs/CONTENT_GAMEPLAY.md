@@ -1,6 +1,6 @@
 # Phase 7 — active gameplay content-revision protection
 
-**Status:** Implemented in isolated draft [PR #15](https://github.com/babunidev/Morkahja/pull/15), stacked on unmerged draft PRs #10–14. [GitHub Actions run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970) verified 5/5 new gameplay, 7/7 storage, 4/4 runtime, 6/6 admin, 4/4 artwork and 4/4 client tests (**26/26** focused checks), static data sync and the standalone frontend build. The complete release workflow still fails on eight pre-existing TypeScript errors in three unrelated server test files; no Phase 7 TypeScript errors appeared. No production deployment, database migration, publishing opt-in or modification of live player data.
+**Status:** Implemented in isolated draft [PR #15](https://github.com/babunidev/Morkahja/pull/15), stacked on unmerged draft PRs #10–14. [GitHub Actions run 42340188970](https://github.com/babunidev/Morkahja/actions/runs/42340188970) verified 5/5 new gameplay, 7/7 storage, 4/4 runtime, 6/6 admin, 4/4 artwork and 4/4 client tests (**30/30** focused checks), static data sync and the standalone frontend build. The complete release workflow still fails on eight pre-existing TypeScript errors in three unrelated server test files; no Phase 7 TypeScript errors appeared. No production deployment, database migration, publishing opt-in or modification of live player data.
 
 ## The consistency boundary
 
