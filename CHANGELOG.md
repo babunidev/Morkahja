@@ -31,3 +31,12 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added optional runtime content-root loading in `gameData.ts` with legacy direct writes disabled when published mode is configured, while preserving current default data loading pending a reviewed migration.
 - Preserved expansion price in the server TypeScript interface, added storage regression tests and included them in the release workflow.
 - No Babuni Admin publishing API, dynamic frontend, artwork publishing or production migration is part of this change. Test and deployment status are independent of source changes.
+
+## 2026-11-07 — Backend content runtime integration (draft PR #11)
+
+- Added a coherent published-content snapshot API, with selected-pointer reading and cache refresh on revision changes.
+- Updated new solo encounter creation to select encounter, prepared encounter and regular rewards from one runtime content snapshot.
+- Exposed public read-only `GET /game-data/content` with ETag revalidation and safe 503 responses when published content is missing or invalid.
+- Made `/game-data/status` count a single coherent snapshot and report its revision.
+- Added isolated HTTP/runtime regression tests, CI wiring and explicit documentation of the pending media/client/active-session migration.
+- Production behavior remains unchanged until the opt-in content root and remaining stages are separately approved and deployed.
