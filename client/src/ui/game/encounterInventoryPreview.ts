@@ -1,4 +1,4 @@
-import solutionData from '../../data/game/solutiondata.json';
+import { getClientContent } from '../../content/clientContent.js';
 import type { AvatarInventory, EncounterAction, InventoryItem } from '../../api/http.js';
 export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
 
@@ -17,7 +17,9 @@ export interface EncounterInventoryChange {
   solution: SolutionRecord;
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return getClientContent().solutions as Record<string, SolutionRecord>;
+}
 
 export function scaledUses(baseUse: number, encounterDifficulty: number): number {
   if (encounterDifficulty < 1) {
@@ -129,7 +131,7 @@ function pickUsedSolutionIdsForSecondary(
   requiredUses: number,
 ): number[] {
   const matches = inventory
-    .filter((solutionId) => solutionsById[String(solutionId)]?.mSolutionType === requiredType)
+    .filter((solutionId) => solutionsById()[String(solutionId)]?.mSolutionType === requiredType)
     .sort((left, right) => left - right);
 
   if (matches.length < requiredUses) {
@@ -247,7 +249,7 @@ function inventoryChangesFromSolutionIds(
     const change = toChange(
       item ?? {
         solutionId,
-        solutionType: solutionsById[String(solutionId)]?.mSolutionType ?? 0,
+        solutionType: solutionsById()[String(solutionId)]?.mSolutionType ?? 0,
         uses: quantity,
       },
       quantity,
@@ -278,7 +280,7 @@ export function encounterLossesFromSolutionIds({
 }
 
 function toChange(item: InventoryItem, quantity: number): EncounterInventoryChange | null {
-  const solution = solutionsById[String(item.solutionId)];
+  const solution = solutionsById()[String(item.solutionId)];
   if (!solution) {
     return null;
   }
@@ -301,7 +303,7 @@ function usedSolutionChanges(
   for (const [solutionId, quantity] of counts) {
     const item = inventoryItems(inventory).find((entry) => entry.solutionId === solutionId);
     const change = toChange(
-      item ?? { solutionId, solutionType: solutionsById[String(solutionId)]?.mSolutionType ?? 0, uses: quantity },
+      item ?? { solutionId, solutionType: solutionsById()[String(solutionId)]?.mSolutionType ?? 0, uses: quantity },
       quantity,
     );
 
