@@ -21,6 +21,8 @@ jobs:
         run: npm run verify:static-data
       - name: Content publication storage test
         run: npm run test:content-publication
+      - name: Content runtime integration test
+        run: npm run test:content-runtime
       - name: Typecheck and client build
         run: npm run typecheck
       - name: Server session auth test

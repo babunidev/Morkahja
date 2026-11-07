@@ -66,6 +66,17 @@ let framesCache: FramesDataFile | null = null;
 let portraitsCache: PortraitsDataFile | null = null;
 let expansionCache: ExpansionDataFile | null = null;
 let publishedCache: PublishedContent | null = null;
+let publishedCacheRoot: string | null = null;
+let publishedCacheManifestSha: string | null = null;
+export interface GameRuntimeContentSnapshot {
+  readonly revision: string | null;
+  readonly encounters: EncounterDataMap;
+  readonly solutions: SolutionDataMap;
+  readonly frames: FramesDataFile;
+  readonly portraits: PortraitsDataFile;
+  readonly expansions: ExpansionDataFile;
+}
+let publishedRuntimeCache: GameRuntimeContentSnapshot | null = null;
 let publishedSolutionCache: { revision: string; map: SolutionDataMap } | null = null;
 
 /** Explicit activation only. Never automatically migrate or initialize production content. */
@@ -86,14 +97,61 @@ function publishedContentRoot(): string | null {
   return root;
 }
 
-function publishedBundle(): PublishedContent | null {
+/**
+ * Return one immutable publication reference, not five independently loaded records.
+ * The current pointer is read exactly once per access. Existing callers retain their
+ * previous object when publication swaps the pointer during another request.
+ *
+ * Null is only possible when publication mode is explicitly disabled. A broken or
+ * missing configured root throws rather than loading Git fixtures.
+ */
+export function getPublishedContentSnapshot(): PublishedContent | null {
   const root = publishedContentRoot();
   if (!root) return null;
   const pointer = readContentPointer(root);
-  if (!publishedCache || publishedCache.revision !== pointer.revision) {
-    publishedCache = readPublishedContent(root);
+  if (!publishedCache || publishedCacheRoot !== root ||
+      publishedCache.revision !== pointer.revision ||
+      publishedCacheManifestSha !== pointer.manifestSha256) {
+    const next = readPublishedContent(root, pointer);
+    publishedCache = next;
+    publishedCacheRoot = root;
+    publishedCacheManifestSha = pointer.manifestSha256;
+    publishedRuntimeCache = null;
+    publishedSolutionCache = null;
   }
   return publishedCache;
+}
+
+/** Capture a coherent runtime dataset before selecting encounters or rewards. */
+export function getGameRuntimeContentSnapshot(): GameRuntimeContentSnapshot {
+  const published = getPublishedContentSnapshot();
+  if (!published) {
+    return {
+      revision: null,
+      encounters: getEncounters(),
+      solutions: getSolutionMap(),
+      frames: getFramesData(),
+      portraits: getPortraitsData(),
+      expansions: { expansions: Object.fromEntries(
+        getExpansions().map(entry => [String(entry.mExtensioID), entry]),
+      ) },
+    };
+  }
+  if (!publishedRuntimeCache || publishedRuntimeCache.revision !== published.revision) {
+    const content = published.content;
+    const sourceSolutions = content.solutions as Record<string, SolutionData>;
+    publishedRuntimeCache = {
+      revision: published.revision,
+      encounters: content.encounters as EncounterDataMap,
+      solutions: Object.fromEntries(
+        Object.values(sourceSolutions).map(entry => [String(entry.mSolutionID), entry]),
+      ),
+      frames: content.frames as FramesDataFile,
+      portraits: content.portraits as PortraitsDataFile,
+      expansions: content.expansions as ExpansionDataFile,
+    };
+  }
+  return publishedRuntimeCache;
 }
 
 
@@ -102,7 +160,7 @@ function gameFilePath(relativePath: string): string {
 }
 
 function loadJson<T>(relativePath: string): T {
-  const current = publishedBundle();
+  const current = getPublishedContentSnapshot();
   if (current) {
     const key = relativePath.startsWith('game/') ? relativePath.slice(5) : relativePath;
     switch (key) {
@@ -130,6 +188,9 @@ function saveJson(relativePath: string, data: unknown): void {
 
 export function invalidateGameDataCaches(): void {
   publishedCache = null;
+  publishedCacheRoot = null;
+  publishedCacheManifestSha = null;
+  publishedRuntimeCache = null;
   publishedSolutionCache = null;
   encounterCache = null;
   solutionCache = null;
@@ -139,21 +200,23 @@ export function invalidateGameDataCaches(): void {
 }
 
 export function getEncounters(): EncounterDataMap {
-  if (publishedContentRoot()) return publishedBundle()!.content.encounters as EncounterDataMap;
+  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.encounters as EncounterDataMap;
   if (!encounterCache) {
     encounterCache = loadJson<EncounterDataMap>('game/encountersdata.json');
   }
   return encounterCache;
 }
 
-export function getEncounterById(encounterId: number): EncounterData | undefined {
-  const encounters = getEncounters();
+export function getEncounterById(
+  encounterId: number,
+  encounters: EncounterDataMap = getEncounters(),
+): EncounterData | undefined {
   return encounters[String(encounterId)] ?? encounters[String(encounterId).padStart(5, '0')];
 }
 
 export function getSolutionMap(): SolutionDataMap {
   if (publishedContentRoot()) {
-    const revision = publishedBundle()!;
+    const revision = getPublishedContentSnapshot()!;
     if (!publishedSolutionCache || publishedSolutionCache.revision !== revision.revision) {
       const raw = revision.content.solutions as Record<string, SolutionData>;
       publishedSolutionCache = {
@@ -189,7 +252,7 @@ function assertIndexedData<T>(
 }
 
 export function getFramesData(): FramesDataFile {
-  if (publishedContentRoot()) return publishedBundle()!.content.frames as FramesDataFile;
+  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.frames as FramesDataFile;
   if (!framesCache) {
     framesCache = loadJson<FramesDataFile>('game/frames.json');
     assertIndexedData(framesCache.Frames, 'Frames');
@@ -199,7 +262,7 @@ export function getFramesData(): FramesDataFile {
 }
 
 export function getPortraitsData(): PortraitsDataFile {
-  if (publishedContentRoot()) return publishedBundle()!.content.portraits as PortraitsDataFile;
+  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.portraits as PortraitsDataFile;
   if (!portraitsCache) {
     portraitsCache = loadJson<PortraitsDataFile>('game/portraits.json');
     assertIndexedData(portraitsCache.Avatar, 'Avatar portraits');
@@ -210,7 +273,7 @@ export function getPortraitsData(): PortraitsDataFile {
 
 export function getExpansions(): ExpansionData[] {
   if (publishedContentRoot()) {
-    const file = publishedBundle()!.content.expansions as ExpansionDataFile;
+    const file = getPublishedContentSnapshot()!.content.expansions as ExpansionDataFile;
     return Object.values(file.expansions);
   }
   if (!expansionCache) {
@@ -225,11 +288,8 @@ export function getExpansionById(expansionId: number): ExpansionData | undefined
 }
 
 export function loadStaticGameEnvironment(): void {
-  getEncounters();
-  getSolutionMap();
-  getFramesData();
-  getPortraitsData();
-  getExpansions();
+  // Validate/capture all five datasets in one revision at startup.
+  getGameRuntimeContentSnapshot();
 }
 
 export function saveEncounterEntry(key: string, entry: EncounterData): void {

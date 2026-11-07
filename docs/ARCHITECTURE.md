@@ -23,3 +23,7 @@ In the historical May 23 entries, the project gained PM2/nginx deployment config
 ## Phase 2 — opt-in revisioned content storage (implementation branch, 2026-11-07)
 
 The server now has a proposed, review-stage implementation of durable JSON content revisions in `server/src/services/contentPublication.ts`. Explicit `MORKAHJA_CONTENT_ROOT` activation makes `gameData.ts` read external published content, with direct file writes disabled in that mode. The client remains build-time JSON-backed and production cutover is not authorized. See [content storage](CONTENT_STORAGE.md). Source/CI verification status is tracked in the review PR.
+
+## Phase 3 — published runtime snapshot and public content API (review branch, 2026-11-07)
+
+The backend can now capture all five published JSON datasets as one versioned runtime snapshot. A reader retains that exact revision across a pointer swap, and a fresh read detects newer content. New solo encounter creation uses one captured encounter/solution set for selection and regular reward generation; active snapshot/room revision pinning remains unimplemented. A public read-only `GET /game-data/content` serves a coherent bundle with ETag revalidation, and returns a generic 503 instead of a Git fallback when published mode is unavailable. The old client still uses build-time JSON. Details and remaining safeguards: [Runtime integration](CONTENT_RUNTIME.md).
