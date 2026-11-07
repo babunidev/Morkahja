@@ -146,11 +146,13 @@ export interface DonateGemsResponse {
 }
 
 export interface PreparedEncounterDto {
+  contentRevision?: string | null;
   encounterId: number;
   followMode: EncounterFollowMode;
 }
 
 export interface EncounterSnapshotDto {
+  contentRevision?: string | null;
   snapshotId: string;
   encounterId: number;
   encounterTitle?: string;

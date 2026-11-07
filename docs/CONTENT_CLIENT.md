@@ -35,3 +35,7 @@ Focused tests: npm run test:client-content. CI separately runs npm run build --p
 **Remaining:** Active solo encounters and multiplayer room snapshots are not pinned to a backend content revision; live publication is still disabled until pinning and gameplay compatibility are verified. Legacy artwork import/parity, physical browser tests, production proxy/backups, local Babuni Admin client integration and full release checks remain separate tasks. No code was merged into main or enabled on production.
 
 **Implementation attribution:** The human creative supplied the desired content-management behavior and integration constraints; the code, tests and technical documentation in this review branch were implemented with AI assistance.
+
+## Phase 7 server pinning addendum (draft PR #15)
+
+Phase 7 adds historical content-revision protection to the server's active solo and multiplayer encounters. This does **not** automatically pin the Phase 6 browser store: that store continues to revalidate the latest publication, so an adventurer can see refreshed item names/images while their server fate is still calculated using the original content revision. A client historical-revision view or another explicit presentation compatibility boundary is needed before live publication is safe for ongoing games. See [ongoing gameplay protection](CONTENT_GAMEPLAY.md).

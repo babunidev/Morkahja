@@ -4,7 +4,7 @@ import type {
   AvatarProfile,
   InventoryItem,
 } from '../types/avatar.js';
-import type { SolutionData } from '../engine/types.js';
+import type { SolutionData, SolutionDataMap } from '../engine/types.js';
 import { getSolutionMap } from './gameData.js';
 import { getInventory, setAvatar, setInventory } from '../db/postgresDocumentStore.js';
 
@@ -58,8 +58,8 @@ function normalizeInventory(value: Partial<AvatarInventory> | undefined): Avatar
   };
 }
 
-function getSolution(solutionId: number): SolutionData {
-  const solution = getSolutionMap()[String(solutionId)];
+function getSolution(solutionId: number, solutions: SolutionDataMap = getSolutionMap()): SolutionData {
+  const solution = solutions[String(solutionId)];
 
   if (!solution) {
     throw new Error(`Solution not found: ${solutionId}`);
@@ -215,9 +215,10 @@ export function addRewardToInventoryState(
   inventory: AvatarInventory,
   solutionId: number,
   uses?: number,
+  solutions: SolutionDataMap = getSolutionMap(),
 ): AvatarInventory {
   const next = normalizeInventory(inventory);
-  const solution = getSolution(solutionId);
+  const solution = getSolution(solutionId, solutions);
   const container = resolveInventoryContainer(solution.mSolutionInventoryType);
   const existing = next[container].find((item) => item.solutionId === solutionId);
 
@@ -234,9 +235,10 @@ export function consumeSolutionFromInventoryState(
   inventory: AvatarInventory,
   solutionId: number,
   amount = 1,
+  solutions: SolutionDataMap = getSolutionMap(),
 ): AvatarInventory {
   let next = normalizeInventory(inventory);
-  const solution = getSolution(solutionId);
+  const solution = getSolution(solutionId, solutions);
   const container = resolveInventoryContainer(solution.mSolutionInventoryType);
 
   for (let chargeIndex = 0; chargeIndex < amount; chargeIndex += 1) {
@@ -273,6 +275,7 @@ function consumeRandomChargesFromContainerState(
   container: InventoryContainerName,
   amount: number,
   randomInt: RandomIntFn = defaultRandomInt,
+  solutions: SolutionDataMap = getSolutionMap(),
 ): { inventory: AvatarInventory; lostSolutionIds: number[] } {
   let next = normalizeInventory(inventory);
   const lostSolutionIds: number[] = [];
@@ -286,7 +289,7 @@ function consumeRandomChargesFromContainerState(
     const pickIndex = randomInt(0, charges.length - 1);
     const solutionId = charges[pickIndex]!;
     lostSolutionIds.push(solutionId);
-    next = consumeSolutionFromInventoryState(next, solutionId, 1);
+    next = consumeSolutionFromInventoryState(next, solutionId, 1, solutions);
   }
 
   return { inventory: next, lostSolutionIds };
@@ -301,9 +304,10 @@ export function applyFailurePenaltyToInventoryState(
   inventory: AvatarInventory,
   outcome: InventoryPenaltyOutcome,
   encounterDifficulty = 1,
-  options: { randomInt?: RandomIntFn } = {},
+  options: { randomInt?: RandomIntFn; solutions?: SolutionDataMap } = {},
 ): FailurePenaltyApplyResult {
   const randomInt = options.randomInt ?? defaultRandomInt;
+  const solutions = options.solutions ?? getSolutionMap();
   const amount = scaledUses(1, encounterDifficulty);
 
   if (amount <= 0) {
@@ -316,6 +320,7 @@ export function applyFailurePenaltyToInventoryState(
       'essences',
       amount,
       randomInt,
+      solutions,
     );
   }
 
@@ -325,12 +330,14 @@ export function applyFailurePenaltyToInventoryState(
       'essences',
       amount,
       randomInt,
+      solutions,
     );
     const itemLoss = consumeRandomChargesFromContainerState(
       essenceLoss.inventory,
       'items',
       amount,
       randomInt,
+      solutions,
     );
 
     return {
@@ -355,21 +362,23 @@ export function applyEncounterInventoryChanges(
   selectedRollOutcome: InventoryPenaltyOutcome | null,
   encounterDifficulty: number,
   rewardAmount: number,
-  options: { randomInt?: RandomIntFn } = {},
+  options: { randomInt?: RandomIntFn; solutions?: SolutionDataMap } = {},
 ): EncounterInventoryApplyResult {
   let next = normalizeInventory(inventory);
+  const solutions = options.solutions ?? getSolutionMap();
 
   for (const solutionId of usedSolutionIds) {
-    next = consumeSolutionFromInventoryState(next, solutionId, 1);
+    next = consumeSolutionFromInventoryState(next, solutionId, 1, solutions);
   }
 
   if (success) {
     for (const reward of rewards) {
-      const solution = getSolution(reward);
+      const solution = getSolution(reward, solutions);
       next = addRewardToInventoryState(
         next,
         reward,
         Math.max(1, solution.mSolutionUses ?? 1),
+        solutions,
       );
     }
     return { inventory: next, lostInventorySolutions: [] };

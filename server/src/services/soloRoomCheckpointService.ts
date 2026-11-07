@@ -15,6 +15,7 @@ export interface LockedEncounterChoice {
 
 export interface SoloRoomCheckpoint {
   roomId: string;
+  contentRevision?: string | null;
   activeEncounterSnapshot: EncounterRoom['activeEncounterSnapshot'];
   slotEncounterSnapshots: EncounterRoom['slotEncounterSnapshots'];
   roomState: EncounterRoom['roomState'];
@@ -78,6 +79,7 @@ export function checkpointFromRoom(room: EncounterRoom): SoloRoomCheckpoint | nu
 
   return {
     roomId: room.roomId,
+    contentRevision: room.contentRevision ?? room.activeEncounterSnapshot.contentRevision,
     activeEncounterSnapshot: room.activeEncounterSnapshot,
     slotEncounterSnapshots: room.slotEncounterSnapshots,
     roomState: room.roomState,

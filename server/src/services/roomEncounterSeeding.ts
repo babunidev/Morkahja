@@ -11,7 +11,7 @@ import {
   type SlotEncounterSnapshots,
 } from './encounterGenerator.js';
 import { loadAvatar, saveActiveEncounter } from './encounterPersistence.js';
-import { getEncounterById } from './gameData.js';
+import { getEncounterById, getGameRuntimeContentSnapshotForRevision } from './gameData.js';
 import { saveEncounterRoom } from './roomPersistence.js';
 
 function nowMs(): number {
@@ -27,6 +27,9 @@ async function buildSlotSnapshotsForRoom(
   encounter: EncounterData,
   preparedEncounter: ReturnType<typeof prepareNextEncounter>,
 ): Promise<SlotEncounterSnapshots> {
+  const content = getGameRuntimeContentSnapshotForRevision(
+    room.contentRevision ?? room.activeEncounterSnapshot.contentRevision,
+  );
   const leader = findParticipant(room, room.leaderPlayerId)
     ?? room.participants[0];
   if (!leader) {
@@ -61,6 +64,7 @@ async function buildSlotSnapshotsForRoom(
     participantRefs,
     (playerId, avatarId) =>
       avatarByParticipantKey.get(`${playerId}:${avatarId}`) ?? leaderAvatar,
+    content,
   );
 }
 
@@ -78,6 +82,7 @@ function roomWithSlotEncounterSnapshots(
 
   return {
     ...room,
+    contentRevision: shellSnapshot.contentRevision,
     activeEncounterSnapshot: shellSnapshot,
     slotEncounterSnapshots: alignedSlots,
     updatedAt: nowMs(),
@@ -129,13 +134,16 @@ export async function ensureSlotEncounterSnapshots(room: EncounterRoom): Promise
     return room;
   }
 
-  const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId);
+  const content = getGameRuntimeContentSnapshotForRevision(
+    room.contentRevision ?? room.activeEncounterSnapshot.contentRevision,
+  );
+  const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId, content.encounters);
   if (!encounter) {
-    return room;
+    throw new Error('CONTENT_PINNED_ENCOUNTER_MISSING');
   }
 
   const preparedEncounter = room.activeEncounterSnapshot.preparedEncounter
-    ?? prepareNextEncounter(encounter, room.mergedExpansions);
+    ?? prepareNextEncounter(encounter, room.mergedExpansions, content.encounters, content.revision);
   const seeded = await seedAllSlotEncountersForRoom(room, encounter, preparedEncounter);
   await saveEncounterRoom(seeded);
   await syncActiveEncountersForRoom(seeded);

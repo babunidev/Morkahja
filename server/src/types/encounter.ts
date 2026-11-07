@@ -19,6 +19,8 @@ export type EncounterFollowMode = 'follow' | 'random' | 'system';
 export interface PreparedEncounter {
   encounterId: number;
   followMode: EncounterFollowMode;
+  /** Content revision used to preselect this encounter; null means legacy. */
+  contentRevision?: string | null;
 }
 
 /** Authoritative server-side encounter fate snapshot stored in persistence. */
@@ -29,6 +31,8 @@ export interface EncounterSnapshot {
   avatarId: string;
   /** When set, the encounter is owned by an EncounterRoom. */
   roomId?: string;
+  /** Immutable published content revision; absent/null on pre-publication snapshots. */
+  contentRevision?: string | null;
   encounterId: number;
 
   // Metadata copied from the selected encounter definition at creation time.

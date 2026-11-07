@@ -68,7 +68,7 @@ import {
   loadAvatar,
   saveActiveEncounter,
 } from './encounterPersistence.js';
-import { getEncounterById, getEncounters } from './gameData.js';
+import { getEncounterById, getGameRuntimeContentSnapshot, getGameRuntimeContentSnapshotForRevision, type GameRuntimeContentSnapshot } from './gameData.js';
 import {
   addPlayerYellowRedGems,
   getPlayerUnlockedExpansions,
@@ -109,6 +109,7 @@ import {
   clearSoloCheckpointForAvatar,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
+  type SoloRoomCheckpoint,
 } from './soloRoomCheckpointService.js';
 
 /**
@@ -464,6 +465,7 @@ function buildLineageFromResolve(
   originSnapshot: EncounterSnapshot,
   result: ResolveParticipantInRoomResult,
 ): RoomEncounterLineage {
+  const content = getGameRuntimeContentSnapshotForRevision(originSnapshot.contentRevision);
   return {
     originEncounterId: originSnapshot.encounterId,
     originEncounterFollow: originSnapshot.encounterFollow,
@@ -472,6 +474,7 @@ function buildLineageFromResolve(
     preparedEncounter: buildLineagePreparedEncounter(
       result.deathTriggered,
       result.eventContext.leveledUp,
+      content,
     ),
   };
 }
@@ -681,20 +684,29 @@ async function expansionsForRoomLeader(room: EncounterRoom): Promise<number[]> {
   return mergeExpansionsForPlayerIds([room.leaderPlayerId]);
 }
 
+function contentForRoom(room: EncounterRoom): GameRuntimeContentSnapshot {
+  if (room.contentRevision !== undefined &&
+      room.activeEncounterSnapshot.contentRevision !== undefined &&
+      room.contentRevision !== room.activeEncounterSnapshot.contentRevision) {
+    throw new Error('CONTENT_ROOM_REVISION_MISMATCH');
+  }
+  return getGameRuntimeContentSnapshotForRevision(
+    room.contentRevision ?? room.activeEncounterSnapshot.contentRevision,
+  );
+}
+/** Do not consult the current publication when an old room needs its history. */
 function previousEncounterFromRoom(room: EncounterRoom): EncounterData | null {
   const lastId = room.lastEncounterId;
-  if (typeof lastId !== 'number' || lastId <= 0) {
-    return null;
-  }
-  return getEncounterById(lastId) ?? null;
+  if (typeof lastId !== 'number' || lastId <= 0) return null;
+  return getEncounterById(lastId, contentForRoom(room).encounters) ?? null;
 }
-
-function previousEncounterFromAvatar(avatar: AvatarDocument): EncounterData | null {
+function previousEncounterFromAvatar(
+  avatar: AvatarDocument,
+  content: GameRuntimeContentSnapshot,
+): EncounterData | null {
   const lastId = avatar.progression?.lastEncounterId;
-  if (typeof lastId !== 'number' || lastId <= 0) {
-    return null;
-  }
-  return getEncounterById(lastId) ?? null;
+  if (typeof lastId !== 'number' || lastId <= 0) return null;
+  return getEncounterById(lastId, content.encounters) ?? null;
 }
 
 function resetParticipantsForNewEncounter(participants: RoomParticipant[]): RoomParticipant[] {
@@ -729,11 +741,12 @@ function getRoomNextEncounter(
   currentSnapshot: EncounterSnapshot,
   room: EncounterRoom,
 ): EncounterData {
+  const content = contentForRoom(room);
   const slotZero = slotZeroParticipant(room);
   const slotZeroSummary = slotZero ? participantOutcomeSummary(slotZero) : undefined;
 
   if (shouldUseEncounterFollow(currentSnapshot.encounterFollow, slotZeroSummary)) {
-    const followUp = getEncounterById(currentSnapshot.encounterFollow);
+    const followUp = getEncounterById(currentSnapshot.encounterFollow, content.encounters);
     if (followUp) {
       return followUp;
     }
@@ -742,7 +755,7 @@ function getRoomNextEncounter(
   return selectNextEncounter({
     unlockedExpansions: room.mergedExpansions,
     previousEncounter: null,
-  }, getEncounters());
+  }, content.encounters);
 }
 
 async function setPresenceInRoom(playerId: string, roomId: string): Promise<void> {
@@ -959,12 +972,13 @@ async function beginSystemEventInTransaction(
     throw new RoomError('System event actor not found', 404, 'SYSTEM_EVENT_ACTOR_NOT_FOUND');
   }
 
-  const systemEncounter = getEncounterById(item.encounterId);
+  const content = contentForRoom(room);
+  const systemEncounter = getEncounterById(item.encounterId, content.encounters);
   if (!systemEncounter) {
     throw new RoomError('System encounter not found', 500, 'SYSTEM_ENCOUNTER_NOT_FOUND');
   }
 
-  const prepared = preparedSystemEncounter(item.encounterId);
+  const prepared = preparedSystemEncounter(item.encounterId, content);
 
   const participants = participantsAtSystemEventStart(room.participants, item.actorPlayerId);
 
@@ -1573,10 +1587,11 @@ async function advanceRoomAfterCommit(
   const lineage = roomForAdvance.systemEvent?.lineage;
   const lastEncounterId = lineage?.originEncounterId ?? roomForAdvance.activeEncounterSnapshot.encounterId;
 
+  const content = contentForRoom(roomForAdvance);
   let nextEncounter: EncounterData;
   let preparedEncounter: ReturnType<typeof prepareNextEncounter>;
   if (lineage) {
-    const resolved = resolveNextEncounterForRoom(lineage, roomForAdvance.mergedExpansions);
+    const resolved = resolveNextEncounterForRoom(lineage, roomForAdvance.mergedExpansions, content);
     nextEncounter = resolved.encounter;
     preparedEncounter = resolved.prepared;
   } else {
@@ -1584,7 +1599,7 @@ async function advanceRoomAfterCommit(
       ...roomForAdvance,
       participants: committedAfterPromotion,
     });
-    preparedEncounter = prepareNextEncounter(nextEncounter, roomForAdvance.mergedExpansions);
+    preparedEncounter = prepareNextEncounter(nextEncounter, roomForAdvance.mergedExpansions, content.encounters, content.revision);
   }
 
   const advanceDraft: EncounterRoom = {
@@ -2065,11 +2080,12 @@ export async function createRoom(
 
   const roomId = randomUUID();
   const leaderExpansions = await mergeExpansionsForPlayerIds([playerId]);
+  const content = getGameRuntimeContentSnapshot();
   const encounter = selectNextEncounter({
     unlockedExpansions: leaderExpansions,
-    previousEncounter: previousEncounterFromAvatar(avatar),
-  });
-  const preparedEncounter = prepareNextEncounter(encounter, leaderExpansions);
+    previousEncounter: previousEncounterFromAvatar(avatar, content),
+  }, content.encounters);
+  const preparedEncounter = prepareNextEncounter(encounter, leaderExpansions, content.encounters, content.revision);
 
   const draftRoom: EncounterRoom = {
     roomId,
@@ -2077,17 +2093,20 @@ export async function createRoom(
     participants: [createParticipant(playerId, avatarId, 0)],
     slotStates: DEFAULT_SLOT_STATES,
     mergedExpansions: leaderExpansions,
+    contentRevision: content.revision,
     activeEncounterSnapshot: buildEncounterSnapshot(
       playerId,
       avatarId,
       encounter,
       preparedEncounter,
       avatar,
+      content.solutions,
+      content.revision,
     ),
     slotEncounterSnapshots: [
-      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
-      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
-      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar),
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar, content.solutions, content.revision),
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar, content.solutions, content.revision),
+      buildEncounterSnapshot(playerId, avatarId, encounter, preparedEncounter, avatar, content.solutions, content.revision),
     ],
     roomState: 'active_encounter',
     lastEncounterId: avatar.progression?.lastEncounterId,
@@ -3236,6 +3255,7 @@ function buildRoomFromCheckpoint(
     participants: [mergedParticipant],
     slotStates: checkpoint.slotStates,
     mergedExpansions: checkpoint.mergedExpansions,
+    contentRevision: checkpoint.contentRevision ?? checkpoint.activeEncounterSnapshot.contentRevision,
     activeEncounterSnapshot: checkpoint.activeEncounterSnapshot,
     slotEncounterSnapshots: checkpoint.slotEncounterSnapshots,
     roomState: checkpoint.roomState,

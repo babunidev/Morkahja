@@ -12,6 +12,7 @@
     "test:content-runtime": "tsx --test src/routes/publicContentRoutes.test.ts",
     "test:content-admin": "tsx --test src/routes/adminContentRoutes.test.ts",
     "test:content-artwork": "tsx --test src/routes/contentArtwork.test.ts",
+    "test:content-gameplay": "tsx --test src/services/contentGameplayRevision.test.ts",
     "test:client-content": "tsx --test ../client/src/content/clientContent.test.ts",
     "test:inventory": "tsx src/tests/initialInventory.test.ts",
     "test:session-auth": "tsx src/services/sessionService.test.ts",

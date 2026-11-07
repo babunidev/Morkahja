@@ -59,3 +59,7 @@ The new `npm run test:content-runtime` suite uses a loopback Express server, iso
 ## Phase 5 addendum (draft PR #13)
 
 The earlier description of an empty assets object describes Phase 3 alone. The stacked Phase 5 implementation adds managed image URL maps to the public content response and a revision-specific public WebP route. Existing browser assets are not migrated automatically. See [managed artwork](CONTENT_ARTWORK.md).
+
+## Phase 7 addendum (draft PR #15)
+
+The Phase 3 limitation on active snapshot revision pinning is addressed in server code by the stacked Phase 7 draft. Active/new solo and multiplayer room snapshots persist contentRevision, look up immutable historical definitions and use pinned solutions for rewards/inventory. Untagged legacy snapshots still need production-baseline parity checks. The browser still follows the current published revision, so historical gameplay presentation and full live lifecycle testing are separate gates. See [Phase 7 gameplay revisions](CONTENT_GAMEPLAY.md).

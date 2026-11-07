@@ -44,6 +44,7 @@ function buildPreDeathSnapshot(
   avatar: AvatarDocument,
   inventory: AvatarDocument['inventory'],
   progression: AvatarPreDeathSnapshot['progression'],
+  contentRevision?: string | null,
 ): AvatarPreDeathSnapshot {
   return {
     level: typeof avatar.level === 'number' ? avatar.level : 1,
@@ -52,6 +53,7 @@ function buildPreDeathSnapshot(
     progression,
     lastPlayedAt: avatar.lastPlayedAt,
     failedAt: Date.now(),
+    contentRevision,
   };
 }
 
@@ -59,8 +61,9 @@ export function applyFailedDeathState(
   avatar: AvatarDocument,
   inventory: AvatarDocument['inventory'],
   progression: AvatarPreDeathSnapshot['progression'],
+  contentRevision?: string | null,
 ): AvatarDocument {
-  const preDeathSnapshot = buildPreDeathSnapshot(avatar, inventory, progression);
+  const preDeathSnapshot = buildPreDeathSnapshot(avatar, inventory, progression, contentRevision);
 
   return {
     ...avatar,
@@ -108,7 +111,7 @@ export async function sacrificeFailedAvatar(
     }
 
     const snapshot = avatar.preDeathSnapshot!;
-    const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar);
+    const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar, snapshot.contentRevision);
     const restoredAvatar: AvatarDocument = {
       ...avatar,
       status: 'active',

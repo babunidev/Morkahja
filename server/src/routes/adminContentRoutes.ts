@@ -1,7 +1,7 @@
 import { Router, type Request, type RequestHandler, type Response } from 'express';
 import express from 'express';
 import {
-  ContentPublicationError, type ContentBundle, listContentRevisions,
+  ContentPublicationError, assertCompatibleContentIdentity, type ContentBundle, listContentRevisions,
   publishContentRevision, readContentRevision, readPublishedContent,
   restoreContentRevision,
 } from '../services/contentPublication.js';
@@ -119,6 +119,7 @@ function prepareChanges(req: Request, allowIdempotentRetry: boolean) {
   if (!Array.isArray(assetStages)) error('CONTENT_INVALID_ASSET_STAGES');
   const next: ContentBundle = applyContentRecordChanges(source.content, body.changes,
     assetStages.length > 0);
+  assertCompatibleContentIdentity(source.content, next);
   prepareArtworkForPublication(root, source, next, assetStages as string[]);
   return { root, body, baseRevision, next, published, publicationId, assetStages: assetStages as string[] };
 }

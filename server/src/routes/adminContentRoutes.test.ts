@@ -9,8 +9,10 @@ import { test } from 'node:test';
 import express from 'express';
 import { adminRoutes } from './adminRoutes.js';
 import {
-  listContentRevisions, publishContentRevision, readPublishedContent,
+  assertCompatibleContentIdentity, listContentRevisions,
+  publishContentRevision, readPublishedContent,
 } from '../services/contentPublication.js';
+import { applyContentRecordChanges } from '../services/contentAdminService.js';
 import { invalidateGameDataCaches } from '../services/gameData.js';
 import { stageWebpArtwork } from '../services/contentArtwork.js';
 
@@ -193,6 +195,16 @@ test('five-category record edits, validation, publication, current read, idempot
   });
 });
 
+test('oversized admin bodies are rejected before storage writes', async () => {
+  await setup(async ({ root, base, fetchAdmin }) => {
+    const res = await fetchAdmin('/content/validate', post({
+      baseRevision: base, changes: [], padding: 'x'.repeat(300_000),
+    }));
+    assert.equal(res.status, 413);
+    assert.equal(readPublishedContent(root).revision, base);
+  });
+});
+
 test('validation rejects missing relations, mismatched IDs and unknown asset references', async () => {
   await setup(async ({ root, base, fetchAdmin }) => {
     const changes = updateAllFive().slice(0, 5);
@@ -205,6 +217,16 @@ test('validation rejects missing relations, mismatched IDs and unknown asset ref
     (badId[0]!.data as Record<string, unknown>).mEncounterID = 42;
     const invalid = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: badId }));
     assert.equal(invalid.status, 400);
+
+    const repurposed = structuredClone(changes);
+    (repurposed[1]!.data as Record<string, unknown>).mSolutionInventoryType =
+      (repurposed[1]!.data as Record<string, number>).mSolutionInventoryType === 1 ? 2 : 1;
+    const source = readPublishedContent(root).content;
+    const draft = applyContentRecordChanges(source, repurposed);
+    assert.throws(
+      () => assertCompatibleContentIdentity(source, draft),
+      /CONTENT_IDENTITY_CHANGE_NOT_SUPPORTED/,
+    );
 
     const missingAsset = structuredClone(changes);
     (missingAsset[0]!.data as Record<string, unknown>).mEncounterImageName = 'nonexistent_new_art';
@@ -251,16 +273,6 @@ test('rollback creates a new checked revision, preserves immutable history and r
     }));
     assert.equal(blocked.status, 422);
     assert.equal(readPublishedContent(root).revision, afterAdd);
-  });
-});
-
-test('oversized admin bodies are rejected before storage writes', async () => {
-  await setup(async ({ root, base, fetchAdmin }) => {
-    const res = await fetchAdmin('/content/validate', post({
-      baseRevision: base, changes: [], padding: 'x'.repeat(300_000),
-    }));
-    assert.equal(res.status, 413);
-    assert.equal(readPublishedContent(root).revision, base);
   });
 });
 

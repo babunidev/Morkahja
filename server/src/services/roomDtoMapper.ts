@@ -57,6 +57,7 @@ function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotD
   return {
     snapshotId: snapshot.snapshotId,
     encounterId: snapshot.encounterId,
+    contentRevision: snapshot.contentRevision,
     encounterTitle: snapshot.encounterTitle,
     encounterImageName: snapshot.encounterImageName,
     encounterText: snapshot.encounterText,

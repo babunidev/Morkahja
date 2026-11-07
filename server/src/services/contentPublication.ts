@@ -151,18 +151,42 @@ export function validateContentBundle(input: unknown): asserts input is ContentB
     if (!imageName(solution.mSolutionIconName)) fail('CONTENT_INVALID_SOLUTION_ICON');
   }
 }
-function preserveIds(previous: ContentBundle, next: ContentBundle): void {
+/**
+ * IDs can already be present in inventories, progression, persisted avatars and
+ * active rooms. No deletion or semantic repurposing of those identifiers is
+ * allowed, even if a database happens not to contain a matching row today.
+ */
+export function assertCompatibleContentIdentity(previous: ContentBundle, next: ContentBundle): void {
+  const stableFields: Record<string, readonly string[]> = {
+    encounters: ['mEncounterID', 'mEncounterType', 'mEncounterExpansion'],
+    solutions: ['mSolutionID', 'mSolutionInventoryType', 'mSolutionType'],
+    expansions: ['mExtensioID'],
+    frames: ['frameID', 'frameRace', 'frameRole', 'frameType'],
+    portraits: ['avatarID', 'avatarRace', 'avatarRole', 'avatarGenderID', 'avatarType'],
+  };
+  const assertStable = (kind: keyof typeof stableFields, before: unknown, after: unknown): void => {
+    const original = before as Record<string, unknown>;
+    const updated = after as Record<string, unknown>;
+    for (const field of stableFields[kind]!) {
+      if (original[field] !== updated[field]) fail('CONTENT_IDENTITY_CHANGE_NOT_SUPPORTED');
+    }
+  };
   for (const kind of ['encounters', 'solutions'] as const) {
     for (const key of Object.keys(previous[kind] as Record<string, unknown>)) {
       if (!Object.hasOwn(next[kind] as object, key)) fail('CONTENT_DELETION_NOT_SUPPORTED');
+      const oldItem = (previous[kind] as Record<string, unknown>)[key];
+      const newItem = (next[kind] as Record<string, unknown>)[key];
+      assertStable(kind, oldItem, newItem);
     }
   }
   for (const [kind, wrapper] of [['expansions', 'expansions'], ['frames', 'Frames'], ['portraits', 'Avatar']] as const) {
     const oldData = (previous[kind] as Record<string, unknown>)[wrapper] as Record<string, unknown> | unknown[];
     const newData = (next[kind] as Record<string, unknown>)[wrapper] as Record<string, unknown> | unknown[];
     for (const key of Object.keys(oldData)) {
-      if ((oldData as Record<string, unknown>)[key] != null &&
-        (newData as Record<string, unknown>)[key] == null) fail('CONTENT_DELETION_NOT_SUPPORTED');
+      const original = (oldData as Record<string, unknown>)[key];
+      const current = (newData as Record<string, unknown>)[key];
+      if (original != null && current == null) fail('CONTENT_DELETION_NOT_SUPPORTED');
+      if (original != null && current != null) assertStable(kind, original, current);
     }
   }
 }
@@ -276,7 +300,7 @@ export function publishContentRevision(root: string, request: PublicationRequest
     const existing = listContentRevisions(root).find(m => m.publicationId === request.publicationId);
     if (existing) fail('CONTENT_PUBLICATION_ID_REUSED');
     if ((current?.revision ?? null) !== request.baseRevision) fail('CONTENT_REVISION_CONFLICT');
-    if (current) preserveIds(current.content, normalized);
+    if (current) assertCompatibleContentIdentity(current.content, normalized);
     if (request.operation === 'rollback' && !request.restoredFrom) fail('CONTENT_INVALID_ROLLBACK');
     const rollbackAssets = request.operation === 'rollback'
       ? (readContentRevision(root, request.restoredFrom!).manifest.assets ?? {})
