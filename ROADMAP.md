@@ -66,7 +66,7 @@ See [runtime integration](docs/CONTENT_RUNTIME.md). Checked work describes a dra
 - [x] Confirm published pointers, preserve revision history and support explicit non-destructive rollback.
 - [x] Retire five unsafe legacy per-record write POSTs with HTTP 410, regardless of legacy content-loading mode.
 - [x] Add bounded admin JSON bodies (256 KiB), single-process rate limits and private fsynced audit events.
-- [x] Implement and execute focused admin HTTP tests on isolated content roots (CI details in PR #12).
+- [x] Verify **6/6 Phase 4 admin HTTP tests** plus 7/7 storage and 4/4 runtime tests on [CI run 42334602021](https://github.com/babunidev/Morkahja/actions/runs/42334602021). The full release gate still fails on nine unrelated pre-existing TypeScript errors.
 - [ ] Complete a passing full release workflow; baseline TypeScript errors outside content integration remain.
 - [ ] Add managed WebP upload/asset-existence validation; asset staging currently returns HTTP 501.
 - [ ] Complete active/room content pinning and operational TLS/proxy, backups and security review before enabling writes in production.
