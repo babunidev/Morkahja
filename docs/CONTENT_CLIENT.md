@@ -18,6 +18,7 @@ Each refresh sends If-None-Match when a published revision is active. 304 reuses
 - ResultBlock, SolutionBlock, SolutionGridOverlay, partyParticipantChoiceBadge, AvatarSolutionInflow: inventory/solution grids, reward and loss images, tooltip metadata, action icons, party choice badges and transition flights read the shared solution table.
 - AvatarCreation: portrait/frame records and image URLs read the current published arrays; the overlay revalidates on open and clamps stale selections.
 - AvatarPortraitStack and avatar preloader: portraits and frames use the shared artwork resolver throughout the UI.
+- SolutionStarfield and encounterInventoryPreview: decorative solution stars and the shared inventory/solution-charge calculator read the same live solution table. Development mock-avatar presets read the current portrait/frame arrays instead of independent JSON imports.
 
 ## Revision-aware media and fallback
 
