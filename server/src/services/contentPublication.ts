@@ -4,6 +4,7 @@ import {
   readFileSync, readdirSync, renameSync, rmdirSync, unlinkSync, writeFileSync,
 } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
+import { prepareArtworkForPublication, validateArtworkManifest, type ArtworkManifest } from './contentArtwork.js';
 
 export const CONTENT_FILES = {
   encounters: 'encountersdata.json',
@@ -23,6 +24,10 @@ export interface ContentManifest {
   operation: 'initial' | 'publish' | 'rollback';
   restoredFrom?: string;
   files: Record<ContentKind, { sha256: string; bytes: number }>;
+  /** Managed WebP image names resolved to immutable objects by this revision. */
+  assets?: ArtworkManifest;
+  /** Exact stage tokens used by a publication for safe retry identification. */
+  assetStageIds?: string[];
 }
 
 export interface ContentPointer {
@@ -211,6 +216,7 @@ export function readContentRevision(root: string, revision: string): PublishedCo
     bundle[kind] = parse(data);
   }
   validateContentBundle(bundle);
+  validateArtworkManifest(root, manifest.assets ?? {});
   return { revision, manifest, content: bundle };
 }
 /** Read the exact pointer selected by the caller, even if another writer advances current.json. */
@@ -236,6 +242,7 @@ export interface PublicationRequest {
   content: unknown;
   operation?: 'publish' | 'rollback';
   restoredFrom?: string;
+  assetStages?: string[];
   /** For deterministic failure-injection tests only; never connect to the admin API. */
   beforePointerSwap?: () => void;
 }
@@ -253,9 +260,11 @@ export function publishContentRevision(root: string, request: PublicationRequest
     // Idempotency is bound to exactly the same request, not merely a reused ID.
     const normalized = parse(JSON.stringify(request.content ?? null));
     validateContentBundle(normalized);
+    const assetStages = request.assetStages ?? [];
     if (current?.manifest.publicationId === request.publicationId) {
       if (current.manifest.previousRevision !== request.baseRevision ||
           JSON.stringify(current.content) !== JSON.stringify(normalized) ||
+          JSON.stringify(current.manifest.assetStageIds ?? []) !== JSON.stringify(assetStages) ||
           (request.operation === 'rollback' &&
             (current.manifest.operation !== 'rollback' ||
              current.manifest.restoredFrom !== request.restoredFrom)) ||
@@ -268,6 +277,11 @@ export function publishContentRevision(root: string, request: PublicationRequest
     if (existing) fail('CONTENT_PUBLICATION_ID_REUSED');
     if ((current?.revision ?? null) !== request.baseRevision) fail('CONTENT_REVISION_CONFLICT');
     if (current) preserveIds(current.content, normalized);
+    if (request.operation === 'rollback' && !request.restoredFrom) fail('CONTENT_INVALID_ROLLBACK');
+    const rollbackAssets = request.operation === 'rollback'
+      ? (readContentRevision(root, request.restoredFrom!).manifest.assets ?? {})
+      : undefined;
+    const assets = prepareArtworkForPublication(root, current, normalized, assetStages, rollbackAssets);
 
     const revision = randomUUID();
     const revisionDir = join(root, 'revisions', revision);
@@ -286,6 +300,8 @@ export function publishContentRevision(root: string, request: PublicationRequest
         revision, previousRevision: current?.revision ?? null,
         publicationId: request.publicationId, createdAt: new Date().toISOString(),
         operation: current ? (request.operation ?? 'publish') : 'initial', files,
+        ...(Object.keys(assets).length ? { assets } : {}),
+        ...(assetStages.length ? { assetStageIds: [...assetStages] } : {}),
         ...(request.restoredFrom ? { restoredFrom: request.restoredFrom } : {}),
       };
       const manifestText = JSON.stringify(manifest, null, 2) + '\n';
