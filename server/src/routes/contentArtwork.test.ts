@@ -259,6 +259,20 @@ test('staged object hashes are checked at publish time, failed commit does not r
       beforePointerSwap: () => { throw new Error('SIMULATED_CRASH'); },
     }), /SIMULATED_CRASH/);
     assert.equal(readContentPointer(root).revision, base);
+    // Even a committed stage cannot be published if its immutable bytes are damaged.
+    const stage = stageWebpArtwork(root, readPublishedContent(root), {
+      kind: 'encounters', name: 'another_unpublished_scene', intent: 'create',
+      baseRevision: base, bytes: blue,
+    });
+    writeFileSync(join(root, 'artwork', 'objects', stage.sha256 + '.webp'), Buffer.from('corrupted'));
+    assert.throws(() => publishContentRevision(root, {
+      baseRevision: base, publicationId: 'managed_corrupt_0001',
+      content: { ...meta.content, encounters: {
+        ...(meta.content.encounters as Record<string, unknown>),
+        '20001': { ...edits[0].data, mEncounterImageName: 'another_unpublished_scene' },
+      } }, assetStages: [stage.id],
+    }), /CONTENT_(ARTWORK_CHECKSUM_MISMATCH|UNSAFE_ARTWORK_FILE)/);
+    assert.equal(readContentPointer(root).revision, base);
     // No public URL is added until the pointer is committed.
   });
 });
