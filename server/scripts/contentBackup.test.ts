@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import {
   listContentRevisions, publishContentRevision, readContentPointer, readContentRevision,
 } from '../src/services/contentPublication.js';
-import { readArtworkObject, stageWebpArtwork } from '../server/src/services/contentArtwork.js';
+import { readArtworkObject, stageWebpArtwork } from '../src/services/contentArtwork.js';
 import {
   createContentBackup, restoreContentBackup, verifyContentBackup,
 } from './contentBackup.js';
