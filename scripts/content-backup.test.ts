@@ -11,7 +11,7 @@ import {
 } from '../server/src/services/contentPublication.js';
 import { readArtworkObject, stageWebpArtwork } from '../server/src/services/contentArtwork.js';
 import {
-  ContentBackupError, createContentBackup, restoreContentBackup, verifyContentBackup,
+  createContentBackup, restoreContentBackup, verifyContentBackup,
 } from './content-backup.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
