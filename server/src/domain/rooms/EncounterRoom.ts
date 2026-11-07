@@ -17,6 +17,8 @@ export interface EncounterRoom {
   participants: RoomParticipant[];
   slotStates: [SlotState, SlotState, SlotState];
   mergedExpansions: number[];
+  /** One content revision for this room's current and prepared encounter lineage. */
+  contentRevision?: string | null;
   activeEncounterSnapshot: EncounterSnapshot;
   /** Pre-rolled fate per slot (0–2); mid-join binds occupant to slot snapshot. */
   slotEncounterSnapshots: [
