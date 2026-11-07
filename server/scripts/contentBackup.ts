@@ -55,6 +55,13 @@ function realDirectory(path: string, code: string): string {
   if (info.isSymbolicLink() || !info.isDirectory()) fail(code);
   return realpathSync(path);
 }
+function pathExists(path: string): boolean {
+  try { lstatSync(path); return true; }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw error;
+  }
+}
 function assertStorePaths(source: string, destination: string, repo = repositoryRoot): void {
   const sourcePath = realDirectory(source, 'CONTENT_BACKUP_SOURCE_UNAVAILABLE');
   const destinationPath = realDirectory(destination, 'CONTENT_BACKUP_DESTINATION_UNAVAILABLE');
@@ -197,6 +204,7 @@ export function createContentBackup(
   const temporaryName = '.morkahja-content-' + Date.now() + '-' + randomUUID() + '.tmp';
   const temporaryPath = join(destination, temporaryName);
   let finalPath = '';
+  let temporaryCreated = false;
   try {
     writeFileSync(lockFd, 'content-backup ' + new Date().toISOString() + '\n');
     fsyncSync(lockFd);
@@ -208,8 +216,9 @@ export function createContentBackup(
     const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
     const backupName = 'morkahja-content-' + stamp + '-' + pointer.revision;
     finalPath = join(destination, backupName);
-    if (existsSync(finalPath)) fail('CONTENT_BACKUP_ALREADY_EXISTS');
+    if (pathExists(finalPath)) fail('CONTENT_BACKUP_ALREADY_EXISTS');
     mkdirSync(temporaryPath, { mode: 0o700 });
+    temporaryCreated = true;
 
     const files: BackupFile[] = [];
     addFile(temporaryPath, 'current.json', readSafe(join(source, 'current.json'), 4096), files);
@@ -251,11 +260,12 @@ export function createContentBackup(
     syncTreeDirectories(temporaryPath);
     verifyContentBackup(temporaryPath);
     renameSync(temporaryPath, finalPath);
+    temporaryCreated = false;
     const directoryFd = openSync(destination, 'r');
     try { fsyncSync(directoryFd); } finally { closeSync(directoryFd); }
     return finalPath;
   } catch (error) {
-    rmSync(temporaryPath, { recursive: true, force: true });
+    if (temporaryCreated) rmSync(temporaryPath, { recursive: true, force: true });
     throw error;
   } finally {
     closeSync(lockFd);
