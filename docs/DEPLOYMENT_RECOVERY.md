@@ -32,10 +32,10 @@ The deployment runner:
 4. Requires the operator's MORKAHJA_BACKUP_OFF_HOST_CONFIRMED=1 acknowledgement and creates a verified content backup on the configured backup mount.
 5. Runs git pull --ff-only, then rechecks path isolation.
 6. Runs npm ci, static-data verification, all focused content/client/gameplay/backup tests, the standalone client build and the full npm run release:check gate.
-7. Uses rsync --archive --delete-delay only from client/dist/ to the dedicated MORKAHJA_DEPLOY_WEB_ROOT, preserving /.well-known/.
-8. Reloads the PM2 application with pm2 startOrReload ecosystem.config.cjs --update-env.
+7. Reloads the PM2 application with pm2 startOrReload ecosystem.config.cjs --update-env, then retries the local /health endpoint with curl before changing the static site.
+8. Uses rsync --archive --delete-delay only from client/dist/ to the dedicated MORKAHJA_DEPLOY_WEB_ROOT, preserving /.well-known/.
 
-The runner never calls a content administration endpoint, changes current.json, edits a published revision, uploads artwork or runs a content rollback. A failed release check stops before the web-root sync and PM2 reload. Git and dependency changes already made earlier in the sequence are not automatically reverted; the published content remains in its independent root.
+The runner requires Git, npm, rsync, PM2, curl and the Linux mountpoint utility. It never calls a content administration endpoint, changes current.json, edits a published revision, uploads artwork or runs a content rollback. A failed release check stops before the web-root sync and PM2 reload. Git and dependency changes already made earlier in the sequence are not automatically reverted; the published content remains in its independent root.
 
 The preflight deliberately refuses overlapping paths. In particular, rsync --delete-delay must never target the Git checkout, content root, artwork objects, revision directories or backup mount. The content root is also rejected if it is nested under, or contains, the application checkout. This makes normal Git pulls and frontend builds unable to remove published data by path.
 
