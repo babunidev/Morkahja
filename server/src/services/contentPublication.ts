@@ -213,8 +213,9 @@ export function readContentRevision(root: string, revision: string): PublishedCo
   validateContentBundle(bundle);
   return { revision, manifest, content: bundle };
 }
-export function readPublishedContent(root: string): PublishedContent {
-  const pointer = readContentPointer(root);
+/** Read the exact pointer selected by the caller, even if another writer advances current.json. */
+export function readPublishedContent(root: string, selectedPointer?: ContentPointer): PublishedContent {
+  const pointer = selectedPointer ?? readContentPointer(root);
   const result = readContentRevision(root, pointer.revision);
   const text = strictRead(join(root, 'revisions', pointer.revision, 'manifest.json'), 16 * 1024);
   if (digest(text) !== pointer.manifestSha256) fail('CONTENT_MANIFEST_CHECKSUM_MISMATCH');
