@@ -31,7 +31,7 @@ export function deployApplication(env = loadEnvironment()) {
   if (!currentBranch || currentBranch !== branch) throw new Error('DEPLOY_WRONG_BRANCH');
   if (output('git', ['status', '--porcelain'], repositoryRoot, env)) throw new Error('DEPLOY_WORKTREE_NOT_CLEAN');
 
-  for (const command of ['git', 'npm', 'rsync', 'pm2']) requireCommand(command);
+  for (const command of ['git', 'npm', 'rsync', 'pm2', 'curl']) requireCommand(command);
 
   // Capture the current published world before application files or dependencies change.
   run('npm', [
@@ -66,12 +66,19 @@ export function deployApplication(env = loadEnvironment()) {
 
   const builtClient = resolve(repositoryRoot, 'client', 'dist');
   if (!existsSync(builtClient)) throw new Error('DEPLOY_CLIENT_BUILD_MISSING');
+  run('pm2', ['startOrReload', 'ecosystem.config.cjs', '--update-env'], repositoryRoot, env);
+  const port = Number(env.PORT || 3000);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('DEPLOY_INVALID_API_PORT');
+  run('curl', [
+    '--fail', '--silent', '--show-error', '--retry', '10', '--retry-connrefused',
+    '--retry-delay', '1', '--retry-max-time', '30',
+    'http://127.0.0.1:' + port + '/health',
+  ], repositoryRoot, env);
   // This is the only --delete destination: a dedicated static web root, never the content store.
   run('rsync', [
     '--archive', '--delete-delay', '--exclude=/.well-known/',
     builtClient + '/', refreshed.web + '/',
   ], repositoryRoot, env);
-  run('pm2', ['startOrReload', 'ecosystem.config.cjs', '--update-env'], repositoryRoot, env);
   process.stdout.write('\nApplication deployment completed. Published content was not modified.\n');
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
