@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -160,15 +161,10 @@ test('configured but corrupt or absent published data fails closed without leaki
       assert.throws(() => getEncounters());
       assert.equal(readPublishedContent(root, {
         revision: baseline.revision,
-        manifestSha256: readFileSync(join(root, 'revisions', baseline.revision, 'manifest.json')).toString()
-          ? requireValidManifestDigest(root, baseline.revision) : '',
+        manifestSha256: createHash('sha256')
+          .update(readFileSync(join(root, 'revisions', baseline.revision, 'manifest.json')))
+          .digest('hex'),
       }).revision, baseline.revision);
     });
   });
 });
-function requireValidManifestDigest(root: string, revision: string): string {
-  // Needed solely to verify that a damaged pointer does not damage intact revisions.
-  const { createHash } = require('node:crypto') as typeof import('node:crypto');
-  return createHash('sha256')
-    .update(readFileSync(join(root, 'revisions', revision, 'manifest.json'))).digest('hex');
-}
