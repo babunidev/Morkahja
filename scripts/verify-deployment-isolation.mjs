@@ -58,6 +58,13 @@ export function verifyDeploymentIsolation({
   if (overlaps(content, web)) fail('DEPLOY_CONTENT_ROOT_OVERLAPS_WEB_ROOT');
   if (overlaps(content, backup)) fail('DEPLOY_BACKUP_ROOT_OVERLAPS_CONTENT_ROOT');
   if (overlaps(web, backup)) fail('DEPLOY_BACKUP_ROOT_OVERLAPS_WEB_ROOT');
+  const webMarkerPath = resolve(web, '.morkahja-static-root');
+  let webMarkerInfo;
+  try { webMarkerInfo = lstatSync(webMarkerPath); } catch { fail('DEPLOY_WEB_ROOT_NOT_MARKED'); }
+  if (webMarkerInfo.isSymbolicLink() || !webMarkerInfo.isFile() ||
+      readFileSync(webMarkerPath, 'utf8') !== 'morkahja-static-root-v1\\n') {
+    fail('DEPLOY_WEB_ROOT_NOT_MARKED');
+  }
   if (requireBackupMount) {
     try { execFileSync('mountpoint', ['-q', backup], { stdio: 'ignore' }); }
     catch { fail('DEPLOY_BACKUP_ROOT_NOT_MOUNTPOINT'); }
