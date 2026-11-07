@@ -43,7 +43,7 @@ Example operator environment (paths must be adapted to the real host):
 
     MORKAHJA_CONTENT_ROOT=/var/lib/morkahja/content
     MORKAHJA_DEPLOY_WEB_ROOT=/var/www/morkahja
-    MORKAHJA_CONTENT_BACKUP_ROOT=/mnt/off-host-backups/morkahja
+    MORKAHJA_CONTENT_BACKUP_ROOT=/mnt/off-host-backups
     MORKAHJA_BACKUP_OFF_HOST_CONFIRMED=1
     MORKAHJA_DEPLOY_BRANCH=main
 
