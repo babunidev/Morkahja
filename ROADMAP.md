@@ -26,3 +26,16 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] Cross-reference material design decisions in dated source/commits; do not infer author acceptance of every implementation detail.
 
 **Audit boundaries:** Documentation-only source review. No builds, tests, live server calls or production data access.
+
+## Phase 2 — independent content storage (implementation review, 2026-11-07)
+
+- [x] Implement a configurable, opt-in authoritative content root outside Git and the public webroot, with fail-closed reads when explicitly enabled.
+- [x] Preserve the five JSON data shapes, IDs, author fields and indexed null-zero arrays in published revisions.
+- [x] Implement immutable revision directories, a current pointer, SHA-256 checksums, validation and an exclusive publication lock.
+- [x] Add revision conflict handling, publication IDs, audit metadata, pre-pointer failure safety and rollback-as-new-revision.
+- [x] Add a focused temporary-directory regression suite and register it in release CI (CI results must be verified separately).
+- [ ] Obtain reviews/approval and verify new tests plus the full existing release gates.
+- [ ] Implement protected admin publishing, revision-aware media and client runtime content loading in subsequent stages.
+- [ ] Verify live Nginx, PM2, backup configuration and production content parity before any independent deployment or live migration.
+
+Implementation details: [Phase 2 storage](docs/CONTENT_STORAGE.md). None of these checked items represents a deployed production change.
