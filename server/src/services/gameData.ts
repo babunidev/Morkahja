@@ -288,11 +288,8 @@ export function getExpansionById(expansionId: number): ExpansionData | undefined
 }
 
 export function loadStaticGameEnvironment(): void {
-  getEncounters();
-  getSolutionMap();
-  getFramesData();
-  getPortraitsData();
-  getExpansions();
+  // Validate/capture all five datasets in one revision at startup.
+  getGameRuntimeContentSnapshot();
 }
 
 export function saveEncounterEntry(key: string, entry: EncounterData): void {
