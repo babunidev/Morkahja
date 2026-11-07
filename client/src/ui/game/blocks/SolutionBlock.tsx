@@ -534,7 +534,7 @@ export function SolutionBlock({
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
 }) {
-  const content = useClientContent();
+  useClientContent();
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsInteractive, setActionsInteractive] = useState(false);
   const [enableRattleSlots, setEnableRattleSlots] = useState<Set<SlotLetter>>(
