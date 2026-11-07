@@ -1,5 +1,5 @@
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   readContentPointer,
@@ -78,7 +78,7 @@ function publishedContentRoot(): string | null {
   const webRoot = resolve(process.env.MORKAHJA_WEB_ROOT || '/var/www/morkahja');
   const inside = (base: string): boolean => {
     const rel = relative(base, root);
-    return rel === '' || (rel !== '..' && !rel.startsWith('../') && !rel.startsWith('..\\\\') && !isAbsolute(rel));
+    return rel === '' || (rel !== '..' && !rel.startsWith('../') && !rel.startsWith('..' + sep) && !isAbsolute(rel));
   };
   if (inside(repoRoot) || inside(webRoot)) {
     throw new Error('MORKAHJA_CONTENT_ROOT must be outside Git and the webroot');
