@@ -31,7 +31,7 @@ Run documented static and lifecycle checks in an appropriate development environ
 
 See [dynamic content publication design](docs/CONTENT_PUBLICATION.md). These tasks are proposals, not implemented features or accepted deployment decisions.
 
-- [x] Inspect the repository's content loading, frontend JSON imports, admin routes and historical deployment documentation (static source review only).
+- [x] Inspect the repository's content loading, frontend JSON imports, admin routes, tracked game JSON/media and historical deployment documentation (static source review only; see [Phase 1 audit](docs/CONTENT_PUBLICATION_PHASE1_AUDIT.md)).
 - [x] Draft a revisioned content architecture and staging/rollback procedure for review (documentation only).
 - [ ] Approve and test the authoritative storage location and HTTP/media contract with Babuni Admin.
 - [ ] Implement immutable content revisions, validation and transactional publishing with automated tests.
