@@ -1,6 +1,6 @@
 import { isAbsolute, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { restoreContentBackup, verifyContentBackup } from './contentBackup.js';
+import { restoreContentBackup } from './contentBackup.js';
 import { loadEnvironment } from '../../scripts/verify-deployment-isolation.mjs';
 
 function option(args: string[], name: string): string | undefined {
@@ -16,12 +16,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     if (!backup || !isAbsolute(backup)) throw new Error('CONTENT_BACKUP_PATH_MUST_BE_ABSOLUTE');
     if (!destination || !isAbsolute(destination)) throw new Error('CONTENT_RESTORE_DESTINATION_MUST_BE_ABSOLUTE');
     if (!args.includes('--create-new-root')) throw new Error('CONTENT_RESTORE_NEW_ROOT_CONFIRMATION_REQUIRED');
-    const verified = verifyContentBackup(backup);
     const restored = restoreContentBackup(backup, destination);
     process.stdout.write(
       'Restored and verified content root: ' + restored.destination +
-      '\nRevision: ' + restored.revision +
-      '\nBackup created: ' + verified.createdAt + '\n',
+      '\nRevision: ' + restored.revision + '\n',
     );
   } catch (error) {
     const code = error instanceof Error ? error.message : 'CONTENT_RESTORE_FAILED';
