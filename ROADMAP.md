@@ -107,3 +107,18 @@ Details: [Phase 5 artwork](docs/CONTENT_ARTWORK.md). A checked task is an isolat
 - [ ] Resolve existing server TypeScript errors, pass full release gates, review and merge stacked PRs in dependency order.
 
 See [Phase 6 client content](docs/CONTENT_CLIENT.md). This work is in a draft branch, not deployed.
+
+## Phase 7 — protect ongoing gameplay (draft PR #15, 2026-11-07)
+
+- [x] Add optional contentRevision metadata to persistent encounter, prepared encounter, room, all three room slots, solo checkpoints and pre-death snapshots.
+- [x] Resolve active and prepared encounters from the exact immutable historical revision rather than the newest published JSON.
+- [x] Feed pinned solution definitions through deterministic resolution, reward generation, level-up/Atranor, inventory routing and penalty/grant calculations.
+- [x] Preserve room revision across system events, waiting/advance boundaries and participant reseeding.
+- [x] Support old untagged snapshots against the checked-in legacy baseline without silently assigning the current published revision; requires pre-cutover production parity verification.
+- [x] Forbid deletion and gameplay-identity repurposing of previously published encounter, solution, expansion, portrait and frame IDs; reject during admin validation and publication.
+- [x] Add isolated publication-during-gameplay simulations with temporary revision roots and fake participant transactions; CI records verified focused results.
+- [ ] Exercise real PostgreSQL-backed solo/party lifecycle, concurrent publication during transactions, reconnect, death/sacrifice and historical artwork in a staging environment.
+- [ ] Reconcile client active-game presentations with server-pinned historical content (the Phase 6 browser store still follows the newest revision).
+- [ ] Audit live legacy snapshots and inventory IDs before any production migration; do not enable live publishing until cutover checks and full release gates pass.
+
+Details: [Phase 7 gameplay revisions](docs/CONTENT_GAMEPLAY.md). Draft implementation is not a deployed or approved feature.
