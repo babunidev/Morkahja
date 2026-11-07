@@ -49,3 +49,7 @@ Release blockers remain: full root typecheck, complete server/database-backed en
 ## Attribution
 
 The human creative directed preservation of ongoing adventures and player-owned IDs during content updates. AI assistance implemented the revision-pinning approach, changes to the resolution and inventory paths, tests and technical documentation. This branch does not represent approval to migrate or deploy.
+
+## Phase 8 recovery boundary (draft PR #16)
+
+Content backups preserve all committed revisions required by pinned active encounters, including the historical artwork objects referenced by those manifests. A disaster restore must create a new content root containing the complete retained history; pruning old revisions would break active snapshots. Application rollback must leave the content pointer unchanged and use a code version that understands the current revision, media and snapshot metadata. This policy is documented but has not yet been exercised against a production backup or an older application release.
