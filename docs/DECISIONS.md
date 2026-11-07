@@ -33,3 +33,13 @@ Babuni.dev chose the actual project repository as the intended public source, re
 Babuni.dev clarified that project artwork was generated with AI and then manually cut out, arranged and composed in Photoshop/GIMP, including portraits, frames, item images and substantial UI work. Babuni.dev also manually entered project data. The music has a separate human author credited in About Us. This describes creative provenance; permission to redistribute contributed music is not inferred. The fuller development history remains a living work in progress.
 
 **AI contribution:** Recorded the author’s decision and clarification, separately from observed GitHub visibility. Earlier documentation-only publication was considered and is superseded as the intended long-term source. No root license was selected by this update; public visibility, open-source reuse permissions, media rights and production readiness are separate matters. No runtime testing or behavior change is claimed.
+
+## D-006 — Stateless revisioned content editing for administration (2026-11-07; implementation proposal awaiting review)
+
+**Human direction:** A secure administration API should support edits to all five content categories, validation, revision conflict handling, idempotent publishing, rollback, auditability and safe authentication.
+
+**AI implementation choice, not an independently approved production decision:** Rather than storing mutable drafts, the API accepts 1–100 complete-record create/update changes tied to a published base revision. The server clones that revision, validates the resulting five-category bundle, publishes a new immutable revision and confirms the current pointer. The existing bearer-key authorization is retained, avoiding a second login system while hardening comparison and rate limits. Legacy direct writes are retired. No new artwork identifiers are permitted until a separate upload/staging pipeline exists.
+
+**Safety rationale:** Explicit base revisions avoid silent overwrites and permit reproducible retries. A separate `MORKAHJA_ENABLE_CONTENT_PUBLISHING` flag defaults to off so the unpinned active-encounter and room systems cannot be exposed to publishing by mere code deployment. A private audit log adds operator traceability within the limits of one shared credential.
+
+**Open items:** Per-operator identities, production TLS/proxy enforcement, durable off-host audit backups, media file existence checks, image staging and active encounter revision pinning are not completed. The implementation remains in draft PR #12 and does not attest to a production security review.

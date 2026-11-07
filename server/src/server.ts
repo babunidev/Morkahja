@@ -106,6 +106,10 @@ app.post(
   stripeWebhookController,
 );
 
+// Admin has its own authenticated, rate-limited 256 KiB parser. Run it before
+// the general player JSON parser so admin edits are not capped at 32 KiB.
+app.use('/game-data/admin', adminRoutes);
+
 app.use(express.json({ limit: '32kb' }));
 
 function authRateLimitKey(req: Request): string {
@@ -135,8 +139,7 @@ function authRateLimit(req: Request, res: Response, next: NextFunction): void {
 // app.use(requestLogger);
 // app.use(multiplayerSessionHooks);
 
-/** Uses existing nginx proxy for `/game-data` — no extra nginx rules needed */
-app.use('/game-data/admin', adminRoutes);
+/** Uses the existing /game-data proxy; admin routes mounted above with their own parser. */
 app.use('/game-data', publicContentRoutes);
 
 app.get('/health', (_req: Request, res: Response) => {
