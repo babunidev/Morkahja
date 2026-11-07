@@ -85,7 +85,8 @@ Detailed API, security assumptions and limitations: [Phase 4 administration](doc
 - [x] Serve managed WebP assets by revision-specific URLs with ETags and immutable cache headers.
 - [x] Add isolated HTTP and failure-injection regression tests (CI results documented in PR #13).
 - [ ] Migrate and verify existing production legacy artwork and image references; existing legacy files are not automatically checked.
-- [ ] Integrate dynamic media URLs into the browser and local Babuni Admin; existing frontend still uses static paths.
+- [x] Implement a draft browser runtime resolver for managed media URLs (Phase 6, not deployed).
+- [ ] Integrate the separate local Babuni Admin UI with the publishing API.
 - [ ] Add production-grade full WebP decode validation, storage retention, quotas, off-host media backup and operational proxy/security review.
 - [ ] Pin active multiplayer/solo encounters to content revisions and pass full release checks before enabling live publishing.
 
