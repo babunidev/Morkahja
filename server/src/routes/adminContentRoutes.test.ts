@@ -206,6 +206,13 @@ test('validation rejects missing relations, mismatched IDs and unknown asset ref
     const invalid = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: badId }));
     assert.equal(invalid.status, 400);
 
+    const repurposed = structuredClone(changes);
+    (repurposed[1]!.data as Record<string, unknown>).mSolutionInventoryType =
+      (repurposed[1]!.data as Record<string, number>).mSolutionInventoryType === 1 ? 2 : 1;
+    const incompatible = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: repurposed }));
+    assert.equal(incompatible.status, 422);
+    assert.deepEqual(await incompatible.json(), { error: 'CONTENT_IDENTITY_CHANGE_NOT_SUPPORTED' });
+
     const missingAsset = structuredClone(changes);
     (missingAsset[0]!.data as Record<string, unknown>).mEncounterImageName = 'nonexistent_new_art';
     const unapproved = await fetchAdmin('/content/validate', post({ baseRevision: base, changes: missingAsset }));
