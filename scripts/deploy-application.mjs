@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { loadEnvironment, repositoryRoot, verifyDeploymentIsolation } from './verify-deployment-isolation.mjs';
 
 function run(command, args, cwd, env) {
