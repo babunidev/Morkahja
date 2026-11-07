@@ -111,7 +111,7 @@ export async function sacrificeFailedAvatar(
     }
 
     const snapshot = avatar.preDeathSnapshot!;
-    const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar);
+    const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar, snapshot.contentRevision);
     const restoredAvatar: AvatarDocument = {
       ...avatar,
       status: 'active',
