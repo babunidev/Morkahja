@@ -1,6 +1,6 @@
 # Morkahja — Phase 3 backend runtime integration
 
-**Status:** Implemented in [draft PR #11](https://github.com/babunidev/Morkahja/pull/11), stacked on the unmerged Phase 2 storage PR #10. This is not a deployed release, production migration or Babuni Admin publishing integration. Follow the separate test results in the PR.
+**Status:** Implemented and tested in [draft PR #11](https://github.com/babunidev/Morkahja/pull/11), stacked on the unmerged Phase 2 storage PR #10. Source commit `8758546b` passed **7/7 storage** and **4/4 runtime HTTP** tests on [GitHub Actions run 42332861255](https://github.com/babunidev/Morkahja/actions/runs/42332861255), including a newly added encounter ID and updated solution. **The complete release workflow failed** on existing TypeScript errors in `encounterResolver.test.ts`, `pendingLevelUpRewards.test.ts`, `roomService.ts`, and `solutionConsumption.test.ts`, outside this change. This is not a deployed release, production migration or Babuni Admin publishing integration.
 
 ## Runtime authority and activation
 
