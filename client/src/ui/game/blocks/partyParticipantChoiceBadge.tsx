@@ -237,7 +237,7 @@ export function PartyParticipantChoiceBadge({
   roomState?: RoomStateDto;
   systemEventActorPlayerId?: string;
 }) {
-  const content = useClientContent();
+  useClientContent();
   const showChoice = hasVisibleParticipantChoice(
     participant,
     roomState,
