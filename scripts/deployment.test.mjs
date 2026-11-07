@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { test } from 'node:test';
 import { verifyDeploymentIsolation } from './verify-deployment-isolation.mjs';
+import { repositoryRoot as repoRootForTest } from './verify-deployment-isolation.mjs';
+import { deployApplication } from './deploy-application.mjs';
 
 test('deployment preflight accepts four independent existing roots', () => {
   const root = mkdtempSync(join(tmpdir(), 'morkahja-deploy-preflight-'));
@@ -67,5 +69,19 @@ test('deployment preflight rejects symlinked roots and missing configuration', (
       /DEPLOY_CONTENT_ROOT_REQUIRED/);
     assert.throws(() => verifyDeploymentIsolation({ repoRoot: repo, contentRoot: content, webRoot: web }),
       /DEPLOY_BACKUP_ROOT_REQUIRED/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('application deployment aborts at path preflight before any Git or filesystem deployment command', () => {
+  const root = mkdtempSync(join(tmpdir(), 'morkahja-deploy-runner-'));
+  try {
+    const web = join(root, 'web');
+    mkdirSync(web);
+    assert.throws(() => deployApplication({
+      MORKAHJA_CONTENT_ROOT: repoRootForTest,
+      MORKAHJA_DEPLOY_WEB_ROOT: web,
+      MORKAHJA_CONTENT_BACKUP_ROOT: '/',
+      MORKAHJA_BACKUP_OFF_HOST_CONFIRMED: '1',
+    }), /DEPLOY_CONTENT_ROOT_OVERLAPS_APPLICATION/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
