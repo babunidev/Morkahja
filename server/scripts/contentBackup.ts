@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync,
@@ -177,12 +178,16 @@ export function verifyContentBackup(backupRoot: string): ContentBackupManifest {
 export function createContentBackup(
   sourceRoot: string,
   destinationRoot: string,
-  options: { confirmOffHost: boolean; repoRoot?: string } = { confirmOffHost: false },
+  options: { confirmOffHost: boolean; requireMountpoint?: boolean; repoRoot?: string } = { confirmOffHost: false },
 ): string {
   if (!options.confirmOffHost) fail('CONTENT_BACKUP_OFF_HOST_CONFIRMATION_REQUIRED');
   assertStorePaths(resolve(sourceRoot), resolve(destinationRoot), options.repoRoot ?? repositoryRoot);
   const source = realDirectory(resolve(sourceRoot), 'CONTENT_BACKUP_SOURCE_UNAVAILABLE');
   const destination = realDirectory(resolve(destinationRoot), 'CONTENT_BACKUP_DESTINATION_UNAVAILABLE');
+  if (options.requireMountpoint) {
+    try { execFileSync('mountpoint', ['-q', destination], { stdio: 'ignore' }); }
+    catch { fail('CONTENT_BACKUP_DESTINATION_NOT_MOUNTPOINT'); }
+  }
   const lockPath = join(source, '.publication.lock');
   let lockFd: number;
   try { lockFd = openSync(lockPath, 'wx', 0o600); }
@@ -312,7 +317,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const confirmOffHost = process.argv.includes('--confirm-off-host');
     if (!source || !isAbsolute(source)) fail('MORKAHJA_CONTENT_ROOT_MUST_BE_ABSOLUTE');
     if (!destination || !isAbsolute(destination)) fail('CONTENT_BACKUP_DESTINATION_MUST_BE_ABSOLUTE');
-    const created = createContentBackup(source, destination, { confirmOffHost });
+    const created = createContentBackup(source, destination, { confirmOffHost, requireMountpoint: true });
     const verified = verifyContentBackup(created);
     process.stdout.write('Verified content backup: ' + created + '\nRevision: ' + verified.currentRevision + '\n');
   } catch (error) {
