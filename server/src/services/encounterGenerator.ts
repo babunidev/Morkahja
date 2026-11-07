@@ -917,6 +917,7 @@ export async function createEncounter(
   const existing = await loadActiveEncounter(playerId, avatarId);
 
   if (existing && !existing.resolved) {
+    getGameRuntimeContentSnapshotForRevision(existing.contentRevision); // pinned content must still be readable
     const activeSnapshot = withPrecomputedSnapshotRewards(existing, avatar);
     if (activeSnapshot !== existing) {
       await saveActiveEncounter(activeSnapshot);
@@ -925,8 +926,10 @@ export async function createEncounter(
   }
 
   const unlockedExpansions = await getPlayerUnlockedExpansions(playerId);
-  // Use one revision for the selected encounter, prepared encounter and rewards.
-  const content = getGameRuntimeContentSnapshot();
+  // A previously prepared encounter must be consumed using its original revision.
+  const content = existing?.resolved && existing.preparedEncounter
+    ? getGameRuntimeContentSnapshotForRevision(existing.contentRevision)
+    : getGameRuntimeContentSnapshot();
 
   const context: EncounterSelectionContext = {
     unlockedExpansions,
@@ -936,7 +939,7 @@ export async function createEncounter(
   const encounter = existing?.resolved && existing.preparedEncounter
     ? getPreparedEncounter(existing, content.encounters)
     : selectNextEncounter(context, content.encounters);
-  const preparedEncounter = prepareNextEncounter(encounter, unlockedExpansions, content.encounters);
+  const preparedEncounter = prepareNextEncounter(encounter, unlockedExpansions, content.encounters, content.revision);
   const snapshot = buildEncounterSnapshot(
     playerId,
     avatarId,
@@ -944,6 +947,7 @@ export async function createEncounter(
     preparedEncounter,
     avatar,
     content.solutions,
+    content.revision,
   );
   const activeSnapshot: EncounterSnapshot = {
     ...snapshot,
@@ -1044,6 +1048,7 @@ export async function continueEncounter(
         throw new Error(`Avatar not found: ${avatarId}`);
       }
 
+      const content = getGameRuntimeContentSnapshotForRevision(claimedSnapshot.contentRevision);
       let encounterSnapshot = withPrecomputedSnapshotRewards(claimedSnapshot, avatar);
 
       if (encounterSnapshot !== claimedSnapshot) {
@@ -1061,7 +1066,7 @@ export async function continueEncounter(
       const baseResolution = runDeterministicResolver(
         encounter,
         flattenInventorySolutionIds(inventory),
-        getSolutionMap(),
+        content.solutions,
         snapshotToRolls(encounterSnapshot),
         toSelectedEncounterAction(actionForResolution),
         encounterSnapshot.rewardIds,
@@ -1074,8 +1079,10 @@ export async function continueEncounter(
           encounterSnapshot,
           baseResolution,
           selectedRollOutcome,
+          content.solutions,
         ),
         selectedRollOutcome,
+        content.solutions,
       );
       const progressionResult = applyProgressionForEncounter(
         progression,
@@ -1091,6 +1098,7 @@ export async function continueEncounter(
           inventory,
           avatar,
           selectedRollOutcome,
+          content.solutions,
         );
         nextInventory = deathOutcome.nextInventory;
         resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
@@ -1099,6 +1107,7 @@ export async function continueEncounter(
           inventory,
           resolution.rewards,
           progressionResult.progression.level,
+          content.solutions,
         );
       } else {
         const inventoryApply = applyEncounterInventoryChanges(
@@ -1136,14 +1145,14 @@ export async function continueEncounter(
       if (progressionResult.leveledUp && !deathTriggered) {
         resolvedSnapshot = {
           ...resolvedSnapshot,
-          preparedEncounter: preparedSystemEncounter(LEVEL_UP_ENCOUNTER_NUMERIC_ID),
+          preparedEncounter: preparedSystemEncounter(LEVEL_UP_ENCOUNTER_NUMERIC_ID, content),
         };
       }
 
       if (deathTriggered) {
         resolvedSnapshot = {
           ...resolvedSnapshot,
-          preparedEncounter: preparedSystemEncounter(DEATH_ENCOUNTER_NUMERIC_ID),
+          preparedEncounter: preparedSystemEncounter(DEATH_ENCOUNTER_NUMERIC_ID, content),
         };
       }
 
@@ -1157,8 +1166,8 @@ export async function continueEncounter(
         unlockedExpansions,
       );
       const preparedAfterActiveEncounter = deathAndLevelUp
-        ? preparedSystemEncounter(LEVEL_UP_ENCOUNTER_NUMERIC_ID)
-        : prepareNextEncounter(nextEncounter, unlockedExpansions);
+        ? preparedSystemEncounter(LEVEL_UP_ENCOUNTER_NUMERIC_ID, content)
+        : prepareNextEncounter(nextEncounter, unlockedExpansions, content.encounters, content.revision);
       const nextSnapshot: EncounterSnapshot = {
         ...buildEncounterSnapshot(
           playerId,
@@ -1166,6 +1175,8 @@ export async function continueEncounter(
           nextEncounter,
           preparedAfterActiveEncounter,
           avatar,
+          content.solutions,
+          content.revision,
         ),
         state: 'active',
       };
