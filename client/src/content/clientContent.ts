@@ -193,10 +193,17 @@ export function refreshClientContent(): Promise<ClientContent> {
  * Legacy URLs are permitted only for known original assets.
  */
 export function contentImageUrl(kind: ArtworkKind, name: string): string {
-  const stem = cleanName(name);
+  let stem: string;
+  try { stem = cleanName(name); } catch { return ''; }
   const content = getClientContent();
   const managed = content.assets[kind]?.[stem];
   if (managed) return API_BASE_URL + managed;
+  if (kind === 'encounters' && stem === 'im_encounter_placeholder_bg_new') {
+    return LEGACY_ROOT[kind] + '/' + stem + '.webp';
+  }
+  if (kind === 'portraits' && stem === 'avatar_verdani_female_mage_a') {
+    return LEGACY_ROOT[kind] + '/' + stem + '.webp';
+  }
   if (!baselineArtwork[kind].has(stem)) return '';
   return LEGACY_ROOT[kind] + '/' + stem + '.webp';
 }
