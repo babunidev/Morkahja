@@ -60,7 +60,7 @@ function str(value: unknown): boolean {
   return typeof value === 'string' && value.length <= 16_384;
 }
 function imageName(value: unknown): boolean {
-  return typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}(?:\\.webp)?$/.test(value);
+  return typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}(?:[.]webp)?$/.test(value);
 }
 function checked(entry: Record<string, unknown>, numbers: string[], strings: string[], title: string): void {
   for (const key of numbers) if (!num(entry[key])) fail(`CONTENT_INVALID_FIELD:${title}.${key}`);
