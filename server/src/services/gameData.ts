@@ -80,7 +80,7 @@ let publishedRuntimeCache: GameRuntimeContentSnapshot | null = null;
 let publishedSolutionCache: { revision: string; map: SolutionDataMap } | null = null;
 
 /** Explicit activation only. Never automatically migrate or initialize production content. */
-function publishedContentRoot(): string | null {
+export function getConfiguredContentRoot(): string | null {
   const configured = process.env.MORKAHJA_CONTENT_ROOT?.trim();
   if (!configured) return null;
   if (!isAbsolute(configured)) throw new Error('MORKAHJA_CONTENT_ROOT must be absolute');
@@ -106,7 +106,7 @@ function publishedContentRoot(): string | null {
  * missing configured root throws rather than loading Git fixtures.
  */
 export function getPublishedContentSnapshot(): PublishedContent | null {
-  const root = publishedContentRoot();
+  const root = getConfiguredContentRoot();
   if (!root) return null;
   const pointer = readContentPointer(root);
   if (!publishedCache || publishedCacheRoot !== root ||
@@ -176,7 +176,7 @@ function loadJson<T>(relativePath: string): T {
 }
 
 function assertLegacyWritable(): void {
-  if (publishedContentRoot()) {
+  if (getConfiguredContentRoot()) {
     throw new Error('CONTENT_PUBLISH_REQUIRED: legacy direct writes are disabled for published content');
   }
 }
@@ -200,7 +200,7 @@ export function invalidateGameDataCaches(): void {
 }
 
 export function getEncounters(): EncounterDataMap {
-  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.encounters as EncounterDataMap;
+  if (getConfiguredContentRoot()) return getPublishedContentSnapshot()!.content.encounters as EncounterDataMap;
   if (!encounterCache) {
     encounterCache = loadJson<EncounterDataMap>('game/encountersdata.json');
   }
@@ -215,7 +215,7 @@ export function getEncounterById(
 }
 
 export function getSolutionMap(): SolutionDataMap {
-  if (publishedContentRoot()) {
+  if (getConfiguredContentRoot()) {
     const revision = getPublishedContentSnapshot()!;
     if (!publishedSolutionCache || publishedSolutionCache.revision !== revision.revision) {
       const raw = revision.content.solutions as Record<string, SolutionData>;
@@ -252,7 +252,7 @@ function assertIndexedData<T>(
 }
 
 export function getFramesData(): FramesDataFile {
-  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.frames as FramesDataFile;
+  if (getConfiguredContentRoot()) return getPublishedContentSnapshot()!.content.frames as FramesDataFile;
   if (!framesCache) {
     framesCache = loadJson<FramesDataFile>('game/frames.json');
     assertIndexedData(framesCache.Frames, 'Frames');
@@ -262,7 +262,7 @@ export function getFramesData(): FramesDataFile {
 }
 
 export function getPortraitsData(): PortraitsDataFile {
-  if (publishedContentRoot()) return getPublishedContentSnapshot()!.content.portraits as PortraitsDataFile;
+  if (getConfiguredContentRoot()) return getPublishedContentSnapshot()!.content.portraits as PortraitsDataFile;
   if (!portraitsCache) {
     portraitsCache = loadJson<PortraitsDataFile>('game/portraits.json');
     assertIndexedData(portraitsCache.Avatar, 'Avatar portraits');
@@ -272,7 +272,7 @@ export function getPortraitsData(): PortraitsDataFile {
 }
 
 export function getExpansions(): ExpansionData[] {
-  if (publishedContentRoot()) {
+  if (getConfiguredContentRoot()) {
     const file = getPublishedContentSnapshot()!.content.expansions as ExpansionDataFile;
     return Object.values(file.expansions);
   }
