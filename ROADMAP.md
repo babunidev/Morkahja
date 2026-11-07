@@ -102,7 +102,7 @@ Details: [Phase 5 artwork](docs/CONTENT_ARTWORK.md). A checked task is an isolat
 - [x] Revalidate content on boot, dashboard/game entry, encounter changes and relevant overlay entry; poll when dashboard/game is active.
 - [x] Keep last complete content on fetch/validation failure; permit bundled legacy content only after explicit backend CONTENT_NOT_CONFIGURED.
 - [x] Verify 4/4 dynamic client tests, 21/21 preceding focused tests, static JSON sync and the separate frontend production build on [CI run 42337063166](https://github.com/babunidev/Morkahja/actions/runs/42337063166). Overall release still fails at the nine existing server TypeScript errors.
-- [ ] Complete active encounter and room revision pinning before production live publishing.
+- [x] Implement draft server-side encounter and room revision pinning in Phase 7; real DB-backed and frontend pinned-view verification remain required before production live publishing.
 - [ ] Verify browser/device gameplay, server API migration, artwork parity and local Babuni Admin integration in staging.
 - [ ] Resolve existing server TypeScript errors, pass full release gates, review and merge stacked PRs in dependency order.
 
