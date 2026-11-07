@@ -9,8 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import framesData from '../../data/game/frames.json';
-import portraitsData from '../../data/game/portraits.json';
+import { contentImageUrl, refreshClientContent, useClientContent, useClientContentState } from '../../content/clientContent.js';
 import type { PersistedAvatar } from '../../api/http.js';
 import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
 import {
@@ -27,8 +26,6 @@ import {
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
 const UI_ROOT = '/UI/02_AvatarCreation';
 const RACES = ['Grimnir', 'Verdani', 'Aevis', 'Rokur'] as const;
 const ROLES = ['Mage', 'Rogue', 'Warrior'] as const;
@@ -495,17 +492,19 @@ export function AvatarCreation({
   slotIndex: number;
   visible: boolean;
 }) {
+  const content = useClientContent();
+  const contentState = useClientContentState();
   const portraits = useMemo(
-    () => portraitsData.Avatar.filter(
+    () => content.portraits.Avatar.filter(
       (portrait): portrait is PortraitRecord => portrait !== null,
     ),
-    [],
+    [content],
   );
   const frames = useMemo(
-    () => framesData.Frames.filter(
+    () => content.frames.Frames.filter(
       (frame): frame is FrameRecord => frame !== null,
     ),
-    [],
+    [content],
   );
   const initialPortraitIndex = useMemo(
     () => {
@@ -535,6 +534,15 @@ export function AvatarCreation({
   const activeTriggerRef = useRef<HTMLElement | null>(null);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const { bind: bindTooltipReveal } = useTooltipRevealBinding(visible);
+
+  useEffect(() => {
+    if (visible) void refreshClientContent().catch(() => undefined);
+  }, [visible]);
+
+  useEffect(() => {
+    setPortraitIndex(index => wrapIndex(index, portraits.length));
+    setFrameIndex(index => wrapIndex(index, frames.length));
+  }, [portraits, frames]);
 
   useEffect(() => {
     if (!visible) {
@@ -584,8 +592,8 @@ export function AvatarCreation({
       window.cancelAnimationFrame(remeasureFrame);
     };
   }, [optionTooltip]);
-  const portrait = portraits[portraitIndex];
-  const frame = frames[frameIndex];
+  const portrait = portraits[wrapIndex(portraitIndex, portraits.length)];
+  const frame = frames[wrapIndex(frameIndex, frames.length)];
   const race = raceFromPortrait(portrait);
   const role = roleFromPortrait(portrait);
   const gender = genderFromPortrait(portrait);
@@ -708,6 +716,7 @@ export function AvatarCreation({
       >
         <header style={headerStyle}>
           <h2 id="avatar-creation-title" style={titleStyle}>CREATE AVATAR</h2>
+          {contentState.error ? <span role="status">Showing the last complete content revision</span> : null}
         </header>
         <div data-avatar-creation-scroll="" style={panelBodyStyle}>
           <style>
@@ -824,8 +833,8 @@ export function AvatarCreation({
                 style={previewStyle}
                 visualStyle={previewVisualStyle}
               >
-                <img alt="" aria-hidden="true" draggable={false} src={`${AVATAR_ASSET_ROOT}/avatar_${portrait.avatarID}.webp`} style={previewImageStyle} />
-                <img alt="" aria-hidden="true" draggable={false} src={`${FRAME_ASSET_ROOT}/frame_${frame.frameID}.webp`} style={previewFrameStyle} />
+                <img alt="" aria-hidden="true" draggable={false} src={contentImageUrl('portraits', `avatar_${portrait.avatarID}`)} style={previewImageStyle} />
+                <img alt="" aria-hidden="true" draggable={false} src={contentImageUrl('frames', `frame_${frame.frameID}`)} style={previewFrameStyle} />
               </CreationImageButton>
               <span aria-hidden="true" className="morkahja-avatar-randomize-hint">
                 Randomize
