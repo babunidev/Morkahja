@@ -3249,6 +3249,7 @@ function buildRoomFromCheckpoint(
     participants: [mergedParticipant],
     slotStates: checkpoint.slotStates,
     mergedExpansions: checkpoint.mergedExpansions,
+    contentRevision: checkpoint.contentRevision ?? checkpoint.activeEncounterSnapshot.contentRevision,
     activeEncounterSnapshot: checkpoint.activeEncounterSnapshot,
     slotEncounterSnapshots: checkpoint.slotEncounterSnapshots,
     roomState: checkpoint.roomState,
