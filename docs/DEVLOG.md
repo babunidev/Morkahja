@@ -49,3 +49,11 @@ The next step in separating Morkahja's authored content from its code was to giv
 The administrator still uses the existing private API key, now with a safer comparison, request limits and an audit record. Artwork editing remains outside the gate until files themselves can be validated and stored with their revisions. To prevent an unfinished live cutover, publication requires an explicit opt-in flag in addition to the external content store.
 
 **Creative direction:** Manage the five content categories securely through Babuni Admin without sacrificing active players or established game data. **AI contribution:** Implemented the protected API, validation/publication workflow, legacy-route retirement, tests, safeguards and documentation. **Verification:** Focused administration, runtime and storage tests passed in GitHub Actions; broader release typechecking remained blocked by pre-existing errors in unrelated files. No live publishing, production access or real administrator-client integration was performed.
+
+## 2026-11-07 — Giving the stories their own images
+
+Keeping Morkahja's content outside the codebase also means keeping the paintings, portraits and small icons that give those stories their faces. The next AI-assisted implementation introduced a private place to stage WebP artwork, checks for size, image structure and naming, and a way to publish image references together with my JSON records. A replaced image acquires a new revision URL rather than overwriting the older painting.
+
+The work keeps the existing names and static browser artwork intact while a future client migration is prepared. Only newly managed images are offered through the versioned media API; a complete inventory of the already published legacy files, and the ongoing adventure snapshots, still need separate verification.
+
+**Creative direction:** Preserve familiar visual naming, avoid broken images and allow deliberate replacements without losing historical versions. **AI contribution:** Implemented staging, immutable content-addressed objects, revision mapping, public media serving, security checks, tests and documentation. **Verification:** Focused test results are recorded in PR #13; no live artwork, deployment, players or production credentials were accessed. The full release typecheck remains blocked by previously observed unrelated errors.
