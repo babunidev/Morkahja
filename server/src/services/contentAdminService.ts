@@ -1,4 +1,4 @@
-import { closeSync, existsSync, fsyncSync, lstatSync, openSync, writeSync } from 'node:fs';
+import { closeSync, constants, existsSync, fsyncSync, lstatSync, openSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ContentPublicationError, type ContentBundle, type ContentKind,
@@ -113,7 +113,8 @@ export function appendContentAdminAudit(root: string, event: ContentAdminAudit):
     const info = lstatSync(path);
     if (!info.isFile() || info.isSymbolicLink()) fail('CONTENT_UNSAFE_AUDIT');
   }
-  const fd = openSync(path, 'a', 0o600);
+  const fd = openSync(path,
+    constants.O_WRONLY | constants.O_APPEND | constants.O_CREAT | constants.O_NOFOLLOW, 0o600);
   try {
     const line = JSON.stringify({
       timestamp: new Date().toISOString(), actor: 'admin-api-key',
