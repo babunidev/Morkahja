@@ -27,6 +27,8 @@ jobs:
         run: npm run test:content-admin
       - name: Managed content artwork test
         run: npm run test:content-artwork
+      - name: Dynamic client content regression test
+        run: npm run test:client-content
       - name: Typecheck and client build
         run: npm run typecheck
       - name: Server session auth test
