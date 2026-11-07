@@ -264,6 +264,17 @@ test('staged object hashes are checked at publish time, failed commit does not r
       kind: 'encounters', name: 'another_unpublished_scene', intent: 'create',
       baseRevision: base, bytes: blue,
     });
+    const duplicate = stageWebpArtwork(root, readPublishedContent(root), {
+      kind: 'encounters', name: 'another_unpublished_scene', intent: 'create',
+      baseRevision: base, bytes: red,
+    });
+    assert.throws(() => publishContentRevision(root, {
+      baseRevision: base, publicationId: 'managed_duplicate_0001',
+      content: { ...meta.content, encounters: {
+        ...(meta.content.encounters as Record<string, unknown>),
+        '20001': { ...edits[0].data, mEncounterImageName: 'another_unpublished_scene' },
+      } }, assetStages: [stage.id, duplicate.id],
+    }), /CONTENT_DUPLICATE_ASSET_NAME/);
     writeFileSync(join(root, 'artwork', 'objects', stage.sha256 + '.webp'), Buffer.from('corrupted'));
     assert.throws(() => publishContentRevision(root, {
       baseRevision: base, publicationId: 'managed_corrupt_0001',
