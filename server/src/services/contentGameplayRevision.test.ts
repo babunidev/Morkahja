@@ -20,6 +20,9 @@ import {
 import { addRewardToInventoryState, createEmptyInventory } from './inventoryService.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import type { EncounterData } from '../engine/types.js';
+import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
+import { DEFAULT_SLOT_STATES } from '../domain/rooms/RoomSlot.js';
+import { checkpointFromRoom } from './soloRoomCheckpointService.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../game');
 const filenames = {
@@ -118,6 +121,29 @@ test('all three multiplayer slots, system-event lineage and checkpoint-compatibl
     assert.deepEqual(slots.map(s => s.contentRevision), [revision, revision, revision]);
     assert.equal(new Set(slots.map(s => s.snapshotId)).size, 1);
     assert.equal(slots[0].preparedEncounter.contentRevision, revision);
+
+    const room: EncounterRoom = {
+      roomId: 'room-one',
+      leaderPlayerId: 'leader',
+      participants: [{
+        playerId: 'leader', avatarId: 'a', slotIndex: 0, joinedAt: Date.now(),
+        choiceState: 'choosing', focusState: 'none', continuePressed: false,
+        lastInteractionAt: Date.now(),
+      }],
+      slotStates: DEFAULT_SLOT_STATES,
+      mergedExpansions: [0],
+      contentRevision: revision,
+      activeEncounterSnapshot: slots[0],
+      slotEncounterSnapshots: slots,
+      roomState: 'active_encounter',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const checkpoint = checkpointFromRoom(room);
+    assert.equal(checkpoint?.contentRevision, revision);
+    assert.equal(checkpoint?.activeEncounterSnapshot.contentRevision, revision);
+    assert.deepEqual(checkpoint?.slotEncounterSnapshots.map(s => s.contentRevision),
+      [revision, revision, revision]);
 
     const system = preparedSystemEncounter(2, first);
     const systemTitle = first.encounters['00002']!.mEncounterTitle;
