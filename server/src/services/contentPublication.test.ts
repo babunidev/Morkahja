@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
+import { getEncounters, invalidateGameDataCaches, saveEncounterEntry } from './gameData.js';
 import {
   ContentPublicationError, listContentRevisions, publishContentRevision, readContentPointer,
   readContentRevision, readPublishedContent, restoreContentRevision, validateContentBundle,
@@ -173,5 +174,30 @@ test('the actual checked-in five-dataset legacy baseline validates without chang
       baseRevision: null, publicationId: 'legacy_fixture_baseline', content: bundle,
     });
     assert.deepEqual(readContentRevision(root, imported.revision).content, bundle);
+  });
+});
+
+
+test('opt-in gameData reads a new revision without a restart and never mutates on legacy writes', () => {
+  temporaryRoot(root => {
+    const initial = publishContentRevision(root, { baseRevision: null, publicationId: 'runtime_initial_01', content: sample() });
+    const prior = process.env.MORKAHJA_CONTENT_ROOT;
+    process.env.MORKAHJA_CONTENT_ROOT = root;
+    try {
+      invalidateGameDataCaches();
+      assert.equal(getEncounters()['00001']?.mEncounterTitle, 'Test');
+      assert.throws(() => saveEncounterEntry('00001', {
+        ...sample().encounters['00001'], mEncounterTitle: 'Unexpected legacy write',
+      } as never), /CONTENT_PUBLISH_REQUIRED/);
+      assert.equal(getEncounters()['00001']?.mEncounterTitle, 'Test');
+      const updated = sample();
+      updated.encounters['00001'].mEncounterTitle = 'Published without restart';
+      publishContentRevision(root, { baseRevision: initial.revision, publicationId: 'runtime_update_02', content: updated });
+      assert.equal(getEncounters()['00001']?.mEncounterTitle, 'Published without restart');
+    } finally {
+      if (prior === undefined) delete process.env.MORKAHJA_CONTENT_ROOT;
+      else process.env.MORKAHJA_CONTENT_ROOT = prior;
+      invalidateGameDataCaches();
+    }
   });
 });
