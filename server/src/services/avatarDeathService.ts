@@ -61,8 +61,9 @@ export function applyFailedDeathState(
   avatar: AvatarDocument,
   inventory: AvatarDocument['inventory'],
   progression: AvatarPreDeathSnapshot['progression'],
+  contentRevision?: string | null,
 ): AvatarDocument {
-  const preDeathSnapshot = buildPreDeathSnapshot(avatar, inventory, progression);
+  const preDeathSnapshot = buildPreDeathSnapshot(avatar, inventory, progression, contentRevision);
 
   return {
     ...avatar,
