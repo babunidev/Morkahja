@@ -32,7 +32,7 @@ import {
   snapshotToRolls,
   toSelectedEncounterAction,
 } from '../types/encounterSnapshot.js';
-import { getEncounterById, getEncounters, getSolutionMap } from './gameData.js';
+import { getEncounterById, getEncounters, getGameRuntimeContentSnapshot, getSolutionMap } from './gameData.js';
 import {
   claimActiveEncounterInTransaction,
   clearActiveEncounter as deleteActiveEncounter,
@@ -158,7 +158,7 @@ export function selectNextEncounter(
   const previous = context.previousEncounter;
 
   if (previous && previous.mEncounterFollow > 0) {
-    const followUp = getEncounterById(previous.mEncounterFollow);
+    const followUp = getEncounterById(previous.mEncounterFollow, encounters);
     if (!followUp) {
       throw new Error(
         `Follow encounter not found: ${previous.mEncounterFollow}`,
@@ -271,6 +271,7 @@ export function generateSnapshotRolls(): Pick<
 export function randomRewardsForEncounter(
   encounter: EncounterData,
   excludeRewardIds: ReadonlySet<number> = new Set(),
+  solutions = getSolutionMap(),
 ): number[] {
   const amount = Math.max(0, encounter.mEncounterRewardAmount);
 
@@ -278,7 +279,7 @@ export function randomRewardsForEncounter(
     return [];
   }
 
-  const candidates = Object.values(getSolutionMap()).filter(
+  const candidates = Object.values(solutions).filter(
     (solution) => solution.mSolutionRewardType === encounter.mEncounterRewardType,
   );
 
@@ -312,12 +313,13 @@ export function buildEncounterSnapshot(
   encounter: EncounterData,
   preparedEncounter: PreparedEncounter,
   avatar?: AvatarDocument,
+  solutions = getSolutionMap(),
 ): EncounterSnapshot {
   const createdAt = Date.now();
   const rolls = generateSnapshotRolls();
   const rewardIds = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID
     ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE)
-    : randomRewardsForEncounter(encounter);
+    : randomRewardsForEncounter(encounter, new Set(), solutions);
 
   return {
     snapshotId: crypto.randomUUID(),
@@ -327,7 +329,7 @@ export function buildEncounterSnapshot(
     ...encounterToSnapshotFields(encounter),
     ...rolls,
     rewardIds,
-    prosperityRewardId: randomEssenceReward(),
+    prosperityRewardId: randomEssenceReward(solutions),
     resolved: false,
     state: 'created',
     createdAt,
@@ -369,6 +371,7 @@ export function withPrecomputedSnapshotRewards(
 
 function previousEncounterFromAvatar(
   avatar: AvatarDocument,
+  encounters = getEncounters(),
 ): EncounterData | null {
   const lastId = avatar.progression?.lastEncounterId;
 
@@ -376,15 +379,15 @@ function previousEncounterFromAvatar(
     return null;
   }
 
-  return getEncounterById(lastId) ?? null;
+  return getEncounterById(lastId, encounters) ?? null;
 }
 
-function getPreparedEncounter(snapshot: EncounterSnapshot): EncounterData {
+function getPreparedEncounter(snapshot: EncounterSnapshot, encounters = getEncounters()): EncounterData {
   if (!snapshot.preparedEncounter) {
     throw new Error(`Snapshot missing prepared encounter: ${snapshot.snapshotId}`);
   }
 
-  const encounter = getEncounterById(snapshot.preparedEncounter.encounterId);
+  const encounter = getEncounterById(snapshot.preparedEncounter.encounterId, encounters);
 
   if (!encounter) {
     throw new Error(
@@ -566,8 +569,9 @@ function raceRewardTypeForAvatar(avatar: AvatarDocument): 40 | 41 | 42 | 43 {
 
 function randomSolutionByPredicate(
   predicate: (solution: ReturnType<typeof getSolutionMap>[string]) => boolean,
+  solutions = getSolutionMap(),
 ): number | null {
-  const candidates = Object.values(getSolutionMap()).filter(predicate);
+  const candidates = Object.values(solutions).filter(predicate);
 
   if (candidates.length === 0) {
     return null;
@@ -576,12 +580,13 @@ function randomSolutionByPredicate(
   return candidates[randomInt(0, candidates.length - 1)].mSolutionID;
 }
 
-function randomEssenceReward(): number | null {
+function randomEssenceReward(solutions = getSolutionMap()): number | null {
   return randomSolutionByPredicate(
     (solution) =>
       solution.mSolutionInventoryType === 3 &&
       solution.mSolutionRewardType === 3 &&
       solution.mSolutionType === 15,
+    solutions,
   );
 }
 
@@ -902,22 +907,25 @@ export async function createEncounter(
   }
 
   const unlockedExpansions = await getPlayerUnlockedExpansions(playerId);
+  // Use one revision for the selected encounter, prepared encounter and rewards.
+  const content = getGameRuntimeContentSnapshot();
 
   const context: EncounterSelectionContext = {
     unlockedExpansions,
-    previousEncounter: previousEncounterFromAvatar(avatar),
+    previousEncounter: previousEncounterFromAvatar(avatar, content.encounters),
   };
 
   const encounter = existing?.resolved && existing.preparedEncounter
-    ? getPreparedEncounter(existing)
-    : selectNextEncounter(context);
-  const preparedEncounter = prepareNextEncounter(encounter, unlockedExpansions);
+    ? getPreparedEncounter(existing, content.encounters)
+    : selectNextEncounter(context, content.encounters);
+  const preparedEncounter = prepareNextEncounter(encounter, unlockedExpansions, content.encounters);
   const snapshot = buildEncounterSnapshot(
     playerId,
     avatarId,
     encounter,
     preparedEncounter,
     avatar,
+    content.solutions,
   );
   const activeSnapshot: EncounterSnapshot = {
     ...snapshot,
