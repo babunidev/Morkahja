@@ -78,7 +78,7 @@ The commands are:
     npm run content:backup -- --destination /absolute/off-host/mount --confirm-off-host
     npm run content:restore -- --backup /absolute/off-host/mount/BACKUP_DIRECTORY --destination /var/lib/morkahja/content-restored-YYYYMMDD --create-new-root
 
-The backup utility requires MORKAHJA_CONTENT_ROOT to be set in the environment. It requires an existing absolute destination and an explicit off-host confirmation. It acquires the same exclusive .publication.lock used by publishing, so a publication cannot change the current pointer while the snapshot is assembled. If the lock is already held, backup fails rather than racing a publication.
+The backup utility requires MORKAHJA_CONTENT_ROOT to be set in the environment. It requires an existing absolute destination that is itself a mountpoint, plus an explicit off-host confirmation. It acquires the same exclusive .publication.lock used by publishing, so a publication cannot change the current pointer while the snapshot is assembled. If the lock is already held, backup fails rather than racing a publication.
 
 Each versioned directory contains:
 - backup.json, a format-versioned inventory of every included file, byte length and SHA-256 digest;
