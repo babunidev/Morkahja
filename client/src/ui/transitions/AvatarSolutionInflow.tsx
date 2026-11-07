@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import solutionData from '../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../content/clientContent.js';
 import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
 import {
   AVATAR_ENTER_CENTER_GLOW_MS,
@@ -8,7 +8,7 @@ import {
   AVATAR_ENTER_TO_GAME_MS,
 } from './avatarEnterTransition.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+
 
 /** Solutions are seeded across the avatar's whole travel (centre + glow + game). */
 const SPAWN_WINDOW_MS =
@@ -34,7 +34,7 @@ interface SolutionRecord {
   mSolutionIconName?: string;
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionRecords(): Record<string, SolutionRecord> { return getClientContent().solutions as Record<string, SolutionRecord>; }
 
 const containerStyle: CSSProperties = {
   position: 'fixed',
@@ -66,9 +66,9 @@ function inventorySolutionSrcs(inventory: AvatarInventory | undefined): string[]
 
   const srcs: string[] = [];
   for (const item of items) {
-    const iconName = solutionsById[String(item.solutionId)]?.mSolutionIconName;
+    const iconName = solutionRecords()[String(item.solutionId)]?.mSolutionIconName;
     if (iconName) {
-      srcs.push(`${SOLUTION_IMAGE_ROOT}/${iconName}.webp`);
+      srcs.push(contentImageUrl('solutions', iconName));
     }
   }
 
@@ -101,6 +101,7 @@ interface Flier {
 }
 
 export function AvatarSolutionInflow({ avatar }: { avatar: PersistedAvatar }) {
+  const content = useClientContent();
   const containerRef = useRef<HTMLDivElement | null>(null);
   // Capture the inventory once when the animation begins.
   const inventoryRef = useRef<AvatarInventory | undefined>(avatar.inventory);
