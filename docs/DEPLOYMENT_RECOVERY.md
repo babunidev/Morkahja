@@ -53,7 +53,7 @@ After provisioning the directories and exporting those variables, run:
     npm run content:backup -- --destination "$MORKAHJA_CONTENT_BACKUP_ROOT" --confirm-off-host
     npm run deploy:application
 
-The backup command is intentionally explicit. The backup destination must already be mounted and writable; the utility will not create a local fallback if the mount is absent.
+The backup command is intentionally explicit. The backup destination must be the exact mounted filesystem root and writable. Both the backup CLI and deployment preflight call mountpoint -q; if the mount is absent, an ordinary directory at that path is rejected rather than used as a local fallback.
 
 ## Nginx delivery for managed artwork
 
