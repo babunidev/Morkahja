@@ -132,7 +132,7 @@ Details: [Phase 7 gameplay revisions](docs/CONTENT_GAMEPLAY.md). Draft implement
 - [x] Block backup during an active publication lock; restore only into a new, non-existing content root and verify it before returning.
 - [x] Add an Nginx media proxy include that preserves revision-aware API cache headers without exposing the private content directory.
 - [x] Document application rollback separately from content rollback and define the compatibility checks required for old application versions.
-- [x] Verify 4/4 backup/restore and 4/4 deployment-isolation tests; all 38 focused content/deployment tests, static-data verification and the standalone frontend build passed on [CI run 42341790066](https://github.com/babunidev/Morkahja/actions/runs/42341959400). The complete release gate still fails on eight pre-existing TypeScript errors in three server test files.
+- [x] Verify 4/4 backup/restore and 6/6 deployment-isolation tests; all 40 focused content/deployment tests, static-data verification and the standalone frontend build passed on [CI run 42342330337](https://github.com/babunidev/Morkahja/actions/runs/42342330337). The complete release gate still fails on eight pre-existing TypeScript errors in three server test files.
 - [ ] Provision a real off-host backup mount, encryption, retention and scheduled backup operation; rehearse a complete restore.
 - [ ] Integrate the Nginx include on the actual HTTPS host, run nginx -t, reload, and verify current/historical media requests and headers.
 - [ ] Pass the complete release gate, test the exact application rollback target against a restored content copy, and approve a staged production cutover.
