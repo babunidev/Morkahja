@@ -76,7 +76,7 @@ export function deployApplication(env = loadEnvironment()) {
   ], repositoryRoot, env);
   // This is the only --delete destination: a dedicated static web root, never the content store.
   run('rsync', [
-    '--archive', '--delete-delay', '--exclude=/.well-known/',
+    '--archive', '--delete-delay', '--exclude=/.well-known/', '--exclude=/.morkahja-static-root',
     builtClient + '/', refreshed.web + '/',
   ], repositoryRoot, env);
   process.stdout.write('\nApplication deployment completed. Published content was not modified.\n');
