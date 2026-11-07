@@ -4,7 +4,7 @@ import solutionsBaseline from '../data/game/solutiondata.json';
 import expansionsBaseline from '../data/game/expansiondata.json';
 import framesBaseline from '../data/game/frames.json';
 import portraitsBaseline from '../data/game/portraits.json';
-import { API_BASE_URL } from '../api/http.js';
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? '';
 
 /**
  * One coherent client data snapshot. Legacy fixtures are kept *only here* for
