@@ -1343,6 +1343,7 @@ export function alignSnapshotToRoomShell(
     roomId: shell.roomId,
     state: shell.state,
     resolved: shell.resolved,
+    contentRevision: shell.contentRevision,
   };
 }
 
@@ -1371,6 +1372,7 @@ export function buildSlotEncounterSnapshots(
     playerId: string,
     avatarId: string,
   ) => AvatarDocument | undefined,
+  content: GameRuntimeContentSnapshot = getGameRuntimeContentSnapshot(),
 ): SlotEncounterSnapshots {
   const shellBase = buildEncounterSnapshot(
     leaderPlayerId,
@@ -1378,6 +1380,8 @@ export function buildSlotEncounterSnapshots(
     encounter,
     preparedEncounter,
     leaderAvatar,
+    content.solutions,
+    content.revision,
   );
   const shell: EncounterSnapshot = {
     ...shellBase,
@@ -1401,10 +1405,12 @@ export function buildSlotEncounterSnapshots(
       encounter,
       preparedEncounter,
       avatar,
+      content.solutions,
+      content.revision,
     );
 
     if (encounter.mEncounterID !== LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
-      const rewardIds = randomRewardsForEncounter(encounter, claimedRewardIds);
+      const rewardIds = randomRewardsForEncounter(encounter, claimedRewardIds, content.solutions);
       slotSnapshot = {
         ...slotSnapshot,
         rewardIds,
@@ -1434,6 +1440,7 @@ function computeParticipantOutcome(
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
 ): PrepareParticipantOutcomeResult {
+  const content = getGameRuntimeContentSnapshotForRevision(encounterSnapshot.contentRevision);
   const snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
   const actionForResolution = selectedActionForSnapshot(snapshot, action);
   const encounter = snapshotToEncounterData(snapshot);
@@ -1441,7 +1448,7 @@ function computeParticipantOutcome(
   const baseResolution = runDeterministicResolver(
     encounter,
     flattenInventorySolutionIds(inventory),
-    getSolutionMap(),
+    content.solutions,
     rollsForResolution,
     toSelectedEncounterAction(actionForResolution),
     snapshot.rewardIds,
@@ -1454,8 +1461,10 @@ function computeParticipantOutcome(
       snapshot,
       baseResolution,
       selectedRollOutcome,
+      content.solutions,
     ),
     selectedRollOutcome,
+    content.solutions,
   );
   const progressionResult = applyProgressionForEncounter(
     progression,
@@ -1475,6 +1484,7 @@ function computeParticipantOutcome(
       inventory,
       avatar,
       selectedRollOutcome,
+      content.solutions,
     );
     nextInventory = deathOutcome.nextInventory;
     resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
@@ -1483,6 +1493,7 @@ function computeParticipantOutcome(
       inventory,
       resolution.rewards,
       progressionResult.progression.level,
+      content.solutions,
     );
   } else {
     const inventoryApply = applyEncounterInventoryChanges(
