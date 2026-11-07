@@ -32,7 +32,7 @@ import {
   snapshotToRolls,
   toSelectedEncounterAction,
 } from '../types/encounterSnapshot.js';
-import { getEncounterById, getEncounters, getGameRuntimeContentSnapshot, getSolutionMap } from './gameData.js';
+import { getEncounterById, getEncounters, getGameRuntimeContentSnapshot, getGameRuntimeContentSnapshotForRevision, getSolutionMap, type GameRuntimeContentSnapshot } from './gameData.js';
 import {
   claimActiveEncounterInTransaction,
   clearActiveEncounter as deleteActiveEncounter,
@@ -192,6 +192,7 @@ export function prepareNextEncounter(
   currentEncounter: EncounterData,
   unlockedExpansions: number[],
   encounters: EncounterDataMap = getEncounters(),
+  contentRevision?: string | null,
 ): PreparedEncounter {
   void currentEncounter;
 
@@ -203,6 +204,7 @@ export function prepareNextEncounter(
   return {
     encounterId: randomEncounter.mEncounterID,
     followMode: 'random',
+    ...(contentRevision !== undefined ? { contentRevision } : {}),
   };
 }
 
@@ -235,17 +237,20 @@ function selectRandomPreparedEncounter(
   throw new Error('Failed to prepare a valid random encounter after rerolls');
 }
 
-export function preparedSystemEncounter(encounterId: number): PreparedEncounter {
-  const encounter = getEncounterById(encounterId);
+export function preparedSystemEncounter(
+  encounterId: number,
+  content: GameRuntimeContentSnapshot = getGameRuntimeContentSnapshot(),
+): PreparedEncounter {
+  const encounter = getEncounterById(encounterId, content.encounters);
 
   if (!encounter) {
     throw new Error(`System encounter not found: ${encounterId}`);
   }
 
-  getSolutionMap();
   return {
     encounterId,
     followMode: 'system',
+    contentRevision: content.revision,
   };
 }
 
@@ -314,17 +319,19 @@ export function buildEncounterSnapshot(
   preparedEncounter: PreparedEncounter,
   avatar?: AvatarDocument,
   solutions = getSolutionMap(),
+  contentRevision: string | null = null,
 ): EncounterSnapshot {
   const createdAt = Date.now();
   const rolls = generateSnapshotRolls();
   const rewardIds = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID
-    ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE)
+    ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE, solutions)
     : randomRewardsForEncounter(encounter, new Set(), solutions);
 
   return {
     snapshotId: crypto.randomUUID(),
     playerId,
     avatarId,
+    contentRevision,
     encounterId: encounter.mEncounterID,
     ...encounterToSnapshotFields(encounter),
     ...rolls,
@@ -334,7 +341,7 @@ export function buildEncounterSnapshot(
     state: 'created',
     createdAt,
     actionReadyAt: createdAt + ENCOUNTER_ACTION_ENABLE_DELAY_MS,
-    preparedEncounter,
+    preparedEncounter: { ...preparedEncounter, contentRevision },
   };
 }
 
@@ -350,13 +357,14 @@ export function withPrecomputedSnapshotRewards(
   }
 
   const encounter = snapshotToEncounterData(snapshot);
+  const solutions = getGameRuntimeContentSnapshotForRevision(snapshot.contentRevision).solutions;
   const rewardIds = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
     ? (
       hasRewardIds && Array.isArray(snapshot.rewardIds) && snapshot.rewardIds.length > 0
         ? snapshot.rewardIds
-        : levelUpRewardIdsForSnapshot(avatar, snapshot.rollE)
+        : levelUpRewardIdsForSnapshot(avatar, snapshot.rollE, solutions)
     )
-    : randomRewardsForEncounter(encounter);
+    : randomRewardsForEncounter(encounter, new Set(), solutions);
 
   return {
     ...snapshot,
@@ -365,7 +373,7 @@ export function withPrecomputedSnapshotRewards(
       : rewardIds,
     prosperityRewardId: hasProsperityReward
       ? snapshot.prosperityRewardId
-      : randomEssenceReward(),
+      : randomEssenceReward(solutions),
   };
 }
 
@@ -382,7 +390,7 @@ function previousEncounterFromAvatar(
   return getEncounterById(lastId, encounters) ?? null;
 }
 
-function getPreparedEncounter(snapshot: EncounterSnapshot, encounters = getEncounters()): EncounterData {
+function getPreparedEncounter(snapshot: EncounterSnapshot, encounters = getGameRuntimeContentSnapshotForRevision(snapshot.contentRevision).encounters): EncounterData {
   if (!snapshot.preparedEncounter) {
     throw new Error(`Snapshot missing prepared encounter: ${snapshot.snapshotId}`);
   }
@@ -428,6 +436,7 @@ function getNextEncounterAfterResolution(
   selectedRollOutcome: RollOutcome | null,
   unlockedExpansions: number[],
 ): EncounterData {
+  const encounters = getGameRuntimeContentSnapshotForRevision(snapshot.contentRevision).encounters;
   if (snapshot.preparedEncounter?.followMode === 'system') {
     return getPreparedEncounter(snapshot);
   }
@@ -436,7 +445,7 @@ function getNextEncounterAfterResolution(
     snapshot.encounterFollow > 0 &&
     isFollowOutcome(selectedRollOutcome)
   ) {
-    const followEncounter = getEncounterById(snapshot.encounterFollow);
+    const followEncounter = getEncounterById(snapshot.encounterFollow, encounters);
 
     if (!followEncounter) {
       throw new Error(`Follow encounter not found: ${snapshot.encounterFollow}`);
@@ -445,22 +454,23 @@ function getNextEncounterAfterResolution(
     return followEncounter;
   }
 
-  return selectRandomPreparedEncounter(unlockedExpansions, getEncounters());
+  return selectRandomPreparedEncounter(unlockedExpansions, encounters);
 }
 
 /** Next encounter after witnessed system events complete — uses origin lineage, not system snapshot. */
 export function resolveNextEncounterForRoom(
   lineage: RoomEncounterLineage,
   mergedExpansions: number[],
+  content: GameRuntimeContentSnapshot = getGameRuntimeContentSnapshot(),
 ): { encounter: EncounterData; prepared: PreparedEncounter } {
   if (lineage.preparedEncounter?.followMode === 'system') {
-    const encounter = getEncounterById(lineage.preparedEncounter.encounterId);
+    const encounter = getEncounterById(lineage.preparedEncounter.encounterId, content.encounters);
     if (!encounter) {
       throw new Error(
         `Prepared system encounter not found: ${lineage.preparedEncounter.encounterId}`,
       );
     }
-    const prepared = prepareNextEncounter(encounter, mergedExpansions);
+    const prepared = prepareNextEncounter(encounter, mergedExpansions, content.encounters, content.revision);
     return { encounter, prepared };
   }
 
@@ -469,32 +479,33 @@ export function resolveNextEncounterForRoom(
     lineage.originSuccess &&
     isFollowOutcome(lineage.originRollOutcome)
   ) {
-    const followEncounter = getEncounterById(lineage.originEncounterFollow);
+    const followEncounter = getEncounterById(lineage.originEncounterFollow, content.encounters);
     if (!followEncounter) {
       throw new Error(`Follow encounter not found: ${lineage.originEncounterFollow}`);
     }
     return {
       encounter: followEncounter,
-      prepared: prepareNextEncounter(followEncounter, mergedExpansions),
+      prepared: prepareNextEncounter(followEncounter, mergedExpansions, content.encounters, content.revision),
     };
   }
 
   const encounter = selectNextEncounter({
     unlockedExpansions: mergedExpansions,
     previousEncounter: null,
-  }, getEncounters());
+  }, content.encounters);
   return {
     encounter,
-    prepared: prepareNextEncounter(encounter, mergedExpansions),
+    prepared: prepareNextEncounter(encounter, mergedExpansions, content.encounters, content.revision),
   };
 }
 
 export function buildLineagePreparedEncounter(
   deathTriggered: boolean,
   leveledUp: boolean,
+  content: GameRuntimeContentSnapshot = getGameRuntimeContentSnapshot(),
 ): PreparedEncounter | undefined {
   if (deathTriggered && leveledUp) {
-    return preparedSystemEncounter(ROOM_LEVEL_UP_ID);
+    return preparedSystemEncounter(ROOM_LEVEL_UP_ID, content);
   }
   return undefined;
 }
