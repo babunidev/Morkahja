@@ -51,10 +51,6 @@ export function verifyDeploymentIsolation({
   const content = requiredDirectory(contentRoot, 'DEPLOY_CONTENT_ROOT_REQUIRED');
   const web = requiredDirectory(webRoot, 'DEPLOY_WEB_ROOT_REQUIRED');
   const backup = requiredDirectory(backupRoot, 'DEPLOY_BACKUP_ROOT_REQUIRED');
-  if (requireBackupMount) {
-    try { execFileSync('mountpoint', ['-q', backup], { stdio: 'ignore' }); }
-    catch { fail('DEPLOY_BACKUP_ROOT_NOT_MOUNTPOINT'); }
-  }
 
   if (overlaps(content, repository)) fail('DEPLOY_CONTENT_ROOT_OVERLAPS_APPLICATION');
   if (overlaps(web, repository)) fail('DEPLOY_WEB_ROOT_OVERLAPS_APPLICATION');
@@ -62,6 +58,10 @@ export function verifyDeploymentIsolation({
   if (overlaps(content, web)) fail('DEPLOY_CONTENT_ROOT_OVERLAPS_WEB_ROOT');
   if (overlaps(content, backup)) fail('DEPLOY_BACKUP_ROOT_OVERLAPS_CONTENT_ROOT');
   if (overlaps(web, backup)) fail('DEPLOY_BACKUP_ROOT_OVERLAPS_WEB_ROOT');
+  if (requireBackupMount) {
+    try { execFileSync('mountpoint', ['-q', backup], { stdio: 'ignore' }); }
+    catch { fail('DEPLOY_BACKUP_ROOT_NOT_MOUNTPOINT'); }
+  }
 
   return { repository, content, web, backup };
 }
