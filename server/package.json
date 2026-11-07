@@ -8,6 +8,7 @@
     "dev": "tsx src/server.ts",
     "start": "tsx src/server.ts",
     "test:encounter": "tsx src/runEncounterTest.ts",
+    "test:content-publication": "tsx --test src/services/contentPublication.test.ts",
     "test:inventory": "tsx src/tests/initialInventory.test.ts",
     "test:session-auth": "tsx src/services/sessionService.test.ts",
     "test:rooms": "tsx src/services/roomService.test.ts && tsx src/services/soloRoomCheckpointService.test.ts && tsx src/services/avatarDeathService.test.ts",
