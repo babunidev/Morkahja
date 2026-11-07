@@ -103,6 +103,9 @@ test('backup refuses to run without explicit off-host confirmation or while publ
     assert.throws(() => createContentBackup(roots.source, roots.backups, {
       confirmOffHost: false, repoRoot,
     }), /CONTENT_BACKUP_OFF_HOST_CONFIRMATION_REQUIRED/);
+    assert.throws(() => createContentBackup(roots.source, roots.backups, {
+      confirmOffHost: true, requireMountpoint: true, repoRoot,
+    }), /CONTENT_BACKUP_DESTINATION_NOT_MOUNTPOINT/);
     writeFileSync(join(roots.source, '.publication.lock'), 'active\n', { flag: 'wx' });
     assert.throws(() => createContentBackup(roots.source, roots.backups, {
       confirmOffHost: true, repoRoot,
