@@ -62,7 +62,7 @@ export function verifyDeploymentIsolation({
   let webMarkerInfo;
   try { webMarkerInfo = lstatSync(webMarkerPath); } catch { fail('DEPLOY_WEB_ROOT_NOT_MARKED'); }
   if (webMarkerInfo.isSymbolicLink() || !webMarkerInfo.isFile() ||
-      readFileSync(webMarkerPath, 'utf8') !== 'morkahja-static-root-v1\\n') {
+      readFileSync(webMarkerPath, 'utf8') !== 'morkahja-static-root-v1\n') {
     fail('DEPLOY_WEB_ROOT_NOT_MARKED');
   }
   if (requireBackupMount) {
