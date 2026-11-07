@@ -395,6 +395,10 @@ function getPreparedEncounter(snapshot: EncounterSnapshot, encounters = getGameR
     throw new Error(`Snapshot missing prepared encounter: ${snapshot.snapshotId}`);
   }
 
+  if (snapshot.preparedEncounter.contentRevision !== undefined &&
+      snapshot.preparedEncounter.contentRevision !== (snapshot.contentRevision ?? null)) {
+    throw new Error('CONTENT_PREPARED_REVISION_MISMATCH');
+  }
   const encounter = getEncounterById(snapshot.preparedEncounter.encounterId, encounters);
 
   if (!encounter) {
@@ -463,6 +467,10 @@ export function resolveNextEncounterForRoom(
   mergedExpansions: number[],
   content: GameRuntimeContentSnapshot = getGameRuntimeContentSnapshot(),
 ): { encounter: EncounterData; prepared: PreparedEncounter } {
+  if (lineage.preparedEncounter?.contentRevision !== undefined &&
+      lineage.preparedEncounter.contentRevision !== content.revision) {
+    throw new Error('CONTENT_PREPARED_REVISION_MISMATCH');
+  }
   if (lineage.preparedEncounter?.followMode === 'system') {
     const encounter = getEncounterById(lineage.preparedEncounter.encounterId, content.encounters);
     if (!encounter) {
@@ -649,6 +657,7 @@ function applyLevelUpInventoryChanges(
       next,
       rewardId,
       Math.max(1, (solution.mSolutionUses ?? 1) + (newLevel + 1)),
+      solutionMap,
     );
   }
 
@@ -731,7 +740,7 @@ function applyDeathEncounterOutcome(
     }
 
     return {
-      nextInventory: addRewardToInventoryState(inventory, essenceReward, essenceUses),
+      nextInventory: addRewardToInventoryState(inventory, essenceReward, essenceUses, solutions),
       rewardIds: [essenceReward],
     };
   }
@@ -1118,6 +1127,7 @@ export async function continueEncounter(
           selectedRollOutcome,
           encounterSnapshot.encounterDifficulty,
           encounterSnapshot.encounterRewardAmount,
+          { solutions: content.solutions },
         );
         nextInventory = inventoryApply.inventory;
         resolution = {
@@ -1215,6 +1225,7 @@ export async function continueEncounter(
             ...progressionResult.progression,
             lastEncounterId: encounterSnapshot.encounterId,
           },
+          encounterSnapshot.contentRevision,
         );
       }
 
@@ -1504,6 +1515,7 @@ function computeParticipantOutcome(
       selectedRollOutcome,
       snapshot.encounterDifficulty,
       snapshot.encounterRewardAmount,
+      { solutions: content.solutions },
     );
     nextInventory = inventoryApply.inventory;
     resolution = {
@@ -1555,6 +1567,7 @@ function computeParticipantOutcome(
         ...progressionResult.progression,
         lastEncounterId: snapshot.encounterId,
       },
+      snapshot.contentRevision,
     );
   }
 
