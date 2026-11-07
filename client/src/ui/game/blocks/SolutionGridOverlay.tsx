@@ -6,7 +6,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import solutionData from '../../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../../content/clientContent.js';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
   anchorXForGridColumn,
@@ -24,7 +24,7 @@ import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 
 const OVERLAY_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+
 
 const GRID_COLUMNS = 5;
 
@@ -86,7 +86,7 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
   77: 'Resurrection Item',
 };
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionRecords(): Record<string, SolutionRecord> { return getClientContent().solutions as Record<string, SolutionRecord>; }
 
 /** Above encounter art/lore inside the encounter row; header row (z-index 50) stays on top. */
 const OVERLAY_Z_INDEX = 26;
@@ -182,7 +182,7 @@ const emptyTextStyle: CSSProperties = {
 };
 
 function solutionImagePath(iconName: string): string {
-  return `${SOLUTION_IMAGE_ROOT}/${iconName}.webp`;
+  return contentImageUrl('solutions', iconName);
 }
 
 function solutionTypeLabel(type: number): string {
@@ -210,7 +210,7 @@ function inventoryEntries(
         continue;
       }
 
-      const solution = solutionsById[String(item.solutionId)];
+      const solution = solutionRecords()[String(item.solutionId)];
 
       if (!solution || !acceptedInventoryTypes.has(solution.mSolutionInventoryType)) {
         continue;
@@ -254,6 +254,7 @@ export function SolutionGridOverlay({
   sourceContainer: 'spellbook' | 'items';
   visible: boolean;
 }) {
+  const content = useClientContent();
   const overlayRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const activeTriggerRef = useRef<HTMLElement | null>(null);
@@ -268,7 +269,7 @@ export function SolutionGridOverlay({
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const items = useMemo(
     () => inventoryEntries(inventory, sourceContainer, inventoryType),
-    [inventory, inventoryType, sourceContainer],
+    [inventory, inventoryType, sourceContainer, content.revision],
   );
   const itemSignature = useMemo(
     () => items.map((item) => `${item.solutionId}:${item.uses}`).join(','),
