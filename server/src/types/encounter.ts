@@ -19,6 +19,8 @@ export type EncounterFollowMode = 'follow' | 'random' | 'system';
 export interface PreparedEncounter {
   encounterId: number;
   followMode: EncounterFollowMode;
+  /** Content revision used to preselect this encounter; null means legacy. */
+  contentRevision?: string | null;
 }
 
 /** Authoritative server-side encounter fate snapshot stored in persistence. */
