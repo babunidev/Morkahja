@@ -40,3 +40,12 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Made `/game-data/status` count a single coherent snapshot and report its revision.
 - Added isolated HTTP/runtime regression tests, CI wiring and explicit documentation of the pending media/client/active-session migration.
 - Production behavior remains unchanged until the opt-in content root and remaining stages are separately approved and deployed.
+
+## 2026-11-07 — Secure revisioned content administration (draft PR #12)
+
+- Reused and hardened bearer API-key authentication with constant-time digest comparison; introduced admin-specific JSON body caps and read/write request throttling.
+- Added authenticated revision/status reads and stateless create/update operations for encounters, solutions, expansions, frames and portraits.
+- Added validated atomic publishing, conflict/idempotency rules, publication confirmation and explicit non-destructive rollback through the existing revision store.
+- Added private durable administrative audit records and conservative image-reference checks; managed WebP asset staging remains unavailable.
+- Disabled the five older unsafe direct-write endpoints even with legacy content mode enabled.
+- Registered focused HTTP security/publication tests in release CI; production configuration and live player data were not modified.
