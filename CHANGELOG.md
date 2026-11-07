@@ -76,3 +76,11 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Strengthened publication and admin validation against deletions and semantic repurposing of established content IDs, independently of personal player data.
 - Added isolated tests that publish new content while simulated solo/multiplayer snapshots remain active, including historical lookup, reward behavior, legacy compatibility and corrupt history.
 - No player/database migration, live publishing, frontend historical presentation pinning or production deployment was performed.
+
+## 2026-11-07 — Deployment and content recovery (draft PR #16)
+
+- Added deployment preflight checks that reject overlap between the Git checkout, persistent content root, static web root and off-host backup destination.
+- Added an application-only deployment runner that backs up published content before Git pull, scopes rsync deletion to the dedicated frontend web root, runs release gates and reloads PM2; it never publishes content.
+- Added versioned content backup verification and restore-to-new-root commands, preserving all committed JSON revisions, referenced WebP objects and the administrative audit log.
+- Added an Nginx proxy include for revision-aware media URLs and documented independent application/content rollback procedures.
+- Added focused backup/restore and deployment-isolation tests to the release workflow. No live host, Nginx, PM2, content root, backup mount or player data was changed.
