@@ -101,6 +101,18 @@ test('new revision images update atomically; corrupt/unavailable responses keep 
     assert.equal(getClientContent().revision, secondRevision);
     assert.equal(getClientContent(), updated);
 
+    const incompleteRecord = structuredClone(second);
+    delete (incompleteRecord.encounters as any)['20001'].mEncounterText;
+    next = incompleteRecord;
+    await assert.rejects(() => refreshClientContent(), /Incomplete or invalid published game records/);
+    assert.equal(getClientContent(), updated);
+
+    const missingRelation = structuredClone(second);
+    (missingRelation.encounters as any)['20001'].mEncounterFollow = 999999;
+    next = missingRelation;
+    await assert.rejects(() => refreshClientContent(), /references incomplete content/);
+    assert.equal(getClientContent(), updated);
+
     next = { error: 'CONTENT_UNAVAILABLE' };
     globalThis.fetch = async () => response(next, 503);
     await assert.rejects(() => refreshClientContent(), /unavailable/i);
