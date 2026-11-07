@@ -20,6 +20,7 @@
     "test:content-artwork": "npm run test:content-artwork --prefix server",
     "test:content-gameplay": "npm run test:content-gameplay --prefix server",
     "test:content-backup": "npm run test:content-backup --prefix server",
+    "test:deployment": "node --test scripts/deployment.test.mjs",
     "content:backup": "npm --prefix server run content:backup --",
     "content:restore": "npm --prefix server run content:restore --",
     "deploy:preflight": "node scripts/verify-deployment-isolation.mjs",
