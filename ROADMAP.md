@@ -54,3 +54,22 @@ Implementation details: [Phase 2 storage](docs/CONTENT_STORAGE.md). None of thes
 - [ ] Add authenticated publishing, managed WebP, frontend dynamic content and a reviewed production migration.
 
 See [runtime integration](docs/CONTENT_RUNTIME.md). Checked work describes a draft branch, **not** deployed behavior.
+
+## Phase 4 — secure administration API (draft PR #12, 2026-11-07)
+
+- [x] Reuse the existing administrator API key and harden comparison; return 401/503 on invalid or missing credentials.
+- [x] Expose authenticated five-category content reads, revision history and publication receipt status.
+- [x] Support atomic creation and editing in all five categories via stateless, base-revision-checked record changes.
+- [x] Validate complete candidate bundles, required schema fields, ID keys, cross-record relationships and existing image identifiers.
+- [x] Add explicit validate-before-publish route, with independent validation again at publication.
+- [x] Return revision conflicts and reject reused publication IDs with different content; allow exact current-publication retries.
+- [x] Confirm published pointers, preserve revision history and support explicit non-destructive rollback.
+- [x] Retire five unsafe legacy per-record write POSTs with HTTP 410, regardless of legacy content-loading mode.
+- [x] Add bounded admin JSON bodies (256 KiB), single-process rate limits and private fsynced audit events.
+- [x] Implement and execute focused admin HTTP tests on isolated content roots (CI details in PR #12).
+- [ ] Complete a passing full release workflow; baseline TypeScript errors outside content integration remain.
+- [ ] Add managed WebP upload/asset-existence validation; asset staging currently returns HTTP 501.
+- [ ] Complete active/room content pinning and operational TLS/proxy, backups and security review before enabling writes in production.
+- [ ] Review/merge PRs #10, #11 and #12 in dependency order, then integrate the separately maintained local admin UI.
+
+Detailed API, security assumptions and limitations: [Phase 4 administration](docs/CONTENT_ADMIN_API.md). All checked code is a **draft-branch implementation**, not an active production service.
