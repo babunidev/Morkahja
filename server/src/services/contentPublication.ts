@@ -156,7 +156,7 @@ export function validateContentBundle(input: unknown): asserts input is ContentB
  * active rooms. No deletion or semantic repurposing of those identifiers is
  * allowed, even if a database happens not to contain a matching row today.
  */
-function preserveIds(previous: ContentBundle, next: ContentBundle): void {
+export function assertCompatibleContentIdentity(previous: ContentBundle, next: ContentBundle): void {
   const stableFields: Record<string, readonly string[]> = {
     encounters: ['mEncounterID', 'mEncounterType', 'mEncounterExpansion'],
     solutions: ['mSolutionID', 'mSolutionInventoryType', 'mSolutionType'],
@@ -300,7 +300,7 @@ export function publishContentRevision(root: string, request: PublicationRequest
     const existing = listContentRevisions(root).find(m => m.publicationId === request.publicationId);
     if (existing) fail('CONTENT_PUBLICATION_ID_REUSED');
     if ((current?.revision ?? null) !== request.baseRevision) fail('CONTENT_REVISION_CONFLICT');
-    if (current) preserveIds(current.content, normalized);
+    if (current) assertCompatibleContentIdentity(current.content, normalized);
     if (request.operation === 'rollback' && !request.restoredFrom) fail('CONTENT_INVALID_ROLLBACK');
     const rollbackAssets = request.operation === 'rollback'
       ? (readContentRevision(root, request.restoredFrom!).manifest.assets ?? {})
