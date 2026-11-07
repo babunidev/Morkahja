@@ -109,6 +109,7 @@ import {
   clearSoloCheckpointForAvatar,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
+  type SoloRoomCheckpoint,
 } from './soloRoomCheckpointService.js';
 
 /**
@@ -684,6 +685,11 @@ async function expansionsForRoomLeader(room: EncounterRoom): Promise<number[]> {
 }
 
 function contentForRoom(room: EncounterRoom): GameRuntimeContentSnapshot {
+  if (room.contentRevision !== undefined &&
+      room.activeEncounterSnapshot.contentRevision !== undefined &&
+      room.contentRevision !== room.activeEncounterSnapshot.contentRevision) {
+    throw new Error('CONTENT_ROOM_REVISION_MISMATCH');
+  }
   return getGameRuntimeContentSnapshotForRevision(
     room.contentRevision ?? room.activeEncounterSnapshot.contentRevision,
   );
