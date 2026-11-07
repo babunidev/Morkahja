@@ -19,3 +19,7 @@ The current root package declares **`0.9.0-beta.2.2`** with npm workspaces `clie
 In the historical May 23 entries, the project gained PM2/nginx deployment configuration, a same-origin API default and documented HTTPS requirements for Web Crypto-based onboarding. The journal notes a Hetzner public alpha. That historic deployment evidence does **not** verify current availability, credentials, backup policy or security. The pre-invite review itself records additional safeguards as needed before wider launch.
 
 **Boundary:** This is a static examination of repository metadata and historical journal, not a penetration test, live-environment audit, database migration or deployment verification.
+
+## Proposed dynamic content publication (not implemented)
+
+A repository inspection on 2026-11-07 identified Git-tracked server JSON, multiple build-time client JSON imports, and existing but non-atomic administrator content writes. The proposed revisioned, out-of-tree content storage and publication boundary is recorded in [Content publication design](CONTENT_PUBLICATION.md). No game runtime or deployment changes have been made by this proposal; it is not a live architecture claim.
