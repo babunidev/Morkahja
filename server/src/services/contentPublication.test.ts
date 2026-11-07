@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import {
   ContentPublicationError, listContentRevisions, publishContentRevision, readContentPointer,
@@ -153,5 +154,24 @@ test('enforces exclusive publication lock and supports explicit rollback as a ne
     assert.equal((readPublishedContent(root).content.encounters as typeof changed.encounters)
       ['00001'].mEncounterTitle, 'Test');
     assert.equal(listContentRevisions(root).length, 4); // includes aborted pre-commit revision
+  });
+});
+
+
+test('the actual checked-in five-dataset legacy baseline validates without changing authored fields', () => {
+  const serverRoot = join(dirname(fileURLToPath(import.meta.url)), '../..');
+  const names = {
+    encounters: 'encountersdata.json', solutions: 'solutiondata.json',
+    expansions: 'expansiondata.json', frames: 'frames.json', portraits: 'portraits.json',
+  };
+  const bundle = Object.fromEntries(Object.entries(names).map(([kind, file]) => [
+    kind, JSON.parse(readFileSync(join(serverRoot, 'game', file), 'utf8')) as unknown,
+  ]));
+  validateContentBundle(bundle);
+  temporaryRoot(root => {
+    const imported = publishContentRevision(root, {
+      baseRevision: null, publicationId: 'legacy_fixture_baseline', content: bundle,
+    });
+    assert.deepEqual(readContentRevision(root, imported.revision).content, bundle);
   });
 });
