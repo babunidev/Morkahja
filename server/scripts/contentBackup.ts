@@ -318,6 +318,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     Object.assign(process.env, loadEnvironment());
     const destination = option(process.argv.slice(2), '--destination');
     const source = process.env.MORKAHJA_CONTENT_ROOT;
+    if (!process.env.MORKAHJA_DEPLOY_WEB_ROOT) fail('MORKAHJA_DEPLOY_WEB_ROOT_REQUIRED');
     const confirmOffHost = process.argv.includes('--confirm-off-host');
     if (!source || !isAbsolute(source)) fail('MORKAHJA_CONTENT_ROOT_MUST_BE_ABSOLUTE');
     if (!destination || !isAbsolute(destination)) fail('CONTENT_BACKUP_DESTINATION_MUST_BE_ABSOLUTE');
