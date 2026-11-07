@@ -51,3 +51,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **AI implementation choice, pending repository review:** WebP files are staged as private SHA-256 objects; a content revision manifest associates stable logical image names with immutable hashes. Public URLs contain the revision and logical name. The single JSON/content-pointer swap is the visibility boundary for related data and artwork; unchanged legacy artwork is not forcibly migrated. Administrative upload requires an authenticated WebP request and the existing explicit publishing opt-in. Create and replace are distinct intents.
 
 **Rationale and limits:** This avoids rewriting image bytes while a player or client references an earlier revision, and allows safe retries and rollback. Actual production legacy-file existence, full WebP pixel decoding, external image backups, browser runtime asset selection and active-encounter pinning are not verified. These are review and deployment blockers rather than implicitly approved functionality.
+
+## D-008 — One validated browser content snapshot (2026-11-07; review-stage implementation)
+
+**Human direction:** Replace build-time authored-data imports with a shared, revision-aware frontend store covering encounters, solutions, expansions, frames, portraits and artwork, while preserving loading/error behavior.
+
+**AI implementation choice pending approval:** A single browser external store fetches GET /game-data/content and revalidates with ETag. Each response must validate as a complete five-category bundle and reference coherent revision-specific media URLs before the observable snapshot changes. Components subscribe to the same store; screen entry and active use revalidate without combining partial category responses.
+
+**Compatibility/safety:** Original checked-in data remains in that single store only when the server expressly returns CONTENT_NOT_CONFIGURED. Unexpected errors and malformed published responses retain last-good data rather than silently returning to Git. The client still cannot guarantee live gameplay revision safety while active solo/room server snapshots remain unpinned. This is a draft implementation and not an approved deployment.

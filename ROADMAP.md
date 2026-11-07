@@ -85,8 +85,25 @@ Detailed API, security assumptions and limitations: [Phase 4 administration](doc
 - [x] Serve managed WebP assets by revision-specific URLs with ETags and immutable cache headers.
 - [x] Add isolated HTTP and failure-injection regression tests (CI results documented in PR #13).
 - [ ] Migrate and verify existing production legacy artwork and image references; existing legacy files are not automatically checked.
-- [ ] Integrate dynamic media URLs into the browser and local Babuni Admin; existing frontend still uses static paths.
+- [x] Implement a draft browser runtime resolver for managed media URLs (Phase 6, not deployed).
+- [ ] Integrate the separate local Babuni Admin UI with the publishing API.
 - [ ] Add production-grade full WebP decode validation, storage retention, quotas, off-host media backup and operational proxy/security review.
 - [ ] Pin active multiplayer/solo encounters to content revisions and pass full release checks before enabling live publishing.
 
 Details: [Phase 5 artwork](docs/CONTENT_ARTWORK.md). A checked task is an isolated draft-branch implementation, not production deployment.
+
+## Phase 6 — frontend dynamic content (draft PR #14, 2026-11-07)
+
+- [x] Add one React-subscribed content store backed by the revision-aware public content API, with ETag/304 and concurrent refresh deduplication.
+- [x] Migrate encounter and expansion JSON lookup away from per-screen build-time imports.
+- [x] Migrate solution icon, inventory, result/reward/loss, solution grid, party badge and avatar-transition lookups to the shared revision.
+- [x] Migrate AvatarCreation's portrait/frame lists, avatar stack rendering and preloads to shared content and image helpers.
+- [x] Prefer revision-aware managed WebP URLs while preserving known legacy artwork paths during explicit compatibility mode.
+- [x] Revalidate content on boot, dashboard/game entry, encounter changes and relevant overlay entry; poll when dashboard/game is active.
+- [x] Keep last complete content on fetch/validation failure; permit bundled legacy content only after explicit backend CONTENT_NOT_CONFIGURED.
+- [x] Verify 4/4 dynamic client tests, 21/21 preceding focused tests, static JSON sync and the separate frontend production build on [CI run 42337063166](https://github.com/babunidev/Morkahja/actions/runs/42337063166). Overall release still fails at the nine existing server TypeScript errors.
+- [ ] Complete active encounter and room revision pinning before production live publishing.
+- [ ] Verify browser/device gameplay, server API migration, artwork parity and local Babuni Admin integration in staging.
+- [ ] Resolve existing server TypeScript errors, pass full release gates, review and merge stacked PRs in dependency order.
+
+See [Phase 6 client content](docs/CONTENT_CLIENT.md). This work is in a draft branch, not deployed.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import encountersData from '../../data/game/encountersdata.json';
+import { useClientContent, getClientContent, contentImageUrl, refreshClientContent } from '../../content/clientContent.js';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -63,8 +63,6 @@ import {
   encounterSnapshotAdvanced,
   runEncounterAdvanceTransition,
 } from './roomAdvanceOrchestrator.js';
-
-const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 
 interface EncounterDataRecord {
   mEncounterID: number;
@@ -138,13 +136,12 @@ function encounterRevealStyle(visible: boolean, delayMs = 120): CSSProperties {
 
 function encounterLookup(encounterId: number): EncounterDataRecord | null {
   const directKey = String(encounterId).padStart(5, '0');
-  const records = encountersData as Record<string, EncounterDataRecord>;
+  const records = getClientContent().encounters as Record<string, EncounterDataRecord>;
   return records[directKey] ?? records[String(encounterId)] ?? null;
 }
 
 function imagePath(imageName: string): string {
-  const fileName = imageName.endsWith('.webp') ? imageName : `${imageName}.webp`;
-  return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
+  return contentImageUrl('encounters', imageName);
 }
 
 function experienceRequiredForNextLevel(level: number): number {
@@ -211,6 +208,7 @@ export function GameEnvironment({
   onKickedFromParty,
   onHome,
 }: GameEnvironmentProps) {
+  const content = useClientContent();
   const [visible, setVisible] = useState(!deferReveal);
   const [footerReadyToken, setFooterReadyToken] = useState(0);
   const footerReadyFiredRef = useRef(false);
@@ -389,9 +387,13 @@ export function GameEnvironment({
     }
   }, [room]);
 
+  useEffect(() => {
+    void refreshClientContent().catch(() => undefined);
+  }, [encounter.snapshotId]);
+
   const encounterData = useMemo(
     () => encounterLookup(encounter.encounterId),
-    [encounter.encounterId],
+    [encounter.encounterId, content.revision],
   );
   const title = encounter.encounterTitle ?? encounterData?.mEncounterTitle ?? 'Encounter';
   const encounterImageName = encounter.encounterImageName
@@ -400,7 +402,7 @@ export function GameEnvironment({
   const preparedEncounterId = encounter.preparedEncounter?.encounterId;
   const preparedEncounterData = useMemo(
     () => (preparedEncounterId ? encounterLookup(preparedEncounterId) : null),
-    [preparedEncounterId],
+    [preparedEncounterId, content.revision],
   );
   const nextEncounterImageSrc = preparedEncounterData?.mEncounterImageName
     ? imagePath(preparedEncounterData.mEncounterImageName)

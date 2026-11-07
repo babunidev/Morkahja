@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import solutionData from '../../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../../content/clientContent.js';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -35,7 +35,7 @@ import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encount
 
 const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
 const DEFAULT_DICE_BUTTON = diceButtonAssetPath(DEFAULT_DICE_ID);
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+
 
 type SlotLetter = 'A' | 'B' | 'C' | 'D';
 type SolutionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
@@ -310,7 +310,7 @@ function solutionTooltipAnchorX(slot: SlotLetter): SolutionTooltipAnchorX {
   return 'center';
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionRecords(): Record<string, SolutionRecord> { return getClientContent().solutions as Record<string, SolutionRecord>; }
 
 function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[] {
   if (!inventory) {
@@ -325,7 +325,7 @@ function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[]
 }
 
 function solutionImagePath(solution: SolutionRecord): string {
-  return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+  return contentImageUrl('solutions', solution.mSolutionIconName);
 }
 
 function primaryRequirement(
@@ -365,7 +365,7 @@ function previewSolutionForRequirement(
   secondaryType: number,
 ): { isPrimary: boolean; solution: SolutionRecord } | null {
   if (primaryId > 0) {
-    const solution = solutionsById[String(primaryId)];
+    const solution = solutionRecords()[String(primaryId)];
 
     if (solution) {
       return { isPrimary: true, solution };
@@ -373,7 +373,7 @@ function previewSolutionForRequirement(
   }
 
   if (secondaryType > 0) {
-    const solution = Object.values(solutionsById).find(
+    const solution = Object.values(solutionRecords()).find(
       (record) => record.mSolutionType === secondaryType,
     );
 
@@ -450,7 +450,7 @@ function solutionForSlot(
     : secondaryMatch ?? primaryMatch;
 
   if (matchedItem && chargeState.available) {
-    const solution = solutionsById[String(matchedItem.solutionId)];
+    const solution = solutionRecords()[String(matchedItem.solutionId)];
 
     if (!solution) {
       return null;
@@ -534,6 +534,7 @@ export function SolutionBlock({
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
 }) {
+  useClientContent();
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsInteractive, setActionsInteractive] = useState(false);
   const [enableRattleSlots, setEnableRattleSlots] = useState<Set<SlotLetter>>(

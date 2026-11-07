@@ -58,3 +58,12 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added versioned public WebP URLs with immutable caching and hash-based ETags, preserving historical image bytes across replacements and rollback.
 - Extended storage, runtime and admin regression checks with focused artwork HTTP and failure-injection tests.
 - Original static artwork and browser components are unchanged. No live media migration, production opt-in or deployment occurred.
+
+## 2026-11-07 — Dynamic client content (draft PR #14)
+
+- Added one client-wide, revision-consistent content cache, server revalidation with ETag and atomic five-dataset snapshot updates.
+- Moved encounter, expansion, solution, frame and portrait lookups from per-component build-time JSON imports to the shared content store.
+- Routed managed artwork through revision-aware URLs across encounter art, inventory/solution UI, results, party badges, transitions and avatar visuals.
+- Preserved explicit legacy-configuration compatibility while rejecting corrupt, incomplete or unexpected server content without partial publication.
+- Added bootstrap/screen-entry refresh, periodic revalidation, focused client regression tests and a standalone frontend build CI gate.
+- No production content, VPS, player records or current main branch were changed.

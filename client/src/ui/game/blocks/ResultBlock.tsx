@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
-import solutionData from '../../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../../content/clientContent.js';
 import { displayRollAsD20, displayRollOutcome, interpretRoll } from '@shared/diceInterpreter';
 import {
   encounterLossesFromSolutionIds,
@@ -54,7 +54,7 @@ const LORE_GEM_REWARD_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
 const LORE_GEM_REWARD_ID = 90_001;
 const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_ACTIVATE_MS = 700;
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+
 const ESSENCE_INVENTORY_TYPE = 3;
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -394,10 +394,10 @@ const rewardTooltipTextStyle: CSSProperties = {
   textAlign: 'left',
 };
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionRecords(): Record<string, SolutionRecord> { return getClientContent().solutions as Record<string, SolutionRecord>; }
 
 function solutionImagePath(solution: SolutionRecord): string {
-  return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+  return contentImageUrl('solutions', solution.mSolutionIconName);
 }
 
 export type ResultBlockHandle = {
@@ -463,6 +463,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
   const [continuePressAnimating, setContinuePressAnimating] = useState(false);
   const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
+  useClientContent();
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
@@ -499,9 +500,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
     rewardIds,
     outcome,
     avatarLevel,
-    getSolutionUses: (rewardId) => solutionsById[String(rewardId)]?.mSolutionUses,
+    getSolutionUses: (rewardId) => solutionRecords()[String(rewardId)]?.mSolutionUses,
   }).flatMap(({ solutionId, quantity }) => {
-    const solution = solutionsById[String(solutionId)];
+    const solution = solutionRecords()[String(solutionId)];
 
     if (!solution) {
       return [];

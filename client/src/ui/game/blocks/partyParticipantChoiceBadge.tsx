@@ -5,7 +5,7 @@ import type {
   RoomParticipantDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import solutionData from '../../../data/game/solutiondata.json';
+import { contentImageUrl, getClientContent, useClientContent } from '../../../content/clientContent.js';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -18,7 +18,7 @@ import {
   protectedImageProps,
 } from '../../protectedImage.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+
 export const PARTY_BADGE_SIZE_PX = 62;
 
 interface PartyBadgeTooltip {
@@ -33,7 +33,7 @@ interface SolutionRecord {
   mSolutionText: string;
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionRecords(): Record<string, SolutionRecord> { return getClientContent().solutions as Record<string, SolutionRecord>; }
 
 const choiceBadgeOverlayStyle: CSSProperties = {
   position: 'absolute',
@@ -72,12 +72,12 @@ const badgeIconStyle: CSSProperties = {
 };
 
 function solutionImagePath(solutionId: number): string | null {
-  const solution = solutionsById[String(solutionId)];
+  const solution = solutionRecords()[String(solutionId)];
   if (!solution) {
     return null;
   }
 
-  return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+  return contentImageUrl('solutions', solution.mSolutionIconName);
 }
 
 function solutionTooltipForId(
@@ -87,7 +87,7 @@ function solutionTooltipForId(
     return null;
   }
 
-  const solution = solutionsById[String(solutionId)];
+  const solution = solutionRecords()[String(solutionId)];
   if (!solution) {
     return null;
   }
@@ -237,6 +237,7 @@ export function PartyParticipantChoiceBadge({
   roomState?: RoomStateDto;
   systemEventActorPlayerId?: string;
 }) {
+  useClientContent();
   const showChoice = hasVisibleParticipantChoice(
     participant,
     roomState,

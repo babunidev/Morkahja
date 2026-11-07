@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { createCheckoutSession, fetchPlayer, unlockExpansion } from '../../api/http.js';
 import { formatEurCents } from '../commerce/formatPrice.js';
-import encountersData from '../../data/game/encountersdata.json';
-import expansionData from '../../data/game/expansiondata.json';
+import { contentImageUrl, getClientContent, refreshClientContent, useClientContent, useClientContentState } from '../../content/clientContent.js';
 import {
   protectedImageProps,
   protectedOverlaySurfaceProps,
@@ -13,8 +12,6 @@ import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
-const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
-const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
 const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
 const OVERLAY_FADE_MS = 300;
 const PREVIEW_ENCOUNTER_COUNT = 3;
@@ -46,17 +43,15 @@ interface EncounterPreviewEntry {
 }
 
 function expansionAsset(assetName: string): string {
-  return `${EXPANSION_UI_ROOT}/${assetName}.webp`;
+  return assetName ? contentImageUrl('expansions', assetName) : '';
 }
 
 function encounterImagePath(imageName: string): string {
-  const fileName = imageName.endsWith('.webp') ? imageName : `${imageName}.webp`;
-
-  return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
+  return contentImageUrl('encounters', imageName);
 }
 
 function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
-  const records = encountersData as Record<string, EncounterDataRecord>;
+  const records = getClientContent().encounters as Record<string, EncounterDataRecord>;
   const byExpansion = new Map<number, EncounterPreviewEntry[]>();
 
   for (const record of Object.values(records)) {
@@ -99,7 +94,7 @@ function pickRandomEncounterPreviews(
 }
 
 function loadExpansionList(): ExpansionRecord[] {
-  const records = (expansionData as { expansions: Record<string, ExpansionRecord> }).expansions;
+  const records = getClientContent().expansions.expansions as Record<string, ExpansionRecord>;
 
   return Object.values(records).sort((left, right) => {
     if (left.mExtensioActive !== right.mExtensioActive) {
@@ -663,6 +658,8 @@ export function ExpansionsOverlay({
   open: boolean;
   playerId: string;
 }) {
+  const content = useClientContent();
+  const contentState = useClientContentState();
   const [visible, setVisible] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
   const [yellowRedGems, setYellowRedGems] = useState(0);
@@ -671,8 +668,8 @@ export function ExpansionsOverlay({
   const [checkoutPending, setCheckoutPending] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const expansions = useMemo(() => loadExpansionList(), []);
-  const encountersByExpansion = useMemo(() => buildEncountersByExpansion(), []);
+  const expansions = useMemo(() => loadExpansionList(), [content.revision]);
+  const encountersByExpansion = useMemo(() => buildEncountersByExpansion(), [content.revision]);
   const [previewSamples, setPreviewSamples] = useState<{
     expansionId: number;
     encounters: EncounterPreviewEntry[];
@@ -718,6 +715,13 @@ export function ExpansionsOverlay({
       window.clearTimeout(showTimer);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    void refreshClientContent().catch(() => undefined);
+  }, [open]);
+
+  useEffect(() => { setPreviewSamples(null); }, [content.revision]);
 
   useEffect(() => {
     if (!open) {
@@ -843,6 +847,7 @@ export function ExpansionsOverlay({
           <style>
             {'[data-expansions-scroll]::-webkit-scrollbar { display: none; }'}
           </style>
+          {contentState.error ? <p style={errorMessageStyle}>Game content refresh failed; showing the last complete revision.</p> : null}
           {loadError ? <p style={errorMessageStyle}>{loadError}</p> : null}
           {statusMessage ? (
             <p style={statusMessage.includes('unlocked') ? statusMessageStyle : errorMessageStyle}>

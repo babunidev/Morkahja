@@ -61,3 +61,7 @@ A replacement gives the logical name a **new revision URL**. Old revision URLs c
 Run npm run test:content-artwork from the repository root, along with the previously established content-publication, content-runtime, content-admin and static-data checks. Tests use a temporary external content root, real WebP samples, the checked-in JSON baseline, authenticated loopback HTTP and publication failure injection; they do not access production.
 
 Still unimplemented or unverified: full WebP decoder verification of all pixel payloads; live Nginx request limits and filesystem permission review; stage retention/cleanup and object garbage collection; off-host media backups; complete legacy artwork inventory/import and existence checks; active encounter and multiplayer revision pinning; frontend dynamic media loading; real Babuni Admin integration; and successful full project TypeScript/release verification. No production activation is authorized by this isolated implementation.
+
+## Phase 6 browser addendum (draft PR #14)
+
+The statement above that the browser still uses exclusively static art describes the Phase 5 branch in isolation. Phase 6 now provides a client-wide revision-aware resolver that prefers published managed image URLs and falls back to the original static asset URL only for known legacy identifiers. Avatar creation, portrait/frame composition, encounter imagery, expansion art and solution/reward displays use the resolver. Real production asset migration/parity and browser device verification remain separate.

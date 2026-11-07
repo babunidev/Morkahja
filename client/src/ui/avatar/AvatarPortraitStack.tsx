@@ -1,7 +1,5 @@
 import type { CSSProperties } from 'react';
-
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
+import { contentImageUrl, useClientContent } from '../../content/clientContent.js';
 
 /** Portrait frame scale in the in-game avatar block (100% + 1%). */
 export const INGAME_FRAME_SCALE = 1.01;
@@ -58,6 +56,7 @@ export function AvatarPortraitStack({
   onPortraitError?: () => void;
   style?: CSSProperties;
 }) {
+  useClientContent();
   const frameSizePercent = frameScale * 100;
   return (
     <div
@@ -71,14 +70,14 @@ export function AvatarPortraitStack({
         aria-hidden="true"
         draggable={false}
         onError={onPortraitError}
-        src={`${AVATAR_ASSET_ROOT}/${portrait}`}
+        src={contentImageUrl('portraits', portrait)}
         style={portraitStyle}
       />
       <img
         alt=""
         aria-hidden="true"
         draggable={false}
-        src={`${FRAME_ASSET_ROOT}/${frame}`}
+        src={contentImageUrl('frames', frame)}
         style={{
           ...frameBaseStyle,
           width: `${frameSizePercent}%`,
