@@ -61,7 +61,7 @@ function respondError(res: Response, err: unknown): void {
   } else if (code === 'CONTENT_REVISION_CONFLICT' || code === 'CONTENT_EDIT_CONFLICT' ||
              code === 'CONTENT_PUBLICATION_ID_REUSED' || code === 'CONTENT_PUBLICATION_LOCKED' ||
              code === 'CONTENT_ASSET_COLLISION' || code === 'CONTENT_ASSET_REPLACEMENT_NOT_FOUND' ||
-             code === 'CONTENT_ASSET_STAGE_STALE') {
+             code === 'CONTENT_ASSET_STAGE_STALE' || code === 'CONTENT_DUPLICATE_ASSET_NAME') {
     status = 409;
   } else if (code === 'CONTENT_INVALID_REQUEST' || code === 'CONTENT_INVALID_REVISION' ||
              code === 'CONTENT_INVALID_PUBLICATION_ID' || code === 'CONTENT_INVALID_CHANGES' ||
