@@ -3,6 +3,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   readContentPointer,
+  readContentRevision,
   readPublishedContent,
   type PublishedContent,
 } from './contentPublication.js';
@@ -122,36 +123,59 @@ export function getPublishedContentSnapshot(): PublishedContent | null {
   return publishedCache;
 }
 
-/** Capture a coherent runtime dataset before selecting encounters or rewards. */
+/** Legacy snapshots predate content revisions: their definition source stays the shipped baseline. */
+let legacyRuntimeCache: GameRuntimeContentSnapshot | null = null;
+function legacyRuntimeContentSnapshot(): GameRuntimeContentSnapshot {
+  if (!legacyRuntimeCache) {
+    const rawSolutions = loadJsonFromRepo<Record<string, SolutionData>>('game/solutiondata.json');
+    legacyRuntimeCache = {
+      revision: null,
+      encounters: loadJsonFromRepo<EncounterDataMap>('game/encountersdata.json'),
+      solutions: Object.fromEntries(
+        Object.values(rawSolutions).map(entry => [String(entry.mSolutionID), entry]),
+      ),
+      frames: loadJsonFromRepo<FramesDataFile>('game/frames.json'),
+      portraits: loadJsonFromRepo<PortraitsDataFile>('game/portraits.json'),
+      expansions: loadJsonFromRepo<ExpansionDataFile>('game/expansiondata.json'),
+    };
+  }
+  return legacyRuntimeCache;
+}
+function runtimeFromPublished(published: PublishedContent): GameRuntimeContentSnapshot {
+  const sourceSolutions = published.content.solutions as Record<string, SolutionData>;
+  return {
+    revision: published.revision,
+    encounters: published.content.encounters as EncounterDataMap,
+    solutions: Object.fromEntries(Object.values(sourceSolutions)
+      .map(entry => [String(entry.mSolutionID), entry])),
+    frames: published.content.frames as FramesDataFile,
+    portraits: published.content.portraits as PortraitsDataFile,
+    expansions: published.content.expansions as ExpansionDataFile,
+  };
+}
+/** Capture the selected current revision for newly created adventures only. */
 export function getGameRuntimeContentSnapshot(): GameRuntimeContentSnapshot {
   const published = getPublishedContentSnapshot();
-  if (!published) {
-    return {
-      revision: null,
-      encounters: getEncounters(),
-      solutions: getSolutionMap(),
-      frames: getFramesData(),
-      portraits: getPortraitsData(),
-      expansions: { expansions: Object.fromEntries(
-        getExpansions().map(entry => [String(entry.mExtensioID), entry]),
-      ) },
-    };
-  }
+  if (!published) return legacyRuntimeContentSnapshot();
   if (!publishedRuntimeCache || publishedRuntimeCache.revision !== published.revision) {
-    const content = published.content;
-    const sourceSolutions = content.solutions as Record<string, SolutionData>;
-    publishedRuntimeCache = {
-      revision: published.revision,
-      encounters: content.encounters as EncounterDataMap,
-      solutions: Object.fromEntries(
-        Object.values(sourceSolutions).map(entry => [String(entry.mSolutionID), entry]),
-      ),
-      frames: content.frames as FramesDataFile,
-      portraits: content.portraits as PortraitsDataFile,
-      expansions: content.expansions as ExpansionDataFile,
-    };
+    publishedRuntimeCache = runtimeFromPublished(published);
   }
   return publishedRuntimeCache;
+}
+/**
+ * Load an encounter's original content version, never the latest version.
+ * Untagged pre-publication snapshots are explicitly bound to the checked-in
+ * legacy baseline. A missing/corrupt historical published revision fails closed.
+ */
+export function getGameRuntimeContentSnapshotForRevision(
+  revision: string | null | undefined,
+): GameRuntimeContentSnapshot {
+  if (revision == null) return legacyRuntimeContentSnapshot();
+  const root = getConfiguredContentRoot();
+  if (!root) throw new Error('CONTENT_PINNED_REVISION_UNAVAILABLE');
+  const current = getPublishedContentSnapshot();
+  if (current?.revision === revision) return getGameRuntimeContentSnapshot();
+  return runtimeFromPublished(readContentRevision(root, revision));
 }
 
 
@@ -159,6 +183,9 @@ function gameFilePath(relativePath: string): string {
   return join(projectRoot, relativePath);
 }
 
+function loadJsonFromRepo<T>(relativePath: string): T {
+  return JSON.parse(readFileSync(gameFilePath(relativePath), 'utf8')) as T;
+}
 function loadJson<T>(relativePath: string): T {
   const current = getPublishedContentSnapshot();
   if (current) {
@@ -172,7 +199,7 @@ function loadJson<T>(relativePath: string): T {
       default: throw new Error('Unknown game content file');
     }
   }
-  return JSON.parse(readFileSync(gameFilePath(relativePath), 'utf8')) as T;
+  return loadJsonFromRepo<T>(relativePath);
 }
 
 function assertLegacyWritable(): void {
@@ -197,6 +224,7 @@ export function invalidateGameDataCaches(): void {
   framesCache = null;
   portraitsCache = null;
   expansionCache = null;
+  legacyRuntimeCache = null;
 }
 
 export function getEncounters(): EncounterDataMap {
