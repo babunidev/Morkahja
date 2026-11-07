@@ -463,7 +463,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
   const [continuePressAnimating, setContinuePressAnimating] = useState(false);
   const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
-  const content = useClientContent();
+  useClientContent();
   const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
