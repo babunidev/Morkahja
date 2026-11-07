@@ -73,3 +73,20 @@ See [runtime integration](docs/CONTENT_RUNTIME.md). Checked work describes a dra
 - [ ] Review/merge PRs #10, #11 and #12 in dependency order, then integrate the separately maintained local admin UI.
 
 Detailed API, security assumptions and limitations: [Phase 4 administration](docs/CONTENT_ADMIN_API.md). All checked code is a **draft-branch implementation**, not an active production service.
+
+## Phase 5 — artwork management (draft PR #13, 2026-11-07)
+
+- [x] Add authenticated raw-WebP upload staging, bound to a base revision and the existing opt-in publishing flag.
+- [x] Validate RIFF/WebP structure, file size, dimensions, safe names, category and create/replace intent; full pixel decoding is not yet implemented.
+- [x] Preserve encounter, solution, expansion, portrait and frame logical naming conventions.
+- [x] Reject image-name collisions without explicit replacement; keep historical image objects on replacement.
+- [x] Write staged assets as immutable, SHA-256-addressed objects outside the repository and deployed webroot.
+- [x] Require staged assets for new JSON image references and newly created portrait/frame IDs; publish artwork mapping and JSON through one revision pointer.
+- [x] Serve managed WebP assets by revision-specific URLs with ETags and immutable cache headers.
+- [x] Add isolated HTTP and failure-injection regression tests (CI results documented in PR #13).
+- [ ] Migrate and verify existing production legacy artwork and image references; existing legacy files are not automatically checked.
+- [ ] Integrate dynamic media URLs into the browser and local Babuni Admin; existing frontend still uses static paths.
+- [ ] Add production-grade full WebP decode validation, storage retention, quotas, off-host media backup and operational proxy/security review.
+- [ ] Pin active multiplayer/solo encounters to content revisions and pass full release checks before enabling live publishing.
+
+Details: [Phase 5 artwork](docs/CONTENT_ARTWORK.md). A checked task is an isolated draft-branch implementation, not production deployment.
