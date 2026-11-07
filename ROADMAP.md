@@ -127,7 +127,7 @@ Details: [Phase 7 gameplay revisions](docs/CONTENT_GAMEPLAY.md). Draft implement
 
 - [x] Separate the application-only deployment workflow from content publication; the runner never calls admin publish or changes the content pointer.
 - [x] Add preflight guards requiring distinct external application, persistent content, static web and backup roots, a marked dedicated web root and a mounted backup destination before Git pull or rsync.
-- [x] Scope rsync --delete-delay to the dedicated client web root and preserve /.well-known/; never target the content or backup roots.
+- [x] Scope rsync --delete-delay to the marked dedicated client web root, preserving /.well-known/ and the marker; verify the reloaded API health before sync and never target content or backup roots.
 - [x] Add versioned content backups with file inventory, SHA-256 verification, all committed historical JSON revisions, referenced artwork objects and admin audit history.
 - [x] Block backup during an active publication lock; restore only into a new, non-existing content root and verify it before returning.
 - [x] Add an Nginx media proxy include that preserves revision-aware API cache headers without exposing the private content directory.
