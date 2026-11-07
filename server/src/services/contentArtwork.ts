@@ -52,6 +52,14 @@ function dirs(root: string, create = false): { art: string; objects: string; sta
   safeDirectory(stages, create);
   return { art, objects, stages };
 }
+function publishedObjectsDirectory(root: string): string {
+  safeDirectory(root, false);
+  const art = join(root, 'artwork');
+  safeDirectory(art, false);
+  const objects = join(art, 'objects');
+  safeDirectory(objects, false);
+  return objects;
+}
 function flushDirectory(path: string): void {
   const fd = openSync(path, 'r');
   try { fsyncSync(fd); } finally { closeSync(fd); }
@@ -170,7 +178,8 @@ function referencedNames(content: ContentBundle, kind: ArtworkKind): Set<string>
 export function readArtworkObject(root: string, entry: ArtworkEntry): Buffer {
   if (!SHA.test(entry.sha256) || !Number.isSafeInteger(entry.bytes) ||
       entry.bytes < 25 || entry.bytes > WEBP_MAX_BYTES) fail('CONTENT_INVALID_ASSET_MANIFEST');
-  const { objects } = dirs(root);
+  // Serving published objects must not depend on the transient staged-token directory.
+  const objects = publishedObjectsDirectory(root);
   const bytes = safeRead(join(objects, entry.sha256 + '.webp'), WEBP_MAX_BYTES);
   if (bytes.length !== entry.bytes || hash(bytes) !== entry.sha256) fail('CONTENT_ARTWORK_CHECKSUM_MISMATCH');
   const dims = inspectWebp(bytes);
@@ -258,8 +267,12 @@ export function prepareArtworkForPublication(
       new Set(stageIds).size !== stageIds.length) fail('CONTENT_INVALID_ASSET_STAGES');
   if (rollbackAssets && stageIds.length) fail('CONTENT_INVALID_ASSET_STAGES');
   const result: ArtworkManifest = structuredClone(rollbackAssets ?? current?.manifest.assets ?? {});
+  const requestedNames = new Set<string>();
   for (const id of stageIds) {
     const stage = readStage(root, id);
+    const key = stage.kind + ':' + stage.name;
+    if (requestedNames.has(key)) fail('CONTENT_DUPLICATE_ASSET_NAME');
+    requestedNames.add(key);
     if (stage.baseRevision !== current?.revision) fail('CONTENT_ASSET_STAGE_STALE');
     const previous = referencedNames(current!.content, stage.kind).has(stage.name) ||
       Boolean(current?.manifest.assets?.[stage.kind]?.[stage.name]);
