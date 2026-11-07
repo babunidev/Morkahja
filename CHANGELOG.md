@@ -49,3 +49,12 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added private durable administrative audit records and conservative image-reference checks; managed WebP asset staging remains unavailable.
 - Disabled the five older unsafe direct-write endpoints even with legacy content mode enabled.
 - Registered focused HTTP security/publication tests in release CI; production configuration and live player data were not modified.
+
+## 2026-11-07 — Managed WebP artwork (draft PR #13)
+
+- Implemented authenticated, bounded WebP staging with filename, structure, dimensions, base-revision and explicit create/replace intent validation.
+- Added private SHA-256-addressed image objects under the external content root and optional revision-manifest artwork mappings.
+- Validated new JSON artwork references and portrait/frame IDs against staged managed assets; published JSON and managed-image references via one atomic pointer.
+- Added versioned public WebP URLs with immutable caching and hash-based ETags, preserving historical image bytes across replacements and rollback.
+- Extended storage, runtime and admin regression checks with focused artwork HTTP and failure-injection tests.
+- Original static artwork and browser components are unchanged. No live media migration, production opt-in or deployment occurred.
