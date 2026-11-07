@@ -37,7 +37,11 @@ The deployment runner:
 
 The runner requires Git, npm, rsync, PM2, curl and the Linux mountpoint utility. It never calls a content administration endpoint, changes current.json, edits a published revision, uploads artwork or runs a content rollback. A failed release check stops before the web-root sync and PM2 reload. Git and dependency changes already made earlier in the sequence are not automatically reverted; the published content remains in its independent root.
 
-The preflight deliberately refuses overlapping paths. In particular, rsync --delete-delay must never target the Git checkout, content root, artwork objects, revision directories or backup mount. The content root is also rejected if it is nested under, or contains, the application checkout. This makes normal Git pulls and frontend builds unable to remove published data by path.
+The static web root must be dedicated to Morkahja. After verifying the directory is not shared with another site, mark it once with:
+
+    printf 'morkahja-static-root-v1\n' > "$MORKAHJA_DEPLOY_WEB_ROOT/.morkahja-static-root"
+
+The preflight checks this exact marker; rsync preserves it and /.well-known/ while deleting stale build files. The preflight deliberately refuses overlapping paths. In particular, rsync --delete-delay must never target the Git checkout, content root, artwork objects, revision directories or backup mount. The content root is also rejected if it is nested under, or contains, the application checkout. This makes normal Git pulls and frontend builds unable to remove published data by path.
 
 Example operator environment (paths must be adapted to the real host):
 
