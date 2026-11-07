@@ -1,6 +1,6 @@
 # Morkahja — Phase 6 frontend dynamic content
 
-**Status:** Implemented in isolated draft PR #14, stacked on unmerged PRs #10–13. No production deployment, content migration or approved live publishing. Verification and remaining blockers are reported in PR #14.
+**Status:** Implemented in isolated draft [PR #14](https://github.com/babunidev/Morkahja/pull/14), stacked on unmerged PRs #10–13. **Verified** on [GitHub Actions run 42337063166](https://github.com/babunidev/Morkahja/actions/runs/42337063166): static JSON sync, 7/7 storage, 4/4 runtime, 6/6 admin, 4/4 artwork and 4/4 client tests; the standalone frontend TypeScript + Vite production build succeeded. The overall workflow still fails on the same nine pre-existing server TypeScript errors in four unrelated files. No production deployment, content migration or approved live publishing.
 
 ## Shared content authority
 
