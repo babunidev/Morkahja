@@ -40,3 +40,17 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] Verify live Nginx, PM2, backup configuration and production content parity before any independent deployment or live migration.
 
 Implementation details: [Phase 2 storage](docs/CONTENT_STORAGE.md). None of these checked items represents a deployed production change.
+
+## Phase 3 — backend runtime integration (draft PR #11, 2026-11-07)
+
+- [x] Adapt the Phase 2 storage-backed `gameData.ts` to capture one published runtime snapshot.
+- [x] Atomically select/cache a validated revision and observe pointer updates without a Node restart.
+- [x] Use one captured revision when selecting new solo encounters and regular rewards; updated solution records and new encounter IDs appear on later reads.
+- [x] Add read-only, revision-consistent `GET /game-data/content` with ETag/304 and no-cache semantics.
+- [x] Add selected-pointer consistency and generic 503 failure handling for missing/invalid published roots.
+- [x] Verify temporary-directory HTTP tests against the real repository JSON (4/4 on [CI run 42332713643](https://github.com/babunidev/Morkahja/actions/runs/42332713643)); latest follow-up test result may differ.
+- [ ] Review and merge the stacked backend PRs when authorized; full release CI remains blocked by existing TypeScript errors outside these changes.
+- [ ] Pin active encounters and room resolution to their content revision before live publication.
+- [ ] Add authenticated publishing, managed WebP, frontend dynamic content and a reviewed production migration.
+
+See [runtime integration](docs/CONTENT_RUNTIME.md). Checked work describes a draft branch, **not** deployed behavior.
