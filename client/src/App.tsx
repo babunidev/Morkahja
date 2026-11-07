@@ -87,6 +87,7 @@ import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
 import { useMobileFullscreen } from './ui/layout/useMobileFullscreen.js';
 import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
+import { refreshClientContent } from './content/clientContent.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
@@ -602,6 +603,20 @@ export default function App() {
     };
   }, [playerId, screen]);
 
+  useEffect(() => {
+    if (screen !== 'dashboard' && screen !== 'game') return undefined;
+    // Entering a content-bearing screen always checks the published revision.
+    void refreshClientContent().catch((error: unknown) => {
+      console.warn('Published game content refresh failed', error);
+    });
+    const poll = window.setInterval(() => {
+      void refreshClientContent().catch((error: unknown) => {
+        console.warn('Published game content refresh failed', error);
+      });
+    }, 30_000);
+    return () => window.clearInterval(poll);
+  }, [screen]);
+
   const loadingHooks = useMemo(
     () => ({
       loadSession: fetchSession,
@@ -616,7 +631,7 @@ export default function App() {
       loadPlayer: loadPlayerForBootstrap,
       loadAvatar: loadAvatarForBootstrap,
       syncState: async () => {
-        await fetchStaticGameDataStatus();
+        await Promise.all([fetchStaticGameDataStatus(), refreshClientContent()]);
       },
     }),
     [],
