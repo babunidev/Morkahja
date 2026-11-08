@@ -17,6 +17,7 @@
 | Backup and recovery | Backup tests verify historical JSON revisions, referenced managed artwork, audit history, checksums and restore into a new root. |
 | Deployment isolation | Deployment tests reject overlapping roots, symlinks, an unmarked web root and an unmounted backup destination. |
 | Database-backed room behavior | CI runs session authentication, room persistence/lifecycle and pending level-up persistence against a disposable PostgreSQL service. |
+| Initial legacy import | `content:initialize` validates the five legacy datasets, writes a checksum-verified pre-import JSON backup to a mounted backup filesystem, then publishes the initial revision into an empty external content root. |
 
 Run the focused suites from the repository root:
 
@@ -29,6 +30,7 @@ npm run test:content-artwork
 npm run test:client-content
 npm run test:content-gameplay
 npm run test:content-backup
+npm run test:content-migration
 npm run test:deployment
 npm run test:rooms
 npm run test:pending-level-up
@@ -62,7 +64,19 @@ No production host or production content directory was available to this impleme
 
 Before a staging rehearsal, an operator must take a read-only snapshot of the actual five production datasets and the deployed legacy artwork, calculate and retain hashes, compare IDs and references against the candidate baseline, and preserve that snapshot independently of the application server. Use a non-production content root and a disposable or privacy-scrubbed database. Verify that the application, content, web and backup roots are separate and that the backup destination is a real off-host mount. Do not copy player/account records into a content migration.
 
-The initial external content root must be provisioned explicitly and populated from the verified production source only through a reviewed migration operation. The current automated rehearsal uses the publication service directly in a temporary root; it does not provide an operator-facing production import command. That operational migration step must be reviewed and rehearsed in staging before any live activation.
+The initial external content root must be provisioned explicitly and be empty. The operator-facing `content:initialize` command now provides a read-only dry-run and an explicit apply path. It validates the five JSON datasets and all cross-references, requires separate source/content/backup roots, requires the backup root to be a mounted filesystem, writes a versioned legacy JSON backup with SHA-256 checksums, verifies that backup, and only then publishes the initial content revision. If publication fails, the verified backup is retained.
+
+Example staging dry-run:
+
+```bash
+MORKAHJA_CONTENT_ROOT=/var/lib/morkahja/content \
+MORKAHJA_CONTENT_BACKUP_ROOT=/mnt/morkahja-backups \
+npm run content:initialize -- --environment staging \
+  --source /srv/morkahja/legacy-game \
+  --publication-id staging_initial_20261108
+```
+
+After reviewing the dry-run inventory and confirming that the backup root is the intended off-host mount, the staging apply command adds `--apply --confirm-off-host-backup`. A production apply additionally requires `--environment production --confirm-production-cutover`; that approval and command have not been issued. The initializer backs up the five JSON datasets only. Legacy static artwork and PostgreSQL player data require their own independently verified backups; the initializer does not copy or modify either. It does not deploy the application, alter Nginx, restart services or enable admin publishing.
 
 ## Production cutover acceptance
 

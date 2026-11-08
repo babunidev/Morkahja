@@ -26,7 +26,9 @@
     "stripe:test-catalog": "node scripts/create-stripe-test-catalog.mjs",
     "test:lifecycle": "tsx src/runEncounterLifecycle.ts",
     "typecheck": "tsc --noEmit",
-    "test:pending-level-up": "tsx src/services/pendingLevelUpRewards.test.ts"
+    "test:pending-level-up": "tsx src/services/pendingLevelUpRewards.test.ts",
+    "content:initialize": "tsx scripts/contentInitialize.ts",
+    "test:content-migration": "tsx --test scripts/contentInitialize.test.ts"
   },
   "dependencies": {
     "express": "^5.2.1",

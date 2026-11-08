@@ -57,6 +57,7 @@ export function deployApplication(env = loadEnvironment()) {
     'test:client-content',
     'test:content-gameplay',
     'test:content-backup',
+    'test:content-migration',
     'test:deployment',
   ]) run('npm', ['run', script], repositoryRoot, env);
   // Production-safe static validation and type/build checks only. Database-mutating

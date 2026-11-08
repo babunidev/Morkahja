@@ -49,6 +49,8 @@ jobs:
         run: npm run test:content-gameplay
       - name: Versioned content backup and restore test
         run: npm run test:content-backup
+      - name: Initial content migration and backup test
+        run: npm run test:content-migration --prefix server
       - name: Deployment path isolation test
         run: npm run test:deployment
       - name: Client typecheck and production build

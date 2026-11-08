@@ -94,3 +94,6 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added isolated PostgreSQL to GitHub Actions and registered room lifecycle and pending level-up persistence tests.
 - Restricted the deployment runner's release check to static validation, typechecking and the frontend build; database-mutating tests run only against disposable CI PostgreSQL.
 - Documented automated coverage and the production migration boundary. No production backup, host migration, Nginx change, player-data rewrite or production cutover was performed.
+
+
+- Added an explicit `content:initialize` command: dry-run validation, empty-root/path separation checks, mounted off-host legacy JSON backup with SHA-256 verification, and initial revision publication only after the backup passes.

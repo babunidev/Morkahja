@@ -145,9 +145,11 @@ Details: [Deployment and recovery](docs/DEPLOYMENT_RECOVERY.md). The deployment 
 - [x] Expand static-data parity verification from encounters alone to all five JSON datasets across server, client source and public fallback.
 - [x] Correct the existing encounter test fixtures so they satisfy the declared reward and encounter contracts rather than weakening production types.
 - [x] Add a combined temporary-root rehearsal for initial legacy import, live revision switching, historical snapshot reads and rollback as a new revision.
+- [x] Add an explicit initial-import command that verifies a mounted off-host JSON backup before publishing the first revision.
 - [x] Provide a disposable PostgreSQL service in GitHub Actions for database-backed session and room tests.
 - [x] Keep database-mutating integration tests out of the production deployment runner; its release check is limited to static validation, typechecking and the client build.
 - [x] Add room lifecycle and pending-level-up persistence tests to the CI workflow.
+- [ ] Run the initializer against an actual non-production host and verify its pre-import JSON backup and imported revision.
 - [ ] Verify the actual production five-dataset and legacy-artwork snapshot against the candidate baseline and preserve it off-host.
 - [ ] Rehearse the initial import, browser acceptance, content reversal and exact application rollback on a real non-production host.
 - [ ] Complete a separate PostgreSQL backup/restore rehearsal and verify the production Nginx media proxy.
