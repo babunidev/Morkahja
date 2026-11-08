@@ -162,13 +162,23 @@ await ensureAvatar(session.playerId, avatarId, {
   };
   await saveEncounterRoom(room);
 
-  await submitChoice(session.playerId, avatarId, 'A');
-  const afterContinue = await submitContinue(session.playerId, avatarId);
-  assert.equal(afterContinue.roomState, 'system_event');
-  assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
+  const startingProgression = await getProgression<ReturnType<typeof createInitialProgression>>(session.playerId, avatarId);
+  assert.equal(startingProgression?.level, 1);
+  assert.equal(startingProgression?.experience, 6);
 
+  const afterChoice = await submitChoice(session.playerId, avatarId, 'A');
+  const preparedCommit = afterChoice.participants.find(
+    participant => participant.playerId === session.playerId,
+  )?.preparedCommit;
+  assert.ok(preparedCommit);
+  assert.equal(preparedCommit.eventContext.leveledUp, true);
+  assert.equal(preparedCommit.nextProgression.level, 2);
+
+  const afterContinue = await submitContinue(session.playerId, avatarId);
   const progressionAfterCommit = await getProgression<ReturnType<typeof createInitialProgression>>(session.playerId, avatarId);
   assert.equal(progressionAfterCommit?.pendingLevelUpRewards, true);
+  assert.equal(afterContinue.roomState, 'system_event');
+  assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
   await leaveRoom(session.playerId, avatarId);
 
