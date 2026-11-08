@@ -211,13 +211,11 @@ const reentryAvatarId = await createPendingLevelUpTestAvatar('reentry');
 
   await submitChoice(session.playerId, outcomeAvatarId, 'dice');
   const afterLevelUpRoll = await submitContinue(session.playerId, outcomeAvatarId);
-  assert.equal(afterLevelUpRoll.roomState, 'waiting_continue');
+  assert.equal(afterLevelUpRoll.roomState, 'active_encounter');
 
   const activeAfterRewards = await getActiveRoomForPlayer(session.playerId, outcomeAvatarId);
-  assert.equal(activeAfterRewards?.roomState, 'waiting_continue');
+  assert.equal(activeAfterRewards?.roomState, 'active_encounter');
   assert.notEqual(activeAfterRewards?.roomState, 'system_event');
-
-  await submitContinue(session.playerId, outcomeAvatarId);
 
   const progressionAfterRewards = await getProgression<ReturnType<typeof createInitialProgression>>(session.playerId, outcomeAvatarId);
   assert.equal(progressionAfterRewards?.pendingLevelUpRewards, false);

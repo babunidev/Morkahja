@@ -32,7 +32,7 @@
     "release:check": "npm run verify:static-data && npm run typecheck",
     "test:rooms": "npm run test:rooms --prefix server",
     "test:pending-level-up": "npm run test:pending-level-up --prefix server",
-    "content:initialize": "npm run content:initialize --prefix server",
+    "content:initialize": "npm run content:initialize --prefix server --",
     "test:content-migration": "npm run test:content-migration --prefix server"
   },
   "dependencies": {

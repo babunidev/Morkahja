@@ -89,6 +89,7 @@ test('initial import verifies an off-host source backup before publishing the fi
     ) as { format: string; files: Array<{ name: string; bytes: number; sha256: string }> };
 
     assert.equal(published.revision, result.revision);
+    assert.deepEqual(published.content, inspectLegacyContent(paths.sourceRoot).bundle);
     assert.equal(manifest.format, 'morkahja-legacy-content-backup-v1');
     assert.equal(manifest.files.length, 5);
     assert.equal(readdirSync(result.backupDirectory).length, 6);
