@@ -146,9 +146,10 @@ Details: [Deployment and recovery](docs/DEPLOYMENT_RECOVERY.md). The deployment 
 - [x] Correct the existing encounter test fixtures so they satisfy the declared reward and encounter contracts rather than weakening production types.
 - [x] Add a combined temporary-root rehearsal for initial legacy import, live revision switching, historical snapshot reads and rollback as a new revision.
 - [x] Add an explicit initial-import command that verifies a mounted off-host JSON backup before publishing the first revision.
-- [x] Provide a disposable PostgreSQL service in GitHub Actions for database-backed session and room tests.
+- [x] Provide a disposable PostgreSQL service in GitHub Actions for database-backed session-authentication and pending-level-up tests.
 - [x] Keep database-mutating integration tests out of the production deployment runner; its release check is limited to static validation, typechecking and the client build.
-- [x] Add room lifecycle and pending-level-up persistence tests to the CI workflow.
+- [x] Add pending-level-up persistence to the CI workflow; keep the broader room lifecycle suite manually runnable until its host/guest departure transition is stable.
+- [ ] Stabilize the host/guest departure transition assertion before adding the full room lifecycle suite to release CI.
 - [ ] Run the initializer against an actual non-production host and verify its pre-import JSON backup and imported revision.
 - [ ] Verify the actual production five-dataset and legacy-artwork snapshot against the candidate baseline and preserve it off-host.
 - [ ] Rehearse the initial import, browser acceptance, content reversal and exact application rollback on a real non-production host.
