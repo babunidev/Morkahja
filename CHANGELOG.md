@@ -84,3 +84,13 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added versioned content backup verification and restore-to-new-root commands, preserving all committed JSON revisions, referenced WebP objects and the administrative audit log.
 - Added an Nginx proxy include for revision-aware media URLs and documented independent application/content rollback procedures.
 - Added focused backup/restore and deployment-isolation tests to the release workflow. No live host, Nginx, PM2, content root, backup mount or player data was changed.
+
+
+## 2026-11-08 — Automated migration verification (draft PR #16)
+
+- Expanded static JSON parity checks to encounters, solutions, expansions, frames and portraits across all three checked-in runtime/fallback copies.
+- Corrected invalid test fixture reward values and completed required encounter fields so server typechecking can enforce the declared contracts.
+- Added a temporary-root migration rehearsal covering baseline import, live revision refresh, historical snapshot reads and rollback as a new revision.
+- Added isolated PostgreSQL to GitHub Actions and registered room lifecycle and pending level-up persistence tests.
+- Restricted the deployment runner's release check to static validation, typechecking and the frontend build; database-mutating tests run only against disposable CI PostgreSQL.
+- Documented automated coverage and the production migration boundary. No production backup, host migration, Nginx change, player-data rewrite or production cutover was performed.

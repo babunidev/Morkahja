@@ -49,7 +49,6 @@ export function deployApplication(env = loadEnvironment()) {
   });
   run('npm', ['ci'], repositoryRoot, env);
 
-  run('npm', ['run', 'verify:static-data'], repositoryRoot, env);
   for (const script of [
     'test:content-publication',
     'test:content-runtime',
@@ -60,8 +59,8 @@ export function deployApplication(env = loadEnvironment()) {
     'test:content-backup',
     'test:deployment',
   ]) run('npm', ['run', script], repositoryRoot, env);
-  run('npm', ['run', 'build', '--prefix', 'client'], repositoryRoot, env);
-  // Includes the complete project release checks and server/client typecheck.
+  // Production-safe static validation and type/build checks only. Database-mutating
+  // integration tests run in CI against its isolated PostgreSQL service, never here.
   run('npm', ['run', 'release:check'], repositoryRoot, env);
 
   const builtClient = resolve(repositoryRoot, 'client', 'dist');

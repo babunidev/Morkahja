@@ -167,7 +167,7 @@ await ensureAvatar(session.playerId, avatarId, {
   assert.equal(afterContinue.roomState, 'system_event');
   assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
-  const progressionAfterCommit = await getProgression(session.playerId, avatarId);
+  const progressionAfterCommit = await getProgression<ReturnType<typeof createInitialProgression>>(session.playerId, avatarId);
   assert.equal(progressionAfterCommit?.pendingLevelUpRewards, true);
 
   await leaveRoom(session.playerId, avatarId);
@@ -204,7 +204,7 @@ await ensureAvatar(session.playerId, avatarId, {
 
   await submitContinue(session.playerId, avatarId);
 
-  const progressionAfterRewards = await getProgression(session.playerId, avatarId);
+  const progressionAfterRewards = await getProgression<ReturnType<typeof createInitialProgression>>(session.playerId, avatarId);
   assert.equal(progressionAfterRewards?.pendingLevelUpRewards, false);
 }
 

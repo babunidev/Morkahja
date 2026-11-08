@@ -4,10 +4,14 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { getEncounters, invalidateGameDataCaches, saveEncounterEntry } from './gameData.js';
+import {
+  getEncounters, getGameRuntimeContentSnapshot, getGameRuntimeContentSnapshotForRevision,
+  invalidateGameDataCaches, saveEncounterEntry,
+} from './gameData.js';
 import {
   ContentPublicationError, listContentRevisions, publishContentRevision, readContentPointer,
   readContentRevision, readPublishedContent, restoreContentRevision, validateContentBundle,
+  type ContentBundle,
 } from './contentPublication.js';
 
 function sample() {
@@ -197,6 +201,76 @@ test('opt-in gameData reads a new revision without a restart and never mutates o
     } finally {
       if (prior === undefined) delete process.env.MORKAHJA_CONTENT_ROOT;
       else process.env.MORKAHJA_CONTENT_ROOT = prior;
+      invalidateGameDataCaches();
+    }
+  });
+});
+
+
+test('rehearses legacy import, live revision switching and reversal in an isolated root', () => {
+  const serverRoot = join(dirname(fileURLToPath(import.meta.url)), '../..');
+  const names = {
+    encounters: 'encountersdata.json', solutions: 'solutiondata.json',
+    expansions: 'expansiondata.json', frames: 'frames.json', portraits: 'portraits.json',
+  };
+  const sourceFiles = Object.values(names).map(file => join(serverRoot, 'game', file));
+  const sourceBytes = new Map(sourceFiles.map(file => [file, readFileSync(file)]));
+
+  const bundle = Object.fromEntries(Object.entries(names).map(([kind, file]) => [
+    kind, JSON.parse(readFileSync(join(serverRoot, 'game', file), 'utf8')) as unknown,
+  ])) as ContentBundle;
+
+  const previousRoot = process.env.MORKAHJA_CONTENT_ROOT;
+  temporaryRoot(root => {
+    try {
+      const imported = publishContentRevision(root, {
+        baseRevision: null, publicationId: 'migration_rehearsal_initial', content: bundle,
+      });
+      process.env.MORKAHJA_CONTENT_ROOT = root;
+      invalidateGameDataCaches();
+
+      const initialSnapshot = getGameRuntimeContentSnapshot();
+      assert.equal(initialSnapshot.revision, imported.revision);
+      const encounterKey = Object.keys(initialSnapshot.encounters)[0]!;
+      const originalTitle = initialSnapshot.encounters[encounterKey]!.mEncounterTitle;
+
+      const revisedBundle = structuredClone(bundle) as ContentBundle;
+      const revisedEncounters = revisedBundle.encounters as Record<string, { mEncounterTitle: string }>;
+      revisedEncounters[encounterKey]!.mEncounterTitle = originalTitle + ' (migration rehearsal)';
+
+      const published = publishContentRevision(root, {
+        baseRevision: imported.revision,
+        publicationId: 'migration_rehearsal_update',
+        content: revisedBundle,
+      });
+      const liveSnapshot = getGameRuntimeContentSnapshot();
+      assert.equal(liveSnapshot.revision, published.revision);
+      assert.equal(liveSnapshot.encounters[encounterKey]!.mEncounterTitle, originalTitle + ' (migration rehearsal)');
+      assert.equal(initialSnapshot.encounters[encounterKey]!.mEncounterTitle, originalTitle);
+      assert.equal(
+        getGameRuntimeContentSnapshotForRevision(imported.revision).encounters[encounterKey]!.mEncounterTitle,
+        originalTitle,
+      );
+
+      const restored = restoreContentRevision(
+        root, published.revision, imported.revision, 'migration_rehearsal_rollback',
+      );
+      const afterRollback = getGameRuntimeContentSnapshot();
+      assert.equal(restored.manifest.operation, 'rollback');
+      assert.equal(afterRollback.revision, restored.revision);
+      assert.equal(afterRollback.encounters[encounterKey]!.mEncounterTitle, originalTitle);
+      assert.equal(
+        getGameRuntimeContentSnapshotForRevision(published.revision).encounters[encounterKey]!.mEncounterTitle,
+        originalTitle + ' (migration rehearsal)',
+      );
+      assert.equal(listContentRevisions(root).length, 3);
+
+      for (const file of sourceFiles) {
+        assert.deepEqual(readFileSync(file), sourceBytes.get(file));
+      }
+    } finally {
+      if (previousRoot === undefined) delete process.env.MORKAHJA_CONTENT_ROOT;
+      else process.env.MORKAHJA_CONTENT_ROOT = previousRoot;
       invalidateGameDataCaches();
     }
   });

@@ -29,7 +29,9 @@
     "test:encounter": "npm run test:encounter --prefix server",
     "test:lifecycle": "npm run test:lifecycle --prefix server",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",
-    "release:check": "npm run verify:static-data && npm run test:session-auth --prefix server && npm run test:achievements --prefix server && npm run test:dice --prefix server && npm run typecheck"
+    "release:check": "npm run verify:static-data && npm run typecheck",
+    "test:rooms": "npm run test:rooms --prefix server",
+    "test:pending-level-up": "npm run test:pending-level-up --prefix server"
   },
   "dependencies": {
     "pg": "^8.20.0"

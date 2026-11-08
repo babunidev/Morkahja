@@ -31,7 +31,7 @@ The deployment runner:
 3. Checks all path boundaries **before** any Git update.
 4. Requires the operator's MORKAHJA_BACKUP_OFF_HOST_CONFIRMED=1 acknowledgement and creates a verified content backup on the configured backup mount.
 5. Runs git pull --ff-only, then rechecks path isolation.
-6. Runs npm ci, static-data verification, all focused content/client/gameplay/backup tests, the standalone client build and the full npm run release:check gate.
+6. Runs npm ci, the focused content/client/gameplay/backup tests, and the production-safe npm run release:check gate (static-data validation, shared/server typecheck and frontend production build). Database-backed integration tests run only in GitHub Actions against an isolated PostgreSQL service; the deployment runner never executes them against the live production database.
 7. Reloads the PM2 application with pm2 startOrReload ecosystem.config.cjs --update-env, then retries the local /health endpoint with curl before changing the static site.
 8. Uses rsync --archive --delete-delay only from client/dist/ to the dedicated MORKAHJA_DEPLOY_WEB_ROOT, preserving /.well-known/ and the ownership marker.
 

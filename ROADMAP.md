@@ -138,3 +138,19 @@ Details: [Phase 7 gameplay revisions](docs/CONTENT_GAMEPLAY.md). Draft implement
 - [ ] Pass the complete release gate, test the exact application rollback target against a restored content copy, and approve a staged production cutover.
 
 Details: [Deployment and recovery](docs/DEPLOYMENT_RECOVERY.md). The deployment runner is guarded but has not been run against a production host. The Phase 8 branch and all preceding content stages remain draft review work.
+
+
+## Phase 9 — automated testing and migration readiness (draft PR #16, 2026-11-08)
+
+- [x] Expand static-data parity verification from encounters alone to all five JSON datasets across server, client source and public fallback.
+- [x] Correct the existing encounter test fixtures so they satisfy the declared reward and encounter contracts rather than weakening production types.
+- [x] Add a combined temporary-root rehearsal for initial legacy import, live revision switching, historical snapshot reads and rollback as a new revision.
+- [x] Provide a disposable PostgreSQL service in GitHub Actions for database-backed session and room tests.
+- [x] Keep database-mutating integration tests out of the production deployment runner; its release check is limited to static validation, typechecking and the client build.
+- [x] Add room lifecycle and pending-level-up persistence tests to the CI workflow.
+- [ ] Verify the actual production five-dataset and legacy-artwork snapshot against the candidate baseline and preserve it off-host.
+- [ ] Rehearse the initial import, browser acceptance, content reversal and exact application rollback on a real non-production host.
+- [ ] Complete a separate PostgreSQL backup/restore rehearsal and verify the production Nginx media proxy.
+- [ ] Obtain explicit approval before production cutover; run acceptance tests without rewriting or losing existing player data.
+
+See [Phase 9 automated testing and migration readiness](docs/CONTENT_MIGRATION.md). Temporary-root and CI tests do not count as production or staging acceptance.

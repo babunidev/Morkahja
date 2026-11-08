@@ -70,40 +70,56 @@ const unfavorableRolls = createEncounterRollSnapshot({
   rollE: 10,
 });
 
-function primaryEncounter(primarySolutionId: number, difficulty = 2): EncounterData {
+function primaryEncounter(
+  primarySolutionId: number,
+  difficulty: EncounterData['mEncounterDifficulty'] = 2,
+): EncounterData {
   return {
-    mEncounterID: 20001,
-    mEncounterTitle: 'Solution consumption test',
     mEncounterDifficulty: difficulty,
-    mEncounterRewardType: 0,
+    mEncounterExpansion: 0,
+    mEncounterFollow: 0,
+    mEncounterID: 20001,
+    mEncounterImageName: 'test_encounter',
     mEncounterRewardAmount: 0,
+    mEncounterRewardType: 1,
     mEncounterSolutiuonA: primarySolutionId,
-    mEncounterSolutiuonTypeA: getSolutionMap()[String(primarySolutionId)]!.mSolutionType,
     mEncounterSolutiuonB: 0,
-    mEncounterSolutiuonTypeB: 0,
     mEncounterSolutiuonC: 0,
-    mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
+    mEncounterSolutiuonTypeA: getSolutionMap()[String(primarySolutionId)]!.mSolutionType,
+    mEncounterSolutiuonTypeB: 0,
+    mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonTypeD: 0,
-  } as EncounterData;
+    mEncounterText: 'Test encounter.',
+    mEncounterTitle: 'Solution consumption test',
+    mEncounterType: 1,
+  };
 }
 
-function secondaryEncounter(secondaryType: number, difficulty = 2): EncounterData {
+function secondaryEncounter(
+  secondaryType: number,
+  difficulty: EncounterData['mEncounterDifficulty'] = 2,
+): EncounterData {
   return {
-    mEncounterID: 20001,
-    mEncounterTitle: 'Secondary consumption test',
     mEncounterDifficulty: difficulty,
-    mEncounterRewardType: 0,
+    mEncounterExpansion: 0,
+    mEncounterFollow: 0,
+    mEncounterID: 20001,
+    mEncounterImageName: 'test_encounter',
     mEncounterRewardAmount: 0,
+    mEncounterRewardType: 1,
     mEncounterSolutiuonA: 99999,
-    mEncounterSolutiuonTypeA: secondaryType,
     mEncounterSolutiuonB: 0,
-    mEncounterSolutiuonTypeB: 0,
     mEncounterSolutiuonC: 0,
-    mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonD: 0,
+    mEncounterSolutiuonTypeA: secondaryType,
+    mEncounterSolutiuonTypeB: 0,
+    mEncounterSolutiuonTypeC: 0,
     mEncounterSolutiuonTypeD: 0,
-  } as EncounterData;
+    mEncounterText: 'Test encounter.',
+    mEncounterTitle: 'Secondary consumption test',
+    mEncounterType: 1,
+  };
 }
 
 {
