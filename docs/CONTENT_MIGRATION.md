@@ -1,6 +1,6 @@
 # Morkahja — Phase 9 automated testing and migration readiness
 
-**Status:** Automated regression coverage and an isolated migration/reversal rehearsal are implemented in draft PR #16. The work is not deployed. Production content parity, a real staging-host rehearsal and the separately approved production cutover remain outstanding.
+**Status:** Automated regression coverage and an isolated migration/reversal rehearsal are implemented and verified in draft PR #16. [GitHub Actions run 42444458409](https://github.com/babunidev/Morkahja/actions/runs/42444458409) passed on commit `8e5e7da8a4a9a21d52515076d8012992238a6b23`, including 46 focused content/migration/deployment assertions, all five-dataset parity checks, database-backed session and pending-level-up tests, TypeScript checks and the frontend production build. The work is not deployed. Production content parity, a real staging-host rehearsal and the separately approved production cutover remain outstanding.
 
 ## Automated verification map
 
@@ -63,7 +63,7 @@ No production host or production content directory was available to this impleme
 
 Before a staging rehearsal, an operator must take a read-only snapshot of the actual five production datasets and the deployed legacy artwork, calculate and retain hashes, compare IDs and references against the candidate baseline, and preserve that snapshot independently of the application server. Use a non-production content root and a disposable or privacy-scrubbed database. Verify that the application, content, web and backup roots are separate and that the backup destination is a real off-host mount. Do not copy player/account records into a content migration.
 
-The initial external content root must be provisioned explicitly and be empty. The operator-facing `content:initialize` command now provides a read-only dry-run and an explicit apply path. It validates the five JSON datasets and all cross-references, requires separate source/content/backup roots, requires the backup root to be a mounted filesystem, writes a versioned legacy JSON backup with SHA-256 checksums, verifies that backup, and only then publishes the initial content revision. If publication fails, the verified backup is retained.
+The initial external content root must be provisioned explicitly and be empty. The operator-facing `content:initialize` command now provides a read-only dry-run and an explicit apply path. It validates the five JSON datasets and all cross-references, requires separate source/content/backup roots, requires the backup root to be a mounted filesystem, writes a versioned legacy JSON backup with SHA-256 checksums, verifies that backup, and only then publishes the initial content revision. It refuses to run while admin publishing is enabled. If publication fails, the verified backup is retained.
 
 Example staging dry-run:
 
