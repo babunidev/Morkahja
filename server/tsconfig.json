@@ -9,8 +9,15 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/src/*"]
+      "@shared/*": [
+        "../shared/src/*"
+      ]
     }
   },
-  "include": ["src/**/*", "../shared/src/**/*"]
+  "include": [
+    "src/**/*",
+    "../shared/src/**/*",
+    "scripts/contentInitialize.ts",
+    "scripts/contentInitialize.test.ts"
+  ]
 }

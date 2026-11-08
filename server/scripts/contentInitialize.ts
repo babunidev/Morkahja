@@ -104,7 +104,7 @@ function sha256(bytes: Buffer | string): string {
 
 function realDirectory(value: string, label: string): string {
   const absolute = path.resolve(value);
-  let info;
+  let info: ReturnType<typeof lstatSync>;
   try {
     info = lstatSync(absolute);
   } catch {
@@ -151,7 +151,7 @@ export function inspectLegacyContent(sourceRoot: string): LegacyContentInspectio
 
   for (const entry of LEGACY_CONTENT_FILES) {
     const filePath = path.join(source, entry.name);
-    let info;
+    let info: ReturnType<typeof lstatSync>;
     try {
       info = lstatSync(filePath);
     } catch {
