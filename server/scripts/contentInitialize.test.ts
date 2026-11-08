@@ -141,6 +141,18 @@ test('initialization requires off-host confirmation and separate production appr
       confirmProductionCutover: false,
     }), /separate cutover approval/i);
 
+    const previousPublishingFlag = process.env.MORKAHJA_ENABLE_CONTENT_PUBLISHING;
+    process.env.MORKAHJA_ENABLE_CONTENT_PUBLISHING = '1';
+    try {
+      assert.throws(
+        () => initializeLegacyContent(initializationOptions(paths)),
+        /publishing must remain disabled/i,
+      );
+    } finally {
+      if (previousPublishingFlag === undefined) delete process.env.MORKAHJA_ENABLE_CONTENT_PUBLISHING;
+      else process.env.MORKAHJA_ENABLE_CONTENT_PUBLISHING = previousPublishingFlag;
+    }
+
     assert.deepEqual(readdirSync(paths.backupRoot), []);
     assert.deepEqual(readdirSync(paths.contentRoot), []);
   });

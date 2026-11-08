@@ -204,6 +204,9 @@ function validateMigrationTargets(
   if (options.environment !== 'staging' && options.environment !== 'production') {
     fail('Migration environment must be staging or production.', 'INVALID_ENVIRONMENT');
   }
+  if (process.env.MORKAHJA_ENABLE_CONTENT_PUBLISHING === '1') {
+    fail('Admin content publishing must remain disabled during initial import.', 'PUBLISHING_ALREADY_ENABLED');
+  }
   if (options.environment === 'production' && options.confirmProductionCutover !== true) {
     fail('Production initialization requires separate cutover approval.', 'PRODUCTION_CUTOVER_NOT_APPROVED');
   }
