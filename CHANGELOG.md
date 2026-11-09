@@ -24,3 +24,11 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 ## 2026-10-31 — Changed: publication decision record
 
 - Recorded Babuni.dev’s open-development decision and verified current visibility in Decisions and Development journal; retained licensing, media-rights and deployment distinctions.
+
+
+## 2026-11-09 — Proposed babuni.dev subpath deployment plan
+
+- Added `docs/DEPLOYMENT.md` for the proposed `https://babuni.dev/Morkahja/` game address, including hosting alternatives, Vite/API/static-asset routing, PWA and Stripe settings, player recovery, verification and rollback.
+- Added the target and uncompleted work to the roadmap and recorded the human-selected address in the decision history.
+- Linked the deployment plan from the README and recorded the documentation work in the development guide.
+- Static source inspection and documentation changes only. No application code, DNS, server, production database or Stripe settings were changed; no build or deployment test was run.
