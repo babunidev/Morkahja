@@ -29,3 +29,12 @@ Babuni.dev requested review of the actual private repository and its documentati
 Babuni.dev clarified that project artwork was generated with AI and then manually cut out, arranged and composed in Photoshop/GIMP, including portraits, frames, item images and substantial UI work. Babuni.dev also manually entered project data. The music has a separate human author credited in About Us. This describes creative provenance; permission to redistribute contributed music is not inferred. The fuller development history remains a living work in progress.
 
 **AI contribution:** Recorded the author’s decision and clarification, separately from observed GitHub visibility. Earlier documentation-only publication was considered and is superseded as the intended long-term source. No root license was selected by this update; public visibility, open-source reuse permissions, media rights and production readiness are separate matters. No runtime testing or behavior change is claimed.
+
+
+## 2026-11-09 — Planning the move to babuni.dev/Morkahja
+
+After losing control of the former game domain, I chose to place the game beneath my existing website at `https://babuni.dev/Morkahja/`, while keeping the website itself at the domain root. The aim is to give Morkahja a stable address without introducing another domain.
+
+The repository already has a configurable API base URL, but its current frontend build, runtime asset paths and PWA manifest assume a root deployment. The existing API routes also need a dedicated reverse-proxy prefix. A second important constraint is player identity: browser storage does not cross domain origins, so the existing recovery-key flow must be tested against the unchanged production database before the move is announced.
+
+**Babuni's direction:** Use the existing domain and the `/Morkahja/` path. **AI contribution:** Inspect the current repository configuration and write a phased deployment plan covering DNS/hosting discovery, Vite and API paths, asset routing, PWA/Stripe settings, player recovery, verification and rollback. **Implementation:** Documentation only; added `docs/DEPLOYMENT.md` and cross-referenced the roadmap, decisions, README and changelog. **Verification:** Read the relevant repository files and historical deployment notes. No build, browser, DNS, live-server, production-database or Stripe test was performed. The hosting topology remains an open question.
