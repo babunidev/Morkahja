@@ -154,7 +154,7 @@ function buildFirestarterView(
   return {
     achievementId: FIRESTARTER_ACHIEVEMENT_ID,
     rank,
-    progress: rank >= 3 ? totalLevels : avatarCount,
+    progress: rank >= 2 ? totalLevels : avatarCount,
     bandStart: band.bandStart,
     bandEnd: band.bandEnd,
     progressInBand: band.progressInBand,

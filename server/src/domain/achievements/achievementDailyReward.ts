@@ -4,6 +4,7 @@ import { spiritguideDailyRewardGems } from './spiritguideAchievement.js';
 
 /** Upper bound for a single daily claim (all chains maxed + Alpha Player). */
 export const MAX_DAILY_REWARD_GEMS = 300;
+export const BASE_DAILY_REWARD_GEMS = 1;
 
 export interface DailyRewardAchievementRanks {
   adventurer: number;
@@ -30,7 +31,7 @@ export function sumAchievementRanks(ranks: DailyRewardAchievementRanks): number 
 }
 
 export function computeDailyRewardGems(ranks: DailyRewardAchievementRanks): number {
-  const raw = adventurerDailyRewardGems(ranks.adventurer)
+  const raw = BASE_DAILY_REWARD_GEMS + adventurerDailyRewardGems(ranks.adventurer)
     + adventurerDailyRewardGems(ranks.firestarter)
     + adventurerDailyRewardGems(ranks.blessed)
     + adventurerDailyRewardGems(ranks.combatant)

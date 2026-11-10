@@ -60,12 +60,6 @@ export function readAvatarDisplayTitle(
 
 
 
-function firstRankTitle(ranks: AchievementRankTitleSource[]): string | undefined {
-
-  return ranks.find((entry) => entry.rank === 1)?.title ?? ranks[0]?.title;
-
-}
-
 
 
 export function collectUnlockedTitlesFromAchievements(
@@ -109,40 +103,14 @@ export function collectUnlockedTitlesFromAchievements(
 
 
   for (const achievement of achievements) {
-
-    if (achievement.progress <= 0 && achievement.rank <= 0) {
-
-      continue;
-
-    }
-
-
-
-    if (achievement.progress > 0 && achievement.chainTitle?.trim()) {
-
-      pushTitle(achievement.chainTitle, achievement.achievementId, 0);
-
-    } else if (achievement.progress > 0 && achievement.rank < 1) {
-
-      const starterTitle = firstRankTitle(achievement.ranks);
-
-      if (starterTitle) {
-
-        pushTitle(starterTitle, achievement.achievementId, 0);
-
-      }
-
-    }
-
-
-
+    // Visible progress is not yet an earned avatar display title.
     if (achievement.rank <= 0) {
-
       continue;
-
     }
 
-
+    if (achievement.chainTitle?.trim()) {
+      pushTitle(achievement.chainTitle, achievement.achievementId, 0);
+    }
 
     for (const rankEntry of achievement.ranks) {
 

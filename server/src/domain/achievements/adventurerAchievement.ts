@@ -66,13 +66,13 @@ export function adventurerRankDefinition(rank: number): AchievementRankDefinitio
   return ADVENTURER_RANKS.find((entry) => entry.rank === rank) ?? null;
 }
 
-/** Standard daily bonus used by Adventurer and every other chain except Alpha Player. */
+/** Only earned ranks contribute achievement bonus gems; rank 0 is progress only. */
 export function standardAchievementDailyRewardGems(
   rank: number,
   maxRank = ADVENTURER_MAX_RANK,
 ): number {
   const clamped = Math.max(0, Math.min(maxRank, Math.floor(rank)));
-  return clamped + 1;
+  return clamped;
 }
 
 export function adventurerDailyRewardGems(rank: number): number {

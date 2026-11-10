@@ -39,3 +39,9 @@ Separate browser tabs can presently use the same account, including different av
 **4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
 
 **Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
+
+## Achievement progression
+
+Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
+
+The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.
