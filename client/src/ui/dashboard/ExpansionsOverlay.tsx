@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { createCheckoutSession, fetchPlayer, unlockExpansion } from '../../api/http.js';
 import { formatEurCents } from '../commerce/formatPrice.js';
-import encountersData from '../../data/game/encountersdata.json';
-import expansionData from '../../data/game/expansiondata.json';
+import { gameEncounters, gameExpansions } from '../../data/gameContent.js';
 import {
   protectedImageProps,
   protectedOverlaySurfaceProps,
@@ -56,7 +55,7 @@ function encounterImagePath(imageName: string): string {
 }
 
 function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
-  const records = encountersData as Record<string, EncounterDataRecord>;
+  const records = gameEncounters() as Record<string, EncounterDataRecord>;
   const byExpansion = new Map<number, EncounterPreviewEntry[]>();
 
   for (const record of Object.values(records)) {
@@ -99,7 +98,7 @@ function pickRandomEncounterPreviews(
 }
 
 function loadExpansionList(): ExpansionRecord[] {
-  const records = (expansionData as { expansions: Record<string, ExpansionRecord> }).expansions;
+  const records = gameExpansions() as Record<string, ExpansionRecord>;
 
   return Object.values(records).sort((left, right) => {
     if (left.mExtensioActive !== right.mExtensioActive) {

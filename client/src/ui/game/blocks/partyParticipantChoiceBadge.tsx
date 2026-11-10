@@ -5,7 +5,7 @@ import type {
   RoomParticipantDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import solutionData from '../../../data/game/solutiondata.json';
+import { gameSolutions } from '../../../data/gameContent.js';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -33,7 +33,9 @@ interface SolutionRecord {
   mSolutionText: string;
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return gameSolutions() as Record<string, SolutionRecord>;
+}
 
 const choiceBadgeOverlayStyle: CSSProperties = {
   position: 'absolute',
@@ -72,7 +74,7 @@ const badgeIconStyle: CSSProperties = {
 };
 
 function solutionImagePath(solutionId: number): string | null {
-  const solution = solutionsById[String(solutionId)];
+  const solution = solutionsById()[String(solutionId)];
   if (!solution) {
     return null;
   }
@@ -87,7 +89,7 @@ function solutionTooltipForId(
     return null;
   }
 
-  const solution = solutionsById[String(solutionId)];
+  const solution = solutionsById()[String(solutionId)];
   if (!solution) {
     return null;
   }

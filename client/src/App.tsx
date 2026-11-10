@@ -24,7 +24,7 @@ import {
   fetchPlayer,
   fetchRecentActivity,
   fetchSession,
-  fetchStaticGameDataStatus,
+  fetchGameContent,
   finalizeAvatarDeath,
   respondHelpInvite,
   sacrificeAvatar,
@@ -87,6 +87,7 @@ import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
 import { useMobileFullscreen } from './ui/layout/useMobileFullscreen.js';
 import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
+import { setGameContent } from './data/gameContent.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
@@ -616,7 +617,7 @@ export default function App() {
       loadPlayer: loadPlayerForBootstrap,
       loadAvatar: loadAvatarForBootstrap,
       syncState: async () => {
-        await fetchStaticGameDataStatus();
+        setGameContent(await fetchGameContent());
       },
     }),
     [],

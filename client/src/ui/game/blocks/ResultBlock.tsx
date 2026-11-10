@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
-import solutionData from '../../../data/game/solutiondata.json';
+import { gameSolutions } from '../../../data/gameContent.js';
 import { displayRollAsD20, displayRollOutcome, interpretRoll } from '@shared/diceInterpreter';
 import {
   encounterLossesFromSolutionIds,
@@ -394,7 +394,9 @@ const rewardTooltipTextStyle: CSSProperties = {
   textAlign: 'left',
 };
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return gameSolutions() as Record<string, SolutionRecord>;
+}
 
 function solutionImagePath(solution: SolutionRecord): string {
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
@@ -499,9 +501,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
     rewardIds,
     outcome,
     avatarLevel,
-    getSolutionUses: (rewardId) => solutionsById[String(rewardId)]?.mSolutionUses,
+    getSolutionUses: (rewardId) => solutionsById()[String(rewardId)]?.mSolutionUses,
   }).flatMap(({ solutionId, quantity }) => {
-    const solution = solutionsById[String(solutionId)];
+    const solution = solutionsById()[String(solutionId)];
 
     if (!solution) {
       return [];

@@ -9,8 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import framesData from '../../data/game/frames.json';
-import portraitsData from '../../data/game/portraits.json';
+import { gameFrames, gamePortraits } from '../../data/gameContent.js';
 import type { PersistedAvatar } from '../../api/http.js';
 import { FADE_DURATION_MS, fadeStyle } from '../transitions/fade.js';
 import {
@@ -496,13 +495,13 @@ export function AvatarCreation({
   visible: boolean;
 }) {
   const portraits = useMemo(
-    () => portraitsData.Avatar.filter(
+    () => (gamePortraits() as Array<PortraitRecord | null>).filter(
       (portrait): portrait is PortraitRecord => portrait !== null,
     ),
     [],
   );
   const frames = useMemo(
-    () => framesData.Frames.filter(
+    () => (gameFrames() as Array<FrameRecord | null>).filter(
       (frame): frame is FrameRecord => frame !== null,
     ),
     [],

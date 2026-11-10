@@ -6,7 +6,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import solutionData from '../../../data/game/solutiondata.json';
+import { gameSolutions } from '../../../data/gameContent.js';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
   anchorXForGridColumn,
@@ -86,7 +86,9 @@ const SOLUTION_TYPE_LABELS: Record<number, string> = {
   77: 'Resurrection Item',
 };
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return gameSolutions() as Record<string, SolutionRecord>;
+}
 
 /** Above encounter art/lore inside the encounter row; header row (z-index 50) stays on top. */
 const OVERLAY_Z_INDEX = 26;
@@ -210,7 +212,7 @@ function inventoryEntries(
         continue;
       }
 
-      const solution = solutionsById[String(item.solutionId)];
+      const solution = solutionsById()[String(item.solutionId)];
 
       if (!solution || !acceptedInventoryTypes.has(solution.mSolutionInventoryType)) {
         continue;

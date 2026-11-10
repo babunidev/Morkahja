@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import solutionData from '../../../data/game/solutiondata.json';
+import { gameSolutions } from '../../../data/gameContent.js';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -310,7 +310,9 @@ function solutionTooltipAnchorX(slot: SlotLetter): SolutionTooltipAnchorX {
   return 'center';
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return gameSolutions() as Record<string, SolutionRecord>;
+}
 
 function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[] {
   if (!inventory) {
@@ -365,7 +367,7 @@ function previewSolutionForRequirement(
   secondaryType: number,
 ): { isPrimary: boolean; solution: SolutionRecord } | null {
   if (primaryId > 0) {
-    const solution = solutionsById[String(primaryId)];
+    const solution = solutionsById()[String(primaryId)];
 
     if (solution) {
       return { isPrimary: true, solution };
@@ -373,7 +375,7 @@ function previewSolutionForRequirement(
   }
 
   if (secondaryType > 0) {
-    const solution = Object.values(solutionsById).find(
+    const solution = Object.values(solutionsById()).find(
       (record) => record.mSolutionType === secondaryType,
     );
 
@@ -450,7 +452,7 @@ function solutionForSlot(
     : secondaryMatch ?? primaryMatch;
 
   if (matchedItem && chargeState.available) {
-    const solution = solutionsById[String(matchedItem.solutionId)];
+    const solution = solutionsById()[String(matchedItem.solutionId)];
 
     if (!solution) {
       return null;
