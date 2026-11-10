@@ -35,7 +35,8 @@ export function mergeFirestarterPeaks(
   const peakAvatarCount = Math.max(peaks.peakAvatarCount, liveAvatarCount);
   const peakTotalLevels = Math.max(peaks.peakTotalLevels, liveTotalLevels);
   const computedRank = firestarterRankFromState(peakAvatarCount, peakTotalLevels);
-  const rank = computedRank;
+  // Ranks never go down: earlier milestones stay earned after rule changes.
+  const rank = Math.max(storedRank ?? 0, computedRank);
 
   return {
     peakAvatarCount,

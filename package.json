@@ -14,10 +14,9 @@
     "dev:client": "npm run dev --prefix client",
     "start": "npm run start --prefix server",
     "verify:static-data": "node scripts/verify-static-game-data.mjs",
-    "test:encounter": "npm run test:encounter --prefix server",
-    "test:lifecycle": "npm run test:lifecycle --prefix server",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",
-    "release:check": "npm run verify:static-data && npm run test:session-auth --prefix server && npm run test:achievements --prefix server && npm run test:dice --prefix server && npm run typecheck"
+    "release:check": "npm run verify:static-data && npm run typecheck && npm test",
+    "test": "npm test --prefix client && npm test --prefix server"
   },
   "dependencies": {
     "pg": "^8.20.0"

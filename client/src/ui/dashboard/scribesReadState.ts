@@ -50,7 +50,3 @@ export function hasUnreadScribes(
   const readIds = loadScribesReadIds(playerId);
   return entries.some((entry) => !readIds.has(entry.eventId));
 }
-
-export function isScribeEntryRead(playerId: string, eventId: string): boolean {
-  return loadScribesReadIds(playerId).has(eventId);
-}

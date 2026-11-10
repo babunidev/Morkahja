@@ -1,4 +1,4 @@
-import { getPlayer, setPlayer } from '../../db/postgresDocumentStore.js';
+import { getPlayer, setPlayer, withDocumentTransaction } from '../../db/postgresDocumentStore.js';
 import { addPlayerYellowRedGems } from '../../services/playerService.js';
 import {
   recordDailyRewardClaimedEvent,
@@ -14,7 +14,6 @@ import {
   HELPER_ACHIEVEMENT_ID,
   TRICKSTER_ACHIEVEMENT_ID,
 } from './encounterSolveAchievements.js';
-import { FIRESTARTER_ACHIEVEMENT_ID } from './firestarterAchievement.js';
 import { loadFirestarterState } from './firestarterProgress.js';
 import { SPIRITGUIDE_ACHIEVEMENT_ID } from './spiritguideAchievement.js';
 import { awardSpiritguidePoint } from './spiritguideProgress.js';
@@ -88,20 +87,6 @@ function isDailyRewardClaimedForDay(
 
 function dailyRewardClaimKey(utcDay: string): string {
   return `daily-reward-${utcDay}`;
-}
-
-async function writeDailyRewardState(
-  playerId: string,
-  state: PlayerDailyRewardState,
-): Promise<void> {
-  await setPlayer(
-    playerId,
-    {
-      dailyReward: state,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
 }
 
 function progressByAchievementId(
@@ -223,43 +208,54 @@ async function maybeRecordHearthBlessingReady(
     return next;
   }
 
-  await recordHearthBlessingReadyEvent(
-    playerId,
-    next.utcDay,
-    DAILY_REWARD_ENCOUNTERS_REQUIRED,
-  );
+  const { current, newlyNotified } = await withDocumentTransaction(async (transaction) => {
+    const freshPlayer = await transaction.getPlayer<PlayerDocument>(playerId);
+    const freshState = readDailyRewardState(freshPlayer);
+    if (
+      freshState.utcDay !== next.utcDay ||
+      freshState.readyNotifiedAt !== undefined ||
+      isDailyRewardClaimedForDay(freshPlayer, next.utcDay)
+    ) {
+      return { current: freshState, newlyNotified: false };
+    }
 
-  const notified: PlayerDailyRewardState = {
-    ...next,
-    readyNotifiedAt: timestamp,
-  };
-  await writeDailyRewardState(playerId, notified);
-  return notified;
+    const updated = { ...freshState, readyNotifiedAt: timestamp };
+    await transaction.setPlayer(
+      playerId,
+      { dailyReward: updated, updatedAt: Date.now() },
+      { merge: true },
+    );
+    return { current: updated, newlyNotified: true };
+  });
+  if (newlyNotified) {
+    await recordHearthBlessingReadyEvent(
+      playerId,
+      next.utcDay,
+      DAILY_REWARD_ENCOUNTERS_REQUIRED,
+    );
+  }
+  return current;
 }
 
 export async function recordDailyEncounterPlayed(
   playerId: string,
   timestamp = Date.now(),
 ): Promise<PlayerDailyRewardState> {
-  const player = await getPlayer<PlayerDocument>(playerId);
-  const state = readDailyRewardState(player);
-  const today = utcDayKey(timestamp);
-
-  if (state.utcDay !== today) {
-    const reset: PlayerDailyRewardState = {
-      utcDay: today,
-      encountersPlayed: 1,
-    };
-    await writeDailyRewardState(playerId, reset);
-    return maybeRecordHearthBlessingReady(playerId, player, 0, reset, timestamp);
-  }
-
-  const previousEncountersPlayed = state.encountersPlayed;
-  const next: PlayerDailyRewardState = {
-    ...state,
-    encountersPlayed: state.encountersPlayed + 1,
-  };
-  await writeDailyRewardState(playerId, next);
+  const { player, previousEncountersPlayed, next } = await withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<PlayerDocument>(playerId);
+    const state = readDailyRewardState(player);
+    const today = utcDayKey(timestamp);
+    const previousEncountersPlayed = state.utcDay === today ? state.encountersPlayed : 0;
+    const next: PlayerDailyRewardState = state.utcDay !== today
+      ? { utcDay: today, encountersPlayed: 1 }
+      : { ...state, encountersPlayed: state.encountersPlayed + 1 };
+    await transaction.setPlayer(
+      playerId,
+      { dailyReward: next, updatedAt: Date.now() },
+      { merge: true },
+    );
+    return { player, previousEncountersPlayed, next };
+  });
   return maybeRecordHearthBlessingReady(
     playerId,
     player,
@@ -342,9 +338,17 @@ export async function claimDailyReward(playerId: string): Promise<{
     claimKey,
   );
 
-  await writeDailyRewardState(playerId, {
-    ...state,
-    claimedAt: Date.now(),
+  // Do not overwrite concurrent encounter progress with the pre-claim snapshot.
+  await withDocumentTransaction(async (transaction) => {
+    const latest = await transaction.getPlayer<PlayerDocument>(playerId);
+    const currentState = readDailyRewardState(latest);
+    if (currentState.utcDay === utcDay) {
+      await transaction.setPlayer(
+        playerId,
+        { dailyReward: { ...currentState, claimedAt: Date.now() }, updatedAt: Date.now() },
+        { merge: true },
+      );
+    }
   });
 
   if (granted) {

@@ -89,25 +89,23 @@ export async function sacrificeFailedAvatar(
   currencies: NonNullable<PlayerDocument['currencies']>;
   room: EncounterRoom | null;
 }> {
-  const avatar = await loadAvatar(playerId, avatarId);
-  if (!avatar || readAvatarLifeStatus(avatar) !== 'failed' || !avatar.preDeathSnapshot) {
-    throw new AvatarDeathError('Avatar is not awaiting sacrifice', 409, 'NOT_FAILED');
-  }
-
-  const cost = sacrificeCostForLevel(avatar.preDeathSnapshot.level);
-
   const result = await withDocumentTransaction(async (transaction) => {
     const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
     if (!player) {
       throw new AvatarDeathError('Player not found', 404, 'PLAYER_NOT_FOUND');
     }
 
+    const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+    if (!avatar || readAvatarLifeStatus(avatar) !== 'failed' || !avatar.preDeathSnapshot) {
+      throw new AvatarDeathError('Avatar is not awaiting sacrifice', 409, 'NOT_FAILED');
+    }
+    const snapshot = avatar.preDeathSnapshot;
+    const cost = sacrificeCostForLevel(snapshot.level);
     const currentGems = readYellowRedGemBalance(player.currencies);
     if (currentGems < cost) {
       throw new InsufficientGemsForSacrificeError();
     }
 
-    const snapshot = avatar.preDeathSnapshot!;
     const fortuneInventory = applyFortuneSacrificeReward(snapshot.inventory, avatar);
     const restoredAvatar: AvatarDocument = {
       ...avatar,
@@ -190,16 +188,4 @@ export async function finalizeAvatarDeath(
   await clearPlayerPresenceRoom(playerId);
 
   return deceasedAvatar;
-}
-
-export async function readSacrificeGemCost(
-  playerId: string,
-  avatarId: string,
-): Promise<number> {
-  const avatar = await loadAvatar(playerId, avatarId);
-  if (!avatar?.preDeathSnapshot) {
-    return 0;
-  }
-
-  return sacrificeCostForLevel(avatar.preDeathSnapshot.level);
 }

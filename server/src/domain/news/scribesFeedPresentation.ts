@@ -21,11 +21,6 @@ function readString(payload: Record<string, unknown>, key: string): string | und
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
-function readNumber(payload: Record<string, unknown>, key: string): number | undefined {
-  const value = payload[key];
-  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-}
-
 export function resolveScribesAvatarVisual(
   event: GameEvent,
 ): { portrait: string; frame: string } | undefined {

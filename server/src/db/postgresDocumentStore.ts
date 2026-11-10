@@ -1,7 +1,7 @@
 import './loadDatabaseConfig.js';
 
 import pg from 'pg';
-import type { Pool as PgPool, PoolClient, QueryResult } from 'pg';
+import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 const { Pool } = pg;
 
@@ -38,6 +38,17 @@ async function ensureSchema(client: PgPool | PoolClient = pool): Promise<void> {
       player_id text NOT NULL,
       data jsonb NOT NULL DEFAULT '{}'::jsonb
     );
+
+    CREATE TABLE IF NOT EXISTS session_auth_challenges (
+      challenge_hash text PRIMARY KEY,
+      device_public_key text NOT NULL,
+      identity_public_key text NOT NULL,
+      purpose text NOT NULL CHECK (purpose IN ('register', 'restore')),
+      expires_at bigint NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS session_auth_challenges_expires_at_idx
+      ON session_auth_challenges (expires_at);
 
     CREATE TABLE IF NOT EXISTS avatars (
       player_id text NOT NULL,
@@ -156,18 +167,16 @@ export async function setPlayer<T extends JsonObject>(
   options: { merge?: boolean } = {},
 ): Promise<void> {
   await ensureSchema();
-  const existing = options.merge ? await getPlayer<T>(playerId) : null;
+  // PostgreSQL performs the merge against the current locked row; no stale read/merge/write.
   await pool.query(
     `INSERT INTO players (id, data)
      VALUES ($1, $2::jsonb)
-     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
-    [playerId, JSON.stringify(mergeData(existing, data, options.merge))],
+     ON CONFLICT (id) DO UPDATE
+     SET data = CASE WHEN $3::boolean
+       THEN players.data || EXCLUDED.data
+       ELSE EXCLUDED.data END`,
+    [playerId, JSON.stringify(data), options.merge === true],
   );
-}
-
-export async function deletePlayer(playerId: string): Promise<void> {
-  await ensureSchema();
-  await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
 }
 
 export async function findPlayerByIdentityPublicKey<T>(
@@ -223,6 +232,45 @@ export async function setDevice<T extends JsonObject>(
      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
     [deviceId, JSON.stringify(mergeData(existing, data, options.merge))],
   );
+}
+
+export interface SessionAuthChallengeRecord {
+  challengeHash: string;
+  devicePublicKey: string;
+  identityPublicKey: string;
+  purpose: 'register' | 'restore';
+  expiresAt: number;
+}
+
+/** Challenges live in PostgreSQL so replay protection works across server processes. */
+export async function storeSessionAuthChallenge(record: SessionAuthChallengeRecord): Promise<void> {
+  await ensureSchema();
+  await pool.query('DELETE FROM session_auth_challenges WHERE expires_at <= $1', [Date.now()]);
+  await pool.query(
+    `INSERT INTO session_auth_challenges
+      (challenge_hash, device_public_key, identity_public_key, purpose, expires_at)
+      VALUES ($1, $2, $3, $4, $5)`,
+    [record.challengeHash, record.devicePublicKey, record.identityPublicKey, record.purpose, record.expiresAt],
+  );
+}
+
+/** Atomic delete: exactly one bootstrap can consume this challenge, even concurrently. */
+export async function consumeSessionAuthChallenge(
+  record: Omit<SessionAuthChallengeRecord, 'expiresAt'>,
+  now = Date.now(),
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await pool.query(
+    `DELETE FROM session_auth_challenges
+      WHERE challenge_hash = $1
+        AND device_public_key = $2
+        AND identity_public_key = $3
+        AND purpose = $4
+        AND expires_at > $5
+      RETURNING challenge_hash`,
+    [record.challengeHash, record.devicePublicKey, record.identityPublicKey, record.purpose, now],
+  );
+  return result.rowCount === 1;
 }
 
 export async function getSession<T>(sessionId: string): Promise<T | null> {
@@ -343,12 +391,14 @@ export async function setAvatar<T extends JsonObject>(
   options: { merge?: boolean } = {},
 ): Promise<void> {
   await ensureSchema();
-  const existing = options.merge ? await getAvatar<T>(playerId, avatarId) : null;
   await pool.query(
     `INSERT INTO avatars (player_id, id, data)
      VALUES ($1, $2, $3::jsonb)
-     ON CONFLICT (player_id, id) DO UPDATE SET data = EXCLUDED.data`,
-    [playerId, avatarId, JSON.stringify(mergeData(existing, data, options.merge))],
+     ON CONFLICT (player_id, id) DO UPDATE
+     SET data = CASE WHEN $4::boolean
+       THEN avatars.data || EXCLUDED.data
+       ELSE EXCLUDED.data END`,
+    [playerId, avatarId, JSON.stringify(data), options.merge === true],
   );
 }
 
@@ -559,8 +609,14 @@ export async function listPendingInvitationsForPlayer<T>(playerId: string): Prom
 }
 
 export interface DocumentTransaction {
+  /** Optional side effects run after a successful COMMIT, never on rollback. */
+  onCommit(callback: () => Promise<void>): void;
+  /** SQL needed by other atomic workflows, executed on the same checked-out client. */
+  query<R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]): Promise<QueryResult<R>>;
   getPlayer<T>(playerId: string): Promise<T | null>;
   getAvatar<T>(playerId: string, avatarId: string): Promise<T | null>;
+  setSession<T extends JsonObject & { accessToken: string; playerId: string }>(sessionId: string, data: T): Promise<void>;
+  deleteSession(sessionId: string): Promise<void>;
   getActiveEncounter<T>(playerId: string, avatarId: string): Promise<T | null>;
   getEncounterRoom<T>(roomId: string): Promise<T | null>;
   getInventory<T>(playerId: string, avatarId: string): Promise<T | null>;
@@ -578,13 +634,35 @@ export async function withDocumentTransaction<T>(
 ): Promise<T> {
   await ensureSchema();
   const client = await pool.connect();
+  const postCommit: Array<() => Promise<void>> = [];
+  let result!: T;
 
   try {
     await client.query('BEGIN');
 
     const transaction: DocumentTransaction = {
+      onCommit: (callback) => { postCommit.push(callback); },
+      query: <R extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]) =>
+        client.query<R>(sql, values),
       getPlayer: async <R>(playerId: string) =>
         one(client.query('SELECT data FROM players WHERE id = $1 FOR UPDATE', [playerId])) as Promise<R | null>,
+      setSession: async <R extends JsonObject & { accessToken: string; playerId: string }>(
+        sessionId: string,
+        data: R,
+      ) => {
+        await client.query(
+          `INSERT INTO sessions (id, access_token, player_id, data)
+           VALUES ($1, $2, $3, $4::jsonb)
+           ON CONFLICT (id) DO UPDATE SET
+             access_token = EXCLUDED.access_token,
+             player_id = EXCLUDED.player_id,
+             data = EXCLUDED.data`,
+          [sessionId, data.accessToken, data.playerId, JSON.stringify(data)],
+        );
+      },
+      deleteSession: async (sessionId: string) => {
+        await client.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+      },
       getAvatar: async <R>(playerId: string, avatarId: string) =>
         one(client.query(
           'SELECT data FROM avatars WHERE player_id = $1 AND id = $2 FOR UPDATE',
@@ -621,12 +699,14 @@ export async function withDocumentTransaction<T>(
         data: R,
         options: { merge?: boolean } = {},
       ) => {
-        const existing = options.merge ? await transaction.getPlayer<R>(playerId) : null;
         await client.query(
           `INSERT INTO players (id, data)
            VALUES ($1, $2::jsonb)
-           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
-          [playerId, JSON.stringify(mergeData(existing, data, options.merge))],
+           ON CONFLICT (id) DO UPDATE
+           SET data = CASE WHEN $3::boolean
+             THEN players.data || EXCLUDED.data
+             ELSE EXCLUDED.data END`,
+          [playerId, JSON.stringify(data), options.merge === true],
         );
       },
       setAvatar: async <R extends JsonObject>(
@@ -635,12 +715,14 @@ export async function withDocumentTransaction<T>(
         data: R,
         options: { merge?: boolean } = {},
       ) => {
-        const existing = options.merge ? await transaction.getAvatar<R>(playerId, avatarId) : null;
         await client.query(
           `INSERT INTO avatars (player_id, id, data)
            VALUES ($1, $2, $3::jsonb)
-           ON CONFLICT (player_id, id) DO UPDATE SET data = EXCLUDED.data`,
-          [playerId, avatarId, JSON.stringify(mergeData(existing, data, options.merge))],
+           ON CONFLICT (player_id, id) DO UPDATE
+           SET data = CASE WHEN $4::boolean
+             THEN avatars.data || EXCLUDED.data
+             ELSE EXCLUDED.data END`,
+          [playerId, avatarId, JSON.stringify(data), options.merge === true],
         );
       },
       setActiveEncounter: async <R extends JsonObject>(playerId: string, avatarId: string, data: R) => {
@@ -677,15 +759,25 @@ export async function withDocumentTransaction<T>(
       },
     };
 
-    const result = await callback(transaction);
+    result = await callback(transaction);
     await client.query('COMMIT');
-    return result;
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
     client.release();
   }
+
+  for (const callback of postCommit) {
+    try {
+      await callback();
+    } catch (error) {
+      // The transaction is already committed: Scribe/event failures must not
+      // make callers retry completed currency or purchase mutations.
+      console.error('Post-commit notification failed', error);
+    }
+  }
+  return result;
 }
 
 export async function getSoloRoomCheckpoint<T>(

@@ -11,7 +11,7 @@ Authorship and creative direction belong to **Babuni.dev**. AI-assisted implemen
 ## Development documentation
 
 - [Concept](CONCEPT.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
-- [Architecture](docs/ARCHITECTURE.md) · [Design evidence](docs/DECISIONS.md) · [Development journal](docs/DEVLOG.md)
+- [Architecture](docs/ARCHITECTURE.md) · [Deployment plan](docs/DEPLOYMENT.md) · [Design evidence](docs/DECISIONS.md) · [Development journal](docs/DEVLOG.md)
 - [AI collaborator rules](AGENTS.md)
 
 The journal distinguishes source-based reconstruction, author direction, AI assistance, and independently verified behavior.
@@ -28,8 +28,20 @@ The original record follows the move from structured encounter/solution data int
 
 The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
 
+## Current development notes — 4 November 2026
+
+Recent security and persistence work is under review, **not merged into `main` or deployed**: [PR #5 — single-use session authentication challenges](https://github.com/babunidev/Morkahja/pull/5) and [PR #6 — atomic player/avatar persistence](https://github.com/babunidev/Morkahja/pull/6). PR #6 builds on PR #5.
+
+On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
+
+Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
+
+**4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
+
+**Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
+
 ## Achievement progression
 
 Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
 
-The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. These values are part of a reviewable gameplay change, not a claim that the branch has been deployed.
+The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.

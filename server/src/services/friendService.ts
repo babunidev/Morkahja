@@ -3,11 +3,10 @@ import {
   getPlayer,
   listAvatars,
   listPlayerIdsWithLiveSessions,
-  setPlayer,
+  withDocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { PlayerDocument } from '../types/player.js';
-import { HELP_SEEN_WINDOW_MS } from '../domain/rooms/roomConstants.js';
 import { getAchievementsSnapshotReadOnly } from './achievementService.js';
 import { loadPlayerAvatars } from './playerService.js';
 import { isPlayerRecentlyActive, readLastInteractionAt } from './playerInteractionService.js';
@@ -131,24 +130,25 @@ function friendIdsChanged(before: string[], after: string[]): boolean {
 
 /** Drop self entries and persist when the stored list was dirty. */
 async function sanitizeStoredFriendIds(playerId: string): Promise<string[]> {
-  const player = await getPlayer<Partial<PlayerDocument>>(playerId);
-  const stored = uniqueFriendIds(player?.friendIds);
-  const withoutSelf = stored.filter((friendId) => !friendIdMatchesPlayer(playerId, friendId));
-  const canonical = await Promise.all(withoutSelf.map((friendId) => resolveCanonicalFriendId(friendId)));
-  const sanitized = [...new Set(canonical)];
-
-  if (friendIdsChanged(stored, sanitized) || friendIdsChanged(withoutSelf, canonical)) {
-    await setPlayer(
-      playerId,
-      {
-        friendIds: sanitized,
-        updatedAt: Date.now(),
-      },
-      { merge: true },
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const stored = uniqueFriendIds(player?.friendIds);
+    const withoutSelf = stored.filter((friendId) => !friendIdMatchesPlayer(playerId, friendId));
+    const canonical = await Promise.all(
+      withoutSelf.map((friendId) => resolveCanonicalFriendId(friendId)),
     );
-  }
+    const sanitized = [...new Set(canonical)];
 
-  return sanitized;
+    if (friendIdsChanged(stored, sanitized) || friendIdsChanged(withoutSelf, canonical)) {
+      await transaction.setPlayer(
+        playerId,
+        { friendIds: sanitized, updatedAt: Date.now() },
+        { merge: true },
+      );
+    }
+
+    return sanitized;
+  });
 }
 
 function isPlayerOnline(
@@ -347,22 +347,21 @@ export async function addPlayerFriend(
     throw new CannotAddSelfError();
   }
 
-  const currentFriendIds = await sanitizeStoredFriendIds(playerId);
-
-  if (currentFriendIds.includes(friendId)) {
-    throw new FriendAlreadyAddedError();
-  }
-
-  const friendIds = [...currentFriendIds, friendId];
-
-  await setPlayer(
-    playerId,
-    {
-      friendIds,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
+  const friendIds = await withDocumentTransaction(async (transaction) => {
+    const current = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const currentFriendIds = uniqueFriendIds(current?.friendIds)
+      .filter((id) => !friendIdMatchesPlayer(playerId, id));
+    if (currentFriendIds.includes(friendId)) {
+      throw new FriendAlreadyAddedError();
+    }
+    const next = [...currentFriendIds, friendId];
+    await transaction.setPlayer(
+      playerId,
+      { friendIds: next, updatedAt: Date.now() },
+      { merge: true },
+    );
+    return next;
+  });
 
   const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions();
   const friend = await buildFriendSummary(playerId, friendId, liveSessionPlayerIds);

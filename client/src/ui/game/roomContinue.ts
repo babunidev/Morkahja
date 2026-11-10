@@ -29,14 +29,6 @@ export function hasWitnessableOutcome(
   );
 }
 
-/** True when another adventurer is in the party (not disengaged). */
-export function isPartySession(room: EncounterRoomSnapshotDto | null | undefined): boolean {
-  if (!room) {
-    return false;
-  }
-  return engagedParticipants(room).length > 1;
-}
-
 /** Mirrors server `continueTargetsForRoom` for UI hints only. */
 export function continueTargets(room: EncounterRoomSnapshotDto): RoomParticipantDto[] {
   if (isPostSystemEventContinue(room)) {

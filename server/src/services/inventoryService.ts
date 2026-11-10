@@ -113,15 +113,6 @@ export async function inventoryExists(
   return (await getInventory(playerId, avatarId)) !== null;
 }
 
-export async function resetInventory(
-  playerId: string,
-  avatarId: string,
-): Promise<AvatarInventory> {
-  const inventory = createEmptyInventory();
-  await persistInventory(playerId, avatarId, inventory);
-  return inventory;
-}
-
 function isWarriorProfile(profile: AvatarProfile): boolean {
   return profile.roleRewardType === WARRIOR_ROLE_REWARD_TYPE;
 }
@@ -416,110 +407,6 @@ export function flattenInventorySolutionIds(inventory: AvatarInventory): number[
 
     return Array.from({ length: item.uses }, () => item.solutionId);
   });
-}
-
-export async function getInventorySolutionIds(
-  playerId: string,
-  avatarId: string,
-): Promise<number[]> {
-  return flattenInventorySolutionIds(await loadInventory(playerId, avatarId));
-}
-
-export async function addRewardToInventory(
-  playerId: string,
-  avatarId: string,
-  solutionId: number,
-  uses?: number,
-): Promise<AvatarInventory> {
-  const solution = getSolution(solutionId);
-  const container = resolveInventoryContainer(solution.mSolutionInventoryType);
-  const inventory = await loadInventory(playerId, avatarId);
-  const existing = inventory[container].find(
-    (item) => item.solutionId === solutionId,
-  );
-
-  if (existing) {
-    existing.uses += Math.max(uses ?? solution.mSolutionUses ?? 1, 1);
-  } else {
-    inventory[container].push(createInventoryItem(solution, uses));
-  }
-
-  await persistInventory(playerId, avatarId, inventory);
-  return inventory;
-}
-
-export async function consumeSolution(
-  playerId: string,
-  avatarId: string,
-  solutionId: number,
-  amount = 1,
-): Promise<AvatarInventory> {
-  const inventory = await loadInventory(playerId, avatarId);
-  const next = consumeSolutionFromInventoryState(inventory, solutionId, amount);
-  await persistInventory(playerId, avatarId, next);
-  return next;
-}
-
-export async function consumeSolutions(
-  playerId: string,
-  avatarId: string,
-  solutionIds: number[],
-): Promise<void> {
-  for (const solutionId of solutionIds) {
-    await consumeSolution(playerId, avatarId, solutionId, 1);
-  }
-}
-
-export async function consumeEssenceUse(
-  playerId: string,
-  avatarId: string,
-  amount = 1,
-): Promise<AvatarInventory> {
-  const inventory = await loadInventory(playerId, avatarId);
-  const result = consumeRandomChargesFromContainerState(inventory, 'essences', amount);
-  await persistInventory(playerId, avatarId, result.inventory);
-  return result.inventory;
-}
-
-export async function removeRandomItem(
-  playerId: string,
-  avatarId: string,
-  amount = 1,
-): Promise<AvatarInventory> {
-  const inventory = await loadInventory(playerId, avatarId);
-  const result = consumeRandomChargesFromContainerState(inventory, 'items', amount);
-  await persistInventory(playerId, avatarId, result.inventory);
-  return result.inventory;
-}
-
-export async function addRewardsToInventory(
-  playerId: string,
-  avatarId: string,
-  solutionIds: number[],
-): Promise<void> {
-  for (const solutionId of solutionIds) {
-    await addRewardToInventory(playerId, avatarId, solutionId);
-  }
-}
-
-export async function applyFailurePenalty(
-  playerId: string,
-  avatarId: string,
-  outcome: InventoryPenaltyOutcome,
-  encounterDifficulty = 1,
-): Promise<void> {
-  const inventory = await loadInventory(playerId, avatarId);
-  const result = applyFailurePenaltyToInventoryState(
-    inventory,
-    outcome,
-    encounterDifficulty,
-  );
-
-  if (result.lostSolutionIds.length === 0) {
-    return;
-  }
-
-  await persistInventory(playerId, avatarId, result.inventory);
 }
 
 export async function initializeAvatarInventory(

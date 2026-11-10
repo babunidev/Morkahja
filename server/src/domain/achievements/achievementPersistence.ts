@@ -70,12 +70,13 @@ export async function reconcileAchievementProgress(
 ): Promise<AchievementProgress> {
   let rank = achievementRankFromProgress(record.achievementId, record.progress);
   if (record.achievementId === FIRESTARTER_ACHIEVEMENT_ID) {
-    // Preserve historic rank-4 encoding while applying current rank milestones.
+    // Decode historic rank-4 encoding before applying current milestones.
     const { peakAvatarCount, peakTotalLevels } = decodeFirestarterProgress(
       record.progress,
       record.rank,
     );
-    rank = firestarterRankFromState(peakAvatarCount, peakTotalLevels);
+    // Ranks never go down: keep a rank earned under earlier milestones.
+    rank = Math.max(record.rank, firestarterRankFromState(peakAvatarCount, peakTotalLevels));
   }
 
   if (record.rank === rank && (rank > 0 || record.unlockedAt === undefined)) {

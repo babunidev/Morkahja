@@ -9,6 +9,21 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: morkahja
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/morkahja
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,15 +31,11 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Verify static data sync
         run: npm run verify:static-data
-      # Run achievement regressions even when an unrelated auth/database gate fails.
-      - name: Server achievements test
-        run: npm run test:achievements --prefix server
-      - name: Server session auth test
-        run: npm run test:session-auth --prefix server
-      - name: Server dice test
-        run: npm run test:dice --prefix server
       - name: Typecheck and client build
         run: npm run typecheck
+      - name: Tests
+        # Fail on pg's deprecated concurrent client.query() use (a real race).
+        run: NODE_OPTIONS=--throw-deprecation npm test

@@ -5,7 +5,6 @@ import type {
 } from '../engine/encounterResolver.js';
 import type {
   EncounterData,
-  EncounterSlotLetter,
 } from '../engine/types.js';
 
 export type EncounterSnapshotState =
@@ -201,22 +200,5 @@ export function toSelectedEncounterAction(
       return { mode: 'slot', slot: 'D' };
     case 'dice':
       return { mode: 'dice' };
-  }
-}
-
-export function slotForPlayerAction(
-  action: PlayerEncounterAction,
-): EncounterSlotLetter | null {
-  switch (action.type) {
-    case 'primaryA':
-      return 'A';
-    case 'secondaryB':
-      return 'B';
-    case 'primaryC':
-      return 'C';
-    case 'secondaryD':
-      return 'D';
-    case 'dice':
-      return null;
   }
 }

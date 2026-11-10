@@ -72,14 +72,6 @@ function saveJson(relativePath: string, data: unknown): void {
   writeFileSync(gameFilePath(relativePath), `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
-export function invalidateGameDataCaches(): void {
-  encounterCache = null;
-  solutionCache = null;
-  framesCache = null;
-  portraitsCache = null;
-  expansionCache = null;
-}
-
 export function getEncounters(): EncounterDataMap {
   if (!encounterCache) {
     encounterCache = loadJson<EncounterDataMap>('game/encountersdata.json');
