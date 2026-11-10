@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-10 — Documentation readability
+
+- Moved the dated audit, test, pull request and gameplay status notes out of the front page into `docs/RELEASE_STATUS_HISTORY.md` and rewrote the entry as a game and project guide. No application, database or production changes.
+
 ## 2026-11-10 — Unreleased: one copy of the game content
 
 - `server/game/*.json` is now the only copy of encounters, solutions, expansions, frames and portraits. The duplicate copies in `client/src/data/game` and `client/public/game` were removed; images stay in `client/public/game`.
