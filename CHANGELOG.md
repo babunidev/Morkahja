@@ -2,11 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-10 — Test fix: random failures in `systemEventInventory.test.ts`
+## 2026-11-10 — Test fix: random failures in `systemEventInventory.test.ts` and `roomService.test.ts`
 
 - The level-up scenario in `server/src/services/systemEventInventory.test.ts` failed at random because it checked exact essence and spell counts while the encounters it used still granted randomly drawn rewards. A level-up's rewards are drawn when the encounter is created, from its own roll; a Prosperity draw can include an essence (seen in CI as 10 essence uses instead of 6). The normal encounter's random rewards could be an essence or spell 10001 itself (seen locally as 7 essence uses and as 3 charges of 10001 instead of 0).
 - The test now gives that normal encounter no random rewards and removes essences from the pre-drawn level-up rewards. All assertions are unchanged. Game code is unchanged; granting an essence on a Prosperity level-up is existing behavior.
-- **Verification:** the test passed 60 of 60 consecutive local runs (an earlier, partial fix failed 1 in 25). `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 38 server tests). Nobara, local Podman PostgreSQL.
+- `server/src/services/roomService.test.ts` (Continue past a disengaged participant) expected the next room state to be `active_encounter`, but the next encounter is drawn at random and can be a system event (seen in CI on PR #22). It now accepts either state, as the file's other Continue checks already do, and also requires a new encounter snapshot.
+- **Verification:** `systemEventInventory.test.ts` passed 60 of 60 consecutive local runs (an earlier, partial fix failed 1 in 25); `roomService.test.ts` passed 30 of 30. Because the random cases are rare, these runs show the changes work but cannot prove every random path is covered. `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 38 server tests). Nobara, local Podman PostgreSQL.
 
 ## 2026-11-10 — One stream: all open work merged into `main`
 
