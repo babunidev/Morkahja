@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-10 — One stream: all open work merged into `main`
+
+- `main` now contains PR #18 (one copy of the game content, `ee960792`), PR #19 (serve the game from `/Morkahja/` plus the stalled-turn fix, `1d35f4a9`) and PR #20 (documentation readability, `a2a3ac2f`). The merged `feat/babuni-dev-subpath` branch was deleted. No other branches or pull requests remain open; the local `backup/main-before-cleanup` branch holds only June admin encounter edits that are already in `main`.
+- **Not deployed:** production still runs backend `95fd5c5a` and frontend hotfix `0d217fc7`, which predate #18. The next release must upgrade backend and frontend together (see `docs/DEPLOYMENT.md`).
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed on `main` at `1d35f4a9` (Nobara, local Podman PostgreSQL); details in `docs/DEVLOG.md`. No application code changed in this step.
+
 ## 2026-11-10 — Deployed: serve the game from /Morkahja/ (branch `feat/babuni-dev-subpath`)
 
 - **Subpath build:** `client/vite.config.ts` sets `base: '/Morkahja/'` for production builds and `vite preview` (override: `VITE_BASE_PATH`). Production `VITE_API_BASE_URL` defaults to `/Morkahja/api`. `vite preview` proxies that prefix to the local backend with the prefix stripped. Development still serves from `/`.
@@ -10,9 +16,9 @@
 - **Backend behind a proxy:** `server/src/config/trustProxy.ts` sets Express `trust proxy` (default `loopback`, override `TRUST_PROXY`). Without it, all players behind Nginx would share one per-IP rate-limit bucket for session challenge, bootstrap and heartbeat.
 - **Deployment:** Added `deploy/nginx/morkahja-locations.conf.template` and rewrote `docs/DEPLOYMENT.md` with the discovered public infrastructure, environment variables, procedure, rollback and security assessment.
 - **Tests:** Added `client/src/assetUrl.test.ts` (base handling, manifest scope, regression guard for unwrapped asset paths) and `server/src/config/trustProxy.test.ts`.
-- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed locally on Nobara against a disposable PostgreSQL 16 container. A local Nginx + headless Chrome run verified routing, assets, onboarding, logout, deep links, recovery-key restoration of the same player, and a committed encounter turn through `/Morkahja/api/`. Not yet merged into `main`.
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed locally on Nobara against a disposable PostgreSQL 16 container. A local Nginx + headless Chrome run verified routing, assets, onboarding, logout, deep links, recovery-key restoration of the same player, and a committed encounter turn through `/Morkahja/api/`. Not yet merged into `main` at the time; merged later on 2026-11-10 as PR #19.
 - **Fix: turns stalled after choosing a solution or dice (`0d217fc7`, hotfix deployed 2026-11-10):** Since #17 the server withholds encounter rolls until a choice is committed, but the client committed only once it knew the roll, so the choice was never sent and Continue stayed disabled. `SolutionBlock` now marks its reveal call as the commit phase (`client/src/ui/game/blocks/actionRevealPhase.ts`, with a unit test), and the existing server-resolution effect reveals the returned roll. Babuni reported the stall in production after the upgrade. The fix was verified by real UI clicks locally and live (solution, dice and a level-up system event) and deployed as a frontend-only release.
-- **Deployed (2026-11-10):** Released to production at `https://www.babuni.dev/Morkahja/` from commit `95fd5c5a`, with Babuni's approval. The backend was upgraded from `77062a42` at the same time. The database backup was verified by restore, and live checks passed; see `docs/DEPLOYMENT.md`. Still open: Stripe webhook URL, a real pre-migration account restore, and merging into `main`.
+- **Deployed (2026-11-10):** Released to production at `https://www.babuni.dev/Morkahja/` from commit `95fd5c5a`, with Babuni's approval. The backend was upgraded from `77062a42` at the same time. The database backup was verified by restore, and live checks passed; see `docs/DEPLOYMENT.md`. Still open at the time: Stripe webhook URL, a real pre-migration account restore, and merging into `main` (all three were completed later on 2026-11-10; see `ROADMAP.md`).
 - **Target host (2026-11-10):** At Babuni's decision the production address is `https://www.babuni.dev/Morkahja/`. The social-preview fallback, test URLs, Nginx template comments and deployment configuration were updated to match. No runtime path logic changed.
 
 ## 2026-11-10 — Documentation readability
@@ -26,7 +32,7 @@
 - The server re-reads a content file when its modification time changes (checked at most once per second) and keeps the last good copy if a file is invalid. Admin saves are written atomically. Content edits therefore reach players on their next page load, without a rebuild or restart. Running rooms keep their own encounter snapshots.
 - `npm run verify:static-data` now checks the single source: structure, matching ids, references from encounters to solutions, follow-ups and expansions, image files, and that no client copy has been reintroduced.
 - babuni.admin writes the JSON to `server/game` (separate change in that repository).
-- **Verification:** see `docs/DEVLOG.md` (2026-11-10). **Not deployed.**
+- **Verification:** see `docs/DEVLOG.md` (2026-11-10). **Not deployed.** Merged into `main` as PR #18 (`ee960792`) on 2026-11-10; still not deployed as of the consolidation entry above.
 
 ## 2026-11-04 — Unreleased: authentication, persistence and release-gate maintenance (PRs #5 and #6)
 

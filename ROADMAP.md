@@ -32,7 +32,7 @@ Run documented static and lifecycle checks in an appropriate development environ
 
 **Target selected by Babuni:** `https://www.babuni.dev/Morkahja/` (decided 2026-11-10, replacing the original `https://babuni.dev/Morkahja/`), with the main website remaining at `https://www.babuni.dev/`.
 
-**Status:** **Deployed and verified live on 2026-11-10** from branch `feat/babuni-dev-subpath` (commit `95fd5c5a`, not yet merged into `main`). The production backend was upgraded from June commit `77062a42` at the same time. Public discovery found the apex `babuni.dev` parked, so Babuni chose `www.babuni.dev`; no DNS was changed.
+**Status:** **Deployed and verified live on 2026-11-10** from branch `feat/babuni-dev-subpath` (commit `95fd5c5a`). The branch was merged into `main` later that day as PR #19 (`1d35f4a9`). The production backend was upgraded from June commit `77062a42` at the same time. Public discovery found the apex `babuni.dev` parked, so Babuni chose `www.babuni.dev`; no DNS was changed.
 
 - [x] **Hostname decided:** `www.babuni.dev/Morkahja/`. Public DNS/HTTP were inspected; no DNS was changed. *(Optional later: redirect the apex to `www` if it is ever connected.)*
 - [x] Server inspected: website, game API (PM2) and PostgreSQL 18 share one host; Stripe is enabled; the backend needed an upgrade.
@@ -49,7 +49,8 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [x] Stripe webhook endpoint updated to the new URL (both checkout events).
 - [ ] Confirm the first real checkout return and signed delivery.
 - [x] Babuni restored their own **pre-migration** account with its recovery key at the new URL (manual, user-reported).
-- [ ] Merge the branch into `main` and return the server checkout to `main`.
+- [x] Merge the branch into `main` (PR #19, `1d35f4a9`, 2026-11-10).
+- [ ] Return the server checkout to `main`. Because `main` now includes PR #18 (game content served by the server), this means deploying **backend and frontend together**; a frontend-only release of current `main` would not load content from the deployed backend. See [the next-deployment notes](docs/DEPLOYMENT.md#next-deployment-game-content-from-the-server-pr-18).
 - [ ] PWA install, two-person multiplayer and mobile browsers at the live URL.
 - [ ] Assess and address same-origin risks (origin-wide `localStorage` holding identity keys, no CSP/HSTS on the website today). *(Documented; not changed.)*
 

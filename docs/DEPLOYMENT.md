@@ -139,6 +139,15 @@ Paths in `<angle brackets>` must be read from the actual server; do not guess th
 
 Keep the previous release, Nginx file and `.env` copy until the new route has been stable for a while.
 
+## Next deployment: game content from the server (PR #18)
+
+Recorded on 2026-11-10, when `main` first contained PR #18 while production still ran backend `95fd5c5a` and frontend `0d217fc7`.
+
+- **Backend and frontend together.** The current client loads all game content from `GET /game-data/content` and no longer carries a built-in copy. The deployed backend predates that endpoint (a live request to `/Morkahja/api/game-data/content` returned 401 on 2026-11-10). Do not use the frontend-only phase for a client built from current `main` until the backend is upgraded.
+- **Preserve live content edits.** `server/game/*.json` in the server checkout is the persistent, admin-writable content (step 3 above). Compare it with `main` and back it up before switching the checkout; any live edits must be kept, not overwritten by the repository copy.
+- **Check compression.** The content response is about 460 KB uncompressed. Confirm whether Nginx compresses `application/json` before or after the release.
+- **Verify** with the checklist above, plus a browser play-through confirming that content loads during the loading screen.
+
 ## Production deployment — 2026-11-10
 
 Approved by Babuni ("deploy it to the server"). AI assistance prepared, uploaded and checked every artifact; Babuni ran the two `sudo` phases of a staged script kept on the server, outside the repository, because it names server-internal paths and accounts.
