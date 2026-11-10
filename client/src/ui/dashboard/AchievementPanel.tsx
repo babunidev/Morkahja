@@ -9,8 +9,9 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 
 const panelBodyStyle: CSSProperties = {
   display: 'grid',
@@ -232,7 +233,7 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
           alt=""
           aria-hidden="true"
           {...protectedImageProps}
-          src={achievement.baseIconUrl}
+          src={assetUrl(achievement.baseIconUrl)}
           style={baseIconStyle}
         />
         {achievement.rankOverlayUrl ? (
@@ -240,7 +241,7 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
             alt=""
             aria-hidden="true"
             {...protectedImageProps}
-            src={achievement.rankOverlayUrl}
+            src={assetUrl(achievement.rankOverlayUrl)}
             style={rankOverlayStyle}
           />
         ) : null}

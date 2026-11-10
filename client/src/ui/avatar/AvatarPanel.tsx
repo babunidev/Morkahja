@@ -5,8 +5,9 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
 
 const panelStyle: CSSProperties = {
   position: 'relative',

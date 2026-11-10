@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
+import { assetUrl } from '../../../assetUrl.js';
 
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
+const FRAME_MASK = assetUrl('/UI/09_GAME/im_spacer_line.webp');
 
 /** On top within the header row (row z-index 50 in GameEnvironment). */
 export const ENCOUNTER_HEADER_SEAM_Z_INDEX = 40;

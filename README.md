@@ -39,3 +39,7 @@ Separate browser tabs can presently use the same account, including different av
 **4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
 
 **Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
+
+## Moving to babuni.dev/Morkahja — 10 November 2026
+
+The repository changes for serving the game at `https://babuni.dev/Morkahja/` are on branch `feat/babuni-dev-subpath`. They passed the local release check and a local Nginx/browser integration test, and are **not merged or deployed**. The live URL first needs a decision about the apex domain, which currently shows a registrar parking page. Existing players will need their recovery-key file at the new address, because browser storage does not move between domains. See the [deployment plan](docs/DEPLOYMENT.md).

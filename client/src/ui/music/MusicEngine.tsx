@@ -18,10 +18,11 @@ import {
   storedMusicEnabled,
   storedMusicVolume,
 } from '../audioVolume.js';
+import { assetUrl } from '../../assetUrl.js';
 const MORKAHJA_MAIN_TRACKS = [
-  '/UI/Music/Morkahja_main_full_intro.mp3',
-  '/UI/Music/Morkahja_main_intro.mp3',
-  '/UI/Music/Morkahja_main_track.mp3',
+  assetUrl('/UI/Music/Morkahja_main_full_intro.mp3'),
+  assetUrl('/UI/Music/Morkahja_main_intro.mp3'),
+  assetUrl('/UI/Music/Morkahja_main_track.mp3'),
 ];
 const DASHBOARD_MUSIC_DELAY_MS = 3000;
 const MUSIC_FADE_MS = 420;

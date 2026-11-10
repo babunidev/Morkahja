@@ -7,8 +7,9 @@ import {
   AVATAR_ENTER_TO_CENTER_MS,
   AVATAR_ENTER_TO_GAME_MS,
 } from './avatarEnterTransition.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 /** Solutions are seeded across the avatar's whole travel (centre + glow + game). */
 const SPAWN_WINDOW_MS =

@@ -15,8 +15,9 @@ import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementPanel from './AchievementPanel.js';
 import SoulLinkOverlay from './SoulLinkOverlay.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const FRIENDS_UI_ROOT = '/UI/07_FriendsMenu';
+const FRIENDS_UI_ROOT = assetUrl('/UI/07_FriendsMenu');
 const ADD_FRIEND_BUTTON = `${FRIENDS_UI_ROOT}/im_button_add_friend.webp`;
 const ONLINE_ICON = `${FRIENDS_UI_ROOT}/im_button_friend_online.webp`;
 const OFFLINE_ICON = `${FRIENDS_UI_ROOT}/im_button_friend_offline.webp`;

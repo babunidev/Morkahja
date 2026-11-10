@@ -32,10 +32,11 @@ import {
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
 import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
-const DEFAULT_DICE_BUTTON = diceButtonAssetPath(DEFAULT_DICE_ID);
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const FRAME_MASK = assetUrl('/UI/09_GAME/im_spacer_line.webp');
+const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 type SlotLetter = 'A' | 'B' | 'C' | 'D';
 type SolutionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];

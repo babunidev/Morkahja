@@ -6,12 +6,26 @@ import {
   SOCIAL_DESCRIPTION,
   SOCIAL_IMAGE_HEIGHT,
   SOCIAL_IMAGE_PATH,
+  SOCIAL_IMAGE_TYPE,
   SOCIAL_IMAGE_WIDTH,
   SOCIAL_SITE_URL_FALLBACK,
   SOCIAL_TITLE,
 } from './socialPreview'
 
 const clientDir = path.dirname(fileURLToPath(import.meta.url))
+
+/**
+ * Production deployment: https://babuni.dev/Morkahja/ (see docs/DEPLOYMENT.md).
+ * The reverse proxy strips `/Morkahja/api` before forwarding to Express, which
+ * keeps registering its routes at the root (`/health`, `/session`, ...).
+ */
+const PRODUCTION_BASE_PATH = '/Morkahja/'
+const LOCAL_API_TARGET = 'http://127.0.0.1:3000'
+
+function normalizeBasePath(value: string): string {
+  const withLeading = value.startsWith('/') ? value : `/${value}`
+  return withLeading.endsWith('/') ? withLeading : `${withLeading}/`
+}
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -34,7 +48,7 @@ function socialPreviewPlugin(siteUrl: string, mode: string): Plugin {
         `<meta property="og:description" content="${escapeHtmlAttr(SOCIAL_DESCRIPTION)}" />`,
         `<meta property="og:url" content="${base}/" />`,
         `<meta property="og:image" content="${image}" />`,
-        `<meta property="og:image:type" content="image/png" />`,
+        `<meta property="og:image:type" content="${SOCIAL_IMAGE_TYPE}" />`,
         `<meta property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}" />`,
         `<meta property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}" />`,
         `<meta property="og:image:alt" content="${escapeHtmlAttr(SOCIAL_TITLE)}" />`,
@@ -58,11 +72,33 @@ function socialPreviewPlugin(siteUrl: string, mode: string): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, clientDir, '')
+  const isProduction = mode === 'production'
+  // Development keeps serving from `/`; production builds and `vite preview` use the subpath.
+  const base = normalizeBasePath(
+    env.VITE_BASE_PATH?.trim() || (isProduction ? PRODUCTION_BASE_PATH : '/'),
+  )
+  // An explicit VITE_API_BASE_URL (including an empty string) always wins.
+  const apiBaseUrl =
+    env.VITE_API_BASE_URL ?? (isProduction && base !== '/' ? `${base}api` : '')
+  const apiProxy =
+    apiBaseUrl.startsWith('/') && apiBaseUrl.length > 1
+      ? {
+          [apiBaseUrl]: {
+            target: LOCAL_API_TARGET,
+            rewrite: (requestPath: string) =>
+              requestPath.slice(apiBaseUrl.length) || '/',
+          },
+        }
+      : {}
   const siteUrl =
     env.VITE_SITE_URL?.trim() ||
     (mode === 'production' ? SOCIAL_SITE_URL_FALLBACK : '')
 
   return {
+    base,
+    define: {
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl),
+    },
     plugins: [
       react(),
       ...(siteUrl ? [socialPreviewPlugin(siteUrl, mode)] : []),
@@ -74,6 +110,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
+        ...apiProxy,
         '/activity': 'http://127.0.0.1:3000',
         '/encounter': 'http://127.0.0.1:3000',
         '/room': 'http://127.0.0.1:3000',
@@ -84,6 +121,11 @@ export default defineConfig(({ mode }) => {
         '/game-data': 'http://127.0.0.1:3000',
         '/health': 'http://127.0.0.1:3000',
       },
+    },
+    // Local subpath check: `npm run build && npm run preview` serves /Morkahja/
+    // and forwards /Morkahja/api/* to the local backend with the prefix stripped.
+    preview: {
+      proxy: apiProxy,
     },
   }
 })

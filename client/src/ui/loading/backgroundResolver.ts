@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assetUrl.js';
 export type LoadingSeason = 'winter' | 'spring' | 'summer' | 'autumn';
 export type LoadingTimeOfDay = 'night' | 'morning' | 'day' | 'evening';
 
@@ -7,8 +8,8 @@ export interface LoadingBackground {
   assetPath: string;
 }
 
-const BACKGROUND_ROOT = '/UI/01_WelcomeScreen/BackgroundPaintings';
-const LOADING_LOGO_ROOT = '/UI/01_WelcomeScreen';
+const BACKGROUND_ROOT = assetUrl('/UI/01_WelcomeScreen/BackgroundPaintings');
+const LOADING_LOGO_ROOT = assetUrl('/UI/01_WelcomeScreen');
 
 export function resolveLoadingLogoPath(now = new Date()): string {
   const season = resolveSeason(now);

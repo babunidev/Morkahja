@@ -22,6 +22,7 @@ import {
 import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
 import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
+import { assetUrl } from '../../assetUrl.js';
 
 async function signedBootstrapInput(
   device: StoredKeypair,
@@ -52,9 +53,9 @@ async function signedBootstrapInput(
 
 const ONBOARDING_FADE_MS = 730;
 
-const BACKGROUND = '/UI/01_2_Agreement/menuBGplayerCreation.webp';
-const FALLBACK_BACKGROUND = '/UI/01_1_SignIn/menuBG.webp';
-const JOURNEY_EMBLEM = '/UI/01_2_Agreement/NEWAgreeButt.png';
+const BACKGROUND = assetUrl('/UI/01_2_Agreement/menuBGplayerCreation.webp');
+const FALLBACK_BACKGROUND = assetUrl('/UI/01_1_SignIn/menuBG.webp');
+const JOURNEY_EMBLEM = assetUrl('/UI/01_2_Agreement/NEWAgreeButt.png');
 
 type Mode = 'gateway' | 'new';
 

@@ -9,9 +9,10 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
 const OVERLAY_FADE_MS = 300;
-const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const PAYPAL_DEVELOPER_URL = 'https://www.paypal.com/paypalme/babunigaming';
 const DEVELOPER_DONATION_TOOLTIP = (
   'All donations go directly into the ongoing maintenance, development, and improvement '

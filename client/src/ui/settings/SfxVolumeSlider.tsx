@@ -4,8 +4,9 @@ import {
   storedSfxVolume,
 } from '../audioVolume.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const SFX_CONTROL_ASSET = '/UI/06_SettingsMenu/im_sfx.webp';
+const SFX_CONTROL_ASSET = assetUrl('/UI/06_SettingsMenu/im_sfx.webp');
 const KNOB_BASE_WIDTH_PX = 54;
 const KNOB_MIN_SCALE = 0.34;
 const KNOB_MAX_SCALE = 1;

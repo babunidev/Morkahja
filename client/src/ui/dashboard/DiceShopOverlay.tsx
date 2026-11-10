@@ -11,8 +11,9 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const OVERLAY_FADE_MS = 300;
 
 function unlockErrorMessage(error: unknown): string {
@@ -529,7 +530,7 @@ export function DiceShopOverlay({
           <div style={listStyle}>
             {DICE_CATALOG.map((entry) => (
               <DiceCard
-                assetPath={entry.assetPath}
+                assetPath={assetUrl(entry.assetPath)}
                 description={entry.description}
                 diceId={entry.id}
                 eurUnlockCents={entry.eurUnlockCents}

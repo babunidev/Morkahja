@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-10 — Unreleased: serve the game from /Morkahja/ (branch `feat/babuni-dev-subpath`)
+
+- **Subpath build:** `client/vite.config.ts` sets `base: '/Morkahja/'` for production builds and `vite preview` (override: `VITE_BASE_PATH`). Production `VITE_API_BASE_URL` defaults to `/Morkahja/api`. `vite preview` proxies that prefix to the local backend with the prefix stripped. Development still serves from `/`.
+- **Asset URLs:** Added `client/src/assetUrl.ts`. All hard-coded `/UI/…` and `/game/…` paths in client source (about 40 files), dice art from `shared/src/diceCatalog.ts`, and server-provided feed and achievement icon paths now resolve beneath the deployed base. Server responses are unchanged.
+- **PWA and social preview:** `client/public/manifest.webmanifest` uses relative `start_url`, `scope` and icon paths, which resolve to `/Morkahja/`. `client/socialPreview.ts` falls back to `https://babuni.dev/Morkahja` and points `og:image` at the existing `posterRaceSkills2.webp`; the previous `.png` reference had been returning 404.
+- **Backend behind a proxy:** `server/src/config/trustProxy.ts` sets Express `trust proxy` (default `loopback`, override `TRUST_PROXY`). Without it, all players behind Nginx would share one per-IP rate-limit bucket for session challenge, bootstrap and heartbeat.
+- **Deployment:** Added `deploy/nginx/morkahja-locations.conf.template` and rewrote `docs/DEPLOYMENT.md` with the discovered public infrastructure, environment variables, procedure, rollback and security assessment.
+- **Tests:** Added `client/src/assetUrl.test.ts` (base handling, manifest scope, regression guard for unwrapped asset paths) and `server/src/config/trustProxy.test.ts`.
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed locally on Nobara against a disposable PostgreSQL 16 container. A local Nginx + headless Chrome run verified routing, assets, onboarding, logout, deep links, recovery-key restoration of the same player, and a committed encounter turn through `/Morkahja/api/`. **Not merged or deployed;** the production URL is blocked on the apex-domain decision recorded in `docs/DEPLOYMENT.md`.
+
 ## 2026-11-04 — Unreleased: authentication, persistence and release-gate maintenance (PRs #5 and #6)
 
 - **PR #5** (`security/one-time-session-challenges`): Added short-lived, single-use server-issued authentication challenges, bound to identity, device and registration/restoration purpose, with PostgreSQL-backed consumption and dual signatures. Updated client onboarding/recovery and authentication integration fixtures. **Open; not merged or deployed.**

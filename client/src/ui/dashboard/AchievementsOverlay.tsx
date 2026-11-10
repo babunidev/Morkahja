@@ -16,8 +16,9 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 
 const OVERLAY_FADE_MS = 300;
 

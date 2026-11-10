@@ -46,15 +46,16 @@ import {
   FADE_DURATION_MS,
   fadeTransition,
 } from '../../transitions/fade.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const RESULT_BACKGROUND = '/UI/09_GAME/im_bg_result.webp';
-const CONTINUE_BUTTON = '/UI/09_GAME/im_button_continue.webp';
-const DEFAULT_DICE_OUTCOME_ICON = diceButtonAssetPath(DEFAULT_DICE_ID);
-const LORE_GEM_REWARD_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
+const RESULT_BACKGROUND = assetUrl('/UI/09_GAME/im_bg_result.webp');
+const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
+const DEFAULT_DICE_OUTCOME_ICON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
+const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const LORE_GEM_REWARD_ID = 90_001;
 const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_ACTIVATE_MS = 700;
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 const ESSENCE_INVENTORY_TYPE = 3;
 interface SolutionRecord {
   mSolutionIconName: string;

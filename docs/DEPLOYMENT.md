@@ -1,136 +1,209 @@
 # Deployment plan — Morkahja under babuni.dev
 
-**Status:** Proposed; approved target URL, implementation and production topology not yet verified  
-**Recorded:** 2026-11-09  
+**Status:** Repository implementation done and verified locally in an Nginx integration environment. **Not deployed.** Production cutover is blocked on the apex-domain/DNS decision below, server access, a verified database backup, and Babuni's explicit approval.  
+**Recorded:** 2026-11-09 (plan) · updated 2026-11-10 (implementation, discovery and local verification)  
+**Branch:** `feat/babuni-dev-subpath`  
 **Target game URL:** https://babuni.dev/Morkahja/
 
 ## Goal
 
 Move the public game address from the former game domain to `https://babuni.dev/Morkahja/`, while keeping the main website at `https://babuni.dev/`.
 
-Morkahja should remain an independently deployable frontend and API beneath the website. The existing player database and game backend should be retained. This plan does not authorize a database reset, player-data migration, or destructive deployment.
+Morkahja remains an independently deployable frontend and API beneath the website. The existing player database and game backend are retained. Nothing here authorizes a database reset, player-data migration or destructive deployment.
 
-## What is known from the repository
+## Infrastructure discovered (2026-11-10, public read-only checks)
 
-The following points were confirmed by static source inspection on 2026-11-09:
+These observations come from public DNS lookups and unauthenticated HTTP(S) requests made from the development machine. No server was logged into and nothing was changed.
 
-- The frontend is a React application built with Vite. `client/vite.config.ts` currently has no Vite `base` setting.
-- `client/src/api/http.ts` already reads `VITE_API_BASE_URL` and prefixes its API requests with that value. The default is the same-origin root.
-- The Express API listens on port 3000 by default and registers routes at the root, including `/session`, `/player`, `/avatar`, `/avatars`, `/encounter`, `/room`, `/activity`, `/game-data`, `/health`, and `/stripe/webhook`.
-- The frontend contains root-relative asset paths such as `/UI/...` and `/game/...`. Vite's `base` setting alone does not rewrite arbitrary root-relative strings assembled at runtime.
-- `client/index.html` references the favicon, Apple touch icon and web manifest at root paths.
-- `client/public/manifest.webmanifest` currently declares `/` as both `start_url` and `scope`, and its icon path is root-relative.
-- `client/socialPreview.ts` still has the former game domain as its production fallback. The Vite social-preview plugin uses `VITE_SITE_URL` when supplied.
-- `server/src/config/corsOrigins.ts` expects browser origins, not URL paths. `server/src/config/stripeConfig.ts` uses `CLIENT_URL` for checkout return URLs.
-- The client stores its session, device keypair and identity keypair in browser `localStorage`. The onboarding flow downloads and restores a separate identity recovery-key file. The server resolves a restored player from the identity public key and verifies a signed challenge.
+| Question | Finding |
+| --- | --- |
+| DNS provider | Porkbun nameservers. |
+| `babuni.dev` (apex) | A records point to **Porkbun parking**. Plain HTTP returns a "Coming Soon" parking page (`Server: openresty`). **HTTPS fails at the TLS handshake**: no certificate is served for the apex. |
+| `www.babuni.dev` | A separate host running `nginx/1.28.3 (Ubuntu)`. It serves the real website ("Babuni.dev — Projects, games, music and creative development") over HTTPS with a Let's Encrypt certificate whose only name is `www.babuni.dev`. |
+| `/Morkahja/` on the website host | `https://www.babuni.dev/Morkahja/` and `/Morkahja/api/health` return Nginx 404. Nothing is routed yet. |
+| Website security headers | Only `Referrer-Policy: strict-origin-when-cross-origin` was observed. No HSTS, CSP or frame-options header. |
+| Former game VPS, PostgreSQL, PM2 | **Not established.** The historical root `DEVLOG.md` describes a Hetzner VPS with Nginx serving `/var/www/morkahja`, PM2 `morkahja-api` on `127.0.0.1:3000`, and PostgreSQL on localhost. No server access details were available for this work, so it is unknown whether the game still runs on that VPS or shares a host with the website. |
+| Stripe | **Not established.** The repository has live price IDs and a `/stripe/webhook` endpoint. Whether production has `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` set, and which webhook URL Stripe uses, needs the server `.env` and the Stripe dashboard. |
 
-Historical entries in the original `DEVLOG.md` describe a Hetzner VPS, Nginx, PM2, PostgreSQL and an API on `127.0.0.1:3000`. Those entries are historical deployment evidence only; they do not establish the current server, DNS records, Nginx configuration, database state or hosting arrangement.
+### Consequence: the requested URL needs an apex change
 
-## Hosting and routing decision
+`https://babuni.dev/` does **not** serve the website today. Until the apex reaches the website host with a valid certificate, `https://babuni.dev/Morkahja/` cannot work, whatever happens in Nginx. This is not "changing DNS to route a path": the apex currently goes to the registrar's parking service.
 
-DNS resolves a hostname to infrastructure; it cannot route a URL path such as `/Morkahja`. The server or reverse proxy receiving requests for `babuni.dev` must therefore route that path.
+One of these is needed, and it is **Babuni's decision** (nothing has been changed):
 
-Two hosting arrangements are possible:
+1. **Point the apex at the website host (keeps the requested URL).** Change the apex A record from Porkbun parking to the website host. Add `babuni.dev` to the website's Nginx `server_name` and its certificate (for example `certbot --nginx -d babuni.dev -d www.babuni.dev`). Decide whether `www` redirects to the apex or the reverse. If `www` stays separately reachable, it is a **different browser origin** with separate `localStorage`; redirect one name to the other so players don't end up with two identities.
+2. **Serve the game at `https://www.babuni.dev/Morkahja/` instead.** No DNS change is required, but this differs from the approved address (D-006). The build only needs `VITE_SITE_URL=https://www.babuni.dev/Morkahja` and `CLIENT_URL`/`CLIENT_ORIGINS` adjusted.
 
-1. **Same host:** If the website and Morkahja can run behind the same Nginx instance, keep the existing website at `/` and add a dedicated `/Morkahja/` location for the game.
-2. **Separate hosts:** If Morkahja remains on a different VPS, the host serving `babuni.dev` must reverse-proxy `/Morkahja/` and its API path to the game host. Protect the upstream connection and restrict direct backend access as appropriate.
+The rest of this document assumes option 1 and the hostname `babuni.dev`.
 
-Do not change DNS until the current website host, the game host and the intended proxy path are known. No hosting arrangement is selected by this plan.
+## What the repository now does
 
-## Implementation phases
+Implemented on `feat/babuni-dev-subpath` (see `CHANGELOG.md` for the file list):
 
-### 1. Confirm infrastructure and protect data
+- **Vite base:** Production builds and `vite preview` use `base: '/Morkahja/'`. Development (`npm run dev:client`) still serves from `/` with the unchanged root API proxies. `VITE_BASE_PATH` overrides the base when needed.
+- **API prefix:** Production builds default `VITE_API_BASE_URL` to `/Morkahja/api` (derived from the base). An explicit `VITE_API_BASE_URL`, including an empty string, still wins. `vite preview` forwards `/Morkahja/api/*` to `127.0.0.1:3000` with the prefix stripped, which makes a local subpath check possible.
+- **Runtime asset URLs:** `client/src/assetUrl.ts` prefixes root-relative public paths (`/UI/…`, `/game/…`) with Vite's `import.meta.env.BASE_URL`. Every hard-coded asset path in client source now goes through it, including dice art from `shared/src/diceCatalog.ts` and asset paths sent by the server (Scribes feed `iconUrl`, achievement `baseIconUrl`/`rankOverlayUrl`). The helper leaves absolute, `data:` and `blob:` URLs alone and never double-prefixes. The server API contract is unchanged: it still sends root-relative public paths. A regression test fails if a new unwrapped `'/UI/…'` or `'/game/…'` literal appears in client source.
+- **HTML, CSS, manifest:** Vite rewrites the favicon, Apple touch icon, manifest link and the CSS font `url()` to `/Morkahja/…` at build time. `manifest.webmanifest` uses relative `start_url`/`scope` (`./`) and icon `src`, which resolve to `https://babuni.dev/Morkahja/` from `/Morkahja/manifest.webmanifest`. A test asserts this.
+- **Social preview:** The fallback site URL is now `https://babuni.dev/Morkahja`. The Open Graph image previously pointed to `posterRaceSkills2.png`, which was removed from the repository earlier and would have returned 404; it now points to the existing `posterRaceSkills2.webp` (600×801, `image/webp`).
+- **Express behind the proxy:** `app.set('trust proxy', …)` now defaults to `loopback`, configurable with `TRUST_PROXY`. Without it, every request through Nginx appears to come from `127.0.0.1`. The per-IP limit of 25 requests per minute on `/session/challenge`, `/session/bootstrap` and `/session/heartbeat` would then be shared by **all** players. With heartbeats every 45 s, roughly 19 concurrent players would start receiving 429s, and three consecutive heartbeat failures log a player out. The default trusts `X-Forwarded-For` only when the direct peer is loopback, so remote clients still cannot spoof their address.
+- **Nginx template:** `deploy/nginx/morkahja-locations.conf.template` contains `location` blocks to include in the existing website `server {}` block, with placeholders for the web root and API upstream.
 
-- [ ] Identify the registrar/DNS provider and inspect the current A, AAAA and relevant CNAME records for `babuni.dev`.
-- [ ] Identify where the main website is hosted and how its current HTTPS certificate is managed.
-- [ ] Confirm whether the historical Morkahja VPS still exists, whether it is reachable, and whether its Nginx, PM2, Node and PostgreSQL services are still in use.
-- [ ] Inspect the active Nginx virtual host and all existing website paths before adding a new location.
-- [ ] Confirm the production database connection and take a versioned backup independent of the application host.
-- [ ] Verify that the database backup can be restored before changing routing or deploying.
-- [ ] Keep credentials, server IPs that should remain private, database dumps and private configuration out of Git.
+No server routes, database schema, Stripe logic or game rules were changed.
 
-**Safety constraint:** Keep the existing PostgreSQL database and player records. Do not run a reset, reseed, destructive migration, or deployment command that can delete website content or published game content.
+### Not changed (deliberately)
 
-### 2. Make the frontend work below a path
+- `client/src/ui/settings/PatchNotesOverlay.tsx` mentions the former domain in a historical release note. `client/src/ui/onboarding/PrivacyPolicyOverlay.tsx` lists a contact email on the former domain. Neither is a URL the game loads. The privacy contact is a legal/notice decision for Babuni and was left as is.
+- `client/public/UI/01_2_Agreement/menuBGplayerCreation.webp` is referenced by onboarding but has never been in the repository. It returns 404, and the CSS falls back to `menuBG.webp`. This predates the migration.
 
-- [ ] Set Vite's production base to `/Morkahja/` in `client/vite.config.ts`.
-- [ ] Build with `VITE_API_BASE_URL=/Morkahja/api`. The existing API client concatenates this prefix with its root API paths.
-- [ ] Audit all root-relative runtime asset paths, including `/UI/`, `/game/`, fonts, audio, icons and assets returned in API payloads.
-- [ ] Prefer a consistent base-aware asset URL helper using Vite's configured base for client-generated asset URLs. Normalize server-provided asset paths at the client boundary where needed.
-- [ ] Only use Nginx aliases for root-level asset prefixes if a complete audit confirms that they do not collide with paths already used by the main website. Do not expose the game's entire asset tree at the website root by assumption.
-- [ ] Ensure the generated HTML references the favicon, Apple touch icon and manifest beneath `/Morkahja/`.
-- [ ] Change the PWA manifest's `start_url` and `scope` to `/Morkahja/`, and make its icon URL resolve beneath that scope.
-- [ ] Set `VITE_SITE_URL=https://babuni.dev/Morkahja` for production builds and replace the obsolete fallback in `client/socialPreview.ts`.
-- [ ] Inspect generated HTML, CSS and JavaScript for URLs that still escape to the domain root unexpectedly.
+## Production configuration
 
-### 3. Route the API through the same public path
+### Frontend build (no secrets)
 
-The intended public API prefix is `/Morkahja/api/`. Nginx should proxy this prefix to the existing Express listener while stripping the public prefix, so the backend continues to receive its current root routes.
+```sh
+# From a checkout of the commit being deployed
+npm ci
+VITE_SITE_URL=https://babuni.dev/Morkahja \
+VITE_API_BASE_URL=/Morkahja/api \
+npm run build --prefix client
+# Output: client/dist (index.html references /Morkahja/assets/...)
+```
 
-For example, an Nginx location matching `/Morkahja/api/` can use a trailing-slash `proxy_pass` to `http://127.0.0.1:3000/`; this replaces the matched prefix with `/`. Confirm the exact behavior against the active Nginx configuration before deployment.
+`VITE_API_BASE_URL` is already the production default; passing it explicitly documents intent.
 
-- [ ] Proxy all required API routes, including session, player, avatar, encounter, room, activity, game-data and health endpoints.
-- [ ] Preserve request methods, query strings, authorization headers, response headers and request bodies.
-- [ ] Route the Stripe webhook through the API proxy if Stripe purchases are enabled, and update the configured webhook URL in Stripe.
-- [ ] Set server `CLIENT_ORIGINS=https://babuni.dev`. This is an origin and must not include `/Morkahja`.
-- [ ] Set server `CLIENT_URL=https://babuni.dev/Morkahja` so Stripe success and cancellation returns go back to the game path.
-- [ ] Keep the backend bound to a private interface such as `127.0.0.1:3000` when the proxy is on the same host; do not expose the Node port publicly without a specific need.
-- [ ] Verify that the main website's existing API routes, if any, are unaffected.
+### Server environment (`.env` beside `ecosystem.config.cjs`, never committed)
 
-### 4. Deploy the frontend without touching the website
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `CLIENT_ORIGINS` | `https://babuni.dev` | Origins only, never paths. Add `https://www.babuni.dev` only if `www` serves the game without redirecting. Same-origin requests do not need CORS; this mainly affects any cross-origin use. |
+| `CLIENT_URL` | `https://babuni.dev/Morkahja` | Stripe returns players to `${CLIENT_URL}/?purchase=success…` / `?purchase=cancel`. |
+| `TRUST_PROXY` | unset (`loopback`) | Set to the proxy's address/subnet only if Nginx runs on another host. |
+| `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PORT` | unchanged | Keep the existing production values. Do not copy them into the repository or documentation. |
 
-- [ ] Build the frontend with the subpath configuration.
-- [ ] Deploy the build into a dedicated Morkahja document root, separate from the main website's document root.
-- [ ] Configure the `/Morkahja/` route to serve the built files and fall back to the Morkahja `index.html` for client-side routes.
-- [ ] Keep the existing PM2 API process and database configuration unless inspection proves a change is required.
-- [ ] Review every copy/synchronization command. Never run `rsync --delete` against the parent website directory or a directory containing persistent/published content.
-- [ ] Validate Nginx configuration with `nginx -t` before reloading it.
-- [ ] Keep a copy of the previous frontend release and Nginx configuration for rollback.
+### Stripe (only if enabled in production)
 
-### 5. Preserve player identity and recovery
+- Webhook endpoint: `https://babuni.dev/Morkahja/api/stripe/webhook` (Nginx strips the prefix, so Express still receives `/stripe/webhook`). Updating the endpoint in Stripe may issue a new signing secret; if so, update `STRIPE_WEBHOOK_SECRET`.
+- Verify a test-mode checkout success and cancel return to `https://babuni.dev/Morkahja/?purchase=…`, and a signed webhook delivery.
 
-A change from the former domain to `babuni.dev` changes the browser origin. Browser storage is isolated by origin, so the old domain's `localStorage` session and private key material will not automatically appear at the new address.
+### Nginx
 
-The existing onboarding implementation supports restoring a player with the downloaded Morkahja recovery-key file. The restored identity public key is matched to the existing player record, and a new device/session is created. This depends on retaining the same production database.
+Fill in `deploy/nginx/morkahja-locations.conf.template` on the server and `include` it inside the existing `server { server_name babuni.dev …; }` block. Don't commit the filled-in copy. It provides:
 
-- [ ] Test restoration at the new URL using a real test account and its recovery-key file before announcing the move.
-- [ ] Verify that the restored player has the same player record, avatars, progression, inventory, achievements and entitlements.
-- [ ] Tell existing players that their old browser session will not transfer automatically and that they need their recovery key to restore access.
-- [ ] Do not claim that every player can recover unless recovery-key availability has been established. Assess any recovery case without a key separately; do not silently create a replacement player.
-- [ ] Expect users with an installed PWA to install the game again under the new origin/scope.
+- `= /Morkahja` → 301 to `/Morkahja/` (query string preserved). `= /Morkahja/api` → 301 to `/Morkahja/api/`.
+- `^~ /Morkahja/api/` → `proxy_pass http://127.0.0.1:3000/;`. The trailing slash replaces the matched prefix, so `/Morkahja/api/health` reaches Express `/health`. Method, body, query string and `Authorization` pass through. Being the longest `^~` prefix, it wins over the SPA location, so unknown API paths return Express JSON (401/404), never HTML.
+- `^~ /Morkahja/` → `root <parent>` where `<parent>/Morkahja` is the current release. `/Morkahja/assets/` is immutable-cached. `/Morkahja/UI/` and `/Morkahja/game/` return a real 404 for missing files. The manifest is served as `application/manifest+json`. Everything else falls back to `/Morkahja/index.html` (no-cache).
 
-### 6. Verify before cutover
+**Header inheritance warning:** Nginx drops all `add_header` directives inherited from the `server` block in any location that sets its own `add_header`. The asset, manifest and index locations set `Cache-Control`. If the website's server block later adds security headers (HSTS, CSP), repeat them in these locations or move them into a shared `include`.
 
-- [ ] Confirm `https://babuni.dev/` still serves the main website.
-- [ ] Confirm `https://babuni.dev/Morkahja/` serves the game and redirects the path without a trailing slash to the canonical trailing-slash URL.
-- [ ] Refresh and directly open nested client routes; verify that they return the game shell rather than a 404.
-- [ ] Check all JavaScript, CSS, fonts, images, portraits, frames, encounter/solution images, music and sound assets for successful loading.
-- [ ] Confirm `/Morkahja/api/health` reaches Express and returns JSON, not the main website's HTML.
-- [ ] Test new journey creation, recovery-key restoration, session heartbeat, logout and authenticated API requests.
-- [ ] Test representative gameplay, room/party requests, game-data reads and player progression against the preserved database.
-- [ ] Test PWA installation, launch URL and scope.
-- [ ] If Stripe is enabled, test checkout success/cancel returns and webhook delivery.
-- [ ] Review browser console, Nginx logs and PM2 logs for path, proxy, authorization and asset errors.
-- [ ] Run the relevant repository checks after implementation. Record exact commands and observed results; do not mark this plan verified based on source inspection alone.
+## Deployment procedure (requires approval; not executed)
 
-### 7. Cutover and rollback
+Paths in `<angle brackets>` must be read from the actual server; do not guess them.
 
-- [ ] Schedule the change only after backup restoration and recovery-key tests pass.
-- [ ] Deploy the frontend and Nginx configuration, validate the configuration, then reload Nginx.
-- [ ] Verify the main website and game from an external browser/network.
-- [ ] Keep the previous frontend artifact and Nginx configuration until the new route is stable.
-- [ ] Roll back by restoring the previous route/configuration and frontend artifact. Keep the database unchanged during rollback.
-- [ ] Do not depend on redirecting from the former domain; it is no longer under the project's control.
+1. **Confirm the host and running code.** On the game host, record the backend checkout path and commit (`git -C <checkout> log -1 --oneline`, `git -C <checkout> status --short`), `pm2 describe morkahja-api`, and the active Nginx site file (`sudo nginx -T`). The frontend on this branch speaks the API of current `main`, including server-issued session challenges. **If production runs an older backend, the frontend and backend must be upgraded together.** The backend creates any missing tables at startup (`CREATE TABLE IF NOT EXISTS`, including `session_auth_challenges`); it does not reset or reseed data, but it is still a production change requiring approval.
+2. **Back up the database off the host and prove the restore.**
+   ```sh
+   # On the host (credentials from the server .env, not typed into shell history)
+   pg_dump --format=custom --file=morkahja-$(date +%Y%m%d-%H%M).dump "$DATABASE_URL"
+   # Copy it off the server (e.g. scp to the Nobara machine), then restore into a throwaway container:
+   podman run -d --rm --name morkahja-restore-check -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:55433:5432 docker.io/library/postgres:16
+   pg_restore --no-owner --dbname=postgres://postgres:postgres@127.0.0.1:55433/postgres --create morkahja-<stamp>.dump
+   # Compare row counts of players, avatars, sessions, purchases with production before trusting it.
+   ```
+   Never restore into, reset or reseed the production database.
+3. **Identify persistent content.** `server/game/*.json` in the backend checkout is writable through the admin API (`/game-data/admin`), so treat that directory as persistent. Check `git -C <checkout> status` before any `git pull`, and back it up. Record any other upload or artwork directories found on the host.
+4. **Stage the frontend as a new release, without deleting anything.**
+   ```sh
+   RELEASE=<releases-dir>/$(date +%Y%m%d-%H%M)-$(git rev-parse --short HEAD)
+   mkdir -p "$RELEASE" && rsync -a client/dist/ "$RELEASE/"   # no --delete, fresh directory
+   ```
+   Keep `<releases-dir>` and `<parent>` outside the website's document root and outside any persistent content directory.
+5. **Nginx.** Back up the active site file (`sudo cp <site-file> <site-file>.bak-<stamp>`). Install the filled-in template, add the `include`, run `sudo nginx -t`, and reload (`sudo systemctl reload nginx`) only if the test passes. Before the reload, point `<parent>/Morkahja` at the release: `ln -sfn "$RELEASE" <parent>/Morkahja`.
+6. **Backend environment.** Update `.env` with the values above, then `pm2 restart morkahja-api --update-env`.
+7. **Stripe.** Update the webhook endpoint if Stripe is enabled.
+8. **Verify** (see checklist), from an external network and a fresh browser profile.
 
-## Open questions before implementation
+### Rollback
 
-- Where does `babuni.dev` currently resolve, and which server/provider serves the main website?
-- Is the former Morkahja VPS still available, and does it still contain the production API and database?
-- Can the website host proxy to the game host, or should both applications be served from one host?
-- Which Nginx configuration is active, and do any of the game's root-level asset paths conflict with the main website?
-- Are Stripe checkout and webhooks active in the current production environment?
-- Is there a current, independently restorable PostgreSQL backup?
+- Frontend: `ln -sfn <previous-release> <parent>/Morkahja` (or remove the include for a first deployment).
+- Nginx: restore `<site-file>.bak-<stamp>`, `sudo nginx -t`, reload.
+- Backend: restore the previous `.env` (and commit, if it was upgraded), `pm2 restart morkahja-api --update-env`.
+- Stripe: restore the previous webhook URL/secret.
+- **The database is not rolled back.** Restoring the backup is a separate, explicit decision, because it would discard real player activity since the backup.
 
-## Verification status
+Keep the previous release, Nginx file and `.env` copy until the new route has been stable for a while.
 
-This document records a proposed migration plan based on static inspection of repository files and the historical deployment journal. No DNS, hosting account, live server, Nginx configuration, production database, Stripe dashboard, build or browser session was accessed or changed while preparing it. No migration step or test is claimed as completed.
+## Player identity and recovery
+
+The origin changes from the former domain to `https://babuni.dev`. Browser storage is per origin, so the old session, device key and **identity key** in the former domain's `localStorage` do not carry over. The former domain is no longer under the project's control, so no redirect or storage hand-off is possible.
+
+Existing players can return only by using **Restore Existing Journey** with their downloaded Morkahja recovery-key file (`Morkahja_<name>.key`). The server matches the key's identity public key to the existing player record and issues a new device/session. This requires the **same production database**.
+
+- Do not promise recovery to players without a key file. There is no other recovery mechanism in the code. Handle such cases individually, and never silently create a replacement player.
+- An installed PWA from the former domain will not move. Players need to install again from `https://babuni.dev/Morkahja/`.
+- Locally verified (below): restoring in an empty browser profile returned the same `playerId` and identical player, avatar, inventory and achievement data. **Not yet verified:** restoration of a real pre-migration production account at the live URL.
+
+## Same-origin security assessment
+
+Serving the game at `https://babuni.dev/Morkahja/` puts it in the **same browser origin** as every other page on `babuni.dev`. URL paths are not a browser security boundary. The URL is kept as requested; these risks are documented, not designed away:
+
+- **`localStorage` is origin-wide.** Any script running on any `babuni.dev` page can read `morkahja.identityKeypair` (the player's identity **private key**), `morkahja.deviceKeypair` and `morkahja.session` (the bearer token). XSS or a compromised third-party script anywhere on the website therefore means full Morkahja account takeover. Website pages should load no third-party or untrusted scripts. An origin-wide Content-Security-Policy is strongly recommended; none is set today.
+- **Service workers.** Morkahja registers none. A website service worker registered with scope `/` would intercept `/Morkahja/` and `/Morkahja/api/` requests; avoid it, or scope it away from `/Morkahja/`.
+- **Cookies.** Morkahja authenticates with `Authorization: Bearer`, not cookies. Website cookies on `babuni.dev` will still be sent with `/Morkahja/api/` requests; they are not used by the API.
+- **Framing and transport.** No `X-Frame-Options`/`frame-ancestors` or HSTS is set on the website today. Consider adding them to the whole server block, keeping the header-inheritance warning above in mind.
+- **Admin API exposure.** `/Morkahja/api/game-data/admin/*` is reachable publicly through the proxy and protected only by the existing admin authentication. Consider an Nginx `allow`/`deny` restriction for it.
+- **Stronger isolation** would require a separate origin such as a subdomain. That is an architecture change and was not made.
+
+## Verification
+
+### Local automated checks — 2026-11-10, Nobara, branch `feat/babuni-dev-subpath`
+
+Run against a disposable `postgres:16` Podman container on `127.0.0.1:55432`. The developer's `morkahja-db` container was not touched.
+
+- `NODE_OPTIONS=--throw-deprecation npm run release:check` — **passed (exit 0)**: static-data sync, shared/server typecheck, client `tsc -b && vite build`, 6 client test files and 37 server tests (all 33 previous files plus 4 new trust-proxy tests). No deprecation warnings.
+- `npm run test:encounter` / `npm run test:lifecycle` **no longer exist**. PR #17 replaced them with the single `npm test`, which includes `encounterResolver`, `roomService`, `soloRoomCheckpointService` and the other encounter/room suites above.
+- ESLint on the client reports 110 problems, all identical on `main` (no new findings from this branch).
+- Build inspection: `dist/index.html`, CSS and manifest reference only `/Morkahja/…` or relative URLs. The only raw `/UI/` literal in the JS bundle is the shared dice root, which is wrapped at every client call site.
+
+### Local integration environment — 2026-11-10
+
+Nginx `1.27-alpine` (Podman, host network) with a stand-in website at `/`, the production build at `/Morkahja/` via the template above, and `/Morkahja/api/` proxied to the branch backend on `127.0.0.1:3000` (test database). `nginx -t` passed. Results:
+
+- `/` and an existing website file → 200 from the stand-in site. `/health` and `/UI/…` at the root → 404: the game is not exposed at the root.
+- `/Morkahja` and `/Morkahja?x=1` → 301 to `/Morkahja/` (query preserved). `/Morkahja/` and `/Morkahja/some/deep/link` → game shell.
+- `/Morkahja/api/health` → `200 application/json {"status":"ok",…}`. Unknown API paths → Express JSON 401, not HTML. `POST /Morkahja/api/stripe/webhook` reaches Express (`503 WEBHOOK_NOT_CONFIGURED`, expected without a local secret).
+- Missing `/Morkahja/UI/…` and `/Morkahja/assets/…` → real 404. Music is served with byte ranges (206). The manifest is `application/manifest+json`.
+- Per-client rate limiting through Nginx: 26 rapid challenge requests from one forwarded address → the 26th got 429; a second address was unaffected.
+
+Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.0.1:8088/Morkahja/`:
+
+- **New journey:** challenge + bootstrap through `/Morkahja/api/`, recovery key downloaded, dashboard, avatar creation and the encounter screen rendered. Screenshots show encounter art, portraits, frames, dice, solution icons, UI chrome and the custom font. No broken `<img>` elements on any screen checked, including Lore/Inventory/Skillbook overlays. **No request escaped `/Morkahja/`.** No console errors beyond the expected pre-login `SESSION_INVALID` probes.
+- **Deep link refresh** inside the app kept the session.
+- **Logout** (Settings → End Session) cleared the session and returned to the gateway.
+- **Recovery-key restore** in a fresh, empty profile: same `playerId`, identical player record (ignoring session/timestamp fields), avatars, inventories and achievements, new session ID.
+- **Gameplay after restore:** room create, selection, polling, then `POST /room/choice` and `/room/continue` through the proxy. The room advanced (`waiting_continue` → `active_encounter`) and avatar experience went 0 → 2 in the database. The choice/continue calls were issued from page JavaScript; driving that final dice-reveal animation by synthetic clicks in headless Chrome did not succeed, so the in-browser reveal UI was not exercised.
+
+### Not verified
+
+- Anything in production or staging: DNS, TLS for the apex, the live website, live Nginx, PM2, the production database, backups/restore, Stripe checkout and webhooks.
+- Restoration of a real pre-migration account at the live URL.
+- Multiplayer with two real players; PWA install prompt and standalone launch; music playback audibility; real mobile browsers.
+
+## Remaining blockers before cutover
+
+1. **Decision:** apex `babuni.dev` → website host plus certificate (option 1), or `www.babuni.dev/Morkahja/` (option 2).
+2. **Access:** SSH user/host for the website host and the game host (if different), and confirmation of where the production API and PostgreSQL run.
+3. **Data safety:** an off-host database backup with a tested restore, and a record of persistent content directories.
+4. **Approval:** Babuni's explicit approval for the production cutover after reviewing this branch.
+5. **After cutover:** the live verification checklist from a fresh browser, recorded here with dates and results.
+
+## Verification checklist for the live cutover
+
+```sh
+curl -sI https://babuni.dev/ | head -1                         # website, 200
+curl -sI https://babuni.dev/Morkahja | grep -i ^location       # -> /Morkahja/
+curl -s  https://babuni.dev/Morkahja/api/health                # {"status":"ok",...}
+curl -s  https://babuni.dev/Morkahja/api/no-such-route         # JSON error, not HTML
+curl -sI https://babuni.dev/Morkahja/UI/01_1_SignIn/menuBG.webp | head -1   # 200 image/webp
+curl -sI https://babuni.dev/Morkahja/manifest.webmanifest | grep -i content-type
+```
+
+Then, in a fresh browser profile: new journey, avatar creation, one encounter, refresh on a deep link, logout, restore with a **pre-migration** recovery key and compare avatars/inventory/achievements/entitlements with the backup. Check PWA install and launch scope, Stripe test checkout and webhook (if enabled), the browser console, and Nginx/PM2 logs.
