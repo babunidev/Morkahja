@@ -1,0 +1,33 @@
+# Morkahja — historical project status and documentation audits
+
+This file preserves dated status notes formerly placed on the repository's front page. They describe the evidence available when written; do not infer current merge or deployment state from older entries. Start with the [project guide](../README.md).
+
+## Historical documentation audit — #30 (27 October 2026)
+
+The project's **primary development record** is the [original dated DEVLOG](DEVLOG.md), which chronicles the browser game from May 16 to June 7, 2026. The supporting documents interpret that journal but do not supersede it. The workspace's current version field is **0.9.0-beta.2.2**; the original journal describes it as a public pre-1.0 beta, not a independently revalidated live service.
+
+The original record follows the move from structured encounter/solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It traces the encounter loop, SCRIBES event feed, avatar lifecycle, achievement/reward systems, expansion unlocks, friends and social surfaces, plus later deployment and security considerations. These stages are historical **development claims from the journal**, not new tests performed in this audit.
+
+**Additional documentation:** [Visual and interaction design](docs/DESIGN.md) · [Content and provenance](docs/CONTENT.md) · [AI collaboration](docs/AI_COLLABORATION.md). The audit preserves Babuni.dev's authorship, separately credits music contributor Nikita Malko, and does not modify the original journal, game code or player data.
+
+## Public repository preparation — 31 October 2026
+
+The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
+
+## Current development notes — 4 November 2026
+
+Recent security and persistence work is under review, **not merged into `main` or deployed**: [PR #5 — single-use session authentication challenges](https://github.com/babunidev/Morkahja/pull/5) and [PR #6 — atomic player/avatar persistence](https://github.com/babunidev/Morkahja/pull/6). PR #6 builds on PR #5.
+
+On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
+
+Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
+
+**4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
+
+**Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
+
+## Achievement progression
+
+Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
+
+The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.
