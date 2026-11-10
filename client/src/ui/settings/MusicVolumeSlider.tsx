@@ -1,8 +1,9 @@
 import { useRef, type CSSProperties } from 'react';
 import { useMusic } from '../music/MusicEngine.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const MUSIC_CONTROL_ASSET = '/UI/06_SettingsMenu/im_music.webp';
+const MUSIC_CONTROL_ASSET = assetUrl('/UI/06_SettingsMenu/im_music.webp');
 const KNOB_BASE_WIDTH_PX = 54;
 const KNOB_MIN_SCALE = 0.34;
 const KNOB_MAX_SCALE = 1;

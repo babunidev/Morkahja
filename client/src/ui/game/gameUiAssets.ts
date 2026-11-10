@@ -1,4 +1,5 @@
-export const GAME_UI_ROOT = '/UI/09_GAME';
+import { assetUrl } from '../../assetUrl.js';
+export const GAME_UI_ROOT = assetUrl('/UI/09_GAME');
 
 export const GAME_FOOTER_BUTTONS = [
   { alt: 'Get help', src: `${GAME_UI_ROOT}/im_button_gethelp.webp` },

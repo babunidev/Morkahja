@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
+import { assetUrl } from '../../assetUrl.js';
 
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
+const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
+const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
 
 /** Portrait frame scale in the in-game avatar block (100% + 1%). */
 export const INGAME_FRAME_SCALE = 1.01;

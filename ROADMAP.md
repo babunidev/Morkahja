@@ -28,24 +28,33 @@ Run documented static and lifecycle checks in an appropriate development environ
 **Audit boundaries:** Documentation-only source review. No builds, tests, live server calls or production data access.
 
 
-## Proposed deployment — game under babuni.dev (2026-11-09)
+## Deployment — game under babuni.dev (planned 2026-11-09, implemented locally 2026-11-10)
 
-**Target selected by Babuni:** `https://babuni.dev/Morkahja/`, with the main website remaining at `https://babuni.dev/`.
+**Target selected by Babuni:** `https://www.babuni.dev/Morkahja/` (decided 2026-11-10, replacing the original `https://babuni.dev/Morkahja/`), with the main website remaining at `https://www.babuni.dev/`.
 
-**Status:** Planned, not implemented. The current DNS destination and live hosting topology remain unknown and must be inspected before choosing the Nginx/reverse-proxy arrangement.
+**Status:** **Deployed and verified live on 2026-11-10** from branch `feat/babuni-dev-subpath` (commit `95fd5c5a`, not yet merged into `main`). The production backend was upgraded from June commit `77062a42` at the same time. Public discovery found the apex `babuni.dev` parked, so Babuni chose `www.babuni.dev`; no DNS was changed.
 
-- [ ] Confirm DNS, website host, game VPS, active Nginx virtual host, HTTPS and current production services.
-- [ ] Take and independently verify a restorable PostgreSQL backup; preserve all player and published content.
-- [ ] Configure Vite's base path as `/Morkahja/` and use the existing API base setting with `VITE_API_BASE_URL=/Morkahja/api`.
-- [ ] Audit root-relative asset URLs and make client/server asset paths work beneath the subpath without colliding with the main website.
-- [ ] Update PWA start URL, scope and icon path; set the production social-preview URL.
-- [ ] Route `/Morkahja/api/` through Nginx to the existing Express root routes; configure `CLIENT_ORIGINS` as the domain origin and `CLIENT_URL` as the game URL.
-- [ ] Deploy the frontend to an isolated document root. Do not allow build synchronization or `rsync --delete` to touch the website root or persistent content.
-- [ ] Test recovery-key restoration against the existing database; communicate that browser storage and sessions do not transfer across origins.
-- [ ] Verify website isolation, game routes, assets, API, gameplay, PWA and Stripe (if enabled); record exact test evidence.
-- [ ] Cut over with a retained frontend/configuration rollback path and no database reset.
+- [x] **Hostname decided:** `www.babuni.dev/Morkahja/`. Public DNS/HTTP were inspected; no DNS was changed. *(Optional later: redirect the apex to `www` if it is ever connected.)*
+- [x] Server inspected: website, game API (PM2) and PostgreSQL 18 share one host; Stripe is enabled; the backend needed an upgrade.
+- [x] Off-host PostgreSQL backup restored into PostgreSQL 18 with matching row counts; `.env`, Nginx files and `server/game/*.json` backed up; upgrade rehearsed against the restored copy.
+- [x] Vite production base `/Morkahja/`; production API base defaults to `/Morkahja/api`; local development unchanged.
+- [x] Base-aware runtime asset URLs for all client and server-provided asset paths, with a regression test against new unwrapped root paths.
+- [x] PWA `start_url`/`scope`/icon resolve beneath `/Morkahja/`; social-preview fallback is `https://www.babuni.dev/Morkahja` and the broken preview image reference is fixed.
+- [x] Nginx location template for `/Morkahja/`, `/Morkahja/api/` (prefix stripped) and redirects. `nginx -t` passed and routing was verified locally.
+- [x] Express `trust proxy` (default `loopback`) so the per-IP auth/heartbeat rate limit is not shared by all players behind the proxy.
+- [x] Recovery-key restoration recovered the same player record in a fresh browser profile (local test database).
+- [x] Deployed: frontend in an isolated release directory behind a symlink, Nginx include, backend upgraded with a health gate and scripted rollback.
+- [x] Live verification: website, game, assets, API, onboarding, logout, deep links, recovery-key restore of a new player, and an encounter turn.
+- [x] Gameplay hotfix `0d217fc7` (turns stalled after a choice) deployed and verified live by real clicks, including a level-up system event.
+- [x] Stripe webhook endpoint updated to the new URL (both checkout events).
+- [ ] Confirm the first real checkout return and signed delivery.
+- [x] Babuni restored their own **pre-migration** account with its recovery key at the new URL (manual, user-reported).
+- [ ] Merge the branch into `main` and return the server checkout to `main`.
+- [ ] PWA install, two-person multiplayer and mobile browsers at the live URL.
+- [ ] Assess and address same-origin risks (origin-wide `localStorage` holding identity keys, no CSP/HSTS on the website today). *(Documented; not changed.)*
 
-See [the deployment plan](docs/DEPLOYMENT.md) for the source-backed implementation sequence, routing design, recovery constraints, verification checklist and unresolved infrastructure questions.
+See [the deployment plan](docs/DEPLOYMENT.md) for discovered infrastructure, configuration, deployment and rollback procedure, the security assessment and exact verification results.
+
 ## Active engineering priorities — 2026-11-04 (separate from October documentation audit)
 
 - [x] **Implemented in PR #5; unmerged:** Server-issued, single-use signed authentication challenges. CI session-auth tests and Nobara local session-auth tests passed. Existing-account recovery against a populated player database and production deployment remain unverified.

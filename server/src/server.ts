@@ -70,9 +70,13 @@ import {
   selectPlayerAvatar,
 } from './services/playerService.js';
 import { loadAllowedClientOrigins } from './config/corsOrigins.js';
+import { resolveTrustProxySetting } from './config/trustProxy.js';
 import { logAndFormatRequestError } from './http/errorResponse.js';
 
 const app = express();
+// Behind the /Morkahja/api reverse proxy, req.ip must be the player's address
+// (from X-Forwarded-For), not the proxy's, for the per-IP auth rate limit.
+app.set('trust proxy', resolveTrustProxySetting(process.env.TRUST_PROXY));
 const PORT = Number(process.env.PORT) || 3000;
 const CLIENT_ORIGINS = loadAllowedClientOrigins();
 const AUTH_RATE_LIMIT_WINDOW_MS = 60_000;

@@ -22,9 +22,10 @@ import {
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const OVERLAY_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const OVERLAY_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 const GRID_COLUMNS = 5;
 

@@ -31,3 +31,7 @@ Separate browser tabs can presently use the same account, including different av
 Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
 
 The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.
+
+## Moving to www.babuni.dev/Morkahja — 10 November 2026
+
+The game went live at **https://www.babuni.dev/Morkahja/** on 10 November from branch `feat/babuni-dev-subpath` (PR #19). The move was verified with a database backup restore, a local Nginx/browser integration test and live checks; Babuni restored their own pre-migration account at the new address. Existing players need their recovery-key file at the new address, because browser storage does not move between domains. See the [deployment record](DEPLOYMENT.md).

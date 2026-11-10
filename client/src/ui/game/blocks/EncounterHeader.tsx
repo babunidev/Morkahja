@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 import { fadeTransition } from '../../transitions/fade.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const HEADER_BACKGROUND = '/UI/09_GAME/im_encounter_background_top_a.webp';
+const HEADER_BACKGROUND = assetUrl('/UI/09_GAME/im_encounter_background_top_a.webp');
 
 const headerStyle: CSSProperties = {
   width: '100%',

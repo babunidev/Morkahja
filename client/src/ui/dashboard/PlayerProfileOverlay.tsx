@@ -19,6 +19,7 @@ import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -688,7 +689,7 @@ export function PlayerProfileOverlay({
                           alt=""
                           aria-hidden="true"
                           {...protectedImageProps}
-                          src={entry.assetPath}
+                          src={assetUrl(entry.assetPath)}
                           style={dicePreviewStyle}
                         />
                         <span style={diceLabelStyle}>{entry.label}</span>

@@ -4,9 +4,10 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const FOOTER_BACKGROUND = '/UI/09_GAME/im_foot_background.webp';
-const FRAME_MASK = '/UI/09_GAME/im_spacer_line.webp';
+const FOOTER_BACKGROUND = assetUrl('/UI/09_GAME/im_foot_background.webp');
+const FRAME_MASK = assetUrl('/UI/09_GAME/im_spacer_line.webp');
 
 const footerStyle: CSSProperties = {
   width: '100%',

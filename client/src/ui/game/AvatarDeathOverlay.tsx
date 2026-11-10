@@ -8,9 +8,10 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../protectedImage.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const DEATH_OVERLAY_ASSET = '/UI/09_GAME/im_overlay_death.webp';
-const GEM_ICON_ASSET = '/UI/03_DASHBOARD/im_button_credits_b.webp';
+const DEATH_OVERLAY_ASSET = assetUrl('/UI/09_GAME/im_overlay_death.webp');
+const GEM_ICON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_credits_b.webp');
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',

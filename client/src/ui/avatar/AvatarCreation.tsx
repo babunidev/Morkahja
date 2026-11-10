@@ -25,10 +25,11 @@ import {
 } from '../hooks/anchoredTooltip.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
-const UI_ROOT = '/UI/02_AvatarCreation';
+const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
+const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
+const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
 const RACES = ['Grimnir', 'Verdani', 'Aevis', 'Rokur'] as const;
 const ROLES = ['Mage', 'Rogue', 'Warrior'] as const;
 const GENDERS = ['Male', 'Female'] as const;

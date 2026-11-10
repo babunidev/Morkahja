@@ -17,8 +17,9 @@ import {
 import {
   protectedImageProps,
 } from '../../protectedImage.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 export const PARTY_BADGE_SIZE_PX = 62;
 
 interface PartyBadgeTooltip {
@@ -101,7 +102,7 @@ function solutionTooltipForId(
 }
 
 function diceChoiceIcon(participant: RoomParticipantDto): string {
-  return diceButtonAssetPath(participant.selectedDiceId ?? DEFAULT_DICE_ID);
+  return assetUrl(diceButtonAssetPath(participant.selectedDiceId ?? DEFAULT_DICE_ID));
 }
 
 export function hasVisibleParticipantChoice(

@@ -1,0 +1,79 @@
+# Morkahja under https://www.babuni.dev/Morkahja/ — Nginx location template.
+#
+# Include these locations inside the EXISTING `server { ... }` block that serves
+# www.babuni.dev (the server_name with the valid certificate). Nothing here changes the website's own `location /` or root.
+# See docs/DEPLOYMENT.md for the full procedure; validate with `nginx -t`.
+#
+# Nginx drops server-level add_header directives in any location that sets its
+# own, so locations below that set Cache-Control repeat the website's
+# X-Content-Type-Options and Referrer-Policy headers. Keep them in sync.
+#
+# Replace before use (do not commit real server values):
+#   __MORKAHJA_WEB_PARENT__  Directory that CONTAINS a `Morkahja` entry, where
+#                            `Morkahja` is (or symlinks to) the built client/dist
+#                            release, e.g. <parent>/Morkahja/index.html.
+#                            Keep it OUTSIDE the website's document root.
+#   __MORKAHJA_API_UPSTREAM__  Express listener, e.g. 127.0.0.1:3000 on the same
+#                            host. For a separate game host use a private,
+#                            protected upstream.
+
+# Canonical trailing slash.
+location = /Morkahja {
+    return 301 /Morkahja/$is_args$args;
+}
+
+location = /Morkahja/api {
+    return 301 /Morkahja/api/$is_args$args;
+}
+
+# API: the trailing slash on proxy_pass replaces the matched `/Morkahja/api/`
+# prefix with `/`, so /Morkahja/api/health reaches Express /health.
+# Longest-prefix `^~` match wins over the SPA location below, so API misses
+# return Express JSON errors, never the game or website HTML.
+location ^~ /Morkahja/api/ {
+    proxy_pass http://__MORKAHJA_API_UPSTREAM__/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Prefix /Morkahja/api;
+    client_max_body_size 1m;
+}
+
+# Game client.
+location ^~ /Morkahja/ {
+    root __MORKAHJA_WEB_PARENT__;
+    index index.html;
+
+    # Hashed build output: cache for a long time.
+    location ^~ /Morkahja/assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+    }
+
+    # Game art, audio and fonts: a missing file is a real 404, not the SPA shell.
+    location ~ ^/Morkahja/(UI|game)/ {
+        try_files $uri =404;
+    }
+
+    # Not every mime.types maps .webmanifest.
+    location = /Morkahja/manifest.webmanifest {
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+    }
+
+    # Always revalidate the shell so a new release is picked up.
+    location = /Morkahja/index.html {
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+    }
+
+    # Client-side deep links fall back to the game shell.
+    try_files $uri $uri/ /Morkahja/index.html;
+}

@@ -4,6 +4,8 @@ Morkahja is a browser-based roleplaying game set in Babuni's original fantasy wo
 
 **Creative direction:** Babuni · **Project:** browser game and server · **Status:** active development; release and production claims require separate verification
 
+**Play:** https://www.babuni.dev/Morkahja/ — returning players restore their journey with their Morkahja recovery-key file, because browser storage does not carry over from the former address. See the [deployment record](docs/DEPLOYMENT.md).
+
 The game and the world archive are distinct projects. The writing and worldbuilding live in [MorkahjaWorld](https://github.com/babunidev/MorkahjaWorld); this repository contains the game's client, server, shared contracts and development history.
 
 ## What the game explores

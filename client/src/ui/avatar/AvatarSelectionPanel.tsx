@@ -39,8 +39,9 @@ import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
 import AvatarCreation from './AvatarCreation.js';
 import AvatarCard from './AvatarCard.js';
 import { formatAvatarDisplayName } from './avatarDisplayName.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const CREATE_AVATAR_ASSET = '/UI/03_DASHBOARD/CreateAvatar.webp';
+const CREATE_AVATAR_ASSET = assetUrl('/UI/03_DASHBOARD/CreateAvatar.webp');
 
 const slotPanelTransitionStyle: CSSProperties = {
   transition: 'opacity 420ms ease, transform 420ms ease, max-height 420ms ease, margin 420ms ease',

@@ -9,6 +9,7 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
+import { assetUrl } from '../../assetUrl.js';
 
 const OVERLAY_FADE_MS = 300;
 const POLL_INTERVAL_MS = 10_000;
@@ -214,7 +215,7 @@ function scribesEntryVisual(entry: ActivityFeedEntryDto) {
         alt=""
         aria-hidden="true"
         {...protectedImageProps}
-        src={entry.iconUrl}
+        src={assetUrl(entry.iconUrl)}
         style={entryIconStyle}
       />
     );

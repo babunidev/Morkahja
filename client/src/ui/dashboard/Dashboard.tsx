@@ -23,52 +23,53 @@ import SettingsScreen from '../settings/SettingsScreen.js';
 import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
 import { useTooltipRevealGroup } from '../hooks/useTooltipReveal.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const PLAY_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_play.webp';
-const PLAY_PREPARE_WHEEL_ASSET = '/UI/01_WelcomeScreen/LoadingWheel.webp';
-const NAV_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_nav_b.webp';
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const PLAY_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_play.webp');
+const PLAY_PREPARE_WHEEL_ASSET = assetUrl('/UI/01_WelcomeScreen/LoadingWheel.webp');
+const NAV_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_nav_b.webp');
+const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
 const SCRIBES_POLL_MS = 10_000;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
     tooltip: 'Scribes',
-    src: '/UI/03_DASHBOARD/im_button_news_a.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_button_news_a.webp'),
     x: 48,
     y: -86,
   },
   {
     label: 'Settings',
     tooltip: 'Settings',
-    src: '/UI/03_DASHBOARD/im_button_setting_b.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_button_setting_b.webp'),
     x: -48,
     y: 83,
   },
   {
     label: 'Social',
     tooltip: 'Friends',
-    src: '/UI/03_DASHBOARD/im_button_social_a.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_button_social_a.webp'),
     x: 96,
     y: 0,
   },
   {
     label: 'Profile',
     tooltip: 'Profile',
-    src: '/UI/03_DASHBOARD/im_button_credits_b.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_button_credits_b.webp'),
     x: -96,
     y: 0,
   },
   {
     label: 'Achievements',
     tooltip: 'Achievements',
-    src: '/UI/03_DASHBOARD/im_achievements.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_achievements.webp'),
     x: 48,
     y: 83,
   },
   {
     label: 'Expansions',
     tooltip: 'Expansions',
-    src: '/UI/03_DASHBOARD/im_button_expansions.webp',
+    src: assetUrl('/UI/03_DASHBOARD/im_button_expansions.webp'),
     x: -48,
     y: -86,
   },

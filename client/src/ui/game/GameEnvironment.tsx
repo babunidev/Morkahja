@@ -63,8 +63,9 @@ import {
   encounterSnapshotAdvanced,
   runEncounterAdvanceTransition,
 } from './roomAdvanceOrchestrator.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
+const ENCOUNTER_IMAGE_ROOT = assetUrl('/game/encounterimages');
 
 interface EncounterDataRecord {
   mEncounterID: number;
@@ -225,7 +226,7 @@ export function GameEnvironment({
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
   const [resultRollVisible, setResultRollVisible] = useState(false);
   const [diceButtonAsset, setDiceButtonAsset] = useState(
-    () => diceButtonAssetPath(DEFAULT_DICE_ID),
+    () => assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID)),
   );
   const dismissHelpToast = useCallback(() => {
     setHelpToastMessage(null);
@@ -418,8 +419,8 @@ export function GameEnvironment({
 
       setDiceButtonAsset(
         isDiceId(diceId)
-          ? diceButtonAssetPath(diceId)
-          : diceButtonAssetPath(DEFAULT_DICE_ID),
+          ? assetUrl(diceButtonAssetPath(diceId))
+          : assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID)),
       );
     }).catch(() => {
       // Keep the default die skin when player data is unavailable.

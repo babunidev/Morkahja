@@ -1,9 +1,10 @@
 import type { PersistedAvatar } from '../../api/http.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const AVATAR_ASSET_ROOT = '/UI/02_AvatarCreation/Avatare';
-const FRAME_ASSET_ROOT = '/UI/02_AvatarCreation/Frames';
-const CREATE_AVATAR_ASSET = '/UI/03_DASHBOARD/CreateAvatar.webp';
-const HOME_BUTTON_ASSET = '/UI/03_DASHBOARD/im_button_home.webp';
+const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
+const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
+const CREATE_AVATAR_ASSET = assetUrl('/UI/03_DASHBOARD/CreateAvatar.webp');
+const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
 const PRELOAD_TIMEOUT_MS = 1200;
 
 function preloadImage(src: string): Promise<void> {

@@ -6,9 +6,10 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const LOCK_ICON = '/UI/01_1_SignIn/LOCK.png';
-const FRIENDS_ICON = '/UI/07_FriendsMenu/FriendsButt.webp';
+const LOCK_ICON = assetUrl('/UI/01_1_SignIn/LOCK.png');
+const FRIENDS_ICON = assetUrl('/UI/07_FriendsMenu/FriendsButt.webp');
 
 const SLOT_OPTIONS: { value: SlotStateDto; label: string }[] = [
   { value: 'open', label: 'Open' },

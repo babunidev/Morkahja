@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { gameSolutions } from '../../data/gameContent.js';
 import { useLayoutMode } from '../layout/useLayoutMode.js';
 import { FADE_DURATION_MS } from '../transitions/fade.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const SOLUTION_IMAGE_ROOT = '/game/solutionimages';
+const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 /** How many solution icons twinkle at once. */
 const STAR_COUNT = 28;

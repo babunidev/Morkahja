@@ -8,9 +8,10 @@ import {
   protectedImageProps,
 } from '../../protectedImage.js';
 import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
+import { assetUrl } from '../../../assetUrl.js';
 
-const LORE_BACKGROUND = '/UI/09_GAME/spellbook_bg.webp';
-const LORE_GEM_ASSET = '/UI/03_DASHBOARD/im_gems.webp';
+const LORE_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
+const LORE_GEM_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const LORE_GEM_COLLECT_ANIMATION_MS = 700;
 const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_TICK_MS = 200;

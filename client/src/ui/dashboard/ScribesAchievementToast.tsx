@@ -6,8 +6,9 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { rankTitleForAchievement } from './achievementUnlockDetection.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const SCRIBES_ICON = '/UI/03_DASHBOARD/im_button_news_a.webp';
+const SCRIBES_ICON = assetUrl('/UI/03_DASHBOARD/im_button_news_a.webp');
 const ENTER_MS = 420;
 const DISPLAY_MS = 6_000;
 const SHAKE_MS = 520;

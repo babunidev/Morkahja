@@ -11,10 +11,11 @@ import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { assetUrl } from '../../assetUrl.js';
 
-const EXPANSION_UI_ROOT = '/UI/03_DASHBOARD/expansions';
-const ENCOUNTER_IMAGE_ROOT = '/game/encounterimages';
-const GEMS_ICON = '/UI/03_DASHBOARD/im_gems.webp';
+const EXPANSION_UI_ROOT = assetUrl('/UI/03_DASHBOARD/expansions');
+const ENCOUNTER_IMAGE_ROOT = assetUrl('/game/encounterimages');
+const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const OVERLAY_FADE_MS = 300;
 const PREVIEW_ENCOUNTER_COUNT = 3;
 
