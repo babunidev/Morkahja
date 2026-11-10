@@ -172,6 +172,12 @@ Headless Google Chrome (fresh temporary profiles) at `https://www.babuni.dev/Mor
 
 The `LiveCheck` test player remains in the production database.
 
+### Gameplay hotfix — 2026-11-10
+
+After the cutover, Babuni reported that a turn stopped after choosing a solution. Cause: since #17 the server withholds encounter rolls until a choice is committed, but the client committed only once it knew the roll, so it synced the selection and never committed. The June backend had sent rolls in advance, which hid the bug. My own earlier browser runs had shown the same stall; I wrongly attributed it to headless clicking and committed turns through the API instead, so the verification above did not exercise the real reveal path.
+
+Fix `0d217fc7` commits on the reveal phase and lets the server's resolution supply the roll. It was deployed as a **frontend-only release** through the script's new `frontend` phase (Babuni ran it with `sudo`); the previous release is kept for `frontend-rollback`. Live verification with **real UI clicks** on the `LiveCheck` player: a solution turn and a dice turn each committed, showed the roll, unlocked Continue and advanced (XP 2 → 4, then a level-up to 2), and the resulting level-up **system event** committed and returned to a normal encounter. No exceptions, and no requests outside `/Morkahja/`. Two-person multiplayer remains untested.
+
 **Still not verified live:** restoration of a real **pre-migration** player with their own key; Stripe checkout return and signed webhook delivery at the new URL (the dashboard endpoint still needs updating); PWA installation; two-person multiplayer; real mobile browsers; Nginx/PM2 log review (the deploy account cannot read them).
 
 ## Player identity and recovery
@@ -223,7 +229,7 @@ Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.
 - **Deep link refresh** inside the app kept the session.
 - **Logout** (Settings → End Session) cleared the session and returned to the gateway.
 - **Recovery-key restore** in a fresh, empty profile: same `playerId`, identical player record (ignoring session/timestamp fields), avatars, inventories and achievements, new session ID.
-- **Gameplay after restore:** room create, selection, polling, then `POST /room/choice` and `/room/continue` through the proxy. The room advanced (`waiting_continue` → `active_encounter`) and avatar experience went 0 → 2 in the database. The choice/continue calls were issued from page JavaScript; driving that final dice-reveal animation by synthetic clicks in headless Chrome did not succeed, so the in-browser reveal UI was not exercised.
+- **Gameplay after restore:** room create, selection, polling, then `POST /room/choice` and `/room/continue` through the proxy. The room advanced (`waiting_continue` → `active_encounter`) and avatar experience went 0 → 2 in the database. The choice/continue calls were issued from page JavaScript because synthetic clicks did not commit the turn. That was not a test artifact but the real stall fixed in `0d217fc7`; see *Gameplay hotfix*.
 
 ### Not verified locally
 
