@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import solutionData from '../../data/game/solutiondata.json';
+import { gameSolutions } from '../../data/gameContent.js';
 import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
 import {
   AVATAR_ENTER_CENTER_GLOW_MS,
@@ -35,7 +35,9 @@ interface SolutionRecord {
   mSolutionIconName?: string;
 }
 
-const solutionsById = solutionData as Record<string, SolutionRecord>;
+function solutionsById(): Record<string, SolutionRecord> {
+  return gameSolutions() as Record<string, SolutionRecord>;
+}
 
 const containerStyle: CSSProperties = {
   position: 'fixed',
@@ -67,7 +69,7 @@ function inventorySolutionSrcs(inventory: AvatarInventory | undefined): string[]
 
   const srcs: string[] = [];
   for (const item of items) {
-    const iconName = solutionsById[String(item.solutionId)]?.mSolutionIconName;
+    const iconName = solutionsById()[String(item.solutionId)]?.mSolutionIconName;
     if (iconName) {
       srcs.push(`${SOLUTION_IMAGE_ROOT}/${iconName}.webp`);
     }

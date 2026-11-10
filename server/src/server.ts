@@ -54,6 +54,7 @@ import {
 import {
   getEncounters,
   getFramesData,
+  getGameContentBundle,
   getPortraitsData,
   getSolutionMap,
   loadStaticGameEnvironment,
@@ -147,6 +148,18 @@ app.get('/health', (_req: Request, res: Response) => {
       activityFeed: true,
     },
   });
+});
+
+/** Single source of game content for the client; revalidated with an ETag on each load. */
+app.get('/game-data/content', (req: Request, res: Response) => {
+  const bundle = getGameContentBundle();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('ETag', bundle.etag);
+  if (req.headers['if-none-match'] === bundle.etag) {
+    res.status(304).end();
+    return;
+  }
+  res.type('application/json').send(bundle.body);
 });
 
 app.get('/game-data/status', (_req: Request, res: Response) => {

@@ -10,6 +10,10 @@
 
 Static inspection only; no server tests, browser tests or production configuration checks executed here.
 
+## Game content (10 November 2026)
+
+Game content (encounters, solutions, expansions, frames, portraits) has one copy: `server/game/*.json`, loaded by `server/src/services/gameData.ts`. The server caches each file and re-reads it when its modification time changes; `GET /game-data/content` serves everything as one ETag-validated response, which the client loads during its loading screen (`client/src/data/gameContent.ts`). Encounter and solution images remain static files in `client/public/game`. Rooms store snapshots of their encounter, so a content edit does not alter a round in progress. The storage behind `gameData.ts` can later move to PostgreSQL without changing the client.
+
 ## Architectural development evidenced by the original journal
 
 The journal identifies three coordinated pieces by the **May 18, 2026 playable checkpoint**: React/Vite browser client, Express API services, and shared client/server TypeScript contracts. It describes PostgreSQL-backed persistent game documents and later server-authoritative enforcement of encounter outcomes and avatar death (May 22). A shared dice interpretation layer was added to reduce client/server disagreements.

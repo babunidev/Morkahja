@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import solutionData from '../../data/game/solutiondata.json';
+import { gameSolutions } from '../../data/gameContent.js';
 import { useLayoutMode } from '../layout/useLayoutMode.js';
 import { FADE_DURATION_MS } from '../transitions/fade.js';
 import { assetUrl } from '../../assetUrl.js';
@@ -16,13 +16,19 @@ interface SolutionRecord {
   mSolutionIconName?: string;
 }
 
-const ICON_NAMES: string[] = Array.from(
-  new Set(
-    Object.values(solutionData as Record<string, SolutionRecord>)
+let iconNamesCache: { source: Record<string, unknown>; names: string[] } | null = null;
+
+/** Distinct solution icon names, recomputed only when the content changes. */
+function iconNames(): string[] {
+  const source = gameSolutions();
+  if (iconNamesCache?.source !== source) {
+    const names = Object.values(source as Record<string, SolutionRecord>)
       .map((record) => record.mSolutionIconName)
-      .filter((name): name is string => typeof name === 'string' && name.length > 0),
-  ),
-);
+      .filter((name): name is string => typeof name === 'string' && name.length > 0);
+    iconNamesCache = { source, names: Array.from(new Set(names)) };
+  }
+  return iconNamesCache.names;
+}
 
 // Full-viewport shell that centres the play-area stage, mirroring PortraitStage.
 const shellStyle: CSSProperties = {
@@ -75,11 +81,12 @@ function randomBetween(min: number, max: number): number {
 }
 
 function randomIcon(): string {
-  if (ICON_NAMES.length === 0) {
+  const names = iconNames();
+  if (names.length === 0) {
     return '';
   }
 
-  return ICON_NAMES[Math.floor(Math.random() * ICON_NAMES.length)];
+  return names[Math.floor(Math.random() * names.length)];
 }
 
 interface StarState {
@@ -120,7 +127,7 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
     Array.from({ length: STAR_COUNT }, (_, index) => createStar(index)),
   );
   const timersRef = useRef<Map<number, number>>(new Map());
-  const hasIcons = useMemo(() => ICON_NAMES.length > 0, []);
+  const hasIcons = useMemo(() => iconNames().length > 0, []);
   const { mode } = useLayoutMode();
   const mobilePortrait = mode === 'mobile-portrait';
 

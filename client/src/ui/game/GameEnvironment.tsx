@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import encountersData from '../../data/game/encountersdata.json';
+import { gameEncounters } from '../../data/gameContent.js';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -139,7 +139,7 @@ function encounterRevealStyle(visible: boolean, delayMs = 120): CSSProperties {
 
 function encounterLookup(encounterId: number): EncounterDataRecord | null {
   const directKey = String(encounterId).padStart(5, '0');
-  const records = encountersData as Record<string, EncounterDataRecord>;
+  const records = gameEncounters() as Record<string, EncounterDataRecord>;
   return records[directKey] ?? records[String(encounterId)] ?? null;
 }
 
