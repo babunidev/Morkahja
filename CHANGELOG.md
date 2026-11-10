@@ -15,6 +15,10 @@
 - **Deployed (2026-11-10):** Released to production at `https://www.babuni.dev/Morkahja/` from commit `95fd5c5a`, with Babuni's approval. The backend was upgraded from `77062a42` at the same time. The database backup was verified by restore, and live checks passed; see `docs/DEPLOYMENT.md`. Still open: Stripe webhook URL, a real pre-migration account restore, and merging into `main`.
 - **Target host (2026-11-10):** At Babuni's decision the production address is `https://www.babuni.dev/Morkahja/`. The social-preview fallback, test URLs, Nginx template comments and deployment configuration were updated to match. No runtime path logic changed.
 
+## 2026-11-10 — Documentation readability
+
+- Moved the dated audit, test, pull request and gameplay status notes out of the front page into `docs/RELEASE_STATUS_HISTORY.md` and rewrote the entry as a game and project guide. No application, database or production changes.
+
 ## 2026-11-10 — Unreleased: one copy of the game content
 
 - `server/game/*.json` is now the only copy of encounters, solutions, expansions, frames and portraits. The duplicate copies in `client/src/data/game` and `client/public/game` were removed; images stay in `client/public/game`.
