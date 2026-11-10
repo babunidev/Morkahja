@@ -40,6 +40,12 @@ Separate browser tabs can presently use the same account, including different av
 
 **Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
 
+## Achievement progression
+
+Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
+
+The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.
+
 ## Moving to www.babuni.dev/Morkahja — 10 November 2026
 
 The repository changes for serving the game at `https://www.babuni.dev/Morkahja/` are on branch `feat/babuni-dev-subpath`. They passed the local release check and a local Nginx/browser integration test, and are **not merged or deployed**. Existing players will need their recovery-key file at the new address, because browser storage does not move between domains. See the [deployment plan](docs/DEPLOYMENT.md).

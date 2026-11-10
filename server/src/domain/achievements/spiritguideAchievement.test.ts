@@ -33,7 +33,8 @@ assert.equal(spiritguideProgressBand(6).bandEnd, 9);
 assert.equal(spiritguideProgressBand(54).bandEnd, null);
 assert.equal(spiritguideProgressBand(54).progressInBand, 1);
 
-assert.equal(spiritguideDailyRewardGems(0), 1);
-assert.equal(spiritguideDailyRewardGems(4), 5);
+assert.equal(spiritguideDailyRewardGems(0), 0);
+assert.equal(spiritguideDailyRewardGems(1), 1);
+assert.equal(spiritguideDailyRewardGems(4), 4);
 
 console.log('spiritguideAchievement.test.ts passed');

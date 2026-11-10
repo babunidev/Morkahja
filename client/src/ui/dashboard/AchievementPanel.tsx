@@ -155,7 +155,7 @@ function progressLabel(achievement: AchievementProgressDto): string {
       return `${achievement.progress} combined levels — max rank reached`;
     }
 
-    if (achievement.rank >= 3) {
+    if (achievement.rank >= 2) {
       return `${achievement.progress} / ${achievement.bandEnd} combined levels`;
     }
 

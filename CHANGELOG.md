@@ -61,3 +61,11 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Added the target and uncompleted work to the roadmap and recorded the human-selected address in the decision history.
 - Linked the deployment plan from the README and recorded the documentation work in the development guide.
 - Static source inspection and documentation changes only. No application code, DNS, server, production database or Stripe settings were changed; no build or deployment test was run.
+
+## Unreleased — 2026-11-04 — Achievement milestones
+
+- Stopped treating the first nonzero progress point as a Scribes achievement unlock; actual rank increases now trigger client notifications.
+- Separated started achievement chains from earned avatar titles and Hearth Blessing bonuses. Daily payout now has one base gem plus the bonuses from achieved ranks.
+- Realigned Firestarter/Pathfinder milestones: one avatar starts visible progress, two avatars earn Firestarter, three earn Pathfinder, followed by 15 and 30 combined levels.
+- Firestarter ranks are never lowered: a rank earned under the earlier milestones is kept, while new rank-ups follow the revised ones. Legacy rank-4 decoding is retained and stale unlock timestamps are corrected.
+- Added threshold, reward, title and Scribes notification regression tests; all 11 achievement tests passed in GitHub Actions run 41766029656. Overall CI remained blocked by an existing unavailable PostgreSQL endpoint in the session-auth test; no gameplay deployment is claimed.

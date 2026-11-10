@@ -9,20 +9,26 @@ import {
 import { mergeFirestarterPeaks } from './firestarterProgress.js';
 
 assert.equal(firestarterRankFromState(0, 0), 0);
-assert.equal(firestarterRankFromState(1, 1), 1);
-assert.equal(firestarterRankFromState(2, 5), 2);
-assert.equal(firestarterRankFromState(3, 12), 3);
+assert.equal(firestarterRankFromState(1, 1), 0);
+assert.equal(firestarterRankFromState(2, 5), 1);
+assert.equal(firestarterRankFromState(3, 12), 2);
+assert.equal(firestarterRankFromState(3, 14), 2);
+assert.equal(firestarterRankFromState(3, 15), 3);
+assert.equal(firestarterRankFromState(2, 29), 1);
 assert.equal(firestarterRankFromState(3, 29), 3);
 assert.equal(firestarterRankFromState(3, 30), 4);
 assert.equal(firestarterRankFromState(2, 40), 4);
 
 assert.deepEqual(firestarterProgressBand(0, 0), {
   bandStart: 0,
-  bandEnd: 3,
+  bandEnd: 2,
   progressInBand: 0,
 });
-assert.equal(firestarterProgressBand(1, 1).progressInBand, 1 / 3);
-assert.equal(firestarterProgressBand(2, 5).progressInBand, 2 / 3);
+assert.equal(firestarterProgressBand(1, 1).progressInBand, 1 / 2);
+assert.equal(firestarterProgressBand(2, 5).bandEnd, 3);
+assert.equal(firestarterProgressBand(2, 5).progressInBand, 0);
+assert.equal(firestarterProgressBand(3, 12).bandEnd, 15);
+assert.equal(firestarterProgressBand(3, 12).progressInBand, 9 / 12);
 assert.equal(firestarterProgressBand(3, 15).bandEnd, 30);
 assert.equal(firestarterProgressBand(3, 30).bandEnd, null);
 
@@ -37,8 +43,18 @@ assert.equal(afterDeath.rank, 4);
 assert.equal(afterDeath.peakAvatarCount, 3);
 assert.equal(afterDeath.peakTotalLevels, 30);
 
+// Ranks earned under the old milestones are never lowered.
 const legacyHeld = mergeFirestarterPeaks(3, 3, 1, 5);
 assert.equal(legacyHeld.rank, 3);
 assert.equal(legacyHeld.peakAvatarCount, 3);
+
+const legacyStarted = mergeFirestarterPeaks(1, 1, 1, 1);
+assert.equal(legacyStarted.rank, 1);
+// New players follow the current milestones: one avatar is progress only.
+const newPlayer = mergeFirestarterPeaks(undefined, undefined, 1, 1);
+assert.equal(newPlayer.rank, 0);
+assert.equal(mergeFirestarterPeaks(undefined, undefined, 2, 2).rank, 1);
+const legacyRankFour = mergeFirestarterPeaks(3, 4, 1, 5);
+assert.equal(legacyRankFour.rank, 4);
 
 console.log('firestarterAchievement.test.ts passed');
