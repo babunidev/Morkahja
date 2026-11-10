@@ -2,7 +2,6 @@ import { recoveryKeyFilename as sharedRecoveryKeyFilename } from '@shared/recove
 
 const DEVICE_KEY_STORAGE = 'morkahja.deviceKeypair';
 const IDENTITY_KEY_STORAGE = 'morkahja.identityKeypair';
-export const RESTORE_CHALLENGE_PREFIX = 'morkahja-restore:';
 
 export interface StoredKeypair {
   privateKey: JsonWebKey;

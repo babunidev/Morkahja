@@ -60,6 +60,23 @@ function getSolutionUses(rewardId: number): number | undefined {
 }
 
 {
+  // Server resolution already includes prosperity essence — do not double-count.
+  const rewards = visibleEncounterRewards({
+    encounterId: NORMAL_ENCOUNTER_ID,
+    prosperityRewardId: 201,
+    rewardIds: [101, 201],
+    outcome: 'Prosperity',
+    avatarLevel: 1,
+    getSolutionUses,
+  });
+
+  assert.deepEqual(rewards, [
+    { solutionId: 101, quantity: 3 },
+    { solutionId: 201, quantity: 5 },
+  ]);
+}
+
+{
   assert.equal(
     rewardQuantityForVisibleEntry({
       encounterId: 2,

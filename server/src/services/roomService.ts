@@ -19,7 +19,6 @@ import type { PlayerPresence } from '../domain/rooms/PlayerPresence.js';
 import type { SlotState } from '../domain/rooms/RoomSlot.js';
 import { DEFAULT_SLOT_STATES } from '../domain/rooms/RoomSlot.js';
 import {
-  HELP_SEEN_WINDOW_MS,
   MAX_PARTICIPANTS,
   RANDOM_HELP_RECIPIENT_COUNT,
   ROOM_INVITE_TTL_MS,
@@ -66,11 +65,10 @@ import {
 } from './roomEncounterSeeding.js';
 import {
   loadAvatar,
-  saveActiveEncounter,
 } from './encounterPersistence.js';
 import { getEncounterById, getEncounters } from './gameData.js';
 import {
-  addPlayerYellowRedGems,
+  grantPlayerYellowRedGemsInTransaction,
   getPlayerUnlockedExpansions,
   loadPlayer,
   loadPlayerActiveAvatar,
@@ -109,6 +107,7 @@ import {
   clearSoloCheckpointForAvatar,
   isSoloLeaderRoom,
   loadSoloRoomCheckpoint,
+  type SoloRoomCheckpoint,
 } from './soloRoomCheckpointService.js';
 
 /**
@@ -236,15 +235,6 @@ function engagedParticipants(room: EncounterRoom): RoomParticipant[] {
     (participant) =>
       participant.choiceState !== 'disengaged' &&
       participant.disconnectedAt === undefined,
-  );
-}
-
-function participantsAwaitingContinue(room: EncounterRoom): RoomParticipant[] {
-  return engagedParticipants(room).filter(
-    (participant) =>
-      participant.choiceState === 'ready_to_continue' ||
-      participant.choiceState === 'resolved' ||
-      participant.preparedResult !== undefined,
   );
 }
 
@@ -616,13 +606,17 @@ async function reengageParticipantIfNeeded(
   room: EncounterRoom,
   playerId: string,
 ): Promise<EncounterRoom> {
-  const updated = reengageFromInactivity(room, playerId, nowMs());
-  if (updated === room) {
-    return room;
-  }
-
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      return room;
+    }
+    const updated = reengageFromInactivity(current, playerId, nowMs());
+    if (updated !== current) {
+      await transaction.setEncounterRoom(updated.roomId, updated);
+    }
+    return updated;
+  });
 }
 
 async function notifyAdventureStartedForJoin(room: EncounterRoom): Promise<void> {
@@ -679,14 +673,6 @@ async function mergeExpansionsForPlayerIds(playerIds: string[]): Promise<number[
 /** Encounter pool for a room is always the leader's unlocked expansions only. */
 async function expansionsForRoomLeader(room: EncounterRoom): Promise<number[]> {
   return mergeExpansionsForPlayerIds([room.leaderPlayerId]);
-}
-
-function previousEncounterFromRoom(room: EncounterRoom): EncounterData | null {
-  const lastId = room.lastEncounterId;
-  if (typeof lastId !== 'number' || lastId <= 0) {
-    return null;
-  }
-  return getEncounterById(lastId) ?? null;
 }
 
 function previousEncounterFromAvatar(avatar: AvatarDocument): EncounterData | null {
@@ -1176,23 +1162,6 @@ async function reconcileSystemEventIfActorUnavailableInTransaction(
   return working;
 }
 
-async function reconcileSystemEventAfterParticipantDeparture(roomId: string): Promise<void> {
-  const reconciled = await withDocumentTransaction(async (transaction) => {
-    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
-    if (!room || room.roomState === 'closed') {
-      return room;
-    }
-
-    let working = await reconcileSystemEventIfActorUnavailableInTransaction(transaction, room);
-    working = await reconcileWaitingContinueAfterParticipantDeparture(transaction, working);
-    return working;
-  });
-
-  if (reconciled && reconciled.roomState !== 'closed') {
-    await syncActiveEncountersForRoom(reconciled);
-  }
-}
-
 async function reconcileSystemEventForPoll(room: EncounterRoom): Promise<EncounterRoom> {
   if (room.roomState !== 'system_event' || !room.systemEvent) {
     return room;
@@ -1236,7 +1205,8 @@ function withRoomLoreGemOnResolutionSummary(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)) {
+  if (!roomLoreGemActivatedForSnapshot(room, snapshotId)
+    || participant.loreGemCollected !== true) {
     return summary;
   }
 
@@ -1411,17 +1381,16 @@ async function syncRoomAfterParticipantDeparture(room: EncounterRoom): Promise<v
   await syncActiveEncountersForRoom(room);
 }
 
-async function grantRoomLoreGemsOnCommit(room: EncounterRoom): Promise<void> {
+async function grantRoomLoreGemsOnCommit(
+  transaction: DocumentTransaction,
+  room: EncounterRoom,
+): Promise<void> {
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
   const recipients = participantsEarnedRoomLoreGem(room, snapshotId);
 
   for (const participant of recipients) {
     const claimKey = `${snapshotId}:${participant.playerId}`;
-    const player = await loadPlayer(participant.playerId);
-    if (player?.loreGemClaims?.[claimKey] === true) {
-      continue;
-    }
-    await addPlayerYellowRedGems(participant.playerId, 1, claimKey);
+    await grantPlayerYellowRedGemsInTransaction(transaction, participant.playerId, 1, claimKey);
   }
 }
 
@@ -1504,7 +1473,7 @@ async function advanceWaitingRoomInTransaction(
     participants: commitResult.participants,
   };
 
-  await grantRoomLoreGemsOnCommit(committedRoom);
+  await grantRoomLoreGemsOnCommit(transaction, committedRoom);
 
   return advanceRoomAfterCommit(
     transaction,
@@ -1568,8 +1537,6 @@ async function advanceRoomAfterCommit(
     );
   }
 
-  const leader = findParticipant(roomForAdvance, roomForAdvance.leaderPlayerId)
-    ?? participants[0];
   const lineage = roomForAdvance.systemEvent?.lineage;
   const lastEncounterId = lineage?.originEncounterId ?? roomForAdvance.activeEncounterSnapshot.encounterId;
 
@@ -1955,31 +1922,29 @@ export async function leaveRoomById(
   }
 
   if (result.type === 'solo_away') {
-    await saveEncounterRoom(result.room);
+    // The departing room was already persisted in the locked transaction.
     await syncActiveEncountersForRoom(result.room);
     await tickRoomById(result.room.roomId);
     await clearPresenceRoom(result.playerId);
     return;
   }
 
-  if (result.type === 'leader_left') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
-    await clearPresenceRoom(result.departingPlayerId);
-    return;
-  }
-
-  if (result.type === 'departed') {
-    const withExpansions: EncounterRoom = {
-      ...result.room,
-      mergedExpansions: await expansionsForRoomLeader(result.room),
-    };
-    await saveEncounterRoom(withExpansions);
-    await syncRoomAfterParticipantDeparture(withExpansions);
+  if (result.type === 'leader_left' || result.type === 'departed') {
+    const roomAfterLeave = await withDocumentTransaction(async (transaction) => {
+      const current = await loadEncounterRoomFromTransaction(transaction, result.room.roomId);
+      if (!current || current.roomState === 'closed') {
+        return current;
+      }
+      // Merge only the expansion field into the latest locked room, preserving
+      // any joins that completed after the participant departed.
+      const mergedExpansions = await expansionsForRoomLeader(current);
+      const updated = { ...current, mergedExpansions, updatedAt: nowMs() };
+      await transaction.setEncounterRoom(current.roomId, updated);
+      return updated;
+    });
+    if (roomAfterLeave) {
+      await syncRoomAfterParticipantDeparture(roomAfterLeave);
+    }
     await clearPresenceRoom(result.departingPlayerId);
     return;
   }
@@ -2148,57 +2113,75 @@ export async function joinRoom(
 
   await leaveOtherOpenRooms(playerId, roomId);
 
-  const room = await loadEncounterRoom(roomId);
-  if (!room || room.roomState === 'closed') {
-    throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
-  }
+  // Slot selection, membership checks and the room update must share a row
+  // lock. Otherwise two simultaneous joiners can reserve the same slot and
+  // overwrite one another's entire room document.
+  const result = await withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed') {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
 
-  if (room.participants.some((participant) => participant.playerId === playerId)) {
-    const reengaged = await reengageReturningParticipantIfNeeded(room, playerId);
+    if (room.participants.some((participant) => participant.playerId === playerId)) {
+      return { room, rejoin: true };
+    }
+
+    const slotIndex = findOpenSlot(room);
+    if (slotIndex === null) {
+      throw new RoomError('Room is full', 409, 'ROOM_FULL');
+    }
+
+    const slotState = room.slotStates[slotIndex];
+    if (slotState === 'locked') {
+      throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
+    }
+    if (slotState === 'friends_only') {
+      const leader = await loadPlayer(room.leaderPlayerId);
+      if (!(leader?.friendIds ?? []).includes(playerId)) {
+        throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
+      }
+    }
+
+    if (room.roomState !== 'system_event' && room.slotEncounterSnapshots?.length !== 3) {
+      // Legacy rooms may not yet have per-slot rolls. Seed while holding the
+      // room lock; never save a stale room snapshot outside the transaction.
+      const encounter = getEncounterById(room.activeEncounterSnapshot.encounterId);
+      if (!encounter) {
+        throw new RoomError('Room encounter is unavailable', 409, 'ROOM_NOT_READY');
+      }
+      const prepared = room.activeEncounterSnapshot.preparedEncounter
+        ?? prepareNextEncounter(encounter, room.mergedExpansions);
+      room = await seedAllSlotEncountersForRoom(room, encounter, prepared);
+    }
+
+    const updated: EncounterRoom = {
+      ...room,
+      participants: [
+        ...room.participants,
+        createParticipantForRoomJoin(room, playerId, avatarId, slotIndex),
+      ],
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    const snapshot = updated.slotEncounterSnapshots[slotIndex];
+    if (snapshot) {
+      await transaction.setActiveEncounter(
+        playerId,
+        avatarId,
+        bindSnapshotToParticipant(snapshot, playerId, avatarId),
+      );
+    }
+    return { room: updated, rejoin: false };
+  });
+
+  if (result.rejoin) {
+    const reengaged = await reengageReturningParticipantIfNeeded(result.room, playerId);
     await setPresenceInRoom(playerId, roomId);
     return reconcilePendingLevelUpForRoom(reengaged);
   }
 
-  const slotIndex = findOpenSlot(room);
-  if (slotIndex === null) {
-    throw new RoomError('Room is full', 409, 'ROOM_FULL');
-  }
-
-  const slotState = room.slotStates[slotIndex];
-  if (slotState === 'locked') {
-    throw new RoomError('Slot is locked', 403, 'SLOT_LOCKED');
-  }
-
-  if (slotState === 'friends_only') {
-    const leader = await loadPlayer(room.leaderPlayerId);
-    const friendIds = leader?.friendIds ?? [];
-    if (!friendIds.includes(playerId)) {
-      throw new RoomError('Friends only slot', 403, 'FRIENDS_ONLY');
-    }
-  }
-
-  const roomWithJoiner = room.roomState === 'system_event'
-    ? room
-    : await ensureSlotEncounterSnapshots(room);
-  const updated: EncounterRoom = {
-    ...roomWithJoiner,
-    participants: [
-      ...roomWithJoiner.participants,
-      createParticipantForRoomJoin(roomWithJoiner, playerId, avatarId, slotIndex),
-    ],
-    updatedAt: nowMs(),
-  };
-
-  await saveEncounterRoom(updated);
-  await saveActiveEncounter(
-    bindSnapshotToParticipant(
-      updated.slotEncounterSnapshots[slotIndex],
-      playerId,
-      avatarId,
-    ),
-  );
   await setPresenceInRoom(playerId, roomId);
-  return reconcilePendingLevelUpForRoom(updated);
+  return reconcilePendingLevelUpForRoom(result.room);
 }
 
 export async function leaveRoom(playerId: string, avatarId?: string): Promise<void> {
@@ -2273,7 +2256,8 @@ export async function kickParticipant(
     throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
   }
 
-  await saveEncounterRoom(result);
+  // The transaction already stored result. Re-saving a stale copy can
+  // overwrite a participant who joined immediately after the kick.
   await markPlayerKickedFromParty(targetPlayerId, room.roomId);
   if (result.roomState !== 'closed') {
     await syncRoomAfterParticipantDeparture(result);
@@ -2291,25 +2275,28 @@ export async function setSlotState(
   if (!room) {
     throw new RoomError('No active room', 404, 'NO_ROOM');
   }
-
-  if (room.leaderPlayerId !== playerId) {
-    throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
-  }
-
   if (slotIndex < 1 || slotIndex >= MAX_PARTICIPANTS) {
     throw new RoomError('Invalid slot index');
   }
 
-  const nextSlotStates = [...room.slotStates] as [SlotState, SlotState, SlotState];
-  nextSlotStates[slotIndex] = slotState;
-
-  const updated: EncounterRoom = {
-    ...room,
-    slotStates: nextSlotStates,
-    updatedAt: nowMs(),
-  };
-  await saveEncounterRoom(updated);
-  return updated;
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed') {
+      throw new RoomError('No active room', 404, 'NO_ROOM');
+    }
+    if (current.leaderPlayerId !== playerId ||
+      !current.participants.some((participant) =>
+        participant.playerId === playerId && participant.avatarId === avatarId)) {
+      throw new RoomError('Only the leader can change slots', 403, 'NOT_LEADER');
+    }
+    const slotStates = [...current.slotStates] as [SlotState, SlotState, SlotState];
+    slotStates[slotIndex] = slotState;
+    const updated: EncounterRoom = {
+      ...current, slotStates, updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(current.roomId, updated);
+    return updated;
+  });
 }
 
 export async function submitChoice(
@@ -2486,7 +2473,7 @@ export async function setFocusState(
 
   const now = nowMs();
 
-  return withDocumentTransaction(async (transaction) => {
+  const updated = await withDocumentTransaction(async (transaction) => {
     let room = await loadEncounterRoomFromTransaction(transaction, roomId);
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
@@ -2494,7 +2481,7 @@ export async function setFocusState(
 
     room = reengageFromInactivity(room, playerId, now);
 
-    const updated: EncounterRoom = {
+    const next: EncounterRoom = {
       ...room,
       participants: room.participants.map((participant) =>
         participant.playerId === playerId
@@ -2507,9 +2494,23 @@ export async function setFocusState(
       ),
       updatedAt: now,
     };
-    await transaction.setEncounterRoom(roomId, updated);
-    return updated;
+    await transaction.setEncounterRoom(roomId, next);
+    return next;
   });
+
+  // Closing a pause menu can unblock advance after everyone already pressed Continue.
+  // Mirror submitContinue: tick outside the focus write so the room does not stay stuck.
+  if (
+    canAdvanceRoom(updated)
+    && (updated.roomState === 'waiting_continue' || updated.roomState === 'advancing')
+  ) {
+    const ticked = await tickRoomById(roomId);
+    if (ticked) {
+      return ticked;
+    }
+  }
+
+  return updated;
 }
 
 async function applyContinuePressInTransaction(
@@ -2660,13 +2661,6 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
   return finalRoom;
 }
 
-function isFriendRecentlySeen(lastPlayedAt: number | undefined, now: number): boolean {
-  if (typeof lastPlayedAt !== 'number') {
-    return false;
-  }
-  return now - lastPlayedAt <= HELP_SEEN_WINDOW_MS;
-}
-
 function isPlayerOnlineAndActive(
   player: PlayerDocument,
   liveSessionPlayerIds: Set<string>,
@@ -2803,9 +2797,23 @@ export async function broadcastCallForHelp(
   }
 
   const snapshotId = room.activeEncounterSnapshot.snapshotId;
-  if (room.helpCalledSnapshotId === snapshotId) {
-    throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
-  }
+  // Reserve this room's help flag BEFORE sending invitations. The locked
+  // update preserves simultaneous joins and stops duplicate help requests.
+  await withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
+    if (!current || current.roomState === 'closed'
+      || current.activeEncounterSnapshot.snapshotId !== snapshotId) {
+      throw new RoomError('Encounter changed while requesting help', 409, 'INVALID_ROOM_STATE');
+    }
+    if (current.helpCalledSnapshotId === snapshotId) {
+      throw new RoomError('Help already called for this encounter', 409, 'HELP_ALREADY_USED');
+    }
+    await transaction.setEncounterRoom(current.roomId, {
+      ...current,
+      helpCalledSnapshotId: snapshotId,
+      updatedAt: nowMs(),
+    });
+  });
 
   const now = nowMs();
   const liveSessionPlayerIds = await listPlayerIdsWithLiveSessions(now);
@@ -2877,13 +2885,6 @@ export async function broadcastCallForHelp(
     );
   }
 
-  const updatedRoom: EncounterRoom = {
-    ...room,
-    helpCalledSnapshotId: snapshotId,
-    updatedAt: now,
-  };
-  await saveEncounterRoom(updatedRoom);
-
   const invitedCount = eligibleFriendIds.length + strangerTargetIds.length;
   const targetMode: BroadcastCallForHelpResult['targetMode'] = strangerTargetIds.length > 0
     ? (eligibleFriendIds.length > 0 ? 'friends' : 'random')
@@ -2894,80 +2895,6 @@ export async function broadcastCallForHelp(
     targetMode,
     helpCalled: true,
   };
-}
-
-/** @deprecated Use broadcastCallForHelp for the in-game help button. */
-export async function requestHelp(
-  fromPlayerId: string,
-  friendId: string,
-): Promise<RoomInvitation> {
-  const room = await getActiveRoomForPlayer(fromPlayerId);
-  if (!room) {
-    throw new RoomError('No active room', 404, 'NO_ROOM');
-  }
-
-  const fromPlayer = await loadPlayer(fromPlayerId);
-  const friendIds = fromPlayer?.friendIds ?? [];
-  if (!friendIds.includes(friendId)) {
-    throw new RoomError('Target is not a friend', 403, 'NOT_FRIEND');
-  }
-
-  const friendPlayer = await loadPlayer(friendId);
-  if (!friendPlayer) {
-    throw new RoomError('Friend not found', 404, 'FRIEND_NOT_FOUND');
-  }
-
-  if (!isFriendRecentlySeen(friendPlayer.lastPlayedAt, nowMs())) {
-    throw new RoomError('Friend has not been seen recently', 403, 'FRIEND_NOT_RECENT');
-  }
-
-  const friendRoomId = await findActiveRoomIdForPlayer(friendId);
-  if (friendRoomId) {
-    throw new RoomError('Friend is already in a room', 409, 'FRIEND_IN_ROOM');
-  }
-
-  const pending = await loadPendingInvitations(friendId);
-  if (pending.some((invite) => invite.fromPlayerId === fromPlayerId && invite.roomId === room.roomId)) {
-    throw new RoomError('Invitation already pending', 409, 'INVITE_PENDING');
-  }
-
-  const invitation: RoomInvitation = {
-    inviteId: randomUUID(),
-    roomId: room.roomId,
-    fromPlayerId,
-    toPlayerId: friendId,
-    createdAt: nowMs(),
-    expiresAt: nowMs() + ROOM_INVITE_TTL_MS,
-    status: 'pending',
-  };
-
-  const fromPlayerName = fromPlayer?.playerName?.trim() || fromPlayerId;
-  const activeAvatar = await loadPlayerActiveAvatar(fromPlayerId);
-  const callerAvatar = activeAvatar?.id
-    ? await loadAvatar(fromPlayerId, activeAvatar.id)
-    : null;
-  const fromAvatarName = callerAvatar
-    ? formatAvatarDisplayName(
-      callerAvatar.name?.trim() || 'Adventurer',
-      readAvatarDisplayTitle(callerAvatar),
-    )
-    : fromPlayerName;
-  await saveRoomInvitation(invitation);
-  await recordHelpRequestedEvent(
-    fromPlayerId,
-    friendId,
-    room.roomId,
-    invitation.inviteId,
-    {
-      encounterId: room.activeEncounterSnapshot.encounterId,
-      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
-      fromPlayerName,
-      avatarName: fromAvatarName,
-      ...(callerAvatar?.portrait ? { avatarPortrait: callerAvatar.portrait } : {}),
-      ...(callerAvatar?.frame ? { avatarFrame: callerAvatar.frame } : {}),
-    },
-  );
-  return invitation;
 }
 
 export interface FriendJoinableRoom {
@@ -3344,7 +3271,7 @@ async function purgeAvatarFromRoom(
   }
 
   if (result.type === 'party_updated') {
-    await saveEncounterRoom(result.room);
+    // Room was already saved inside the locked removal transaction.
     await syncRoomAfterParticipantDeparture(result.room);
     await clearPresenceRoom(playerId);
   }

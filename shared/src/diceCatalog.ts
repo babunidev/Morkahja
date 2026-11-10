@@ -70,10 +70,6 @@ export function diceDisplayName(diceId: DiceId): string {
   return DICE_NAMES[diceId];
 }
 
-export function diceDescription(diceId: DiceId): string {
-  return DICE_DESCRIPTIONS[diceId];
-}
-
 export interface DiceCatalogEntry {
   id: DiceId;
   label: string;

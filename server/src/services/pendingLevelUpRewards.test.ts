@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
 import {
   applyPendingLevelUpRewardsFlag,
   createInitialProgression,
+  type AvatarProgression,
 } from '../domain/avatar/AvatarProgression.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type { RoomParticipant } from '../domain/rooms/RoomParticipant.js';
@@ -21,11 +22,7 @@ import {
   submitContinue,
 } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
-import { bootstrapSession } from './sessionService.js';
-
-function randomDeviceKey(): string {
-  return `device-pending-lvl-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
 function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRoom {
   return {
@@ -93,18 +90,7 @@ function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRo
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `pending-level-up-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `pending-level-up-${Date.now()}`);
 
 const avatarId = `avatar-pending-lvl-${Date.now()}`;
 
@@ -139,6 +125,16 @@ await ensureAvatar(session.playerId, avatarId, {
 }
 
 {
+  // A separate avatar prevents the preceding system event from being restored.
+  const avatarId = `avatar-pending-from-xp-${Date.now()}`;
+  await savePlayerAvatar(session.playerId, {
+    id: avatarId,
+    name: 'Level Up Through XP',
+    race: 'Rokur',
+    role: 'Warrior',
+    portrait: 'm_portrait_rokur_warrior',
+    frame: 'm_frame_01',
+  });
   await leaveAllRoomsForPlayer(session.playerId);
   await setProgression(session.playerId, avatarId, {
     ...createInitialProgression(),
@@ -146,6 +142,7 @@ await ensureAvatar(session.playerId, avatarId, {
   });
 
   let room = await createRoom(session.playerId, avatarId);
+  assert.equal(room.roomState, 'active_encounter');
   const slotIndex = room.participants[0]!.slotIndex;
   room = {
     ...readyEncounterRoom(room, slotIndex),
@@ -167,7 +164,7 @@ await ensureAvatar(session.playerId, avatarId, {
   assert.equal(afterContinue.roomState, 'system_event');
   assert.equal(afterContinue.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
-  const progressionAfterCommit = await getProgression(session.playerId, avatarId);
+  const progressionAfterCommit = await getProgression<AvatarProgression>(session.playerId, avatarId);
   assert.equal(progressionAfterCommit?.pendingLevelUpRewards, true);
 
   await leaveRoom(session.playerId, avatarId);
@@ -196,19 +193,29 @@ await ensureAvatar(session.playerId, avatarId, {
 
   await submitChoice(session.playerId, avatarId, 'dice');
   const afterLevelUpRoll = await submitContinue(session.playerId, avatarId);
-  assert.equal(afterLevelUpRoll.roomState, 'waiting_continue');
+  // Current solo system-event Continue commits the reward and advances in one
+  // action. There is no second waiting_continue acknowledgement.
+  assert.equal(afterLevelUpRoll.roomState, 'active_encounter');
 
   const activeAfterRewards = await getActiveRoomForPlayer(session.playerId, avatarId);
-  assert.equal(activeAfterRewards?.roomState, 'waiting_continue');
+  assert.equal(activeAfterRewards?.roomState, 'active_encounter');
   assert.notEqual(activeAfterRewards?.roomState, 'system_event');
 
-  await submitContinue(session.playerId, avatarId);
-
-  const progressionAfterRewards = await getProgression(session.playerId, avatarId);
+  const progressionAfterRewards = await getProgression<AvatarProgression>(session.playerId, avatarId);
   assert.equal(progressionAfterRewards?.pendingLevelUpRewards, false);
 }
 
 {
+  // Reconciliation uses a third avatar, not a parked checkpoint from earlier.
+  const avatarId = `avatar-pending-reconcile-${Date.now()}`;
+  await savePlayerAvatar(session.playerId, {
+    id: avatarId,
+    name: 'Pending Level Up Reconcile',
+    race: 'Rokur',
+    role: 'Warrior',
+    portrait: 'm_portrait_rokur_warrior',
+    frame: 'm_frame_01',
+  });
   await leaveAllRoomsForPlayer(session.playerId);
   await setProgression(session.playerId, avatarId, {
     ...createInitialProgression(),

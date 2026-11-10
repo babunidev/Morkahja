@@ -3,7 +3,6 @@ import {
   WARRIOR_IMPROVISED_WEAPON_ID,
   buildInitialAvatarSeedIds,
   createInitialAvatarInventory,
-  flattenInventorySolutionIds,
   randomSampleSolutionIds,
   type RandomIntFn,
 } from '../services/inventoryService.js';
@@ -30,6 +29,10 @@ function solutionPredicate(
   const solution = getSolutionMap()[String(solutionId)];
 
   return Boolean(solution && predicate(solution));
+}
+
+function inventoryEntryCount(inventory: ReturnType<typeof createInitialAvatarInventory>): number {
+  return inventory.spellbook.length + inventory.items.length + inventory.essences.length;
 }
 
 function assertInventoryShape(
@@ -138,9 +141,9 @@ function testDeterministicMageStarterPack(): void {
   assert(!seedIds.includes(WARRIOR_IMPROVISED_WEAPON_ID), 'mage starter must not include improvised weapon');
   assertInventoryShape(profile, inventory);
   assertEqual(
-    flattenInventorySolutionIds(inventory).length,
+    inventoryEntryCount(inventory),
     13,
-    'mage total seeded solutions',
+    'mage total seeded entries',
   );
 }
 
@@ -159,9 +162,9 @@ function testWarriorGetsImprovisedWeapon(): void {
   );
   assertInventoryShape(profile, inventory);
   assertEqual(
-    flattenInventorySolutionIds(inventory).length,
+    inventoryEntryCount(inventory),
     14,
-    'warrior total seeded solutions',
+    'warrior total seeded entries',
   );
 }
 

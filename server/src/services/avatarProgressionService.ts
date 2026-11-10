@@ -5,13 +5,7 @@ import {
   type AvatarProgression,
 } from '../domain/avatar/AvatarProgression.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
-import { loadAvatar, saveAvatar } from './encounterPersistence.js';
-import { loadInventory } from './inventoryService.js';
 import { getProgression, setProgression } from '../db/postgresDocumentStore.js';
-
-export interface AvatarEssenceSummary {
-  currentEssence: number;
-}
 
 export interface EncounterProgressionResult {
   progression: AvatarProgression;
@@ -111,72 +105,4 @@ export async function initializeAvatarProgression(
   const progression = createInitialProgression();
   await persistAvatarProgression(playerId, avatarId, progression);
   return progression;
-}
-
-export async function resetAvatarProgression(
-  playerId: string,
-  avatarId: string,
-): Promise<AvatarProgression> {
-  return initializeAvatarProgression(playerId, avatarId);
-}
-
-export async function touchAvatarProgression(
-  playerId: string,
-  avatarId: string,
-): Promise<AvatarProgression> {
-  const progression = await loadAvatarProgression(playerId, avatarId);
-  const touched = {
-    ...progression,
-    lastPlayedAt: Date.now(),
-  };
-
-  await persistAvatarProgression(playerId, avatarId, touched);
-  return touched;
-}
-
-export async function applyEncounterProgression(
-  playerId: string,
-  avatarId: string,
-  selectedRollOutcome: RollOutcome | null,
-): Promise<EncounterProgressionResult> {
-  const existing = await loadAvatarProgression(playerId, avatarId);
-  const { progression: progressed, leveledUp } = applyEncounterProgressionState(
-    existing,
-    selectedRollOutcome,
-  );
-
-  await persistAvatarProgression(playerId, avatarId, progressed);
-  return { progression: progressed, leveledUp };
-}
-
-export async function persistLastEncounter(
-  playerId: string,
-  avatarId: string,
-  encounterId: number,
-): Promise<void> {
-  const avatar = await loadAvatar(playerId, avatarId);
-
-  if (!avatar) {
-    throw new Error(`Avatar not found: ${avatarId}`);
-  }
-
-  await saveAvatar(playerId, avatarId, {
-    ...avatar,
-    progression: {
-      ...avatar.progression,
-      lastEncounterId: encounterId,
-    },
-  });
-}
-
-export async function getAvatarEssenceSummary(
-  playerId: string,
-  avatarId: string,
-): Promise<AvatarEssenceSummary> {
-  const inventory = await loadInventory(playerId, avatarId);
-  const currentEssence = inventory.essences
-    .filter((item) => item.solutionType === 15)
-    .reduce((total, item) => total + item.uses, 0);
-
-  return { currentEssence };
 }

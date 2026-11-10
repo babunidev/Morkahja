@@ -6,12 +6,10 @@ import { transitionState } from '../domain/encounter/EncounterStateMachine.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import {
-  deleteActiveEncounter as deleteActiveEncounterDocument,
   getActiveEncounter,
   getAvatar,
   setActiveEncounter,
   setAvatar,
-  withDocumentTransaction,
   type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 
@@ -95,27 +93,6 @@ export async function loadActiveEncounter(
   avatarId: string,
 ): Promise<EncounterSnapshot | null> {
   return getActiveEncounter<EncounterSnapshot>(playerId, avatarId);
-}
-
-/**
- * Atomically claim the active encounter for resolution.
- * Enforces the only valid runtime transition into the resolver:
- * active -> resolving.
- */
-export async function claimActiveEncounterForResolution(
-  playerId: string,
-  avatarId: string,
-): Promise<EncounterSnapshot> {
-  return withDocumentTransaction(async (transaction) => (
-    claimActiveEncounterInTransaction(transaction, playerId, avatarId)
-  ));
-}
-
-export async function clearActiveEncounter(
-  playerId: string,
-  avatarId: string,
-): Promise<void> {
-  await deleteActiveEncounterDocument(playerId, avatarId);
 }
 
 export async function saveAvatar(

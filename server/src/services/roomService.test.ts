@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 
-import { bootstrapSession } from './sessionService.js';
+import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 import { shouldUseEncounterFollow } from './encounterGenerator.js';
 import {
   broadcastCallForHelp,
@@ -19,7 +19,7 @@ import {
   submitChoice,
   submitContinue,
 } from './roomService.js';
-import { getProgression, setPlayer } from '../db/postgresDocumentStore.js';
+import { getProgression, pool, setPlayer } from '../db/postgresDocumentStore.js';
 import { queryActivityFeed } from './gameEventService.js';
 import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
@@ -27,27 +27,12 @@ import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomCons
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom, findActiveRoomIdForPlayerAvatar } from './roomPersistence.js';
 
-function randomDeviceKey(): string {
-  return `device-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-}
-
 assert.deepEqual(clientActionToPlayerAction('C'), { type: 'primaryC' });
 assert.deepEqual(clientActionToPlayerAction('dice'), { type: 'dice' });
 
 const identityKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const identityPublicJwk = JSON.stringify(identityKeyPair.publicKey.export({ format: 'jwk' }));
-const challenge = `morkahja-restore:${identityPublicJwk}`;
-const signature = sign(
-  'sha256',
-  Buffer.from(challenge, 'utf8'),
-  { key: identityKeyPair.privateKey, dsaEncoding: 'ieee-p1363' },
-).toString('base64url');
-
-const session = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: identityPublicJwk,
-  playerName: `room-test-${Date.now()}`,
-});
+const session = await bootstrapTestSession(identityKeyPair, identityPublicJwk, `room-test-${Date.now()}`);
 
 const avatarId = `avatar-${Date.now()}`;
 const { savePlayerAvatar } = await import('./playerService.js');
@@ -376,10 +361,14 @@ assert.equal(
   'solo should enter waiting_continue when only disconnected ghosts remain choosing',
 );
 const ghostAdvanced = await submitContinue(session.playerId, switchedAvatarRoom.participants[0]!.avatarId);
-assert.equal(
-  ghostAdvanced.roomState,
-  'active_encounter',
-  'continue should advance when solo is the only engaged participant',
+assert.ok(
+  ghostAdvanced.roomState === 'active_encounter' || ghostAdvanced.roomState === 'system_event',
+  'continue must leave waiting_continue when solo is the only engaged participant',
+);
+assert.notEqual(
+  ghostAdvanced.activeEncounterSnapshot.snapshotId,
+  ghostReady.activeEncounterSnapshot.snapshotId,
+  'host advances to a new encounter or a legitimate system event',
 );
 
 const withIdleJoiner: EncounterRoom = {
@@ -417,7 +406,11 @@ const advancedWithGhost = await getActiveRoomForPlayer(
   session.playerId,
   switchedAvatarRoom.participants[0]!.avatarId,
 );
-assert.equal(advancedWithGhost?.roomState, 'active_encounter');
+assert.ok(
+  advancedWithGhost?.roomState === 'active_encounter'
+    || advancedWithGhost?.roomState === 'system_event',
+  'host should advance to an encounter or system event after idle joiner',
+);
 
 const soloInactivityRoom: EncounterRoom = {
   ...room,
@@ -759,11 +752,7 @@ const concurrentHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' })
 const concurrentHostIdentityJwk = JSON.stringify(
   concurrentHostKeyPair.publicKey.export({ format: 'jwk' }),
 );
-const concurrentHostSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: concurrentHostIdentityJwk,
-  playerName: `concurrent-host-${Date.now()}`,
-});
+const concurrentHostSession = await bootstrapTestSession(concurrentHostKeyPair, concurrentHostIdentityJwk, `concurrent-host-${Date.now()}`);
 const concurrentHostAvatarId = `concurrent-host-${Date.now()}`;
 await savePlayerAvatar(concurrentHostSession.playerId, {
   id: concurrentHostAvatarId,
@@ -779,11 +768,7 @@ const concurrentGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' }
 const concurrentGuestIdentityJwk = JSON.stringify(
   concurrentGuestKeyPair.publicKey.export({ format: 'jwk' }),
 );
-const concurrentGuestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: concurrentGuestIdentityJwk,
-  playerName: `concurrent-guest-${Date.now()}`,
-});
+const concurrentGuestSession = await bootstrapTestSession(concurrentGuestKeyPair, concurrentGuestIdentityJwk, `concurrent-guest-${Date.now()}`);
 const concurrentGuestAvatarId = `concurrent-guest-${Date.now()}`;
 await savePlayerAvatar(concurrentGuestSession.playerId, {
   id: concurrentGuestAvatarId,
@@ -814,7 +799,19 @@ await joinRoom(
   concurrentPartyRoom.roomId,
 );
 
-await submitChoice(concurrentHostSession.playerId, concurrentHostAvatarId, 'dice');
+const roomAfterHostChoice = await submitChoice(
+  concurrentHostSession.playerId, concurrentHostAvatarId, 'dice',
+);
+const guestBeforeOwnChoice = await toEncounterRoomSnapshotDto(
+  roomAfterHostChoice, concurrentGuestSession.playerId,
+);
+assert.equal(guestBeforeOwnChoice.activeEncounter.rollE, undefined);
+assert.equal(guestBeforeOwnChoice.activeEncounter.rewardIds, undefined);
+const otherPlayerBeforeReveal = guestBeforeOwnChoice.participants.find(
+  (participant) => participant.playerId === concurrentHostSession.playerId,
+);
+assert.equal(otherPlayerBeforeReveal?.preparedResult, undefined);
+assert.equal(otherPlayerBeforeReveal?.selectedAction, undefined);
 await submitChoice(concurrentGuestSession.playerId, concurrentGuestAvatarId, 'dice');
 const concurrentSnapshotBefore = concurrentPartyRoom.activeEncounterSnapshot.snapshotId;
 
@@ -876,6 +873,22 @@ const pausedByInventory = await getActiveRoomForPlayer(
   concurrentHostAvatarId,
 );
 assert.equal(pausedByInventory?.roomState, 'waiting_continue');
+
+const unpausedAfterFocusClear = await setFocusState(
+  concurrentHostSession.playerId,
+  concurrentHostAvatarId,
+  'none',
+);
+assert.ok(
+  unpausedAfterFocusClear.roomState === 'active_encounter'
+  || unpausedAfterFocusClear.roomState === 'system_event'
+  || unpausedAfterFocusClear.roomState === 'advancing',
+  `expected advance after clearing pause focus, got ${unpausedAfterFocusClear.roomState}`,
+);
+assert.notEqual(
+  unpausedAfterFocusClear.activeEncounterSnapshot.snapshotId,
+  pauseInventoryRoom.activeEncounterSnapshot.snapshotId,
+);
 
 assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 70 }), true);
 assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 20 }), false);
@@ -979,11 +992,7 @@ assert.equal(
 
 const leaderPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const leaderPoolIdentityJwk = JSON.stringify(leaderPoolKeyPair.publicKey.export({ format: 'jwk' }));
-const leaderPoolSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: leaderPoolIdentityJwk,
-  playerName: `room-leader-pool-${Date.now()}`,
-});
+const leaderPoolSession = await bootstrapTestSession(leaderPoolKeyPair, leaderPoolIdentityJwk, `room-leader-pool-${Date.now()}`);
 const leaderPoolAvatarId = `leader-pool-${Date.now()}`;
 await savePlayerAvatar(leaderPoolSession.playerId, {
   id: leaderPoolAvatarId,
@@ -999,11 +1008,7 @@ const leaderExpansionsBeforeJoin = [...leaderPoolRoom.mergedExpansions];
 
 const joinerPoolKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const joinerPoolIdentityJwk = JSON.stringify(joinerPoolKeyPair.publicKey.export({ format: 'jwk' }));
-const joinerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: joinerPoolIdentityJwk,
-  playerName: `room-joiner-pool-${Date.now()}`,
-});
+const joinerSession = await bootstrapTestSession(joinerPoolKeyPair, joinerPoolIdentityJwk, `room-joiner-pool-${Date.now()}`);
 const joinerAvatarId = `joiner-pool-${Date.now()}`;
 await savePlayerAvatar(joinerSession.playerId, {
   id: joinerAvatarId,
@@ -1022,9 +1027,16 @@ const joinedRoom = await joinRoom(
 assert.deepEqual(joinedRoom.mergedExpansions, leaderExpansionsBeforeJoin);
 
 assert.equal(leaderPoolRoom.slotEncounterSnapshots.length, 3);
-assert.notEqual(
-  leaderPoolRoom.slotEncounterSnapshots[0].rollA,
-  leaderPoolRoom.slotEncounterSnapshots[1].rollA,
+// Compare all four rolls: a single d100 pair matches by chance about 1% of the time.
+const slotRolls = (snapshot: { rollA?: number; rollB?: number; rollC?: number; rollD?: number }) => [
+  snapshot.rollA,
+  snapshot.rollB,
+  snapshot.rollC,
+  snapshot.rollD,
+];
+assert.notDeepEqual(
+  slotRolls(leaderPoolRoom.slotEncounterSnapshots[0]),
+  slotRolls(leaderPoolRoom.slotEncounterSnapshots[1]),
 );
 const slotOneRollBeforeJoin = leaderPoolRoom.slotEncounterSnapshots[1].rollA;
 assert.equal(
@@ -1034,9 +1046,17 @@ assert.equal(
 
 const leaderDto = await toEncounterRoomSnapshotDto(leaderPoolRoom, leaderPoolSession.playerId);
 const joinerDto = await toEncounterRoomSnapshotDto(joinedRoom, joinerSession.playerId);
-assert.equal(leaderDto.activeEncounter.rollA, leaderPoolRoom.slotEncounterSnapshots[0].rollA);
-assert.equal(joinerDto.activeEncounter.rollA, joinedRoom.slotEncounterSnapshots[1].rollA);
-assert.notEqual(leaderDto.activeEncounter.rollA, joinerDto.activeEncounter.rollA);
+assert.equal(leaderDto.activeEncounter.rollA, undefined, 'unplayed host must not receive pre-rolled fate');
+assert.equal(joinerDto.activeEncounter.rollA, undefined, 'unplayed guest must not receive pre-rolled fate');
+assert.equal(joinerDto.activeEncounter.rollE, undefined);
+assert.equal(joinerDto.activeEncounter.rewardIds, undefined);
+assert.equal(joinerDto.activeEncounter.prosperityRewardId, undefined);
+assert.equal(leaderDto.activeEncounter.rewardIds, undefined);
+assert.notDeepEqual(
+  slotRolls(leaderPoolRoom.slotEncounterSnapshots[0]),
+  slotRolls(joinedRoom.slotEncounterSnapshots[1]),
+  'server still holds independent per-slot rolls',
+);
 
 const slotChoiceRoom = await createRoom(joinerSession.playerId, joinerAvatarId);
 const slotChoiceReady: EncounterRoom = {
@@ -1053,6 +1073,9 @@ const slotChoiceReady: EncounterRoom = {
 };
 await saveEncounterRoom(slotChoiceReady);
 const afterSlotChoice = await submitChoice(joinerSession.playerId, joinerAvatarId, 'C');
+const resolvedDto = await toEncounterRoomSnapshotDto(afterSlotChoice, joinerSession.playerId);
+assert.equal(resolvedDto.activeEncounter.rollA, slotChoiceReady.slotEncounterSnapshots[1].rollA);
+assert.deepEqual(resolvedDto.activeEncounter.rewardIds, slotChoiceReady.slotEncounterSnapshots[1].rewardIds);
 const slotChoiceParticipant = afterSlotChoice.participants.find(
   (participant) => participant.playerId === joinerSession.playerId,
 );
@@ -1068,11 +1091,7 @@ assert.ok(
 
 const helpCallerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpCallerIdentityJwk = JSON.stringify(helpCallerKeyPair.publicKey.export({ format: 'jwk' }));
-const helpCallerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpCallerIdentityJwk,
-  playerName: `room-help-caller-${Date.now()}`,
-});
+const helpCallerSession = await bootstrapTestSession(helpCallerKeyPair, helpCallerIdentityJwk, `room-help-caller-${Date.now()}`);
 const helpCallerAvatarId = `help-caller-${Date.now()}`;
 await savePlayerAvatar(helpCallerSession.playerId, {
   id: helpCallerAvatarId,
@@ -1087,11 +1106,7 @@ await createRoom(helpCallerSession.playerId, helpCallerAvatarId);
 
 const helpFriendKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpFriendIdentityJwk = JSON.stringify(helpFriendKeyPair.publicKey.export({ format: 'jwk' }));
-const helpFriendSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpFriendIdentityJwk,
-  playerName: `room-help-friend-${Date.now()}`,
-});
+const helpFriendSession = await bootstrapTestSession(helpFriendKeyPair, helpFriendIdentityJwk, `room-help-friend-${Date.now()}`);
 await savePlayerAvatar(helpFriendSession.playerId, {
   id: `help-friend-${Date.now()}`,
   name: 'Help Friend',
@@ -1104,11 +1119,7 @@ await savePlayerAvatar(helpFriendSession.playerId, {
 
 const helpStrangerKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const helpStrangerIdentityJwk = JSON.stringify(helpStrangerKeyPair.publicKey.export({ format: 'jwk' }));
-const helpStrangerSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: helpStrangerIdentityJwk,
-  playerName: `room-help-stranger-${Date.now()}`,
-});
+const helpStrangerSession = await bootstrapTestSession(helpStrangerKeyPair, helpStrangerIdentityJwk, `room-help-stranger-${Date.now()}`);
 await savePlayerAvatar(helpStrangerSession.playerId, {
   id: `help-stranger-${Date.now()}`,
   name: 'Help Stranger',
@@ -1156,11 +1167,7 @@ if (strangerInvites.some((invite) => invite.fromPlayerId === helpCallerSession.p
 
 const guestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const guestIdentityJwk = JSON.stringify(guestKeyPair.publicKey.export({ format: 'jwk' }));
-const guestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: guestIdentityJwk,
-  playerName: `room-guest-${Date.now()}`,
-});
+const guestSession = await bootstrapTestSession(guestKeyPair, guestIdentityJwk, `room-guest-${Date.now()}`);
 const guestAvatarId = `guest-avatar-${Date.now()}`;
 await savePlayerAvatar(guestSession.playerId, {
   id: guestAvatarId,
@@ -1172,7 +1179,25 @@ await savePlayerAvatar(guestSession.playerId, {
   createdAt: Date.now(),
 });
 
-let partyRoom = await createRoom(session.playerId, avatarId);
+// Keep this departure/rejoin scenario independent of the earlier fixtures,
+// which intentionally create several open rooms for the original test avatar.
+const partyHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const partyHostIdentityJwk = JSON.stringify(partyHostKeyPair.publicKey.export({ format: 'jwk' }));
+const partyHostSession = await bootstrapTestSession(
+  partyHostKeyPair, partyHostIdentityJwk, `room-party-host-${Date.now()}`,
+);
+const partyHostAvatarId = `party-host-avatar-${Date.now()}`;
+await savePlayerAvatar(partyHostSession.playerId, {
+  id: partyHostAvatarId,
+  name: 'Room Party Host',
+  race: 'Rokur',
+  role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior',
+  frame: 'm_frame_01',
+  createdAt: Date.now(),
+});
+
+let partyRoom = await createRoom(partyHostSession.playerId, partyHostAvatarId);
 partyRoom = {
   ...partyRoom,
   activeEncounterSnapshot: {
@@ -1182,9 +1207,26 @@ partyRoom = {
   updatedAt: Date.now(),
 };
 await saveEncounterRoom(partyRoom);
-await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+const joinedPartyRoom = await joinRoom(guestSession.playerId, guestAvatarId, partyRoom.roomId);
+// The test verifies leave/continue bookkeeping, not random fate. Favorable
+// dice avoid a random death or other special outcome changing the room state.
+const favorablePartyRoom: EncounterRoom = {
+  ...joinedPartyRoom,
+  activeEncounterSnapshot: {
+    ...joinedPartyRoom.activeEncounterSnapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  },
+  slotEncounterSnapshots: joinedPartyRoom.slotEncounterSnapshots.map((snapshot) => ({
+    ...snapshot,
+    rollE: 96,
+    actionReadyAt: Date.now() - 1,
+  })) as EncounterRoom['slotEncounterSnapshots'],
+  updatedAt: Date.now(),
+};
+await saveEncounterRoom(favorablePartyRoom);
 
-await submitChoice(session.playerId, avatarId, 'dice');
+await submitChoice(partyHostSession.playerId, partyHostAvatarId, 'dice');
 const guestChoiceRoom = await submitChoice(guestSession.playerId, guestAvatarId, 'dice');
 assert.equal(guestChoiceRoom.roomState, 'waiting_continue');
 const guestBeforeLeave = guestChoiceRoom.participants.find(
@@ -1256,8 +1298,28 @@ const guestOpenRoomId = await findActiveRoomIdForPlayerAvatar(
 assert.ok(guestOpenRoomId);
 assert.notEqual(guestOpenRoomId, partyRoom.roomId);
 
-await submitContinue(session.playerId, avatarId);
-const advancedWhileGuestAway = await getActiveRoomForPlayer(session.playerId, avatarId);
+// Verify the host is the sole engaged participant in the *intended* party room
+// before checking that Continue advances. A previous fixture must not win the
+// avatar-room lookup when several room updatedAt values share a millisecond.
+assert.equal(
+  await findActiveRoomIdForPlayerAvatar(partyHostSession.playerId, partyHostAvatarId),
+  partyRoom.roomId,
+);
+const hostWaitingRoom = await loadEncounterRoom(partyRoom.roomId);
+assert.equal(hostWaitingRoom?.roomState, 'waiting_continue');
+assert.deepEqual(hostWaitingRoom?.participants.map((participant) => participant.playerId), [
+  partyHostSession.playerId,
+]);
+assert.equal(hostWaitingRoom?.participants[0]?.choiceState, 'ready_to_continue');
+assert.equal(hostWaitingRoom?.participants[0]?.focusState, 'none');
+
+const hostContinued = await submitContinue(partyHostSession.playerId, partyHostAvatarId);
+assert.ok(
+  hostContinued.roomState === 'active_encounter'
+  || hostContinued.roomState === 'system_event',
+  `host Continue should advance the intended room, got ${hostContinued.roomState}`,
+);
+const advancedWhileGuestAway = await getActiveRoomForPlayer(partyHostSession.playerId, partyHostAvatarId);
 assert.ok(
   advancedWhileGuestAway?.roomState === 'active_encounter'
   || advancedWhileGuestAway?.roomState === 'system_event',
@@ -1272,17 +1334,22 @@ const guestAfterAdvance = await joinRoom(
 const guestFreshChooser = guestAfterAdvance.participants.find(
   (participant) => participant.playerId === guestSession.playerId,
 );
-assert.equal(guestFreshChooser?.choiceState, 'choosing');
+// A late joiner witnesses the current system event, but may choose normally
+// if the host advanced to a regular encounter while the guest was away.
+const currentEvent = guestAfterAdvance.systemEvent;
+const systemEventActorId = currentEvent?.queue[currentEvent.queueIndex]?.actorPlayerId
+  ?? currentEvent?.lastEvent?.actorPlayerId;
+const guestExpectedChoiceState = guestAfterAdvance.roomState === 'system_event'
+  && currentEvent
+  && systemEventActorId !== guestSession.playerId
+  ? 'witnessing' : 'choosing';
+assert.equal(guestFreshChooser?.choiceState, guestExpectedChoiceState);
 assert.equal(guestFreshChooser?.preparedResult, undefined);
 assert.equal(guestFreshChooser?.resolutionSummary, undefined);
 
 const soloCheckpointKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const soloCheckpointIdentityJwk = JSON.stringify(soloCheckpointKeyPair.publicKey.export({ format: 'jwk' }));
-const soloCheckpointSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: soloCheckpointIdentityJwk,
-  playerName: `solo-checkpoint-${Date.now()}`,
-});
+const soloCheckpointSession = await bootstrapTestSession(soloCheckpointKeyPair, soloCheckpointIdentityJwk, `solo-checkpoint-${Date.now()}`);
 const soloCheckpointAvatarId = `solo-checkpoint-${Date.now()}`;
 await savePlayerAvatar(soloCheckpointSession.playerId, {
   id: soloCheckpointAvatarId,
@@ -1322,13 +1389,18 @@ assert.equal(
   'solo away should keep the open room indexed for rejoin',
 );
 
-const countAdventureStartedEvents = (
-  entries: Awaited<ReturnType<typeof queryActivityFeed>>,
-): number => entries.filter((entry) => entry.eventType === 'adventure_started').length;
+// Scribes shows at most 50 events across public and player-relevant traffic.
+// On a reused development database, that rolling window is not an event count.
+const countStoredAdventureStarts = async (): Promise<number> => {
+  const result = await pool.query<{ count: number }>(
+    `SELECT COUNT(*)::integer AS count FROM game_events
+     WHERE player_id = $1 AND avatar_id = $2 AND type = 'adventure_started'`,
+    [soloCheckpointSession.playerId, soloCheckpointAvatarId],
+  );
+  return result.rows[0]?.count ?? 0;
+};
 
-const adventureStartedBeforeRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
+const adventureStartedBeforeRestore = await countStoredAdventureStarts();
 assert.ok(adventureStartedBeforeRestore >= 1);
 
 const restored = await createRoom(soloCheckpointSession.playerId, soloCheckpointAvatarId);
@@ -1338,9 +1410,7 @@ assert.notEqual(
   snapshotIdBeforeLeave,
   'solo leave with choice should advance before rejoin',
 );
-const adventureStartedAfterRestore = countAdventureStartedEvents(
-  await queryActivityFeed(soloCheckpointSession.playerId),
-);
+const adventureStartedAfterRestore = await countStoredAdventureStarts();
 assert.equal(
   adventureStartedAfterRestore,
   adventureStartedBeforeRestore + 1,
@@ -1349,11 +1419,7 @@ assert.equal(
 
 const soloNoChoiceKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const soloNoChoiceIdentityJwk = JSON.stringify(soloNoChoiceKeyPair.publicKey.export({ format: 'jwk' }));
-const soloNoChoiceSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: soloNoChoiceIdentityJwk,
-  playerName: `solo-no-choice-${Date.now()}`,
-});
+const soloNoChoiceSession = await bootstrapTestSession(soloNoChoiceKeyPair, soloNoChoiceIdentityJwk, `solo-no-choice-${Date.now()}`);
 const soloNoChoiceAvatarId = `solo-no-choice-${Date.now()}`;
 await savePlayerAvatar(soloNoChoiceSession.playerId, {
   id: soloNoChoiceAvatarId,
@@ -1377,11 +1443,7 @@ assert.equal(
 
 const kickGuestKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const kickGuestIdentityJwk = JSON.stringify(kickGuestKeyPair.publicKey.export({ format: 'jwk' }));
-const kickGuestSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: kickGuestIdentityJwk,
-  playerName: `room-kick-guest-${Date.now()}`,
-});
+const kickGuestSession = await bootstrapTestSession(kickGuestKeyPair, kickGuestIdentityJwk, `room-kick-guest-${Date.now()}`);
 const kickGuestAvatarId = `kick-guest-${Date.now()}`;
 await savePlayerAvatar(kickGuestSession.playerId, {
   id: kickGuestAvatarId,
@@ -1394,11 +1456,7 @@ await savePlayerAvatar(kickGuestSession.playerId, {
 });
 const kickHostKeyPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const kickHostIdentityJwk = JSON.stringify(kickHostKeyPair.publicKey.export({ format: 'jwk' }));
-const kickHostSession = await bootstrapSession({
-  devicePublicKey: randomDeviceKey(),
-  identityPublicKey: kickHostIdentityJwk,
-  playerName: `room-kick-host-${Date.now()}`,
-});
+const kickHostSession = await bootstrapTestSession(kickHostKeyPair, kickHostIdentityJwk, `room-kick-host-${Date.now()}`);
 const kickHostAvatarId = `kick-host-${Date.now()}`;
 await savePlayerAvatar(kickHostSession.playerId, {
   id: kickHostAvatarId,
@@ -1441,5 +1499,58 @@ assert.ok(
     (participant) => participant.playerId === kickGuestSession.playerId,
   ),
 );
+
+
+// Concurrent joiners compete for two party slots. Both may join once, but a
+// third must fail without overwriting either committed participant.
+const joinRaceHostId = `join-race-host-${Date.now()}`;
+const joinRaceHostAvatarId = `join-race-host-avatar-${Date.now()}`;
+await savePlayerAvatar(joinRaceHostId, {
+  id: joinRaceHostAvatarId, name: 'Join Race Host', race: 'Rokur', role: 'Warrior',
+  portrait: 'm_portrait_rokur_warrior', frame: 'm_frame_01', createdAt: Date.now(),
+});
+const joinRaceRoom = await createRoom(joinRaceHostId, joinRaceHostAvatarId);
+const raceGuests = Array.from({ length: 3 }, (_, index) => ({
+  playerId: `join-race-guest-${index}-${Date.now()}`,
+  avatarId: `join-race-avatar-${index}-${Date.now()}`,
+}));
+for (const guest of raceGuests) {
+  await savePlayerAvatar(guest.playerId, {
+    id: guest.avatarId, name: 'Join Race Guest', race: 'Verdani', role: 'Mage',
+    portrait: 'm_portrait_verdani_mage', frame: 'm_frame_01', createdAt: Date.now(),
+  });
+}
+const joinedRace = await Promise.allSettled(
+  raceGuests.map((guest) => joinRoom(guest.playerId, guest.avatarId, joinRaceRoom.roomId)),
+);
+const successfulJoins = joinedRace.filter((entry) => entry.status === 'fulfilled');
+const deniedJoins = joinedRace.filter((entry) => entry.status === 'rejected');
+assert.equal(successfulJoins.length, 2, 'exactly two open party slots must be awarded');
+assert.equal(deniedJoins.length, 1);
+assert.ok(deniedJoins[0]?.status === 'rejected' && deniedJoins[0].reason instanceof RoomError);
+const storedJoinRaceRoom = await loadEncounterRoom(joinRaceRoom.roomId);
+assert.equal(storedJoinRaceRoom?.participants.length, 3);
+assert.deepEqual(
+  storedJoinRaceRoom?.participants.map((participant) => participant.slotIndex).sort(),
+  [0, 1, 2],
+  'concurrent arrivals cannot share a slot',
+);
+const storedGuestIds = new Set(
+  storedJoinRaceRoom?.participants.map((participant) => participant.playerId),
+);
+for (let index = 0; index < raceGuests.length; index += 1) {
+  if (joinedRace[index]?.status === 'fulfilled') {
+    assert.ok(storedGuestIds.has(raceGuests[index]!.playerId));
+  } else {
+    assert.ok(!storedGuestIds.has(raceGuests[index]!.playerId));
+  }
+}
+// Repeated parallel requests from a member must not create duplicate entries.
+const winningGuest = raceGuests[joinedRace.findIndex((entry) => entry.status === 'fulfilled')]!;
+await Promise.all([
+  joinRoom(winningGuest.playerId, winningGuest.avatarId, joinRaceRoom.roomId),
+  joinRoom(winningGuest.playerId, winningGuest.avatarId, joinRaceRoom.roomId),
+]);
+assert.equal((await loadEncounterRoom(joinRaceRoom.roomId))?.participants.length, 3);
 
 console.log('roomService.test.ts passed');

@@ -8,7 +8,7 @@ import {
   normalizeUnlockedDiceIds,
 } from '@shared/diceCatalog.js';
 import type { PlayerDocument } from '../types/player.js';
-import { withDocumentTransaction } from '../db/postgresDocumentStore.js';
+import { withDocumentTransaction, type DocumentTransaction } from '../db/postgresDocumentStore.js';
 import { loadPlayer, readYellowRedGemBalance } from './playerService.js';
 
 export class DiceNotFoundError extends Error {
@@ -140,6 +140,7 @@ export async function unlockPlayerDice(
 export async function grantPlayerDice(
   playerId: string,
   diceId: string,
+  transaction?: DocumentTransaction,
 ): Promise<{
   unlockedDiceIds: DiceId[];
   diceId: DiceId;
@@ -153,8 +154,8 @@ export async function grantPlayerDice(
     return { unlockedDiceIds: [...DEFAULT_UNLOCKED_DICE_IDS], diceId, alreadyUnlocked: true };
   }
 
-  return withDocumentTransaction(async (transaction) => {
-    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+  const applyGrant = async (currentTransaction: DocumentTransaction) => {
+    const player = await currentTransaction.getPlayer<Partial<PlayerDocument>>(playerId);
 
     if (!player) {
       throw new PlayerNotFoundError();
@@ -168,7 +169,7 @@ export async function grantPlayerDice(
 
     const nextUnlocked = normalizeUnlockedDiceIds([...unlockedDiceIds, diceId]);
 
-    await transaction.setPlayer(
+    await currentTransaction.setPlayer(
       playerId,
       {
         unlockedDiceIds: nextUnlocked,
@@ -178,7 +179,8 @@ export async function grantPlayerDice(
     );
 
     return { unlockedDiceIds: nextUnlocked, diceId, alreadyUnlocked: false };
-  });
+  };
+  return transaction ? applyGrant(transaction) : withDocumentTransaction(applyGrant);
 }
 
 export async function setPlayerSelectedDice(

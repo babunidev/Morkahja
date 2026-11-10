@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
-import { encounterControllerErrorStatus } from '../controllers/encounterController.js';
 import { EncounterConflictError } from '../services/encounterPersistence.js';
+import { LoreGemError } from '../services/loreGemService.js';
 import { SessionError } from '../services/sessionService.js';
 
 export type ClientErrorBody = {
@@ -65,7 +65,26 @@ export function resolveHttpErrorStatus(error: unknown): number {
     return error.statusCode;
   }
 
-  return encounterControllerErrorStatus(error);
+  if (error instanceof LoreGemError) {
+    return error.statusCode;
+  }
+
+  if (error instanceof EncounterConflictError) {
+    return 409;
+  }
+
+  if (
+    error instanceof Error
+    && (
+      error.message.includes('Encounter already resolving')
+      || error.message.includes('Encounter already resolved')
+      || error.message.includes('Encounter snapshot mismatch')
+    )
+  ) {
+    return 409;
+  }
+
+  return 500;
 }
 
 function genericClientMessage(status: number): string {

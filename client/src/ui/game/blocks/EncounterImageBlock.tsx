@@ -605,7 +605,9 @@ export function EncounterImageBlock({
           onContinue={() => {
             void handleContinue();
           }}
-          prosperityRewardId={encounter.prosperityRewardId}
+          prosperityRewardId={
+            serverResolution?.rewards ? null : encounter.prosperityRewardId
+          }
           ref={resultBlockRef}
           resolutionAction={
             outcomeRoll !== undefined

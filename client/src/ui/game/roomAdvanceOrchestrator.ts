@@ -28,14 +28,6 @@ export function encounterSnapshotAdvanced(
   return ENCOUNTER_TRANSITION_BASELINE_STATES.has(baseline.roomState);
 }
 
-/** Room advanced from a continue/advance boundary (poll gating). */
-export function roomAdvancedFromBaseline(
-  baseline: EncounterRoomSnapshotDto,
-  next: EncounterRoomSnapshotDto,
-): boolean {
-  return encounterSnapshotAdvanced(baseline, next);
-}
-
 export interface RoomAdvanceTransitionHooks {
   applySnapshotOnly: (next: EncounterRoomSnapshotDto) => void;
   playDismissAnimations: () => Promise<void>;
