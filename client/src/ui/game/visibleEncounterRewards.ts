@@ -44,9 +44,16 @@ export function visibleEncounterRewardIds({
     return [];
   }
 
+  // Server resolutions already include the prosperity essence in rewardIds
+  // (withProsperityEssenceReward). Only append for pre-resolution preview.
+  const shouldAppendProsperity =
+    outcome === 'Prosperity'
+    && prosperityRewardId != null
+    && !rewardIds.includes(prosperityRewardId);
+
   return [
     ...rewardIds,
-    ...(outcome === 'Prosperity' && prosperityRewardId ? [prosperityRewardId] : []),
+    ...(shouldAppendProsperity ? [prosperityRewardId] : []),
   ];
 }
 

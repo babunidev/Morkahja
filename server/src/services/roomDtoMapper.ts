@@ -53,7 +53,7 @@ function playerActionToClientAction(
 
 const loggedParticipantFallbacks = new Set<string>();
 
-function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotDto {
+export function toEncounterSnapshotDto(snapshot: EncounterSnapshot, revealFate: boolean): EncounterSnapshotDto {
   return {
     snapshotId: snapshot.snapshotId,
     encounterId: snapshot.encounterId,
@@ -70,21 +70,25 @@ function toEncounterSnapshotDto(snapshot: EncounterSnapshot): EncounterSnapshotD
     secondarySolutionTypeB: snapshot.secondarySolutionTypeB,
     secondarySolutionTypeC: snapshot.secondarySolutionTypeC,
     secondarySolutionTypeD: snapshot.secondarySolutionTypeD,
-    rollA: snapshot.rollA,
-    rollB: snapshot.rollB,
-    rollC: snapshot.rollC,
-    rollD: snapshot.rollD,
-    rollPrimaryA: snapshot.rollPrimaryA,
-    rollPrimaryB: snapshot.rollPrimaryB,
-    rollPrimaryC: snapshot.rollPrimaryC,
-    rollPrimaryD: snapshot.rollPrimaryD,
-    rollSecondaryA: snapshot.rollSecondaryA,
-    rollSecondaryB: snapshot.rollSecondaryB,
-    rollSecondaryC: snapshot.rollSecondaryC,
-    rollSecondaryD: snapshot.rollSecondaryD,
-    rollE: snapshot.rollE,
-    rewardIds: snapshot.rewardIds,
-    prosperityRewardId: snapshot.prosperityRewardId,
+    // The authoritative rolls and reward pool must not be sent until this
+    // viewer has actually resolved a choice. UI timing is not a security gate.
+    ...(revealFate ? {
+      rollA: snapshot.rollA,
+      rollB: snapshot.rollB,
+      rollC: snapshot.rollC,
+      rollD: snapshot.rollD,
+      rollPrimaryA: snapshot.rollPrimaryA,
+      rollPrimaryB: snapshot.rollPrimaryB,
+      rollPrimaryC: snapshot.rollPrimaryC,
+      rollPrimaryD: snapshot.rollPrimaryD,
+      rollSecondaryA: snapshot.rollSecondaryA,
+      rollSecondaryB: snapshot.rollSecondaryB,
+      rollSecondaryC: snapshot.rollSecondaryC,
+      rollSecondaryD: snapshot.rollSecondaryD,
+      rollE: snapshot.rollE,
+      rewardIds: snapshot.rewardIds,
+      prosperityRewardId: snapshot.prosperityRewardId,
+    } : {}),
     preparedEncounter: snapshot.preparedEncounter,
     state: snapshot.state,
     resolved: snapshot.resolved,
@@ -312,10 +316,10 @@ function toSystemEventDto(
     isLocalActor: localPlayerId === actorPlayerId,
     isLocalWitness: isWitness,
     ...(actorOutcome ? { actorOutcome } : {}),
-    ...(actorSlotSnapshot?.rewardIds?.length
+    ...(actorHasCommittedSystemEventRoll(actorParticipant) && actorSlotSnapshot?.rewardIds?.length
       ? { actorRewardIds: actorSlotSnapshot.rewardIds }
       : {}),
-    ...(actorSlotSnapshot && 'prosperityRewardId' in actorSlotSnapshot
+    ...(actorHasCommittedSystemEventRoll(actorParticipant) && actorSlotSnapshot
       ? { actorProsperityRewardId: actorSlotSnapshot.prosperityRewardId ?? null }
       : {}),
     lastEventRecap: context.lastEvent?.resolutionSummary,
@@ -326,15 +330,29 @@ export async function toEncounterRoomSnapshotDto(
   room: EncounterRoom,
   localPlayerId: string,
 ): Promise<EncounterRoomSnapshotDto> {
-  const participantDtos = await Promise.all(
-    room.participants.map((participant) => participantToDto(participant, localPlayerId, room.roomId)),
-  );
-
-  participantDtos.sort((a, b) => a.slotIndex - b.slotIndex);
-
   const localParticipant = room.participants.find(
     (participant) => participant.playerId === localPlayerId,
   );
+  const revealFate = Boolean(
+    localParticipant?.preparedResult || localParticipant?.resolutionSummary,
+  );
+  const participantDtos = await Promise.all(
+    room.participants.map((participant) => participantToDto(participant, localPlayerId, room.roomId)),
+  );
+  // A party member may have precomputed an outcome while this viewer is still
+  // choosing. Never expose another member's result before the viewer reveals.
+  const safeParticipants = participantDtos.map((participant) => (
+    revealFate || participant.isLocal
+      ? participant
+      : {
+          ...participant,
+          selectedAction: undefined,
+          selectedSolutionId: undefined,
+          preparedResult: undefined,
+          resolutionSummary: undefined,
+        }
+  ));
+  safeParticipants.sort((a, b) => a.slotIndex - b.slotIndex);
   const localSlotIndex = localParticipant?.slotIndex ?? 0;
   const localEncounterSnapshot = room.slotEncounterSnapshots[localSlotIndex]
     ?? room.activeEncounterSnapshot;
@@ -344,8 +362,8 @@ export async function toEncounterRoomSnapshotDto(
     leaderPlayerId: room.leaderPlayerId,
     roomState: room.roomState,
     slotStates: room.slotStates,
-    participants: participantDtos,
-    activeEncounter: toEncounterSnapshotDto(localEncounterSnapshot),
+    participants: safeParticipants,
+    activeEncounter: toEncounterSnapshotDto(localEncounterSnapshot, revealFate),
     helpCalledForEncounter:
       room.helpCalledSnapshotId === room.activeEncounterSnapshot.snapshotId,
     systemEvent: toSystemEventDto(room, localPlayerId),

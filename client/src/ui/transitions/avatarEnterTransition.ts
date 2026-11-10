@@ -124,19 +124,6 @@ export async function waitForNextPaint(): Promise<void> {
   });
 }
 
-export async function animateBounds(
-  from: Bounds,
-  to: Bounds,
-  durationMs: number,
-  onFrame: (bounds: Bounds) => void,
-): Promise<void> {
-  await waitForNextPaint();
-  onFrame(from);
-  await waitForNextPaint();
-  onFrame(to);
-  await waitMs(durationMs);
-}
-
 export async function waitForEnterTargetBounds(maxAttempts = 80): Promise<Bounds | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const target = document.querySelector(`[${AVATAR_ENTER_TARGET_ATTR}]`);

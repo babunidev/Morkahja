@@ -328,19 +328,3 @@ export function usedEncounterSolutions({
 
   return usedSolutionChanges(inventory, usedSolutionIds);
 }
-
-/** @deprecated Use usedEncounterSolutions for multi-stack consumption. */
-export function usedEncounterSolution({
-  inventory,
-  solutionId,
-}: {
-  inventory: AvatarInventory | undefined;
-  solutionId: number | null;
-}): EncounterInventoryChange | null {
-  if (!inventory || solutionId === null) {
-    return null;
-  }
-
-  const changes = usedEncounterSolutions({ inventory, usedSolutionIds: [solutionId] });
-  return changes[0] ?? null;
-}

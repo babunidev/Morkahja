@@ -1,10 +1,9 @@
-import type { AvatarDocument } from '../types/avatar.js';
+import type { AvatarDocument, AvatarInventory } from '../types/avatar.js';
 import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { PlayerDocument } from '../types/player.js';
-import { loadAvatar, saveAvatar } from './encounterPersistence.js';
+import { loadAvatar } from './encounterPersistence.js';
 import {
   createInitialAvatarInventory,
-  initializeAvatarInventory,
   loadInventory,
 } from './inventoryService.js';
 import {
@@ -16,6 +15,7 @@ import {
   listAvatars,
   setPlayer,
   withDocumentTransaction,
+  type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import { getExpansionById } from './gameData.js';
 import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
@@ -61,7 +61,6 @@ export class InsufficientGemsForExpansionError extends Error {
 }
 
 const DEFAULT_UNLOCKED_EXPANSIONS = [0];
-export const BABUNI_PLAYER_ID = 'Babuni';
 export const MAX_PLAYER_AVATARS = 3;
 
 export class AvatarLimitReachedError extends Error {
@@ -156,21 +155,17 @@ export async function ensurePlayerUnlockedExpansions(
   playerId: string,
   unlockedExpansions = DEFAULT_UNLOCKED_EXPANSIONS,
 ): Promise<number[]> {
-  const player = await loadPlayer(playerId);
-  const merged = uniqueSorted([
-    ...(player?.unlockedExpansions ?? []),
-    ...unlockedExpansions,
-  ]);
-
-  await setPlayer(
-    playerId,
-    {
-      unlockedExpansions: merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS,
-    },
-    { merge: true },
-  );
-
-  return merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS;
+  // Merge unlocked expansions while holding the player row lock so purchases cannot be lost.
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const merged = uniqueSorted([
+      ...normalizeUnlockedExpansions(player?.unlockedExpansions),
+      ...unlockedExpansions,
+    ]);
+    const next = merged.length > 0 ? merged : DEFAULT_UNLOCKED_EXPANSIONS;
+    await transaction.setPlayer(playerId, { unlockedExpansions: next }, { merge: true });
+    return next;
+  });
 }
 
 export async function getPlayerUnlockedExpansions(
@@ -184,7 +179,12 @@ export async function getPlayerUnlockedExpansions(
   return base;
 }
 
-export async function addPlayerYellowRedGems(
+/**
+ * A lore-gem claim key is unique per player and encounter. Uses the caller's
+ * transaction and row lock, so a room commit and its gem grant cannot diverge.
+ */
+export async function grantPlayerYellowRedGemsInTransaction(
+  transaction: DocumentTransaction,
   playerId: string,
   amount: number,
   loreGemClaimKey?: string,
@@ -192,47 +192,42 @@ export async function addPlayerYellowRedGems(
   if (amount > 0 && !loreGemClaimKey?.trim()) {
     throw new Error('loreGemClaimKey is required when granting yellow_red_gem');
   }
+  const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+  const currentCurrencies = player?.currencies ?? {};
+  const claims = player?.loreGemClaims ?? {};
+  const alreadyClaimed = Boolean(loreGemClaimKey && claims[loreGemClaimKey] === true);
+  const currentAmount = readYellowRedGemBalance(currentCurrencies);
+  const granted = amount > 0 && !alreadyClaimed;
+  const currencies = {
+    ...currentCurrencies,
+    yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
+  };
 
-  const { currencies, granted } = await withDocumentTransaction(async (transaction) => {
-    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
-    const currentCurrencies = player?.currencies ?? {};
-    const loreGemClaims = player?.loreGemClaims ?? {};
-    const alreadyClaimed = loreGemClaimKey ? loreGemClaims[loreGemClaimKey] === true : false;
-    const currentAmount = typeof currentCurrencies.yellow_red_gem === 'number'
-      ? currentCurrencies.yellow_red_gem
-      : 0;
-    const nextCurrencies = {
-      ...currentCurrencies,
-      yellow_red_gem: currentAmount + (alreadyClaimed ? 0 : amount),
-    };
-    const grantedNow = !alreadyClaimed && amount > 0;
-
-    await transaction.setPlayer(
-      playerId,
-      {
-        currencies: nextCurrencies,
-        ...(loreGemClaimKey ? {
-          loreGemClaims: {
-            ...loreGemClaims,
-            [loreGemClaimKey]: true,
-          },
-        } : {}),
-        updatedAt: Date.now(),
-      },
-      { merge: true },
-    );
-
-    return { currencies: nextCurrencies, granted: grantedNow };
-  });
+  if (!alreadyClaimed || amount !== 0) {
+    await transaction.setPlayer(playerId, {
+      currencies,
+      ...(loreGemClaimKey ? { loreGemClaims: { ...claims, [loreGemClaimKey]: true } } : {}),
+      updatedAt: Date.now(),
+    }, { merge: true });
+  }
 
   if (granted) {
-    await recordGemsReceivedEvent(playerId, amount, {
+    transaction.onCommit(() => recordGemsReceivedEvent(playerId, amount, {
       encounterKey: loreGemClaimKey,
       source: loreGemClaimKey ? 'lore_gem' : 'general',
-    });
+    }));
   }
 
   return { currencies, granted };
+}
+
+export async function addPlayerYellowRedGems(
+  playerId: string,
+  amount: number,
+  loreGemClaimKey?: string,
+): Promise<{ currencies: NonNullable<PlayerDocument['currencies']>; granted: boolean }> {
+  return withDocumentTransaction((transaction) =>
+    grantPlayerYellowRedGemsInTransaction(transaction, playerId, amount, loreGemClaimKey));
 }
 
 export async function donatePlayerYellowRedGems(
@@ -358,6 +353,7 @@ export async function unlockPlayerExpansion(
 export async function grantPlayerExpansion(
   playerId: string,
   expansionId: number,
+  transaction?: DocumentTransaction,
 ): Promise<{
   unlockedExpansions: number[];
   expansionId: number;
@@ -373,8 +369,8 @@ export async function grantPlayerExpansion(
     throw new ExpansionNotFoundError();
   }
 
-  return withDocumentTransaction(async (transaction) => {
-    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+  const applyGrant = async (currentTransaction: DocumentTransaction) => {
+    const player = await currentTransaction.getPlayer<Partial<PlayerDocument>>(playerId);
     if (!player) {
       throw new Error(`Player not found: ${playerId}`);
     }
@@ -388,7 +384,7 @@ export async function grantPlayerExpansion(
 
     const nextUnlocked = uniqueSorted([...unlockedExpansions, expansionId]);
 
-    await transaction.setPlayer(
+    await currentTransaction.setPlayer(
       playerId,
       {
         unlockedExpansions: nextUnlocked,
@@ -398,7 +394,8 @@ export async function grantPlayerExpansion(
     );
 
     return { unlockedExpansions: nextUnlocked, expansionId, alreadyUnlocked: false };
-  });
+  };
+  return transaction ? applyGrant(transaction) : withDocumentTransaction(applyGrant);
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(
@@ -435,20 +432,14 @@ function raceRewardType(race: AvatarRace): 40 | 41 | 42 | 43 {
   }
 }
 
-export async function saveBabuniAvatar(
-  payload: PersistedAvatarPayload,
-): Promise<AvatarDocument> {
-  return savePlayerAvatar(BABUNI_PLAYER_ID, payload);
-}
-
 export async function savePlayerAvatar(
   playerId: string,
   payload: PersistedAvatarPayload,
 ): Promise<AvatarDocument> {
   const now = Date.now();
-  const existing = await loadAvatar(playerId, payload.id);
+  const priorAvatar = await loadAvatar(playerId, payload.id);
 
-  if (!existing) {
+  if (!priorAvatar) {
     const avatarCount = (await listAvatars<AvatarDocument>(playerId))
       .filter((entry) => {
         const status = readAvatarLifeStatus(entry.data);
@@ -459,54 +450,57 @@ export async function savePlayerAvatar(
       throw new AvatarLimitReachedError();
     }
   }
-  const profile: AvatarDocument['profile'] = {
-    ...existing?.profile,
-    raceRewardType: raceRewardType(payload.race),
-    roleRewardType: roleRewardType(payload.role),
-    displayTitle: Object.prototype.hasOwnProperty.call(payload, 'displayTitle')
-      ? (typeof payload.displayTitle === 'string'
-        ? payload.displayTitle.trim() || null
-        : null)
-      : readAvatarDisplayTitle(existing ?? {}),
-  };
-  const storedInventory = await loadInventory(playerId, payload.id);
-  const inventory = existing?.inventory
-    ?? storedInventory
-    ?? createInitialAvatarInventory(profile);
-  const avatar: AvatarDocument = {
-    ...existing,
-    id: payload.id,
-    name: payload.name,
-    race: payload.race,
-    role: payload.role,
-    level: typeof existing?.level === 'number' ? existing.level : 1,
-    experience: typeof existing?.experience === 'number' ? existing.experience : 0,
-    portrait: payload.portrait,
-    frame: payload.frame,
-    createdAt: payload.createdAt ?? existing?.createdAt ?? now,
-    lastPlayedAt: now,
-    profile,
-    progression: existing?.progression ?? {},
-    activeEncounter: existing?.activeEncounter ?? null,
-  };
-
-  if (inventory) {
-    avatar.inventory = inventory;
-  }
 
   await ensurePlayerUnlockedExpansions(playerId);
-  await saveAvatar(playerId, payload.id, avatar);
-  if (!existing) {
-    await initializeAvatarInventory(playerId, payload.id, avatar.profile);
+
+  // Construct the full avatar only after locking its latest row. The previous
+  // read was solely for the avatar cap, not a document snapshot to write back.
+  const { avatar, created } = await withDocumentTransaction(async (transaction) => {
+    const existing = await transaction.getAvatar<AvatarDocument>(playerId, payload.id);
+    const profile: AvatarDocument['profile'] = {
+      ...existing?.profile,
+      raceRewardType: raceRewardType(payload.race),
+      roleRewardType: roleRewardType(payload.role),
+      displayTitle: Object.prototype.hasOwnProperty.call(payload, 'displayTitle')
+        ? (typeof payload.displayTitle === 'string'
+          ? payload.displayTitle.trim() || null
+          : null)
+        : readAvatarDisplayTitle(existing ?? {}),
+    };
+    const storedInventory = await transaction.getInventory<AvatarInventory>(playerId, payload.id);
+    // Create starting items exactly once and persist them with the avatar.
+    // Returning an empty avatar inventory until a later write can mislead the client.
+    const inventory = existing?.inventory
+      ?? storedInventory
+      ?? createInitialAvatarInventory(profile);
+    const avatar: AvatarDocument = {
+      ...existing,
+      id: payload.id,
+      name: payload.name,
+      race: payload.race,
+      role: payload.role,
+      level: typeof existing?.level === 'number' ? existing.level : 1,
+      experience: typeof existing?.experience === 'number' ? existing.experience : 0,
+      portrait: payload.portrait,
+      frame: payload.frame,
+      createdAt: payload.createdAt ?? existing?.createdAt ?? now,
+      lastPlayedAt: now,
+      profile,
+      progression: existing?.progression ?? {},
+      activeEncounter: existing?.activeEncounter ?? null,
+      inventory,
+    };
+    await transaction.setAvatar(playerId, payload.id, avatar, { merge: true });
+    if (!existing) {
+      await transaction.setInventory(playerId, payload.id, inventory);
+    }
+    return { avatar, created: !existing };
+  });
+
+  if (created) {
     await recordAvatarCreatedEvent(playerId, avatar);
   }
   return avatar;
-}
-
-export async function selectBabuniAvatar(
-  payload: PersistedAvatarPayload,
-): Promise<AvatarDocument> {
-  return selectPlayerAvatar(BABUNI_PLAYER_ID, payload);
 }
 
 export async function selectPlayerAvatar(
@@ -539,10 +533,6 @@ export async function selectPlayerAvatar(
   return avatar;
 }
 
-export async function loadBabuniAvatars(): Promise<AvatarDocument[]> {
-  return loadPlayerAvatars(BABUNI_PLAYER_ID);
-}
-
 export async function loadPlayerAvatars(playerId: string): Promise<AvatarDocument[]> {
   const avatars = await listAvatars<AvatarDocument>(playerId);
 
@@ -555,10 +545,6 @@ export async function loadPlayerAvatars(playerId: string): Promise<AvatarDocumen
       inventory: avatar.data.inventory ?? await loadInventory(playerId, avatarId),
     };
   }));
-}
-
-export async function loadBabuniActiveAvatar(): Promise<AvatarDocument | null> {
-  return loadPlayerActiveAvatar(BABUNI_PLAYER_ID);
 }
 
 export async function loadPlayerActiveAvatar(playerId: string): Promise<AvatarDocument | null> {
@@ -580,10 +566,6 @@ export async function loadPlayerActiveAvatar(playerId: string): Promise<AvatarDo
     id: avatar.id ?? activeAvatarId,
     inventory: avatar.inventory ?? await loadInventory(playerId, activeAvatarId),
   };
-}
-
-export async function deleteBabuniAvatar(avatarId: string): Promise<void> {
-  await deletePlayerAvatar(BABUNI_PLAYER_ID, avatarId);
 }
 
 export async function deletePlayerAvatar(playerId: string, avatarId: string): Promise<void> {

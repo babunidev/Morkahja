@@ -22,7 +22,6 @@ import type {
   ClientSession,
   ContinueReadinessDto,
   EncounterAction,
-  EncounterResultResponse,
   EncounterRoomSnapshotDto,
   EncounterSnapshotDto,
   JoinFriendRoomResponse,
@@ -57,7 +56,6 @@ export type AvatarInventory = AvatarInventoryDto;
 export type EncounterSnapshot = EncounterSnapshotDto;
 export type InventoryItem = InventoryItemDto;
 export type PersistedAvatar = PersistedAvatarDto;
-export type ResolveEncounterResponse = EncounterResultResponse;
 export type {
   AvatarResponse,
   AvatarsResponse,
@@ -151,11 +149,29 @@ export async function fetchSession(): Promise<ClientSession> {
   return loadStoredSession() ?? DEFAULT_SESSION;
 }
 
+export type SessionChallengePurpose = 'register' | 'restore';
+
+export async function requestSessionChallenge(input: {
+  devicePublicKey: string;
+  identityPublicKey: string;
+  purpose: SessionChallengePurpose;
+}): Promise<{ challenge: string; expiresAt: number }> {
+  return request<{ challenge: string; expiresAt: number }>('/session/challenge', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export async function bootstrapSession(input: {
   devicePublicKey: string;
   identityPublicKey: string;
+  purpose: SessionChallengePurpose;
   playerName?: string;
-  signedIdentityChallenge?: {
+  signedIdentityChallenge: {
+    challenge: string;
+    signature: string;
+  };
+  signedDeviceChallenge: {
     challenge: string;
     signature: string;
   };

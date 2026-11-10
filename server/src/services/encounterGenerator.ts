@@ -35,39 +35,27 @@ import {
 import { getEncounterById, getEncounters, getSolutionMap } from './gameData.js';
 import {
   claimActiveEncounterInTransaction,
-  clearActiveEncounter as deleteActiveEncounter,
   loadActiveEncounter,
   loadAvatar,
   saveActiveEncounter,
   saveAvatar,
 } from './encounterPersistence.js';
 import {
-  applyEncounterProgression,
-  applyEncounterProgressionState,
   applyProgressionForEncounter,
-  getAvatarEssenceSummary,
   initializeAvatarProgression,
-  persistLastEncounter,
   progressionExists,
-  resetAvatarProgression,
-  touchAvatarProgression,
 } from './avatarProgressionService.js';
 import { experienceForSelectedRollOutcome } from '../domain/avatar/AvatarProgression.js';
 import {
   addRewardToInventoryState,
   applyEncounterInventoryChanges,
   createInitialAvatarInventory,
-  addRewardsToInventory,
-  applyFailurePenalty,
-  consumeSolutions,
   flattenInventorySolutionIds,
-  getInventorySolutionIds,
   initializeAvatarInventory,
   inventoryExists,
   scaledUses,
 } from './inventoryService.js';
 import {
-  getPlayerUnlockedExpansions,
   migrateAvatarUnlockedExpansionsToPlayer,
 } from './playerService.js';
 import {
@@ -365,18 +353,6 @@ export function withPrecomputedSnapshotRewards(
       ? snapshot.prosperityRewardId
       : randomEssenceReward(),
   };
-}
-
-function previousEncounterFromAvatar(
-  avatar: AvatarDocument,
-): EncounterData | null {
-  const lastId = avatar.progression?.lastEncounterId;
-
-  if (typeof lastId !== 'number' || lastId <= 0) {
-    return null;
-  }
-
-  return getEncounterById(lastId) ?? null;
 }
 
 function getPreparedEncounter(snapshot: EncounterSnapshot): EncounterData {
@@ -829,108 +805,9 @@ function essenceCostForOutcome(
   return scaledUses(1, encounterDifficulty);
 }
 
-async function wouldEnterDeathState(
-  playerId: string,
-  avatarId: string,
-  snapshot: EncounterSnapshot,
-  resolution: EncounterResolution,
-  selectedRollOutcome: ReturnType<typeof interpretRoll>,
-): Promise<boolean> {
-  if (
-    resolution.success ||
-    snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID ||
-    snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
-  ) {
-    return false;
-  }
-
-  const essenceCost = essenceCostForOutcome(
-    selectedRollOutcome,
-    snapshot.encounterDifficulty,
-  );
-
-  if (essenceCost <= 0) {
-    return false;
-  }
-
-  const { currentEssence } = await getAvatarEssenceSummary(playerId, avatarId);
-  return currentEssence <= essenceCost;
-}
-
-async function resetAvatarAfterDeathFailure(
-  playerId: string,
-  avatarId: string,
-  avatar: AvatarDocument,
-): Promise<void> {
-  await resetAvatarProgression(playerId, avatarId);
-  await initializeAvatarInventory(playerId, avatarId, avatar.profile);
-  await saveAvatar(playerId, avatarId, {
-    profile: avatar.profile,
-    editMode: true,
-    progression: {},
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Authoritative public API (server-only)
 // ---------------------------------------------------------------------------
-
-/**
- * Select encounter, generate immutable rolls, persist to Firebase.
- * Path: /players/{playerId}/avatars/{avatarId}/activeEncounter/current
- */
-export async function createEncounter(
-  playerId: string,
-  avatarId: string,
-): Promise<EncounterSnapshot> {
-  const avatar = await loadAvatar(playerId, avatarId);
-
-  if (!avatar) {
-    throw new Error(
-      `Avatar not found: players/${playerId}/avatars/${avatarId}`,
-    );
-  }
-
-  const existing = await loadActiveEncounter(playerId, avatarId);
-
-  if (existing && !existing.resolved) {
-    const activeSnapshot = withPrecomputedSnapshotRewards(existing, avatar);
-    if (activeSnapshot !== existing) {
-      await saveActiveEncounter(activeSnapshot);
-    }
-    return activeSnapshot;
-  }
-
-  const unlockedExpansions = await getPlayerUnlockedExpansions(playerId);
-
-  const context: EncounterSelectionContext = {
-    unlockedExpansions,
-    previousEncounter: previousEncounterFromAvatar(avatar),
-  };
-
-  const encounter = existing?.resolved && existing.preparedEncounter
-    ? getPreparedEncounter(existing)
-    : selectNextEncounter(context);
-  const preparedEncounter = prepareNextEncounter(encounter, unlockedExpansions);
-  const snapshot = buildEncounterSnapshot(
-    playerId,
-    avatarId,
-    encounter,
-    preparedEncounter,
-    avatar,
-  );
-  const activeSnapshot: EncounterSnapshot = {
-    ...snapshot,
-    state: 'active',
-  };
-
-  if (existing?.resolved) {
-    await deleteActiveEncounter(playerId, avatarId);
-  }
-
-  await saveActiveEncounter(activeSnapshot);
-  return activeSnapshot;
-}
 
 /** Read authoritative active snapshot (no roll regeneration). */
 export async function getActiveEncounter(
@@ -1002,17 +879,13 @@ export async function continueEncounter(
         expectedSnapshotId,
       );
 
-      const [
-        avatar,
-        inventoryDocument,
-        progressionDocument,
-        playerData,
-      ] = await Promise.all([
-        transaction.getAvatar<AvatarDocument>(playerId, avatarId),
-        transaction.getInventory<AvatarInventory>(playerId, avatarId),
-        transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
-        transaction.getPlayer<{ unlockedExpansions?: number[] }>(playerId),
-      ]);
+      // A transaction uses one PostgreSQL client: query it sequentially.
+      const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+      const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
+      const progressionDocument = await transaction.getProgression<ReturnType<typeof createInitialProgression>>(
+        playerId, avatarId,
+      );
+      const playerData = await transaction.getPlayer<{ unlockedExpansions?: number[] }>(playerId);
 
       if (!avatar) {
         throw new Error(`Avatar not found: ${avatarId}`);
@@ -1549,15 +1422,12 @@ export async function prepareParticipantOutcome(
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
 ): Promise<PrepareParticipantOutcomeResult> {
-  const [
-    avatar,
-    inventoryDocument,
-    progressionDocument,
-  ] = await Promise.all([
-    transaction.getAvatar<AvatarDocument>(playerId, avatarId),
-    transaction.getInventory<AvatarInventory>(playerId, avatarId),
-    transaction.getProgression<ReturnType<typeof createInitialProgression>>(playerId, avatarId),
-  ]);
+  // The transaction's row-locked reads share a single client.
+  const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+  const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
+  const progressionDocument = await transaction.getProgression<ReturnType<typeof createInitialProgression>>(
+    playerId, avatarId,
+  );
 
   if (!avatar) {
     throw new Error(`Avatar not found: ${avatarId}`);

@@ -114,7 +114,3 @@ export function getPriceId(priceKey: PriceKey): string | null {
   const override = process.env[`STRIPE_PRICE_${priceKey.toUpperCase()}`]?.trim();
   return override || DEFAULT_LIVE_PRICE_IDS[priceKey] || null;
 }
-
-export function isStripeConfigured(): boolean {
-  return getStripeSecretKey() !== null;
-}

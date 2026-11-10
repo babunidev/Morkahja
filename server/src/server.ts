@@ -42,13 +42,13 @@ import {
 } from './services/avatarDeathService.js';
 import { registerAchievementHandlers } from './domain/achievements/registerAchievementHandlers.js';
 import { adminRoutes } from './routes/adminRoutes.js';
-import { encounterRoutes } from './routes/encounterRoutes.js';
 import { roomRoutes } from './routes/roomRoutes.js';
 import { loadAvatar } from './services/encounterPersistence.js';
 import { loadInventory } from './services/inventoryService.js';
 import {
   bootstrapSession,
   heartbeatSession,
+  issueSessionChallenge,
   logoutSession,
 } from './services/sessionService.js';
 import {
@@ -132,9 +132,6 @@ function authRateLimit(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
-// Future runtime hooks:
-// app.use(requestLogger);
-// app.use(multiplayerSessionHooks);
 
 /** Uses existing nginx proxy for `/game-data` — no extra nginx rules needed */
 app.use('/game-data/admin', adminRoutes);
@@ -163,6 +160,16 @@ app.get('/game-data/status', (_req: Request, res: Response) => {
   });
 });
 
+app.post('/session/challenge', authRateLimit, async (req: Request, res: Response) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const challenge = await issueSessionChallenge({
+    devicePublicKey: typeof body.devicePublicKey === 'string' ? body.devicePublicKey : '',
+    identityPublicKey: typeof body.identityPublicKey === 'string' ? body.identityPublicKey : '',
+    purpose: body.purpose as 'register' | 'restore',
+  });
+  res.status(201).json(challenge);
+});
+
 app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response) => {
   const body = req.body as Record<string, unknown>;
   const devicePublicKey = typeof body.devicePublicKey === 'string'
@@ -183,6 +190,15 @@ app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response
     ? body.signedIdentityChallenge as { challenge: string; signature: string }
     : undefined;
 
+  const signedDeviceChallenge = (
+    body.signedDeviceChallenge &&
+    typeof body.signedDeviceChallenge === 'object' &&
+    typeof (body.signedDeviceChallenge as Record<string, unknown>).challenge === 'string' &&
+    typeof (body.signedDeviceChallenge as Record<string, unknown>).signature === 'string'
+  )
+    ? body.signedDeviceChallenge as { challenge: string; signature: string }
+    : undefined;
+
   if (!devicePublicKey) {
     res.status(400).json({ error: 'devicePublicKey is required' });
     return;
@@ -192,7 +208,9 @@ app.post('/session/bootstrap', authRateLimit, async (req: Request, res: Response
     devicePublicKey,
     identityPublicKey,
     playerName,
+    purpose: body.purpose as 'register' | 'restore',
     signedIdentityChallenge,
+    signedDeviceChallenge,
   });
 
   res.status(201).json(session);
@@ -230,7 +248,6 @@ app.post('/session/logout', async (req: Request, res: Response) => {
 
 // Mount authenticated game API.
 app.use(authMiddleware);
-app.use('/encounter', encounterRoutes);
 app.use('/room', roomRoutes);
 app.get('/activity/recent', getRecentActivityController);
 app.get('/player/achievements', getPlayerAchievementsController);

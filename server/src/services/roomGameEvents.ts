@@ -1,5 +1,4 @@
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
-import type { RoomInvitation } from '../domain/rooms/RoomInvitation.js';
 import {
   formatAvatarDisplayName,
   readAvatarDisplayTitle,
@@ -32,53 +31,6 @@ async function leaderAvatarPayload(
         }
       : {}),
   };
-}
-
-export async function recordRoomCreatedEvent(
-  playerId: string,
-  room: EncounterRoom,
-): Promise<void> {
-  await recordGameEvent({
-    playerId,
-    avatarId: room.participants.find((participant) => participant.playerId === playerId)?.avatarId,
-    type: 'room_created',
-    visibility: 'friends',
-    importance: 'low',
-    payload: await leaderAvatarPayload(room, playerId),
-  });
-}
-
-export async function recordPlayerJoinedRoomEvent(
-  playerId: string,
-  avatarId: string,
-  room: EncounterRoom,
-): Promise<void> {
-  await recordGameEvent({
-    playerId,
-    avatarId,
-    type: 'player_joined_room',
-    visibility: 'friends',
-    importance: 'medium',
-    payload: {
-      roomId: room.roomId,
-      encounterId: room.activeEncounterSnapshot.encounterId,
-    },
-  });
-}
-
-export async function recordPlayerDisengagedEvent(
-  playerId: string,
-  avatarId: string,
-  roomId: string,
-): Promise<void> {
-  await recordGameEvent({
-    playerId,
-    avatarId,
-    type: 'player_disengaged',
-    visibility: 'friends',
-    importance: 'low',
-    payload: { roomId },
-  });
 }
 
 export async function recordAdventureStartedEvent(
@@ -144,34 +96,6 @@ export async function recordRoomEncounterResolvedEvent(
     payload: {
       roomId: room.roomId,
       encounterId: room.activeEncounterSnapshot.encounterId,
-    },
-  });
-}
-
-export async function recordHelpCalledEvent(
-  fromPlayerId: string,
-  room: EncounterRoom,
-  context: {
-    fromPlayerName?: string;
-    avatarName?: string;
-    avatarPortrait?: string;
-    avatarFrame?: string;
-  },
-): Promise<void> {
-  await recordGameEvent({
-    playerId: fromPlayerId,
-    type: 'help_called',
-    visibility: 'friends',
-    importance: 'high',
-    payload: {
-      roomId: room.roomId,
-      encounterId: room.activeEncounterSnapshot.encounterId,
-      encounterTitle: room.activeEncounterSnapshot.encounterTitle,
-      playerName: context.fromPlayerName,
-      avatarName: context.avatarName,
-      snapshotId: room.activeEncounterSnapshot.snapshotId,
-      ...(context.avatarPortrait ? { avatarPortrait: context.avatarPortrait } : {}),
-      ...(context.avatarFrame ? { avatarFrame: context.avatarFrame } : {}),
     },
   });
 }

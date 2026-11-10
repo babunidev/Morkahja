@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID, verify } from 'node:crypto';
 
 import {
+  consumeSessionAuthChallenge,
   deleteAllSessionsForPlayer,
-  deleteSession,
   findPlayerByIdentityPublicKey,
   findSessionByAccessToken,
   getDevice,
@@ -10,13 +10,29 @@ import {
   getSession,
   setDevice,
   setPlayer,
-  setSession,
+  storeSessionAuthChallenge,
+  withDocumentTransaction,
 } from '../db/postgresDocumentStore.js';
 import { assertPlayerCanPlay } from './adminPlayerService.js';
 import type { PlayerDocument } from '../types/player.js';
 import type { DeviceDocument, SessionDocument, SignedIdentityChallenge } from '../types/session.js';
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 8;
+const SESSION_CHALLENGE_DURATION_MS = 2 * 60 * 1000;
+const SESSION_CHALLENGE_PREFIX = 'morkahja-session-v1:';
+
+export type SessionChallengePurpose = 'register' | 'restore';
+
+export interface IssueSessionChallengeInput {
+  devicePublicKey: string;
+  identityPublicKey: string;
+  purpose: SessionChallengePurpose;
+}
+
+export interface IssuedSessionChallenge {
+  challenge: string;
+  expiresAt: number;
+}
 
 export class SessionError extends Error {
   constructor(
@@ -31,7 +47,9 @@ export interface BootstrapSessionInput {
   devicePublicKey: string;
   playerName?: string;
   signedIdentityChallenge?: SignedIdentityChallenge;
+  signedDeviceChallenge?: SignedIdentityChallenge;
   identityPublicKey?: string;
+  purpose?: SessionChallengePurpose;
 }
 
 export interface BootstrapSessionResult {
@@ -45,32 +63,80 @@ function stableId(prefix: string, value: string): string {
   return `${prefix}_${createHash('sha256').update(value).digest('base64url').slice(0, 32)}`;
 }
 
-function restoreChallenge(identityPublicKey: string): string {
-  return `morkahja-restore:${identityPublicKey}`;
+function challengeHash(challenge: string): string {
+  return createHash('sha256').update(challenge).digest('hex');
 }
 
-function verifyIdentitySignature(
-  identityPublicKey: string,
-  signedChallenge: SignedIdentityChallenge,
-): boolean {
-  if (signedChallenge.challenge !== restoreChallenge(identityPublicKey)) {
+function parsePublicKey(encoded: string): JsonWebKey | null {
+  if (typeof encoded !== 'string' || encoded.length > 1024) {
+    return null;
+  }
+
+  try {
+    const jwk = JSON.parse(encoded) as JsonWebKey;
+    if (
+      jwk.kty !== 'EC' ||
+      jwk.crv !== 'P-256' ||
+      typeof jwk.x !== 'string' ||
+      typeof jwk.y !== 'string' ||
+      jwk.d !== undefined
+    ) {
+      return null;
+    }
+    return jwk;
+  } catch {
+    return null;
+  }
+}
+
+function verifyChallengeSignature(publicKey: string, signed: SignedIdentityChallenge): boolean {
+  const jwk = parsePublicKey(publicKey);
+  if (
+    !jwk ||
+    !signed ||
+    typeof signed.challenge !== 'string' ||
+    typeof signed.signature !== 'string' ||
+    !/^morkahja-session-v1:[A-Za-z0-9_-]{43}$/u.test(signed.challenge) ||
+    !/^[A-Za-z0-9_-]{86}$/u.test(signed.signature)
+  ) {
     return false;
   }
 
   try {
     return verify(
       'sha256',
-      Buffer.from(signedChallenge.challenge, 'utf8'),
-      {
-        key: JSON.parse(identityPublicKey) as JsonWebKey,
-        format: 'jwk',
-        dsaEncoding: 'ieee-p1363',
-      },
-      Buffer.from(signedChallenge.signature, 'base64url'),
+      Buffer.from(signed.challenge, 'utf8'),
+      { key: jwk, format: 'jwk', dsaEncoding: 'ieee-p1363' },
+      Buffer.from(signed.signature, 'base64url'),
     );
   } catch {
     return false;
   }
+}
+
+export async function issueSessionChallenge(
+  input: IssueSessionChallengeInput,
+): Promise<IssuedSessionChallenge> {
+  if (
+    (input.purpose !== 'register' && input.purpose !== 'restore') ||
+    !parsePublicKey(input.devicePublicKey) ||
+    !parsePublicKey(input.identityPublicKey)
+  ) {
+    throw new SessionError('Invalid session challenge request', 400);
+  }
+
+  const challenge = `${SESSION_CHALLENGE_PREFIX}${randomBytes(32).toString('base64url')}`;
+  const expiresAt = Date.now() + SESSION_CHALLENGE_DURATION_MS;
+
+  await storeSessionAuthChallenge({
+    challengeHash: challengeHash(challenge),
+    devicePublicKey: input.devicePublicKey,
+    identityPublicKey: input.identityPublicKey,
+    purpose: input.purpose,
+    expiresAt,
+  });
+
+  return { challenge, expiresAt };
 }
 
 async function resolveDevice(devicePublicKey: string, now: number): Promise<DeviceDocument> {
@@ -119,11 +185,7 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
 
   const existing = await findPlayerByIdentityPublicKey<PlayerDocument>(input.identityPublicKey);
 
-  if (input.signedIdentityChallenge) {
-    if (!verifyIdentitySignature(input.identityPublicKey, input.signedIdentityChallenge)) {
-      throw new SessionError('SESSION_INVALID', 401);
-    }
-
+  if (input.purpose === 'restore') {
     if (!existing) {
       throw new SessionError('Player identity not found', 404);
     }
@@ -134,12 +196,15 @@ async function resolvePlayer(input: BootstrapSessionInput, now: number): Promise
     };
   }
 
+  if (input.purpose !== 'register') {
+    throw new SessionError('SESSION_INVALID', 401);
+  }
+
   if (existing) {
-    throw new SessionError('signedIdentityChallenge is required', 401);
+    throw new SessionError('Player identity already exists', 409);
   }
 
   const playerName = input.playerName?.trim();
-
   if (!playerName) {
     throw new SessionError('playerName is required', 400);
   }
@@ -164,8 +229,35 @@ export async function bootstrapSession(
   input: BootstrapSessionInput,
 ): Promise<BootstrapSessionResult> {
   const now = Date.now();
-  const device = await resolveDevice(input.devicePublicKey, now);
+  const identityProof = input.signedIdentityChallenge;
+  const deviceProof = input.signedDeviceChallenge;
+
+  if (
+    !input.identityPublicKey ||
+    !input.devicePublicKey ||
+    (input.purpose !== 'register' && input.purpose !== 'restore') ||
+    !identityProof ||
+    !deviceProof ||
+    identityProof.challenge !== deviceProof.challenge ||
+    !verifyChallengeSignature(input.identityPublicKey, identityProof) ||
+    !verifyChallengeSignature(input.devicePublicKey, deviceProof)
+  ) {
+    throw new SessionError('SESSION_INVALID', 401);
+  }
+
+  const consumed = await consumeSessionAuthChallenge({
+    challengeHash: challengeHash(identityProof.challenge),
+    identityPublicKey: input.identityPublicKey,
+    devicePublicKey: input.devicePublicKey,
+    purpose: input.purpose,
+  }, now);
+
+  if (!consumed) {
+    throw new SessionError('SESSION_INVALID', 401);
+  }
+
   const resolved = await resolvePlayer(input, now);
+  const device = await resolveDevice(input.devicePublicKey, now);
   const player = await loadPlayerForSession(resolved.playerId);
 
   try {
@@ -196,20 +288,33 @@ export async function bootstrapSession(
     lastHeartbeatAt: now,
   };
 
-  if (player.activeSessionId) {
-    await deleteSession(player.activeSessionId);
-  }
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer) {
+      throw new SessionError('Player not found', 404);
+    }
 
-  await setSession(sessionId, session);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionId: sessionId,
-      activeSessionExpiresAt: expiresAt,
-      lastPlayedAt: now,
-    },
-  );
+    try {
+      assertPlayerCanPlay(currentPlayer);
+    } catch (error) {
+      throw new SessionError(error instanceof Error ? error.message : 'SESSION_INVALID', 403);
+    }
+
+    if (currentPlayer.activeSessionId) {
+      await transaction.deleteSession(currentPlayer.activeSessionId);
+    }
+
+    await transaction.setSession(sessionId, session);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionId: sessionId,
+        activeSessionExpiresAt: expiresAt,
+        lastPlayedAt: now,
+      },
+      { merge: true },
+    );
+  });
 
   return {
     playerId: player.playerId,
@@ -271,16 +376,23 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
     lastHeartbeatAt: now,
   };
 
-  await setSession(nextSession.sessionId, nextSession);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionExpiresAt: expiresAt,
-      lastPlayedAt: now,
-      lastInteractionAt: now,
-    },
-  );
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer || currentPlayer.activeSessionId !== session.sessionId) {
+      throw new SessionError();
+    }
+    assertPlayerCanPlay(currentPlayer);
+    await transaction.setSession(nextSession.sessionId, nextSession);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionExpiresAt: expiresAt,
+        lastPlayedAt: now,
+        lastInteractionAt: now,
+      },
+      { merge: true },
+    );
+  });
 
   const { touchPlayerPresence } = await import('./roomService.js');
   await touchPlayerPresence(player.playerId, 'online');
@@ -291,16 +403,22 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
 export async function logoutSession(accessToken: string): Promise<void> {
   const { player, session } = await authenticateAccessToken(accessToken);
 
-  await deleteSession(session.sessionId);
-  await setPlayer(
-    player.playerId,
-    {
-      ...player,
-      activeSessionId: null,
-      activeSessionExpiresAt: null,
-      lastPlayedAt: Date.now(),
-    },
-  );
+  await withDocumentTransaction(async (transaction) => {
+    const currentPlayer = await transaction.getPlayer<PlayerDocument>(player.playerId);
+    if (!currentPlayer || currentPlayer.activeSessionId !== session.sessionId) {
+      throw new SessionError();
+    }
+    await transaction.deleteSession(session.sessionId);
+    await transaction.setPlayer(
+      player.playerId,
+      {
+        activeSessionId: null,
+        activeSessionExpiresAt: null,
+        lastPlayedAt: Date.now(),
+      },
+      { merge: true },
+    );
+  });
 }
 
 export async function loadSession(sessionId: string): Promise<SessionDocument | null> {

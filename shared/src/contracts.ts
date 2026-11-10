@@ -104,36 +104,12 @@ export interface CheckoutSessionResponse {
   url: string;
 }
 
-export interface PlayerCurrencyResponse {
-  playerId: string;
-  currencies: {
-    yellow_red_gem: number;
-    [key: string]: number | undefined;
-  };
-  granted: boolean;
-}
-
 export interface LoreGemOfferDto {
   eligible: boolean;
   claimableAt: number | null;
   offeredAt: number;
   /** Randomized reveal delay for this encounter; client counts down only while lore is open. */
   durationMs: number;
-}
-
-export interface LoreGemOfferResponse {
-  eligible: boolean;
-  claimableAt: number | null;
-  encounterKey: string;
-}
-
-export interface LoreGemClaimResponse {
-  playerId: string;
-  currencies: {
-    yellow_red_gem: number;
-    [key: string]: number | undefined;
-  };
-  granted: boolean;
 }
 
 export interface DonateGemsResponse {
@@ -218,22 +194,6 @@ export interface PersistedAvatarDto {
   sacrificeGemCost?: number;
 }
 
-export interface SacrificeAvatarResponse {
-  playerId: string;
-  avatar: PersistedAvatarDto;
-  spent: number;
-  currencies: {
-    yellow_red_gem?: number;
-    [key: string]: number | undefined;
-  };
-}
-
-export interface FinalizeAvatarDeathResponse {
-  playerId: string;
-  avatarId: string;
-  status: AvatarLifeStatus;
-}
-
 export interface AvatarResponse {
   avatar?: PersistedAvatarDto;
 }
@@ -241,22 +201,6 @@ export interface AvatarResponse {
 export interface AvatarsResponse {
   playerId: string;
   avatars: PersistedAvatarDto[];
-}
-
-export interface EncounterResultResponse {
-  success: boolean;
-  selectedRoll?: number;
-  rewards: number[];
-  message: string;
-  failurePenalty?: number;
-  slotResults?: Record<'A' | 'B' | 'C' | 'D', boolean>;
-  usedInventorySolutions?: number[];
-  snapshot: EncounterSnapshotDto;
-  avatar?: PersistedAvatarDto;
-  /** True when essence depletion queues the Atranor encounter (player still plays it). */
-  deathTriggered?: boolean;
-  /** True when Atranor resolves Misery/Hardship — show the avatar death overlay. */
-  avatarDied?: boolean;
 }
 
 export interface StaticGameDataStatus {
@@ -547,10 +491,6 @@ export interface RoomActiveResponse {
   partyEjection?: PartyEjectionDto;
 }
 
-export interface RoomCreateResponse {
-  room: EncounterRoomSnapshotDto;
-}
-
 export interface RoomHelpInvitationDto {
   inviteId: string;
   roomId: string;
@@ -562,20 +502,6 @@ export interface RoomHelpInvitationDto {
 
 export interface RoomHelpPendingResponse {
   invitations: RoomHelpInvitationDto[];
-}
-
-export interface RoomChoiceRequest {
-  action: EncounterAction;
-  solutionId?: number;
-}
-
-export interface RoomSelectionRequest {
-  action: EncounterAction;
-  solutionId?: number;
-}
-
-export interface RoomFocusRequest {
-  focusState: ParticipantFocusStateDto;
 }
 
 export interface CallForHelpResponse {

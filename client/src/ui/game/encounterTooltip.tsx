@@ -50,14 +50,6 @@ export const encounterTooltipDetailStyle: CSSProperties = {
   whiteSpace: 'pre-line',
 };
 
-export function encounterTooltipAboveCenterStyle(): CSSProperties {
-  return {
-    left: '50%',
-    bottom: '100%',
-    transform: 'translate(-50%, -12px)',
-  };
-}
-
 function portalPositionForAnchor(anchor: HTMLElement): CSSProperties {
   const rect = anchor.getBoundingClientRect();
 

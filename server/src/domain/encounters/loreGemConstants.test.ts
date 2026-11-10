@@ -10,7 +10,7 @@ const now = 1_700_000_000_000;
 
 assert.deepEqual(
   rollLoreGemClaimableAt(now, () => 0),
-  { eligible: true, claimableAt: now + LORE_GEM_MIN_MS },
+  { eligible: true, claimableAt: now + LORE_GEM_MIN_MS, durationMs: LORE_GEM_MIN_MS },
 );
 
 let callCount = 0;

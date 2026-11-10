@@ -8,7 +8,6 @@ import {
   listOpenRoomIdsByParticipant,
   getEncounterRoom,
   getPlayerPresence,
-  getRoomInvitation,
   listPendingInvitationsForPlayer,
   setEncounterRoom,
   setPlayerPresence,
@@ -64,10 +63,6 @@ export async function loadPlayerPresence(playerId: string): Promise<PlayerPresen
 
 export async function savePlayerPresence(presence: PlayerPresence): Promise<void> {
   await setPlayerPresence(presence.playerId, presence);
-}
-
-export async function loadRoomInvitation(inviteId: string): Promise<RoomInvitation | null> {
-  return getRoomInvitation<RoomInvitation>(inviteId);
 }
 
 export async function saveRoomInvitation(invitation: RoomInvitation): Promise<void> {

@@ -3,7 +3,6 @@ import type { AvatarDocument } from '../types/avatar.js';
 import { formatAvatarDisplayName, readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import type { RollOutcome } from '../engine/diceInterpreter.js';
-import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
 import { ACTIVITY_FEED_WINDOW_MS, type GameEvent, type GameEventImportance } from '../domain/events/GameEvent.js';
 import { gameEventBus } from '../domain/events/gameEventBus.js';
 import { getPlayer } from '../db/postgresDocumentStore.js';
@@ -207,31 +206,6 @@ export async function recordAvatarCreatedEvent(
     visibility: 'global',
     importance: 'medium',
     payload: basePayload(player?.playerName, avatar),
-  });
-}
-
-export async function recordEncounterStartedEvent(
-  playerId: string,
-  avatar: AvatarDocument,
-  snapshot: EncounterSnapshot,
-): Promise<void> {
-  const player = await readPlayer(playerId);
-  const encounter = getEncounterById(snapshot.encounterId);
-
-  await recordGameEvent({
-    playerId,
-    avatarId: avatar.id ?? snapshot.avatarId,
-    type: 'encounter_started',
-    visibility: 'global',
-    importance: 'low',
-    payload: {
-      ...basePayload(
-        player?.playerName,
-        avatar,
-        snapshot.encounterId,
-        snapshot.encounterTitle ?? encounter?.mEncounterTitle,
-      ),
-    },
   });
 }
 

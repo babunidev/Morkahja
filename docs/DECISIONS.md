@@ -48,3 +48,12 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **Status:** Approved target address and documented plan; implementation not started or verified. Preserve the existing player database. Browser storage is origin-scoped, so existing players will need the current recovery-key restoration flow at the new address; automatic transfer of the old session/local storage must not be promised.
 
 **AI contribution:** Inspected current repository configuration and documented the migration plan and constraints. No application code, server, DNS, database or Stripe configuration was changed.
+## 2026-11-04 — D-006: Prevent lost player/avatar updates before feature polish
+
+**Human direction:** Prioritize preserving player/avatar state under simultaneous rewards, gem spending, daily encounter progress and session changes. **AI-assisted implementation:** [PR #6](https://github.com/babunidev/Morkahja/pull/6) introduces atomic PostgreSQL top-level JSONB merges and selected row-locked transactions, building on authentication [PR #5](https://github.com/babunidev/Morkahja/pull/5). **Reasoning:** A separate read followed by a full document overwrite can erase changes made by another request. **Boundary:** JSONB `||` merges only top-level keys; nested counters and multi-document invariants still require coordinated transactions. Tests passed in CI and locally, but both PRs remain unmerged, the overall typecheck is red for unrelated existing errors, and production has not been verified.
+
+## 2026-11-04 — D-007: Allow existing multi-tab/multi-avatar behavior for now
+
+**Human decision:** Do not restrict multiple tabs or simultaneous avatars at this stage. Two tabs on the same avatar were observed to reflect the same server-side actions, and switching to another avatar made concurrent play possible. This behavior is acceptable for now; dedicated multi-avatar polish can be a later feature. **Rejected for now:** Blocking duplicate tabs or forcing only one avatar to play. **Risk retained:** The observation does not prove avatar isolation, resource conservation, cross-tab UI synchronization or correct room transitions in every race. Do not treat it as a guaranteed supported feature before targeted tests.
+
+**Implementation:** No runtime change was requested for the tab behavior; this records direction, not a completed new feature.
