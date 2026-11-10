@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-10 — Test fix: random failures in `systemEventInventory.test.ts`
+
+- The level-up scenario in `server/src/services/systemEventInventory.test.ts` failed at random because it checked exact essence and spell counts while the encounters it used still granted randomly drawn rewards. A level-up's rewards are drawn when the encounter is created, from its own roll; a Prosperity draw can include an essence (seen in CI as 10 essence uses instead of 6). The normal encounter's random rewards could be an essence or spell 10001 itself (seen locally as 7 essence uses and as 3 charges of 10001 instead of 0).
+- The test now gives that normal encounter no random rewards and removes essences from the pre-drawn level-up rewards. All assertions are unchanged. Game code is unchanged; granting an essence on a Prosperity level-up is existing behavior.
+- **Verification:** the test passed 60 of 60 consecutive local runs (an earlier, partial fix failed 1 in 25). `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 38 server tests). Nobara, local Podman PostgreSQL.
+
 ## 2026-11-10 — One stream: all open work merged into `main`
 
 - `main` now contains PR #18 (one copy of the game content, `ee960792`), PR #19 (serve the game from `/Morkahja/` plus the stalled-turn fix, `1d35f4a9`) and PR #20 (documentation readability, `a2a3ac2f`). The merged `feat/babuni-dev-subpath` branch was deleted. No other branches or pull requests remain open; the local `backup/main-before-cleanup` branch holds only June admin encounter edits that are already in `main`.
