@@ -9,10 +9,12 @@ import {
 } from '../domain/rooms/RoomSystemEvent.js';
 import { setProgression } from '../db/postgresDocumentStore.js';
 import { ensureAvatar } from './encounterGenerator.js';
+import { getSolutionMap } from './gameData.js';
 import {
   flattenInventorySolutionIds,
   loadInventory,
   persistInventory,
+  resolveInventoryContainer,
 } from './inventoryService.js';
 import { savePlayerAvatar } from './playerService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
@@ -29,6 +31,12 @@ function countSolutionCharges(
   solutionId: number,
 ): number {
   return flattenInventorySolutionIds(inventory).filter((id) => id === solutionId).length;
+}
+
+function isEssenceReward(solutionId: number): boolean {
+  const solution = getSolutionMap()[String(solutionId)];
+  return solution !== undefined
+    && resolveInventoryContainer(solution.mSolutionInventoryType) === 'essences';
 }
 
 function totalEssenceUses(inventory: Awaited<ReturnType<typeof loadInventory>>): number {
@@ -204,6 +212,11 @@ await persistInventory(session.playerId, avatarId, {
       (snapshot, index) => ({
         ...snapshot,
         rollPrimaryA: index === slotIndex ? 96 : 50,
+        // The encounter's own rewards are drawn at random and could include an
+        // essence or spell 10001, which would make the totals below vary between
+        // runs. This scenario is about the level-up event, so the normal encounter
+        // grants none; the success still adds its one-use Prosperity essence.
+        rewardIds: [] as number[],
       }),
     ) as EncounterRoom['slotEncounterSnapshots'],
   };
@@ -238,6 +251,10 @@ await persistInventory(session.playerId, avatarId, {
       ...snapshot,
       encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
       rollE: index === slotIndex ? 96 : 50,
+      // Level-up rewards were drawn when the snapshot was created, from its own
+      // random roll. A Prosperity draw can include an essence, which would change
+      // the essence total below at random; keep this test's rewards essence-free.
+      rewardIds: snapshot.rewardIds?.filter((rewardId) => !isEssenceReward(rewardId)),
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],
     updatedAt: Date.now(),

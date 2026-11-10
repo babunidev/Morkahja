@@ -553,7 +553,18 @@ const advancedPastDisengaged = await getActiveRoomForPlayer(
   session.playerId,
   switchedAvatarRoom.participants[0]!.avatarId,
 );
-assert.equal(advancedPastDisengaged?.roomState, 'active_encounter');
+// The next encounter is drawn at random and can itself be a system event
+// (as in the other Continue checks in this file); either way the room must
+// leave waiting_continue with a new encounter.
+assert.ok(
+  advancedPastDisengaged?.roomState === 'active_encounter'
+  || advancedPastDisengaged?.roomState === 'system_event',
+  `continue should advance past the disengaged participant, got ${advancedPastDisengaged?.roomState}`,
+);
+assert.notEqual(
+  advancedPastDisengaged?.activeEncounterSnapshot.snapshotId,
+  postSystemDisengagedRoom.activeEncounterSnapshot.snapshotId,
+);
 
 const prepareAvatarId = `${avatarId}-prepare-${Date.now()}`;
 await savePlayerAvatar(session.playerId, {
