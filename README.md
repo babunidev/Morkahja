@@ -1,47 +1,41 @@
 # Morkahja
 
-**Author:** Babuni.dev
+Morkahja is a browser-based roleplaying game set in Babuni's original fantasy world. Encounters, characters, achievements, choices and social features connect a playable application to a larger body of places, peoples and stories.
 
-An evolving browser-based role-playing game project set in the world of Morkahja.
+**Creative direction:** Babuni · **Project:** browser game and server · **Status:** active development; release and production claims require separate verification
 
-The repository contains the client, server, shared code, and a development journal (`DEVLOG.md`). The client and server have their own package manifests; the client README currently contains the Vite starter instructions.
+The game and the world archive are distinct projects. The writing and worldbuilding live in [MorkahjaWorld](https://github.com/babunidev/MorkahjaWorld); this repository contains the game's client, server, shared contracts and development history.
 
-Authorship and creative direction belong to **Babuni.dev**. AI-assisted implementation is documented separately from the original project direction.
+## What the game explores
 
-## Development documentation
+The existing development record follows the project from structured encounter and solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It describes encounters, avatar progression, achievements and rewards, an event feed known as Scribes, and various social and account systems.
 
-- [Concept](CONCEPT.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
-- [Architecture](docs/ARCHITECTURE.md) · [Deployment plan](docs/DEPLOYMENT.md) · [Design evidence](docs/DECISIONS.md) · [Development journal](docs/DEVLOG.md)
-- [AI collaborator rules](AGENTS.md)
+These are parts of a developing game, not an assertion that every system has passed a fresh end-to-end or production test. The [concept](CONCEPT.md) sets the creative direction, while [architecture](docs/ARCHITECTURE.md) and [content](docs/CONTENT.md) explain the technical organization.
 
-The journal distinguishes source-based reconstruction, author direction, AI assistance, and independently verified behavior.
+## Where to begin
 
-## Historical documentation audit — #30 (27 October 2026)
+| Interested in… | Read… |
+| --- | --- |
+| The game idea | [Concept](CONCEPT.md) · [Design](docs/DESIGN.md) |
+| Current work and unresolved risks | [Roadmap](ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) |
+| Code and data boundaries | [Architecture](docs/ARCHITECTURE.md) · [Content](docs/CONTENT.md) |
+| What changed | [Changelog](CHANGELOG.md) |
+| How the project evolved | [Curated journal](docs/DEVLOG.md) · [Original journal](DEVLOG.md) |
+| Creative and technical decisions | [Decisions](docs/DECISIONS.md) · [AI collaboration](docs/AI_COLLABORATION.md) |
+| Dated audits, PR checks and gameplay notes | [Historical status notes](docs/RELEASE_STATUS_HISTORY.md) |
 
-The project's **primary development record** is the [original dated DEVLOG](DEVLOG.md), which chronicles the browser game from May 16 to June 7, 2026. The supporting documents interpret that journal but do not supersede it. The workspace's current version field is **0.9.0-beta.2.2**; the original journal describes it as a public pre-1.0 beta, not a independently revalidated live service.
+## Development and verification
 
-The original record follows the move from structured encounter/solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It traces the encounter loop, SCRIBES event feed, avatar lifecycle, achievement/reward systems, expansion unlocks, friends and social surfaces, plus later deployment and security considerations. These stages are historical **development claims from the journal**, not new tests performed in this audit.
+The repository separates client and server packages. Read their own manifests and environment documentation before starting local services; they do not necessarily share the same commands or credentials.
 
-**Additional documentation:** [Visual and interaction design](docs/DESIGN.md) · [Content and provenance](docs/CONTENT.md) · [AI collaboration](docs/AI_COLLABORATION.md). The audit preserves Babuni.dev's authorship, separately credits music contributor Nikita Malko, and does not modify the original journal, game code or player data.
+The project has ongoing work concerning session authentication, concurrent player/avatar persistence and regression tests. Earlier records describe isolated Nobara database tests and CI results for two pull requests dated **4 November 2026**. Those results do not by themselves verify a merged branch or deployed production build; see [the historical test and PR notes](docs/RELEASE_STATUS_HISTORY.md) and current pull request status.
 
-## Public repository preparation — 31 October 2026
+Player data, credentials and remote game files are sensitive and must not be copied into public documentation. A source review, simulated test, local database test, complete release gate and live deployment are different kinds of evidence.
 
-The standard documentation is maintained in this actual project repository. See [publication preparation](docs/PUBLISHING.md) for the current review, remaining permissions and migration order. Visibility has not changed.
+## Development story
 
-## Current development notes — 4 November 2026
+The original [development log](DEVLOG.md) follows the game's formation from **May to June 2026** and remains preserved. The [curated journal](docs/DEVLOG.md) records later direction, design changes, AI-assisted work and verified outcomes in a shorter reading form.
 
-Recent security and persistence work is under review, **not merged into `main` or deployed**: [PR #5 — single-use session authentication challenges](https://github.com/babunidev/Morkahja/pull/5) and [PR #6 — atomic player/avatar persistence](https://github.com/babunidev/Morkahja/pull/6). PR #6 builds on PR #5.
+The human creative owns the game's idea, world and design decisions. AI assistance contributes drafts, code and analysis where recorded; it does not replace creative authorship. Named third-party credits, including music contributions, are retained in the project records.
 
-On the isolated Nobara test checkout, `npm run test:session-auth --prefix server` and `npm run test:persistence --prefix server` passed against local PostgreSQL. CI also passed these, achievements, dice, static data checks, and the client build. The complete release gate remains red because of previously existing server TypeScript errors; production behavior has not been verified. See [architecture](docs/ARCHITECTURE.md), [roadmap](ROADMAP.md), [decisions](docs/DECISIONS.md), and [development journal](docs/DEVLOG.md) for the boundaries.
-
-Separate browser tabs can presently use the same account, including different avatars. This is an observed behavior deliberately left unchanged, not yet a fully validated multi-avatar feature.
-
-**4 November release-gate update:** PR #6 passed the expanded GitHub Actions [run #82](https://github.com/babunidev/Morkahja/actions/runs/41768507068), including room regressions, authentication, concurrent persistence, achievements, dice, static-data checks, client build and TypeScript typecheck. The developer separately merged the earlier PR code with locally committed development work in an isolated Nobara worktree, but the latest room-test correction and uncommitted original changes have not yet been tested together. PRs #5 and #6 remain open; nothing is deployed.
-
-**Room regression follow-up:** GitHub Actions [run #84](https://github.com/babunidev/Morkahja/actions/runs/41769428202) passed the full suite after isolating the solo-room rejoin event assertion from the Scribes feed's 50-entry limit. A rerun in the populated Nobara integration database remains outstanding.
-
-## Achievement progression
-
-Achievement chains appear once progress is above zero, but this alone is not an unlock. Ranks, avatar display titles, Scribes unlock notices, and the associated Hearth Blessing bonuses are earned only when rank milestones are reached. Hearth Blessing pays one base gem plus earned rank bonuses after its encounter requirement; the limited Alpha Player chain retains its separate per-rank multiplier.
-
-The Firestarter chain uses the player's peak milestones: two avatars for Firestarter (rank 1), three avatars for Pathfinder (rank 2), then 15 and 30 combined avatar levels for Wayseeker and Fateforger. Ranks already earned are never lowered, so players who reached a rank under the earlier milestones keep it.
+Before changing source or documentation, read [AGENTS.md](AGENTS.md) and [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md).
