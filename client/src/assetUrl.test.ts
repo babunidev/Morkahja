@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { assetUrl, PUBLIC_BASE_PATH, withBasePath } from './assetUrl.js';
 
-// Production subpath (https://babuni.dev/Morkahja/).
+// Production subpath (https://www.babuni.dev/Morkahja/).
 assert.equal(withBasePath('/Morkahja/', '/UI/09_GAME/im_gems.webp'), '/Morkahja/UI/09_GAME/im_gems.webp');
 assert.equal(withBasePath('/Morkahja/', '/game/encounterimages'), '/Morkahja/game/encounterimages');
 assert.equal(withBasePath('/Morkahja/', 'UI/04_ACHIEVEMENTS/im_glyph_helper.webp'), '/Morkahja/UI/04_ACHIEVEMENTS/im_glyph_helper.webp');
@@ -27,7 +27,7 @@ for (const url of [
   'http://localhost:3000/health',
   '//cdn.example.com/a.webp',
   'data:image/png;base64,AAAA',
-  'blob:https://babuni.dev/0b8f',
+  'blob:https://www.babuni.dev/0b8f',
 ]) {
   assert.equal(withBasePath('/Morkahja/', url), url);
 }
@@ -43,12 +43,12 @@ const clientDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const manifest = JSON.parse(
   readFileSync(path.join(clientDir, 'public', 'manifest.webmanifest'), 'utf8'),
 ) as { start_url: string; scope: string; icons: Array<{ src: string }> };
-const manifestUrl = 'https://babuni.dev/Morkahja/manifest.webmanifest';
-assert.equal(new URL(manifest.start_url, manifestUrl).href, 'https://babuni.dev/Morkahja/');
-assert.equal(new URL(manifest.scope, manifestUrl).href, 'https://babuni.dev/Morkahja/');
+const manifestUrl = 'https://www.babuni.dev/Morkahja/manifest.webmanifest';
+assert.equal(new URL(manifest.start_url, manifestUrl).href, 'https://www.babuni.dev/Morkahja/');
+assert.equal(new URL(manifest.scope, manifestUrl).href, 'https://www.babuni.dev/Morkahja/');
 for (const icon of manifest.icons) {
   assert.ok(
-    new URL(icon.src, manifestUrl).href.startsWith('https://babuni.dev/Morkahja/'),
+    new URL(icon.src, manifestUrl).href.startsWith('https://www.babuni.dev/Morkahja/'),
     `manifest icon escapes the game scope: ${icon.src}`,
   );
 }

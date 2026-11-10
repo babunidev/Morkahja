@@ -12,4 +12,4 @@ export const SOCIAL_IMAGE_WIDTH = 600;
 export const SOCIAL_IMAGE_HEIGHT = 801;
 
 /** Used when VITE_SITE_URL is unset during production builds. Override via env if needed. */
-export const SOCIAL_SITE_URL_FALLBACK = 'https://babuni.dev/Morkahja';
+export const SOCIAL_SITE_URL_FALLBACK = 'https://www.babuni.dev/Morkahja';

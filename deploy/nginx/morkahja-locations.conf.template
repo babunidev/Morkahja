@@ -1,7 +1,7 @@
-# Morkahja under https://babuni.dev/Morkahja/ — Nginx location template.
+# Morkahja under https://www.babuni.dev/Morkahja/ — Nginx location template.
 #
 # Include these locations inside the EXISTING `server { ... }` block that serves
-# babuni.dev. Nothing here changes the website's own `location /` or root.
+# www.babuni.dev (the server_name with the valid certificate). Nothing here changes the website's own `location /` or root.
 # See docs/DEPLOYMENT.md for the full procedure; validate with `nginx -t`.
 #
 # Replace before use (do not commit real server values):

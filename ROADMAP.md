@@ -30,16 +30,16 @@ Run documented static and lifecycle checks in an appropriate development environ
 
 ## Deployment — game under babuni.dev (planned 2026-11-09, implemented locally 2026-11-10)
 
-**Target selected by Babuni:** `https://babuni.dev/Morkahja/`, with the main website remaining at `https://babuni.dev/`.
+**Target selected by Babuni:** `https://www.babuni.dev/Morkahja/` (decided 2026-11-10, replacing the original `https://babuni.dev/Morkahja/`), with the main website remaining at `https://www.babuni.dev/`.
 
-**Status:** Repository changes are implemented on branch `feat/babuni-dev-subpath` and verified in a **local** Nginx + headless-Chrome integration environment. **Not merged, not deployed.** Public discovery on 10 November found that the apex `babuni.dev` points to Porkbun parking with no HTTPS certificate; the website itself is served from `www.babuni.dev`. The apex needs a DNS/certificate decision before the requested URL can work.
+**Status:** Repository changes are implemented on branch `feat/babuni-dev-subpath` and verified in a **local** Nginx + headless-Chrome integration environment. **Not merged, not deployed.** Public discovery on 10 November found that the apex `babuni.dev` points to Porkbun parking with no HTTPS certificate; the website itself is served from `www.babuni.dev`. Babuni then chose `www.babuni.dev` as the game host, so no DNS change is needed.
 
-- [ ] **Blocked — decision:** Point the apex `babuni.dev` at the website host and certificate, or use `www.babuni.dev/Morkahja/` instead. (Public DNS/HTTP were inspected; no DNS was changed.)
+- [x] **Hostname decided:** `www.babuni.dev/Morkahja/`. Public DNS/HTTP were inspected; no DNS was changed. *(Optional later: redirect the apex to `www` if it is ever connected.)*
 - [ ] **Blocked — access:** Confirm the game VPS, active production Nginx file, PM2 process, backend commit and Stripe state. These need server access, which was not available.
 - [ ] Take and independently verify a restorable off-host PostgreSQL backup; record persistent content (including the admin-writable `server/game/*.json`).
 - [x] Vite production base `/Morkahja/`; production API base defaults to `/Morkahja/api`; local development unchanged.
 - [x] Base-aware runtime asset URLs for all client and server-provided asset paths, with a regression test against new unwrapped root paths.
-- [x] PWA `start_url`/`scope`/icon resolve beneath `/Morkahja/`; social-preview fallback is `https://babuni.dev/Morkahja` and the broken preview image reference is fixed.
+- [x] PWA `start_url`/`scope`/icon resolve beneath `/Morkahja/`; social-preview fallback is `https://www.babuni.dev/Morkahja` and the broken preview image reference is fixed.
 - [x] Nginx location template for `/Morkahja/`, `/Morkahja/api/` (prefix stripped) and redirects. `nginx -t` passed and routing was verified locally.
 - [x] Express `trust proxy` (default `loopback`) so the per-IP auth/heartbeat rate limit is not shared by all players behind the proxy.
 - [x] Recovery-key restoration recovered the same player record in a fresh browser profile (local test database).

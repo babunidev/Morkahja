@@ -15,7 +15,7 @@ import {
 const clientDir = path.dirname(fileURLToPath(import.meta.url))
 
 /**
- * Production deployment: https://babuni.dev/Morkahja/ (see docs/DEPLOYMENT.md).
+ * Production deployment: https://www.babuni.dev/Morkahja/ (see docs/DEPLOYMENT.md).
  * The reverse proxy strips `/Morkahja/api` before forwarding to Express, which
  * keeps registering its routes at the root (`/health`, `/session`, ...).
  */

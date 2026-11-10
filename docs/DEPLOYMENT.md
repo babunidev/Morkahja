@@ -1,13 +1,13 @@
 # Deployment plan — Morkahja under babuni.dev
 
-**Status:** Repository implementation done and verified locally in an Nginx integration environment. **Not deployed.** Production cutover is blocked on the apex-domain/DNS decision below, server access, a verified database backup, and Babuni's explicit approval.  
+**Status:** Repository implementation done and verified locally in an Nginx integration environment. **Not deployed.** Production cutover still needs server access, a verified database backup, and Babuni's explicit approval. The hostname question is settled: the game goes on `www.babuni.dev`.  
 **Recorded:** 2026-11-09 (plan) · updated 2026-11-10 (implementation, discovery and local verification)  
 **Branch:** `feat/babuni-dev-subpath`  
-**Target game URL:** https://babuni.dev/Morkahja/
+**Target game URL:** https://www.babuni.dev/Morkahja/ (decided 2026-11-10; originally planned as `https://babuni.dev/Morkahja/`)
 
 ## Goal
 
-Move the public game address from the former game domain to `https://babuni.dev/Morkahja/`, while keeping the main website at `https://babuni.dev/`.
+Move the public game address from the former game domain to `https://www.babuni.dev/Morkahja/`, while keeping the main website at `https://www.babuni.dev/`.
 
 Morkahja remains an independently deployable frontend and API beneath the website. The existing player database and game backend are retained. Nothing here authorizes a database reset, player-data migration or destructive deployment.
 
@@ -25,16 +25,16 @@ These observations come from public DNS lookups and unauthenticated HTTP(S) requ
 | Former game VPS, PostgreSQL, PM2 | **Not established.** The historical root `DEVLOG.md` describes a Hetzner VPS with Nginx serving `/var/www/morkahja`, PM2 `morkahja-api` on `127.0.0.1:3000`, and PostgreSQL on localhost. No server access details were available for this work, so it is unknown whether the game still runs on that VPS or shares a host with the website. |
 | Stripe | **Not established.** The repository has live price IDs and a `/stripe/webhook` endpoint. Whether production has `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` set, and which webhook URL Stripe uses, needs the server `.env` and the Stripe dashboard. |
 
-### Consequence: the requested URL needs an apex change
+### Decision: serve the game from `www.babuni.dev`
 
-`https://babuni.dev/` does **not** serve the website today. Until the apex reaches the website host with a valid certificate, `https://babuni.dev/Morkahja/` cannot work, whatever happens in Nginx. This is not "changing DNS to route a path": the apex currently goes to the registrar's parking service.
+`https://babuni.dev/` does not serve the website today. The apex goes to the registrar's parking service and has no certificate. Given the two options (point the apex at the website host, or use the existing `www` host), **Babuni chose `https://www.babuni.dev/Morkahja/` on 2026-11-10** (see D-006 in `DECISIONS.md`). No DNS change is required for this, and none was made.
 
-One of these is needed, and it is **Babuni's decision** (nothing has been changed):
+What the decision implies:
 
-1. **Point the apex at the website host (keeps the requested URL).** Change the apex A record from Porkbun parking to the website host. Add `babuni.dev` to the website's Nginx `server_name` and its certificate (for example `certbot --nginx -d babuni.dev -d www.babuni.dev`). Decide whether `www` redirects to the apex or the reverse. If `www` stays separately reachable, it is a **different browser origin** with separate `localStorage`; redirect one name to the other so players don't end up with two identities.
-2. **Serve the game at `https://www.babuni.dev/Morkahja/` instead.** No DNS change is required, but this differs from the approved address (D-006). The build only needs `VITE_SITE_URL=https://www.babuni.dev/Morkahja` and `CLIENT_URL`/`CLIENT_ORIGINS` adjusted.
+- The browser origin is `https://www.babuni.dev`. That is a **different origin** from the apex `https://babuni.dev`. If the apex is later connected to the website, redirect it to `www` (for example a 301 of `https://babuni.dev/*` to `https://www.babuni.dev/*`) rather than serving the game on both names. Otherwise players would end up with separate browser storage, and so separate local identities, per name.
+- Until then, `babuni.dev/Morkahja/` shows the parking page. Links and announcements should use the full `https://www.babuni.dev/Morkahja/` address.
 
-The rest of this document assumes option 1 and the hostname `babuni.dev`.
+The rest of this document uses `www.babuni.dev`.
 
 ## What the repository now does
 
@@ -43,8 +43,8 @@ Implemented on `feat/babuni-dev-subpath` (see `CHANGELOG.md` for the file list):
 - **Vite base:** Production builds and `vite preview` use `base: '/Morkahja/'`. Development (`npm run dev:client`) still serves from `/` with the unchanged root API proxies. `VITE_BASE_PATH` overrides the base when needed.
 - **API prefix:** Production builds default `VITE_API_BASE_URL` to `/Morkahja/api` (derived from the base). An explicit `VITE_API_BASE_URL`, including an empty string, still wins. `vite preview` forwards `/Morkahja/api/*` to `127.0.0.1:3000` with the prefix stripped, which makes a local subpath check possible.
 - **Runtime asset URLs:** `client/src/assetUrl.ts` prefixes root-relative public paths (`/UI/…`, `/game/…`) with Vite's `import.meta.env.BASE_URL`. Every hard-coded asset path in client source now goes through it, including dice art from `shared/src/diceCatalog.ts` and asset paths sent by the server (Scribes feed `iconUrl`, achievement `baseIconUrl`/`rankOverlayUrl`). The helper leaves absolute, `data:` and `blob:` URLs alone and never double-prefixes. The server API contract is unchanged: it still sends root-relative public paths. A regression test fails if a new unwrapped `'/UI/…'` or `'/game/…'` literal appears in client source.
-- **HTML, CSS, manifest:** Vite rewrites the favicon, Apple touch icon, manifest link and the CSS font `url()` to `/Morkahja/…` at build time. `manifest.webmanifest` uses relative `start_url`/`scope` (`./`) and icon `src`, which resolve to `https://babuni.dev/Morkahja/` from `/Morkahja/manifest.webmanifest`. A test asserts this.
-- **Social preview:** The fallback site URL is now `https://babuni.dev/Morkahja`. The Open Graph image previously pointed to `posterRaceSkills2.png`, which was removed from the repository earlier and would have returned 404; it now points to the existing `posterRaceSkills2.webp` (600×801, `image/webp`).
+- **HTML, CSS, manifest:** Vite rewrites the favicon, Apple touch icon, manifest link and the CSS font `url()` to `/Morkahja/…` at build time. `manifest.webmanifest` uses relative `start_url`/`scope` (`./`) and icon `src`, which resolve to `https://www.babuni.dev/Morkahja/` from `/Morkahja/manifest.webmanifest`. A test asserts this.
+- **Social preview:** The fallback site URL is now `https://www.babuni.dev/Morkahja`. The Open Graph image previously pointed to `posterRaceSkills2.png`, which was removed from the repository earlier and would have returned 404; it now points to the existing `posterRaceSkills2.webp` (600×801, `image/webp`).
 - **Express behind the proxy:** `app.set('trust proxy', …)` now defaults to `loopback`, configurable with `TRUST_PROXY`. Without it, every request through Nginx appears to come from `127.0.0.1`. The per-IP limit of 25 requests per minute on `/session/challenge`, `/session/bootstrap` and `/session/heartbeat` would then be shared by **all** players. With heartbeats every 45 s, roughly 19 concurrent players would start receiving 429s, and three consecutive heartbeat failures log a player out. The default trusts `X-Forwarded-For` only when the direct peer is loopback, so remote clients still cannot spoof their address.
 - **Nginx template:** `deploy/nginx/morkahja-locations.conf.template` contains `location` blocks to include in the existing website `server {}` block, with placeholders for the web root and API upstream.
 
@@ -62,7 +62,7 @@ No server routes, database schema, Stripe logic or game rules were changed.
 ```sh
 # From a checkout of the commit being deployed
 npm ci
-VITE_SITE_URL=https://babuni.dev/Morkahja \
+VITE_SITE_URL=https://www.babuni.dev/Morkahja \
 VITE_API_BASE_URL=/Morkahja/api \
 npm run build --prefix client
 # Output: client/dist (index.html references /Morkahja/assets/...)
@@ -74,19 +74,19 @@ npm run build --prefix client
 
 | Variable | Value | Notes |
 | --- | --- | --- |
-| `CLIENT_ORIGINS` | `https://babuni.dev` | Origins only, never paths. Add `https://www.babuni.dev` only if `www` serves the game without redirecting. Same-origin requests do not need CORS; this mainly affects any cross-origin use. |
-| `CLIENT_URL` | `https://babuni.dev/Morkahja` | Stripe returns players to `${CLIENT_URL}/?purchase=success…` / `?purchase=cancel`. |
+| `CLIENT_ORIGINS` | `https://www.babuni.dev` | Origins only, never paths. Same-origin requests do not need CORS; this mainly affects any cross-origin use. |
+| `CLIENT_URL` | `https://www.babuni.dev/Morkahja` | Stripe returns players to `${CLIENT_URL}/?purchase=success…` / `?purchase=cancel`. |
 | `TRUST_PROXY` | unset (`loopback`) | Set to the proxy's address/subnet only if Nginx runs on another host. |
 | `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PORT` | unchanged | Keep the existing production values. Do not copy them into the repository or documentation. |
 
 ### Stripe (only if enabled in production)
 
-- Webhook endpoint: `https://babuni.dev/Morkahja/api/stripe/webhook` (Nginx strips the prefix, so Express still receives `/stripe/webhook`). Updating the endpoint in Stripe may issue a new signing secret; if so, update `STRIPE_WEBHOOK_SECRET`.
-- Verify a test-mode checkout success and cancel return to `https://babuni.dev/Morkahja/?purchase=…`, and a signed webhook delivery.
+- Webhook endpoint: `https://www.babuni.dev/Morkahja/api/stripe/webhook` (Nginx strips the prefix, so Express still receives `/stripe/webhook`). Updating the endpoint in Stripe may issue a new signing secret; if so, update `STRIPE_WEBHOOK_SECRET`.
+- Verify a test-mode checkout success and cancel return to `https://www.babuni.dev/Morkahja/?purchase=…`, and a signed webhook delivery.
 
 ### Nginx
 
-Fill in `deploy/nginx/morkahja-locations.conf.template` on the server and `include` it inside the existing `server { server_name babuni.dev …; }` block. Don't commit the filled-in copy. It provides:
+Fill in `deploy/nginx/morkahja-locations.conf.template` on the server and `include` it inside the existing `server { server_name www.babuni.dev …; }` block (the HTTPS one that holds the current certificate). Don't commit the filled-in copy. It provides:
 
 - `= /Morkahja` → 301 to `/Morkahja/` (query string preserved). `= /Morkahja/api` → 301 to `/Morkahja/api/`.
 - `^~ /Morkahja/api/` → `proxy_pass http://127.0.0.1:3000/;`. The trailing slash replaces the matched prefix, so `/Morkahja/api/health` reaches Express `/health`. Method, body, query string and `Authorization` pass through. Being the longest `^~` prefix, it wins over the SPA location, so unknown API paths return Express JSON (401/404), never HTML.
@@ -133,21 +133,21 @@ Keep the previous release, Nginx file and `.env` copy until the new route has be
 
 ## Player identity and recovery
 
-The origin changes from the former domain to `https://babuni.dev`. Browser storage is per origin, so the old session, device key and **identity key** in the former domain's `localStorage` do not carry over. The former domain is no longer under the project's control, so no redirect or storage hand-off is possible.
+The origin changes from the former domain to `https://www.babuni.dev`. Browser storage is per origin, so the old session, device key and **identity key** in the former domain's `localStorage` do not carry over. The former domain is no longer under the project's control, so no redirect or storage hand-off is possible.
 
 Existing players can return only by using **Restore Existing Journey** with their downloaded Morkahja recovery-key file (`Morkahja_<name>.key`). The server matches the key's identity public key to the existing player record and issues a new device/session. This requires the **same production database**.
 
 - Do not promise recovery to players without a key file. There is no other recovery mechanism in the code. Handle such cases individually, and never silently create a replacement player.
-- An installed PWA from the former domain will not move. Players need to install again from `https://babuni.dev/Morkahja/`.
+- An installed PWA from the former domain will not move. Players need to install again from `https://www.babuni.dev/Morkahja/`.
 - Locally verified (below): restoring in an empty browser profile returned the same `playerId` and identical player, avatar, inventory and achievement data. **Not yet verified:** restoration of a real pre-migration production account at the live URL.
 
 ## Same-origin security assessment
 
-Serving the game at `https://babuni.dev/Morkahja/` puts it in the **same browser origin** as every other page on `babuni.dev`. URL paths are not a browser security boundary. The URL is kept as requested; these risks are documented, not designed away:
+Serving the game at `https://www.babuni.dev/Morkahja/` puts it in the **same browser origin** as every other page on `www.babuni.dev`. URL paths are not a browser security boundary. The URL is kept as requested; these risks are documented, not designed away:
 
-- **`localStorage` is origin-wide.** Any script running on any `babuni.dev` page can read `morkahja.identityKeypair` (the player's identity **private key**), `morkahja.deviceKeypair` and `morkahja.session` (the bearer token). XSS or a compromised third-party script anywhere on the website therefore means full Morkahja account takeover. Website pages should load no third-party or untrusted scripts. An origin-wide Content-Security-Policy is strongly recommended; none is set today.
+- **`localStorage` is origin-wide.** Any script running on any `www.babuni.dev` page can read `morkahja.identityKeypair` (the player's identity **private key**), `morkahja.deviceKeypair` and `morkahja.session` (the bearer token). XSS or a compromised third-party script anywhere on the website therefore means full Morkahja account takeover. Website pages should load no third-party or untrusted scripts. An origin-wide Content-Security-Policy is strongly recommended; none is set today.
 - **Service workers.** Morkahja registers none. A website service worker registered with scope `/` would intercept `/Morkahja/` and `/Morkahja/api/` requests; avoid it, or scope it away from `/Morkahja/`.
-- **Cookies.** Morkahja authenticates with `Authorization: Bearer`, not cookies. Website cookies on `babuni.dev` will still be sent with `/Morkahja/api/` requests; they are not used by the API.
+- **Cookies.** Morkahja authenticates with `Authorization: Bearer`, not cookies. Website cookies on `www.babuni.dev` (and any set for the parent `babuni.dev` domain) will still be sent with `/Morkahja/api/` requests; they are not used by the API.
 - **Framing and transport.** No `X-Frame-Options`/`frame-ancestors` or HSTS is set on the website today. Consider adding them to the whole server block, keeping the header-inheritance warning above in mind.
 - **Admin API exposure.** `/Morkahja/api/game-data/admin/*` is reachable publicly through the proxy and protected only by the existing admin authentication. Consider an Nginx `allow`/`deny` restriction for it.
 - **Stronger isolation** would require a separate origin such as a subdomain. That is an architecture change and was not made.
@@ -189,21 +189,20 @@ Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.
 
 ## Remaining blockers before cutover
 
-1. **Decision:** apex `babuni.dev` → website host plus certificate (option 1), or `www.babuni.dev/Morkahja/` (option 2).
-2. **Access:** SSH user/host for the website host and the game host (if different), and confirmation of where the production API and PostgreSQL run.
-3. **Data safety:** an off-host database backup with a tested restore, and a record of persistent content directories.
-4. **Approval:** Babuni's explicit approval for the production cutover after reviewing this branch.
-5. **After cutover:** the live verification checklist from a fresh browser, recorded here with dates and results.
+1. **Access:** SSH user/host for the website host and the game host (if different), and confirmation of where the production API and PostgreSQL run.
+2. **Data safety:** an off-host database backup with a tested restore, and a record of persistent content directories.
+3. **Approval:** Babuni's explicit approval for the production cutover after reviewing this branch.
+4. **After cutover:** the live verification checklist from a fresh browser, recorded here with dates and results.
 
 ## Verification checklist for the live cutover
 
 ```sh
-curl -sI https://babuni.dev/ | head -1                         # website, 200
-curl -sI https://babuni.dev/Morkahja | grep -i ^location       # -> /Morkahja/
-curl -s  https://babuni.dev/Morkahja/api/health                # {"status":"ok",...}
-curl -s  https://babuni.dev/Morkahja/api/no-such-route         # JSON error, not HTML
-curl -sI https://babuni.dev/Morkahja/UI/01_1_SignIn/menuBG.webp | head -1   # 200 image/webp
-curl -sI https://babuni.dev/Morkahja/manifest.webmanifest | grep -i content-type
+curl -sI https://www.babuni.dev/ | head -1                     # website, 200
+curl -sI https://www.babuni.dev/Morkahja | grep -i ^location   # -> /Morkahja/
+curl -s  https://www.babuni.dev/Morkahja/api/health            # {"status":"ok",...}
+curl -s  https://www.babuni.dev/Morkahja/api/no-such-route     # JSON error, not HTML
+curl -sI https://www.babuni.dev/Morkahja/UI/01_1_SignIn/menuBG.webp | head -1   # 200 image/webp
+curl -sI https://www.babuni.dev/Morkahja/manifest.webmanifest | grep -i content-type
 ```
 
-Then, in a fresh browser profile: new journey, avatar creation, one encounter, refresh on a deep link, logout, restore with a **pre-migration** recovery key and compare avatars/inventory/achievements/entitlements with the backup. Check PWA install and launch scope, Stripe test checkout and webhook (if enabled), the browser console, and Nginx/PM2 logs.
+Also confirm `http://www.babuni.dev/Morkahja/` redirects to HTTPS (Web Crypto, which recovery keys need, only works in a secure context). Then, in a fresh browser profile: new journey, avatar creation, one encounter, refresh on a deep link, logout, restore with a **pre-migration** recovery key and compare avatars/inventory/achievements/entitlements with the backup. Check PWA install and launch scope, Stripe test checkout and webhook (if enabled), the browser console, and Nginx/PM2 logs.
