@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-10 — Unreleased: one copy of the game content
+
+- `server/game/*.json` is now the only copy of encounters, solutions, expansions, frames and portraits. The duplicate copies in `client/src/data/game` and `client/public/game` were removed; images stay in `client/public/game`.
+- New public endpoint `GET /game-data/content` serves all content in one response with an ETag (`Cache-Control: no-cache`), so a returning browser gets `304 Not Modified` when nothing changed. The client loads it during the loading screen instead of building the JSON into the app; the main JavaScript bundle shrank from about 948 KB to 511 KB.
+- The server re-reads a content file when its modification time changes (checked at most once per second) and keeps the last good copy if a file is invalid. Admin saves are written atomically. Content edits therefore reach players on their next page load, without a rebuild or restart. Running rooms keep their own encounter snapshots.
+- `npm run verify:static-data` now checks the single source: structure, matching ids, references from encounters to solutions, follow-ups and expansions, image files, and that no client copy has been reintroduced.
+- babuni.admin writes the JSON to `server/game` (separate change in that repository).
+- **Verification:** see `docs/DEVLOG.md` (2026-11-10). **Not deployed.**
+
 ## 2026-11-04 — Unreleased: authentication, persistence and release-gate maintenance (PRs #5 and #6)
 
 - **PR #5** (`security/one-time-session-challenges`): Added short-lived, single-use server-issued authentication challenges, bound to identity, device and registration/restoration purpose, with PostgreSQL-backed consumption and dual signatures. Updated client onboarding/recovery and authentication integration fixtures. **Open; not merged or deployed.**

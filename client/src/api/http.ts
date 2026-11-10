@@ -41,7 +41,7 @@ import type {
   RoomActiveResponse,
   SetAvatarDisplayTitleResponse,
   SlotStateDto,
-  StaticGameDataStatus,
+  GameContentDto,
 } from '@shared/contracts';
 
 /**
@@ -73,7 +73,7 @@ export type {
   RoomParticipantDto,
   RoomStateDto,
   SlotStateDto,
-  StaticGameDataStatus,
+  GameContentDto,
 };
 
 const DEFAULT_SESSION: ClientSession = {
@@ -194,20 +194,9 @@ export async function logoutSession(): Promise<void> {
   clearStoredSession();
 }
 
-export async function fetchStaticGameDataStatus(): Promise<StaticGameDataStatus> {
-  const status = await request<StaticGameDataStatus>('/game-data/status');
-
-  if (
-    status.status !== 'ok' ||
-    status.encounters <= 0 ||
-    status.solutions <= 0 ||
-    status.frames <= 0 ||
-    status.portraits <= 0
-  ) {
-    throw new Error('Static game data is incomplete.');
-  }
-
-  return status;
+/** Loads game content from the server (the browser revalidates it via ETag). */
+export async function fetchGameContent(): Promise<GameContentDto> {
+  return request<GameContentDto>('/game-data/content');
 }
 
 export async function fetchPlayer(

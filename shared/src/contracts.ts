@@ -211,6 +211,26 @@ export interface StaticGameDataStatus {
   portraits: number;
 }
 
+/**
+ * Game content served by `GET /game-data/content` (source: server/game/*.json).
+ * Records keep their original field names; each client module types the
+ * fields it reads.
+ */
+export interface GameContentDto {
+  /** Content hash; changes whenever any content file changes. */
+  version: string;
+  /** Encounter records keyed by encounter id. */
+  encounters: Record<string, unknown>;
+  /** Solution records keyed by solution id. */
+  solutions: Record<string, unknown>;
+  /** Expansion records keyed by expansion id. */
+  expansions: Record<string, unknown>;
+  /** Frame records indexed by frame id; index 0 is null. */
+  frames: Array<unknown | null>;
+  /** Portrait records indexed by portrait id; index 0 is null. */
+  portraits: Array<unknown | null>;
+}
+
 export type ActivityFeedImportance = 'low' | 'medium' | 'high' | 'legendary';
 
 export interface ActivityFeedJoinRoomActionDto {

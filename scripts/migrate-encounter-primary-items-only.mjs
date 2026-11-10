@@ -12,8 +12,6 @@ const SLOTS = ['A', 'B', 'C', 'D'];
 
 const encounterPaths = [
   join(root, 'server/game/encountersdata.json'),
-  join(root, 'client/src/data/game/encountersdata.json'),
-  join(root, 'client/public/game/encountersdata.json'),
 ];
 
 const solutions = JSON.parse(
