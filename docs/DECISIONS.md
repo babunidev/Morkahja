@@ -73,3 +73,12 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **Verification boundary:** GitHub Actions run [41766029656](https://github.com/babunidev/Morkahja/actions/runs/41766029656) passed all 11 focused achievement tests and static-data verification. Overall release-gates failed separately at session authentication because PostgreSQL was not available at `localhost:4242`. Full gameplay, client typechecking, deployment, and database-backed regression have not been verified.
 
 **Babuni's confirmation (2026-11-10):** (1) Apply the daily-gem change: one base gem plus one per earned rank, removing the former +1 per chain at rank 0, although existing players receive a smaller daily claim. (2) Wayseeker is earned at 15 combined avatar levels. (3) Ranks never go down: a Firestarter rank earned under the old milestones (for example rank 1 for a single avatar) is kept; the revised milestones apply only to further rank-ups. **AI implementation:** Firestarter rank is the higher of the stored rank and the rank computed from peak progress, both when syncing and when reconciling stored records; tests cover kept legacy ranks and new-player milestones.
+
+## D-009 — AI may run production releases through one restricted command (2026-11-11)
+
+**Babuni's direction:** releases kept stopping because every root step needed Babuni's `sudo` password. Babuni asked for the server to be set up "so that it works in the future, that you can deploy stuff yourself."
+
+**AI implementation:** a root-owned `morkahja-deploy` command with fixed phases (`status`, `backup`, `release`, `rollback`, `frontend`, `frontend-rollback`) and a sudo rule that lets the deploy login run that command, and only that command, without a password. The command backs up before every release, never resets, reseeds or restores the database, and rolls back automatically when the new backend fails its health checks. Babuni installed it with `sudo` on 2026-11-11 and checked that the installed file's SHA-256 matched the reviewed copy.
+
+**Boundaries:** the rule does not grant general root access; changing the command itself still needs Babuni's password. Database restores remain a separate, explicit decision. Not decided: whether each future release needs Babuni's approval. Until Babuni says otherwise, AI asks before running `release` or `rollback`, as with any outward-facing production change.
+

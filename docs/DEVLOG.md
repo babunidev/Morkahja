@@ -183,3 +183,13 @@ Merging the consolidation notes as PR #21 turned the CI check red, even though t
 
 **Verification (2026-11-10, Nobara, local Podman PostgreSQL):** 60 of 60 consecutive runs of the inventory test and 30 of 30 of the room test passed, and `NODE_OPTIONS=--throw-deprecation npm run release:check` passed with 9 client and 38 server tests. GitHub Actions result recorded in the pull request. **Not deployed; test-only change.**
 
+## 2026-11-11 — Letting releases finish on their own
+
+With everything merged into `main`, the server-owned game content from #18 still had to go live, and it needed the backend and frontend released together. Earlier releases had stalled at every root step, waiting for my `sudo` password, so I asked for the server to be set up so that AI could deploy without getting stuck there.
+
+**Babuni's direction:** release backend and frontend together, and make future releases possible without me at each step (D-009). **AI implementation:** a root-owned `morkahja-deploy` command replaced the one-off cutover script. Its `release` phase backs up first, refuses unsafe uploads or uncommitted live content edits, moves the server to `main`, and switches the frontend only after the backend answers its health, login-challenge and content checks; a failure rolls the backend back. A sudo rule lets my deploy login run only that command without a password. Review before upload caught one flaw in the draft, an archive check that `pipefail` could have defeated, which was rewritten and tested against an archive containing a planted link. The only step left to me was a single `sudo` installation, where the printed checksum matched the reviewed file.
+
+The release itself went through on the first run. The server's checkout moved from the subpath branch back to `main` at `5e5481f7`, the new frontend went live, and the content endpoint began answering. Earlier that evening the local test database's password was also aligned with my gitignored `Key.js`, so the release gate runs without an override; that change is local and outside the repository.
+
+**Verification (2026-11-11):** the pre-release backup was downloaded, checksum-verified and restored into a disposable PostgreSQL 18 container with every row count matching. Public checks passed; the live content matched `server/game` (203 encounters, 247 solutions), arrived gzip-compressed at about 104 KB, and answered `304` on a repeat request. A fresh headless browser reached the welcome screen without unexpected errors. **Not verified by AI:** a turn played on a real account, two-person multiplayer, Stripe checkout and mobile browsers.
+

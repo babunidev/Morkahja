@@ -141,12 +141,42 @@ Keep the previous release, Nginx file and `.env` copy until the new route has be
 
 ## Next deployment: game content from the server (PR #18)
 
-Recorded on 2026-11-10, when `main` first contained PR #18 while production still ran backend `95fd5c5a` and frontend `0d217fc7`.
+Recorded on 2026-11-10, when `main` first contained PR #18 while production still ran backend `95fd5c5a` and frontend `0d217fc7`. **Done on 2026-11-11**; see *Production release — 2026-11-11* below.
 
 - **Backend and frontend together.** The current client loads all game content from `GET /game-data/content` and no longer carries a built-in copy. The deployed backend predates that endpoint (a live request to `/Morkahja/api/game-data/content` returned 401 on 2026-11-10). Do not use the frontend-only phase for a client built from current `main` until the backend is upgraded.
 - **Preserve live content edits.** `server/game/*.json` in the server checkout is the persistent, admin-writable content (step 3 above). Compare it with `main` and back it up before switching the checkout; any live edits must be kept, not overwritten by the repository copy.
 - **Check compression.** The content response is about 460 KB uncompressed. Confirm whether Nginx compresses `application/json` before or after the release.
 - **Verify** with the checklist above, plus a browser play-through confirming that content loads during the loading screen.
+
+## Routine releases with `morkahja-deploy` (since 2026-11-11)
+
+Before this tool, every root step needed Babuni's `sudo` password, so releases stopped halfway and waited. At Babuni's request (D-009 in `DECISIONS.md`), the server now has one root-owned command, `morkahja-deploy`, which the deploy login may run through `sudo` without a password. The sudo rule names that one command and nothing else; every other root action still needs the password. The deploy login cannot edit the command. It lives outside the repository because it names server-internal paths and accounts, and its first run log is on the server.
+
+| Phase | What it does |
+| --- | --- |
+| `status` | Read-only: backend branch and commit, uncommitted files, current frontend release, health and content endpoint, last backup. |
+| `backup` | `pg_dump` with row counts and checksum, plus `.env` and `server/game`; copies the dump to the deploy login's staging folder so it can be taken off the host. Changes nothing else. |
+| `release` | Backend and frontend together: checks the upload checksums, refuses a client archive with links or unsafe paths and a bundle with any branch but `main`, and stops if `server/game` has uncommitted live edits. Then backs up, fast-forwards the server's `main` from the bundle, runs `npm ci`, restarts PM2, and requires `/health`, the session challenge and `/game-data/content` to answer before switching the frontend symlink. Any backend failure rolls the backend back automatically. Ends with public HTTP checks. |
+| `rollback` | Returns the backend to the previous commit, `node_modules` and `.env`, and the frontend to the previous release. The database is never touched. |
+| `frontend` / `frontend-rollback` | Client-only release and its undo. Refused while the backend lacks `/game-data/content`, so a current client can no longer be paired with an older backend. |
+
+**Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
+
+## Production release — 2026-11-11 (PR #18 live)
+
+Requested by Babuni ("do the next deploy and update the server and client together"). AI assistance prepared and uploaded the release and ran every step; Babuni ran only the one-time `sudo` installation of `morkahja-deploy`. Times are the server's clock (UTC).
+
+1. **Before:** `status` showed backend `95fd5c5a` on the subpath branch, no uncommitted files, frontend release `20261110-103704`, and `/game-data/content` answering 401. The server's `server/game` matched its commit, so there were no live content edits to preserve.
+2. **Uploads:** client build of `main` at `5e5481f7` (main bundle about 512 KB instead of about 948 KB) and a 48 KB Git bundle of the 16 commits after `95fd5c5a`; checksums verified on the server. The previous staging files were kept in a dated folder.
+3. **`release` at 23:37 UTC on 10 November** (00:37 on 11 November in Babuni's time zone): backup `20261110-233714` (1.6 MB, 15 tables with data; 63 players, 91 avatars, 14 sessions, 70 devices, 91 inventories, 273 achievement rows). The server's `main` fast-forwarded from the June commit `77062a42` to `5e5481f7` and is now the checked-out branch; `npm ci` installed 259 packages; the health gate passed with the content endpoint answering 200. Frontend release `20261110-233715` was switched in. No dependency or `.env` changes, no Nginx changes, and the database was not reset, reseeded or restored.
+4. **Backup proof:** the dump was downloaded, its SHA-256 matched, and it was restored into a disposable PostgreSQL 18 container with every row count matching. The only restore messages concerned admin roles that exist only on the server.
+
+### Live verification — 2026-11-11 (from outside the server)
+
+- `/`, `/Morkahja` (301 to `/Morkahja/`), `/Morkahja/`, `/Morkahja/api/health` and a menu image all answered as before.
+- `/Morkahja/api/game-data/content` returned 203 encounters, 247 solutions, 4 expansions, 100 frames and 682 portraits, matching `server/game` on `main`. Nginx serves it gzip-compressed (about 104 KB instead of about 460 KB), and a repeat request with its ETag returned `304`.
+- A fresh headless Chrome profile loaded the new bundle and reached the welcome screen (Start New Journey / Restore Existing Journey). Its only console messages were the expected `SESSION_INVALID` lookups of a browser with no account.
+- **Not verified by AI:** a played turn on a real account, two-person multiplayer, a Stripe checkout, mobile browsers.
 
 ## Production deployment — 2026-11-10
 
@@ -251,7 +281,7 @@ Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.
 ## Follow-ups after cutover
 
 1. **Stripe:** endpoint updated (done). Confirm the first real checkout return and a successful delivery in the destination's event log.
-2. **Repository:** merge `feat/babuni-dev-subpath` into `main`, then return the server checkout to `main` (it currently runs a local branch fetched from a bundle) and drop the stashed `package-lock.json` change once it is confirmed obsolete.
+2. **Repository:** merge `feat/babuni-dev-subpath` into `main`, then return the server checkout to `main` (it currently runs a local branch fetched from a bundle) and drop the stashed `package-lock.json` change once it is confirmed obsolete. *Merged as #19 and the server returned to `main` on 2026-11-11. Still open: the old stash and the `node_modules` backup folders on the server, kept for rollback.*
 3. **Optional:** delete the `LiveCheck` test player; review the same-origin security recommendations; retire the former domain's Nginx site.
 
 ## Verification checklist (reuse for later releases)
