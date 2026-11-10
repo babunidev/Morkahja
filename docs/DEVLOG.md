@@ -1,6 +1,6 @@
 # Morkahja — development-history guide
 
-**Author:** Babuni.dev
+**Creative:** Babuni
 
 ## Retrospective source organization — 2026-10-26
 
@@ -29,7 +29,6 @@ Babuni.dev requested review of the actual private repository and its documentati
 Babuni.dev clarified that project artwork was generated with AI and then manually cut out, arranged and composed in Photoshop/GIMP, including portraits, frames, item images and substantial UI work. Babuni.dev also manually entered project data. The music has a separate human author credited in About Us. This describes creative provenance; permission to redistribute contributed music is not inferred. The fuller development history remains a living work in progress.
 
 **AI contribution:** Recorded the author’s decision and clarification, separately from observed GitHub visibility. Earlier documentation-only publication was considered and is superseded as the intended long-term source. No root license was selected by this update; public visibility, open-source reuse permissions, media rights and production readiness are separate matters. No runtime testing or behavior change is claimed.
-
 
 ## 2026-11-09 — Planning the move to babuni.dev/Morkahja
 
