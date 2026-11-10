@@ -50,7 +50,7 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [ ] Confirm the first real checkout return and signed delivery.
 - [x] Babuni restored their own **pre-migration** account with its recovery key at the new URL (manual, user-reported).
 - [x] Merge the branch into `main` (PR #19, `1d35f4a9`, 2026-11-10).
-- [ ] Return the server checkout to `main`. Because `main` now includes PR #18 (game content served by the server), this means deploying **backend and frontend together**; a frontend-only release of current `main` would not load content from the deployed backend. See [the next-deployment notes](docs/DEPLOYMENT.md#next-deployment-game-content-from-the-server-pr-18).
+- [x] Return the server checkout to `main`: released backend and frontend together on 2026-11-11 (`5e5481f7`), which put the server-owned game content (#18) live. Because `main` now includes PR #18 (game content served by the server), this means deploying **backend and frontend together**; a frontend-only release of current `main` would not load content from the deployed backend. See [the next-deployment notes](docs/DEPLOYMENT.md#next-deployment-game-content-from-the-server-pr-18).
 - [ ] PWA install, two-person multiplayer and mobile browsers at the live URL.
 - [ ] Assess and address same-origin risks (origin-wide `localStorage` holding identity keys, no CSP/HSTS on the website today). *(Documented; not changed.)*
 

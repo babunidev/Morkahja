@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-11 — Deployed: game content from the server (`main` at `5e5481f7`)
+
+- Production now runs `main` for both backend and frontend, so the server-owned game content from #18 is live: the client loads it from `/Morkahja/api/game-data/content`. The server's checkout is back on `main`.
+- Added a server-side release command, `morkahja-deploy` (outside the repository), with `status`, `backup`, `release`, `rollback`, `frontend` and `frontend-rollback`. The deploy login may run only that command through `sudo` without a password (D-009). See `docs/DEPLOYMENT.md`.
+- **Verification:** backup restored with matching row counts; health gate and public checks passed; live content matches `server/game`, is gzip-compressed and answers `304` to a repeat request; a fresh browser reached the welcome screen. A played turn, multiplayer and Stripe were not verified by AI.
+
 ## 2026-11-10 — Test fix: random failures in `systemEventInventory.test.ts` and `roomService.test.ts`
 
 - The level-up scenario in `server/src/services/systemEventInventory.test.ts` failed at random because it checked exact essence and spell counts while the encounters it used still granted randomly drawn rewards. A level-up's rewards are drawn when the encounter is created, from its own roll; a Prosperity draw can include an essence (seen in CI as 10 essence uses instead of 6). The normal encounter's random rewards could be an essence or spell 10001 itself (seen locally as 7 essence uses and as 3 charges of 10001 instead of 0).
@@ -39,7 +45,7 @@
 - The server re-reads a content file when its modification time changes (checked at most once per second) and keeps the last good copy if a file is invalid. Admin saves are written atomically. Content edits therefore reach players on their next page load, without a rebuild or restart. Running rooms keep their own encounter snapshots.
 - `npm run verify:static-data` now checks the single source: structure, matching ids, references from encounters to solutions, follow-ups and expansions, image files, and that no client copy has been reintroduced.
 - babuni.admin writes the JSON to `server/game` (separate change in that repository).
-- **Verification:** see `docs/DEVLOG.md` (2026-11-10). **Not deployed.** Merged into `main` as PR #18 (`ee960792`) on 2026-11-10; still not deployed as of the consolidation entry above.
+- **Verification:** see `docs/DEVLOG.md` (2026-11-10). **Not deployed.** Merged into `main` as PR #18 (`ee960792`) on 2026-11-10; deployed on 2026-11-11 (see above).
 
 ## 2026-11-04 — Unreleased: authentication, persistence and release-gate maintenance (PRs #5 and #6)
 
