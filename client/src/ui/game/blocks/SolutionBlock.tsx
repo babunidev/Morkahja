@@ -33,6 +33,7 @@ import {
 } from '../encounterTooltip.js';
 import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
 import { assetUrl } from '../../../assetUrl.js';
+import type { ActionRevealPhase } from './actionRevealPhase.js';
 
 const FRAME_MASK = assetUrl('/UI/09_GAME/im_spacer_line.webp');
 const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
@@ -527,10 +528,17 @@ export function SolutionBlock({
   diceButtonAsset?: string;
   encounterRevealKey: string;
   hidden?: boolean;
+  /**
+   * Called twice per choice: `phase: 'select'` when the player picks it, then
+   * `phase: 'commit'` when the reveal timer fires. The server withholds rolls
+   * until a choice is committed, so `roll` is usually null at commit time and
+   * the revealed roll comes back with the committed room snapshot.
+   */
   onActionReveal?: (
     action: EncounterAction,
     roll: number | null,
     solutionId?: number,
+    phase?: ActionRevealPhase,
   ) => void;
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
@@ -723,11 +731,11 @@ export function SolutionBlock({
     clearRollRevealTimer();
     hideSolutionTooltip();
 
-    onActionReveal?.('dice', null);
+    onActionReveal?.('dice', null, undefined, 'select');
     playSfx(DICE_SOUND);
     setDiceRollCount((count) => count + 1);
     rollRevealTimer.current = window.setTimeout(() => {
-      onActionReveal?.('dice', encounter.rollE ?? null);
+      onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
       rollRevealTimer.current = null;
     }, DICE_ROLL_ANIMATION_MS);
   }
@@ -751,9 +759,9 @@ export function SolutionBlock({
     const roll = rollForSolutionSlot(encounter, solution);
     playSfx(SOLUTION_SOUND);
     setActiveSolutionSlot(solution.slot);
-    onActionReveal?.(solution.slot, null, solution.solutionId);
+    onActionReveal?.(solution.slot, null, solution.solutionId, 'select');
     rollRevealTimer.current = window.setTimeout(() => {
-      onActionReveal?.(solution.slot, roll, solution.solutionId);
+      onActionReveal?.(solution.slot, roll, solution.solutionId, 'commit');
       setActiveSolutionSlot(null);
       rollRevealTimer.current = null;
     }, SOLUTION_ROLL_REVEAL_MS);

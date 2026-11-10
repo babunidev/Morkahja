@@ -21,6 +21,7 @@ import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
+import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
 const SYSTEM_EVENT_CHOICE_RETRY_MS = 400;
@@ -452,22 +453,28 @@ export function EncounterImageBlock({
     action: EncounterAction,
     roll: number | null,
     solutionId?: number,
+    phase?: ActionRevealPhase,
   ): void {
     setSelectedAction(action);
     setRevealedRoll(roll);
     setSelectedSolutionId(solutionId ?? null);
 
-    if (roll !== null && roomState === 'system_event' && isSystemEventActor) {
+    // Commit on the reveal moment, not on "roll is known": the server only
+    // sends rolls after the commit, and the serverResolution effect above then
+    // reveals the authoritative roll.
+    const committing = isCommitMoment(phase, roll);
+
+    if (committing && roomState === 'system_event' && isSystemEventActor) {
       commitSystemEventChoice(action, solutionId);
       return;
     }
 
-    if (roll !== null && roomState === 'active_encounter') {
+    if (committing && roomState === 'active_encounter') {
       commitEncounterChoice(action, solutionId);
       return;
     }
 
-    const isSelectionMoment = roll === null && (
+    const isSelectionMoment = !committing && (
       solutionId !== undefined || action === 'dice'
     );
     if (isSelectionMoment) {
