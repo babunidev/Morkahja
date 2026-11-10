@@ -32,19 +32,23 @@ Run documented static and lifecycle checks in an appropriate development environ
 
 **Target selected by Babuni:** `https://www.babuni.dev/Morkahja/` (decided 2026-11-10, replacing the original `https://babuni.dev/Morkahja/`), with the main website remaining at `https://www.babuni.dev/`.
 
-**Status:** Repository changes are implemented on branch `feat/babuni-dev-subpath` and verified in a **local** Nginx + headless-Chrome integration environment. **Not merged, not deployed.** Public discovery on 10 November found that the apex `babuni.dev` points to Porkbun parking with no HTTPS certificate; the website itself is served from `www.babuni.dev`. Babuni then chose `www.babuni.dev` as the game host, so no DNS change is needed.
+**Status:** **Deployed and verified live on 2026-11-10** from branch `feat/babuni-dev-subpath` (commit `95fd5c5a`, not yet merged into `main`). The production backend was upgraded from June commit `77062a42` at the same time. Public discovery found the apex `babuni.dev` parked, so Babuni chose `www.babuni.dev`; no DNS was changed.
 
 - [x] **Hostname decided:** `www.babuni.dev/Morkahja/`. Public DNS/HTTP were inspected; no DNS was changed. *(Optional later: redirect the apex to `www` if it is ever connected.)*
-- [ ] **Blocked — access:** Confirm the game VPS, active production Nginx file, PM2 process, backend commit and Stripe state. These need server access, which was not available.
-- [ ] Take and independently verify a restorable off-host PostgreSQL backup; record persistent content (including the admin-writable `server/game/*.json`).
+- [x] Server inspected: website, game API (PM2) and PostgreSQL 18 share one host; Stripe is enabled; the backend needed an upgrade.
+- [x] Off-host PostgreSQL backup restored into PostgreSQL 18 with matching row counts; `.env`, Nginx files and `server/game/*.json` backed up; upgrade rehearsed against the restored copy.
 - [x] Vite production base `/Morkahja/`; production API base defaults to `/Morkahja/api`; local development unchanged.
 - [x] Base-aware runtime asset URLs for all client and server-provided asset paths, with a regression test against new unwrapped root paths.
 - [x] PWA `start_url`/`scope`/icon resolve beneath `/Morkahja/`; social-preview fallback is `https://www.babuni.dev/Morkahja` and the broken preview image reference is fixed.
 - [x] Nginx location template for `/Morkahja/`, `/Morkahja/api/` (prefix stripped) and redirects. `nginx -t` passed and routing was verified locally.
 - [x] Express `trust proxy` (default `loopback`) so the per-IP auth/heartbeat rate limit is not shared by all players behind the proxy.
 - [x] Recovery-key restoration recovered the same player record in a fresh browser profile (local test database).
-- [ ] Deploy the frontend to an isolated release directory with symlink rollback. Never run `rsync --delete` against the website root or persistent content. *(Procedure documented; not executed.)*
-- [ ] Production verification: website at `/`, game, assets, API, gameplay, PWA, Stripe (if enabled), and restoration of a real pre-migration account.
+- [x] Deployed: frontend in an isolated release directory behind a symlink, Nginx include, backend upgraded with a health gate and scripted rollback.
+- [x] Live verification: website, game, assets, API, onboarding, logout, deep links, recovery-key restore of a new player, and an encounter turn.
+- [ ] Update the Stripe webhook endpoint in the dashboard; test checkout return and signed delivery.
+- [ ] Restore a real **pre-migration** account with its own recovery key.
+- [ ] Merge the branch into `main` and return the server checkout to `main`.
+- [ ] PWA install, two-person multiplayer and mobile browsers at the live URL.
 - [ ] Assess and address same-origin risks (origin-wide `localStorage` holding identity keys, no CSP/HSTS on the website today). *(Documented; not changed.)*
 
 See [the deployment plan](docs/DEPLOYMENT.md) for discovered infrastructure, configuration, deployment and rollback procedure, the security assessment and exact verification results.

@@ -1,8 +1,8 @@
 # Deployment plan — Morkahja under babuni.dev
 
-**Status:** Repository implementation done and verified locally in an Nginx integration environment. **Not deployed.** Production cutover still needs server access, a verified database backup, and Babuni's explicit approval. The hostname question is settled: the game goes on `www.babuni.dev`.  
-**Recorded:** 2026-11-09 (plan) · updated 2026-11-10 (implementation, discovery and local verification)  
-**Branch:** `feat/babuni-dev-subpath`  
+**Status:** **Deployed 2026-11-10** at https://www.babuni.dev/Morkahja/ with Babuni's approval and verified live (see *Production deployment*). Open follow-ups: update the Stripe webhook URL in the Stripe dashboard, test restoration with a real pre-migration recovery key, and merge the branch so the server can track `main` again.  
+**Recorded:** 2026-11-09 (plan) · updated 2026-11-10 (implementation, discovery, local verification, production deployment)  
+**Branch:** `feat/babuni-dev-subpath` (deployed commit `95fd5c5a`, not yet merged into `main`)  
 **Target game URL:** https://www.babuni.dev/Morkahja/ (decided 2026-11-10; originally planned as `https://babuni.dev/Morkahja/`)
 
 ## Goal
@@ -22,8 +22,8 @@ These observations come from public DNS lookups and unauthenticated HTTP(S) requ
 | `www.babuni.dev` | A separate host running `nginx/1.28.3 (Ubuntu)`. It serves the real website ("Babuni.dev — Projects, games, music and creative development") over HTTPS with a Let's Encrypt certificate whose only name is `www.babuni.dev`. |
 | `/Morkahja/` on the website host | `https://www.babuni.dev/Morkahja/` and `/Morkahja/api/health` return Nginx 404. Nothing is routed yet. |
 | Website security headers | Only `Referrer-Policy: strict-origin-when-cross-origin` was observed. No HSTS, CSP or frame-options header. |
-| Former game VPS, PostgreSQL, PM2 | **Not established.** The historical root `DEVLOG.md` describes a Hetzner VPS with Nginx serving `/var/www/morkahja`, PM2 `morkahja-api` on `127.0.0.1:3000`, and PostgreSQL on localhost. No server access details were available for this work, so it is unknown whether the game still runs on that VPS or shares a host with the website. |
-| Stripe | **Not established.** The repository has live price IDs and a `/stripe/webhook` endpoint. Whether production has `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` set, and which webhook URL Stripe uses, needs the server `.env` and the Stripe dashboard. |
+| Former game VPS, PostgreSQL, PM2 | *Superseded by the server inspection below.* **Not established from public checks.** The historical root `DEVLOG.md` describes a Hetzner VPS with Nginx serving `/var/www/morkahja`, PM2 `morkahja-api` on `127.0.0.1:3000`, and PostgreSQL on localhost. No server access details were available for this work, so it is unknown whether the game still runs on that VPS or shares a host with the website. |
+| Stripe | *Superseded below.* **Not established from public checks.** The repository has live price IDs and a `/stripe/webhook` endpoint. Whether production has `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` set, and which webhook URL Stripe uses, needs the server `.env` and the Stripe dashboard. |
 
 ### Decision: serve the game from `www.babuni.dev`
 
@@ -35,6 +35,14 @@ What the decision implies:
 - Until then, `babuni.dev/Morkahja/` shows the parking page. Links and announcements should use the full `https://www.babuni.dev/Morkahja/` address.
 
 The rest of this document uses `www.babuni.dev`.
+
+### Server inspection (2026-11-10, with Babuni's authorization)
+
+- **One host** runs the website, the game and its database. Nginx serves the website from a release-symlink directory. The Morkahja API runs under PM2 as a dedicated service user on port 3000, which `ufw` blocks from outside. PostgreSQL 18 is local.
+- The former domain's Nginx site is still enabled and serves a June frontend build. It was left untouched.
+- Before the cutover, production ran backend commit `77062a42` (16 June 2026), 31 commits behind `main`. It did not have the server-issued session challenges the current frontend uses, so **the backend had to be upgraded together with the frontend**. The server checkout had no unpublished game-data edits, only a modified `package-lock.json` and a `node_modules.bak` directory.
+- **Stripe is enabled**: the secret key and webhook secret are both set.
+- The website deploy account has no `sudo`. Root steps ran through a script started by Babuni with `sudo`.
 
 ## What the repository now does
 
@@ -94,7 +102,7 @@ Fill in `deploy/nginx/morkahja-locations.conf.template` on the server and `inclu
 
 **Header inheritance warning:** Nginx drops all `add_header` directives inherited from the `server` block in any location that sets its own `add_header`. The asset, manifest and index locations set `Cache-Control`. If the website's server block later adds security headers (HSTS, CSP), repeat them in these locations or move them into a shared `include`.
 
-## Deployment procedure (requires approval; not executed)
+## Deployment procedure (as executed 2026-11-10; reusable)
 
 Paths in `<angle brackets>` must be read from the actual server; do not guess them.
 
@@ -131,6 +139,41 @@ Paths in `<angle brackets>` must be read from the actual server; do not guess th
 
 Keep the previous release, Nginx file and `.env` copy until the new route has been stable for a while.
 
+## Production deployment — 2026-11-10
+
+Approved by Babuni ("deploy it to the server"). AI assistance prepared, uploaded and checked every artifact; Babuni ran the two `sudo` phases of a staged script kept on the server, outside the repository, because it names server-internal paths and accounts.
+
+1. **Backup** (`backup` phase): a custom-format `pg_dump` (1.6 MB, 14 tables with data; 62 players, 90 avatars, 13 sessions, 65 devices, 90 inventories, 267 achievement rows), plus copies of the backend `.env`, both Nginx site files and `server/game/*.json`, stored on the server. A copy of the dump was downloaded to the development machine, its SHA-256 verified, and **restored into a disposable PostgreSQL 18 container with every row count matching**.
+2. **Rehearsal:** the deployed backend commit was started against that restored copy. It came up healthy and served the new authentication API. Its only schema change was the new `session_auth_challenges` table; no tables were removed and row counts were unchanged.
+3. **Deploy** (`deploy` phase):
+   - **Backend:** switched to commit `95fd5c5a` from a verified git bundle. The modified `package-lock.json` was stashed and the previous `node_modules` kept for rollback. Ran `npm ci`, set `CLIENT_ORIGINS=https://www.babuni.dev` and `CLIENT_URL=https://www.babuni.dev/Morkahja`, then restarted PM2 and saved its state. A health gate checked `/health` and the challenge endpoint, with automatic backend rollback on failure; it passed.
+   - **Frontend:** unpacked into a new timestamped release directory outside the website root and switched in by symlink.
+   - **Nginx:** installed the filled-in location template as a snippet, added one `include` line before the website's catch-all location, passed `nginx -t`, and reloaded.
+4. The database was not reset, reseeded or restored.
+
+**Rollback:** the same script's `rollback` phase restores the previous Nginx site file, removes the snippet, removes or reverts the frontend symlink, and returns the backend to its previous commit, `node_modules` and `.env`. The database is left untouched. Releases and backups are kept.
+
+### Live verification — 2026-11-10 (from outside the server)
+
+HTTP checks against `https://www.babuni.dev`:
+- `/` returned the website (200).
+- `/Morkahja` and `/Morkahja?x=1` returned 301 to the trailing-slash URL, keeping the query string. `/Morkahja/` and a deep link returned the game shell.
+- `/Morkahja/api/health` and `/Morkahja/api/game-data/status` returned JSON (203 encounters, 247 solutions, 100 frames, 682 portraits). Unknown API routes returned a JSON 401, never HTML.
+- The manifest was `application/manifest+json`. Icon, preview image, font and music all returned 200.
+- A missing game asset returned a real 404. `/health` and `/UI/…` at the site root returned 404.
+- `POST /Morkahja/api/stripe/webhook` reached Express and rejected the unsigned probe (`400 INVALID_SIGNATURE`).
+- The website's `X-Content-Type-Options` and `Referrer-Policy` headers were present on game assets. `og:url` and `og:image` point beneath `/Morkahja/`.
+
+Headless Google Chrome (fresh temporary profiles) at `https://www.babuni.dev/Morkahja/`:
+- **New journey** (test player `LiveCheck`, avatar `Livewire`): registration, recovery-key download, avatar creation, the encounter screen and the Lore/Inventory overlays all worked with no broken images, console errors or requests outside `/Morkahja/`.
+- Deep-link refresh kept the session. Logout cleared it.
+- **Restore** in an empty profile: same `playerId`, identical player record (ignoring session/timestamp fields), avatars, inventory and achievements.
+- **Gameplay:** one encounter turn was committed through the live API (`waiting_continue` → `active_encounter`, experience 0 → 2).
+
+The `LiveCheck` test player remains in the production database.
+
+**Still not verified live:** restoration of a real **pre-migration** player with their own key; Stripe checkout return and signed webhook delivery at the new URL (the dashboard endpoint still needs updating); PWA installation; two-person multiplayer; real mobile browsers; Nginx/PM2 log review (the deploy account cannot read them).
+
 ## Player identity and recovery
 
 The origin changes from the former domain to `https://www.babuni.dev`. Browser storage is per origin, so the old session, device key and **identity key** in the former domain's `localStorage` do not carry over. The former domain is no longer under the project's control, so no redirect or storage hand-off is possible.
@@ -160,6 +203,7 @@ Run against a disposable `postgres:16` Podman container on `127.0.0.1:55432`. Th
 
 - `NODE_OPTIONS=--throw-deprecation npm run release:check` — **passed (exit 0)**: static-data sync, shared/server typecheck, client `tsc -b && vite build`, 6 client test files and 37 server tests (all 33 previous files plus 4 new trust-proxy tests). No deprecation warnings.
 - `npm run test:encounter` / `npm run test:lifecycle` **no longer exist**. PR #17 replaced them with the single `npm test`, which includes `encounterResolver`, `roomService`, `soloRoomCheckpointService` and the other encounter/room suites above.
+- After merging `main` (#8) into the branch, one full-suite run failed `systemEventInventory.test.ts:255` (expected 6 essence uses, got 10). The test passed three times in isolation on the branch and twice on `main`, and two further full-suite runs on the branch passed 37/37. It is recorded as an intermittent gameplay test unrelated to the path changes; its cause was not investigated.
 - ESLint on the client reports 110 problems, all identical on `main` (no new findings from this branch).
 - Build inspection: `dist/index.html`, CSS and manifest reference only `/Morkahja/…` or relative URLs. The only raw `/UI/` literal in the JS bundle is the shared dice root, which is wrapped at every client call site.
 
@@ -181,20 +225,20 @@ Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.
 - **Recovery-key restore** in a fresh, empty profile: same `playerId`, identical player record (ignoring session/timestamp fields), avatars, inventories and achievements, new session ID.
 - **Gameplay after restore:** room create, selection, polling, then `POST /room/choice` and `/room/continue` through the proxy. The room advanced (`waiting_continue` → `active_encounter`) and avatar experience went 0 → 2 in the database. The choice/continue calls were issued from page JavaScript; driving that final dice-reveal animation by synthetic clicks in headless Chrome did not succeed, so the in-browser reveal UI was not exercised.
 
-### Not verified
+### Not verified locally
 
-- Anything in production or staging: DNS, TLS for the apex, the live website, live Nginx, PM2, the production database, backups/restore, Stripe checkout and webhooks.
+- Production items: covered later in *Live verification*, which also lists what remains unverified.
 - Restoration of a real pre-migration account at the live URL.
 - Multiplayer with two real players; PWA install prompt and standalone launch; music playback audibility; real mobile browsers.
 
-## Remaining blockers before cutover
+## Follow-ups after cutover
 
-1. **Access:** SSH user/host for the website host and the game host (if different), and confirmation of where the production API and PostgreSQL run.
-2. **Data safety:** an off-host database backup with a tested restore, and a record of persistent content directories.
-3. **Approval:** Babuni's explicit approval for the production cutover after reviewing this branch.
-4. **After cutover:** the live verification checklist from a fresh browser, recorded here with dates and results.
+1. **Stripe:** change the webhook endpoint to `https://www.babuni.dev/Morkahja/api/stripe/webhook`. If Stripe issues a new signing secret, update `STRIPE_WEBHOOK_SECRET` and restart the API. Then test a checkout return and a webhook delivery.
+2. **Real account:** restore a pre-migration player with their own recovery key and compare against the backup.
+3. **Repository:** merge `feat/babuni-dev-subpath` into `main`, then return the server checkout to `main` (it currently runs a local branch fetched from a bundle) and drop the stashed `package-lock.json` change once it is confirmed obsolete.
+4. **Optional:** delete the `LiveCheck` test player; review the same-origin security recommendations; retire the former domain's Nginx site.
 
-## Verification checklist for the live cutover
+## Verification checklist (reuse for later releases)
 
 ```sh
 curl -sI https://www.babuni.dev/ | head -1                     # website, 200

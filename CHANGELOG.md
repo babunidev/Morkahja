@@ -2,7 +2,7 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-10 — Unreleased: serve the game from /Morkahja/ (branch `feat/babuni-dev-subpath`)
+## 2026-11-10 — Deployed: serve the game from /Morkahja/ (branch `feat/babuni-dev-subpath`)
 
 - **Subpath build:** `client/vite.config.ts` sets `base: '/Morkahja/'` for production builds and `vite preview` (override: `VITE_BASE_PATH`). Production `VITE_API_BASE_URL` defaults to `/Morkahja/api`. `vite preview` proxies that prefix to the local backend with the prefix stripped. Development still serves from `/`.
 - **Asset URLs:** Added `client/src/assetUrl.ts`. All hard-coded `/UI/…` and `/game/…` paths in client source (about 40 files), dice art from `shared/src/diceCatalog.ts`, and server-provided feed and achievement icon paths now resolve beneath the deployed base. Server responses are unchanged.
@@ -10,7 +10,8 @@
 - **Backend behind a proxy:** `server/src/config/trustProxy.ts` sets Express `trust proxy` (default `loopback`, override `TRUST_PROXY`). Without it, all players behind Nginx would share one per-IP rate-limit bucket for session challenge, bootstrap and heartbeat.
 - **Deployment:** Added `deploy/nginx/morkahja-locations.conf.template` and rewrote `docs/DEPLOYMENT.md` with the discovered public infrastructure, environment variables, procedure, rollback and security assessment.
 - **Tests:** Added `client/src/assetUrl.test.ts` (base handling, manifest scope, regression guard for unwrapped asset paths) and `server/src/config/trustProxy.test.ts`.
-- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed locally on Nobara against a disposable PostgreSQL 16 container. A local Nginx + headless Chrome run verified routing, assets, onboarding, logout, deep links, recovery-key restoration of the same player, and a committed encounter turn through `/Morkahja/api/`. **Not merged or deployed.**
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed locally on Nobara against a disposable PostgreSQL 16 container. A local Nginx + headless Chrome run verified routing, assets, onboarding, logout, deep links, recovery-key restoration of the same player, and a committed encounter turn through `/Morkahja/api/`. Not yet merged into `main`.
+- **Deployed (2026-11-10):** Released to production at `https://www.babuni.dev/Morkahja/` from commit `95fd5c5a`, with Babuni's approval. The backend was upgraded from `77062a42` at the same time. The database backup was verified by restore, and live checks passed; see `docs/DEPLOYMENT.md`. Still open: Stripe webhook URL, a real pre-migration account restore, and merging into `main`.
 - **Target host (2026-11-10):** At Babuni's decision the production address is `https://www.babuni.dev/Morkahja/`. The social-preview fallback, test URLs, Nginx template comments and deployment configuration were updated to match. No runtime path logic changed.
 
 ## 2026-11-04 — Unreleased: authentication, persistence and release-gate maintenance (PRs #5 and #6)

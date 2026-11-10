@@ -48,4 +48,4 @@ The Firestarter chain uses the player's peak milestones: two avatars for Firesta
 
 ## Moving to www.babuni.dev/Morkahja — 10 November 2026
 
-The repository changes for serving the game at `https://www.babuni.dev/Morkahja/` are on branch `feat/babuni-dev-subpath`. They passed the local release check and a local Nginx/browser integration test, and are **not merged or deployed**. Existing players will need their recovery-key file at the new address, because browser storage does not move between domains. See the [deployment plan](docs/DEPLOYMENT.md).
+The game is live at **https://www.babuni.dev/Morkahja/** (deployed 10 November from branch `feat/babuni-dev-subpath`, not yet merged into `main`). The move was verified with a database backup restore, a local Nginx/browser integration test and live checks. Existing players will need their recovery-key file at the new address, because browser storage does not move between domains. See the [deployment plan](docs/DEPLOYMENT.md).
