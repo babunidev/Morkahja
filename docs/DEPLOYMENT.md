@@ -1,6 +1,6 @@
 # Deployment plan — Morkahja under babuni.dev
 
-**Status:** **Deployed 2026-11-10** at https://www.babuni.dev/Morkahja/ with Babuni's approval and verified live (see *Production deployment*). Open follow-ups: update the Stripe webhook URL in the Stripe dashboard, test restoration with a real pre-migration recovery key, and merge the branch so the server can track `main` again.  
+**Status:** **Deployed 2026-11-10** at https://www.babuni.dev/Morkahja/ with Babuni's approval and verified live (see *Production deployment*). Babuni confirmed restoring their own pre-migration account. Open follow-ups: confirm the first real Stripe delivery at the new webhook URL, and merge the branch so the server can track `main` again.  
 **Recorded:** 2026-11-09 (plan) · updated 2026-11-10 (implementation, discovery, local verification, production deployment)  
 **Branch:** `feat/babuni-dev-subpath` (deployed commit `95fd5c5a`, not yet merged into `main`)  
 **Target game URL:** https://www.babuni.dev/Morkahja/ (decided 2026-11-10; originally planned as `https://babuni.dev/Morkahja/`)
@@ -178,7 +178,9 @@ After the cutover, Babuni reported that a turn stopped after choosing a solution
 
 Fix `0d217fc7` commits on the reveal phase and lets the server's resolution supply the roll. It was deployed as a **frontend-only release** through the script's new `frontend` phase (Babuni ran it with `sudo`); the previous release is kept for `frontend-rollback`. Live verification with **real UI clicks** on the `LiveCheck` player: a solution turn and a dice turn each committed, showed the roll, unlocked Continue and advanced (XP 2 → 4, then a level-up to 2), and the resulting level-up **system event** committed and returned to a normal encounter. No exceptions, and no requests outside `/Morkahja/`. Two-person multiplayer remains untested.
 
-**Still not verified live:** restoration of a real **pre-migration** player with their own key; Stripe checkout return and signed webhook delivery at the new URL (the dashboard endpoint still needs updating); PWA installation; two-person multiplayer; real mobile browsers; Nginx/PM2 log review (the deploy account cannot read them).
+**Babuni-reported (2026-11-10):** restoring their own **pre-migration** account with its recovery key at `https://www.babuni.dev/Morkahja/` worked. This is a manual check; no individual field comparison was supplied. **Stripe:** the dashboard endpoint was changed to `https://www.babuni.dev/Morkahja/api/stripe/webhook` with `checkout.session.completed` and `checkout.session.async_payment_succeeded`, keeping the existing signing secret.
+
+**Still not verified live:** a real Stripe checkout return and signed webhook delivery at the new URL (no purchase has occurred yet); PWA installation; two-person multiplayer; real mobile browsers; Nginx/PM2 log review (the deploy account cannot read them).
 
 ## Player identity and recovery
 
@@ -239,10 +241,9 @@ Headless Google Chrome (DevTools protocol, temporary profiles) at `http://127.0.
 
 ## Follow-ups after cutover
 
-1. **Stripe:** change the webhook endpoint to `https://www.babuni.dev/Morkahja/api/stripe/webhook`. If Stripe issues a new signing secret, update `STRIPE_WEBHOOK_SECRET` and restart the API. Then test a checkout return and a webhook delivery.
-2. **Real account:** restore a pre-migration player with their own recovery key and compare against the backup.
-3. **Repository:** merge `feat/babuni-dev-subpath` into `main`, then return the server checkout to `main` (it currently runs a local branch fetched from a bundle) and drop the stashed `package-lock.json` change once it is confirmed obsolete.
-4. **Optional:** delete the `LiveCheck` test player; review the same-origin security recommendations; retire the former domain's Nginx site.
+1. **Stripe:** endpoint updated (done). Confirm the first real checkout return and a successful delivery in the destination's event log.
+2. **Repository:** merge `feat/babuni-dev-subpath` into `main`, then return the server checkout to `main` (it currently runs a local branch fetched from a bundle) and drop the stashed `package-lock.json` change once it is confirmed obsolete.
+3. **Optional:** delete the `LiveCheck` test player; review the same-origin security recommendations; retire the former domain's Nginx site.
 
 ## Verification checklist (reuse for later releases)
 

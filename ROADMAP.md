@@ -46,8 +46,9 @@ Run documented static and lifecycle checks in an appropriate development environ
 - [x] Deployed: frontend in an isolated release directory behind a symlink, Nginx include, backend upgraded with a health gate and scripted rollback.
 - [x] Live verification: website, game, assets, API, onboarding, logout, deep links, recovery-key restore of a new player, and an encounter turn.
 - [x] Gameplay hotfix `0d217fc7` (turns stalled after a choice) deployed and verified live by real clicks, including a level-up system event.
-- [ ] Update the Stripe webhook endpoint in the dashboard; test checkout return and signed delivery.
-- [ ] Restore a real **pre-migration** account with its own recovery key.
+- [x] Stripe webhook endpoint updated to the new URL (both checkout events).
+- [ ] Confirm the first real checkout return and signed delivery.
+- [x] Babuni restored their own **pre-migration** account with its recovery key at the new URL (manual, user-reported).
 - [ ] Merge the branch into `main` and return the server checkout to `main`.
 - [ ] PWA install, two-person multiplayer and mobile browsers at the live URL.
 - [ ] Assess and address same-origin risks (origin-wide `localStorage` holding identity keys, no CSP/HSTS on the website today). *(Documented; not changed.)*
