@@ -1,25 +1,44 @@
 import type { CSSProperties, ReactNode } from 'react';
-import GoldenSplitLayout from './GoldenSplitLayout.js';
 import PortraitStage from './PortraitStage.js';
+import {
+  actionMenuZoneStyle,
+  encounterZoneStyle,
+  gameScreenRootStyle,
+  partyZoneStyle,
+} from '../game/gameScreenLayout.js';
 
 interface GameLayoutProps {
-  top: ReactNode;
-  bottom: ReactNode;
-  raiseBottom?: boolean;
+  encounterZone: ReactNode;
+  partyZone: ReactNode;
+  actionMenuZone: ReactNode;
 }
 
-const layoutStyle: CSSProperties = {
+const shellStyle: CSSProperties = {
   position: 'relative',
   width: '100%',
   height: '100%',
-  overflow: 'hidden',
+  overflow: 'visible',
 };
 
-export function GameLayout({ top, bottom, raiseBottom = false }: GameLayoutProps) {
+export function GameLayout({
+  encounterZone,
+  partyZone,
+  actionMenuZone,
+}: GameLayoutProps) {
   return (
     <PortraitStage>
-      <div style={layoutStyle}>
-        <GoldenSplitLayout raiseBottom={raiseBottom} top={top} bottom={bottom} />
+      <div style={shellStyle}>
+        <div style={gameScreenRootStyle()}>
+          <section aria-label="Encounter Zone" style={encounterZoneStyle()}>
+            {encounterZone}
+          </section>
+          <section aria-label="Party Zone" style={partyZoneStyle()}>
+            {partyZone}
+          </section>
+          <section aria-label="Action Menu" style={actionMenuZoneStyle()}>
+            {actionMenuZone}
+          </section>
+        </div>
       </div>
     </PortraitStage>
   );

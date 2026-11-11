@@ -82,3 +82,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Boundaries:** the rule does not grant general root access; changing the command itself still needs Babuni's password. Database restores remain a separate, explicit decision. Not decided: whether each future release needs Babuni's approval. Until Babuni says otherwise, AI asks before running `release` or `rollback`, as with any outward-facing production change.
 
+## D-010 — Use the standalone version's game screen in the web game (2026-11-11)
+
+**Babuni's direction:** after replaying the standalone desktop version, Babuni preferred its layout: "the sizes are better, the button size and stuff, and it feels more free, and there's more room for the background and less UI elements that are pretty much in the way." Babuni asked for all of it in the web version: the new layout, the encounter title on hover, solution icons flying from the inventory, and essences shown as lives under the avatar. The work is tested on a branch and played locally before any merge.
+
+**AI implementation:** visual and layout code only, merged three-way from the June base, today's web code and the standalone. Offline-only removals in the standalone (Call for help, Friends-only slots, lore gem rewards, gem sacrifice, daily gems, recovery key, payments, local saves, nearby play) and its changes to multiplayer rules were not taken.
+
+**Open:** mobile layout, which the standalone did not target; Babuni's acceptance after playing.
+

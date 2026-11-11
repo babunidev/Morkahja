@@ -43,6 +43,23 @@ export function vibrateFooterButton(kind: RewardFlyTargetKind): void {
   }, 320);
 }
 
+export function ejectFooterButton(kind: RewardFlyTargetKind): void {
+  const element = document.querySelector(
+    `${FOOTER_TARGET_SELECTOR}="${kind}"]`,
+  );
+
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove('morkahja-footer-button-eject');
+  void element.getBoundingClientRect();
+  element.classList.add('morkahja-footer-button-eject');
+  window.setTimeout(() => {
+    element.classList.remove('morkahja-footer-button-eject');
+  }, 400);
+}
+
 export function cleanupRewardFlyers(): void {
   document.querySelectorAll(ICON_FLYER_SELECTOR).forEach((node) => {
     node.remove();
@@ -441,6 +458,113 @@ export async function playRewardFlights(
       Promise.all(flights.map((flight) => runRewardFlight(flight, vibratedTargets)))
     )),
     wait(REWARD_FLIGHT_TIMEOUT_MS + flights.length * 80),
+  ]);
+
+  cleanupRewardFlyers();
+}
+
+export interface SolutionSlotInboundFlightSpec {
+  id: string;
+  imageSrc: string;
+  size: number;
+  source: RewardFlyTargetKind;
+  sourceRect: DOMRect;
+  targetRect: DOMRect;
+}
+
+export const SOLUTION_SLOT_INBOUND_FLIGHT_MS = 780;
+export const SOLUTION_SLOT_INBOUND_STAGGER_MS = 110;
+const SOLUTION_SLOT_INBOUND_TIMEOUT_MS = SOLUTION_SLOT_INBOUND_FLIGHT_MS + 600;
+
+function runSolutionSlotInboundFlight(
+  sourceRect: DOMRect,
+  targetRect: DOMRect,
+  imageSrc: string,
+  size: number,
+  sourceKind: RewardFlyTargetKind,
+  onNearTarget?: () => void,
+): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const target = rectCenter(targetRect);
+  const half = size / 2;
+  const flyer = createIconFlyer(
+    imageSrc,
+    size,
+    '0 0 16px rgba(255, 204, 102, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45)',
+  );
+  const nearTargetLeadMs = Math.round(SOLUTION_SLOT_INBOUND_FLIGHT_MS * 0.18);
+  const nearTargetTimer = onNearTarget
+    ? window.setTimeout(onNearTarget, SOLUTION_SLOT_INBOUND_FLIGHT_MS - nearTargetLeadMs)
+    : null;
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      {
+        offset: 0,
+        transform: `translate(${source.x - half}px, ${source.y - half}px) scale(0.38)`,
+        opacity: 0.92,
+      },
+      {
+        offset: 0.58,
+        transform: `translate(${
+          source.x + (target.x - source.x) * 0.58 - half
+        }px, ${
+          source.y + (target.y - source.y) * 0.58 - half
+        }px) scale(0.82)`,
+        opacity: 1,
+      },
+      {
+        offset: 0.82,
+        transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
+        opacity: 1,
+      },
+      {
+        offset: 1,
+        transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
+        opacity: 0,
+      },
+    ],
+    SOLUTION_SLOT_INBOUND_FLIGHT_MS,
+    SOLUTION_SLOT_INBOUND_TIMEOUT_MS,
+    () => {
+      ejectFooterButton(sourceKind);
+      flyer.style.transform = `translate(${source.x - half}px, ${source.y - half}px) scale(0.38)`;
+      flyer.style.opacity = '0.92';
+    },
+  ).finally(() => {
+    if (nearTargetTimer !== null) {
+      window.clearTimeout(nearTargetTimer);
+    }
+  });
+}
+
+export async function playSolutionSlotInboundFlights(
+  flights: SolutionSlotInboundFlightSpec[],
+  onFlightComplete?: (id: string) => void,
+): Promise<void> {
+  cleanupRewardFlyers();
+
+  if (flights.length === 0) {
+    return;
+  }
+
+  await waitForNextFrame();
+
+  await Promise.race([
+    Promise.all(flights.map((flight, index) => (
+      wait(index * SOLUTION_SLOT_INBOUND_STAGGER_MS).then(() => (
+        runSolutionSlotInboundFlight(
+          flight.sourceRect,
+          flight.targetRect,
+          flight.imageSrc,
+          flight.size,
+          flight.source,
+          onFlightComplete ? () => onFlightComplete(flight.id) : undefined,
+        )
+      ))
+    ))),
+    wait(SOLUTION_SLOT_INBOUND_TIMEOUT_MS + flights.length * SOLUTION_SLOT_INBOUND_STAGGER_MS),
   ]);
 
   cleanupRewardFlyers();

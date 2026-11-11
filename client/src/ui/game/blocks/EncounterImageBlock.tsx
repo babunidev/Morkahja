@@ -20,6 +20,8 @@ import {
 import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
+import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
+import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 
@@ -31,13 +33,31 @@ const blockStyle: CSSProperties = {
   width: '100%',
   height: '100%',
   minHeight: 0,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  position: 'relative',
+  overflow: 'visible',
+};
+
+/** Square encounter art + frame + all in-frame overlays share one box. */
+const artFrameStyle: CSSProperties = {
+  position: 'relative',
+  height: '100%',
+  width: 'auto',
+  maxWidth: '100%',
+  aspectRatio: '1 / 1',
+  flexShrink: 0,
+  overflow: 'visible',
+};
+
+const imageClipStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  overflow: 'hidden',
   display: 'grid',
   gridTemplateRows: '1fr',
   gridTemplateColumns: '1fr',
-  alignItems: 'stretch',
-  justifyItems: 'stretch',
-  position: 'relative',
-  overflow: 'visible',
 };
 
 const imageStyle: CSSProperties = {
@@ -47,9 +67,21 @@ const imageStyle: CSSProperties = {
   width: '100%',
   height: '100%',
   objectFit: 'cover',
+  objectPosition: 'top center',
   zIndex: 1,
   transition: encounterFadeTransition,
   userSelect: 'none',
+};
+
+const titleHoverZoneStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  width: '58%',
+  height: '52%',
+  transform: 'translate(-50%, -50%)',
+  zIndex: 35,
+  pointerEvents: 'auto',
 };
 
 const previousImageStyle: CSSProperties = {
@@ -192,6 +224,7 @@ export function EncounterImageBlock({
   const [missingImageSrcs, setMissingImageSrcs] = useState<string[]>([]);
   const [currentImageSrc, setCurrentImageSrc] = useState(imageSrc);
   const [currentImageFading, setCurrentImageFading] = useState(false);
+  const [encounterTitleHovered, setEncounterTitleHovered] = useState(false);
   const [transitionImageSrc, setTransitionImageSrc] = useState<string | null>(null);
   const [underlayHoldSrc, setUnderlayHoldSrc] = useState<string | null>(null);
   const underlayImageSrc = transitionImageSrc ?? underlayHoldSrc ?? undefined;
@@ -204,6 +237,8 @@ export function EncounterImageBlock({
     solutionId?: number;
   } | null>(null);
   const showWitnessLabel = isWitnessingLabel && !showWitnessResult;
+  const encounterOverlaysOpen = loreOpen || inventoryOpen || skillbookOpen;
+  const encounterTitleVisible = encounterTitleHovered && !encounterOverlaysOpen;
   const witnessLabelPresence = useOpacityPresence(showWitnessLabel);
   const witnessResultLatchRef = useRef(false);
   const witnessResultSnapRef = useRef<{
@@ -216,6 +251,12 @@ export function EncounterImageBlock({
   if (showWitnessResult && witnessOutcome) {
     witnessResultLatchRef.current = true;
   }
+
+  useEffect(() => {
+    if (encounterOverlaysOpen) {
+      setEncounterTitleHovered(false);
+    }
+  }, [encounterOverlaysOpen]);
 
   useEffect(() => {
     if (!witnessSuppressLocalResolution) {
@@ -493,7 +534,9 @@ export function EncounterImageBlock({
 
   return (
     <section aria-label="Encounter Image" style={blockStyle}>
-      {underlayImageSrc ? (
+      <div style={artFrameStyle}>
+        <div style={imageClipStyle}>
+        {underlayImageSrc ? (
         missingImageSrcs.includes(underlayImageSrc) ? (
           <div
             role="img"
@@ -554,6 +597,24 @@ export function EncounterImageBlock({
           }}
         />
       )}
+        </div>
+        <DecorativeEdgeFrame />
+        {!encounterOverlaysOpen ? (
+          <div
+            aria-hidden="true"
+            onMouseEnter={() => {
+              setEncounterTitleHovered(true);
+            }}
+            onMouseLeave={() => {
+              setEncounterTitleHovered(false);
+            }}
+            style={titleHoverZoneStyle}
+          />
+        ) : null}
+        <EncounterHeader
+          hidden={!encounterTitleVisible}
+          title={title}
+        />
       {witnessLabelPresence.mounted ? (
         <div
           aria-live="polite"
@@ -654,10 +715,12 @@ export function EncounterImageBlock({
           onRoomSnapshot?.(result.room);
         }}
         text={encounter.encounterText ?? ''}
+        title={title}
         visible={loreOpen}
       />
       <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
       <InventoryBlock inventory={inventory} visible={inventoryOpen} />
+      </div>
     </section>
   );
 }

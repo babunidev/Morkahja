@@ -193,3 +193,11 @@ The release itself went through on the first run. The server's checkout moved fr
 
 **Verification (2026-11-11):** the pre-release backup was downloaded, checksum-verified and restored into a disposable PostgreSQL 18 container with every row count matching. Public checks passed; the live content matched `server/game` (203 encounters, 247 solutions), arrived gzip-compressed at about 104 KB, and answered `304` on a repeat request. A fresh headless browser reached the welcome screen without unexpected errors. **Not verified by AI:** a turn played on a real account, two-person multiplayer, Stripe checkout and mobile browsers.
 
+## 2026-11-11 — Bringing the standalone look home
+
+Months ago I made a desktop version of Morkahja that runs offline, and along the way I reworked its game screen. Comparing the two versions showed how much: three calmer zones instead of two crowded ones, a framed encounter picture with its title appearing only on hover, essences shown as lives, and solution icons that fly out of the inventory. Getting the standalone to run again needed its build tools reinstalled for Linux. After playing it I wanted that screen in the web game (D-010).
+
+**Babuni's direction:** take the standalone's layout and small animations, test them on a branch, and play them locally first. **AI implementation:** a three-way merge from the shared June starting point kept the web fixes made since then, such as `/Morkahja/` asset paths, server-loaded content and the stalled-turn fix. Everything the offline version had removed for lack of a server was restored or left out of the merge; Call for help moved into the new action menu.
+
+**Verification (2026-11-11, Nobara, local Podman PostgreSQL):** the release gate passed and the local client reached its welcome screen. My own play test is pending. **Branch only; not merged or deployed.**
+

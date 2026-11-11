@@ -40,11 +40,11 @@ import {
   fadeStyle,
   waitForFade,
 } from '../transitions/fade.js';
-import EncounterHeader from './blocks/EncounterHeader.js';
-import EncounterHeaderSeam from './blocks/EncounterHeaderSeam.js';
 import EncounterImageBlock from './blocks/EncounterImageBlock.js';
 import type { ResultBlockHandle } from './blocks/ResultBlock.js';
-import PlayerHub from './blocks/PlayerHub.js';
+import PartyZone from './blocks/PartyZone.js';
+import ActionMenuZone from './blocks/ActionMenuZone.js';
+import { encounterZoneContentStyle } from './gameScreenLayout.js';
 import GameMessageToast from './GameMessageToast.js';
 import {
   actorCanPressContinue,
@@ -95,45 +95,16 @@ interface GameEnvironmentProps {
   onHome: () => void;
 }
 
-const topZoneStyle: CSSProperties = {
-  position: 'relative',
-  width: '100%',
-  height: '100%',
-  display: 'grid',
-  gridTemplateRows: '15% minmax(0, 1fr)',
-};
-
-/** Header row (title + seam) always stacks above the encounter row and its overlays (lore, inventory, results). */
-const ENCOUNTER_HEADER_ROW_Z_INDEX = 50;
-
-const headerSlotStyle: CSSProperties = {
-  position: 'relative',
-  zIndex: ENCOUNTER_HEADER_ROW_Z_INDEX,
-  minHeight: 0,
-};
-
-const encounterImageSlotStyle: CSSProperties = {
-  gridRow: '2',
-  gridColumn: '1',
-  position: 'relative',
-  zIndex: 1,
-  minHeight: 0,
-  width: '100%',
-  display: 'flex',
-};
+const encounterRevealStyle = (visible: boolean, delayMs = 120): CSSProperties => ({
+  opacity: visible ? 1 : 0,
+  transition: encounterFadeTransition,
+  transitionDelay: visible ? `${delayMs}ms` : '0ms',
+});
 
 function delayStyle(visible: boolean, order: number): CSSProperties {
   return {
     ...fadeStyle(visible),
     transitionDelay: visible ? `${order * 120}ms` : '0ms',
-  };
-}
-
-function encounterRevealStyle(visible: boolean, delayMs = 120): CSSProperties {
-  return {
-    opacity: visible ? 1 : 0,
-    transition: encounterFadeTransition,
-    transitionDelay: visible ? `${delayMs}ms` : '0ms',
   };
 }
 
@@ -908,88 +879,85 @@ export function GameEnvironment({
         />
       ) : null}
       <GameLayout
-        raiseBottom={homeVisible}
-        top={
-          <div style={{ ...topZoneStyle, ...delayStyle(visible, 0) }}>
-            <div style={headerSlotStyle}>
-              <EncounterHeader
-                overlayTitle={
-                  inventoryOpen
-                    ? 'Inventory'
-                    : skillbookOpen
-                      ? 'Skillbook'
-                      : null
-                }
-                title={title}
-              />
-              <EncounterHeaderSeam />
-            </div>
-            <div
-              style={{
-                ...encounterImageSlotStyle,
-                ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
-              }}
-            >
-              <EncounterImageBlock
-                avatarId={avatar.id}
-                avatarLevel={displayAvatarLevel}
-                diceButtonAsset={diceButtonAsset}
-                continueGlowClass={continueGlow}
-                continuePending={continuePending || deathPending || waitingForResolution}
-                continueWaitingAfterPress={continueWaitingAfterPress}
-                deferRewardDismiss={deferRewardDismiss}
-                encounter={encounter}
-                holdResultRollReset={holdResultRollReset}
-                loreGemCollected={loreGemCollected}
-                onRoomSnapshot={applyEncounterRoomSnapshot}
-                isSystemEventActor={room?.systemEvent?.isLocalActor === true}
-                showLoreGemReward={showLoreGemReward}
-                imageSrc={imagePath(encounterImageName)}
-                inventory={avatar.inventory}
-                inventoryOpen={inventoryOpen}
-                localContinuePressed={localHasContinuePressed}
-                loreOpen={loreOpen}
-                onContinue={handleContinueEncounter}
-                onResultsVisibleChange={setResultRollVisible}
-                resultBlockRef={resultBlockRef}
-                roomState={room?.roomState ?? 'active_encounter'}
-                serverResolution={showServerResult ? displayResolution : undefined}
-                serverCommittedAction={localParticipant?.selectedAction}
-                witnessSuppressLocalResolution={witnessDisplay.isWitness}
-                isWitnessingLabel={isWitnessingLabel}
-                showWitnessResult={showWitnessResult}
-                witnessCanContinue={witnessDisplay.witnessCanContinue}
-                actorShowContinue={actorShowContinue}
-                witnessEncounterId={witnessEncounterId}
-                witnessOutcome={witnessActorOutcome ?? null}
-                witnessAvatarLevel={systemEventActor?.avatar.level}
-                systemEventActorName={
-                  systemEventActor?.avatar
-                    ? formatAvatarDisplayName(systemEventActor.avatar)
-                    : undefined
-                }
-                outcomeRoll={outcomeRollForDisplay}
-                outcomeResolutionAction={outcomeResolutionAction}
-                skillbookOpen={skillbookOpen}
-                title={title}
-              />
-            </div>
+        encounterZone={(
+          <div
+            style={{
+              ...encounterZoneContentStyle(),
+              ...delayStyle(visible, 0),
+              ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
+            }}
+          >
+            <EncounterImageBlock
+              avatarId={avatar.id}
+              avatarLevel={displayAvatarLevel}
+              diceButtonAsset={diceButtonAsset}
+              continueGlowClass={continueGlow}
+              continuePending={continuePending || deathPending || waitingForResolution}
+              continueWaitingAfterPress={continueWaitingAfterPress}
+              deferRewardDismiss={deferRewardDismiss}
+              encounter={encounter}
+              holdResultRollReset={holdResultRollReset}
+              loreGemCollected={loreGemCollected}
+              onRoomSnapshot={applyEncounterRoomSnapshot}
+              isSystemEventActor={room?.systemEvent?.isLocalActor === true}
+              showLoreGemReward={showLoreGemReward}
+              imageSrc={imagePath(encounterImageName)}
+              inventory={avatar.inventory}
+              inventoryOpen={inventoryOpen}
+              localContinuePressed={localHasContinuePressed}
+              loreOpen={loreOpen}
+              onContinue={handleContinueEncounter}
+              onResultsVisibleChange={setResultRollVisible}
+              resultBlockRef={resultBlockRef}
+              roomState={room?.roomState ?? 'active_encounter'}
+              serverResolution={showServerResult ? displayResolution : undefined}
+              serverCommittedAction={localParticipant?.selectedAction}
+              witnessSuppressLocalResolution={witnessDisplay.isWitness}
+              isWitnessingLabel={isWitnessingLabel}
+              showWitnessResult={showWitnessResult}
+              witnessCanContinue={witnessDisplay.witnessCanContinue}
+              actorShowContinue={actorShowContinue}
+              witnessEncounterId={witnessEncounterId}
+              witnessOutcome={witnessActorOutcome ?? null}
+              witnessAvatarLevel={systemEventActor?.avatar.level}
+              systemEventActorName={
+                systemEventActor?.avatar
+                  ? formatAvatarDisplayName(systemEventActor.avatar)
+                  : undefined
+              }
+              outcomeRoll={outcomeRollForDisplay}
+              outcomeResolutionAction={outcomeResolutionAction}
+              skillbookOpen={skillbookOpen}
+              title={title}
+            />
           </div>
-        }
-        bottom={
+        )}
+        partyZone={(
           <div style={{ width: '100%', height: '100%', ...bottomDelay }}>
-            <PlayerHub
+            <PartyZone
               avatar={avatar}
               hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
               onAvatarDetailsVisibleChange={setHomeVisible}
-              onCallForHelp={() => {
-                void handleCallForHelp();
-              }}
-              helpCalled={helpCalled}
               onHome={() => {
                 void handleHome();
               }}
+              onKickParticipant={(targetPlayerId) => {
+                void handleKickParticipant(targetPlayerId);
+              }}
+              onSlotStateChange={(slotIndex, slotState) => {
+                void handleSlotStateChange(slotIndex, slotState);
+              }}
+              room={room}
+              roomState={room?.roomState}
+              localXpGainAmount={localXpGainAmount}
+              partyXpPulseByPlayer={partyXpPulseByPlayer}
+            />
+          </div>
+        )}
+        actionMenuZone={(
+          <div style={bottomDelay}>
+            <ActionMenuZone
               onInventoryToggle={() => {
                 setInventoryOpen((open) => {
                   const next = !open;
@@ -1020,20 +988,14 @@ export function GameEnvironment({
                   return next;
                 });
               }}
-              onKickParticipant={(targetPlayerId) => {
-                void handleKickParticipant(targetPlayerId);
+              helpCalled={helpCalled}
+              onCallForHelp={() => {
+                void handleCallForHelp();
               }}
-              onSlotStateChange={(slotIndex, slotState) => {
-                void handleSlotStateChange(slotIndex, slotState);
-              }}
-              room={room}
-              roomState={room?.roomState}
-              localXpGainAmount={localXpGainAmount}
-              partyXpPulseByPlayer={partyXpPulseByPlayer}
               readyRattleToken={footerReadyToken}
             />
           </div>
-        }
+        )}
       />
     </div>
   );

@@ -2,6 +2,11 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 import { gameSolutions } from '../../data/gameContent.js';
 import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
 import {
+  PORTRAIT_STAGE_DESIGN_HEIGHT,
+  PORTRAIT_STAGE_DESIGN_WIDTH,
+  portraitStageFitScale,
+} from '../layout/portraitStageSize.js';
+import {
   AVATAR_ENTER_CENTER_GLOW_MS,
   AVATAR_ENTER_OVERLAY_ATTR,
   AVATAR_ENTER_TO_CENTER_MS,
@@ -18,8 +23,8 @@ const SPAWN_WINDOW_MS =
 const FLIER_TRAVEL_MIN_MS = 620;
 const FLIER_TRAVEL_MAX_MS = 1040;
 // Full size roughly matches the in-game solution icon (SOLUTION_ACTION_SIZE_PX).
-const FLIER_FULL_SIZE_MIN = 66;
-const FLIER_FULL_SIZE_MAX = 88;
+const FLIER_FULL_SIZE_MIN = 52;
+const FLIER_FULL_SIZE_MAX = 70;
 const MAX_FLIERS = 64;
 
 /** Scale envelope: small on spawn, full size mid-flight, shrinks into the avatar. */
@@ -44,7 +49,7 @@ const containerStyle: CSSProperties = {
   inset: 0,
   // Just beneath the moving avatar overlay (z 250) so icons vanish "into" it.
   zIndex: 249,
-  overflow: 'hidden',
+  overflow: 'visible',
   pointerEvents: 'none',
 };
 
@@ -81,8 +86,9 @@ function inventorySolutionSrcs(inventory: AvatarInventory | undefined): string[]
 function stageBounds(): { left: number; top: number; width: number; height: number } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const width = Math.min(vw, (vh * 9) / 16);
-  const height = Math.min(vh, (vw * 16) / 9);
+  const scale = portraitStageFitScale(vw, vh);
+  const width = PORTRAIT_STAGE_DESIGN_WIDTH * scale;
+  const height = PORTRAIT_STAGE_DESIGN_HEIGHT * scale;
 
   return {
     left: (vw - width) / 2,

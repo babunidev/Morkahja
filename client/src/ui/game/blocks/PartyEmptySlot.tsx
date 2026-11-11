@@ -19,7 +19,6 @@ const SLOT_OPTIONS: { value: SlotStateDto; label: string }[] = [
 
 const slotStyle: CSSProperties = {
   width: '100%',
-  height: '100%',
   display: 'grid',
   placeItems: 'center',
   minWidth: 0,

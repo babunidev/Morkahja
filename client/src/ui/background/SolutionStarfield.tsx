@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { gameSolutions } from '../../data/gameContent.js';
 import { useLayoutMode } from '../layout/useLayoutMode.js';
+import {
+  PORTRAIT_STAGE_DESIGN_HEIGHT,
+  PORTRAIT_STAGE_DESIGN_WIDTH,
+  portraitStageFitScale,
+} from '../layout/portraitStageSize.js';
 import { FADE_DURATION_MS } from '../transitions/fade.js';
 import { assetUrl } from '../../assetUrl.js';
 
@@ -30,14 +35,11 @@ function iconNames(): string[] {
   return iconNamesCache.names;
 }
 
-// Full-viewport shell that centres the play-area stage, mirroring PortraitStage.
 const shellStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
   zIndex: 1,
-  display: 'grid',
-  placeItems: 'center',
-  overflow: 'hidden',
+  overflow: 'visible',
   pointerEvents: 'none',
 };
 
@@ -45,16 +47,6 @@ const shellMobileStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
   zIndex: 1,
-  overflow: 'hidden',
-  pointerEvents: 'none',
-};
-
-// The stage box the icons are confined to: matches PortraitStage's 9 / 16 frame.
-const stageStyle: CSSProperties = {
-  position: 'relative',
-  width: 'min(100vw, calc(100dvh * 9 / 16))',
-  height: 'min(100dvh, calc(100vw * 16 / 9))',
-  aspectRatio: '9 / 16',
   overflow: 'hidden',
   pointerEvents: 'none',
 };
@@ -109,9 +101,7 @@ function randomPlacement(): Pick<
     left: randomBetween(1, 95),
     top: randomBetween(1, 93),
     size: randomBetween(32, 76),
-    // Subtle presence so the icons read as faint stars, never foreground.
     peak: randomBetween(0.37, 0.81),
-    // Snappier fade in, gentle smooth fade out.
     fadeInMs: randomBetween(640, 1040),
     fadeOutMs: randomBetween(1100, 1900),
     icon: randomIcon(),
@@ -122,6 +112,28 @@ function createStar(id: number): StarState {
   return { id, visible: false, ...randomPlacement() };
 }
 
+function renderStars(stars: StarState[]) {
+  return stars.map((star) => (
+    <img
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      key={star.id}
+      src={`${SOLUTION_IMAGE_ROOT}/${star.icon}.webp`}
+      style={{
+        ...starBaseStyle,
+        left: `${star.left}%`,
+        top: `${star.top}%`,
+        width: star.size,
+        height: star.size,
+        opacity: star.visible ? star.peak : 0,
+        transform: star.visible ? 'scale(1)' : 'scale(0.9)',
+        transition: `opacity ${star.visible ? star.fadeInMs : star.fadeOutMs}ms ease-in-out, transform ${star.visible ? star.fadeInMs : star.fadeOutMs}ms ease-in-out`,
+      }}
+    />
+  ));
+}
+
 export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }) {
   const [stars, setStars] = useState<StarState[]>(() =>
     Array.from({ length: STAR_COUNT }, (_, index) => createStar(index)),
@@ -130,6 +142,28 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
   const hasIcons = useMemo(() => iconNames().length > 0, []);
   const { mode } = useLayoutMode();
   const mobilePortrait = mode === 'mobile-portrait';
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    if (mobilePortrait) {
+      return undefined;
+    }
+
+    const shell = shellRef.current;
+    if (!shell) {
+      return undefined;
+    }
+
+    const updateScale = (): void => {
+      setScale(portraitStageFitScale(shell.clientWidth, shell.clientHeight));
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(shell);
+    return () => observer.disconnect();
+  }, [mobilePortrait]);
 
   useEffect(() => {
     if (!hasIcons) {
@@ -145,7 +179,6 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
 
     const appear = (id: number): void => {
       const placement = randomPlacement();
-      // Re-seed position/icon while the star is still invisible, then fade in.
       setStars((current) =>
         current.map((star) =>
           star.id === id ? { ...star, ...placement, visible: true } : star,
@@ -159,12 +192,9 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
       setStars((current) =>
         current.map((star) => (star.id === id ? { ...star, visible: false } : star)),
       );
-      // Wait for the fade-out to finish, then rest at 0 opacity for 0.73s.
       schedule(id, fadeOutMs + HOLD_AT_ZERO_MS, () => appear(id));
     };
 
-    // All stars begin fully invisible; they hold at 0 for at least 0.73s, with a
-    // little extra random spread so they do not all light up in unison.
     for (let id = 0; id < STAR_COUNT; id += 1) {
       schedule(id, HOLD_AT_ZERO_MS + randomBetween(0, 1400), () => appear(id));
     }
@@ -182,33 +212,32 @@ export function SolutionStarfield({ fadingOut = false }: { fadingOut?: boolean }
   return (
     <div
       aria-hidden="true"
+      ref={shellRef}
       style={{
         ...(mobilePortrait ? shellMobileStyle : shellStyle),
         opacity: fadingOut ? 0 : 1,
         transition: `opacity ${FADE_DURATION_MS}ms ease`,
       }}
     >
-      <div style={mobilePortrait ? stageMobileStyle : stageStyle}>
-        {stars.map((star) => (
-          <img
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            key={star.id}
-            src={`${SOLUTION_IMAGE_ROOT}/${star.icon}.webp`}
-            style={{
-              ...starBaseStyle,
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: star.size,
-              height: star.size,
-              opacity: star.visible ? star.peak : 0,
-              transform: star.visible ? 'scale(1)' : 'scale(0.9)',
-              transition: `opacity ${star.visible ? star.fadeInMs : star.fadeOutMs}ms ease-in-out, transform ${star.visible ? star.fadeInMs : star.fadeOutMs}ms ease-in-out`,
-            }}
-          />
-        ))}
-      </div>
+      {mobilePortrait ? (
+        <div style={stageMobileStyle}>{renderStars(stars)}</div>
+      ) : (
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: PORTRAIT_STAGE_DESIGN_WIDTH,
+            height: PORTRAIT_STAGE_DESIGN_HEIGHT,
+            transform: `translate(-50%, -50%) scale(${scale})`,
+            transformOrigin: 'center center',
+            overflow: 'visible',
+            pointerEvents: 'none',
+          }}
+        >
+          {renderStars(stars)}
+        </div>
+      )}
     </div>
   );
 }

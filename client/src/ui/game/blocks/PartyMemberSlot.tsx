@@ -7,7 +7,10 @@ import type {
   RoomStateDto,
 } from '../../../api/http.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
-import { formatAvatarDisplayName } from '../../avatar/avatarDisplayName.js';
+import AvatarPartyDetailsCard, {
+  avatarDetailsOverlayStyle,
+  type AvatarDetailsSlotSide,
+} from '../../avatar/AvatarPartyDetailsCard.js';
 import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
 import {
   AnchoredEncounterTooltip,
@@ -31,19 +34,25 @@ interface PartyBadgeTooltip {
 
 const slotStyle: CSSProperties = {
   width: '100%',
-  height: '100%',
   display: 'grid',
   placeItems: 'center',
   minWidth: 0,
   position: 'relative',
+  overflow: 'visible',
 };
 
 const columnStyle: CSSProperties = {
-  width: 'min(100%, 140px)',
-  maxWidth: 'min(28vw, 140px)',
+  width: '100%',
   justifySelf: 'center',
   display: 'grid',
   placeItems: 'center',
+  overflow: 'visible',
+};
+
+const portraitWrapStyle: CSSProperties = {
+  position: 'relative',
+  width: '100%',
+  overflow: 'visible',
 };
 
 const portraitButtonStyle: CSSProperties = {
@@ -55,51 +64,6 @@ const portraitButtonStyle: CSSProperties = {
   background: 'transparent',
   cursor: 'pointer',
   borderRadius: 8,
-};
-
-const detailsOverlayStyle: CSSProperties = {
-  position: 'absolute',
-  inset: 0,
-  zIndex: 8,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 6,
-  padding: '8px 6px',
-  boxSizing: 'border-box',
-  background: 'rgba(8, 4, 2, 0.72)',
-  borderRadius: 8,
-  pointerEvents: 'auto',
-};
-
-const nameStyle: CSSProperties = {
-  margin: 0,
-  width: '100%',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  textAlign: 'center',
-  color: '#ffcc66',
-  fontFamily: 'Breathe Fire, Georgia, serif',
-  fontSize: 'clamp(11px, 2.8vw, 14px)',
-  lineHeight: 1.2,
-  letterSpacing: '0.03em',
-  textShadow: '0 2px 6px rgba(0, 0, 0, 0.85)',
-};
-
-const metaStyle: CSSProperties = {
-  margin: 0,
-  width: '100%',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  textAlign: 'center',
-  color: 'rgba(247, 239, 224, 0.9)',
-  fontFamily: 'Georgia, serif',
-  fontSize: 'clamp(10px, 2.4vw, 12px)',
-  lineHeight: 1.25,
-  textShadow: '0 2px 6px rgba(0, 0, 0, 0.85)',
 };
 
 const badgeOverlayStyle: CSSProperties = {
@@ -157,6 +121,19 @@ const xpPulseDotStyle: CSSProperties = {
   boxShadow: '0 0 12px rgba(255, 204, 102, 0.9)',
   pointerEvents: 'none',
   animation: 'morkahja-party-xp-pulse 700ms ease-out forwards',
+};
+
+const kickButtonStyle: CSSProperties = {
+  padding: '4px 10px',
+  borderRadius: 999,
+  border: '1px solid rgba(255, 204, 102, 0.62)',
+  background: 'rgba(40, 12, 8, 0.82)',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.62rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
 };
 
 function focusBadgeTooltip(focusState: ParticipantFocusStateDto): PartyBadgeTooltip | null {
@@ -246,23 +223,23 @@ function statusLabel(participant: RoomParticipantDto, roomState?: RoomStateDto):
   return '';
 }
 
-function participantAvatarMeta(avatar: RoomParticipantDto['avatar']): string {
-  return `${avatar.race} ${avatar.role} · Level ${avatar.level}`;
-}
-
 export function PartyMemberSlot({
   canKick = false,
   onKick,
+  onDetailsVisibleChange,
   participant,
   roomState,
   systemEventActorPlayerId,
+  slotSide = 'center',
   xpPulseToken,
 }: {
   canKick?: boolean;
   onKick?: (targetPlayerId: string) => void;
+  onDetailsVisibleChange?: (visible: boolean) => void;
   participant: RoomParticipantDto;
   roomState?: RoomStateDto;
   systemEventActorPlayerId?: string;
+  slotSide?: AvatarDetailsSlotSide;
   xpPulseToken?: number;
 }) {
   const [portraitSrc, setPortraitSrc] = useState(participant.avatar.portrait);
@@ -278,6 +255,8 @@ export function PartyMemberSlot({
   const focusPresence = useOpacityPresence(showFocusBadge);
   const [displayFocusIcon, setDisplayFocusIcon] = useState(focusIconSrc);
   const [displayFocusTooltip, setDisplayFocusTooltip] = useState(focusTooltip);
+  const compact = slotSide !== 'center';
+  const badge = statusLabel(participant, roomState);
 
   useEffect(() => {
     if (focusIconSrc) {
@@ -288,93 +267,90 @@ export function PartyMemberSlot({
     }
   }, [focusIconSrc, focusTooltip]);
 
-  const badge = statusLabel(participant, roomState);
-  const avatarDisplayName = formatAvatarDisplayName(participant.avatar);
-  const avatarMeta = participantAvatarMeta(participant.avatar);
+  useEffect(() => {
+    onDetailsVisibleChange?.(detailsOpen);
+  }, [detailsOpen, onDetailsVisibleChange]);
 
   return (
     <div
-      aria-label={`${avatarDisplayName} party slot`}
+      aria-label={`${participant.avatar.name} party slot`}
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       onContextMenu={preventImageContextMenu}
-      style={slotStyle}
+      style={{
+        ...slotStyle,
+        zIndex: detailsOpen ? 40 : slotStyle.zIndex,
+      }}
     >
       <div style={columnStyle}>
-        <button
-          aria-expanded={detailsOpen}
-          aria-label={`${avatarDisplayName}, ${avatarMeta}. ${badge || 'party member'}. ${detailsOpen ? 'Hide' : 'Show'} details`}
-          className={
-            disengaged
-              ? 'morkahja-party-member-disengaged'
-              : waitingContinue
-                ? 'morkahja-party-member-continue-glow'
-                : undefined
-          }
-          onClick={() => {
-            setDetailsOpen((open) => !open);
-          }}
-          onContextMenu={preventImageContextMenu}
-          style={portraitButtonStyle}
-          type="button"
-        >
-          <AvatarPortraitStack
-            frame={participant.avatar.frame}
-            frameScale={1.01}
-            onPortraitError={() => {
-              setPortraitSrc(PORTRAIT_FALLBACK);
+        <div style={portraitWrapStyle}>
+          <button
+            aria-expanded={detailsOpen}
+            aria-label={`${participant.avatar.name}, level ${participant.avatar.level}. ${badge || 'party member'}. ${detailsOpen ? 'Hide' : 'Show'} details`}
+            className={[
+              'morkahja-avatar-slot-button',
+              disengaged ? 'morkahja-party-member-disengaged' : '',
+              waitingContinue ? 'morkahja-party-member-continue-glow' : '',
+            ].filter(Boolean).join(' ')}
+            onClick={() => {
+              setDetailsOpen((open) => !open);
             }}
-            portrait={portraitSrc}
-          />
-          <PartyParticipantChoiceBadge
-            hidden={detailsOpen}
-            participant={participant}
-            roomState={roomState}
-            systemEventActorPlayerId={systemEventActorPlayerId}
-          />
-          {focusPresence.mounted && displayFocusIcon ? (
-            <PartyMemberFocusBadge
-              fadeVisible={focusPresence.visible}
-              iconSrc={displayFocusIcon}
-              iconStyle={focusBadgeIconStyle}
-              overlayStyle={focusBadgeOverlayStyle}
-              tooltip={displayFocusTooltip}
-            />
-          ) : null}
+            onContextMenu={preventImageContextMenu}
+            style={portraitButtonStyle}
+            type="button"
+          >
+            <span className="morkahja-avatar-slot-visual">
+              <AvatarPortraitStack
+                frame={participant.avatar.frame}
+                frameScale={1.01}
+                onPortraitError={() => {
+                  setPortraitSrc(PORTRAIT_FALLBACK);
+                }}
+                portrait={portraitSrc}
+              />
+              <PartyParticipantChoiceBadge
+                hidden={detailsOpen}
+                participant={participant}
+                roomState={roomState}
+                systemEventActorPlayerId={systemEventActorPlayerId}
+              />
+              {focusPresence.mounted && displayFocusIcon ? (
+                <PartyMemberFocusBadge
+                  fadeVisible={focusPresence.visible}
+                  iconSrc={displayFocusIcon}
+                  iconStyle={focusBadgeIconStyle}
+                  overlayStyle={focusBadgeOverlayStyle}
+                  tooltip={displayFocusTooltip}
+                />
+              ) : null}
+              {xpPulseToken ? <span aria-hidden="true" style={xpPulseDotStyle} /> : null}
+            </span>
+          </button>
           {detailsOpen ? (
-            <div
-              className="morkahja-party-details-overlay"
-              style={detailsOverlayStyle}
-            >
-              <p style={nameStyle}>{avatarDisplayName}</p>
-              <p style={metaStyle}>{avatarMeta}</p>
-              {badge ? (
-                <span
-                  className={
-                    disengaged
-                      ? 'morkahja-party-status-badge morkahja-party-status-badge-inactive'
-                      : 'morkahja-party-status-badge'
-                  }
-                >
-                  {badge}
-                </span>
-              ) : null}
-              {canKick && onKick ? (
-                <button
-                  className="morkahja-party-kick-button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onKick(participant.playerId);
-                    setDetailsOpen(false);
-                  }}
-                  type="button"
-                >
-                  Kick
-                </button>
-              ) : null}
+            <div style={avatarDetailsOverlayStyle(slotSide, compact)}>
+              <AvatarPartyDetailsCard
+                avatar={participant.avatar}
+                footer={canKick && onKick ? (
+                  <button
+                    className="morkahja-party-kick-button"
+                    onClick={() => {
+                      onKick(participant.playerId);
+                      setDetailsOpen(false);
+                    }}
+                    style={kickButtonStyle}
+                    type="button"
+                  >
+                    Kick
+                  </button>
+                ) : undefined}
+                inventory={participant.avatar.inventory}
+                inventorySeed={participant.avatar.id}
+                slotSide={slotSide}
+                statusInactive={disengaged}
+                statusLabel={badge || undefined}
+              />
             </div>
           ) : null}
-          {xpPulseToken ? <span aria-hidden="true" style={xpPulseDotStyle} /> : null}
-        </button>
+        </div>
       </div>
       <style>
         {`@keyframes morkahja-party-xp-pulse {

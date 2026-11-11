@@ -16,6 +16,11 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import {
+  bottomEdgeAnchorStyle,
+  FRAME_HORIZONTAL_BAR_SPAN,
+  RESULT_BOTTOM_EDGE_NUDGE_PX,
+} from './decorativeFrameShared.js';
+import {
   LOSS_ROW_FADE_IN_MS,
   playLossBubblesFromTargets,
   playLossFlightsFromAvatar,
@@ -80,18 +85,14 @@ type ItemTooltipState = {
 };
 
 const resultBlockStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: 0,
-  height: 10,
-  width: '108%',
+  ...bottomEdgeAnchorStyle(RESULT_BOTTOM_EDGE_NUDGE_PX),
+  width: FRAME_HORIZONTAL_BAR_SPAN,
   display: 'grid',
   gridTemplateRows: '1fr',
   gridTemplateColumns: '1fr',
   alignItems: 'center',
   justifyItems: 'center',
-  transform: 'translate(-50%, -4px)',
-  zIndex: 21,
+  zIndex: 31,
   overflow: 'visible',
   transition: fadeTransition,
   pointerEvents: 'auto',
@@ -315,8 +316,8 @@ const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0
 
 const lossRowStyle: CSSProperties = {
   ...rewardRowStyle,
-  transform: 'translateY(42px)',
-  zIndex: 11,
+  transform: 'translateY(-48px)',
+  zIndex: 13,
 };
 
 const lossItemImageStyle: CSSProperties = {
@@ -1062,7 +1063,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const imageStyle = {
       ...lossIconStyle(loss.solution.mSolutionInventoryType),
       opacity: lossVisible ? 1 : 0,
-      transform: lossVisible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.9)',
+      transform: lossVisible ? 'translateY(0) scale(1)' : 'translateY(-12px) scale(0.9)',
       transition: lossesFlyingAway
         ? 'opacity 0ms, transform 0ms'
         : lossesRevealed
@@ -1291,6 +1292,18 @@ export const ResultBlock = forwardRef(function ResultBlock(
           </span>
         </button>
       ) : null}
+      {losses.length > 0 && !lossesFlyingAway ? (
+        <div
+          aria-label="Encounter losses"
+          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+          style={{
+            ...lossRowStyle,
+            ...rewardDismissLayerStyle(rewardDismissInProgress),
+          }}
+        >
+          {losses.map((loss) => renderLossIcon(loss))}
+        </div>
+      ) : null}
       {rewards.length > 0 && !rewardsFlyingAway && !rewardDismissInProgress ? (
         <div
           aria-label="Predetermined rewards"
@@ -1339,18 +1352,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {!readOnlyWitness && showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
             ? renderLoreGemRewardIcon()
             : null}
-        </div>
-      ) : null}
-      {losses.length > 0 && !lossesFlyingAway ? (
-        <div
-          aria-label="Encounter losses"
-          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-          style={{
-            ...lossRowStyle,
-            ...rewardDismissLayerStyle(rewardDismissInProgress),
-          }}
-        >
-          {losses.map((loss) => renderLossIcon(loss))}
         </div>
       ) : null}
       {itemTooltip ? (

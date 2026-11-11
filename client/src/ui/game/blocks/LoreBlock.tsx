@@ -9,6 +9,8 @@ import {
 } from '../../protectedImage.js';
 import { FADE_DURATION_MS, fadeTransition } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
+import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
+import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 
 const LORE_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 const LORE_GEM_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -22,15 +24,13 @@ const LORE_BACKGROUND_OPACITY = 0.81;
 
 const loreBlockStyle: CSSProperties = {
   position: 'absolute',
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: -30,
+  inset: 0,
   zIndex: 18,
   width: '100%',
+  height: '100%',
   display: 'grid',
   gridTemplateRows: 'minmax(0, 1fr)',
-  overflow: 'visible',
+  overflow: 'hidden',
   transition: fadeTransition,
 };
 
@@ -51,7 +51,7 @@ const textWrapStyle: CSSProperties = {
   position: 'relative',
   zIndex: 1,
   minHeight: 0,
-  padding: 'clamp(22px, 6vw, 34px) clamp(22px, 7vw, 42px)',
+  padding: '0 clamp(22px, 7vw, 42px) clamp(28px, 7vw, 40px)',
   boxSizing: 'border-box',
   overflow: 'auto',
   msOverflowStyle: 'none',
@@ -63,6 +63,11 @@ const textWrapStyle: CSSProperties = {
   textAlign: 'center',
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.92)',
   userSelect: 'none',
+};
+
+const loreTitleStyle: CSSProperties = {
+  ...overlayPanelTitleStyle,
+  paddingBottom: 'clamp(12px, 3vh, 20px)',
 };
 
 const textStyle: CSSProperties = {
@@ -165,6 +170,7 @@ export function LoreBlock({
   loreGemOffer,
   onLoreGemCollect,
   text,
+  title,
   visible,
 }: {
   encounterKey: string;
@@ -172,6 +178,7 @@ export function LoreBlock({
   loreGemOffer?: LoreGemOfferDto;
   onLoreGemCollect: () => Promise<void>;
   text: string;
+  title: string;
   visible: boolean;
 }) {
   const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
@@ -343,12 +350,16 @@ export function LoreBlock({
         {...{ [PROTECTED_BACKGROUND_ATTR]: '', [PROTECTED_SURFACE_ATTR]: '' }}
         style={loreBackgroundLayerStyle}
       />
+      <DecorativeEdgeFrame zIndex={27} />
       <div
         data-lore-scroll
         {...{ [PROTECTED_SURFACE_ATTR]: '' }}
         onContextMenu={preventImageContextMenu}
         style={textWrapStyle}
       >
+        <h1 className="morkahja-title" style={loreTitleStyle}>
+          {title}
+        </h1>
         <p style={textStyle}>{text || 'No lore has been written for this encounter yet.'}</p>
         {showWaitingStar ? (
           <span aria-hidden="true" style={loreGemStarStyle} />
