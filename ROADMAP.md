@@ -94,4 +94,5 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
 - [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.
 - [ ] Optional: the same render-loop fix in the standalone version, which has the same party-strip code.
-- [ ] Merge into `main`, then release backend and frontend together with `morkahja-deploy release` after Babuni's approval.
+- [ ] Merge into `main`, then release backend and frontend together with `morkahja-deploy release` (approved by Babuni on 2026-11-11).
+- [ ] Bot adventurers online in production (D-012), with `morkahja-deploy` commands to see, stop and start them.

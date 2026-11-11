@@ -1,19 +1,22 @@
 /**
- * Development-only bot adventurers for multiplayer testing.
+ * Bot adventurers: three always-online players that give the world some life
+ * and answer Call for help. Used for local multiplayer testing and, with an
+ * explicit opt-in, on the production server (see ecosystem.config.cjs).
  *
  * Runs three bot players, each a normal account that behaves like a player in
  * a browser: it signs up through the session challenge handshake with its own
  * identity key, creates its avatar through POST /avatar exactly as the avatar
- * creation screen does (a real portrait and frame from the game content),
+ * creation screen does (a real portrait and frame from the game content, named after its portrait
+ * like the creation screen's default),
  * selects it, and plays only through the web client's /room endpoints. Nothing
  * touches the database directly.
  *
- *   Wanderbot  Brakka (Rokur Warrior)  always playing in its own room; join it from Friends.
- *   Watchbot   Sylwen (Verdani Mage)   waits on the welcome screen; answers Call for help,
- *                                      helps until the room ends, the caller leaves, or the
- *                                      room has not moved for 3 minutes (HELP_STALE_MINUTES).
- *   Driftbot   Kestra (Aevis Rogue)    plays 7 rounds, returns to the welcome screen for
- *                                      5 minutes (answering Call for help meanwhile), repeats.
+ *   Varrokh  Rokur Warrior   always adventuring in its own room; join it from Friends.
+ *   Sylvaen  Verdani Mage    waits on the welcome screen; answers Call for help, helps
+ *                            until the room ends, the caller leaves, or the room has not
+ *                            moved for 3 minutes (HELP_STALE_MINUTES).
+ *   Thalyss  Aevis Rogue     plays 7 rounds, returns to the welcome screen for 5 minutes
+ *                            (answering Call for help meanwhile), repeats.
  *
  * In an encounter every bot plays by one simple rule: use an item if one solves
  * it, otherwise a skill, otherwise roll the dice (system events always roll).
@@ -22,20 +25,21 @@
  * One account can only be in one room with one selected avatar at a time, which
  * is why each behavior is its own account.
  *
- *   cd server && BOT_FRIENDS=Babuni npx tsx scripts/dev-bot-adventurer.ts
- *   BOTS=Watchbot,Driftbot ...   # run only some of them
+ *   cd server && BOT_FRIENDS=Babuni npx tsx scripts/bot-adventurers.ts
+ *   BOTS=Sylvaen,Thalyss ...      # run only some of them
  *
  * Identity keys, sessions and avatar ids are kept in gitignored state files
- * beside this script, like recovery keys, so restarts log back in as the same
- * players. Refuses to run with NODE_ENV=production.
+ * (BOT_STATE_DIR, default: beside this script), like recovery keys, so restarts
+ * log back in as the same players. With NODE_ENV=production the bots refuse to
+ * start unless BOT_ALLOW_PRODUCTION=1 is set deliberately.
  */
 import { generateKeyPairSync, createPrivateKey, sign, type KeyObject } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-if (process.env.NODE_ENV === 'production') {
-  console.error('dev-bot-adventurer is for local development only.');
+if (process.env.NODE_ENV === 'production' && process.env.BOT_ALLOW_PRODUCTION !== '1') {
+  console.error('bot-adventurers: refusing to run in production without BOT_ALLOW_PRODUCTION=1.');
   process.exit(1);
 }
 
@@ -59,7 +63,7 @@ const READ_RESULT_MS: [number, number] = [6500, 10000];
 const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
 const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const stateDir = process.env.BOT_STATE_DIR ?? path.dirname(fileURLToPath(import.meta.url));
 
 const RACE_IDS = { Grimnir: 1, Verdani: 2, Aevis: 3, Rokur: 4 } as const;
 const ROLE_IDS = { Mage: 1, Rogue: 2, Warrior: 3 } as const;
@@ -69,16 +73,15 @@ type Behavior = 'always' | 'helper' | 'drift';
 
 interface BotConfig {
   name: string;
-  avatarName: string;
   race: Race;
   role: Role;
   behavior: Behavior;
 }
 
 const BOTS: BotConfig[] = [
-  { name: 'Wanderbot', avatarName: 'Brakka', race: 'Rokur', role: 'Warrior', behavior: 'always' },
-  { name: 'Watchbot', avatarName: 'Sylwen', race: 'Verdani', role: 'Mage', behavior: 'helper' },
-  { name: 'Driftbot', avatarName: 'Kestra', race: 'Aevis', role: 'Rogue', behavior: 'drift' },
+  { name: 'Varrokh', race: 'Rokur', role: 'Warrior', behavior: 'always' },
+  { name: 'Sylvaen', race: 'Verdani', role: 'Mage', behavior: 'helper' },
+  { name: 'Thalyss', race: 'Aevis', role: 'Rogue', behavior: 'drift' },
 ];
 
 type Jwk = Record<string, unknown>;
@@ -136,13 +139,13 @@ class Bot {
   /** While helping: the room's last visible state and when it last changed. */
   private helpRoomFingerprint = '';
   private helpProgressAt = 0;
-  /** Driftbot: rounds played this session, and when its rest ends. */
+  /** On-and-off player: rounds played this session, and when its rest ends. */
   private roundsThisSession = 0;
   private restUntil = 0;
   private readonly stateFile: string;
 
   constructor(private readonly config: BotConfig) {
-    this.stateFile = path.join(scriptDir, `.dev-bot-account-${config.name}.json`);
+    this.stateFile = path.join(stateDir, `.bot-account-${config.name}.json`);
   }
 
   private log(message: string): void {
@@ -228,7 +231,7 @@ class Bot {
 
   /** What the avatar creation screen does: pick from the content, POST /avatar, then select it. */
   private async createAvatar(): Promise<string> {
-    const { race, role, avatarName } = this.config;
+    const { race, role } = this.config;
     const content = await this.api<{ portraits: ContentRow[]; frames: ContentRow[] }>('/game-data/content');
     const portraits = content.portraits.filter(
       (row): row is Record<string, number> =>
@@ -239,16 +242,16 @@ class Bot {
     );
     const now = Date.now();
     this.state.avatarCount += 1;
-    const count = this.state.avatarCount;
-    const suffix = count > 1 ? ` ${['', '', 'II', 'III', 'IV', 'V'][count] ?? count}` : '';
+    const portrait = pick(portraits) as Record<string, number> & { avatarName?: string };
     const avatar = {
       id: `avatar-slot-1-${now}`,
-      name: `${avatarName}${suffix}`,
+      // The creation screen's default: the portrait's own name.
+      name: String(portrait.avatarName ?? race),
       race,
       role,
       level: 1,
       experience: 0,
-      portrait: `avatar_${pick(portraits).avatarID}.webp`,
+      portrait: `avatar_${portrait.avatarID}.webp`,
       frame: `frame_${pick(frames).frameID}.webp`,
       createdAt: now,
       lastPlayedAt: now,
@@ -269,7 +272,7 @@ class Bot {
       return current.id;
     }
     if (current) {
-      this.log(`${this.config.avatarName} has fallen; laying them to rest`);
+      this.log('the avatar has fallen; laying them to rest');
       await this.api(`/avatar/${encodeURIComponent(current.id)}/finalize-death`, { method: 'POST' }).catch(() => undefined);
     }
     this.avatarId = await this.createAvatar();

@@ -98,3 +98,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Open:** whether collectable items need an extra visual hint beyond their existing gentle shake; behaviour on touch screens, where the first tap may also show the item's tooltip.
 
+## D-012 — Bot adventurers live on the production server (2026-11-11)
+
+**Babuni's direction:** keep "some adventurers active on the server all the time, so some bots playing, just to give the game a little bit of life and randomness, and also to have someone available when someone needs help", with more fantasy names.
+
+**AI implementation:** the three test bots run on the production server as normal accounts named Varrokh, Sylvaen and Thalyss, with the same behaviours as in testing (always adventuring, waiting helper, on-and-off player). They use only the public HTTP API from the same host, under PM2 next to the API, and can be switched off with `MORKAHJA_BOTS=0`.
+
+**Open:** whether players should be able to tell that these adventurers are bots (for example a title); their effect on shared features such as the activity feed and achievements has not been reviewed.
+
