@@ -87,10 +87,14 @@ export function PartyZone({
   const visualSlotToLogical: [number, number, number] = [1, 0, 2];
 
   function setSlotDetailsOpen(visualIndex: number, open: boolean): void {
-    setOpenDetailsSlots((current) => ({
-      ...current,
-      [visualIndex]: open,
-    }));
+    // Keep the same object when nothing changes: a new object re-renders
+    // PartyZone, which hands the slots new callbacks, which report again; that
+    // loop ("Maximum update depth exceeded") eventually crashed the browser tab.
+    setOpenDetailsSlots((current) => (
+      Boolean(current[visualIndex]) === open
+        ? current
+        : { ...current, [visualIndex]: open }
+    ));
   }
 
   return (

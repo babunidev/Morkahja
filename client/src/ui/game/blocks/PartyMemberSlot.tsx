@@ -267,9 +267,13 @@ export function PartyMemberSlot({
     }
   }, [focusIconSrc, focusTooltip]);
 
+  // Report only when the details state changes, not whenever the parent hands
+  // over a new callback (inline callbacks are new on every render).
+  const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
+  onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
-    onDetailsVisibleChange?.(detailsOpen);
-  }, [detailsOpen, onDetailsVisibleChange]);
+    onDetailsVisibleChangeRef.current?.(detailsOpen);
+  }, [detailsOpen]);
 
   return (
     <div

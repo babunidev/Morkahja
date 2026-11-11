@@ -209,3 +209,7 @@ When my own Call for help reached nobody, the cause turned out to be a game bug 
 
 **Verification (2026-11-11, Nobara, local Podman PostgreSQL):** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 39 server tests). A side effect worth remembering: running the test suite while the bots are running sends real help invitations to them from short-lived test players. **Branch only; not merged or deployed.**
 
+### A crashed browser tab — 2026-11-11
+
+Chrome closed the tab I was testing in, and the core-dump notice pointed only at Chrome itself. The dump named the local game as the tab's page, and the development server's log told the rest: React had reported "Maximum update depth exceeded" over half a million times since I first opened the new layout. AI traced it to the party strip ported from the standalone version, where showing or hiding an avatar's details card re-rendered the strip in an endless loop, and fixed both halves of that loop. Investigating the dump also briefly filled the memory-backed `/tmp` with a 29 GB extracted core file, which stopped the development server until the file was deleted; nothing else was affected. **Verification:** client typecheck and tests passed; a watch on the development server log for the loop error was started while I tested again. **Branch only; not merged or deployed.**
+

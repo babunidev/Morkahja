@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 import type { PersistedAvatar, RoomParticipantDto, RoomStateDto } from '../../api/http.js';
 
@@ -220,11 +220,13 @@ export function AvatarPanel({
 
 
 
+  // Report only when the details state changes, not whenever the parent hands
+  // over a new callback (inline callbacks are new on every render).
+  const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
+  onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
-
-    onDetailsVisibleChange?.(showDetails);
-
-  }, [onDetailsVisibleChange, showDetails]);
+    onDetailsVisibleChangeRef.current?.(showDetails);
+  }, [showDetails]);
 
 
 
