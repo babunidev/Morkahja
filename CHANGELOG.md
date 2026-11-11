@@ -2,11 +2,11 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-11 — Unreleased: level-up event no longer plays twice; lore gem flies to the avatar
+## 2026-11-11 — Deployed: level-up event no longer plays twice; lore gem flies to the avatar (`main` at `e78cde2f`, PR #26)
 
 - **Fix: a level-up event could be played twice, with its rewards granted twice.** Choosing in a system event and then leaving a solo adventure, or only going away (page reload, switching tab or window), committed the event on the leave path (`commitParticipantOutcomeOnLeave`) but left the room on it, so the player could play the same event again on return. That path also added the room XP bonus to the level-up event. When the player stays listed in the room, the leave and away paths now defer the system event, and `resolveSystemEventLeftByActor` resolves it through the same routine as Continue, once, and moves the room on (`server/src/services/roomService.ts`). Found from Babuni's report; the event log showed it for Babuni's local avatar and an early bot. New test `server/src/services/systemEventLeaveOnce.test.ts` (leave and away) fails on the old code and passes now.
 - **Lore gem (Babuni's direction):** a collected lore gem flies onto the avatar portrait instead of into the inventory, since gems belong to the player, not the inventory.
-- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 40 server tests). **Not deployed.**
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 40 server tests). Released on 2026-11-11 at 08:04 UTC with Babuni's approval; see `docs/DEPLOYMENT.md`. Duplicate rewards players received before the fix were not reverted.
 
 ## 2026-11-11 — Deployed: standalone game screen and bot adventurers (`main` at `a40a6c5c`)
 
