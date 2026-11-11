@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import { gameSolutions } from '../../../data/gameContent.js';
@@ -85,7 +86,13 @@ type ItemTooltipState = {
  * slots and Continue takes the middle. No background bar.
  */
 const RESULT_SLOT_SIZE_PX = 64;
-const REWARD_SLOT_COLUMNS = [1, 2, 4, 5] as const;
+/** Babuni's order: middle, left, right, far left, far right. */
+const RESULT_SLOT_ORDER = [3, 2, 4, 1, 5] as const;
+/** When the Continue arrow holds the middle (nothing to collect, or watching). */
+const RESULT_SLOT_ORDER_AROUND_CONTINUE = [2, 4, 1, 5] as const;
+/** The solutions' "ready" wobble (SolutionBlock), played once when items can be collected. */
+const READY_RATTLE_MS = 520;
+const READY_RATTLE_STAGGER_MS = 80;
 
 const resultBlockStyle: CSSProperties = {
   ...BOTTOM_EDGE_ANCHOR_STYLE,
@@ -284,11 +291,6 @@ const rewardOverflowRowStyle: CSSProperties = {
   transform: 'translateY(-118px)',
 };
 
-const lossRowStyle: CSSProperties = {
-  ...rewardRowStyle,
-  transform: 'translateY(-62px)',
-  zIndex: 13,
-};
 
 const lossItemImageStyle: CSSProperties = {
   ...solutionIconImageBaseStyle,
@@ -923,6 +925,30 @@ export const ResultBlock = forwardRef(function ResultBlock(
     && actorShowContinue
     && !(deferRewardDismiss && localContinuePressed);
 
+  const [readyRattle, setReadyRattle] = useState(false);
+  useEffect(() => {
+    if (!canCollect) {
+      setReadyRattle(false);
+      return undefined;
+    }
+    setReadyRattle(true);
+    const timer = window.setTimeout(() => {
+      setReadyRattle(false);
+    }, READY_RATTLE_MS + RESULT_SLOT_ORDER.length * READY_RATTLE_STAGGER_MS + 60);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [canCollect]);
+
+  function readyRattleStyle(index: number): CSSProperties {
+    return readyRattle
+      ? {
+        animation: `morkahja-result-ready-rattle ${READY_RATTLE_MS}ms ease-out ${index * READY_RATTLE_STAGGER_MS}ms`,
+        transformOrigin: '50% 50%',
+      }
+      : {};
+  }
+
   function collectStyle(key: string): CSSProperties {
     if (collected.has(key)) {
       return { opacity: 0, pointerEvents: 'none' };
@@ -1127,7 +1153,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     );
   }
 
-  function renderLossIcon(loss: EncounterInventoryChange) {
+  function renderLossIcon(loss: EncounterInventoryChange, placement: CSSProperties = {}) {
     const lossVisible = lossesRevealed && !lossesFlyingAway;
     const imageStyle = {
       ...lossIconStyle(loss.solution.mSolutionInventoryType),
@@ -1167,6 +1193,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         onClick={() => { void collectItem(`l:${loss.solution.mSolutionID}`); }}
         style={{
           ...rewardItemStyle,
+          ...placement,
           pointerEvents: lossVisible ? 'auto' : 'none',
           ...(lossVisible ? collectStyle(`l:${loss.solution.mSolutionID}`) : {}),
         }}
@@ -1335,6 +1362,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   60% { transform: rotate(-0.9deg); }
   80% { transform: rotate(0.8deg); }
 }
+@keyframes morkahja-result-ready-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }
 @keyframes morkahja-continue-reveal-spin {
   0% {
     opacity: 0;
@@ -1454,53 +1482,55 @@ export const ResultBlock = forwardRef(function ResultBlock(
           </span>
         </button>
       ) : null}
-      {losses.length > 0 && !lossesFlyingAway ? (
-        <div
-          aria-label="Encounter losses"
-          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-          style={{
-            ...lossRowStyle,
-            ...rewardDismissLayerStyle(rewardDismissInProgress),
-          }}
-        >
-          {losses.map((loss) => renderLossIcon(loss))}
-        </div>
-      ) : null}
-      {!rewardsFlyingAway && !rewardDismissInProgress ? (() => {
-        const showLoreGem = !readOnlyWitness && showLoreGemReward && roll !== null;
-        const slotted = rewards.slice(0, REWARD_SLOT_COLUMNS.length);
-        const overflow = rewards.slice(REWARD_SLOT_COLUMNS.length);
-        const gemColumn = REWARD_SLOT_COLUMNS[slotted.length];
-        const slotPlacement = (column: number): CSSProperties => ({
-          ...rewardItemStyle,
-          gridColumn: String(column),
-          gridRow: '1',
-          zIndex: 11,
-          opacity: rewardsEmerged ? 1 : 0,
-        });
-        return (
-          <>
-            {/* Hidden until grown out of the encounter (see playRewardEmergence). */}
-            {slotted.map((reward, index) => renderSolutionIcon(
+      {(() => {
+        // One row in the solution bar's places: rewards, an earned lore gem,
+        // then losses, filled middle first; anything beyond five floats above.
+        const showRewards = !rewardsFlyingAway && !rewardDismissInProgress;
+        const showLosses = losses.length > 0 && !lossesFlyingAway;
+        const showLoreGem = showRewards && !readOnlyWitness && showLoreGemReward && roll !== null;
+        const rewardShown: CSSProperties = { opacity: rewardsEmerged ? 1 : 0 };
+        const entries: Array<(placement: CSSProperties) => ReactNode> = [
+          ...(showRewards
+            ? rewards.map((reward) => (placement: CSSProperties) => renderSolutionIcon(
               reward,
               '+',
               rewardImageStyle,
-              slotPlacement(REWARD_SLOT_COLUMNS[index]!),
-            ))}
-            {showLoreGem && gemColumn !== undefined ? renderLoreGemRewardIcon(slotPlacement(gemColumn)) : null}
-            {overflow.length > 0 || (showLoreGem && gemColumn === undefined) ? (
+              { ...rewardItemStyle, ...placement, ...rewardShown },
+            ))
+            : []),
+          ...(showLoreGem
+            ? [(placement: CSSProperties) => renderLoreGemRewardIcon({ ...placement, ...rewardShown })]
+            : []),
+          ...(showLosses
+            ? losses.map((loss) => (placement: CSSProperties) => renderLossIcon(loss, {
+              ...placement,
+              ...rewardDismissLayerStyle(rewardDismissInProgress),
+            }))
+            : []),
+        ];
+        const order: readonly number[] = collectMode ? RESULT_SLOT_ORDER : RESULT_SLOT_ORDER_AROUND_CONTINUE;
+        const slotted = entries.slice(0, order.length);
+        const overflow = entries.slice(order.length);
+        return (
+          <>
+            {slotted.map((render, index) => render({
+              gridColumn: String(order[index]),
+              gridRow: '1',
+              zIndex: 11,
+              ...readyRattleStyle(index),
+            }))}
+            {overflow.length > 0 ? (
               <div
-                aria-label="More rewards"
+                aria-label="More rewards and losses"
                 {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-                style={{ ...rewardOverflowRowStyle, opacity: rewardsEmerged ? 1 : 0 }}
+                style={rewardOverflowRowStyle}
               >
-                {overflow.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
-                {showLoreGem && gemColumn === undefined ? renderLoreGemRewardIcon() : null}
+                {overflow.map((render, index) => render(readyRattleStyle(slotted.length + index)))}
               </div>
             ) : null}
           </>
         );
-      })() : null}
+      })()}
       {itemTooltip ? (
         <div
           role="tooltip"
