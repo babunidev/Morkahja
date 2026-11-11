@@ -39,8 +39,13 @@ const FRIENDS = (process.env.BOT_FRIENDS ?? '').split(',').map((name) => name.tr
 const ONLY = (process.env.BOTS ?? '').split(',').map((name) => name.trim()).filter(Boolean);
 const TICK_MS = 1500;
 const HEARTBEAT_MS = 60_000;
-const THINK_MS: [number, number] = [3500, 7000];
-const READ_RESULT_MS: [number, number] = [4000, 6500];
+// Player pace, from the client's animation timings: the choice buttons finish
+// fading in about 3.8 s after a new encounter (280 ms delay + 3000 ms fade +
+// 560 ms), and Continue becomes pressable about 6.2 s after a choice (dice roll
+// 1350 ms + roll reveal 1800 ms + Continue fade-in about 3100 ms). The bot never
+// acts sooner than a player could, and adds a few seconds of "thinking".
+const THINK_MS: [number, number] = [4500, 9000];
+const READ_RESULT_MS: [number, number] = [6500, 10000];
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
 const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
