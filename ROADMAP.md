@@ -92,7 +92,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Development bots for multiplayer testing (always playing, waiting helper, on-and-off player), using items, then skills, then dice.
 - [ ] Mobile layout pass: the standalone targeted desktop; phones take a separate full-screen path and some sizes are fixed pixels on the 390-wide canvas.
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
-- [x] Fixed: a level-up event could be played twice after leaving or reloading mid-event (rewards twice). Unreleased at the time of writing.
+- [x] Fixed and released (`e78cde2f`, 2026-11-11): a level-up event could be played twice after leaving or reloading mid-event (rewards twice).
 - [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.
 - [ ] Optional: the same render-loop fix in the standalone version, which has the same party-strip code.
 - [x] Merged into `main` (PR #24) and released backend and frontend together on 2026-11-11 (`a40a6c5c`).

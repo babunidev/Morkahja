@@ -181,6 +181,15 @@ Requested by Babuni ("do the next deploy and update the server and client togeth
 - A fresh headless Chrome profile loaded the new bundle and reached the welcome screen (Start New Journey / Restore Existing Journey). Its only console messages were the expected `SESSION_INVALID` lookups of a browser with no account.
 - **Not verified by AI:** a played turn on a real account, two-person multiplayer, a Stripe checkout, mobile browsers.
 
+## Production release — 2026-11-11, 08:04 UTC (level-up fix and lore gem)
+
+Approved by Babuni ("yes"). `main` at `e78cde2f` (PR #26); code only, no dependency or game-content changes since `a40a6c5c`.
+
+- **Release:** backup `20261111-080431` (sha256 `f32ed36a…`); backend fast-forwarded to `e78cde2f`; `npm ci`; health gate with content endpoint passed; frontend release `20261111-080433`; public checks passed.
+- **Bots:** restarted with the release; after start-up retries while the API came up, Varrokh, Sylvaen and Thalyss signed in again as the same accounts (same player ids), with no new sign-ups.
+- **Backup proof:** dump downloaded, SHA-256 matched, restored into a disposable PostgreSQL 18 container with every row count matching.
+- **Not verified by AI:** a real player's level-up in production after the fix.
+
 ## Production release — 2026-11-11 (standalone game screen and bot adventurers)
 
 Requested by Babuni ("I want to merge and release this"). `main` at `a40a6c5c` (PR #24) for backend and frontend; no dependency or game-content changes since `5e5481f7`. Times are the server's clock (UTC).
