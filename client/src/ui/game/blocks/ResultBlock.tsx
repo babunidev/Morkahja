@@ -15,11 +15,7 @@ import {
   usedEncounterSolutions,
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
-import {
-  bottomEdgeAnchorStyle,
-  FRAME_HORIZONTAL_BAR_SPAN,
-  RESULT_BOTTOM_EDGE_NUDGE_PX,
-} from './decorativeFrameShared.js';
+import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import {
   getAvatarPortraitRect,
   getFooterButtonRect,
@@ -52,7 +48,6 @@ import {
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
 
-const RESULT_BACKGROUND = assetUrl('/UI/09_GAME/im_bg_result.webp');
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const LORE_GEM_REWARD_ID = 90_001;
@@ -82,12 +77,22 @@ type ItemTooltipState = {
   y: number;
 };
 
+/**
+ * The result uses the solution bar's place and grid (A, B, dice, C, D; see
+ * SolutionBlock), which is hidden while a result shows: rewards take the A-D
+ * slots and Continue takes the middle. No background bar.
+ */
+const RESULT_SLOT_SIZE_PX = 64;
+const REWARD_SLOT_COLUMNS = [1, 2, 4, 5] as const;
+
 const resultBlockStyle: CSSProperties = {
-  ...bottomEdgeAnchorStyle(RESULT_BOTTOM_EDGE_NUDGE_PX),
-  width: FRAME_HORIZONTAL_BAR_SPAN,
+  ...BOTTOM_EDGE_ANCHOR_STYLE,
+  width: '96%',
+  minHeight: RESULT_SLOT_SIZE_PX,
   display: 'grid',
-  gridTemplateRows: '1fr',
-  gridTemplateColumns: '1fr',
+  gridTemplateRows: 'auto',
+  gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+  columnGap: 6,
   alignItems: 'center',
   justifyItems: 'center',
   zIndex: 31,
@@ -96,19 +101,13 @@ const resultBlockStyle: CSSProperties = {
   pointerEvents: 'auto',
 };
 
-const resultImageStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-};
 
 const continueButtonStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  justifySelf: 'end',
+  gridColumn: '3',
+  gridRow: '1',
+  justifySelf: 'center',
   alignSelf: 'center',
-  width: 92,
-  marginRight: '7%',
+  width: 72,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -197,23 +196,11 @@ function rewardDismissLayerStyle(rewardDismissInProgress: boolean): CSSPropertie
   };
 }
 
-const outcomeClusterStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  justifySelf: 'center',
-  alignSelf: 'center',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 'clamp(8px, 2.4vw, 14px)',
-  maxWidth: '88%',
-  transform: 'translateX(-14px)',
-  zIndex: 12,
-  pointerEvents: 'auto',
-};
 
 
 const rewardRowStyle: CSSProperties = {
-  gridArea: '1 / 1',
+  gridColumn: '1 / -1',
+  gridRow: '1',
   justifySelf: 'center',
   alignSelf: 'center',
   display: 'flex',
@@ -241,8 +228,8 @@ const solutionIconImageBaseStyle: CSSProperties = {
 
 const rewardImageStyle: CSSProperties = {
   ...solutionIconImageBaseStyle,
-  width: 64,
-  height: 64,
+  width: RESULT_SLOT_SIZE_PX,
+  height: RESULT_SLOT_SIZE_PX,
   boxShadow: '0 0 14px rgba(255, 204, 102, 0.38), 0 6px 12px rgba(0, 0, 0, 0.46)',
   animation: 'morkahja-reward-shake 3.2s ease-in-out infinite',
   transformOrigin: '50% 50%',
@@ -289,9 +276,15 @@ const loreGemPopupStyle: CSSProperties = {
 
 const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
+/** More than four rewards (some level-ups): the rest float above the bar. */
+const rewardOverflowRowStyle: CSSProperties = {
+  ...rewardRowStyle,
+  transform: 'translateY(-118px)',
+};
+
 const lossRowStyle: CSSProperties = {
   ...rewardRowStyle,
-  transform: 'translateY(-48px)',
+  transform: 'translateY(-62px)',
   zIndex: 13,
 };
 
@@ -918,7 +911,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setItemTooltip(null);
   }
 
-  function renderLoreGemRewardIcon() {
+  function renderLoreGemRewardIcon(placement: CSSProperties = {}) {
     const loreGemReward: VisibleReward = {
       quantity: 1,
       solution: {
@@ -954,7 +947,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         }}
         onContextMenu={preventImageContextMenu}
         onPointerLeave={hideItemTooltip}
-        style={loreGemRewardButtonStyle}
+        style={{ ...loreGemRewardButtonStyle, ...placement }}
         type="button"
       >
         <span
@@ -1216,17 +1209,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
   100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
 }`}
       </style>
-      <img
-        alt=""
-        aria-hidden="true"
-        {...protectedImageProps}
-        src={RESULT_BACKGROUND}
-        style={{
-          ...resultImageStyle,
-          ...rewardDismissLayerStyle(rewardDismissInProgress),
-          pointerEvents: resultInteractive ? 'auto' : 'none',
-        }}
-      />
       {(!readOnlyWitness || visible) ? (
         <button
           aria-disabled={!continueInteractive}
@@ -1314,27 +1296,39 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {losses.map((loss) => renderLossIcon(loss))}
         </div>
       ) : null}
-      {rewards.length > 0 && !rewardsFlyingAway && !rewardDismissInProgress ? (
-        <div
-          aria-label="Predetermined rewards"
-          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-          style={rewardRowStyle}
-        >
-          {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
-        </div>
-      ) : null}
-      {!readOnlyWitness && showLoreGemReward && roll !== null && !rewardsFlyingAway && !rewardDismissInProgress ? (
-        <div
-          aria-label="Encounter outcome"
-          {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-          style={{
-            ...outcomeClusterStyle,
-            ...rewardDismissLayerStyle(rewardDismissInProgress),
-          }}
-        >
-          {renderLoreGemRewardIcon()}
-        </div>
-      ) : null}
+      {!rewardsFlyingAway && !rewardDismissInProgress ? (() => {
+        const showLoreGem = !readOnlyWitness && showLoreGemReward && roll !== null;
+        const slotted = rewards.slice(0, REWARD_SLOT_COLUMNS.length);
+        const overflow = rewards.slice(REWARD_SLOT_COLUMNS.length);
+        const gemColumn = REWARD_SLOT_COLUMNS[slotted.length];
+        const slotPlacement = (column: number): CSSProperties => ({
+          ...rewardItemStyle,
+          gridColumn: String(column),
+          gridRow: '1',
+          zIndex: 11,
+        });
+        return (
+          <>
+            {slotted.map((reward, index) => renderSolutionIcon(
+              reward,
+              '+',
+              rewardImageStyle,
+              slotPlacement(REWARD_SLOT_COLUMNS[index]!),
+            ))}
+            {showLoreGem && gemColumn !== undefined ? renderLoreGemRewardIcon(slotPlacement(gemColumn)) : null}
+            {overflow.length > 0 || (showLoreGem && gemColumn === undefined) ? (
+              <div
+                aria-label="More rewards"
+                {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+                style={rewardOverflowRowStyle}
+              >
+                {overflow.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
+                {showLoreGem && gemColumn === undefined ? renderLoreGemRewardIcon() : null}
+              </div>
+            ) : null}
+          </>
+        );
+      })() : null}
       {itemTooltip ? (
         <div
           role="tooltip"
