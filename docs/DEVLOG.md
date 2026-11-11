@@ -199,5 +199,5 @@ Months ago I made a desktop version of Morkahja that runs offline, and along the
 
 **Babuni's direction:** take the standalone's layout and small animations, test them on a branch, and play them locally first. **AI implementation:** a three-way merge from the shared June starting point kept the web fixes made since then, such as `/Morkahja/` asset paths, server-loaded content and the stalled-turn fix. Everything the offline version had removed for lack of a server was restored or left out of the merge; Call for help moved into the new action menu.
 
-**Verification (2026-11-11, Nobara, local Podman PostgreSQL):** the release gate passed and the local client reached its welcome screen. My own play test is pending. **Branch only; not merged or deployed.**
+**Verification (2026-11-11, Nobara, local Podman PostgreSQL):** the release gate passed and the local client reached its welcome screen; the play test is still mine to do. **Branch only; not merged or deployed.**
 
