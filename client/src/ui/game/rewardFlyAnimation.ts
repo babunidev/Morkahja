@@ -43,6 +43,23 @@ export function vibrateFooterButton(kind: RewardFlyTargetKind): void {
   }, 320);
 }
 
+export function ejectFooterButton(kind: RewardFlyTargetKind): void {
+  const element = document.querySelector(
+    `${FOOTER_TARGET_SELECTOR}="${kind}"]`,
+  );
+
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove('morkahja-footer-button-eject');
+  void element.getBoundingClientRect();
+  element.classList.add('morkahja-footer-button-eject');
+  window.setTimeout(() => {
+    element.classList.remove('morkahja-footer-button-eject');
+  }, 400);
+}
+
 export function cleanupRewardFlyers(): void {
   document.querySelectorAll(ICON_FLYER_SELECTOR).forEach((node) => {
     node.remove();
@@ -138,12 +155,15 @@ function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTM
   return flyer;
 }
 
+const DEFAULT_FLIGHT_EASING = 'cubic-bezier(0.18, 0.04, 0.12, 1)';
+
 function runAnimatedFlyer(
   flyer: HTMLImageElement,
   keyframes: Keyframe[],
   durationMs: number,
   timeoutMs: number,
   onStart: () => void,
+  easing: string = DEFAULT_FLIGHT_EASING,
 ): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
@@ -173,7 +193,7 @@ function runAnimatedFlyer(
 
         const animation = flyer.animate(keyframes, {
           duration: durationMs,
-          easing: 'cubic-bezier(0.18, 0.04, 0.12, 1)',
+          easing,
           fill: 'forwards',
         });
 
@@ -369,9 +389,15 @@ function runRewardFlight(
   });
 }
 
+/** `keepOtherFlyers`: collecting one item must not cut off another item's flight. */
+interface FlightOptions {
+  keepOtherFlyers?: boolean;
+}
+
 async function playLossBubbles(
   flights: LossFlightSpec[],
   resolveSourceRect: (flight: LossFlightSpec, index: number) => DOMRect | null,
+  options: FlightOptions = {},
 ): Promise<void> {
   if (flights.length === 0) {
     return;
@@ -391,7 +417,9 @@ async function playLossBubbles(
     return;
   }
 
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 
   await Promise.race([
     waitForNextFrame().then(() => (
@@ -404,7 +432,9 @@ async function playLossBubbles(
     wait(LOSS_BUBBLE_TIMEOUT_MS + runnable.length * LOSS_BUBBLE_STAGGER_MS),
   ]);
 
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 }
 
 export async function playLossFlightsFromAvatar(
@@ -421,14 +451,18 @@ export async function playLossFlightsFromAvatar(
 
 export async function playLossBubblesFromTargets(
   flights: LossBubbleTargetSpec[],
+  options: FlightOptions = {},
 ): Promise<void> {
-  await playLossBubbles(flights, (_, index) => flights[index]?.sourceRect ?? null);
+  await playLossBubbles(flights, (_, index) => flights[index]?.sourceRect ?? null, options);
 }
 
 export async function playRewardFlights(
   flights: RewardFlightSpec[],
+  options: FlightOptions = {},
 ): Promise<void> {
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 
   if (flights.length === 0) {
     return;
@@ -443,5 +477,416 @@ export async function playRewardFlights(
     wait(REWARD_FLIGHT_TIMEOUT_MS + flights.length * 80),
   ]);
 
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
+}
+
+/**
+ * Played-animation memory, per encounter: a result can re-render or remount
+ * while a round continues (for example when the server's final result arrives),
+ * and a spending, arrival or emergence animation must never play twice.
+ */
+const playedAnimationKeys = new Set<string>();
+const PLAYED_ANIMATION_MEMORY = 200;
+
+/** Returns true the first time a key is seen, false afterwards. */
+export function claimAnimationOnce(key: string): boolean {
+  if (playedAnimationKeys.has(key)) {
+    return false;
+  }
+  playedAnimationKeys.add(key);
+  if (playedAnimationKeys.size > PLAYED_ANIMATION_MEMORY) {
+    const oldest = playedAnimationKeys.values().next().value;
+    if (oldest !== undefined) {
+      playedAnimationKeys.delete(oldest);
+    }
+  }
+  return true;
+}
+
+export function animationAlreadyPlayed(key: string): boolean {
+  return playedAnimationKeys.has(key);
+}
+
+/**
+ * Landing hand-over shared by every flight that ends on a real object: the
+ * flyer arrives at LANDING_ARRIVE_AT, holds while its glow fades and the real
+ * object fades in underneath (`onArrive` fires at arrival), then fades out over
+ * it. Offsets are time fractions; only the travel part is eased.
+ */
+export const LANDING_ARRIVE_AT = 0.72;
+const LANDING_SETTLED_AT = 0.86;
+/** How long the real object should take to fade in under the flyer. */
+export function landingRevealMs(durationMs: number): number {
+  return Math.round(durationMs * (LANDING_SETTLED_AT - LANDING_ARRIVE_AT));
+}
+const NO_SHADOW = '0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0)';
+const TRAVEL_EASING = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+
+interface LandingPoint {
+  offset: number;
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+}
+
+function runLandingFlight({
+  boxShadow,
+  durationMs,
+  imageSrc,
+  onArrive,
+  onStart,
+  points,
+  size,
+}: {
+  boxShadow: string;
+  durationMs: number;
+  imageSrc: string;
+  onArrive?: () => void;
+  onStart?: () => void;
+  /** Travel keyframes; the last one is the arrival, at LANDING_ARRIVE_AT. */
+  points: LandingPoint[];
+  size: number;
+}): Promise<void> {
+  const flyer = createIconFlyer(imageSrc, size, boxShadow);
+  const half = size / 2;
+  const transform = (point: LandingPoint): string => (
+    `translate(${point.x - half}px, ${point.y - half}px) scale(${point.scale})`
+  );
+  const arrival = points[points.length - 1]!;
+  const frames: Keyframe[] = points.map((point, index) => ({
+    offset: point.offset,
+    transform: transform(point),
+    opacity: point.opacity,
+    boxShadow,
+    easing: index < points.length - 1 ? TRAVEL_EASING : 'linear',
+  }));
+  frames.push(
+    { offset: LANDING_SETTLED_AT, transform: transform(arrival), opacity: 1, boxShadow: NO_SHADOW, easing: 'linear' },
+    { offset: 1, transform: transform(arrival), opacity: 0, boxShadow: NO_SHADOW },
+  );
+
+  let arrived = false;
+  let arriveTimer: number | null = null;
+  const arrive = (): void => {
+    if (!arrived) {
+      arrived = true;
+      onArrive?.();
+    }
+  };
+
+  return runAnimatedFlyer(
+    flyer,
+    frames,
+    durationMs,
+    durationMs + 600,
+    () => {
+      flyer.style.transform = transform(points[0]!);
+      flyer.style.opacity = String(points[0]!.opacity);
+      onStart?.();
+      arriveTimer = window.setTimeout(arrive, Math.round(arrival.offset * durationMs));
+    },
+    'linear',
+  ).finally(() => {
+    if (arriveTimer !== null) {
+      window.clearTimeout(arriveTimer);
+    }
+    // Never leave the real object hidden if the flight was cut short.
+    arrive();
+  });
+}
+
+export interface SolutionSlotInboundFlightSpec {
+  id: string;
+  imageSrc: string;
+  size: number;
+  source: RewardFlyTargetKind;
+  sourceRect: DOMRect;
+  targetRect: DOMRect;
+}
+
+export const SOLUTION_SLOT_INBOUND_FLIGHT_MS = 900;
+export const SOLUTION_SLOT_INBOUND_STAGGER_MS = 110;
+const SOLUTION_SLOT_INBOUND_TIMEOUT_MS = SOLUTION_SLOT_INBOUND_FLIGHT_MS + 600;
+
+function runSolutionSlotInboundFlight(
+  sourceRect: DOMRect,
+  targetRect: DOMRect,
+  imageSrc: string,
+  size: number,
+  sourceKind: RewardFlyTargetKind,
+  onNearTarget?: () => void,
+): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const target = rectCenter(targetRect);
+  const along = (progress: number) => ({
+    x: source.x + (target.x - source.x) * progress,
+    y: source.y + (target.y - source.y) * progress,
+  });
+  return runLandingFlight({
+    boxShadow: '0 0 16px rgba(255, 204, 102, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45)',
+    durationMs: SOLUTION_SLOT_INBOUND_FLIGHT_MS,
+    imageSrc,
+    onArrive: onNearTarget,
+    onStart: () => ejectFooterButton(sourceKind),
+    points: [
+      { offset: 0, ...source, scale: 0.38, opacity: 0.92 },
+      { offset: LANDING_ARRIVE_AT * 0.58, ...along(0.58), scale: 0.82, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
+    ],
+    size,
+  });
+}
+
+export async function playSolutionSlotInboundFlights(
+  flights: SolutionSlotInboundFlightSpec[],
+  onFlightComplete?: (id: string) => void,
+): Promise<void> {
   cleanupRewardFlyers();
+
+  if (flights.length === 0) {
+    return;
+  }
+
+  await waitForNextFrame();
+
+  await Promise.race([
+    Promise.all(flights.map((flight, index) => (
+      wait(index * SOLUTION_SLOT_INBOUND_STAGGER_MS).then(() => (
+        runSolutionSlotInboundFlight(
+          flight.sourceRect,
+          flight.targetRect,
+          flight.imageSrc,
+          flight.size,
+          flight.source,
+          onFlightComplete ? () => onFlightComplete(flight.id) : undefined,
+        )
+      ))
+    ))),
+    wait(SOLUTION_SLOT_INBOUND_TIMEOUT_MS + flights.length * SOLUTION_SLOT_INBOUND_STAGGER_MS),
+  ]);
+
+  cleanupRewardFlyers();
+}
+
+const ENCOUNTER_ART_SELECTOR = '[data-morkahja-encounter-art]';
+
+export function getEncounterArtRect(): DOMRect | null {
+  const element = document.querySelector(ENCOUNTER_ART_SELECTOR);
+  return element instanceof HTMLElement ? element.getBoundingClientRect() : null;
+}
+
+/** A used solution travels into the middle of the encounter picture and shrinks to nothing. */
+export const USED_SOLUTION_FLIGHT_MS = 900;
+const USED_SOLUTION_FLIGHT_TIMEOUT_MS = USED_SOLUTION_FLIGHT_MS + 600;
+export const USED_SOLUTION_STAGGER_MS = 120;
+
+export interface UsedSolutionFlightSpec {
+  imageSrc: string;
+  size: number;
+  sourceRect: DOMRect;
+  /** Called the moment the flyer covers the slot, to hide the original icon. */
+  onTakeOff?: () => void;
+}
+
+function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect): Promise<void> {
+  const source = rectCenter(spec.sourceRect);
+  const target = rectCenter(targetRect);
+  const half = spec.size / 2;
+  const flyer = createIconFlyer(
+    spec.imageSrc,
+    spec.size,
+    '0 0 18px rgba(255, 204, 102, 0.6), 0 6px 14px rgba(0, 0, 0, 0.45)',
+  );
+  const at = (progress: number): { x: number; y: number } => ({
+    x: source.x + (target.x - source.x) * progress - half,
+    y: source.y + (target.y - source.y) * progress - half,
+  });
+  const start = at(0);
+  const lift = at(0.04);
+  const middle = at(0.72);
+  const end = at(1);
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      { offset: 0, transform: `translate(${start.x}px, ${start.y}px) scale(1)`, opacity: 1 },
+      { offset: 0.18, transform: `translate(${lift.x}px, ${lift.y}px) scale(1.1)`, opacity: 1 },
+      { offset: 0.72, transform: `translate(${middle.x}px, ${middle.y}px) scale(0.62)`, opacity: 1 },
+      { offset: 1, transform: `translate(${end.x}px, ${end.y}px) scale(0)`, opacity: 0 },
+    ],
+    USED_SOLUTION_FLIGHT_MS,
+    USED_SOLUTION_FLIGHT_TIMEOUT_MS,
+    () => {
+      flyer.style.transform = `translate(${start.x}px, ${start.y}px) scale(1)`;
+      flyer.style.opacity = '1';
+      spec.onTakeOff?.();
+    },
+    // Slow start, then into the picture.
+    'cubic-bezier(0.45, 0, 0.3, 1)',
+  );
+}
+
+export async function playUsedSolutionsIntoEncounter(flights: UsedSolutionFlightSpec[]): Promise<void> {
+  const targetRect = getEncounterArtRect();
+  if (!targetRect || flights.length === 0) {
+    return;
+  }
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * USED_SOLUTION_STAGGER_MS).then(() => runUsedSolutionFlight(flight, targetRect))
+    )))),
+    wait(USED_SOLUTION_FLIGHT_TIMEOUT_MS + flights.length * USED_SOLUTION_STAGGER_MS),
+  ]);
+}
+
+/**
+ * A loss appears where it was kept (an essence in the middle of the avatar, an
+ * item or skill at its Inventory or Skillbook button) and travels to its place
+ * in the result's loss row.
+ */
+export const LOSS_ARRIVAL_MS = 950;
+const LOSS_ARRIVAL_TIMEOUT_MS = LOSS_ARRIVAL_MS + 600;
+export const LOSS_ARRIVAL_STAGGER_MS = 140;
+
+export interface LossArrivalSpec {
+  imageSrc: string;
+  size: number;
+  sourceRect: DOMRect;
+  targetRect: DOMRect;
+}
+
+function runLossArrival(spec: LossArrivalSpec, onArrive: () => void): Promise<void> {
+  const source = rectCenter(spec.sourceRect);
+  const target = rectCenter(spec.targetRect);
+  return runLandingFlight({
+    boxShadow: '0 0 16px rgba(255, 120, 96, 0.5), 0 6px 12px rgba(0, 0, 0, 0.45)',
+    durationMs: LOSS_ARRIVAL_MS,
+    imageSrc: spec.imageSrc,
+    onArrive,
+    points: [
+      { offset: 0, ...source, scale: 0.3, opacity: 0 },
+      { offset: 0.16, ...source, scale: 1.08, opacity: 1 },
+      { offset: 0.24, ...source, scale: 1, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
+    ],
+    size: spec.size,
+  });
+}
+
+/** Each loss is handed over as it lands (`onItemArrived(index)`); resolves once all have settled. */
+export async function playLossArrivals(
+  flights: LossArrivalSpec[],
+  onItemArrived?: (index: number) => void,
+): Promise<void> {
+  if (flights.length === 0) {
+    return;
+  }
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * LOSS_ARRIVAL_STAGGER_MS).then(() => runLossArrival(flight, () => onItemArrived?.(index)))
+    )))),
+    wait(LOSS_ARRIVAL_TIMEOUT_MS + flights.length * LOSS_ARRIVAL_STAGGER_MS),
+  ]);
+  flights.forEach((_, index) => onItemArrived?.(index));
+}
+
+/**
+ * Rewards grow out of the middle of the encounter picture and travel to their
+ * slots: the reverse of a used solution shrinking into it.
+ */
+export const REWARD_EMERGE_MS = 950;
+const REWARD_EMERGE_TIMEOUT_MS = REWARD_EMERGE_MS + 600;
+export const REWARD_EMERGE_STAGGER_MS = 130;
+
+export interface RewardEmergenceSpec {
+  imageSrc: string;
+  size: number;
+  targetRect: DOMRect;
+}
+
+function runRewardEmergence(spec: RewardEmergenceSpec, sourceRect: DOMRect, onArrive: () => void): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const target = rectCenter(spec.targetRect);
+  const along = (progress: number) => ({
+    x: source.x + (target.x - source.x) * progress,
+    y: source.y + (target.y - source.y) * progress,
+  });
+  return runLandingFlight({
+    boxShadow: '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
+    durationMs: REWARD_EMERGE_MS,
+    imageSrc: spec.imageSrc,
+    onArrive,
+    points: [
+      { offset: 0, ...source, scale: 0, opacity: 0 },
+      { offset: LANDING_ARRIVE_AT * 0.3, ...along(0.3), scale: 0.72, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
+    ],
+    size: spec.size,
+  });
+}
+
+/**
+ * Each reward is handed over as it lands (`onItemArrived(index)`); resolves
+ * once all have settled.
+ */
+export async function playRewardEmergence(
+  flights: RewardEmergenceSpec[],
+  onItemArrived?: (index: number) => void,
+): Promise<void> {
+  const sourceRect = getEncounterArtRect();
+  if (!sourceRect || flights.length === 0) {
+    flights.forEach((_, index) => onItemArrived?.(index));
+    return;
+  }
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * REWARD_EMERGE_STAGGER_MS).then(() => runRewardEmergence(
+        flight,
+        sourceRect,
+        () => onItemArrived?.(index),
+      ))
+    )))),
+    wait(REWARD_EMERGE_TIMEOUT_MS + flights.length * REWARD_EMERGE_STAGGER_MS),
+  ]);
+  flights.forEach((_, index) => onItemArrived?.(index));
+}
+
+/**
+ * The player's committed action, recorded by the solution bar at the moment of
+ * commit. Result animations are tied to it rather than to what the result
+ * currently shows: when a new encounter starts, the result briefly still holds
+ * the previous roll and slot while the encounter id is already the new one,
+ * which must not replay the spending animation with the new slot's image.
+ */
+let committedAction: { snapshotId: string; action: string; spendTaken: boolean } | null = null;
+
+export function recordCommittedAction(snapshotId: string, action: string): void {
+  committedAction = { snapshotId, action, spendTaken: false };
+}
+
+/** The action the player committed in this encounter, if any. */
+export function committedActionFor(snapshotId: string | undefined): string | null {
+  return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.action : null;
+}
+
+/** True once for a solution actually committed in this slot of this encounter. */
+export function takeCommittedSolutionSpend(snapshotId: string | undefined, slot: string | null): boolean {
+  if (
+    !snapshotId
+    || !slot
+    || slot === 'dice'
+    || committedAction?.snapshotId !== snapshotId
+    || committedAction.action !== slot
+    || committedAction.spendTaken
+  ) {
+    return false;
+  }
+  committedAction.spendTaken = true;
+  return true;
 }

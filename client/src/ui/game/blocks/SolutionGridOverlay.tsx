@@ -20,6 +20,8 @@ import {
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
+import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
+import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { assetUrl } from '../../../assetUrl.js';
@@ -96,12 +98,10 @@ const OVERLAY_Z_INDEX = 26;
 
 const overlayBlockStyle: CSSProperties = {
   position: 'absolute',
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: -30,
+  inset: 0,
   zIndex: OVERLAY_Z_INDEX,
   width: '100%',
+  height: '100%',
   display: 'flex',
   flexDirection: 'column',
   backgroundColor: 'rgba(10, 7, 5, 0.94)',
@@ -118,11 +118,17 @@ const scrollWrapStyle: CSSProperties = {
   zIndex: 1,
   flex: 1,
   minHeight: 0,
-  padding: 'clamp(18px, 5vw, 30px) clamp(14px, 4vw, 28px)',
+  padding: '0 clamp(14px, 4vw, 28px) clamp(24px, 6vw, 36px)',
   boxSizing: 'border-box',
   overflow: 'auto',
   msOverflowStyle: 'none',
   scrollbarWidth: 'none',
+};
+
+const panelTitleWrapStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  flexShrink: 0,
 };
 
 const itemGridStyle: CSSProperties = {
@@ -245,6 +251,7 @@ export function SolutionGridOverlay({
   emptyText,
   inventory,
   inventoryType,
+  panelTitle,
   scrollDataAttribute,
   sourceContainer,
   visible,
@@ -253,6 +260,7 @@ export function SolutionGridOverlay({
   emptyText: string;
   inventory: AvatarInventory | undefined;
   inventoryType: 1 | 2;
+  panelTitle: string;
   scrollDataAttribute: string;
   sourceContainer: 'spellbook' | 'items';
   visible: boolean;
@@ -398,6 +406,12 @@ export function SolutionGridOverlay({
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
       </style>
+      <DecorativeEdgeFrame zIndex={27} />
+      <div style={panelTitleWrapStyle}>
+        <h1 className="morkahja-title" style={overlayPanelTitleStyle}>
+          {panelTitle}
+        </h1>
+      </div>
       <div
         {...{ [`data-${scrollDataAttribute}`]: '' }}
         style={{

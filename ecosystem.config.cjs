@@ -60,6 +60,31 @@ if (!fs.existsSync(tsx)) {
   );
 }
 
+const fileEnv = loadEnvFile(envFilePath);
+
+/**
+ * Bot adventurers (server/scripts/bot-adventurers.ts): three always-online
+ * players that talk to the API over HTTP like any browser. They get no access
+ * to the database or the .env secrets. Set MORKAHJA_BOTS=0 in .env to leave
+ * them out.
+ */
+const botsEnabled = (fileEnv.MORKAHJA_BOTS ?? '1') !== '0';
+const botsApp = {
+  name: 'morkahja-bots',
+  cwd: path.join(repoRoot, 'server'),
+  script: tsx,
+  args: 'scripts/bot-adventurers.ts',
+  interpreter: 'none',
+  // Give the API time to come up; back off if it is unreachable.
+  restart_delay: 5000,
+  exp_backoff_restart_delay: 2000,
+  env: {
+    NODE_ENV: 'production',
+    BOT_ALLOW_PRODUCTION: '1',
+    BOT_API: `http://127.0.0.1:${fileEnv.PORT || 3000}`,
+  },
+};
+
 module.exports = {
   apps: [
     {
@@ -70,8 +95,9 @@ module.exports = {
       interpreter: 'none',
       env: {
         NODE_ENV: 'production',
-        ...loadEnvFile(envFilePath),
+        ...fileEnv,
       },
     },
+    ...(botsEnabled ? [botsApp] : []),
   ],
 };

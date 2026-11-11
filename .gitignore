@@ -6,3 +6,5 @@ morkahja-cbt-firebase-adminsdk-dinxd-7b9e95108c.json
 .env
 .env.*
 Key.js
+server/scripts/.dev-bot-*.json
+server/scripts/.bot-account-*.json

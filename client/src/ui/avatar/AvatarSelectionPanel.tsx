@@ -38,7 +38,7 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
 import AvatarCreation from './AvatarCreation.js';
 import AvatarCard from './AvatarCard.js';
-import { formatAvatarDisplayName } from './avatarDisplayName.js';
+import { formatAvatarDisplayName, readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { assetUrl } from '../../assetUrl.js';
 
 const CREATE_AVATAR_ASSET = assetUrl('/UI/03_DASHBOARD/CreateAvatar.webp');
@@ -113,9 +113,17 @@ const messageStyle: CSSProperties = {
 };
 
 function avatarSlotTooltipContent(avatar: PersistedAvatar): ReactNode {
+  const displayTitle = readAvatarDisplayTitle(avatar);
+  const baseName = avatar.name.trim() || 'Adventurer';
+
   return (
     <>
-      <span className="morkahja-avatar-slot-tooltip-title">{formatAvatarDisplayName(avatar)}</span>
+      {displayTitle ? (
+        <span className="morkahja-avatar-slot-tooltip-title">{displayTitle}</span>
+      ) : null}
+      <span className={displayTitle ? 'morkahja-avatar-slot-tooltip-name' : 'morkahja-avatar-slot-tooltip-title'}>
+        {baseName}
+      </span>
       <span className="morkahja-avatar-slot-tooltip-meta">
         Level {avatar.level} · {avatar.race} {avatar.role}
       </span>

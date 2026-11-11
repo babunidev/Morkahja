@@ -14,6 +14,7 @@ export function SkillbookBlock({
       emptyText="Your skillbook is empty."
       inventory={inventory}
       inventoryType={1}
+      panelTitle="SKILLBOOK"
       scrollDataAttribute="skillbook-scroll"
       sourceContainer="spellbook"
       visible={visible}

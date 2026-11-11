@@ -14,6 +14,7 @@ export function InventoryBlock({
       emptyText="Your inventory is empty."
       inventory={inventory}
       inventoryType={2}
+      panelTitle="INVENTORY"
       scrollDataAttribute="inventory-scroll"
       sourceContainer="items"
       visible={visible}

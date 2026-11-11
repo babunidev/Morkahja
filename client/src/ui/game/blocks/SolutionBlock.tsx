@@ -13,7 +13,6 @@ import {
 } from '../../hooks/useTooltipReveal.js';
 import {
   PROTECTED_SURFACE_ATTR,
-  protectedImageProps,
 } from '../../protectedImage.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
@@ -23,6 +22,7 @@ import {
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
+  FADE_DURATION_MS,
   fadeTransition,
 } from '../../transitions/fade.js';
 import {
@@ -34,8 +34,17 @@ import {
 import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
+import {
+  recordCommittedAction,
+  getFooterButtonRect,
+  landingRevealMs,
+  SOLUTION_SLOT_INBOUND_FLIGHT_MS,
+  playSolutionSlotInboundFlights,
+  type RewardFlyTargetKind,
+  type SolutionSlotInboundFlightSpec,
+} from '../rewardFlyAnimation.js';
+import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 
-const FRAME_MASK = assetUrl('/UI/09_GAME/im_spacer_line.webp');
 const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
@@ -45,6 +54,7 @@ type SolutionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[
 interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
+  mSolutionInventoryType: number;
   mSolutionName: string;
   mSolutionText: string;
   mSolutionType: number;
@@ -70,6 +80,8 @@ const SOLUTION_REVEAL_TOTAL_MS = ENCOUNTER_ACTIONS_FADE_DURATION_MS + AVAILABLE_
 const SOLUTION_ENABLE_RATTLE_MS = 520;
 const DICE_ROLL_ANIMATION_MS = 1350;
 const SOLUTION_ROLL_REVEAL_MS = 1800;
+
+const SOLUTION_ACTION_SIZE_PX = 64;
 
 type SolutionRevealDirection = 'left' | 'right' | 'bottom';
 
@@ -107,12 +119,11 @@ function solutionHiddenStyle(direction: SolutionRevealDirection): CSSProperties 
 
 function solutionRevealSpinStyle(
   direction: SolutionRevealDirection,
-  available: boolean,
 ): CSSProperties {
   return {
     opacity: 0,
     transformOrigin: '50% 50%',
-    animation: `${solutionSpinAnimationName(direction, available)} ${SOLUTION_REVEAL_TOTAL_MS}ms cubic-bezier(0.55, 0, 0.25, 1) forwards`,
+    animation: `${solutionSpinAnimationName(direction, false)} ${SOLUTION_REVEAL_TOTAL_MS}ms cubic-bezier(0.55, 0, 0.25, 1) forwards`,
   };
 }
 
@@ -135,10 +146,56 @@ function solutionRevealStyle(
   }
 
   if (!interactive) {
-    return solutionRevealSpinStyle(direction, available);
+    return solutionRevealSpinStyle(direction);
   }
 
   return solutionSettledStyle(available);
+}
+
+function solutionInboundButtonStyle(
+  revealing: boolean,
+): CSSProperties {
+  if (!revealing) {
+    return { opacity: 0 };
+  }
+
+  return { opacity: 1 };
+}
+
+function solutionIconShellRevealStyle(
+  revealing: boolean,
+  revealSettled: boolean,
+  direction: SolutionRevealDirection,
+  available: boolean,
+  slot: SlotLetter,
+  inboundFlownSlots: Set<SlotLetter>,
+): CSSProperties {
+  if (!revealing) {
+    return {};
+  }
+
+  if (!revealSettled) {
+    return solutionRevealSpinStyle(direction);
+  }
+
+  const opacityTransition = `opacity ${FADE_DURATION_MS}ms ease`;
+
+  if (available && inboundFlownSlots.has(slot)) {
+    return {
+      opacity: 1,
+      transform: 'rotate(0deg) scale(1)',
+      transformOrigin: '50% 50%',
+      // Quick: the landed flyer still covers the slot while this fades in.
+      transition: `opacity ${landingRevealMs(SOLUTION_SLOT_INBOUND_FLIGHT_MS)}ms ease-out`,
+    };
+  }
+
+  return {
+    opacity: UNAVAILABLE_SOLUTION_OPACITY,
+    transform: 'rotate(0deg) scale(1)',
+    transformOrigin: '50% 50%',
+    transition: opacityTransition,
+  };
 }
 
 function diceRevealStyle(revealing: boolean, interactive: boolean): CSSProperties {
@@ -184,46 +241,56 @@ const unavailableTooltipDetailStyle: CSSProperties = {
   lineHeight: 1.15,
 };
 
+const compactDiceTooltipStyle: CSSProperties = {
+  width: 'max-content',
+  maxWidth: 'min(70vw, 220px)',
+  padding: '6px 11px',
+  textAlign: 'center',
+};
+
+const compactDiceTooltipTitleStyle: CSSProperties = {
+  margin: '0 0 2px',
+  color: '#ffcc66',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  lineHeight: 1.1,
+  textAlign: 'center',
+};
+
+const compactDiceTooltipDetailStyle: CSSProperties = {
+  margin: 0,
+  color: '#f7efe0',
+  fontSize: '0.72rem',
+  lineHeight: 1.1,
+  textAlign: 'center',
+};
+
+function isCompactDiceTooltip(tooltip: SolutionTooltipState): boolean {
+  return tooltip.name === 'Dice' && !tooltip.description && !tooltip.unavailable;
+}
+
 const solutionBlockStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: 0,
-  height: 10,
-  width: '108%',
+  ...BOTTOM_EDGE_ANCHOR_STYLE,
+  width: '96%',
   display: 'grid',
   gridTemplateRows: '1fr',
   gridTemplateColumns: '1fr',
   alignItems: 'center',
   justifyItems: 'center',
-  transform: 'translateX(-50%) translateY(3px)',
-  zIndex: 20,
+  zIndex: 30,
   overflow: 'visible',
   pointerEvents: 'auto',
 };
 
-const frameMaskStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  alignSelf: 'center',
-  justifySelf: 'center',
-  width: '100%',
-  height: 10,
-  objectFit: 'cover',
-  zIndex: 6,
-  pointerEvents: 'none',
-};
-
 const solutionActionsLayerStyle: CSSProperties = {
   gridArea: '1 / 1',
-  zIndex: 7,
-  width: '82%',
+  width: '100%',
   display: 'grid',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
   alignItems: 'center',
   justifyItems: 'center',
-  columnGap: 10,
+  columnGap: 6,
 };
-
-const SOLUTION_ACTION_SIZE_PX = 83;
 
 const solutionIconShellStyle: CSSProperties = {
   width: SOLUTION_ACTION_SIZE_PX,
@@ -330,6 +397,54 @@ function inventoryItems(inventory: AvatarInventory | undefined): InventoryItem[]
 
 function solutionImagePath(solution: SolutionRecord): string {
   return `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`;
+}
+
+function inventorySourceKind(solutionId: number): RewardFlyTargetKind {
+  const solution = solutionsById()[String(solutionId)];
+
+  return solution?.mSolutionInventoryType === 1 ? 'skillbook' : 'inventory';
+}
+
+function buildInboundSolutionFlights(
+  block: HTMLDivElement | null,
+  encounter: EncounterSnapshot,
+  inventory: AvatarInventory | undefined,
+): SolutionSlotInboundFlightSpec[] {
+  if (!block) {
+    return [];
+  }
+
+  return (['A', 'B', 'C', 'D'] as const).flatMap((slot) => {
+    const visibleSlot = solutionForSlot(encounter, inventory, slot);
+
+    if (!visibleSlot?.available) {
+      return [];
+    }
+
+    const targetElement = block.querySelector(`[data-solution-slot="${slot}"]`);
+    const targetRect = targetElement?.getBoundingClientRect();
+
+    if (!targetRect || targetRect.width <= 0 || targetRect.height <= 0) {
+      return [];
+    }
+
+    const sourceKind = inventorySourceKind(visibleSlot.solutionId);
+    const sourceRect = getFooterButtonRect(sourceKind);
+
+    if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+      return [];
+    }
+
+    return [{
+      id: slot,
+      imageSrc: visibleSlot.imageSrc,
+      // On-screen size: the stage is scaled, the flyer is not.
+      size: Math.round(Math.min(targetRect.width, targetRect.height)),
+      source: sourceKind,
+      sourceRect,
+      targetRect,
+    }];
+  });
 }
 
 function primaryRequirement(
@@ -545,7 +660,10 @@ export function SolutionBlock({
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
 }) {
+  const blockRef = useRef<HTMLDivElement | null>(null);
+  const rollRevealTimer = useRef<number | null>(null);
   const [actionsVisible, setActionsVisible] = useState(false);
+  const [actionsRevealSettled, setActionsRevealSettled] = useState(false);
   const [actionsInteractive, setActionsInteractive] = useState(false);
   const [enableRattleSlots, setEnableRattleSlots] = useState<Set<SlotLetter>>(
     () => new Set(),
@@ -554,14 +672,19 @@ export function SolutionBlock({
   const [diceRollCount, setDiceRollCount] = useState(0);
   const [solutionTooltip, setSolutionTooltip] = useState<SolutionTooltipState | null>(null);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
+  const [inboundFlownSlots, setInboundFlownSlots] = useState<Set<SlotLetter>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     setActionsVisible(false);
+    setActionsRevealSettled(false);
     setActionsInteractive(false);
     setEnableRattleSlots(new Set());
     setDiceEnableRattle(false);
     setDiceRollCount(0);
     setSolutionTooltip(null);
+    setInboundFlownSlots(new Set());
 
     let cancelled = false;
 
@@ -590,12 +713,40 @@ export function SolutionBlock({
         return;
       }
 
+      setActionsRevealSettled(true);
+      await waitForNextPaint();
+
+      if (cancelled) {
+        return;
+      }
+
+      const inboundFlights = buildInboundSolutionFlights(
+        blockRef.current,
+        encounter,
+        inventory,
+      );
+      const completedInboundFlights = new Set<SlotLetter>();
+
+      if (inboundFlights.length > 0) {
+        await playSolutionSlotInboundFlights(inboundFlights, (flightId) => {
+          if (cancelled) {
+            return;
+          }
+
+          completedInboundFlights.add(flightId as SlotLetter);
+          setInboundFlownSlots(new Set(completedInboundFlights));
+        });
+      }
+
+      if (cancelled) {
+        return;
+      }
+
       setActionsInteractive(true);
       setDiceEnableRattle(true);
 
       const slotsToRattle = (['A', 'B', 'C', 'D'] as const).filter((slot) => {
-        const solution = solutionForSlot(encounter, inventory, slot);
-        return solution?.available ?? false;
+        return completedInboundFlights.has(slot);
       });
 
       if (slotsToRattle.length > 0) {
@@ -626,8 +777,6 @@ export function SolutionBlock({
     }
   }, [hidden]);
 
-  const blockRef = useRef<HTMLDivElement | null>(null);
-  const rollRevealTimer = useRef<number | null>(null);
   const solutionSlots = ['A', 'B', 'dice', 'C', 'D'] as const;
   const visibleSlots = {
     A: solutionForSlot(encounter, inventory, 'A'),
@@ -737,6 +886,7 @@ export function SolutionBlock({
     playSfx(DICE_SOUND);
     setDiceRollCount((count) => count + 1);
     rollRevealTimer.current = window.setTimeout(() => {
+      recordCommittedAction(encounter.snapshotId, 'dice');
       onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
       rollRevealTimer.current = null;
     }, DICE_ROLL_ANIMATION_MS);
@@ -763,6 +913,7 @@ export function SolutionBlock({
     setActiveSolutionSlot(solution.slot);
     onActionReveal?.(solution.slot, null, solution.solutionId, 'select');
     rollRevealTimer.current = window.setTimeout(() => {
+      recordCommittedAction(encounter.snapshotId, solution.slot);
       onActionReveal?.(solution.slot, roll, solution.solutionId, 'commit');
       setActiveSolutionSlot(null);
       rollRevealTimer.current = null;
@@ -789,13 +940,6 @@ export function SolutionBlock({
         {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
         {'@keyframes morkahja-dice-roll { 0% { transform: rotate(0deg) translateY(0); } 12.5% { transform: rotate(90deg) translateY(-8px); } 25% { transform: rotate(180deg) translateY(0); } 37.5% { transform: rotate(270deg) translateY(-7px); } 50% { transform: rotate(360deg) translateY(0); } 62.5% { transform: rotate(450deg) translateY(-6px); } 75% { transform: rotate(540deg) translateY(0); } 87.5% { transform: rotate(630deg) translateY(-3px); } 100% { transform: rotate(720deg) translateY(0); } }'}
       </style>
-      <img
-        alt=""
-        aria-hidden="true"
-        {...protectedImageProps}
-        src={FRAME_MASK}
-        style={frameMaskStyle}
-      />
       <div
         aria-label="Solution actions"
         style={{
@@ -863,17 +1007,20 @@ export function SolutionBlock({
           const visibleSlot = visibleSlots[slot];
 
           if (!visibleSlot) {
+            const emptyDirection: SolutionRevealDirection = slot === 'A' || slot === 'B'
+              ? 'left'
+              : 'right';
+
             return (
               <span
                 aria-hidden="true"
                 key={slot}
                 style={{
-                  ...solutionRevealStyle(
-                    actionsRevealing,
-                    actionsReady,
-                    slot === 'A' || slot === 'B' ? 'left' : 'right',
-                    false,
-                  ),
+                  ...solutionButtonStyle,
+                  ...solutionInboundButtonStyle(actionsRevealing),
+                  ...(!actionsRevealSettled && actionsRevealing
+                    ? solutionRevealSpinStyle(emptyDirection)
+                    : {}),
                   width: SOLUTION_ACTION_SIZE_PX,
                   height: SOLUTION_ACTION_SIZE_PX,
                 }}
@@ -885,6 +1032,8 @@ export function SolutionBlock({
             ? 'left'
             : 'right';
 
+          const showAsOwned = visibleSlot.available && inboundFlownSlots.has(slot);
+
           return (
               <button
                 aria-disabled={!actionsReady || !visibleSlot.available}
@@ -894,8 +1043,9 @@ export function SolutionBlock({
                     : `${visibleSlot.name} required for slot ${slot}, not available`
                 }
                 className={`morkahja-footer-button${
-                  visibleSlot.available ? '' : ' morkahja-footer-button--unavailable'
+                  showAsOwned ? '' : ' morkahja-footer-button--unavailable'
                 }`}
+                data-solution-slot={slot}
                 disabled={!actionsReady}
                 key={slot}
                 {...bindTooltipReveal({
@@ -909,12 +1059,7 @@ export function SolutionBlock({
                 }}
                 style={{
                   ...solutionButtonStyle,
-                  ...solutionRevealStyle(
-                    actionsRevealing,
-                    actionsReady,
-                    revealDirection,
-                    visibleSlot.available,
-                  ),
+                  ...solutionInboundButtonStyle(actionsRevealing),
                 }}
                 type="button"
               >
@@ -922,9 +1067,20 @@ export function SolutionBlock({
                   className="morkahja-footer-button-visual"
                   style={{
                     ...solutionIconShellStyle,
+                    ...solutionIconShellRevealStyle(
+                      actionsRevealing,
+                      actionsRevealSettled,
+                      revealDirection,
+                      visibleSlot.available,
+                      slot,
+                      inboundFlownSlots,
+                    ),
                     ...(enableRattleSlots.has(slot) ? enableRattleAnimationStyle : {}),
                     ...(activeSolutionSlot === slot ? lockpickAnimationStyle : {}),
-                    ...(visibleSlot.available && visibleSlot.isPrimary && actionsReady
+                    ...(visibleSlot.available
+                      && visibleSlot.isPrimary
+                      && actionsReady
+                      && inboundFlownSlots.has(slot)
                       ? primarySolutionGlowStyle
                       : {}),
                   }}
@@ -947,6 +1103,7 @@ export function SolutionBlock({
           style={{
             ...encounterTooltipFrameStyle,
             ...(solutionTooltip.unavailable ? unavailableSolutionTooltipStyle : {}),
+            ...(isCompactDiceTooltip(solutionTooltip) ? compactDiceTooltipStyle : {}),
             left: solutionTooltip.x,
             top: solutionTooltip.y,
             transform: solutionTooltipTransform(solutionTooltip.anchorX),
@@ -956,6 +1113,11 @@ export function SolutionBlock({
             <>
               <div style={unavailableTooltipTitleStyle}>{solutionTooltip.name}</div>
               <div style={unavailableTooltipDetailStyle}>{solutionTooltip.detail}</div>
+            </>
+          ) : isCompactDiceTooltip(solutionTooltip) ? (
+            <>
+              <div style={compactDiceTooltipTitleStyle}>{solutionTooltip.name}</div>
+              <div style={compactDiceTooltipDetailStyle}>{solutionTooltip.detail}</div>
             </>
           ) : (
             <>

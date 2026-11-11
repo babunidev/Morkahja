@@ -1,77 +1,37 @@
 import type { CSSProperties } from 'react';
 import { fadeTransition } from '../../transitions/fade.js';
-import { assetUrl } from '../../../assetUrl.js';
 
-const HEADER_BACKGROUND = assetUrl('/UI/09_GAME/im_encounter_background_top_a.webp');
-
-const headerStyle: CSSProperties = {
-  width: '100%',
-  height: '100%',
-  display: 'grid',
-  gridTemplateRows: '1fr',
-  gridTemplateColumns: '1fr',
-  placeItems: 'center',
-  backgroundImage: `url(${HEADER_BACKGROUND})`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'center',
-  backgroundSize: 'cover',
-};
-
-const titleWrapStyle: CSSProperties = {
-  gridArea: '1 / 1',
-  position: 'relative',
-  width: '100%',
-  height: '100%',
-  display: 'grid',
-  placeItems: 'center',
-  zIndex: 1,
-};
-
-const titleLayerStyle: CSSProperties = {
-  margin: 0,
-  padding: '0 18px',
-  fontSize: 'clamp(1.5rem, 6.6vw, 2.4rem)',
-  textAlign: 'center',
+const overlayStyle: CSSProperties = {
   position: 'absolute',
-  inset: 0,
-  display: 'grid',
-  placeItems: 'center',
+  top: 'clamp(18px, 5vh, 36px)',
+  left: 0,
+  right: 0,
+  zIndex: 40,
+  pointerEvents: 'none',
+  textAlign: 'center',
+  padding: '0 18px',
+  boxSizing: 'border-box',
   transition: fadeTransition,
 };
 
+const titleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 'clamp(1.5rem, 6.6vw, 2.4rem)',
+  textAlign: 'center',
+};
+
 export function EncounterHeader({
-  overlayTitle = null,
+  hidden = false,
   title,
 }: {
-  overlayTitle?: string | null;
+  hidden?: boolean;
   title: string;
 }) {
-  const showOverlay = overlayTitle !== null;
-
   return (
-    <div style={headerStyle}>
-      <div style={titleWrapStyle}>
-        <h1
-          className="morkahja-title"
-          style={{
-            ...titleLayerStyle,
-            opacity: showOverlay ? 0 : 1,
-          }}
-        >
-          {title}
-        </h1>
-        {showOverlay ? (
-          <h1
-            className="morkahja-title"
-            style={{
-              ...titleLayerStyle,
-              opacity: 1,
-            }}
-          >
-            {overlayTitle}
-          </h1>
-        ) : null}
-      </div>
+    <div style={{ ...overlayStyle, opacity: hidden ? 0 : 1 }}>
+      <h1 aria-hidden={hidden} className="morkahja-title" style={titleStyle}>
+        {title}
+      </h1>
     </div>
   );
 }
