@@ -1,18 +1,21 @@
 /**
  * Development-only bot adventurer for multiplayer testing.
  *
- * Creates (or reuses) a player named "Wanderbot" with a Rokur Warrior avatar,
- * keeps it in its own encounter room, and plays forever: it rolls the dice on
- * every encounter and system event, and presses Continue after a short pause.
- * Players who add "Wanderbot" as a friend are added back, so they can join its
- * room from the Friends list (also into Friends-only slots).
+ * Behaves like a normal player in a browser: it signs up through the
+ * session challenge handshake with its own identity key, creates an avatar
+ * through POST /avatar exactly as the avatar creation screen does (a real
+ * Rokur Warrior portrait and frame from the game content), selects it, and
+ * plays through the same /room endpoints as the web client. It never touches
+ * the database directly.
  *
  *   cd server && npx tsx scripts/dev-bot-adventurer.ts
+ *   BOT_FRIENDS=Babuni npx tsx scripts/dev-bot-adventurer.ts   # add friends by name
  *
- * Talks to the database directly through the server's own services, exactly
- * like the integration tests. Refuses to run with NODE_ENV=production.
+ * Its identity key, session and avatar id are kept in a gitignored state file
+ * beside this script, like a recovery key, so a restart logs back in as the
+ * same player. Testers add the bot ("Wanderbot") as a friend and join its room.
  */
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, createPrivateKey, sign, type KeyObject } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,173 +25,219 @@ if (process.env.NODE_ENV === 'production') {
   process.exit(1);
 }
 
-const { pool, getPlayer, getAvatar, setAvatar } = await import('../src/db/postgresDocumentStore.js');
-const { getPortraitsData, getFramesData } = await import('../src/services/gameData.js');
-const { savePlayerAvatar, deletePlayerAvatar } = await import('../src/services/playerService.js');
-const { addPlayerFriend } = await import('../src/services/friendService.js');
-const { createRoom, getActiveRoomForPlayer, submitChoice, submitContinue } = await import(
-  '../src/services/roomService.js'
-);
-const { bootstrapTestSession } = await import('../src/tests/sessionAuthTestHelpers.js');
-const { heartbeatSession } = await import('../src/services/sessionService.js');
-const { touchPlayerInteraction } = await import('../src/services/playerInteractionService.js');
-
+const API = (process.env.BOT_API ?? 'http://127.0.0.1:3000').replace(/\/+$/, '');
 const BOT_NAME = process.env.BOT_NAME ?? 'Wanderbot';
+const AVATAR_NAME = process.env.BOT_AVATAR_NAME ?? 'Brakka';
+const FRIENDS = (process.env.BOT_FRIENDS ?? '').split(',').map((name) => name.trim()).filter(Boolean);
 const TICK_MS = 1500;
+const HEARTBEAT_MS = 60_000;
 const THINK_MS: [number, number] = [3500, 7000];
 const READ_RESULT_MS: [number, number] = [4000, 6500];
-const stateFile = path.join(path.dirname(fileURLToPath(import.meta.url)), `.dev-bot-${BOT_NAME}.json`);
+const ROKUR = 4;
+const WARRIOR = 3;
+const stateFile = path.join(path.dirname(fileURLToPath(import.meta.url)), `.dev-bot-account-${BOT_NAME}.json`);
 
-type BotState = { playerId: string; avatarId: string; avatarCount: number; accessToken?: string };
-const HEARTBEAT_MS = 60_000;
+type Jwk = Record<string, unknown>;
+type BotState = {
+  playerId: string;
+  identity: { privateKey: Jwk; publicKey: Jwk };
+  accessToken: string;
+  avatarId?: string;
+  avatarCount: number;
+};
+type Participant = { isLocal?: boolean; playerId: string; choiceState: string; continuePressed?: boolean };
+type Room = { roomId: string; roomState: string; participants: Participant[] };
+type Avatar = { id: string; status?: string };
+
+class ApiError extends Error {
+  constructor(readonly status: number, readonly body: string) {
+    super(`${status} ${body.slice(0, 160)}`);
+  }
+}
 
 function log(message: string): void {
   console.log(`[${new Date().toLocaleTimeString()}] ${BOT_NAME}: ${message}`);
 }
 
-function randomBetween([min, max]: [number, number]): number {
+function between([min, max]: [number, number]): number {
   return Math.round(min + Math.random() * (max - min));
 }
-
-function errorCode(error: unknown): string {
-  if (error && typeof error === 'object') {
-    const record = error as { code?: unknown; message?: unknown };
-    if (typeof record.code === 'string') return record.code;
-    if (typeof record.message === 'string') return record.message;
-  }
-  return String(error);
-}
-
-const ROKUR_RACE_ID = 4;
-const WARRIOR_ROLE_ID = 3;
-
-type PortraitRow = { avatarID: number; avatarRace: number; avatarRole: number; avatarType?: number } | null;
-type FrameRow = { frameID: number; frameType?: number } | null;
 
 function pick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]!;
 }
 
-/** Same portrait and frame file names the avatar creation screen saves. */
-function randomLook(): { portrait: string; frame: string } {
-  const portraits = (Object.values(getPortraitsData())[0] as PortraitRow[])
-    .filter((row): row is NonNullable<PortraitRow> => row !== null)
-    .filter((row) => row.avatarRace === ROKUR_RACE_ID && row.avatarRole === WARRIOR_ROLE_ID && (row.avatarType ?? 0) === 0);
-  const frames = (Object.values(getFramesData())[0] as FrameRow[])
-    .filter((row): row is NonNullable<FrameRow> => row !== null && (row.frameType ?? 1) === 1);
-  return {
-    portrait: `avatar_${pick(portraits).avatarID}.webp`,
-    frame: `frame_${pick(frames).frameID}.webp`,
-  };
+let token: string | null = null;
+
+async function api<T>(route: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  const response = await fetch(`${API}${route}`, {
+    method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+  const text = await response.text();
+  if (!response.ok) throw new ApiError(response.status, text);
+  return (text ? JSON.parse(text) : {}) as T;
 }
 
-async function newAvatar(playerId: string, count: number): Promise<string> {
-  const now = Date.now();
-  const id = `avatar-slot-1-${now}`;
-  const suffix = count > 1 ? ` ${['', '', 'II', 'III', 'IV', 'V'][count] ?? count}` : '';
-  const look = randomLook();
-  await savePlayerAvatar(playerId, {
-    id,
-    name: `Brakka${suffix}`,
-    race: 'Rokur',
-    role: 'Warrior',
-    ...look,
-    createdAt: now,
-    lastPlayedAt: now,
-  } as never);
-  log(`created avatar Brakka${suffix} (${look.portrait}, ${look.frame})`);
-  return id;
+/** Same signature format as the browser's WebCrypto ECDSA P-256 / SHA-256. */
+function signChallenge(privateKey: KeyObject, challenge: string): string {
+  return sign('sha256', Buffer.from(challenge, 'utf8'), { key: privateKey, dsaEncoding: 'ieee-p1363' })
+    .toString('base64url');
 }
 
-/** Avatars made by the first bot version used names the game cannot draw. */
-async function repairLook(playerId: string, avatarId: string): Promise<void> {
-  const avatar = await getAvatar<{ portrait?: string; frame?: string }>(playerId, avatarId);
-  if (!avatar) return;
-  const valid = /^avatar_\d+\.webp$/.test(avatar.portrait ?? '') && /^frame_\d+\.webp$/.test(avatar.frame ?? '');
-  if (valid) return;
-  const look = randomLook();
-  await setAvatar(playerId, avatarId, look, { merge: true });
-  log(`gave the avatar a real portrait and frame (${look.portrait}, ${look.frame})`);
+async function handshake(
+  identityPrivate: KeyObject,
+  identityPublicJwk: Jwk,
+  purpose: 'register' | 'restore',
+): Promise<{ playerId: string; accessToken: string }> {
+  const device = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  const devicePublicKey = JSON.stringify(device.publicKey.export({ format: 'jwk' }));
+  const identityPublicKey = JSON.stringify(identityPublicJwk);
+  token = null;
+  const { challenge } = await api<{ challenge: string }>('/session/challenge', {
+    body: { devicePublicKey, identityPublicKey, purpose },
+  });
+  return api<{ playerId: string; accessToken: string }>('/session/bootstrap', {
+    body: {
+      devicePublicKey,
+      identityPublicKey,
+      purpose,
+      ...(purpose === 'register' ? { playerName: BOT_NAME } : {}),
+      signedIdentityChallenge: { challenge, signature: signChallenge(identityPrivate, challenge) },
+      signedDeviceChallenge: { challenge, signature: signChallenge(device.privateKey, challenge) },
+    },
+  });
 }
 
-async function loadOrCreateBot(): Promise<BotState> {
+function save(state: BotState): void {
+  writeFileSync(stateFile, JSON.stringify(state, null, 2), { mode: 0o600 });
+}
+
+async function restore(state: BotState): Promise<void> {
+  const privateKey = createPrivateKey({ key: state.identity.privateKey as never, format: 'jwk' });
+  const session = await handshake(privateKey, state.identity.publicKey, 'restore');
+  token = session.accessToken;
+  state.accessToken = session.accessToken;
+  save(state);
+}
+
+async function signIn(): Promise<BotState> {
   if (existsSync(stateFile)) {
-    const saved = JSON.parse(readFileSync(stateFile, 'utf8')) as BotState;
-    if (await getPlayer(saved.playerId)) {
-      log(`reusing player ${saved.playerId}`);
-      return saved;
+    const state = JSON.parse(readFileSync(stateFile, 'utf8')) as BotState;
+    token = state.accessToken;
+    try {
+      await api('/session/heartbeat', { method: 'POST' });
+      log(`signed in again as ${state.playerId}`);
+    } catch {
+      await restore(state);
+      log(`restored the account with its identity key (${state.playerId})`);
     }
+    return state;
   }
+
   const identity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
-  const identityPublicJwk = JSON.stringify(identity.publicKey.export({ format: 'jwk' }));
-  const session = await bootstrapTestSession(identity, identityPublicJwk, BOT_NAME);
-  log(`registered player ${session.playerId}`);
+  const publicKey = identity.publicKey.export({ format: 'jwk' }) as Jwk;
+  const session = await handshake(identity.privateKey, publicKey, 'register');
+  token = session.accessToken;
   const state: BotState = {
     playerId: session.playerId,
-    avatarId: await newAvatar(session.playerId, 1),
-    avatarCount: 1,
+    identity: { privateKey: identity.privateKey.export({ format: 'jwk' }) as Jwk, publicKey },
     accessToken: session.accessToken,
+    avatarCount: 0,
   };
-  writeFileSync(stateFile, JSON.stringify(state, null, 2));
+  save(state);
+  log(`signed up as a new player (${state.playerId})`);
   return state;
 }
 
-async function befriendFollowers(botPlayerId: string): Promise<void> {
-  const bot = await getPlayer<{ friendIds?: string[] }>(botPlayerId);
-  const known = new Set(bot?.friendIds ?? []);
-  const { rows } = await pool.query<{ id: string; name: string | null }>(
-    "select id, data->>'playerName' as name from players where data->'friendIds' ? $1",
-    [botPlayerId],
+/** What the avatar creation screen does: pick from the content, POST /avatar, then select it. */
+async function createAvatar(state: BotState): Promise<string> {
+  const content = await api<{
+    portraits: Array<Record<string, number> | null>;
+    frames: Array<Record<string, number> | null>;
+  }>('/game-data/content');
+  const portraits = content.portraits.filter(
+    (row): row is Record<string, number> =>
+      row !== null && row.avatarRace === ROKUR && row.avatarRole === WARRIOR && (row.avatarType ?? 0) === 0,
   );
-  for (const row of rows) {
-    if (known.has(row.id)) continue;
-    try {
-      await addPlayerFriend(botPlayerId, row.id);
-      log(`added ${row.name ?? row.id} back as a friend`);
-    } catch (error) {
-      log(`could not add ${row.name ?? row.id} back: ${errorCode(error)}`);
-    }
+  const frames = content.frames.filter(
+    (row): row is Record<string, number> => row !== null && (row.frameType ?? 1) === 1,
+  );
+  const now = Date.now();
+  state.avatarCount += 1;
+  const suffix = state.avatarCount > 1
+    ? ` ${['', '', 'II', 'III', 'IV', 'V'][state.avatarCount] ?? state.avatarCount}`
+    : '';
+  const avatar = {
+    id: `avatar-slot-1-${now}`,
+    name: `${AVATAR_NAME}${suffix}`,
+    race: 'Rokur',
+    role: 'Warrior',
+    level: 1,
+    experience: 0,
+    portrait: `avatar_${pick(portraits).avatarID}.webp`,
+    frame: `frame_${pick(frames).frameID}.webp`,
+    createdAt: now,
+    lastPlayedAt: now,
+  };
+  const created = await api<{ avatar: Avatar }>('/avatar', { body: avatar });
+  await api('/avatar/select', { body: { ...avatar, ...created.avatar } });
+  state.avatarId = created.avatar.id;
+  save(state);
+  log(`created avatar ${avatar.name} (${avatar.portrait}, ${avatar.frame})`);
+  return created.avatar.id;
+}
+
+async function ensureLivingAvatar(state: BotState): Promise<string> {
+  const { avatars } = await api<{ avatars: Avatar[] }>('/avatars').catch(() => ({ avatars: [] as Avatar[] }));
+  const current = avatars.find((avatar) => avatar.id === state.avatarId);
+  if (current && (current.status ?? 'active') === 'active') return current.id;
+  if (current) {
+    log(`${AVATAR_NAME} has fallen; laying them to rest`);
+    await api(`/avatar/${encodeURIComponent(current.id)}/finalize-death`, { method: 'POST' }).catch(() => undefined);
+  }
+  return createAvatar(state);
+}
+
+const state = await signIn();
+let avatarId = await ensureLivingAvatar(state);
+for (const name of FRIENDS) {
+  try {
+    await api('/player/friends', { body: { query: name } });
+    log(`added ${name} as a friend`);
+  } catch (error) {
+    log(`friend ${name}: ${error instanceof ApiError ? error.body.slice(0, 80) : String(error)}`);
   }
 }
 
-const state = await loadOrCreateBot();
-let waitUntil = 0;
-let nextHeartbeat = 0;
-let lastStatus = '';
 let stopping = false;
 process.on('SIGINT', () => { stopping = true; });
 process.on('SIGTERM', () => { stopping = true; });
+log(`playing. Add "${BOT_NAME}" as a friend in the game and join its room. Ctrl+C stops.`);
 
-log('playing. Add "' + BOT_NAME + '" as a friend in the game, then join its room. Ctrl+C stops.');
+let waitUntil = 0;
+let nextHeartbeat = 0;
+let lastStatus = '';
 
 while (!stopping) {
   try {
-    // Look like a present player: a live session and recent activity are what
-    // the Friends list needs before it offers Join.
-    await touchPlayerInteraction(state.playerId);
-    if (state.accessToken && Date.now() >= nextHeartbeat) {
+    if (Date.now() >= nextHeartbeat) {
       nextHeartbeat = Date.now() + HEARTBEAT_MS;
-      await heartbeatSession(state.accessToken).catch((error: unknown) => {
-        log(`session heartbeat failed (${errorCode(error)}); Wanderbot may show as offline`);
-      });
+      await api('/session/heartbeat', { method: 'POST' });
     }
-    await befriendFollowers(state.playerId);
-    const room = await getActiveRoomForPlayer(state.playerId, state.avatarId);
 
+    const { room } = await api<{ room: Room | null }>(`/room/active?avatarId=${encodeURIComponent(avatarId)}`);
     if (!room) {
-      try {
-        await createRoom(state.playerId, state.avatarId);
-        log('started a new room');
-      } catch (error) {
-        log(`cannot start a room with this avatar (${errorCode(error)}); making a new one`);
-        await deletePlayerAvatar(state.playerId, state.avatarId).catch(() => undefined);
-        state.avatarCount += 1;
-        state.avatarId = await newAvatar(state.playerId, state.avatarCount);
-        writeFileSync(stateFile, JSON.stringify(state, null, 2));
-      }
+      avatarId = await ensureLivingAvatar(state);
+      await api('/room/create', { body: { avatarId } });
+      log('started a new room');
     } else {
-      const me = room.participants.find((entry) => entry.playerId === state.playerId);
-      const others = room.participants.filter((entry) => entry.playerId !== state.playerId).length;
+      const me = room.participants.find((entry) => entry.isLocal);
+      const others = room.participants.filter((entry) => !entry.isLocal).length;
       const status = `${room.roomState}/${me?.choiceState ?? 'absent'}${me?.continuePressed ? '+continued' : ''}, ${others} other player(s)`;
       if (status !== lastStatus) {
         log(status);
@@ -197,15 +246,12 @@ while (!stopping) {
 
       if (me && Date.now() >= waitUntil) {
         if (me.choiceState === 'choosing') {
-          // Repair only before choosing: a prepared outcome carries a full copy
-          // of the avatar and would write the old look back when committed.
-          await repairLook(state.playerId, state.avatarId);
           if (waitUntil === 0) {
-            waitUntil = Date.now() + randomBetween(THINK_MS);
+            waitUntil = Date.now() + between(THINK_MS);
           } else {
-            await submitChoice(state.playerId, state.avatarId, 'dice' as never);
+            await api('/room/choice', { body: { avatarId, action: 'dice' } });
             log('rolled the dice');
-            waitUntil = Date.now() + randomBetween(READ_RESULT_MS);
+            waitUntil = Date.now() + between(READ_RESULT_MS);
           }
         } else if (
           !me.continuePressed
@@ -213,7 +259,7 @@ while (!stopping) {
           // In a party the room only reaches waiting_continue once everyone has chosen.
           && ['waiting_continue', 'system_event'].includes(room.roomState)
         ) {
-          await submitContinue(state.playerId, state.avatarId);
+          await api('/room/continue', { body: { avatarId } });
           log('pressed Continue');
           waitUntil = 0;
         } else {
@@ -222,9 +268,14 @@ while (!stopping) {
       }
     }
   } catch (error) {
-    const code = errorCode(error);
-    if (!/not ready|ACTION_NOT_READY|ALREADY|WAITING/i.test(code)) {
-      log(`waiting (${code})`);
+    if (error instanceof ApiError && error.status === 401) {
+      log('session expired; signing in again');
+      await restore(state).catch((restoreError: unknown) => log(`sign-in failed: ${String(restoreError)}`));
+    } else {
+      log(`waiting (${error instanceof ApiError ? `${error.status} ${error.body.slice(0, 80)}` : String(error)})`);
+      if (error instanceof ApiError && /AVATAR|DEAD|DECEASED/i.test(error.body)) {
+        avatarId = await ensureLivingAvatar(state).catch(() => avatarId);
+      }
     }
     waitUntil = Date.now() + 2000;
   }
@@ -232,4 +283,3 @@ while (!stopping) {
 }
 
 log('stopping');
-await pool.end();
