@@ -8,8 +8,8 @@ export const GAME_FOOTER_BUTTONS: ReadonlyArray<{
 }> = [
   { alt: 'Get help', src: `${GAME_UI_ROOT}/im_button_gethelp.webp` },
   { alt: 'Inventory', src: `${GAME_UI_ROOT}/im_button_inventory.webp`, target: 'inventory' },
-  { alt: 'Lore', src: `${GAME_UI_ROOT}/im_button_lore.webp` },
   { alt: 'Skillbook', src: `${GAME_UI_ROOT}/im_button_skillbook.webp`, target: 'skillbook' },
+  { alt: 'Lore', src: `${GAME_UI_ROOT}/im_button_lore.webp` },
 ];
 
 export const GAME_FOCUS_BUTTON_ICONS = {
