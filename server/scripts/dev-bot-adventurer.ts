@@ -22,7 +22,8 @@ if (process.env.NODE_ENV === 'production') {
   process.exit(1);
 }
 
-const { pool, getPlayer } = await import('../src/db/postgresDocumentStore.js');
+const { pool, getPlayer, getAvatar, setAvatar } = await import('../src/db/postgresDocumentStore.js');
+const { getPortraitsData, getFramesData } = await import('../src/services/gameData.js');
 const { savePlayerAvatar, deletePlayerAvatar } = await import('../src/services/playerService.js');
 const { addPlayerFriend } = await import('../src/services/friendService.js');
 const { createRoom, getActiveRoomForPlayer, submitChoice, submitContinue } = await import(
@@ -58,20 +59,56 @@ function errorCode(error: unknown): string {
   return String(error);
 }
 
+const ROKUR_RACE_ID = 4;
+const WARRIOR_ROLE_ID = 3;
+
+type PortraitRow = { avatarID: number; avatarRace: number; avatarRole: number; avatarType?: number } | null;
+type FrameRow = { frameID: number; frameType?: number } | null;
+
+function pick<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)]!;
+}
+
+/** Same portrait and frame file names the avatar creation screen saves. */
+function randomLook(): { portrait: string; frame: string } {
+  const portraits = (Object.values(getPortraitsData())[0] as PortraitRow[])
+    .filter((row): row is NonNullable<PortraitRow> => row !== null)
+    .filter((row) => row.avatarRace === ROKUR_RACE_ID && row.avatarRole === WARRIOR_ROLE_ID && (row.avatarType ?? 0) === 0);
+  const frames = (Object.values(getFramesData())[0] as FrameRow[])
+    .filter((row): row is NonNullable<FrameRow> => row !== null && (row.frameType ?? 1) === 1);
+  return {
+    portrait: `avatar_${pick(portraits).avatarID}.webp`,
+    frame: `frame_${pick(frames).frameID}.webp`,
+  };
+}
+
 async function newAvatar(playerId: string, count: number): Promise<string> {
-  const id = `${playerId}-bot-avatar-${Date.now()}`;
+  const now = Date.now();
+  const id = `avatar-slot-1-${now}`;
   const suffix = count > 1 ? ` ${['', '', 'II', 'III', 'IV', 'V'][count] ?? count}` : '';
+  const look = randomLook();
   await savePlayerAvatar(playerId, {
     id,
     name: `Brakka${suffix}`,
     race: 'Rokur',
     role: 'Warrior',
-    portrait: 'm_portrait_rokur_warrior',
-    frame: 'm_frame_01',
-    createdAt: Date.now(),
+    ...look,
+    createdAt: now,
+    lastPlayedAt: now,
   } as never);
-  log(`created avatar Brakka${suffix} (${id})`);
+  log(`created avatar Brakka${suffix} (${look.portrait}, ${look.frame})`);
   return id;
+}
+
+/** Avatars made by the first bot version used names the game cannot draw. */
+async function repairLook(playerId: string, avatarId: string): Promise<void> {
+  const avatar = await getAvatar<{ portrait?: string; frame?: string }>(playerId, avatarId);
+  if (!avatar) return;
+  const valid = /^avatar_\d+\.webp$/.test(avatar.portrait ?? '') && /^frame_\d+\.webp$/.test(avatar.frame ?? '');
+  if (valid) return;
+  const look = randomLook();
+  await setAvatar(playerId, avatarId, look, { merge: true });
+  log(`gave the avatar a real portrait and frame (${look.portrait}, ${look.frame})`);
 }
 
 async function loadOrCreateBot(): Promise<BotState> {
@@ -115,6 +152,7 @@ async function befriendFollowers(botPlayerId: string): Promise<void> {
 }
 
 const state = await loadOrCreateBot();
+await repairLook(state.playerId, state.avatarId);
 let waitUntil = 0;
 let nextHeartbeat = 0;
 let lastStatus = '';
@@ -170,7 +208,8 @@ while (!stopping) {
         } else if (
           !me.continuePressed
           && ['resolved', 'ready_to_continue', 'witnessing'].includes(me.choiceState)
-          && ['waiting_continue', 'system_event', 'active_encounter'].includes(room.roomState)
+          // In a party the room only reaches waiting_continue once everyone has chosen.
+          && ['waiting_continue', 'system_event'].includes(room.roomState)
         ) {
           await submitContinue(state.playerId, state.avatarId);
           log('pressed Continue');
