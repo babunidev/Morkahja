@@ -231,3 +231,7 @@ Once the new screen felt right, I wanted it live, and I also wanted the world to
 
 **Verification (2026-11-11):** release gate and CI passed before the merge; the release's health gate and public checks passed; the bots signed up and stayed online; the pre-release backup restored with every row count matching. A real player's game on the new screen in production, and a real Call for help reaching the bots there, were not observed by AI.
 
+### The level-up that came twice — 2026-11-11
+
+Right after the release I levelled up a new avatar twice and each time got the level-up event twice. The game's own event log confirmed it was real, for my local avatar and for an early bot: one more level-up event played than levels gained. AI reproduced it on demand. Choosing in the level-up event and then leaving, reloading, or just switching away from the browser saved the event on a side path but left the room showing it, so it could be played again, rewards included. The side path also handed out a stray experience point. The fix sends that case through the same routine as Continue, once; a new test covers leaving and going away, failing on the old code. The same investigation corrected an earlier explanation of a randomly failing room test: it sees an owed level-up, not a random event. Alongside, the collected lore gem now flies onto my avatar rather than into the inventory, because a gem is not an item. **Verification:** release gate passed (9 client, 40 server tests). **Not deployed yet.**
+
