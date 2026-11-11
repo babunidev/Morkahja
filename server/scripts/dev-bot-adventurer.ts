@@ -15,6 +15,10 @@
  *   Driftbot   Kestra (Aevis Rogue)    plays 7 rounds, returns to the welcome screen for
  *                                      5 minutes (answering Call for help meanwhile), repeats.
  *
+ * In an encounter every bot plays by one simple rule: use an item if one solves
+ * it, otherwise a skill, otherwise roll the dice (system events always roll).
+ * Availability comes from the web client's own rule, so they see what a player sees.
+ *
  * One account can only be in one room with one selected avatar at a time, which
  * is why each behavior is its own account.
  *
@@ -34,6 +38,11 @@ if (process.env.NODE_ENV === 'production') {
   console.error('dev-bot-adventurer is for local development only.');
   process.exit(1);
 }
+
+// The web client's own content store and solution-availability rule, so the
+// bots see exactly the solutions a player's screen would offer.
+const { setGameContent, gameSolutions } = await import('../../client/src/data/gameContent.js');
+const { slotHasEnoughSolutionCharges } = await import('../../client/src/ui/game/encounterInventoryPreview.js');
 
 const API = (process.env.BOT_API ?? 'http://127.0.0.1:3000').replace(/\/+$/, '');
 const FRIENDS = (process.env.BOT_FRIENDS ?? '').split(',').map((name) => name.trim()).filter(Boolean);
@@ -83,6 +92,11 @@ type BotState = {
 type Participant = { isLocal?: boolean; playerId: string; choiceState: string; continuePressed?: boolean };
 type Room = { roomId: string; roomState: string; participants: Participant[] };
 type Avatar = { id: string; status?: string };
+type InventoryEntry = { solutionId: number; solutionType: number; uses: number };
+type Inventory = { spellbook: InventoryEntry[]; items: InventoryEntry[]; essences: InventoryEntry[] };
+type EncounterRequirements = Record<string, number | undefined>;
+type SolutionChoice = { slot: 'A' | 'B' | 'C' | 'D'; solutionId: number; kind: 'item' | 'skill'; name: string };
+const SLOTS = ['A', 'B', 'C', 'D'] as const;
 type Invitation = { inviteId: string; roomId: string; fromPlayerId: string; fromPlayerName: string; expiresAt: number };
 type ContentRow = Record<string, number> | null;
 
@@ -264,6 +278,7 @@ class Bot {
 
   async start(): Promise<void> {
     await this.signIn();
+    setGameContent(await this.api('/game-data/content'));
     await this.ensureLivingAvatar();
     for (const name of FRIENDS) {
       try {
@@ -310,8 +325,20 @@ class Bot {
       if (this.waitUntil === 0) {
         this.waitUntil = Date.now() + between(THINK_MS);
       } else {
-        await this.api('/room/choice', { body: { avatarId: this.avatarId, action: 'dice' } });
-        this.log('rolled the dice');
+        const choice = room.roomState === 'active_encounter' ? await this.pickSolution(room) : null;
+        if (choice) {
+          try {
+            await this.api('/room/choice', { body: { avatarId: this.avatarId, action: choice.slot, solutionId: choice.solutionId } });
+            this.log(`used ${choice.kind} ${choice.name} (slot ${choice.slot})`);
+          } catch (error) {
+            this.log(`could not use ${choice.name} (${error instanceof ApiError ? error.body.slice(0, 60) : String(error)}); rolling instead`);
+            await this.api('/room/choice', { body: { avatarId: this.avatarId, action: 'dice' } });
+            this.log('rolled the dice');
+          }
+        } else {
+          await this.api('/room/choice', { body: { avatarId: this.avatarId, action: 'dice' } });
+          this.log('rolled the dice');
+        }
         this.waitUntil = Date.now() + between(READ_RESULT_MS);
       }
       return false;
@@ -329,6 +356,47 @@ class Bot {
     }
     this.waitUntil = 0;
     return false;
+  }
+
+  /**
+   * Babuni's simple rule: use an item if one solves the encounter, otherwise a
+   * skill, otherwise roll the dice. Several matching items (or skills) are
+   * chosen between at random, so the bots vary their play a little.
+   */
+  private async pickSolution(room: Room & { activeEncounter?: EncounterRequirements }): Promise<SolutionChoice | null> {
+    const encounter = room.activeEncounter;
+    if (!encounter) return null;
+    const { avatar } = await this.api<{ avatar: { inventory?: Inventory } }>('/avatar/active');
+    const inventory = avatar.inventory;
+    if (!inventory) return null;
+    const solutions = gameSolutions() as Record<string, { mSolutionName?: string; mSolutionType?: number }>;
+    const kindOf = (solutionId: number): 'item' | 'skill' | null => {
+      if (inventory.items.some((entry) => entry.solutionId === solutionId && entry.uses > 0)) return 'item';
+      if (inventory.spellbook.some((entry) => entry.solutionId === solutionId && entry.uses > 0)) return 'skill';
+      return null;
+    };
+    const owned = [...inventory.items, ...inventory.spellbook].filter((entry) => entry.uses > 0);
+
+    const choices: SolutionChoice[] = [];
+    for (const slot of SLOTS) {
+      const charges = slotHasEnoughSolutionCharges({ encounter: encounter as never, inventory: inventory as never, slot });
+      if (!charges.available) continue;
+      // Same item the screen shows for the slot: the exact item for a primary
+      // requirement, otherwise the lowest-id item of the required type.
+      const solutionId = charges.isPrimary
+        ? Number(encounter[`primarySolution${slot}`])
+        : owned
+          .filter((entry) => entry.solutionType === Number(encounter[`secondarySolutionType${slot}`]))
+          .sort((left, right) => left.solutionId - right.solutionId)[0]?.solutionId;
+      const kind = solutionId ? kindOf(solutionId) : null;
+      if (!solutionId || !kind) continue;
+      choices.push({ slot, solutionId, kind, name: solutions[String(solutionId)]?.mSolutionName ?? `#${solutionId}` });
+    }
+    const items = choices.filter((choice) => choice.kind === 'item');
+    const skills = choices.filter((choice) => choice.kind === 'skill');
+    if (items.length > 0) return pick(items);
+    if (skills.length > 0) return pick(skills);
+    return null;
   }
 
   /** On the welcome screen: accept the first pending Call for help. */
