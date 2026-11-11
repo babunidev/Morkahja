@@ -77,6 +77,7 @@ const SOLUTION_REVEAL_TOTAL_MS = ENCOUNTER_ACTIONS_FADE_DURATION_MS + AVAILABLE_
 const SOLUTION_ENABLE_RATTLE_MS = 520;
 const DICE_ROLL_ANIMATION_MS = 1350;
 const SOLUTION_ROLL_REVEAL_MS = 1800;
+const SOLUTION_LANDING_FADE_MS = 110;
 const SOLUTION_ACTION_SIZE_PX = 64;
 
 type SolutionRevealDirection = 'left' | 'right' | 'bottom';
@@ -181,7 +182,8 @@ function solutionIconShellRevealStyle(
       opacity: 1,
       transform: 'rotate(0deg) scale(1)',
       transformOrigin: '50% 50%',
-      transition: opacityTransition,
+      // Quick: the landed flyer still covers the slot while this fades in.
+      transition: `opacity ${SOLUTION_LANDING_FADE_MS}ms ease-out`,
     };
   }
 
@@ -433,7 +435,8 @@ function buildInboundSolutionFlights(
     return [{
       id: slot,
       imageSrc: visibleSlot.imageSrc,
-      size: SOLUTION_ACTION_SIZE_PX,
+      // On-screen size: the stage is scaled, the flyer is not.
+      size: Math.round(Math.min(targetRect.width, targetRect.height)),
       source: sourceKind,
       sourceRect,
       targetRect,

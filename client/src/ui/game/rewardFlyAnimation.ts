@@ -155,12 +155,15 @@ function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTM
   return flyer;
 }
 
+const DEFAULT_FLIGHT_EASING = 'cubic-bezier(0.18, 0.04, 0.12, 1)';
+
 function runAnimatedFlyer(
   flyer: HTMLImageElement,
   keyframes: Keyframe[],
   durationMs: number,
   timeoutMs: number,
   onStart: () => void,
+  easing: string = DEFAULT_FLIGHT_EASING,
 ): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
@@ -190,7 +193,7 @@ function runAnimatedFlyer(
 
         const animation = flyer.animate(keyframes, {
           duration: durationMs,
-          easing: 'cubic-bezier(0.18, 0.04, 0.12, 1)',
+          easing,
           fill: 'forwards',
         });
 
@@ -386,9 +389,15 @@ function runRewardFlight(
   });
 }
 
+/** `keepOtherFlyers`: collecting one item must not cut off another item's flight. */
+interface FlightOptions {
+  keepOtherFlyers?: boolean;
+}
+
 async function playLossBubbles(
   flights: LossFlightSpec[],
   resolveSourceRect: (flight: LossFlightSpec, index: number) => DOMRect | null,
+  options: FlightOptions = {},
 ): Promise<void> {
   if (flights.length === 0) {
     return;
@@ -408,7 +417,9 @@ async function playLossBubbles(
     return;
   }
 
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 
   await Promise.race([
     waitForNextFrame().then(() => (
@@ -421,7 +432,9 @@ async function playLossBubbles(
     wait(LOSS_BUBBLE_TIMEOUT_MS + runnable.length * LOSS_BUBBLE_STAGGER_MS),
   ]);
 
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 }
 
 export async function playLossFlightsFromAvatar(
@@ -438,14 +451,18 @@ export async function playLossFlightsFromAvatar(
 
 export async function playLossBubblesFromTargets(
   flights: LossBubbleTargetSpec[],
+  options: FlightOptions = {},
 ): Promise<void> {
-  await playLossBubbles(flights, (_, index) => flights[index]?.sourceRect ?? null);
+  await playLossBubbles(flights, (_, index) => flights[index]?.sourceRect ?? null, options);
 }
 
 export async function playRewardFlights(
   flights: RewardFlightSpec[],
+  options: FlightOptions = {},
 ): Promise<void> {
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 
   if (flights.length === 0) {
     return;
@@ -460,7 +477,9 @@ export async function playRewardFlights(
     wait(REWARD_FLIGHT_TIMEOUT_MS + flights.length * 80),
   ]);
 
-  cleanupRewardFlyers();
+  if (!options.keepOtherFlyers) {
+    cleanupRewardFlyers();
+  }
 }
 
 export interface SolutionSlotInboundFlightSpec {
@@ -492,7 +511,9 @@ function runSolutionSlotInboundFlight(
     size,
     '0 0 16px rgba(255, 204, 102, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45)',
   );
-  const nearTargetLeadMs = Math.round(SOLUTION_SLOT_INBOUND_FLIGHT_MS * 0.18);
+  // The flyer arrives at 85% and stays fully visible while the slot icon fades
+  // in underneath it (see SolutionBlock), so the hand-over cannot be seen.
+  const nearTargetLeadMs = Math.round(SOLUTION_SLOT_INBOUND_FLIGHT_MS * 0.15);
   const nearTargetTimer = onNearTarget
     ? window.setTimeout(onNearTarget, SOLUTION_SLOT_INBOUND_FLIGHT_MS - nearTargetLeadMs)
     : null;
@@ -515,14 +536,14 @@ function runSolutionSlotInboundFlight(
         opacity: 1,
       },
       {
-        offset: 0.82,
+        offset: 0.85,
         transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
         opacity: 1,
       },
       {
         offset: 1,
         transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
-        opacity: 0,
+        opacity: 1,
       },
     ],
     SOLUTION_SLOT_INBOUND_FLIGHT_MS,
@@ -586,6 +607,8 @@ export interface UsedSolutionFlightSpec {
   imageSrc: string;
   size: number;
   sourceRect: DOMRect;
+  /** Called the moment the flyer covers the slot, to hide the original icon. */
+  onTakeOff?: () => void;
 }
 
 function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect): Promise<void> {
@@ -602,14 +625,16 @@ function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect
     y: source.y + (target.y - source.y) * progress - half,
   });
   const start = at(0);
-  const middle = at(0.7);
+  const lift = at(0.04);
+  const middle = at(0.72);
   const end = at(1);
 
   return runAnimatedFlyer(
     flyer,
     [
       { offset: 0, transform: `translate(${start.x}px, ${start.y}px) scale(1)`, opacity: 1 },
-      { offset: 0.7, transform: `translate(${middle.x}px, ${middle.y}px) scale(0.72)`, opacity: 1 },
+      { offset: 0.18, transform: `translate(${lift.x}px, ${lift.y}px) scale(1.1)`, opacity: 1 },
+      { offset: 0.72, transform: `translate(${middle.x}px, ${middle.y}px) scale(0.62)`, opacity: 1 },
       { offset: 1, transform: `translate(${end.x}px, ${end.y}px) scale(0)`, opacity: 0 },
     ],
     USED_SOLUTION_FLIGHT_MS,
@@ -617,7 +642,10 @@ function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect
     () => {
       flyer.style.transform = `translate(${start.x}px, ${start.y}px) scale(1)`;
       flyer.style.opacity = '1';
+      spec.onTakeOff?.();
     },
+    // Slow start, then into the picture.
+    'cubic-bezier(0.45, 0, 0.3, 1)',
   );
 }
 

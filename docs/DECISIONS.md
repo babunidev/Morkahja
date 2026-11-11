@@ -90,3 +90,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Open:** mobile layout, which the standalone did not target; Babuni's acceptance after playing.
 
+## D-011 — Collect rewards and losses to continue (2026-11-11)
+
+**Babuni's direction:** remove the Continue button without changing how a round proceeds: "the way the play proceeds should be by pressing the reward or loss, only if there is no reward or loss the player should be served the continue arrow, otherwise we dont want to show it and the player is tabbing the rewards to collect them and continue."
+
+**AI implementation:** in the result, each reward (including an earned lore gem) and each loss is tapped to collect it; the last one triggers the same continue request as the arrow did. Without anything to collect, and for players watching someone else's turn, the Continue arrow remains. If continuing fails, the collected items return so the player can try again.
+
+**Open:** whether collectable items need an extra visual hint beyond their existing gentle shake; behaviour on touch screens, where the first tap may also show the item's tooltip.
+
