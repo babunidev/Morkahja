@@ -159,6 +159,9 @@ Before this tool, every root step needed Babuni's `sudo` password, so releases s
 | `release` | Backend and frontend together: checks the upload checksums, refuses a client archive with links or unsafe paths and a bundle with any branch but `main`, and stops if `server/game` has uncommitted live edits. Then backs up, fast-forwards the server's `main` from the bundle, runs `npm ci`, restarts PM2, and requires `/health`, the session challenge and `/game-data/content` to answer before switching the frontend symlink. Any backend failure rolls the backend back automatically. Ends with public HTTP checks. |
 | `rollback` | Returns the backend to the previous commit, `node_modules` and `.env`, and the frontend to the previous release. The database is never touched. |
 | `frontend` / `frontend-rollback` | Client-only release and its undo. Refused while the backend lacks `/game-data/content`, so a current client can no longer be paired with an older backend. |
+| `bots-status` / `bots-start` / `bots-stop` | The bot adventurers (PM2 app `morkahja-bots`, D-012): state and recent log, start or restart, stop. Stopped bots stay stopped through later releases until `bots-start`. Added 2026-11-11. |
+
+Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also starts apps new to the file (the bots on their first release); a rollback removes `morkahja-bots` first, in case the previous commit does not define it. Since 2026-11-11 the backend update fetches the bundle into a side ref and fast-forwards `main`, because Git refuses to fetch straight into a checked-out branch.
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
@@ -177,6 +180,19 @@ Requested by Babuni ("do the next deploy and update the server and client togeth
 - `/Morkahja/api/game-data/content` returned 203 encounters, 247 solutions, 4 expansions, 100 frames and 682 portraits, matching `server/game` on `main`. Nginx serves it gzip-compressed (about 104 KB instead of about 460 KB), and a repeat request with its ETag returned `304`.
 - A fresh headless Chrome profile loaded the new bundle and reached the welcome screen (Start New Journey / Restore Existing Journey). Its only console messages were the expected `SESSION_INVALID` lookups of a browser with no account.
 - **Not verified by AI:** a played turn on a real account, two-person multiplayer, a Stripe checkout, mobile browsers.
+
+## Production release — 2026-11-11 (standalone game screen and bot adventurers)
+
+Requested by Babuni ("I want to merge and release this"). `main` at `a40a6c5c` (PR #24) for backend and frontend; no dependency or game-content changes since `5e5481f7`. Times are the server's clock (UTC).
+
+1. **Deploy tool update:** Babuni installed the new `morkahja-deploy` (bot commands, `startOrRestart`) with `sudo`; installed checksum `6c569a93…`.
+2. **First attempt, 07:17:** backup `20261111-071755`, then the backend step failed with `refusing to fetch into branch 'refs/heads/main' checked out`, because the server was now on `main` (the first release had started from another branch). The automatic rollback kept backend `5e5481f7` and restarted the API, so the game was unreachable for a few seconds; frontend and database were untouched, and the live site answered normally right after.
+3. **Fix:** fetch into `refs/remotes/release/main`, then `git merge --ff-only`. Tested on a clone set up like the server, with `main` and with another branch checked out; the old command reproduced the failure. Babuni reinstalled the tool (checksum `eb18ed9d…`).
+4. **Release, 07:19:** backup `20261111-071930` (1.6 MB, 17 tables with data; 64 players, 92 avatars, 14 sessions, 70 devices, 92 inventories, 1 purchase, 277 achievement rows); backend fast-forwarded to `a40a6c5c`; `npm ci`; health gate passed with the content endpoint; frontend release `20261111-071931` switched in; public checks passed. PM2 then showed `morkahja-api` and `morkahja-bots` online.
+5. **Bots:** the first bot start met the API still starting (`ECONNREFUSED`) and crashed before signing up; PM2 restarted it and Varrokh, Sylvaen and Thalyss signed up as new players with avatars Brakru, Vaedae and Myrsyl. Stable one minute later (no further restarts).
+6. **Backup proof:** dump downloaded, SHA-256 matched, restored into a disposable PostgreSQL 18 container with every row count matching.
+
+**Not verified by AI:** a played turn by a real player on the new screen in production, phones, a real player's Call for help reaching Sylvaen or Thalyss in production.
 
 ## Production deployment — 2026-11-10
 
