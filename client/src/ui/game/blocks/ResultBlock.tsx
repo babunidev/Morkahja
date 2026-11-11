@@ -827,7 +827,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
           imageSrc: LORE_GEM_REWARD_ASSET,
           size: Math.round(sourceRect.width),
           sourceRect,
-          target: 'inventory',
+          // Gems belong to the player, not the inventory: onto the avatar.
+          target: 'avatar',
         });
       }
     }

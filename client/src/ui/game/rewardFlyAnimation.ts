@@ -91,7 +91,8 @@ export interface RewardFlightSpec {
   imageSrc: string;
   size: number;
   sourceRect: DOMRect;
-  target: RewardFlyTargetKind;
+  /** 'avatar': not an inventory item (the lore gem), so it flies onto the avatar portrait. */
+  target: RewardFlyTargetKind | 'avatar';
 }
 
 export const REWARD_FLIGHT_MS = 820;
@@ -368,7 +369,8 @@ function runRewardFlight(
   flight: RewardFlightSpec,
   vibratedTargets: Set<RewardFlyTargetKind>,
 ): Promise<void> {
-  const targetRect = getFooterButtonRect(flight.target);
+  const target = flight.target;
+  const targetRect = target === 'avatar' ? getAvatarPortraitRect() : getFooterButtonRect(target);
 
   if (!targetRect) {
     return Promise.resolve();
@@ -381,9 +383,9 @@ function runRewardFlight(
     boxShadow: '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
     nearEndLeadMs: REWARD_FLIGHT_VIBRATE_BEFORE_END_MS,
     onNearEnd: () => {
-      if (!vibratedTargets.has(flight.target)) {
-        vibrateFooterButton(flight.target);
-        vibratedTargets.add(flight.target);
+      if (target !== 'avatar' && !vibratedTargets.has(target)) {
+        vibrateFooterButton(target);
+        vibratedTargets.add(target);
       }
     },
   });

@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-11 — Unreleased: level-up event no longer plays twice; lore gem flies to the avatar
+
+- **Fix: a level-up event could be played twice, with its rewards granted twice.** Choosing in a system event and then leaving a solo adventure, or only going away (page reload, switching tab or window), committed the event on the leave path (`commitParticipantOutcomeOnLeave`) but left the room on it, so the player could play the same event again on return. That path also added the room XP bonus to the level-up event. When the player stays listed in the room, the leave and away paths now defer the system event, and `resolveSystemEventLeftByActor` resolves it through the same routine as Continue, once, and moves the room on (`server/src/services/roomService.ts`). Found from Babuni's report; the event log showed it for Babuni's local avatar and an early bot. New test `server/src/services/systemEventLeaveOnce.test.ts` (leave and away) fails on the old code and passes now.
+- **Lore gem (Babuni's direction):** a collected lore gem flies onto the avatar portrait instead of into the inventory, since gems belong to the player, not the inventory.
+- **Verification:** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 40 server tests). **Not deployed.**
+
 ## 2026-11-11 — Deployed: standalone game screen and bot adventurers (`main` at `a40a6c5c`)
 
 - Merged as PR #24 and released to production with backend and frontend together; the bot adventurers Varrokh, Sylvaen and Thalyss run on the server as `morkahja-bots`. `morkahja-deploy` gained `bots-status`, `bots-start` and `bots-stop`, and its backend update now fast-forwards a checked-out `main` (the first attempt failed and rolled back on its own). Details and evidence in `docs/DEPLOYMENT.md`.
@@ -36,7 +42,7 @@
 
 - The level-up scenario in `server/src/services/systemEventInventory.test.ts` failed at random because it checked exact essence and spell counts while the encounters it used still granted randomly drawn rewards. A level-up's rewards are drawn when the encounter is created, from its own roll; a Prosperity draw can include an essence (seen in CI as 10 essence uses instead of 6). The normal encounter's random rewards could be an essence or spell 10001 itself (seen locally as 7 essence uses and as 3 charges of 10001 instead of 0).
 - The test now gives that normal encounter no random rewards and removes essences from the pre-drawn level-up rewards. All assertions are unchanged. Game code is unchanged; granting an essence on a Prosperity level-up is existing behavior.
-- `server/src/services/roomService.test.ts` (Continue past a disengaged participant) expected the next room state to be `active_encounter`, but the next encounter is drawn at random and can be a system event (seen in CI on PR #22). It now accepts either state, as the file's other Continue checks already do, and also requires a new encounter snapshot.
+- `server/src/services/roomService.test.ts` (Continue past a disengaged participant) expected the next room state to be `active_encounter`, but it can legitimately be a level-up event (seen in CI on PR #22). It now accepts either state, as the file's other Continue checks already do, and also requires a new encounter snapshot. *Correction (2026-11-11): the original explanation here, that the next encounter is drawn at random and can be a system event, was wrong. A diagnostic run showed that in the failing case the avatar had already reached a new level in an earlier, random step of the test, and the owed level-up event is shown at the next opportunity, as designed.*
 - **Verification:** `systemEventInventory.test.ts` passed 60 of 60 consecutive local runs (an earlier, partial fix failed 1 in 25); `roomService.test.ts` passed 30 of 30. Because the random cases are rare, these runs show the changes work but cannot prove every random path is covered. `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 38 server tests). Nobara, local Podman PostgreSQL.
 
 ## 2026-11-10 — One stream: all open work merged into `main`

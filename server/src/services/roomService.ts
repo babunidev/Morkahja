@@ -1262,12 +1262,27 @@ function participantHasCommittableLeaveOutcome(
   return true;
 }
 
+/**
+ * `deferSystemEvent`: the player stays listed in the room (a paused solo room,
+ * or only "away"), so a system event must not be committed here. Committing it
+ * on this side path left the room on the event, and the player could play it
+ * again on return, with its rewards granted twice. The caller resolves it
+ * afterwards through the normal path instead (`resolveSystemEventLeftByActor`).
+ */
+interface LeaveCommitOptions {
+  deferSystemEvent?: boolean;
+}
+
 async function commitParticipantOutcomeOnLeave(
   transaction: DocumentTransaction,
   room: EncounterRoom,
   participant: RoomParticipant,
+  options: LeaveCommitOptions = {},
 ): Promise<RoomParticipant> {
   if (!participantHasCommittableLeaveOutcome(room, participant)) {
+    return participant;
+  }
+  if (options.deferSystemEvent && room.roomState === 'system_event') {
     return participant;
   }
 
@@ -1306,13 +1321,14 @@ async function applyLeaveCommitToParticipantInRoom(
   transaction: DocumentTransaction,
   room: EncounterRoom,
   playerId: string,
+  options: LeaveCommitOptions = {},
 ): Promise<EncounterRoom> {
   const participant = findParticipant(room, playerId);
   if (!participant) {
     return room;
   }
 
-  const committed = await commitParticipantOutcomeOnLeave(transaction, room, participant);
+  const committed = await commitParticipantOutcomeOnLeave(transaction, room, participant, options);
   if (committed === participant) {
     return room;
   }
@@ -1332,8 +1348,9 @@ async function finalizeParticipantLeaveChoiceInTransaction(
   transaction: DocumentTransaction,
   room: EncounterRoom,
   playerId: string,
+  options: LeaveCommitOptions = {},
 ): Promise<EncounterRoom> {
-  let working = await applyLeaveCommitToParticipantInRoom(transaction, room, playerId);
+  let working = await applyLeaveCommitToParticipantInRoom(transaction, room, playerId, options);
   const participant = findParticipant(working, playerId);
   if (!participant) {
     return working;
@@ -1637,6 +1654,38 @@ async function tickRoomById(roomId: string): Promise<EncounterRoom | null> {
   return tickRoom(room);
 }
 
+/**
+ * After a player who stays listed in the room left or went away with a choice
+ * made in their own system event: resolve it exactly like Continue does, once,
+ * and move the room past it.
+ */
+async function resolveSystemEventLeftByActor(roomId: string, playerId: string): Promise<void> {
+  const room = await loadEncounterRoom(roomId);
+  if (!room || room.roomState !== 'system_event') {
+    return;
+  }
+  const item = currentSystemEventQueueItem(room);
+  const actor = findParticipant(room, playerId);
+  if (
+    item?.actorPlayerId !== playerId
+    || actor?.choiceState !== 'ready_to_continue'
+    || !actor.selectedAction
+  ) {
+    return;
+  }
+  const resolved = await tryResolveSystemEventIfReady(roomId);
+  if (
+    resolved
+    && (
+      resolved.roomState === 'waiting_continue'
+      || resolved.roomState === 'active_encounter'
+      || resolved.roomState === 'system_event'
+    )
+  ) {
+    await recordRoomEncounterResolvedEvent(resolved);
+  }
+}
+
 async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRoom | null> {
   return withDocumentTransaction(async (transaction) => {
     const room = await loadEncounterRoomFromTransaction(transaction, roomId);
@@ -1881,7 +1930,11 @@ export async function leaveRoomById(
       return { type: 'absent' };
     }
 
-    room = await finalizeParticipantLeaveChoiceInTransaction(transaction, room, playerId);
+    // In a solo room the player stays listed (the room only pauses).
+    const staysListed = isSoloLeaderRoom(room);
+    room = await finalizeParticipantLeaveChoiceInTransaction(transaction, room, playerId, {
+      deferSystemEvent: staysListed,
+    });
 
     if (isSoloLeaderRoom(room)) {
       await transaction.setEncounterRoom(roomId, room);
@@ -1923,6 +1976,7 @@ export async function leaveRoomById(
 
   if (result.type === 'solo_away') {
     // The departing room was already persisted in the locked transaction.
+    await resolveSystemEventLeftByActor(result.room.roomId, result.playerId);
     await syncActiveEncountersForRoom(result.room);
     await tickRoomById(result.room.roomId);
     await clearPresenceRoom(result.playerId);
@@ -1988,12 +2042,15 @@ export async function processRoomAway(
       return;
     }
 
-    room = await finalizeParticipantLeaveChoiceInTransaction(transaction, room, playerId);
+    room = await finalizeParticipantLeaveChoiceInTransaction(transaction, room, playerId, {
+      deferSystemEvent: true,
+    });
     await transaction.setEncounterRoom(roomId, room);
     advancedRoomId = roomId;
   });
 
   if (advancedRoomId) {
+    await resolveSystemEventLeftByActor(advancedRoomId, playerId);
     const ticked = await tickRoomById(advancedRoomId);
     if (ticked) {
       await syncActiveEncountersForRoom(ticked);
