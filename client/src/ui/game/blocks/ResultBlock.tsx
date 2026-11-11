@@ -22,8 +22,10 @@ import {
   LOSS_ROW_FADE_IN_MS,
   playLossArrivals,
   playLossBubblesFromTargets,
+  playRewardEmergence,
   playRewardFlights,
   playUsedSolutionsIntoEncounter,
+  USED_SOLUTION_FLIGHT_MS,
   resultLossSequenceDurationMs,
   rewardFlyTargetKind,
   type LossBubbleTargetSpec,
@@ -434,6 +436,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   /** Losses that flew into the row appear in place instead of fading in. */
   const [lossesArrived, setLossesArrived] = useState(false);
   const usedSolutionFlightKeyRef = useRef<string | null>(null);
+  /** Rewards stay hidden in their slots until they have grown out of the encounter. */
+  const [rewardsEmerged, setRewardsEmerged] = useState(false);
+  const rewardEmergenceKeyRef = useRef<string | null>(null);
   const [lossesSequenceDone, setLossesSequenceDone] = useState(true);
   const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
   const [continueInteractive, setContinueInteractive] = useState(false);
@@ -498,6 +503,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setLossesFlyingAway(false);
     setLossesRevealed(losses.length === 0);
     setLossesArrived(false);
+    setRewardsEmerged(false);
     setLossesSequenceDone(roll === null);
     setContinueRevealPlaying(false);
     setContinueInteractive(false);
@@ -650,7 +656,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return undefined;
     }
 
-    if (!visible || !lossesSequenceDone) {
+    if (!visible || !lossesSequenceDone || !rewardsEmerged) {
       setContinueRevealPlaying(false);
       setContinueInteractive(false);
       return undefined;
@@ -717,6 +723,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     actorShowContinue,
     encounterSnapshotId,
     lossesSequenceDone,
+    rewardsEmerged,
     visible,
     readOnlyWitness,
     witnessShowContinue,
@@ -1144,6 +1151,60 @@ export const ResultBlock = forwardRef(function ResultBlock(
     })));
   }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
 
+  // Rewards grow out of the middle of the encounter into their slots, the
+  // reverse of the used solution; after a used solution, just as it vanishes.
+  useEffect(() => {
+    if (!resultShown || rewardsEmerged) {
+      return undefined;
+    }
+
+    const emergenceKey = `${encounterSnapshotId ?? ''}:${roll ?? 'witness'}`;
+    if (rewardEmergenceKeyRef.current === emergenceKey) {
+      // Already played for this result (or interrupted): never leave rewards hidden.
+      setRewardsEmerged(true);
+      return undefined;
+    }
+    rewardEmergenceKeyRef.current = emergenceKey;
+
+    let cancelled = false;
+    const solutionFlew = !readOnlyWitness
+      && Boolean(resolutionAction)
+      && resolutionAction !== 'dice'
+      && usedSolutions.length > 0;
+
+    async function emerge(): Promise<void> {
+      if (solutionFlew) {
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
+        });
+      }
+      await waitForNextPaint();
+      if (cancelled) {
+        return;
+      }
+
+      const flights = [...rewardButtonRefs.current.values()].flatMap((button) => {
+        const imageSrc = button.querySelector('img')?.src;
+        const targetRect = button.getBoundingClientRect();
+        if (!imageSrc || targetRect.width <= 0) {
+          return [];
+        }
+        return [{ imageSrc, size: Math.round(Math.min(targetRect.width, targetRect.height)), targetRect }];
+      });
+
+      await playRewardEmergence(flights, () => {
+        if (!cancelled) {
+          setRewardsEmerged(true);
+        }
+      });
+    }
+
+    void emerge();
+    return () => {
+      cancelled = true;
+    };
+  }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, rewardsEmerged, usedSolutions.length]);
+
   return (
     <div
       aria-hidden={roll === null}
@@ -1306,9 +1367,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
           gridColumn: String(column),
           gridRow: '1',
           zIndex: 11,
+          opacity: rewardsEmerged ? 1 : 0,
         });
         return (
           <>
+            {/* Hidden until grown out of the encounter (see playRewardEmergence). */}
             {slotted.map((reward, index) => renderSolutionIcon(
               reward,
               '+',
@@ -1320,7 +1383,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
               <div
                 aria-label="More rewards"
                 {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-                style={rewardOverflowRowStyle}
+                style={{ ...rewardOverflowRowStyle, opacity: rewardsEmerged ? 1 : 0 }}
               >
                 {overflow.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
                 {showLoreGem && gemColumn === undefined ? renderLoreGemRewardIcon() : null}

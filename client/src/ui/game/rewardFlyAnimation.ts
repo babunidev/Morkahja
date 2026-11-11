@@ -705,3 +705,75 @@ export async function playLossArrivals(
   window.clearTimeout(revealTimer);
   onLastArrival?.();
 }
+
+/**
+ * Rewards grow out of the middle of the encounter picture and travel to their
+ * slots: the reverse of a used solution shrinking into it.
+ */
+export const REWARD_EMERGE_MS = 950;
+const REWARD_EMERGE_TIMEOUT_MS = REWARD_EMERGE_MS + 600;
+export const REWARD_EMERGE_STAGGER_MS = 130;
+
+export interface RewardEmergenceSpec {
+  imageSrc: string;
+  size: number;
+  targetRect: DOMRect;
+}
+
+function runRewardEmergence(spec: RewardEmergenceSpec, sourceRect: DOMRect): Promise<void> {
+  const source = rectCenter(sourceRect);
+  const target = rectCenter(spec.targetRect);
+  const half = spec.size / 2;
+  const flyer = createIconFlyer(
+    spec.imageSrc,
+    spec.size,
+    '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
+  );
+  const at = (progress: number): { x: number; y: number } => ({
+    x: source.x + (target.x - source.x) * progress - half,
+    y: source.y + (target.y - source.y) * progress - half,
+  });
+  const start = at(0);
+  const early = at(0.3);
+  const end = at(1);
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      { offset: 0, transform: `translate(${start.x}px, ${start.y}px) scale(0)`, opacity: 0 },
+      { offset: 0.3, transform: `translate(${early.x}px, ${early.y}px) scale(0.72)`, opacity: 1 },
+      { offset: 1, transform: `translate(${end.x}px, ${end.y}px) scale(1)`, opacity: 1 },
+    ],
+    REWARD_EMERGE_MS,
+    REWARD_EMERGE_TIMEOUT_MS,
+    () => {
+      flyer.style.transform = `translate(${start.x}px, ${start.y}px) scale(0)`;
+      flyer.style.opacity = '0';
+    },
+  );
+}
+
+/** Resolves once every reward has landed; `onLanded` fires just before the last flyer is removed. */
+export async function playRewardEmergence(
+  flights: RewardEmergenceSpec[],
+  onLanded?: () => void,
+): Promise<void> {
+  const sourceRect = getEncounterArtRect();
+  if (!sourceRect || flights.length === 0) {
+    onLanded?.();
+    return;
+  }
+
+  const lastLandsAt = (flights.length - 1) * REWARD_EMERGE_STAGGER_MS + REWARD_EMERGE_MS;
+  const landedTimer = window.setTimeout(() => onLanded?.(), Math.max(0, lastLandsAt - 60));
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * REWARD_EMERGE_STAGGER_MS).then(() => runRewardEmergence(flight, sourceRect))
+    )))),
+    wait(REWARD_EMERGE_TIMEOUT_MS + flights.length * REWARD_EMERGE_STAGGER_MS),
+  ]);
+
+  window.clearTimeout(landedTimer);
+  onLanded?.();
+}
