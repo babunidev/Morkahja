@@ -104,5 +104,5 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** the three test bots run on the production server as normal accounts named Varrokh, Sylvaen and Thalyss, with the same behaviours as in testing (always adventuring, waiting helper, on-and-off player). They use only the public HTTP API from the same host, under PM2 next to the API, and can be switched off with `MORKAHJA_BOTS=0`.
 
-**Open:** whether players should be able to tell that these adventurers are bots (for example a title); their effect on shared features such as the activity feed and achievements has not been reviewed.
+**Status:** live since 2026-11-11 (release `a40a6c5c`). **Open:** whether players should be able to tell that these adventurers are bots (for example a title); their effect on shared features such as the activity feed and achievements has not been reviewed.
 
