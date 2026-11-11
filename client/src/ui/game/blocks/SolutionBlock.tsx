@@ -36,6 +36,8 @@ import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
   getFooterButtonRect,
+  landingRevealMs,
+  SOLUTION_SLOT_INBOUND_FLIGHT_MS,
   playSolutionSlotInboundFlights,
   type RewardFlyTargetKind,
   type SolutionSlotInboundFlightSpec,
@@ -77,7 +79,7 @@ const SOLUTION_REVEAL_TOTAL_MS = ENCOUNTER_ACTIONS_FADE_DURATION_MS + AVAILABLE_
 const SOLUTION_ENABLE_RATTLE_MS = 520;
 const DICE_ROLL_ANIMATION_MS = 1350;
 const SOLUTION_ROLL_REVEAL_MS = 1800;
-const SOLUTION_LANDING_FADE_MS = 110;
+
 const SOLUTION_ACTION_SIZE_PX = 64;
 
 type SolutionRevealDirection = 'left' | 'right' | 'bottom';
@@ -183,7 +185,7 @@ function solutionIconShellRevealStyle(
       transform: 'rotate(0deg) scale(1)',
       transformOrigin: '50% 50%',
       // Quick: the landed flyer still covers the slot while this fades in.
-      transition: `opacity ${SOLUTION_LANDING_FADE_MS}ms ease-out`,
+      transition: `opacity ${landingRevealMs(SOLUTION_SLOT_INBOUND_FLIGHT_MS)}ms ease-out`,
     };
   }
 

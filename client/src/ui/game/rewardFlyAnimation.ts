@@ -482,6 +482,122 @@ export async function playRewardFlights(
   }
 }
 
+/**
+ * Played-animation memory, per encounter: a result can re-render or remount
+ * while a round continues (for example when the server's final result arrives),
+ * and a spending, arrival or emergence animation must never play twice.
+ */
+const playedAnimationKeys = new Set<string>();
+const PLAYED_ANIMATION_MEMORY = 200;
+
+/** Returns true the first time a key is seen, false afterwards. */
+export function claimAnimationOnce(key: string): boolean {
+  if (playedAnimationKeys.has(key)) {
+    return false;
+  }
+  playedAnimationKeys.add(key);
+  if (playedAnimationKeys.size > PLAYED_ANIMATION_MEMORY) {
+    const oldest = playedAnimationKeys.values().next().value;
+    if (oldest !== undefined) {
+      playedAnimationKeys.delete(oldest);
+    }
+  }
+  return true;
+}
+
+export function animationAlreadyPlayed(key: string): boolean {
+  return playedAnimationKeys.has(key);
+}
+
+/**
+ * Landing hand-over shared by every flight that ends on a real object: the
+ * flyer arrives at LANDING_ARRIVE_AT, holds while its glow fades and the real
+ * object fades in underneath (`onArrive` fires at arrival), then fades out over
+ * it. Offsets are time fractions; only the travel part is eased.
+ */
+export const LANDING_ARRIVE_AT = 0.72;
+const LANDING_SETTLED_AT = 0.86;
+/** How long the real object should take to fade in under the flyer. */
+export function landingRevealMs(durationMs: number): number {
+  return Math.round(durationMs * (LANDING_SETTLED_AT - LANDING_ARRIVE_AT));
+}
+const NO_SHADOW = '0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0)';
+const TRAVEL_EASING = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+
+interface LandingPoint {
+  offset: number;
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+}
+
+function runLandingFlight({
+  boxShadow,
+  durationMs,
+  imageSrc,
+  onArrive,
+  onStart,
+  points,
+  size,
+}: {
+  boxShadow: string;
+  durationMs: number;
+  imageSrc: string;
+  onArrive?: () => void;
+  onStart?: () => void;
+  /** Travel keyframes; the last one is the arrival, at LANDING_ARRIVE_AT. */
+  points: LandingPoint[];
+  size: number;
+}): Promise<void> {
+  const flyer = createIconFlyer(imageSrc, size, boxShadow);
+  const half = size / 2;
+  const transform = (point: LandingPoint): string => (
+    `translate(${point.x - half}px, ${point.y - half}px) scale(${point.scale})`
+  );
+  const arrival = points[points.length - 1]!;
+  const frames: Keyframe[] = points.map((point, index) => ({
+    offset: point.offset,
+    transform: transform(point),
+    opacity: point.opacity,
+    boxShadow,
+    easing: index < points.length - 1 ? TRAVEL_EASING : 'linear',
+  }));
+  frames.push(
+    { offset: LANDING_SETTLED_AT, transform: transform(arrival), opacity: 1, boxShadow: NO_SHADOW, easing: 'linear' },
+    { offset: 1, transform: transform(arrival), opacity: 0, boxShadow: NO_SHADOW },
+  );
+
+  let arrived = false;
+  let arriveTimer: number | null = null;
+  const arrive = (): void => {
+    if (!arrived) {
+      arrived = true;
+      onArrive?.();
+    }
+  };
+
+  return runAnimatedFlyer(
+    flyer,
+    frames,
+    durationMs,
+    durationMs + 600,
+    () => {
+      flyer.style.transform = transform(points[0]!);
+      flyer.style.opacity = String(points[0]!.opacity);
+      onStart?.();
+      arriveTimer = window.setTimeout(arrive, Math.round(arrival.offset * durationMs));
+    },
+    'linear',
+  ).finally(() => {
+    if (arriveTimer !== null) {
+      window.clearTimeout(arriveTimer);
+    }
+    // Never leave the real object hidden if the flight was cut short.
+    arrive();
+  });
+}
+
 export interface SolutionSlotInboundFlightSpec {
   id: string;
   imageSrc: string;
@@ -491,7 +607,7 @@ export interface SolutionSlotInboundFlightSpec {
   targetRect: DOMRect;
 }
 
-export const SOLUTION_SLOT_INBOUND_FLIGHT_MS = 780;
+export const SOLUTION_SLOT_INBOUND_FLIGHT_MS = 900;
 export const SOLUTION_SLOT_INBOUND_STAGGER_MS = 110;
 const SOLUTION_SLOT_INBOUND_TIMEOUT_MS = SOLUTION_SLOT_INBOUND_FLIGHT_MS + 600;
 
@@ -505,58 +621,22 @@ function runSolutionSlotInboundFlight(
 ): Promise<void> {
   const source = rectCenter(sourceRect);
   const target = rectCenter(targetRect);
-  const half = size / 2;
-  const flyer = createIconFlyer(
+  const along = (progress: number) => ({
+    x: source.x + (target.x - source.x) * progress,
+    y: source.y + (target.y - source.y) * progress,
+  });
+  return runLandingFlight({
+    boxShadow: '0 0 16px rgba(255, 204, 102, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45)',
+    durationMs: SOLUTION_SLOT_INBOUND_FLIGHT_MS,
     imageSrc,
-    size,
-    '0 0 16px rgba(255, 204, 102, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45)',
-  );
-  // The flyer arrives at 85% and stays fully visible while the slot icon fades
-  // in underneath it (see SolutionBlock), so the hand-over cannot be seen.
-  const nearTargetLeadMs = Math.round(SOLUTION_SLOT_INBOUND_FLIGHT_MS * 0.15);
-  const nearTargetTimer = onNearTarget
-    ? window.setTimeout(onNearTarget, SOLUTION_SLOT_INBOUND_FLIGHT_MS - nearTargetLeadMs)
-    : null;
-
-  return runAnimatedFlyer(
-    flyer,
-    [
-      {
-        offset: 0,
-        transform: `translate(${source.x - half}px, ${source.y - half}px) scale(0.38)`,
-        opacity: 0.92,
-      },
-      {
-        offset: 0.58,
-        transform: `translate(${
-          source.x + (target.x - source.x) * 0.58 - half
-        }px, ${
-          source.y + (target.y - source.y) * 0.58 - half
-        }px) scale(0.82)`,
-        opacity: 1,
-      },
-      {
-        offset: 0.85,
-        transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
-        opacity: 1,
-      },
-      {
-        offset: 1,
-        transform: `translate(${target.x - half}px, ${target.y - half}px) scale(1)`,
-        opacity: 1,
-      },
+    onArrive: onNearTarget,
+    onStart: () => ejectFooterButton(sourceKind),
+    points: [
+      { offset: 0, ...source, scale: 0.38, opacity: 0.92 },
+      { offset: LANDING_ARRIVE_AT * 0.58, ...along(0.58), scale: 0.82, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
     ],
-    SOLUTION_SLOT_INBOUND_FLIGHT_MS,
-    SOLUTION_SLOT_INBOUND_TIMEOUT_MS,
-    () => {
-      ejectFooterButton(sourceKind);
-      flyer.style.transform = `translate(${source.x - half}px, ${source.y - half}px) scale(0.38)`;
-      flyer.style.opacity = '0.92';
-    },
-  ).finally(() => {
-    if (nearTargetTimer !== null) {
-      window.clearTimeout(nearTargetTimer);
-    }
+    size,
   });
 }
 
@@ -679,59 +759,40 @@ export interface LossArrivalSpec {
   targetRect: DOMRect;
 }
 
-function runLossArrival(spec: LossArrivalSpec): Promise<void> {
+function runLossArrival(spec: LossArrivalSpec, onArrive: () => void): Promise<void> {
   const source = rectCenter(spec.sourceRect);
   const target = rectCenter(spec.targetRect);
-  const half = spec.size / 2;
-  const flyer = createIconFlyer(
-    spec.imageSrc,
-    spec.size,
-    '0 0 16px rgba(255, 120, 96, 0.5), 0 6px 12px rgba(0, 0, 0, 0.45)',
-  );
-  const startX = source.x - half;
-  const startY = source.y - half;
-  const endX = target.x - half;
-  const endY = target.y - half;
-
-  return runAnimatedFlyer(
-    flyer,
-    [
-      { offset: 0, transform: `translate(${startX}px, ${startY}px) scale(0.3)`, opacity: 0 },
-      { offset: 0.22, transform: `translate(${startX}px, ${startY}px) scale(1.08)`, opacity: 1 },
-      { offset: 0.34, transform: `translate(${startX}px, ${startY}px) scale(1)`, opacity: 1 },
-      { offset: 1, transform: `translate(${endX}px, ${endY}px) scale(1)`, opacity: 1 },
+  return runLandingFlight({
+    boxShadow: '0 0 16px rgba(255, 120, 96, 0.5), 0 6px 12px rgba(0, 0, 0, 0.45)',
+    durationMs: LOSS_ARRIVAL_MS,
+    imageSrc: spec.imageSrc,
+    onArrive,
+    points: [
+      { offset: 0, ...source, scale: 0.3, opacity: 0 },
+      { offset: 0.16, ...source, scale: 1.08, opacity: 1 },
+      { offset: 0.24, ...source, scale: 1, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
     ],
-    LOSS_ARRIVAL_MS,
-    LOSS_ARRIVAL_TIMEOUT_MS,
-    () => {
-      flyer.style.transform = `translate(${startX}px, ${startY}px) scale(0.3)`;
-      flyer.style.opacity = '0';
-    },
-  );
+    size: spec.size,
+  });
 }
 
-/** Resolves once every loss has arrived; `onLastArrival` fires just before the final flyer is removed. */
+/** Each loss is handed over as it lands (`onItemArrived(index)`); resolves once all have settled. */
 export async function playLossArrivals(
   flights: LossArrivalSpec[],
-  onLastArrival?: () => void,
+  onItemArrived?: (index: number) => void,
 ): Promise<void> {
   if (flights.length === 0) {
-    onLastArrival?.();
     return;
   }
 
-  const lastLandsAt = (flights.length - 1) * LOSS_ARRIVAL_STAGGER_MS + LOSS_ARRIVAL_MS;
-  const revealTimer = window.setTimeout(() => onLastArrival?.(), Math.max(0, lastLandsAt - 60));
-
   await Promise.race([
     waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
-      wait(index * LOSS_ARRIVAL_STAGGER_MS).then(() => runLossArrival(flight))
+      wait(index * LOSS_ARRIVAL_STAGGER_MS).then(() => runLossArrival(flight, () => onItemArrived?.(index)))
     )))),
     wait(LOSS_ARRIVAL_TIMEOUT_MS + flights.length * LOSS_ARRIVAL_STAGGER_MS),
   ]);
-
-  window.clearTimeout(revealTimer);
-  onLastArrival?.();
+  flights.forEach((_, index) => onItemArrived?.(index));
 }
 
 /**
@@ -748,60 +809,50 @@ export interface RewardEmergenceSpec {
   targetRect: DOMRect;
 }
 
-function runRewardEmergence(spec: RewardEmergenceSpec, sourceRect: DOMRect): Promise<void> {
+function runRewardEmergence(spec: RewardEmergenceSpec, sourceRect: DOMRect, onArrive: () => void): Promise<void> {
   const source = rectCenter(sourceRect);
   const target = rectCenter(spec.targetRect);
-  const half = spec.size / 2;
-  const flyer = createIconFlyer(
-    spec.imageSrc,
-    spec.size,
-    '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
-  );
-  const at = (progress: number): { x: number; y: number } => ({
-    x: source.x + (target.x - source.x) * progress - half,
-    y: source.y + (target.y - source.y) * progress - half,
+  const along = (progress: number) => ({
+    x: source.x + (target.x - source.x) * progress,
+    y: source.y + (target.y - source.y) * progress,
   });
-  const start = at(0);
-  const early = at(0.3);
-  const end = at(1);
-
-  return runAnimatedFlyer(
-    flyer,
-    [
-      { offset: 0, transform: `translate(${start.x}px, ${start.y}px) scale(0)`, opacity: 0 },
-      { offset: 0.3, transform: `translate(${early.x}px, ${early.y}px) scale(0.72)`, opacity: 1 },
-      { offset: 1, transform: `translate(${end.x}px, ${end.y}px) scale(1)`, opacity: 1 },
+  return runLandingFlight({
+    boxShadow: '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
+    durationMs: REWARD_EMERGE_MS,
+    imageSrc: spec.imageSrc,
+    onArrive,
+    points: [
+      { offset: 0, ...source, scale: 0, opacity: 0 },
+      { offset: LANDING_ARRIVE_AT * 0.3, ...along(0.3), scale: 0.72, opacity: 1 },
+      { offset: LANDING_ARRIVE_AT, ...target, scale: 1, opacity: 1 },
     ],
-    REWARD_EMERGE_MS,
-    REWARD_EMERGE_TIMEOUT_MS,
-    () => {
-      flyer.style.transform = `translate(${start.x}px, ${start.y}px) scale(0)`;
-      flyer.style.opacity = '0';
-    },
-  );
+    size: spec.size,
+  });
 }
 
-/** Resolves once every reward has landed; `onLanded` fires just before the last flyer is removed. */
+/**
+ * Each reward is handed over as it lands (`onItemArrived(index)`); resolves
+ * once all have settled.
+ */
 export async function playRewardEmergence(
   flights: RewardEmergenceSpec[],
-  onLanded?: () => void,
+  onItemArrived?: (index: number) => void,
 ): Promise<void> {
   const sourceRect = getEncounterArtRect();
   if (!sourceRect || flights.length === 0) {
-    onLanded?.();
+    flights.forEach((_, index) => onItemArrived?.(index));
     return;
   }
 
-  const lastLandsAt = (flights.length - 1) * REWARD_EMERGE_STAGGER_MS + REWARD_EMERGE_MS;
-  const landedTimer = window.setTimeout(() => onLanded?.(), Math.max(0, lastLandsAt - 60));
-
   await Promise.race([
     waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
-      wait(index * REWARD_EMERGE_STAGGER_MS).then(() => runRewardEmergence(flight, sourceRect))
+      wait(index * REWARD_EMERGE_STAGGER_MS).then(() => runRewardEmergence(
+        flight,
+        sourceRect,
+        () => onItemArrived?.(index),
+      ))
     )))),
     wait(REWARD_EMERGE_TIMEOUT_MS + flights.length * REWARD_EMERGE_STAGGER_MS),
   ]);
-
-  window.clearTimeout(landedTimer);
-  onLanded?.();
+  flights.forEach((_, index) => onItemArrived?.(index));
 }

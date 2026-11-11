@@ -18,9 +18,14 @@ import {
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import {
+  animationAlreadyPlayed,
+  claimAnimationOnce,
   getAvatarPortraitRect,
   getFooterButtonRect,
+  landingRevealMs,
+  LOSS_ARRIVAL_MS,
   LOSS_ROW_FADE_IN_MS,
+  REWARD_EMERGE_MS,
   playLossArrivals,
   playLossBubblesFromTargets,
   playRewardEmergence,
@@ -434,13 +439,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [lossesRevealed, setLossesRevealed] = useState(true);
   /** Losses that flew into the row appear in place instead of fading in. */
   const [lossesArrived, setLossesArrived] = useState(false);
-  const usedSolutionFlightKeyRef = useRef<string | null>(null);
+  /** Items revealed one by one as their flyer lands on them. */
+  const [arrivedLossKeys, setArrivedLossKeys] = useState<ReadonlySet<string>>(() => new Set());
+  const [emergedRewardKeys, setEmergedRewardKeys] = useState<ReadonlySet<string>>(() => new Set());
   /** Rewards stay hidden in their slots until they have grown out of the encounter. */
   const [rewardsEmerged, setRewardsEmerged] = useState(false);
   const [collected, setCollected] = useState<ReadonlySet<string>>(() => new Set());
   /** Mirror of `collected` for quick consecutive taps within one render. */
   const collectedRef = useRef<Set<string>>(new Set());
-  const rewardEmergenceKeyRef = useRef<string | null>(null);
   const [lossesSequenceDone, setLossesSequenceDone] = useState(true);
   const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
   const [continueInteractive, setContinueInteractive] = useState(false);
@@ -520,6 +526,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setLossesFlyingAway(false);
     setLossesRevealed(losses.length === 0);
     setLossesArrived(false);
+    setArrivedLossKeys(new Set());
+    setEmergedRewardKeys(new Set());
     setRewardsEmerged(false);
     collectedRef.current = new Set();
     setCollected(new Set());
@@ -593,6 +601,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     let cancelled = false;
+    const arrivalKey = `loss-arrive:${encounterSnapshotId ?? `roll-${roll}`}`;
+    if (animationAlreadyPlayed(arrivalKey)) {
+      // Played before for this encounter (the result re-rendered): just show them.
+      setLossesArrived(true);
+      setLossesRevealed(true);
+      setLossesSequenceDone(true);
+      return undefined;
+    }
     setLossesSequenceDone(false);
     setLossesRevealed(false);
 
@@ -607,7 +623,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       // loss row: an essence from the middle of the avatar, an item or skill
       // from its Inventory or Skillbook button.
       const avatarRect = getAvatarPortraitRect();
-      const flights: LossArrivalSpec[] = losses.flatMap((loss) => {
+      const flights: Array<LossArrivalSpec & { key: string }> = losses.flatMap((loss) => {
         const inventoryType = loss.solution.mSolutionInventoryType;
         const sourceRect = inventoryType === ESSENCE_INVENTORY_TYPE
           ? avatarRect
@@ -617,6 +633,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           return [];
         }
         return [{
+          key: `l:${loss.solution.mSolutionID}`,
           imageSrc: solutionImagePath(loss.solution),
           // On-screen size of the loss icon (the stage is scaled, flyers are not).
           size: Math.round(Math.min(targetRect.width, targetRect.height)),
@@ -648,7 +665,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
         return;
       }
 
-      await playLossArrivals(flights, markLossRowRevealed);
+      claimAnimationOnce(arrivalKey);
+      const flightKeys = flights.map((flight) => flight.key);
+      const arrived = new Set<string>();
+      await playLossArrivals(flights, (index) => {
+        if (cancelled) {
+          return;
+        }
+        arrived.add(flightKeys[index]!);
+        setArrivedLossKeys(new Set(arrived));
+        if (arrived.size === flightKeys.length) {
+          markLossRowRevealed();
+        }
+      });
+      markLossRowRevealed();
     }
 
     void playLossRevealFlights();
@@ -1154,17 +1184,22 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   function renderLossIcon(loss: EncounterInventoryChange, placement: CSSProperties = {}) {
-    const lossVisible = lossesRevealed && !lossesFlyingAway;
+    const lossKey = `l:${loss.solution.mSolutionID}`;
+    const landedHere = arrivedLossKeys.has(lossKey);
+    const lossVisible = (lossesRevealed || landedHere) && !lossesFlyingAway;
     const imageStyle = {
       ...lossIconStyle(loss.solution.mSolutionInventoryType),
       opacity: lossVisible ? 1 : 0,
       // Hidden icons keep their final place: arriving losses fly to exactly this spot.
       transform: 'translateY(0) scale(1)',
-      transition: lossesFlyingAway || lossesArrived
+      transition: lossesFlyingAway
         ? 'opacity 0ms, transform 0ms'
-        : lossesRevealed
-          ? lossRowRevealTransition
-          : 'none',
+        : landedHere || lossesArrived
+          // Fades in under its landed flyer, which then fades out over it.
+          ? `opacity ${landingRevealMs(LOSS_ARRIVAL_MS)}ms ease-out`
+          : lossesRevealed
+            ? lossRowRevealTransition
+            : 'none',
     };
 
     return (
@@ -1255,11 +1290,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return;
     }
 
-    const flightKey = `${encounterSnapshotId ?? ''}:${roll}:${resolutionAction}`;
-    if (usedSolutionFlightKeyRef.current === flightKey) {
+    // Once per encounter: continuing (collecting) re-renders the result with the
+    // server's final values, which must not replay the spending animation.
+    if (!claimAnimationOnce(`spend:${encounterSnapshotId ?? `roll-${roll}-${resolutionAction}`}`)) {
       return;
     }
-    usedSolutionFlightKeyRef.current = flightKey;
 
     const slotElement = document.querySelector(`[data-solution-slot="${resolutionAction}"]`);
     const sourceRect = slotElement?.getBoundingClientRect();
@@ -1294,13 +1329,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return undefined;
     }
 
-    const emergenceKey = `${encounterSnapshotId ?? ''}:${roll ?? 'witness'}`;
-    if (rewardEmergenceKeyRef.current === emergenceKey) {
-      // Already played for this result (or interrupted): never leave rewards hidden.
+    if (!claimAnimationOnce(`emerge:${encounterSnapshotId ?? `roll-${roll ?? 'witness'}`}`)) {
+      // Already played for this encounter (or interrupted): never leave rewards hidden.
       setRewardsEmerged(true);
       return undefined;
     }
-    rewardEmergenceKeyRef.current = emergenceKey;
 
     let cancelled = false;
     const solutionFlew = !readOnlyWitness
@@ -1319,20 +1352,32 @@ export const ResultBlock = forwardRef(function ResultBlock(
         return;
       }
 
-      const flights = [...rewardButtonRefs.current.values()].flatMap((button) => {
+      const flights = [...rewardButtonRefs.current.entries()].flatMap(([solutionId, button]) => {
         const imageSrc = button.querySelector('img')?.src;
         const targetRect = button.getBoundingClientRect();
         if (!imageSrc || targetRect.width <= 0) {
           return [];
         }
-        return [{ imageSrc, size: Math.round(Math.min(targetRect.width, targetRect.height)), targetRect }];
+        return [{
+          key: `r:${solutionId}`,
+          imageSrc,
+          size: Math.round(Math.min(targetRect.width, targetRect.height)),
+          targetRect,
+        }];
       });
 
-      await playRewardEmergence(flights, () => {
-        if (!cancelled) {
-          setRewardsEmerged(true);
+      // Each reward fades in under its own flyer as it lands.
+      const landed = new Set<string>();
+      await playRewardEmergence(flights, (index) => {
+        if (cancelled) {
+          return;
         }
+        landed.add(flights[index]!.key);
+        setEmergedRewardKeys(new Set(landed));
       });
+      if (!cancelled) {
+        setRewardsEmerged(true);
+      }
     }
 
     void emerge();
@@ -1488,18 +1533,25 @@ export const ResultBlock = forwardRef(function ResultBlock(
         const showRewards = !rewardsFlyingAway && !rewardDismissInProgress;
         const showLosses = losses.length > 0 && !lossesFlyingAway;
         const showLoreGem = showRewards && !readOnlyWitness && showLoreGemReward && roll !== null;
-        const rewardShown: CSSProperties = { opacity: rewardsEmerged ? 1 : 0 };
+        const rewardShown = (key: string): CSSProperties => ({
+          opacity: rewardsEmerged || emergedRewardKeys.has(key) ? 1 : 0,
+          // Fades in under its landed flyer, which then fades out over it.
+          transition: `opacity ${landingRevealMs(REWARD_EMERGE_MS)}ms ease-out`,
+        });
         const entries: Array<(placement: CSSProperties) => ReactNode> = [
           ...(showRewards
             ? rewards.map((reward) => (placement: CSSProperties) => renderSolutionIcon(
               reward,
               '+',
               rewardImageStyle,
-              { ...rewardItemStyle, ...placement, ...rewardShown },
+              { ...rewardItemStyle, ...placement, ...rewardShown(`r:${reward.solution.mSolutionID}`) },
             ))
             : []),
           ...(showLoreGem
-            ? [(placement: CSSProperties) => renderLoreGemRewardIcon({ ...placement, ...rewardShown })]
+            ? [(placement: CSSProperties) => renderLoreGemRewardIcon({
+              ...placement,
+              ...rewardShown(`r:${LORE_GEM_REWARD_ID}`),
+            })]
             : []),
           ...(showLosses
             ? losses.map((loss) => (placement: CSSProperties) => renderLossIcon(loss, {
