@@ -152,7 +152,6 @@ async function befriendFollowers(botPlayerId: string): Promise<void> {
 }
 
 const state = await loadOrCreateBot();
-await repairLook(state.playerId, state.avatarId);
 let waitUntil = 0;
 let nextHeartbeat = 0;
 let lastStatus = '';
@@ -198,6 +197,9 @@ while (!stopping) {
 
       if (me && Date.now() >= waitUntil) {
         if (me.choiceState === 'choosing') {
+          // Repair only before choosing: a prepared outcome carries a full copy
+          // of the avatar and would write the old look back when committed.
+          await repairLook(state.playerId, state.avatarId);
           if (waitUntil === 0) {
             waitUntil = Date.now() + randomBetween(THINK_MS);
           } else {
