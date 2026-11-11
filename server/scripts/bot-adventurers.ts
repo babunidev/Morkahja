@@ -34,7 +34,7 @@
  * start unless BOT_ALLOW_PRODUCTION=1 is set deliberately.
  */
 import { generateKeyPairSync, createPrivateKey, sign, type KeyObject } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,6 +51,8 @@ const { slotHasEnoughSolutionCharges } = await import('../../client/src/ui/game/
 const API = (process.env.BOT_API ?? 'http://127.0.0.1:3000').replace(/\/+$/, '');
 const FRIENDS = (process.env.BOT_FRIENDS ?? '').split(',').map((name) => name.trim()).filter(Boolean);
 const ONLY = (process.env.BOTS ?? '').split(',').map((name) => name.trim()).filter(Boolean);
+/** Full play-by-play locally; in production only notable events, to keep PM2 logs small. */
+const VERBOSE = process.env.BOT_VERBOSE === '1' || process.env.NODE_ENV !== 'production';
 const TICK_MS = 1500;
 const HEARTBEAT_MS = 60_000;
 // Player pace, from the client's animation timings: the choice buttons finish
@@ -64,6 +66,8 @@ const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
 const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
 const stateDir = process.env.BOT_STATE_DIR ?? path.dirname(fileURLToPath(import.meta.url));
+// Before any sign-up: an account whose key cannot be saved would be orphaned.
+mkdirSync(stateDir, { recursive: true, mode: 0o700 });
 
 const RACE_IDS = { Grimnir: 1, Verdani: 2, Aevis: 3, Rokur: 4 } as const;
 const ROLE_IDS = { Mage: 1, Rogue: 2, Warrior: 3 } as const;
@@ -305,9 +309,16 @@ class Bot {
     await this.run();
   }
 
+  /** Routine play-by-play: logged only when VERBOSE. */
+  private detail(message: string): void {
+    if (VERBOSE) {
+      this.log(message);
+    }
+  }
+
   private status(text: string): void {
     if (text !== this.lastStatus) {
-      this.log(text);
+      this.detail(text);
       this.lastStatus = text;
     }
   }
@@ -332,15 +343,15 @@ class Bot {
         if (choice) {
           try {
             await this.api('/room/choice', { body: { avatarId: this.avatarId, action: choice.slot, solutionId: choice.solutionId } });
-            this.log(`used ${choice.kind} ${choice.name} (slot ${choice.slot})`);
+            this.detail(`used ${choice.kind} ${choice.name} (slot ${choice.slot})`);
           } catch (error) {
             this.log(`could not use ${choice.name} (${error instanceof ApiError ? error.body.slice(0, 60) : String(error)}); rolling instead`);
             await this.api('/room/choice', { body: { avatarId: this.avatarId, action: 'dice' } });
-            this.log('rolled the dice');
+            this.detail('rolled the dice');
           }
         } else {
           await this.api('/room/choice', { body: { avatarId: this.avatarId, action: 'dice' } });
-          this.log('rolled the dice');
+          this.detail('rolled the dice');
         }
         this.waitUntil = Date.now() + between(READ_RESULT_MS);
       }
@@ -353,7 +364,7 @@ class Bot {
       && ['waiting_continue', 'system_event'].includes(room.roomState)
     ) {
       await this.api('/room/continue', { body: { avatarId: this.avatarId } });
-      this.log('pressed Continue');
+      this.detail('pressed Continue');
       this.waitUntil = 0;
       return true;
     }
@@ -484,7 +495,7 @@ class Bot {
         if (!room) {
           await this.ensureLivingAvatar();
           await this.api('/room/create', { body: { avatarId: this.avatarId } });
-          this.log('started a new room');
+          this.detail('started a new room');
           return;
         }
         await this.playStep(room);
@@ -507,7 +518,7 @@ class Bot {
           await this.ensureLivingAvatar();
           await this.api('/room/create', { body: { avatarId: this.avatarId } });
           this.roundsThisSession = 0;
-          this.log(`started an adventure (${DRIFT_ROUNDS} rounds)`);
+          this.detail(`started an adventure (${DRIFT_ROUNDS} rounds)`);
           return;
         }
         if (await this.playStep(room)) {
