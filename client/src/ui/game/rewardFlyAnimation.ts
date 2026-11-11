@@ -856,3 +856,37 @@ export async function playRewardEmergence(
   ]);
   flights.forEach((_, index) => onItemArrived?.(index));
 }
+
+/**
+ * The player's committed action, recorded by the solution bar at the moment of
+ * commit. Result animations are tied to it rather than to what the result
+ * currently shows: when a new encounter starts, the result briefly still holds
+ * the previous roll and slot while the encounter id is already the new one,
+ * which must not replay the spending animation with the new slot's image.
+ */
+let committedAction: { snapshotId: string; action: string; spendTaken: boolean } | null = null;
+
+export function recordCommittedAction(snapshotId: string, action: string): void {
+  committedAction = { snapshotId, action, spendTaken: false };
+}
+
+/** The action the player committed in this encounter, if any. */
+export function committedActionFor(snapshotId: string | undefined): string | null {
+  return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.action : null;
+}
+
+/** True once for a solution actually committed in this slot of this encounter. */
+export function takeCommittedSolutionSpend(snapshotId: string | undefined, slot: string | null): boolean {
+  if (
+    !snapshotId
+    || !slot
+    || slot === 'dice'
+    || committedAction?.snapshotId !== snapshotId
+    || committedAction.action !== slot
+    || committedAction.spendTaken
+  ) {
+    return false;
+  }
+  committedAction.spendTaken = true;
+  return true;
+}

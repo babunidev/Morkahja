@@ -35,6 +35,7 @@ import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encount
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
+  recordCommittedAction,
   getFooterButtonRect,
   landingRevealMs,
   SOLUTION_SLOT_INBOUND_FLIGHT_MS,
@@ -885,6 +886,7 @@ export function SolutionBlock({
     playSfx(DICE_SOUND);
     setDiceRollCount((count) => count + 1);
     rollRevealTimer.current = window.setTimeout(() => {
+      recordCommittedAction(encounter.snapshotId, 'dice');
       onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
       rollRevealTimer.current = null;
     }, DICE_ROLL_ANIMATION_MS);
@@ -911,6 +913,7 @@ export function SolutionBlock({
     setActiveSolutionSlot(solution.slot);
     onActionReveal?.(solution.slot, null, solution.solutionId, 'select');
     rollRevealTimer.current = window.setTimeout(() => {
+      recordCommittedAction(encounter.snapshotId, solution.slot);
       onActionReveal?.(solution.slot, roll, solution.solutionId, 'commit');
       setActiveSolutionSlot(null);
       rollRevealTimer.current = null;

@@ -20,6 +20,8 @@ import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import {
   animationAlreadyPlayed,
   claimAnimationOnce,
+  committedActionFor,
+  takeCommittedSolutionSpend,
   getAvatarPortraitRect,
   getFooterButtonRect,
   landingRevealMs,
@@ -602,7 +604,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     let cancelled = false;
     const arrivalKey = `loss-arrive:${encounterSnapshotId ?? `roll-${roll}`}`;
-    if (animationAlreadyPlayed(arrivalKey)) {
+    const ownResult = readOnlyWitness || committedActionFor(encounterSnapshotId) !== null;
+    if (!ownResult || animationAlreadyPlayed(arrivalKey)) {
       // Played before for this encounter (the result re-rendered): just show them.
       setLossesArrived(true);
       setLossesRevealed(true);
@@ -1292,7 +1295,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     // Once per encounter: continuing (collecting) re-renders the result with the
     // server's final values, which must not replay the spending animation.
-    if (!claimAnimationOnce(`spend:${encounterSnapshotId ?? `roll-${roll}-${resolutionAction}`}`)) {
+    // Only for a solution the player really committed in this encounter, once.
+    if (!takeCommittedSolutionSpend(encounterSnapshotId, resolutionAction)) {
       return;
     }
 
@@ -1329,7 +1333,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return undefined;
     }
 
-    if (!claimAnimationOnce(`emerge:${encounterSnapshotId ?? `roll-${roll ?? 'witness'}`}`)) {
+    // A result the player did not just commit (for example the previous one,
+    // still shown for a moment as a new encounter starts) shows without flying.
+    const ownResult = readOnlyWitness || committedActionFor(encounterSnapshotId) !== null;
+    if (!ownResult || !claimAnimationOnce(`emerge:${encounterSnapshotId ?? `roll-${roll ?? 'witness'}`}`)) {
       // Already played for this encounter (or interrupted): never leave rewards hidden.
       setRewardsEmerged(true);
       return undefined;
