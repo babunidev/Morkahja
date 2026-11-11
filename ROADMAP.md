@@ -81,3 +81,17 @@ See [the deployment plan](docs/DEPLOYMENT.md) for discovered infrastructure, con
 **Evidence boundary:** Developer-provided Nobara terminal output on 4 November confirms `test:encounter`, `test:lifecycle`, `test:visible-rewards`, `test:rooms`, `test:persistence` and `release:check` all passed together in the isolated local worktree with commit `25aa8feb` and the current PR #6 test-runner changes. This verifies the combined **local** automated source checks; subsequent user-reported browser registration and new-account recovery checks passed, while pre-update legacy recovery and the remaining death/sacrifice and multiplayer-reconnection scenarios remain unverified; core gameplay is now user-reported as manually verified. The five-file local commit is unpublished; PR #5 and PR #6 remain unmerged into `main` and nothing was deployed. The overlapping-transaction `pg` deprecation and isolated fixture intermittency have been corrected and reverified locally and in CI, though no guarantee is made about unrelated concurrent production room-join behavior. The non-fatal room placeholder-avatar test diagnostic still appears.
 
 **Additional integrated acceptance — 4 November 2026:** The developer's isolated `integration/priority-1` worktree reported a clean `git status` before fetch and `Already up to date` when merging the current PR #6 branch. The supplied Nobara terminal output shows passing `test:commerce`, `test:rooms` (including lore-gem security), `test:lifecycle`, `test:persistence` and `release:check` on PostgreSQL, with room and lifecycle under `NODE_OPTIONS=--throw-deprecation` and no overlapping-query warnings. No Stripe test-mode webhook delivery or browser animation acceptance occurred in these commands. The main checkout, live environment and PR merge state are unchanged.
+
+## Game screen from the standalone version (branch `feat/standalone-layout`, 2026-11-11)
+
+Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and the [journal](docs/DEVLOG.md).
+
+- [x] Three-zone game screen on a fixed 9:16 canvas, framed encounter picture, title on hover, party strip with essence lives, action menu (Get help, Inventory, Skillbook, Lore). Accepted by Babuni after local play.
+- [x] Result redesign: spent solutions fly into the encounter, rewards grow out of it into the solution slots (order 3, 2, 4, 1, 5), losses arrive from the avatar or their button, collect-to-continue, ready wobble, cross-faded landings.
+- [x] Fixes found while testing: Call for help skipped players with a paused solo room; endless render loop in the party strip; replaying spending animation.
+- [x] Development bots for multiplayer testing (always playing, waiting helper, on-and-off player), using items, then skills, then dice.
+- [ ] Mobile layout pass: the standalone targeted desktop; phones take a separate full-screen path and some sizes are fixed pixels on the 390-wide canvas.
+- [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
+- [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.
+- [ ] Optional: the same render-loop fix in the standalone version, which has the same party-strip code.
+- [ ] Merge into `main`, then release backend and frontend together with `morkahja-deploy release` after Babuni's approval.

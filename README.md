@@ -32,6 +32,8 @@ The repository separates client and server packages. Read their own manifests an
 
 The project has ongoing work concerning session authentication, concurrent player/avatar persistence and regression tests. Earlier records describe isolated Nobara database tests and CI results for two pull requests dated **4 November 2026**. Those results do not by themselves verify a merged branch or deployed production build; see [the historical test and PR notes](docs/RELEASE_STATUS_HISTORY.md) and current pull request status.
 
+For multiplayer testing against a local database, `server/scripts/dev-bot-adventurer.ts` runs three bot players that play like normal accounts; see [the architecture notes](docs/ARCHITECTURE.md).
+
 Player data, credentials and remote game files are sensitive and must not be copied into public documentation. A source review, simulated test, local database test, complete release gate and live deployment are different kinds of evidence.
 
 ## Development story

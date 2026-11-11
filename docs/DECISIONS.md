@@ -88,7 +88,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** visual and layout code only, merged three-way from the June base, today's web code and the standalone. Offline-only removals in the standalone (Call for help, Friends-only slots, lore gem rewards, gem sacrifice, daily gems, recovery key, payments, local saves, nearby play) and its changes to multiplayer rules were not taken.
 
-**Open:** mobile layout, which the standalone did not target; Babuni's acceptance after playing.
+**Status (2026-11-11):** after playing the branch locally, Babuni confirmed the layout ("I do like the design decisions that I made there") and then directed further changes to the result presentation (see D-011 and the CHANGELOG). **Open:** the mobile layout, which the standalone did not target.
 
 ## D-011 — Collect rewards and losses to continue (2026-11-11)
 
