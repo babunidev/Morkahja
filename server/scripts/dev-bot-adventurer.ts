@@ -10,7 +10,8 @@
  *
  *   Wanderbot  Brakka (Rokur Warrior)  always playing in its own room; join it from Friends.
  *   Watchbot   Sylwen (Verdani Mage)   waits on the welcome screen; answers Call for help,
- *                                      helps until the room closes or the caller leaves.
+ *                                      helps until the room ends, the caller leaves, or the
+ *                                      room has not moved for 3 minutes (HELP_STALE_MINUTES).
  *   Driftbot   Kestra (Aevis Rogue)    plays 7 rounds, returns to the welcome screen for
  *                                      5 minutes (answering Call for help meanwhile), repeats.
  *
@@ -46,6 +47,7 @@ const HEARTBEAT_MS = 60_000;
 // acts sooner than a player could, and adds a few seconds of "thinking".
 const THINK_MS: [number, number] = [4500, 9000];
 const READ_RESULT_MS: [number, number] = [6500, 10000];
+const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
 const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -117,6 +119,9 @@ class Bot {
   private lastStatus = '';
   /** Set while helping someone who called for help. */
   private helping: { fromPlayerId: string; fromPlayerName: string; roomId: string } | null = null;
+  /** While helping: the room's last visible state and when it last changed. */
+  private helpRoomFingerprint = '';
+  private helpProgressAt = 0;
   /** Driftbot: rounds played this session, and when its rest ends. */
   private roundsThisSession = 0;
   private restUntil = 0;
@@ -339,26 +344,51 @@ class Bot {
       return false;
     }
     this.helping = { fromPlayerId: invite.fromPlayerId, fromPlayerName: invite.fromPlayerName, roomId: room.roomId };
+    this.helpRoomFingerprint = '';
+    this.helpProgressAt = Date.now();
     this.waitUntil = 0;
     this.log(`heard ${invite.fromPlayerName} call for help and joined their room`);
     return true;
   }
 
-  /** While helping: play, and leave as soon as the caller leaves or the room ends. */
+  /** Leave the room and go back to the welcome screen; report failures instead of hiding them. */
+  private async leaveToWelcomeScreen(): Promise<void> {
+    try {
+      await this.api('/room/leave', { body: { avatarId: this.avatarId } });
+      await this.api('/room/leave/all', { body: {} });
+    } catch (error) {
+      this.log(`leaving failed: ${error instanceof ApiError ? `${error.status} ${error.body.slice(0, 80)}` : String(error)}`);
+    }
+  }
+
+  /**
+   * While helping: play, and leave when the room ends, the caller leaves, or
+   * nothing has happened in the room for a while (a caller who walked away
+   * before the helpers arrived stays listed in their paused room).
+   */
   private async helpStep(): Promise<void> {
     const helping = this.helping!;
     const room = await this.activeRoom();
     if (!room || room.roomId !== helping.roomId) {
       this.log(`${helping.fromPlayerName}'s room has ended; back to the welcome screen`);
       this.helping = null;
-      await this.api('/room/leave/all', { body: {} }).catch(() => undefined);
+      await this.leaveToWelcomeScreen();
       return;
     }
     if (!room.participants.some((entry) => entry.playerId === helping.fromPlayerId)) {
       this.log(`${helping.fromPlayerName} left; leaving too`);
       this.helping = null;
-      await this.api('/room/leave', { body: { avatarId: this.avatarId } }).catch(() => undefined);
-      await this.api('/room/leave/all', { body: {} }).catch(() => undefined);
+      await this.leaveToWelcomeScreen();
+      return;
+    }
+    const fingerprint = `${room.roomState}|${room.participants.map((entry) => `${entry.playerId}:${entry.choiceState}:${entry.continuePressed ? 1 : 0}`).join(',')}`;
+    if (fingerprint !== this.helpRoomFingerprint) {
+      this.helpRoomFingerprint = fingerprint;
+      this.helpProgressAt = Date.now();
+    } else if (Date.now() - this.helpProgressAt > HELP_STALE_MS) {
+      this.log(`nothing has happened in ${helping.fromPlayerName}'s room for ${HELP_STALE_MS / 60_000} min; giving up and leaving`);
+      this.helping = null;
+      await this.leaveToWelcomeScreen();
       return;
     }
     await this.playStep(room);

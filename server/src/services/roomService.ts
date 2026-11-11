@@ -2691,6 +2691,38 @@ function shufflePlayerIds(playerIds: string[]): string[] {
   return shuffled;
 }
 
+/**
+ * Whether a player is actually taking part in a room right now, for Call for
+ * help. Leaving a solo adventure only pauses its room (so it can be resumed),
+ * and the player stays listed as its participant; such a paused solo room must
+ * not make a player on the welcome screen unreachable. A room counts when the
+ * player's presence points at it, or when it is a party with someone else engaged.
+ */
+async function isPlayerBusyInRoom(playerId: string): Promise<boolean> {
+  const roomIds = await listActiveRoomIdsForPlayer(playerId);
+  if (roomIds.length === 0) {
+    return false;
+  }
+
+  const presence = await loadPlayerPresence(playerId);
+  for (const roomId of roomIds) {
+    if (presence?.activeRoomId === roomId) {
+      return true;
+    }
+    const room = await loadEncounterRoom(roomId);
+    if (!room || room.roomState === 'closed') {
+      continue;
+    }
+    const othersEngaged = room.participants.some(
+      (participant) => participant.playerId !== playerId && participant.choiceState !== 'disengaged',
+    );
+    if (othersEngaged) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function canReceiveHelpInvite(
   fromPlayerId: string,
   toPlayerId: string,
@@ -2700,8 +2732,7 @@ async function canReceiveHelpInvite(
     return false;
   }
 
-  const targetRoomId = await findActiveRoomIdForPlayer(toPlayerId);
-  if (targetRoomId) {
+  if (await isPlayerBusyInRoom(toPlayerId)) {
     return false;
   }
 

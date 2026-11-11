@@ -201,3 +201,11 @@ Months ago I made a desktop version of Morkahja that runs offline, and along the
 
 **Verification (2026-11-11, Nobara, local Podman PostgreSQL):** the release gate passed and the local client reached its welcome screen; the play test is still mine to do. **Branch only; not merged or deployed.**
 
+### Testing multiplayer with bot players — 2026-11-11
+
+To test the new screen together with other players, I asked for a bot that plays like a real account, then for three behaviours: one always playing, one waiting for a Call for help, and one playing on and off. AI built them as three normal accounts, since one account can only be in one room at a time, which use only the web client's requests. A first version that wrote to the database directly lost its avatar's portrait after a round, because a prepared round result carries a full copy of the avatar and saves it back when committed. That stale-copy behaviour is a real, separate game issue still to be fixed.
+
+When my own Call for help reached nobody, the cause turned out to be a game bug rather than the bot: leaving a solo adventure only pauses its room, and the help system counted anyone listed in such a room as busy, forever. Helpers are hit hardest, since a caller leaving leaves them alone in a paused room. AI changed the rule to count a player as busy only when they are really in the room, added a regression test that fails on the old rule, and confirmed against the running bots that a waiting helper now joins and leaves with the caller.
+
+**Verification (2026-11-11, Nobara, local Podman PostgreSQL):** `NODE_OPTIONS=--throw-deprecation npm run release:check` passed (9 client, 39 server tests). A side effect worth remembering: running the test suite while the bots are running sends real help invitations to them from short-lived test players. **Branch only; not merged or deployed.**
+
