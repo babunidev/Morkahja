@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import { gameSolutions } from '../../../data/gameContent.js';
-import { displayRollAsD20, displayRollOutcome, interpretRoll } from '@shared/diceInterpreter';
+import { interpretRoll } from '@shared/diceInterpreter';
 import {
   encounterLossesFromSolutionIds,
   usedEncounterSolutions,
@@ -21,14 +21,17 @@ import {
   RESULT_BOTTOM_EDGE_NUDGE_PX,
 } from './decorativeFrameShared.js';
 import {
+  getAvatarPortraitRect,
+  getFooterButtonRect,
   LOSS_ROW_FADE_IN_MS,
+  playLossArrivals,
   playLossBubblesFromTargets,
-  playLossFlightsFromAvatar,
   playRewardFlights,
+  playUsedSolutionsIntoEncounter,
   resultLossSequenceDurationMs,
   rewardFlyTargetKind,
   type LossBubbleTargetSpec,
-  type LossFlightSpec,
+  type LossArrivalSpec,
   type RewardFlightSpec,
 } from '../rewardFlyAnimation.js';
 import {
@@ -38,10 +41,6 @@ import {
 } from '../../protectedImage.js';
 import { CONTINUE_SOUND, playSfx } from '../../sfx.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
-import {
-  diceButtonAssetPath,
-  DEFAULT_DICE_ID,
-} from '@shared/diceCatalog.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
   visibleEncounterRewards,
@@ -55,7 +54,6 @@ import { assetUrl } from '../../../assetUrl.js';
 
 const RESULT_BACKGROUND = assetUrl('/UI/09_GAME/im_bg_result.webp');
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
-const DEFAULT_DICE_OUTCOME_ICON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const LORE_GEM_REWARD_ID = 90_001;
 const LORE_GEM_POPUP_MS = 330;
@@ -213,19 +211,6 @@ const outcomeClusterStyle: CSSProperties = {
   pointerEvents: 'auto',
 };
 
-const outcomeButtonStyle: CSSProperties = {
-  margin: 0,
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  fontSize: 'clamp(1.15rem, 4.8vw, 1.55rem)',
-  lineHeight: 1,
-  textAlign: 'center',
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-  flex: '0 0 auto',
-  userSelect: 'none',
-};
 
 const rewardRowStyle: CSSProperties = {
   gridArea: '1 / 1',
@@ -263,17 +248,7 @@ const rewardImageStyle: CSSProperties = {
   transformOrigin: '50% 50%',
 };
 
-const usedSolutionItemStyle: CSSProperties = {
-  ...rewardItemStyle,
-  flex: '0 0 auto',
-};
 
-const usedSolutionImageStyle: CSSProperties = {
-  ...solutionIconImageBaseStyle,
-  width: 48,
-  height: 48,
-  boxShadow: '0 0 10px rgba(247, 239, 224, 0.28), 0 5px 10px rgba(0, 0, 0, 0.46)',
-};
 
 const loreGemRewardButtonStyle: CSSProperties = {
   ...rewardItemStyle,
@@ -335,12 +310,6 @@ const lossEssenceImageStyle: CSSProperties = {
   height: 60,
 };
 
-const diceOutcomeIconStyle: CSSProperties = {
-  width: 48,
-  height: 'auto',
-  flex: '0 0 auto',
-  filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5))',
-};
 
 function lossIconSize(inventoryType: number): number {
   return inventoryType === ESSENCE_INVENTORY_TYPE ? 60 : 52;
@@ -413,7 +382,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueGlowClass,
     continueWaitingAfterPress = false,
     deferRewardDismiss = false,
-    diceOutcomeIcon = DEFAULT_DICE_OUTCOME_ICON,
     disabled = false,
     showLoreGemReward = false,
     encounterDifficulty: _encounterDifficulty,
@@ -438,7 +406,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
     deferRewardDismiss?: boolean;
-    diceOutcomeIcon?: string;
     disabled?: boolean;
     showLoreGemReward?: boolean;
     encounterDifficulty: number;
@@ -467,11 +434,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
   const [continuePressAnimating, setContinuePressAnimating] = useState(false);
   const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
-  const [outcomeShowsRoll, setOutcomeShowsRoll] = useState(false);
   const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
   const [lossesFlyingAway, setLossesFlyingAway] = useState(false);
   const [lossesRevealed, setLossesRevealed] = useState(true);
+  /** Losses that flew into the row appear in place instead of fading in. */
+  const [lossesArrived, setLossesArrived] = useState(false);
+  const usedSolutionFlightKeyRef = useRef<string | null>(null);
   const [lossesSequenceDone, setLossesSequenceDone] = useState(true);
   const [continueRevealPlaying, setContinueRevealPlaying] = useState(false);
   const [continueInteractive, setContinueInteractive] = useState(false);
@@ -486,8 +455,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const activationRevealDoneRef = useRef(false);
   const postPressContinueRef = useRef(false);
   const outcome = roll === null ? null : interpretRoll(roll);
-  const outcomeLabel = outcome === null ? null : displayRollOutcome(outcome);
-  const displayRoll = roll === null ? null : displayRollAsD20(roll);
   const isLevelUp = encounterId === LEVEL_UP_ENCOUNTER_ID;
   const usedSolutions = readOnlyWitness
     ? []
@@ -534,10 +501,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
   );
 
   useEffect(() => {
-    setOutcomeShowsRoll(false);
     setRewardsFlyingAway(false);
     setLossesFlyingAway(false);
     setLossesRevealed(losses.length === 0);
+    setLossesArrived(false);
     setLossesSequenceDone(roll === null);
     setContinueRevealPlaying(false);
     setContinueInteractive(false);
@@ -618,43 +585,51 @@ export const ResultBlock = forwardRef(function ResultBlock(
         return;
       }
 
-      const flights: LossFlightSpec[] = losses.map((loss) => ({
-        id: `loss-fly-${loss.solution.mSolutionID}`,
-        imageSrc: solutionImagePath(loss.solution),
-        size: lossIconSize(loss.solution.mSolutionInventoryType),
-      }));
-      const rowRevealDelayMs = lossRowRevealDelayMs(flights.length);
-      let rowRevealed = false;
+      // Each loss appears where it was kept and travels to its place in the
+      // loss row: an essence from the middle of the avatar, an item or skill
+      // from its Inventory or Skillbook button.
+      const avatarRect = getAvatarPortraitRect();
+      const flights: LossArrivalSpec[] = losses.flatMap((loss) => {
+        const inventoryType = loss.solution.mSolutionInventoryType;
+        const sourceRect = inventoryType === ESSENCE_INVENTORY_TYPE
+          ? avatarRect
+          : getFooterButtonRect(rewardFlyTargetKind(inventoryType));
+        const targetRect = lossButtonRefs.current.get(loss.solution.mSolutionID)?.getBoundingClientRect();
+        if (!sourceRect || !targetRect || sourceRect.width <= 0 || targetRect.width <= 0) {
+          return [];
+        }
+        return [{
+          imageSrc: solutionImagePath(loss.solution),
+          size: lossIconSize(inventoryType),
+          sourceRect,
+          targetRect,
+        }];
+      });
 
+      let rowRevealed = false;
       const markLossRowRevealed = (): void => {
         if (cancelled || rowRevealed) {
           return;
         }
 
         rowRevealed = true;
+        setLossesArrived(flights.length > 0);
         setLossesRevealed(true);
         setLossesSequenceDone(true);
       };
 
-      const rowRevealTimer = window.setTimeout(() => {
-        markLossRowRevealed();
-      }, rowRevealDelayMs);
-
-      if (flights.length > 0) {
-        await playLossFlightsFromAvatar(flights);
-      }
-
-      window.clearTimeout(rowRevealTimer);
-
-      if (!cancelled && !rowRevealed) {
-        markLossRowRevealed();
-      }
-
-      if (!cancelled) {
+      if (flights.length === 0) {
+        // Nothing to fly from (for example a layout without the avatar); fade the row in.
+        const rowRevealTimer = window.setTimeout(markLossRowRevealed, lossRowRevealDelayMs(losses.length));
         await new Promise<void>((resolve) => {
-          window.setTimeout(resolve, LOSS_ROW_FADE_IN_MS);
+          window.setTimeout(resolve, lossRowRevealDelayMs(losses.length) + LOSS_ROW_FADE_IN_MS);
         });
+        window.clearTimeout(rowRevealTimer);
+        markLossRowRevealed();
+        return;
       }
+
+      await playLossArrivals(flights, markLossRowRevealed);
     }
 
     void playLossRevealFlights();
@@ -1063,8 +1038,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const imageStyle = {
       ...lossIconStyle(loss.solution.mSolutionInventoryType),
       opacity: lossVisible ? 1 : 0,
-      transform: lossVisible ? 'translateY(0) scale(1)' : 'translateY(-12px) scale(0.9)',
-      transition: lossesFlyingAway
+      // Hidden icons keep their final place: arriving losses fly to exactly this spot.
+      transform: 'translateY(0) scale(1)',
+      transition: lossesFlyingAway || lossesArrived
         ? 'opacity 0ms, transform 0ms'
         : lossesRevealed
           ? lossRowRevealTransition
@@ -1140,6 +1116,40 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const resultShown = resultInteractive && (
     presenceVisible !== undefined ? presenceVisible : resultFadedIn
   );
+
+  // As the result appears, the solution the player used travels from its slot
+  // into the middle of the encounter picture and shrinks to nothing: it was
+  // spent on this encounter.
+  useEffect(() => {
+    if (
+      !resultShown
+      || readOnlyWitness
+      || roll === null
+      || !resolutionAction
+      || resolutionAction === 'dice'
+      || usedSolutions.length === 0
+    ) {
+      return;
+    }
+
+    const flightKey = `${encounterSnapshotId ?? ''}:${roll}:${resolutionAction}`;
+    if (usedSolutionFlightKeyRef.current === flightKey) {
+      return;
+    }
+    usedSolutionFlightKeyRef.current = flightKey;
+
+    const slotElement = document.querySelector(`[data-solution-slot="${resolutionAction}"]`);
+    const sourceRect = slotElement?.getBoundingClientRect();
+    if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+      return;
+    }
+
+    void playUsedSolutionsIntoEncounter(usedSolutions.map((usedSolution) => ({
+      imageSrc: solutionImagePath(usedSolution.solution),
+      size: Math.round(Math.min(sourceRect.width, sourceRect.height)),
+      sourceRect,
+    })));
+  }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
 
   return (
     <div
@@ -1313,7 +1323,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           {rewards.map((reward) => renderSolutionIcon(reward, '+', rewardImageStyle))}
         </div>
       ) : null}
-      {outcome && outcomeLabel && roll !== null ? (
+      {!readOnlyWitness && showLoreGemReward && roll !== null && !rewardsFlyingAway && !rewardDismissInProgress ? (
         <div
           aria-label="Encounter outcome"
           {...{ [PROTECTED_SURFACE_ATTR]: '' }}
@@ -1322,36 +1332,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             ...rewardDismissLayerStyle(rewardDismissInProgress),
           }}
         >
-          {usedSolutions.map((usedSolution) => renderSolutionIcon(
-            usedSolution,
-            'used',
-            usedSolutionImageStyle,
-            usedSolutionItemStyle,
-          ))}
-          {resolutionAction === 'dice' ? (
-            <img
-              alt=""
-              aria-hidden="true"
-              {...protectedImageProps}
-              src={diceOutcomeIcon}
-              style={diceOutcomeIconStyle}
-            />
-          ) : null}
-          <button
-            aria-label={outcomeShowsRoll ? `Roll ${displayRoll}` : `${outcomeLabel}, show roll`}
-            className="morkahja-result-outcome"
-            onClick={() => {
-              setOutcomeShowsRoll((showingRoll) => !showingRoll);
-            }}
-            onContextMenu={preventImageContextMenu}
-            style={outcomeButtonStyle}
-            type="button"
-          >
-            {outcomeShowsRoll ? displayRoll : outcomeLabel}
-          </button>
-          {!readOnlyWitness && showLoreGemReward && !rewardsFlyingAway && !rewardDismissInProgress
-            ? renderLoreGemRewardIcon()
-            : null}
+          {renderLoreGemRewardIcon()}
         </div>
       ) : null}
       {itemTooltip ? (

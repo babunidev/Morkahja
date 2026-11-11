@@ -569,3 +569,139 @@ export async function playSolutionSlotInboundFlights(
 
   cleanupRewardFlyers();
 }
+
+const ENCOUNTER_ART_SELECTOR = '[data-morkahja-encounter-art]';
+
+export function getEncounterArtRect(): DOMRect | null {
+  const element = document.querySelector(ENCOUNTER_ART_SELECTOR);
+  return element instanceof HTMLElement ? element.getBoundingClientRect() : null;
+}
+
+/** A used solution travels into the middle of the encounter picture and shrinks to nothing. */
+export const USED_SOLUTION_FLIGHT_MS = 900;
+const USED_SOLUTION_FLIGHT_TIMEOUT_MS = USED_SOLUTION_FLIGHT_MS + 600;
+export const USED_SOLUTION_STAGGER_MS = 120;
+
+export interface UsedSolutionFlightSpec {
+  imageSrc: string;
+  size: number;
+  sourceRect: DOMRect;
+}
+
+function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect): Promise<void> {
+  const source = rectCenter(spec.sourceRect);
+  const target = rectCenter(targetRect);
+  const half = spec.size / 2;
+  const flyer = createIconFlyer(
+    spec.imageSrc,
+    spec.size,
+    '0 0 18px rgba(255, 204, 102, 0.6), 0 6px 14px rgba(0, 0, 0, 0.45)',
+  );
+  const at = (progress: number): { x: number; y: number } => ({
+    x: source.x + (target.x - source.x) * progress - half,
+    y: source.y + (target.y - source.y) * progress - half,
+  });
+  const start = at(0);
+  const middle = at(0.7);
+  const end = at(1);
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      { offset: 0, transform: `translate(${start.x}px, ${start.y}px) scale(1)`, opacity: 1 },
+      { offset: 0.7, transform: `translate(${middle.x}px, ${middle.y}px) scale(0.72)`, opacity: 1 },
+      { offset: 1, transform: `translate(${end.x}px, ${end.y}px) scale(0)`, opacity: 0 },
+    ],
+    USED_SOLUTION_FLIGHT_MS,
+    USED_SOLUTION_FLIGHT_TIMEOUT_MS,
+    () => {
+      flyer.style.transform = `translate(${start.x}px, ${start.y}px) scale(1)`;
+      flyer.style.opacity = '1';
+    },
+  );
+}
+
+export async function playUsedSolutionsIntoEncounter(flights: UsedSolutionFlightSpec[]): Promise<void> {
+  const targetRect = getEncounterArtRect();
+  if (!targetRect || flights.length === 0) {
+    return;
+  }
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * USED_SOLUTION_STAGGER_MS).then(() => runUsedSolutionFlight(flight, targetRect))
+    )))),
+    wait(USED_SOLUTION_FLIGHT_TIMEOUT_MS + flights.length * USED_SOLUTION_STAGGER_MS),
+  ]);
+}
+
+/**
+ * A loss appears where it was kept (an essence in the middle of the avatar, an
+ * item or skill at its Inventory or Skillbook button) and travels to its place
+ * in the result's loss row.
+ */
+export const LOSS_ARRIVAL_MS = 950;
+const LOSS_ARRIVAL_TIMEOUT_MS = LOSS_ARRIVAL_MS + 600;
+export const LOSS_ARRIVAL_STAGGER_MS = 140;
+
+export interface LossArrivalSpec {
+  imageSrc: string;
+  size: number;
+  sourceRect: DOMRect;
+  targetRect: DOMRect;
+}
+
+function runLossArrival(spec: LossArrivalSpec): Promise<void> {
+  const source = rectCenter(spec.sourceRect);
+  const target = rectCenter(spec.targetRect);
+  const half = spec.size / 2;
+  const flyer = createIconFlyer(
+    spec.imageSrc,
+    spec.size,
+    '0 0 16px rgba(255, 120, 96, 0.5), 0 6px 12px rgba(0, 0, 0, 0.45)',
+  );
+  const startX = source.x - half;
+  const startY = source.y - half;
+  const endX = target.x - half;
+  const endY = target.y - half;
+
+  return runAnimatedFlyer(
+    flyer,
+    [
+      { offset: 0, transform: `translate(${startX}px, ${startY}px) scale(0.3)`, opacity: 0 },
+      { offset: 0.22, transform: `translate(${startX}px, ${startY}px) scale(1.08)`, opacity: 1 },
+      { offset: 0.34, transform: `translate(${startX}px, ${startY}px) scale(1)`, opacity: 1 },
+      { offset: 1, transform: `translate(${endX}px, ${endY}px) scale(1)`, opacity: 1 },
+    ],
+    LOSS_ARRIVAL_MS,
+    LOSS_ARRIVAL_TIMEOUT_MS,
+    () => {
+      flyer.style.transform = `translate(${startX}px, ${startY}px) scale(0.3)`;
+      flyer.style.opacity = '0';
+    },
+  );
+}
+
+/** Resolves once every loss has arrived; `onLastArrival` fires just before the final flyer is removed. */
+export async function playLossArrivals(
+  flights: LossArrivalSpec[],
+  onLastArrival?: () => void,
+): Promise<void> {
+  if (flights.length === 0) {
+    onLastArrival?.();
+    return;
+  }
+
+  const lastLandsAt = (flights.length - 1) * LOSS_ARRIVAL_STAGGER_MS + LOSS_ARRIVAL_MS;
+  const revealTimer = window.setTimeout(() => onLastArrival?.(), Math.max(0, lastLandsAt - 60));
+
+  await Promise.race([
+    waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
+      wait(index * LOSS_ARRIVAL_STAGGER_MS).then(() => runLossArrival(flight))
+    )))),
+    wait(LOSS_ARRIVAL_TIMEOUT_MS + flights.length * LOSS_ARRIVAL_STAGGER_MS),
+  ]);
+
+  window.clearTimeout(revealTimer);
+  onLastArrival?.();
+}

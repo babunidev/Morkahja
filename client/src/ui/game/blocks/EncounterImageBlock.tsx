@@ -534,7 +534,7 @@ export function EncounterImageBlock({
 
   return (
     <section aria-label="Encounter Image" style={blockStyle}>
-      <div style={artFrameStyle}>
+      <div data-morkahja-encounter-art="" style={artFrameStyle}>
         <div style={imageClipStyle}>
         {underlayImageSrc ? (
         missingImageSrcs.includes(underlayImageSrc) ? (
@@ -637,7 +637,6 @@ export function EncounterImageBlock({
           continueWaitingAfterPress={continueWaitingAfterPress}
           deferRewardDismiss={deferRewardDismiss}
           disabled={continuePending}
-          diceOutcomeIcon={diceButtonAsset}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={witnessResultSnapRef.current.avatarLevel}
           encounterId={witnessResultSnapRef.current.encounterId}
@@ -656,7 +655,6 @@ export function EncounterImageBlock({
         />
       ) : !isWitnessingLabel ? (
         <ResultBlock
-          diceOutcomeIcon={diceButtonAsset}
           actorShowContinue={isSystemEventActor ? actorShowContinue : true}
           continueGlowClass={continueGlowClass}
           encounterSnapshotId={encounter.snapshotId}
