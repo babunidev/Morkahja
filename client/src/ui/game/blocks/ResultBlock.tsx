@@ -17,6 +17,7 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import { middleElement, startFrameTimer } from '../frameTimer.js';
 import { GameTooltipCard, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import {
@@ -28,8 +29,10 @@ import {
   getFooterButtonRect,
   landingRevealMs,
   LOSS_ARRIVAL_MS,
+  LOSS_ARRIVAL_STAGGER_MS,
   LOSS_ROW_FADE_IN_MS,
   REWARD_EMERGE_MS,
+  REWARD_EMERGE_STAGGER_MS,
   playLossArrivals,
   playLossBubblesFromTargets,
   playRewardEmergence,
@@ -651,6 +654,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       claimAnimationOnce(arrivalKey);
+      // The frame's bottom line counts down toward the arriving losses.
+      cancelFrameTimer = startFrameTimer(
+        middleElement(lossButtonRefs.current.values()),
+        LOSS_ARRIVAL_MS + (flights.length - 1) * LOSS_ARRIVAL_STAGGER_MS,
+      );
       const flightKeys = flights.map((flight) => flight.key);
       const arrived = new Set<string>();
       await playLossArrivals(flights, (index) => {
@@ -666,10 +674,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
       markLossRowRevealed();
     }
 
+    let cancelFrameTimer = (): void => {};
     void playLossRevealFlights();
 
     return () => {
       cancelled = true;
+      cancelFrameTimer();
     };
   }, [roll, lossesKey, losses.length, visible]);
 
@@ -721,6 +731,14 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       setContinueRevealPlaying(true);
+      // Counts down to the moment the player can act: toward the Continue
+      // arrow, or in collect mode toward the rewards and losses, which can be
+      // picked up when this reveal ends.
+      const waitTarget = blockRef.current?.querySelector('[aria-label="Continue"]')
+        ?? middleElement([...rewardButtonRefs.current.values(), ...lossButtonRefs.current.values()]);
+      if (waitTarget) {
+        cancelFrameTimer = startFrameTimer(waitTarget, CONTINUE_REVEAL_TOTAL_MS);
+      }
 
       await waitForNextPaint();
       if (cancelled || postPressContinueRef.current) {
@@ -749,10 +767,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
     }
 
+    let cancelFrameTimer = (): void => {};
     void revealContinue();
 
     return () => {
       cancelled = true;
+      cancelFrameTimer();
     };
   }, [
     actorShowContinue,
@@ -1328,8 +1348,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
       && resolutionAction !== 'dice'
       && usedSolutions.length > 0;
 
+    let cancelFrameTimer = (): void => {};
+
     async function emerge(): Promise<void> {
+      // The frame's bottom line counts down toward the rewards, through the
+      // used solution's flight and the rewards' arrival.
+      const startRewardTimer = (durationMs: number): void => {
+        const target = middleElement(rewardButtonRefs.current.values());
+        if (target) {
+          cancelFrameTimer();
+          cancelFrameTimer = startFrameTimer(target, durationMs);
+        }
+      };
       if (solutionFlew) {
+        startRewardTimer(Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {
           window.setTimeout(resolve, Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
         });
@@ -1353,6 +1385,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
         }];
       });
 
+      if (flights.length > 0) {
+        startRewardTimer(REWARD_EMERGE_MS + (flights.length - 1) * REWARD_EMERGE_STAGGER_MS);
+      }
+
       // Each reward fades in under its own flyer as it lands.
       const landed = new Set<string>();
       await playRewardEmergence(flights, (index) => {
@@ -1370,6 +1406,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     void emerge();
     return () => {
       cancelled = true;
+      cancelFrameTimer();
     };
   }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, rewardsEmerged, usedSolutions.length]);
 

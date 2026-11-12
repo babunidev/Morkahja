@@ -106,3 +106,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-11 (release `a40a6c5c`). **Babuni's decision (2026-11-11):** the bots are not marked as bots: "people don't need to know that it's bots ... It's just could be other players." Babuni also observed them appearing in the activity feed as normal. Their effect on achievements has not been reviewed.
 
+## D-013 — Line frame and wait timer on the encounter picture (2026-11-12)
+
+**Babuni's direction:** replace the long bar graphics around the encounter picture with lines: a 2 px line, a 2 px line "randomly interrupted, so it has gaps", a 1 px line, a little distance, and an outer line, with cut-off corners filled by small triangles inside and cut outer corners. The bottom line behind the solutions and rewards acts as a timer: while waiting for an animation, it "shrinks from the outside towards the element that is working right now ... in the timing that the animation needs", including the wait until a reward or loss can be picked, and it fades in.
+
+**AI implementation:** SVG lines with 45° cut corners and seeded random gaps; a small shared timer (`frameTimer.ts`) that each animation starts with its target and duration; overlapping waits follow the one that ends last.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own play or released. Line colour, thickness of the timer and the corner size are AI choices open to change.
+

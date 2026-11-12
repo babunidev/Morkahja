@@ -35,11 +35,13 @@ import {
   getFooterButtonRect,
   landingRevealMs,
   SOLUTION_SLOT_INBOUND_FLIGHT_MS,
+  SOLUTION_SLOT_INBOUND_STAGGER_MS,
   playSolutionSlotInboundFlights,
   type RewardFlyTargetKind,
   type SolutionSlotInboundFlightSpec,
 } from '../rewardFlyAnimation.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import { startFrameTimer } from '../frameTimer.js';
 
 const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -652,8 +654,12 @@ export function SolutionBlock({
     setInboundFlownSlots(new Set());
 
     let cancelled = false;
+    const frameTimers: Array<() => void> = [];
+    const diceButton = (): Element | null => blockRef.current?.querySelector('[aria-label="Roll dice"]') ?? null;
 
     async function runActionsReveal(): Promise<void> {
+      // The frame's bottom line counts down to the moment the actions can be used.
+      frameTimers.push(startFrameTimer(diceButton(), ENCOUNTER_ACTIONS_REVEAL_DELAY_MS + SOLUTION_REVEAL_TOTAL_MS));
       await new Promise<void>((resolve) => {
         window.setTimeout(resolve, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
       });
@@ -693,6 +699,10 @@ export function SolutionBlock({
       const completedInboundFlights = new Set<SlotLetter>();
 
       if (inboundFlights.length > 0) {
+        frameTimers.push(startFrameTimer(
+          diceButton(),
+          SOLUTION_SLOT_INBOUND_FLIGHT_MS + (inboundFlights.length - 1) * SOLUTION_SLOT_INBOUND_STAGGER_MS,
+        ));
         await playSolutionSlotInboundFlights(inboundFlights, (flightId) => {
           if (cancelled) {
             return;
@@ -732,6 +742,7 @@ export function SolutionBlock({
 
     return () => {
       cancelled = true;
+      frameTimers.forEach((cancel) => cancel());
     };
     // Only re-run reveal when the encounter snapshot changes — not on room poll object churn.
   }, [encounterRevealKey]);
@@ -844,6 +855,7 @@ export function SolutionBlock({
     onActionReveal?.('dice', null, undefined, 'select');
     playSfx(DICE_SOUND);
     setDiceRollCount((count) => count + 1);
+    startFrameTimer(blockRef.current?.querySelector('[aria-label="Roll dice"]'), DICE_ROLL_ANIMATION_MS);
     rollRevealTimer.current = window.setTimeout(() => {
       recordCommittedAction(encounter.snapshotId, 'dice');
       onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
@@ -870,6 +882,7 @@ export function SolutionBlock({
     const roll = rollForSolutionSlot(encounter, solution);
     playSfx(SOLUTION_SOUND);
     setActiveSolutionSlot(solution.slot);
+    startFrameTimer(blockRef.current?.querySelector(`[data-solution-slot="${solution.slot}"]`), SOLUTION_ROLL_REVEAL_MS);
     onActionReveal?.(solution.slot, null, solution.solutionId, 'select');
     rollRevealTimer.current = window.setTimeout(() => {
       recordCommittedAction(encounter.snapshotId, solution.slot);
