@@ -7,10 +7,7 @@ import type {
   InventoryItem,
 } from '../../../api/http.js';
 import { DICE_SOUND, playSfx, SOLUTION_SOUND } from '../../sfx.js';
-import {
-  useTooltipRevealBinding,
-  type TooltipRevealCallbacks,
-} from '../../hooks/useTooltipReveal.js';
+import { useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import {
   PROTECTED_SURFACE_ATTR,
 } from '../../protectedImage.js';
@@ -28,7 +25,6 @@ import {
 import {
   encounterTooltipDescriptionStyle,
   encounterTooltipDetailStyle,
-  encounterTooltipFrameStyle,
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
 import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
@@ -49,7 +45,6 @@ const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 type SlotLetter = 'A' | 'B' | 'C' | 'D';
-type SolutionTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -207,16 +202,11 @@ const enableRattleAnimationStyle: CSSProperties = {
   transformOrigin: '50% 50%',
 };
 
-type SolutionTooltipAnchorX = 'left' | 'center' | 'right';
-
 interface SolutionTooltipState {
-  anchorX: SolutionTooltipAnchorX;
   description: string;
   detail: string;
   name: string;
   unavailable: boolean;
-  x: number;
-  y: number;
 }
 
 const unavailableSolutionTooltipStyle: CSSProperties = {
@@ -353,31 +343,7 @@ const diceRollAnimationStyle: CSSProperties = {
   transformOrigin: '50% 50%',
 };
 
-function solutionTooltipTransform(anchorX: SolutionTooltipAnchorX): string {
-  const offsetY = 'calc(-100% - 12px)';
 
-  if (anchorX === 'left') {
-    return `translate(0, ${offsetY})`;
-  }
-
-  if (anchorX === 'right') {
-    return `translate(-100%, ${offsetY})`;
-  }
-
-  return `translate(-50%, ${offsetY})`;
-}
-
-function solutionTooltipAnchorX(slot: SlotLetter): SolutionTooltipAnchorX {
-  if (slot === 'A' || slot === 'B') {
-    return 'left';
-  }
-
-  if (slot === 'C' || slot === 'D') {
-    return 'right';
-  }
-
-  return 'center';
-}
 
 function solutionsById(): Record<string, SolutionRecord> {
   return gameSolutions() as Record<string, SolutionRecord>;
@@ -670,7 +636,6 @@ export function SolutionBlock({
   );
   const [diceEnableRattle, setDiceEnableRattle] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
-  const [solutionTooltip, setSolutionTooltip] = useState<SolutionTooltipState | null>(null);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
   const [inboundFlownSlots, setInboundFlownSlots] = useState<Set<SlotLetter>>(
     () => new Set(),
@@ -683,7 +648,7 @@ export function SolutionBlock({
     setEnableRattleSlots(new Set());
     setDiceEnableRattle(false);
     setDiceRollCount(0);
-    setSolutionTooltip(null);
+    solutionTips.hide();
     setInboundFlownSlots(new Set());
 
     let cancelled = false;
@@ -773,7 +738,7 @@ export function SolutionBlock({
 
   useEffect(() => {
     if (hidden) {
-      setSolutionTooltip(null);
+      solutionTips.hide();
     }
   }, [hidden]);
 
@@ -799,72 +764,66 @@ export function SolutionBlock({
 
   const actionsReady = actionsInteractive && !hidden;
   const actionsRevealing = actionsVisible && !hidden;
-  const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
-    actionsReady,
-  );
+  // The game's shared tooltip: toward the picture's centre, corner-anchored
+  // (centred for the dice), gold marker, short hover delay and soft fade.
+  const solutionTips = useGameTooltip();
+  const consumeLongPressActivation = solutionTips.consumeLongPressActivation;
 
-  function showActionTooltip(
-    name: string,
-    description: string,
-    detail: string,
-    unavailable: boolean,
-    anchorX: SolutionTooltipAnchorX,
-    event: SolutionTooltipTriggerEvent,
-  ): void {
+  function solutionTooltipContent(key: string, info: SolutionTooltipState): GameTooltipContent | null {
     if (!actionsReady) {
-      return;
+      return null;
     }
+    const compact = isCompactDiceTooltip(info);
+    return {
+      key,
+      shellStyle: {
+        width: 220,
+        maxWidth: 220,
+        maxHeight: 'min(42vh, 200px)',
+        overflow: 'auto',
+        textAlign: 'left',
+        ...(info.unavailable ? unavailableSolutionTooltipStyle : {}),
+        ...(compact ? compactDiceTooltipStyle : {}),
+      },
+      body: info.unavailable ? (
+        <>
+          <div style={unavailableTooltipTitleStyle}>{info.name}</div>
+          <div style={unavailableTooltipDetailStyle}>{info.detail}</div>
+        </>
+      ) : compact ? (
+        <>
+          <div style={compactDiceTooltipTitleStyle}>{info.name}</div>
+          <div style={compactDiceTooltipDetailStyle}>{info.detail}</div>
+        </>
+      ) : (
+        <>
+          <div style={encounterTooltipTitleStyle}>{info.name}</div>
+          {info.description ? (
+            <div style={encounterTooltipDescriptionStyle}>{info.description}</div>
+          ) : null}
+          <div style={encounterTooltipDetailStyle}>{info.detail}</div>
+        </>
+      ),
+    };
+  }
 
-    const trigger = event.currentTarget;
-    if (!(trigger instanceof HTMLButtonElement)) {
-      return;
-    }
-
-    const blockRect = blockRef.current?.getBoundingClientRect();
-    const buttonRect = trigger.getBoundingClientRect();
-    const y = blockRect
-      ? buttonRect.top - blockRect.top
-      : 0;
-    const x = !blockRect
-      ? buttonRect.width / 2
-      : anchorX === 'left'
-        ? buttonRect.left - blockRect.left
-        : anchorX === 'right'
-          ? buttonRect.right - blockRect.left
-          : buttonRect.left - blockRect.left + buttonRect.width / 2;
-
-    setSolutionTooltip({
-      anchorX,
-      description,
-      detail,
-      name,
-      unavailable,
-      x,
-      y,
+  function solutionTooltipFor(solution: VisibleSolutionSlot): GameTooltipContent | null {
+    return solutionTooltipContent(`solution-${solution.slot}`, {
+      name: solution.name,
+      description: solution.available ? solution.description : '',
+      detail: formatSolutionChargeTooltipDetail(solution),
+      unavailable: !solution.available,
     });
   }
 
-  function showSolutionTooltip(
-    solution: VisibleSolutionSlot,
-    event: SolutionTooltipTriggerEvent,
-  ): void {
-    showActionTooltip(
-      solution.name,
-      solution.available ? solution.description : '',
-      formatSolutionChargeTooltipDetail(solution),
-      !solution.available,
-      solutionTooltipAnchorX(solution.slot),
-      event,
-    );
-  }
-
-  function showDiceTooltip(event: SolutionTooltipTriggerEvent): void {
-    showActionTooltip('Dice', '', 'try your luck', false, 'center', event);
+  function diceTooltip(): GameTooltipContent | null {
+    return solutionTooltipContent('dice', { name: 'Dice', description: '', detail: 'try your luck', unavailable: false });
   }
 
   function hideSolutionTooltip(): void {
-    setSolutionTooltip(null);
+    solutionTips.hide();
   }
+
 
   function handleDiceButtonClick(): void {
     if (consumeLongPressActivation()) {
@@ -965,10 +924,7 @@ export function SolutionBlock({
                 className="morkahja-footer-button"
                 disabled={!actionsReady}
                 onClick={handleDiceButtonClick}
-                {...bindTooltipReveal({
-                  onShow: showDiceTooltip,
-                  onHide: hideSolutionTooltip,
-                })}
+                {...solutionTips.bindTooltip(diceTooltip)}
                 style={diceButtonStyle}
                 type="button"
               >
@@ -1048,12 +1004,7 @@ export function SolutionBlock({
                 data-solution-slot={slot}
                 disabled={!actionsReady}
                 key={slot}
-                {...bindTooltipReveal({
-                  onShow: (event) => {
-                    showSolutionTooltip(visibleSlot, event);
-                  },
-                  onHide: hideSolutionTooltip,
-                })}
+                {...solutionTips.bindTooltip(() => solutionTooltipFor(visibleSlot))}
                 onClick={() => {
                   handleSolutionButtonClick(visibleSlot);
                 }}
@@ -1097,39 +1048,7 @@ export function SolutionBlock({
             );
         })}
       </div>
-      {solutionTooltip && !hidden ? (
-        <div
-          role="tooltip"
-          style={{
-            ...encounterTooltipFrameStyle,
-            ...(solutionTooltip.unavailable ? unavailableSolutionTooltipStyle : {}),
-            ...(isCompactDiceTooltip(solutionTooltip) ? compactDiceTooltipStyle : {}),
-            left: solutionTooltip.x,
-            top: solutionTooltip.y,
-            transform: solutionTooltipTransform(solutionTooltip.anchorX),
-          }}
-        >
-          {solutionTooltip.unavailable ? (
-            <>
-              <div style={unavailableTooltipTitleStyle}>{solutionTooltip.name}</div>
-              <div style={unavailableTooltipDetailStyle}>{solutionTooltip.detail}</div>
-            </>
-          ) : isCompactDiceTooltip(solutionTooltip) ? (
-            <>
-              <div style={compactDiceTooltipTitleStyle}>{solutionTooltip.name}</div>
-              <div style={compactDiceTooltipDetailStyle}>{solutionTooltip.detail}</div>
-            </>
-          ) : (
-            <>
-              <div style={encounterTooltipTitleStyle}>{solutionTooltip.name}</div>
-              {solutionTooltip.description ? (
-                <div style={encounterTooltipDescriptionStyle}>{solutionTooltip.description}</div>
-              ) : null}
-              <div style={encounterTooltipDetailStyle}>{solutionTooltip.detail}</div>
-            </>
-          )}
-        </div>
-      ) : null}
+      {!hidden ? solutionTips.layer : null}
     </div>
   );
 }

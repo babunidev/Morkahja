@@ -21,6 +21,7 @@ import {
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
+import { GAME_TOOLTIP_DELAY_MS } from '../GameTooltip.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
@@ -456,12 +457,41 @@ export function SolutionGridOverlay({
     };
   }, [tooltip]);
 
+  const hoverDelayTimerRef = useRef<number | null>(null);
+
+  function clearHoverDelay(): void {
+    if (hoverDelayTimerRef.current !== null) {
+      window.clearTimeout(hoverDelayTimerRef.current);
+      hoverDelayTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => clearHoverDelay, []);
+
   function showItemTooltip(
     item: SolutionGridEntry,
     columnIndex: number,
     event: GridTooltipTriggerEvent,
   ): void {
-    const trigger = event.currentTarget;
+    clearHoverDelay();
+    // A mouse hover waits a moment, like every game tooltip; clicks, focus and
+    // touch long presses show at once.
+    if (event.type === 'mouseenter' || event.type === 'mouseover') {
+      const trigger = event.currentTarget;
+      hoverDelayTimerRef.current = window.setTimeout(() => {
+        hoverDelayTimerRef.current = null;
+        showItemTooltipNow(item, columnIndex, trigger);
+      }, GAME_TOOLTIP_DELAY_MS);
+      return;
+    }
+    showItemTooltipNow(item, columnIndex, event.currentTarget);
+  }
+
+  function showItemTooltipNow(
+    item: SolutionGridEntry,
+    columnIndex: number,
+    trigger: EventTarget | null,
+  ): void {
 
     if (!(trigger instanceof HTMLElement) || !overlayRef.current) {
       return;
@@ -488,6 +518,7 @@ export function SolutionGridOverlay({
   }
 
   function hideItemTooltip(): void {
+    clearHoverDelay();
     retireShownTooltip();
     activeTriggerRef.current = null;
     setTooltip(null);

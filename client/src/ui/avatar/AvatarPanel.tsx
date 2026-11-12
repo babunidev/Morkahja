@@ -11,6 +11,7 @@ import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.j
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
+import { GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
 import AvatarPartyDetailsCard, {
   avatarDetailsOverlayStyle,
   type AvatarDetailsSlotSide,
@@ -222,6 +223,14 @@ export function AvatarPanel({
 
   // Report only when the details state changes, not whenever the parent hands
   // over a new callback (inline callbacks are new on every render).
+  const avatarTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
+  const avatarTip = avatarTips.bindTooltip(() => (showDetails
+    ? null
+    : {
+      key: `avatar-${avatar.id}`,
+      shellStyle: { width: 'max-content', maxWidth: 200 },
+      body: <GameTooltipCard title={avatar.name} lines={[`Level ${avatar.level}`]} />,
+    }));
   const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
   onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
@@ -250,6 +259,8 @@ export function AvatarPanel({
 
       <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
 
+        {avatarTips.layer}
+
         {xpGainAmount > 0 ? (
 
           <span aria-hidden="true" style={xpGainBubbleStyle}>+{xpGainAmount} XP</span>
@@ -264,7 +275,17 @@ export function AvatarPanel({
 
           className="morkahja-avatar-slot-button"
 
+          {...avatarTip}
+
           onClick={() => {
+
+            avatarTips.hide();
+
+            if (avatarTips.consumeLongPressActivation()) {
+
+              return;
+
+            }
 
             playSfx(DEFAULT_BUTTON_SOUND);
 
@@ -272,9 +293,11 @@ export function AvatarPanel({
 
           }}
 
-          onPointerDown={() => {
+          onPointerDown={(event) => {
 
             pulse('avatar');
+
+            avatarTip.onPointerDown?.(event);
 
           }}
 

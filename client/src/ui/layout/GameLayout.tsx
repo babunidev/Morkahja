@@ -28,7 +28,7 @@ export function GameLayout({
   return (
     <PortraitStage>
       <div style={shellStyle}>
-        <div style={gameScreenRootStyle()}>
+        <div data-morkahja-game-screen="" style={gameScreenRootStyle()}>
           <section aria-label="Encounter Zone" style={encounterZoneStyle()}>
             {encounterZone}
           </section>

@@ -17,6 +17,7 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import { GameTooltipCard, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import {
   animationAlreadyPlayed,
@@ -80,13 +81,6 @@ interface VisibleReward {
   solution: SolutionRecord;
 }
 
-type ItemTooltipState = {
-  name: string;
-  quantityLabel: string;
-  description?: string;
-  x: number;
-  y: number;
-};
 
 /**
  * The result uses the solution bar's place and grid (A, B, dice, C, D; see
@@ -323,23 +317,6 @@ function lossIconStyle(inventoryType: number): CSSProperties {
     : lossItemImageStyle;
 }
 
-const rewardTooltipStyle: CSSProperties = {
-  position: 'absolute',
-  zIndex: 50,
-  display: 'grid',
-  gap: 4,
-  minWidth: 148,
-  maxWidth: 'min(280px, 72vw)',
-  padding: '8px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.94)',
-  fontFamily: 'Georgia, serif',
-  textShadow: '0 2px 5px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  pointerEvents: 'none',
-  transform: 'translate(-50%, calc(-100% - 12px))',
-};
 
 const rewardTooltipTitleStyle: CSSProperties = {
   margin: 0,
@@ -439,7 +416,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
   const [continuePressAnimating, setContinuePressAnimating] = useState(false);
   const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
-  const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
+  // The game's shared tooltip (toward the picture's centre, corner marker, delay, fade).
+  const resultTips = useGameTooltip();
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
   const [lossesFlyingAway, setLossesFlyingAway] = useState(false);
   const [lossesRevealed, setLossesRevealed] = useState(true);
@@ -912,6 +890,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }));
 
   async function handleContinueClick(): Promise<void> {
+    if (resultTips.consumeLongPressActivation()) {
+      return;
+    }
     if (
       disabled
       || hidden
@@ -1014,6 +995,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   async function collectItem(key: string): Promise<void> {
+    if (resultTips.consumeLongPressActivation()) {
+      return;
+    }
     if (!canCollect || collectedRef.current.has(key)) {
       return;
     }
@@ -1057,33 +1041,37 @@ export const ResultBlock = forwardRef(function ResultBlock(
     await proceedAfterCollecting();
   }
 
-  function showItemTooltip(
+  function itemTooltipContent(
     change: EncounterInventoryChange | VisibleReward,
     sign: '+' | '-' | 'used',
-    event: { currentTarget: HTMLElement },
-  ): void {
-    const blockRect = blockRef.current?.getBoundingClientRect();
-    const itemRect = event.currentTarget.getBoundingClientRect();
-    const x = blockRect ? itemRect.left - blockRect.left + itemRect.width / 2 : itemRect.width / 2;
-    const y = blockRect ? itemRect.top - blockRect.top : 0;
+  ): GameTooltipContent {
     const quantityLabel = sign === 'used'
       ? `Used (−${change.quantity})`
       : `${sign}${change.quantity}`;
-
     const description = change.solution.mSolutionText?.trim();
-
-    setItemTooltip({
-      name: change.solution.mSolutionName,
-      quantityLabel,
-      description: description || undefined,
-      x,
-      y,
-    });
+    return {
+      key: `${sign}${change.solution.mSolutionID}`,
+      shellStyle: { width: 200, maxWidth: 200 },
+      body: (
+        <>
+          <p style={rewardTooltipTitleStyle}>{change.solution.mSolutionName}</p>
+          <p style={rewardTooltipMetaStyle}>{quantityLabel}</p>
+          {description ? <p style={rewardTooltipTextStyle}>{description}</p> : null}
+        </>
+      ),
+    };
   }
+
+  const continueTooltip = (): GameTooltipContent => ({
+    key: 'continue',
+    shellStyle: { width: 'max-content', maxWidth: 200 },
+    body: <GameTooltipCard title="Continue" lines={['Continue to the next encounter']} />,
+  });
 
   function hideItemTooltip(): void {
-    setItemTooltip(null);
+    resultTips.hide();
   }
+
 
   function renderLoreGemRewardIcon(placement: CSSProperties = {}) {
     const loreGemReward: VisibleReward = {
@@ -1111,16 +1099,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
           }
           rewardButtonRefs.current.delete(LORE_GEM_REWARD_ID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(loreGemReward, '+', event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(loreGemReward, '+', event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(loreGemReward, '+'))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={() => { void collectItem(`r:${LORE_GEM_REWARD_ID}`); }}
         style={{ ...loreGemRewardButtonStyle, ...placement, ...collectStyle(`r:${LORE_GEM_REWARD_ID}`) }}
         type="button"
@@ -1172,16 +1152,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
           rewardButtonRefs.current.delete(change.solution.mSolutionID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(change, sign, event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(change, sign, event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(change, sign))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={trackRewardRef ? () => { void collectItem(`r:${change.solution.mSolutionID}`); } : undefined}
         style={trackRewardRef ? { ...buttonStyle, ...collectStyle(`r:${change.solution.mSolutionID}`) } : buttonStyle}
         type="button"
@@ -1234,16 +1206,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
           lossButtonRefs.current.delete(loss.solution.mSolutionID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(loss, '-', event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(loss, '-', event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(loss, '-'))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={() => { void collectItem(`l:${loss.solution.mSolutionID}`); }}
         style={{
           ...rewardItemStyle,
@@ -1491,6 +1455,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           onClick={() => {
             void handleContinueClick();
           }}
+          {...resultTips.bindTooltip(continueTooltip)}
           onContextMenu={preventImageContextMenu}
           style={{
             ...continueButtonStyle,
@@ -1606,22 +1571,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           </>
         );
       })()}
-      {itemTooltip ? (
-        <div
-          role="tooltip"
-          style={{
-            ...rewardTooltipStyle,
-            left: itemTooltip.x,
-            top: itemTooltip.y,
-          }}
-        >
-          <p style={rewardTooltipTitleStyle}>{itemTooltip.name}</p>
-          <p style={rewardTooltipMetaStyle}>{itemTooltip.quantityLabel}</p>
-          {itemTooltip.description ? (
-            <p style={rewardTooltipTextStyle}>{itemTooltip.description}</p>
-          ) : null}
-        </div>
-      ) : null}
+      {resultTips.layer}
     </div>
   );
 });

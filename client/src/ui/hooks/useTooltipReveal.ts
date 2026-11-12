@@ -9,6 +9,12 @@ import {
 } from 'react';
 
 export const TOOLTIP_LONG_PRESS_MS = 420;
+/**
+ * After a long press shows a tooltip, the click that follows on release must not
+ * press the button. Touch release fires pointerup and pointerleave before click,
+ * so the flag survives them and simply expires after this long.
+ */
+const LONG_PRESS_CLICK_GUARD_MS = 1000;
 
 /** Desktop mice and precise pointers — hover tooltips. */
 const HOVER_TOOLTIP_QUERY = '(hover: hover) and (pointer: fine)';
@@ -59,7 +65,11 @@ function scheduleTooltipLongPressShow(
   longPressTriggeredRef.current = false;
   clearTimer();
   timerRef.current = window.setTimeout(() => {
+    timerRef.current = null;
     longPressTriggeredRef.current = true;
+    window.setTimeout(() => {
+      longPressTriggeredRef.current = false;
+    }, LONG_PRESS_CLICK_GUARD_MS);
     callbacks.onShow(createTooltipShowEvent(pressTarget));
   }, TOOLTIP_LONG_PRESS_MS);
 }
@@ -84,14 +94,20 @@ function longPressHandlers(
       clearTimer();
       callbacks.onHide();
     },
+    // A press that ends before the long press fired cancels it. After it
+    // fired, the flag stays set so the release's click is not a press.
     onPointerCancel: () => {
+      if (timerRef.current !== null) {
+        longPressTriggeredRef.current = false;
+      }
       clearTimer();
-      longPressTriggeredRef.current = false;
       callbacks.onHide();
     },
     onPointerLeave: () => {
+      if (timerRef.current !== null) {
+        longPressTriggeredRef.current = false;
+      }
       clearTimer();
-      longPressTriggeredRef.current = false;
       callbacks.onHide();
     },
   };

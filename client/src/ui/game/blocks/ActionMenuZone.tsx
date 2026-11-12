@@ -4,6 +4,25 @@ import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { PROTECTED_SURFACE_ATTR, protectedImageProps } from '../../protectedImage.js';
 import { actionMenuRowStyle, GAME_SCREEN_LAYOUT } from '../gameScreenLayout.js';
+import { GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
+
+/** What each menu button does, shown after a short hover (or a long press). */
+function menuTooltip(alt: string, helpCalled: boolean): GameTooltipContent {
+  const text: Record<string, [string, string]> = {
+    'Get help': helpCalled
+      ? ['Call for help', 'Help has already been called for this encounter']
+      : ['Call for help', 'Call nearby adventurers and friends to help with this encounter'],
+    Inventory: ['Inventory', 'The items you carry to solve encounters'],
+    Skillbook: ['Skillbook', 'Your skills and spells'],
+    Lore: ['Lore', 'Read the story of this encounter'],
+  };
+  const [title, line] = text[alt] ?? [alt, ''];
+  return {
+    key: `menu-${alt}`,
+    shellStyle: { width: 190, maxWidth: 190 },
+    body: <GameTooltipCard title={title} lines={line ? [line] : []} />,
+  };
+}
 
 const FOOTER_BUTTONS = GAME_FOOTER_BUTTONS;
 const FOOTER_READY_RATTLE_MS = 560;
@@ -44,6 +63,7 @@ export function ActionMenuZone({
   readyRattleToken?: number;
 }) {
   const [footerRattling, setFooterRattling] = useState(false);
+  const menuTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
   useEffect(() => {
@@ -62,10 +82,11 @@ export function ActionMenuZone({
   }, [readyRattleToken]);
 
   return (
-    <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} aria-label="Footer actions" style={actionMenuRowStyle()}>
+    <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} aria-label="Footer actions" style={{ ...actionMenuRowStyle(), position: 'relative' }}>
       {FOOTER_BUTTONS.map((button, index) => {
         const isHelp = button.alt === 'Get help';
         const helpSpent = isHelp && helpCalled;
+        const tip = menuTips.bindTooltip(() => menuTooltip(button.alt, helpCalled));
         return (
         <button
           aria-label={isHelp ? 'Call for help' : button.alt}
@@ -73,7 +94,12 @@ export function ActionMenuZone({
           className="morkahja-footer-button"
           data-morkahja-footer-target={button.target}
           key={button.alt}
+          {...tip}
           onClick={() => {
+            menuTips.hide();
+            if (menuTips.consumeLongPressActivation()) {
+              return;
+            }
             if (isHelp) {
               if (helpCalled) {
                 return;
@@ -96,8 +122,9 @@ export function ActionMenuZone({
               onInventoryToggle();
             }
           }}
-          onPointerDown={() => {
+          onPointerDown={(event) => {
             pulse(button.alt);
+            tip.onPointerDown?.(event);
           }}
           style={{
             ...footerButtonStyle,
@@ -126,6 +153,7 @@ export function ActionMenuZone({
         </button>
         );
       })}
+      {menuTips.layer}
     </div>
   );
 }

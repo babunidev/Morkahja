@@ -247,3 +247,7 @@ On my phone the game leaned to the left and the notifications at the top were of
 
 Item descriptions in the Inventory and Skillbook sometimes slid under the frame or off the picture. What I wanted, as I described it: open toward the middle of the picture from wherever the item sits, hold on to the item by one corner, and mark that corner in gold so the two read as connected. AI implemented the placement as a small tested rule bounded by the picture itself, and found along the way that on desktop the tooltip had been positioned in the stage's unscaled pixels while measured in screen pixels. **Verification:** measured in the browser on desktop and two phone sizes; client tests and build passed. **Not deployed yet.**
 
+### One tooltip style for the whole game screen — 2026-11-12
+
+The new inventory tooltips worked so well that I wanted the same everywhere in the game: on the solutions, with the dice centred, on rewards and losses, on the Continue arrow, on the menu buttons with a word about what each does, and a small name-and-level preview on my avatar, all appearing after a short delay. AI built one shared tooltip for all of them. Testing it with simulated long presses turned up an older bug: on a touch screen, releasing a long press still pressed the button, so reading a solution's tooltip could use the solution. That is fixed too. **Verification:** checked with touch long presses in the browser and with tests and a build; the desktop hover delay is for my own test. **Not deployed yet.**
+
