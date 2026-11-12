@@ -135,3 +135,31 @@ export function timerSegments(frameWidth: number, targetX: number, endInset: num
 function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
+
+/**
+ * Dashes for a ring with random gaps, in units of a path length of 100 (use
+ * `pathLength="100"`): dashes of 7–24 units and gaps of 2–5, ending exactly
+ * on the full circle. A different seed gives a different pattern.
+ */
+export function randomRingDashArray(seed: number): number[] {
+  const random = seededRandom(seed);
+  const dashes: number[] = [];
+  let covered = 0;
+  while (covered < 100) {
+    const dash = Math.min(7 + random() * 17, 100 - covered);
+    covered += dash;
+    const gap = Math.min(2 + random() * 3, Math.max(0, 100 - covered));
+    covered += gap;
+    dashes.push(round(dash), round(gap));
+  }
+  return dashes;
+}
+
+/** A stable number for a text, to seed a pattern per item. */
+export function seedFromText(text: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
+  }
+  return hash >>> 0;
+}

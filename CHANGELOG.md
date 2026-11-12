@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: bigger avatar when alone, clearer selection in avatar creation
+
+- **Change (Babuni's direction): the avatar grows when playing alone.** With no one else in the encounter, the avatar uses the party strip's free height, from just below the solutions to just above the bottom buttons, and the empty side slots share the rest (`PartyZone.tsx`, sized with container units). On a 412 × 915 phone it grew from 131 to 195 px wide; on desktop it now stays clear of the solutions (176–180 px wide in the scaled stage, before 192 px overlapping them). With party members the slots are unchanged.
+- **Change: the avatar in Create Avatar is sized by its frame.** The frame is the outermost image (700 px; the portrait is 600 px inside it), so the box now follows the frame, with room for the 6 % grow on hover or press; the frame no longer reaches past the panel.
+- **Change (Babuni's direction): clearer selection in Create Avatar.** A selected race, role or sex gets a 1 px gold ring just outside it, a ring with random gaps around that (a different pattern per option, the same every time), and the existing glow over both.
+- **Verification:** client typecheck, tests (25, including the gapped ring) and production build passed. Headless Chrome at 360 × 740, 412 × 915 and 1400 × 900: avatar creation centred without scrolling, frame at least 29 px inside the panel, rings shown on the selected options; in the game the solo avatar measured clear of the solutions and the bottom buttons. **Not deployed.**
+
 ## 2026-11-12 — Unreleased: avatar creation rearranged and fitted to the screen
 
 - **Change (Babuni's layout):** the Create Avatar panel now has one settings block on top (the four races across the full width, the three roles below, then Frame and Male/Female side by side) and below it the avatar, with its name directly on top, as big as the remaining space allows and reaching down between Cancel and Accept in the bottom corners (`AvatarCreation.tsx`). The avatar sizes itself with container units, so it stays square on any screen; the frame image is scaled from the centre so it no longer pushes the panel into scrolling.

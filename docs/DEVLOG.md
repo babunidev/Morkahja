@@ -263,3 +263,7 @@ Opening the local game on my phone showed two things. The welcome panel was off-
 
 Avatar creation on my phone was cramped and off-centre, with small race buttons. I described the layout I wanted: all the choices in one block on top (races, then roles, then frame and sex next to each other), and underneath a big avatar with its name on top, using the space down to the Cancel and Accept buttons. AI rebuilt the panel that way, fixed the same width mistake as on the welcome screen, and confirmed that the standalone version had no avatar-creation changes we had missed. **Verification:** screenshots and measurements at two phone sizes and on desktop in a headless browser, including creating an avatar; tests and build passed. **Not deployed yet.**
 
+### More room for my avatar — 2026-11-13
+
+On my phone the new avatar creation was close, but the frame still clipped past the edges. AI now sizes the preview by the frame, not the portrait inside it. I also wanted the selected race, role and sex easier to see. Each now has a thin gold ring, a ring with random gaps around it, and the glow. In the game, when I play alone, my avatar now takes the whole space between the solutions and the bottom buttons, instead of a slot sized for three party members. **Verification:** measured and screenshotted at two phone sizes and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
+

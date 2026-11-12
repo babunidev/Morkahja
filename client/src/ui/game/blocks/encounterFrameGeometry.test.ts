@@ -50,3 +50,13 @@ test('overlapping waits: the line follows the one that finishes last', () => {
   assert.equal(replacesTimer(running, { startedAt: 1200, durationMs: 100 }, 1200), true, 'a finished wait never blocks');
   assert.equal(replacesTimer(null, { startedAt: 0, durationMs: 1 }, 0), true);
 });
+
+test('a selection ring with random gaps closes exactly and differs per item', async () => {
+  const { randomRingDashArray, seedFromText } = await import('./encounterFrameGeometry.js');
+  const grimnir = randomRingDashArray(seedFromText('Grimnir'));
+  const total = grimnir.reduce((sum, value) => sum + value, 0);
+  assert.ok(Math.abs(total - 100) < 0.05, `covers the circle once (${total})`);
+  assert.ok(grimnir.length >= 8, 'several gaps');
+  assert.deepEqual(randomRingDashArray(seedFromText('Grimnir')), grimnir);
+  assert.notDeepEqual(randomRingDashArray(seedFromText('Rokur')), grimnir);
+});

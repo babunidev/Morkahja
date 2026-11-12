@@ -26,6 +26,7 @@ import {
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { randomRingDashArray, seedFromText } from '../game/blocks/encounterFrameGeometry.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -198,12 +199,13 @@ const previewWrapStyle: CSSProperties = {
 };
 
 /**
- * As big as the space allows; portrait and frame are square. The frame image is
- * drawn at 105 %, so the box leaves it a little room.
+ * Sized by the frame, the outermost image: the box is the frame's square, as big
+ * as the space allows, with room for the 6 % grow on hover or press so the
+ * frame never reaches past the panel.
  */
 const previewStyle: CSSProperties = {
-  width: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.94)`,
-  height: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.94)`,
+  width: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.92)`,
+  height: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.92)`,
   flexShrink: 0,
 };
 
@@ -214,10 +216,11 @@ const previewVisualStyle: CSSProperties = {
   height: '100%',
 };
 
+/** Portraits are 600 px and frames 700 px square: the portrait fills 6/7 of the frame. */
 const previewImageStyle: CSSProperties = {
   gridArea: '1 / 1',
-  width: '92%',
-  height: '92%',
+  width: `${(600 / 700) * 100}%`,
+  height: `${(600 / 700) * 100}%`,
   objectFit: 'contain',
 };
 
@@ -226,8 +229,6 @@ const previewFrameStyle: CSSProperties = {
   width: '100%',
   height: '100%',
   objectFit: 'contain',
-  // Slightly larger than the portrait, grown evenly from the centre.
-  transform: 'scale(1.05)',
 };
 
 const rowStyle: CSSProperties = {
@@ -244,15 +245,16 @@ const rowStyle: CSSProperties = {
 const raceRowStyle: CSSProperties = {
   ...rowStyle,
   flexWrap: 'nowrap',
-  gap: 6,
-  padding: '2px 0',
+  gap: 10,
+  // Room for the selection rings and glow at the ends of the row.
+  padding: '8px 8px',
 };
 
 const roleRowStyle: CSSProperties = {
   ...rowStyle,
   flexWrap: 'nowrap',
-  gap: 8,
-  padding: '2px 0',
+  gap: 12,
+  padding: '8px 8px',
 };
 
 const sectionLabelStyle: CSSProperties = {
@@ -322,7 +324,7 @@ const genderButtonStyle: CSSProperties = {
 const genderRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 12,
 };
 
 /** Cancel and Accept sit in the bottom corners, beside the avatar. */
@@ -519,8 +521,45 @@ function CreationImageButton({
             style={imageStyle}
           />
         )}
+        {selected ? <SelectionRings seed={seedFromText(ariaLabel)} /> : null}
       </span>
     </button>
+  );
+}
+
+const SELECTION_GOLD = '#ffcc66';
+
+/**
+ * Around a selected option (Babuni's direction, 2026-11-13): a 1 px gold ring
+ * just outside the button, a ring with random gaps around that, and the
+ * selection glow over both (the glow is the button's drop shadow).
+ */
+function SelectionRings({ seed }: { seed: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: -7,
+        width: 'calc(100% + 14px)',
+        height: 'calc(100% + 14px)',
+        overflow: 'visible',
+        pointerEvents: 'none',
+      }}
+    >
+      <circle cx="50%" cy="50%" fill="none" stroke={SELECTION_GOLD} strokeWidth={1} style={{ r: 'calc(50% - 4.5px)' } as CSSProperties} />
+      <circle
+        cx="50%"
+        cy="50%"
+        fill="none"
+        pathLength={100}
+        stroke={SELECTION_GOLD}
+        strokeDasharray={randomRingDashArray(seed).join(' ')}
+        strokeOpacity={0.85}
+        strokeWidth={1.5}
+        style={{ r: 'calc(50% - 1.5px)' } as CSSProperties}
+      />
+    </svg>
   );
 }
 

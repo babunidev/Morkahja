@@ -44,11 +44,41 @@ function partySlotWidth(mobilePortrait: boolean): number | string {
     : PARTY_SLOT_WIDTH;
 }
 
-function mainAvatarAnchorStyle(): CSSProperties {
+/**
+ * Alone in the encounter, the avatar grows into the party strip's free height
+ * (Babuni's direction, 2026-11-13): from just below the solutions to just above
+ * the bottom buttons. Sized in the strip's container units, as tall as fits.
+ */
+const ALONE_TOP_CLEARANCE_PX = 22;
+const ALONE_BOTTOM_CLEARANCE_PX = 10;
+/** Height of the avatar panel (portrait, frame and essence row) per unit of width. */
+const AVATAR_PANEL_HEIGHT_PER_WIDTH = 1.18;
+const ALONE_AVATAR_WIDTH = `min(100cqw - ${2 * GAME_SCREEN_LAYOUT.partySlotGap + 2 * 44}px, `
+  + `calc((100cqh - ${ALONE_TOP_CLEARANCE_PX + ALONE_BOTTOM_CLEARANCE_PX}px) / ${AVATAR_PANEL_HEIGHT_PER_WIDTH}))`;
+
+function aloneSlotStyle(detailsOpen: boolean, main: boolean): CSSProperties {
+  return main
+    ? {
+      ...partySlotStyle,
+      width: ALONE_AVATAR_WIDTH,
+      alignSelf: 'flex-end',
+      marginBottom: ALONE_BOTTOM_CLEARANCE_PX,
+      zIndex: detailsOpen ? 40 : 8,
+    }
+    : {
+      ...partySlotStyle,
+      // The empty side slots share what is left.
+      flex: '1 1 0',
+      minWidth: 0,
+      zIndex: 8,
+    };
+}
+
+function mainAvatarAnchorStyle(alone: boolean): CSSProperties {
   return {
     position: 'relative',
     width: '100%',
-    maxWidth: PARTY_SLOT_WIDTH,
+    maxWidth: alone ? 'none' : PARTY_SLOT_WIDTH,
     justifySelf: 'center',
     overflow: 'visible',
   };
@@ -99,6 +129,12 @@ export function PartyZone({
     && room.leaderPlayerId === localPlayerId,
   );
   const visualSlotToLogical: [number, number, number] = [1, 0, 2];
+  const alone = Boolean(room)
+    && room!.participants.length === 1
+    && Boolean(room!.participants[0]?.isLocal);
+  const slotStyle = (detailsOpen: boolean, isLocal: boolean): CSSProperties => (
+    alone ? aloneSlotStyle(detailsOpen, isLocal) : partySlotVisualStyle(detailsOpen, mobilePortrait)
+  );
 
   function setSlotDetailsOpen(visualIndex: number, open: boolean): void {
     // Keep the same object when nothing changes: a new object re-renders
@@ -112,7 +148,11 @@ export function PartyZone({
   }
 
   return (
-    <div aria-label="Party avatars" {...{ [PROTECTED_SURFACE_ATTR]: '' }} style={partyStripStyle()}>
+    <div
+      aria-label="Party avatars"
+      {...{ [PROTECTED_SURFACE_ATTR]: '' }}
+      style={{ ...partyStripStyle(), ...(alone ? { containerType: 'size' } : {}) }}
+    >
       {[0, 1, 2].map((visualIndex) => {
         const slotIndex = visualSlotToLogical[visualIndex];
         const participant = room?.participants.find((entry) => entry.slotIndex === slotIndex);
@@ -125,9 +165,9 @@ export function PartyZone({
               aria-label={`Your party slot ${slotIndex + 1}`}
               key={`slot-${visualIndex}-${slotIndex}`}
               {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-              style={partySlotVisualStyle(detailsOpen, mobilePortrait)}
+              style={slotStyle(detailsOpen, true)}
             >
-              <div style={mainAvatarAnchorStyle()}>
+              <div style={mainAvatarAnchorStyle(alone)}>
                 <AvatarPanel
                   avatar={avatar}
                   hidePortraitForHandoff={hideAvatarPortraitForHandoff}
@@ -175,7 +215,7 @@ export function PartyZone({
           <div
             key={`slot-${visualIndex}-${slotIndex}`}
             {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-            style={partySlotVisualStyle(false, mobilePortrait)}
+            style={slotStyle(false, false)}
           >
             <PartyEmptySlot
               animationDelayMs={slotIndex * 420}
