@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-12 — Unreleased: welcome screen on phones, and https for testing on a phone
+
+- **Fix (reported by Babuni on a phone):** the welcome panel ("Welcome, Adventurer!" and the New Journey form) sat off-centre and ran past the right edge on phones: its width was 86 % of the screen plus its own padding, more than the space inside the screen margin. It now includes its padding and fits the screen (`OnboardingGateway.tsx`).
+- **Found while testing on a phone:** opened from the local network as `http://192.168.x.x:5173/`, the page is not a secure context, so the browser offers no Web Crypto and creating or restoring a journey failed with a misleading "Check the backend connection". Production is https and not affected. New `npm run dev:phone` serves the dev client over https with a local self-signed certificate (never committed), and the welcome screen now says when a secure connection is missing.
+- **Verification:** client typecheck and tests (24) passed. Headless Chrome at 412 × 915 over the network address: on http, `isSecureContext` false and no `crypto.subtle` (the cause confirmed); on https, the panel fits on both screens and creating a journey saved a session and opened the dashboard (a local test player). **Not deployed.**
+
 ## 2026-11-12 — Unreleased: line frame around the encounter, with a wait timer
 
 - **Change (Babuni's design):** the long bar graphics around the encounter picture are replaced by thin gold lines drawn in SVG: from the picture outward a 2 px line, a 2 px line with random gaps, a 1 px line, a small gap and an outer line. Small triangles fill the picture's corners and every line cuts its corners at the same angle, so the frame is octagonal (`DecorativeEdgeFrame.tsx`, geometry in `encounterFrameGeometry.ts`). The gaps are random but seeded, so they stay the same between renders. The Inventory, Skillbook and Lore overlays use the same frame. On narrow screens the picture is 22 px narrower so the frame fits on screen.

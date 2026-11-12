@@ -18,6 +18,8 @@ import {
   saveIdentityKeypair,
   signChallenge,
   type StoredKeypair,
+  secureConnectionMissing,
+  SECURE_CONNECTION_MESSAGE,
 } from '../../sessionKeys.js';
 import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
 import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
@@ -80,7 +82,9 @@ const screenStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(86vw, 520px)',
+  // Padding and border included, so the panel never overflows a phone screen.
+  width: 'min(100%, 520px)',
+  boxSizing: 'border-box',
   display: 'grid',
   gap: 14,
   padding: '24px 22px',
@@ -347,7 +351,9 @@ export function OnboardingGateway({
       await finishOnboarding(session);
     } catch (error) {
       console.error('New journey bootstrap failed', error);
-      setMessage('Could not create journey. Check the backend connection.');
+      setMessage(secureConnectionMissing()
+        ? SECURE_CONNECTION_MESSAGE
+        : 'Could not create journey. Check the backend connection.');
       setBusy(false);
     }
   }
@@ -373,7 +379,9 @@ export function OnboardingGateway({
       await finishOnboarding(session);
     } catch (error) {
       console.error('Restore journey failed', error);
-      setMessage('Could not restore journey from this key.');
+      setMessage(secureConnectionMissing()
+        ? SECURE_CONNECTION_MESSAGE
+        : 'Could not restore journey from this key.');
       setBusy(false);
     }
   }

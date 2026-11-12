@@ -12,6 +12,7 @@
     "dev": "npm run dev --prefix server",
     "dev:backend": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
+    "dev:phone": "npm run dev:phone --prefix client",
     "start": "npm run start --prefix server",
     "verify:static-data": "node scripts/verify-static-game-data.mjs",
     "typecheck": "npm run typecheck --prefix shared && npm run typecheck --prefix server && npm run build --prefix client",

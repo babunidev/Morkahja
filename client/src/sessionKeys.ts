@@ -39,6 +39,17 @@ export function publicKeyString(publicKey: JsonWebKey): string {
   return JSON.stringify(publicKey);
 }
 
+/**
+ * Browsers offer the Web Crypto API only on secure pages (https, or
+ * localhost). Opened over plain http from another device, for example a phone
+ * on the local network, the journey keys cannot be created or used.
+ */
+export function secureConnectionMissing(): boolean {
+  return typeof window === 'undefined' || !window.isSecureContext || !window.crypto?.subtle;
+}
+
+export const SECURE_CONNECTION_MESSAGE = 'This page needs a secure (https) connection to create or restore a journey.';
+
 export async function generateKeypair(): Promise<StoredKeypair> {
   const keypair = await window.crypto.subtle.generateKey(
     keyAlgorithm(),
