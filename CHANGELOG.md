@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-12 — Unreleased: avatar creation rearranged and fitted to the screen
+
+- **Change (Babuni's layout):** the Create Avatar panel now has one settings block on top (the four races across the full width, the three roles below, then Frame and Male/Female side by side) and below it the avatar, with its name directly on top, as big as the remaining space allows and reaching down between Cancel and Accept in the bottom corners (`AvatarCreation.tsx`). The avatar sizes itself with container units, so it stays square on any screen; the frame image is scaled from the centre so it no longer pushes the panel into scrolling.
+- **Fix:** the panel was off-centre on phones (92 % of the screen plus its own padding, the same cause as the welcome panel); it now fits inside the screen margin and fills a phone screen.
+- **Checked against the standalone version:** its avatar creation is identical apart from asset paths and how game data is loaded, so no avatar-creation changes were missed in the port. The standalone's avatar selection has an extra "join with avatar" path for nearby sessions, which belongs to its offline multiplayer and was not taken.
+- **Verification:** client typecheck, tests (24) and production build passed. Headless Chrome at 360 × 740, 412 × 915 and 1400 × 900: equal left and right margins, nothing scrolls, races and roles fill the width, and accepting created the avatar in its slot (a local test player). **Not deployed.**
+
 ## 2026-11-12 — Unreleased: welcome screen on phones, and https for testing on a phone
 
 - **Fix (reported by Babuni on a phone):** the welcome panel ("Welcome, Adventurer!" and the New Journey form) sat off-centre and ran past the right edge on phones: its width was 86 % of the screen plus its own padding, more than the space inside the screen margin. It now includes its padding and fits the screen (`OnboardingGateway.tsx`).

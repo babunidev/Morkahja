@@ -92,6 +92,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Development bots for multiplayer testing (always playing, waiting helper, on-and-off player), using items, then skills, then dice.
 - [ ] Mobile layout pass: the standalone targeted desktop; phones take a separate full-screen path and some sizes are fixed pixels on the 390-wide canvas.
   - [x] First step (2026-11-12): the game screen and notifications are centred and fit the screen on phones; still to check on real devices, and the dashboard and overlays on phones.
+  - [x] Welcome screen and avatar creation fit and are centred on phones (2026-11-12); avatar creation rearranged to Babuni's layout.
 - [ ] Line frame with wait timer on the bottom edge (D-013): implemented locally 2026-11-12, waiting for Babuni's play test and release.
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
 - [x] Fixed and released (`e78cde2f`, 2026-11-11): a level-up event could be played twice after leaving or reloading mid-event (rewards twice).
