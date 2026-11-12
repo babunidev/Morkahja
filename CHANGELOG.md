@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-12 — Unreleased: collected items show in the inventory at once
+
+- **Fix (Babuni's report):** a collected reward only appeared in the Inventory or Skillbook from the next encounter, because the server adds rewards and removes losses when the round is committed, on Continue, and the panels showed the server's inventory. The game screen now keeps the rewards and losses collected from the current result and shows them on top of the server's inventory in the Inventory and Skillbook panels and the avatar's essence row (`client/src/ui/game/collectedInventory.ts`). It applies only while the same encounter is shown; the next encounter's committed inventory then takes over, so nothing is counted twice. Solution availability and the server's records are unchanged. The lore gem is not an inventory item and is left out. New tests in `collectedInventory.test.ts`.
+- **Verification:** client typecheck, tests (14) and production build passed. **Not deployed.**
+
 ## 2026-11-11 — Deployed: level-up event no longer plays twice; lore gem flies to the avatar (`main` at `e78cde2f`, PR #26)
 
 - **Fix: a level-up event could be played twice, with its rewards granted twice.** Choosing in a system event and then leaving a solo adventure, or only going away (page reload, switching tab or window), committed the event on the leave path (`commitParticipantOutcomeOnLeave`) but left the room on it, so the player could play the same event again on return. That path also added the room XP bonus to the level-up event. When the player stays listed in the room, the leave and away paths now defer the system event, and `resolveSystemEventLeftByActor` resolves it through the same routine as Continue, once, and moves the room on (`server/src/services/roomService.ts`). Found from Babuni's report; the event log showed it for Babuni's local avatar and an early bot. New test `server/src/services/systemEventLeaveOnce.test.ts` (leave and away) fails on the old code and passes now.

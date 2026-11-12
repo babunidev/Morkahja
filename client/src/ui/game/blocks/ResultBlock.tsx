@@ -17,6 +17,7 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import type { CollectedInventoryChange } from '../collectedInventory.js';
 import {
   animationAlreadyPlayed,
   claimAnimationOnce,
@@ -403,6 +404,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     roll,
     usedSolutionIds = [],
     lostSolutionIds = [],
+    onItemCollected,
   }: {
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
@@ -429,6 +431,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     roll: number | null;
     usedSolutionIds?: number[];
     lostSolutionIds?: number[];
+    /** A reward or loss the player just collected (so the inventory can show it at once). */
+    onItemCollected?: (change: CollectedInventoryChange) => void;
   },
   ref,
 ) {
@@ -1026,6 +1030,17 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     collectedRef.current = new Set(collectedRef.current).add(key);
     setCollected(collectedRef.current);
+    // Show it in the inventory now; the server commits it when the round continues.
+    const collectedChange = isReward
+      ? rewards.find((reward) => reward.solution.mSolutionID === solutionId)
+      : losses.find((loss) => loss.solution.mSolutionID === solutionId);
+    if (collectedChange && solutionId !== LORE_GEM_REWARD_ID) {
+      onItemCollected?.({
+        solutionId,
+        quantity: collectedChange.quantity,
+        kind: isReward ? 'reward' : 'loss',
+      });
+    }
     const isLast = collectibleKeys.every((candidate) => collectedRef.current.has(candidate));
     playSfx(isLast ? CONTINUE_SOUND : DEFAULT_BUTTON_SOUND);
 

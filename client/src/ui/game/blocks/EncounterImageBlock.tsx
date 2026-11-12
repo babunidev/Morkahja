@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
+import type { CollectedInventoryChange } from '../collectedInventory.js';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -150,6 +151,8 @@ export function EncounterImageBlock({
   showLoreGemReward = false,
   imageSrc,
   inventory,
+  displayInventory,
+  onItemCollected,
   inventoryOpen,
   localContinuePressed = false,
   loreOpen,
@@ -188,6 +191,9 @@ export function EncounterImageBlock({
   showLoreGemReward?: boolean;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
+  /** Inventory shown in the Inventory and Skillbook panels, including items collected this round. */
+  displayInventory?: AvatarInventory;
+  onItemCollected?: (change: CollectedInventoryChange) => void;
   inventoryOpen: boolean;
   localContinuePressed?: boolean;
   loreOpen: boolean;
@@ -684,6 +690,7 @@ export function EncounterImageBlock({
           roll={outcomeRoll ?? revealedRoll}
           usedSolutionIds={usedSolutionIds}
           lostSolutionIds={serverResolution?.lostInventorySolutions ?? []}
+          onItemCollected={onItemCollected}
         />
       ) : null}
       <SolutionBlock
@@ -716,8 +723,8 @@ export function EncounterImageBlock({
         title={title}
         visible={loreOpen}
       />
-      <SkillbookBlock inventory={inventory} visible={skillbookOpen} />
-      <InventoryBlock inventory={inventory} visible={inventoryOpen} />
+      <SkillbookBlock inventory={displayInventory ?? inventory} visible={skillbookOpen} />
+      <InventoryBlock inventory={displayInventory ?? inventory} visible={inventoryOpen} />
       </div>
     </section>
   );

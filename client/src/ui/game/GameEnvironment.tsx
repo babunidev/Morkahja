@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { gameEncounters } from '../../data/gameContent.js';
+import { gameEncounters, gameSolutions } from '../../data/gameContent.js';
 import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
@@ -64,6 +64,11 @@ import {
   runEncounterAdvanceTransition,
 } from './roomAdvanceOrchestrator.js';
 import { assetUrl } from '../../assetUrl.js';
+import {
+  inventoryWithCollected,
+  type CollectedInventoryChange,
+  type CollectedSolutionInfo,
+} from './collectedInventory.js';
 
 const ENCOUNTER_IMAGE_ROOT = assetUrl('/game/encounterimages');
 
@@ -185,6 +190,16 @@ export function GameEnvironment({
 }: GameEnvironmentProps) {
   const [visible, setVisible] = useState(!deferReveal);
   const [footerReadyToken, setFooterReadyToken] = useState(0);
+  /**
+   * Rewards and losses collected from the current result, shown in the
+   * inventory at once; the server commits them when the round continues. Only
+   * applied while the same encounter is shown, so the next encounter's
+   * committed inventory takes over without counting anything twice.
+   */
+  const [collectedThisResult, setCollectedThisResult] = useState<{
+    snapshotId: string;
+    changes: CollectedInventoryChange[];
+  } | null>(null);
   const footerReadyFiredRef = useRef(false);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [encounter, setEncounter] = useState(initialEncounter);
@@ -718,6 +733,30 @@ export function GameEnvironment({
     }
   }
 
+  function handleItemCollected(change: CollectedInventoryChange): void {
+    const snapshotId = encounter.snapshotId;
+    setCollectedThisResult((current) => ({
+      snapshotId,
+      changes: current?.snapshotId === snapshotId ? [...current.changes, change] : [change],
+    }));
+  }
+
+  const collectedChanges = collectedThisResult?.snapshotId === encounter.snapshotId
+    ? collectedThisResult.changes
+    : [];
+  const displayInventory = useMemo(
+    () => inventoryWithCollected(
+      avatar.inventory,
+      collectedChanges,
+      (solutionId) => (gameSolutions() as Record<string, CollectedSolutionInfo | undefined>)[String(solutionId)],
+    ),
+    [avatar.inventory, collectedChanges],
+  );
+  const displayAvatar = useMemo(
+    () => (displayInventory === avatar.inventory ? avatar : { ...avatar, inventory: displayInventory }),
+    [avatar, displayInventory],
+  );
+
   const helpCalled = room?.helpCalledForEncounter ?? false;
 
   async function handleCallForHelp(): Promise<void> {
@@ -903,6 +942,8 @@ export function GameEnvironment({
               showLoreGemReward={showLoreGemReward}
               imageSrc={imagePath(encounterImageName)}
               inventory={avatar.inventory}
+              displayInventory={displayInventory}
+              onItemCollected={handleItemCollected}
               inventoryOpen={inventoryOpen}
               localContinuePressed={localHasContinuePressed}
               loreOpen={loreOpen}
@@ -935,7 +976,7 @@ export function GameEnvironment({
         partyZone={(
           <div style={{ width: '100%', height: '100%', ...bottomDelay }}>
             <PartyZone
-              avatar={avatar}
+              avatar={displayAvatar}
               hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
               onAvatarDetailsVisibleChange={setHomeVisible}
