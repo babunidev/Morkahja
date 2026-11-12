@@ -170,6 +170,10 @@ const gridTooltipShellStyle: CSSProperties = {
 /** Gold of the tooltip's frame and title, for the corner that points at the item. */
 const TOOLTIP_GOLD = '#ffcc66';
 const CORNER_BRACKET_PX = 14;
+/** Soft, short fade in and out for item tooltips. */
+const TOOLTIP_FADE_MS = 120;
+const TOOLTIP_FADE_KEYFRAMES = '@keyframes morkahja-grid-tooltip-in { from { opacity: 0; } to { opacity: 1; } }'
+  + ' @keyframes morkahja-grid-tooltip-out { from { opacity: 1; } to { opacity: 0; } }';
 
 /**
  * A gold marker where the tooltip touches its item: a corner bracket with a
@@ -355,6 +359,12 @@ export function SolutionGridOverlay({
   const activeTriggerRef = useRef<HTMLElement | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<GridTooltipState | null>(null);
+  /** The previous tooltip, kept on screen while it fades out. */
+  const [fadingTooltip, setFadingTooltip] = useState<{
+    key: number;
+    item: SolutionGridEntry;
+    placement: { left: number; top: number; corner: TooltipCorner };
+  } | null>(null);
   const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number; corner: TooltipCorner } | null>(
     null,
   );
@@ -386,6 +396,18 @@ export function SolutionGridOverlay({
     setTooltipPlacement(null);
     activeTriggerRef.current = null;
   }, [itemSignature]);
+
+  useEffect(() => {
+    if (!fadingTooltip) {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setFadingTooltip(null);
+    }, TOOLTIP_FADE_MS);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fadingTooltip]);
 
   useLayoutEffect(() => {
     if (!tooltip || !overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
@@ -446,6 +468,9 @@ export function SolutionGridOverlay({
     }
 
     const anchorX = anchorXForGridColumn(columnIndex, GRID_COLUMNS);
+    if (activeTriggerRef.current !== trigger) {
+      retireShownTooltip();
+    }
     activeTriggerRef.current = trigger;
     setSelectedItemId(item.solutionId);
     setTooltipPlacement(null);
@@ -455,7 +480,15 @@ export function SolutionGridOverlay({
     });
   }
 
+  /** Let the tooltip on screen fade out instead of vanishing. */
+  function retireShownTooltip(): void {
+    if (tooltip && tooltipPlacement) {
+      setFadingTooltip({ key: Date.now(), item: tooltip.item, placement: tooltipPlacement });
+    }
+  }
+
   function hideItemTooltip(): void {
+    retireShownTooltip();
     activeTriggerRef.current = null;
     setTooltip(null);
     setTooltipPlacement(null);
@@ -496,6 +529,7 @@ export function SolutionGridOverlay({
     >
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
+        {TOOLTIP_FADE_KEYFRAMES}
       </style>
       <DecorativeEdgeFrame zIndex={27} />
       <div style={panelTitleWrapStyle}>
@@ -587,12 +621,30 @@ export function SolutionGridOverlay({
             ...gridTooltipShellStyle,
             left: tooltipPlacement?.left ?? tooltip.anchor.x,
             top: tooltipPlacement?.top ?? tooltip.anchor.y,
-            // Measured first, then shown in place: no flash in the wrong spot.
+            // Measured first, then faded in place: no flash in the wrong spot.
             visibility: tooltipPlacement ? 'visible' : 'hidden',
+            animation: tooltipPlacement
+              ? `morkahja-grid-tooltip-in ${TOOLTIP_FADE_MS}ms ease-out`
+              : 'none',
           }}
         >
           <SolutionGridTooltipPanel item={tooltip.item} />
           {tooltipPlacement ? tooltipCornerMarker(tooltipPlacement.corner) : null}
+        </div>
+      ) : null}
+      {fadingTooltip ? (
+        <div
+          aria-hidden="true"
+          key={fadingTooltip.key}
+          style={{
+            ...gridTooltipShellStyle,
+            left: fadingTooltip.placement.left,
+            top: fadingTooltip.placement.top,
+            animation: `morkahja-grid-tooltip-out ${TOOLTIP_FADE_MS}ms ease-in forwards`,
+          }}
+        >
+          <SolutionGridTooltipPanel item={fadingTooltip.item} />
+          {tooltipCornerMarker(fadingTooltip.placement.corner)}
         </div>
       ) : null}
     </aside>
