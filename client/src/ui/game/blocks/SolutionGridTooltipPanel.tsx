@@ -3,8 +3,7 @@ import type { SolutionGridEntry } from './SolutionGridOverlay.js';
 
 const tooltipPanelStyle: CSSProperties = {
   width: '100%',
-  maxHeight: 'min(32vh, 200px)',
-  overflow: 'auto',
+  overflow: 'visible',
   padding: '6px 10px',
   border: '1px solid rgba(255, 204, 102, 0.78)',
   borderRadius: 8,

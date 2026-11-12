@@ -779,8 +779,8 @@ export function SolutionBlock({
       shellStyle: {
         width: 220,
         maxWidth: 220,
-        maxHeight: 'min(42vh, 200px)',
-        overflow: 'auto',
+        // Sized by its text; never scrolls (the gold marker sits just outside the frame).
+        overflow: 'visible',
         textAlign: 'left',
         ...(info.unavailable ? unavailableSolutionTooltipStyle : {}),
         ...(compact ? compactDiceTooltipStyle : {}),
