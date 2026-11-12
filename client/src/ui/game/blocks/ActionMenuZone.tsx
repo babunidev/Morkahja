@@ -10,6 +10,8 @@ const FOOTER_READY_RATTLE_MS = 560;
 const FOOTER_READY_RATTLE_STAGGER_MS = 90;
 
 const footerButtonStyle: CSSProperties = {
+  flex: `0 1 ${GAME_SCREEN_LAYOUT.actionMenuButtonMaxWidthPx}px`,
+  minWidth: 0,
   width: '100%',
   maxWidth: GAME_SCREEN_LAYOUT.actionMenuButtonMaxWidthPx,
   padding: 0,

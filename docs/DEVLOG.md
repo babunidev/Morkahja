@@ -239,3 +239,7 @@ Right after the release I levelled up a new avatar twice and each time got the l
 
 After collecting a reward I opened the inventory and the item was not there; it only turned up in the next encounter. The server adds rewards when the round is committed, which happens on continuing, so a collected item was in limbo for one step. AI kept the game's single source of truth and changed only what is shown: the inventory panels and the avatar's essence row now include what was just collected or lost, until the next encounter arrives with the server's committed inventory. **Verification:** client typecheck, tests and build passed; my own check in the game is next. **Not deployed yet.**
 
+### Centred on every screen — 2026-11-12
+
+On my phone the game leaned to the left and the notifications at the top were off-centre. Phone-sized screenshots of a local test player showed why: the screen's layout grew to fit the party strip, which is wider than a phone, so everything started at the left edge and ran off the right, and the phone browser widened the page as well. The same quirk had nudged the desktop screen off-centre without my noticing. AI capped the layout at the screen width, let the party slots and menu buttons share a narrow screen, and kept the desktop proportions I had approved. **Verification:** measured and screenshotted at two phone sizes and on desktop; client tests and build passed; the test on my own phone comes next, on the local server. **Not deployed yet.**
+

@@ -8,7 +8,8 @@ import type {
 import AvatarPanel from '../../avatar/AvatarPanel.js';
 import type { AvatarDetailsSlotSide } from '../../avatar/AvatarPartyDetailsCard.js';
 import { PROTECTED_SURFACE_ATTR } from '../../protectedImage.js';
-import { partyStripStyle } from '../gameScreenLayout.js';
+import { GAME_SCREEN_LAYOUT, partyStripStyle } from '../gameScreenLayout.js';
+import { useLayoutMode } from '../../layout/useLayoutMode.js';
 import PartyEmptySlot from './PartyEmptySlot.js';
 import PartyMemberSlot from './PartyMemberSlot.js';
 
@@ -32,6 +33,17 @@ function slotSideForVisualIndex(visualIndex: number): AvatarDetailsSlotSide {
   return 'center';
 }
 
+/**
+ * Desktop keeps 148 px slots, which may spill past the 390 px design canvas into
+ * the letterbox. A phone has no letterbox, so there the three slots share the
+ * screen width instead of running off its edge.
+ */
+function partySlotWidth(mobilePortrait: boolean): number | string {
+  return mobilePortrait
+    ? `min(${PARTY_SLOT_WIDTH}px, calc((100% - ${2 * GAME_SCREEN_LAYOUT.partySlotGap}px) / 3))`
+    : PARTY_SLOT_WIDTH;
+}
+
 function mainAvatarAnchorStyle(): CSSProperties {
   return {
     position: 'relative',
@@ -42,10 +54,11 @@ function mainAvatarAnchorStyle(): CSSProperties {
   };
 }
 
-function partySlotVisualStyle(avatarDetailsOpen: boolean): CSSProperties {
+function partySlotVisualStyle(avatarDetailsOpen: boolean, mobilePortrait: boolean): CSSProperties {
   return {
     ...partySlotStyle,
-    width: PARTY_SLOT_WIDTH,
+    width: partySlotWidth(mobilePortrait),
+    minWidth: 0,
     zIndex: avatarDetailsOpen ? 40 : 8,
   };
 }
@@ -75,6 +88,7 @@ export function PartyZone({
   localXpGainAmount?: number;
   partyXpPulseByPlayer?: Record<string, number>;
 }) {
+  const mobilePortrait = useLayoutMode().mode === 'mobile-portrait';
   const [openSlotMenu, setOpenSlotMenu] = useState<number | null>(null);
   const [openDetailsSlots, setOpenDetailsSlots] = useState<Record<number, boolean>>({});
   const localPlayerId = room?.participants.find((participant) => participant.isLocal)?.playerId;
@@ -111,7 +125,7 @@ export function PartyZone({
               aria-label={`Your party slot ${slotIndex + 1}`}
               key={`slot-${visualIndex}-${slotIndex}`}
               {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-              style={partySlotVisualStyle(detailsOpen)}
+              style={partySlotVisualStyle(detailsOpen, mobilePortrait)}
             >
               <div style={mainAvatarAnchorStyle()}>
                 <AvatarPanel
@@ -139,7 +153,7 @@ export function PartyZone({
             <div
               key={`slot-${visualIndex}-${slotIndex}`}
               {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-              style={partySlotVisualStyle(detailsOpen)}
+              style={partySlotVisualStyle(detailsOpen, mobilePortrait)}
             >
               <PartyMemberSlot
                 canKick={canManageSlots}
@@ -161,7 +175,7 @@ export function PartyZone({
           <div
             key={`slot-${visualIndex}-${slotIndex}`}
             {...{ [PROTECTED_SURFACE_ATTR]: '' }}
-            style={partySlotVisualStyle(false)}
+            style={partySlotVisualStyle(false, mobilePortrait)}
           >
             <PartyEmptySlot
               animationDelayMs={slotIndex * 420}

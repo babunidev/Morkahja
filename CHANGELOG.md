@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-12 — Unreleased: game screen centred on phones and desktop
+
+- **Fix (Babuni's report):** on phones the game screen was anchored to the left and cut off on the right, and the pop-up notifications sat off-centre. The layout grid's column grew to the party strip's width (three 148 px slots and gaps, 464 px), wider than a phone; phone browsers then also widened the page, which moved the fixed-position notifications. The grid column is now capped at the stage width (`minmax(0, 1fr)` in `gameScreenLayout.ts`), the party slots share the screen width on phones (desktop keeps 148 px), and the action menu's buttons may shrink when the row is narrower than 378 px. The same overflow had placed the desktop game about 37 design pixels (48 screen pixels at 1400 × 900) right of centre; it is now centred.
+- **Verification:** measured in headless Chrome with a local test player at 360 × 780, 412 × 915 and 1400 × 900: every zone spans the screen (phones) or sits equally far from both edges (desktop, 447 px each side), the menu fits, and a Call-for-help notification is centred (14 px from each edge at 360 wide). Client typecheck, tests and production build passed. Real phones not yet tested. **Not deployed.**
+
 ## 2026-11-12 — Unreleased: collected items show in the inventory at once
 
 - **Fix (Babuni's report):** a collected reward only appeared in the Inventory or Skillbook from the next encounter, because the server adds rewards and removes losses when the round is committed, on Continue, and the panels showed the server's inventory. The game screen now keeps the rewards and losses collected from the current result and shows them on top of the server's inventory in the Inventory and Skillbook panels and the avatar's essence row (`client/src/ui/game/collectedInventory.ts`). It applies only while the same encounter is shown; the next encounter's committed inventory then takes over, so nothing is counted twice. Solution availability and the server's records are unchanged. The lore gem is not an inventory item and is left out. New tests in `collectedInventory.test.ts`.
