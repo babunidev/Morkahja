@@ -243,3 +243,7 @@ After collecting a reward I opened the inventory and the item was not there; it 
 
 On my phone the game leaned to the left and the notifications at the top were off-centre. Phone-sized screenshots of a local test player showed why: the screen's layout grew to fit the party strip, which is wider than a phone, so everything started at the left edge and ran off the right, and the phone browser widened the page as well. The same quirk had nudged the desktop screen off-centre without my noticing. AI capped the layout at the screen width, let the party slots and menu buttons share a narrow screen, and kept the desktop proportions I had approved. **Verification:** measured and screenshotted at two phone sizes and on desktop; client tests and build passed; the test on my own phone comes next, on the local server. **Not deployed yet.**
 
+### Tooltips that point at their item — 2026-11-12
+
+Item descriptions in the Inventory and Skillbook sometimes slid under the frame or off the picture. What I wanted, as I described it: open toward the middle of the picture from wherever the item sits, hold on to the item by one corner, and mark that corner in gold so the two read as connected. AI implemented the placement as a small tested rule bounded by the picture itself, and found along the way that on desktop the tooltip had been positioned in the stage's unscaled pixels while measured in screen pixels. **Verification:** measured in the browser on desktop and two phone sizes; client tests and build passed. **Not deployed yet.**
+

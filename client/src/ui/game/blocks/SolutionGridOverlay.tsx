@@ -5,15 +5,16 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import { gameSolutions } from '../../../data/gameContent.js';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
   anchorXForGridColumn,
   anchoredTooltipCoords,
-  clampAnchoredTooltipPlacement,
-  tooltipTransform,
+  placeTooltipTowardCenter,
   type AnchoredTooltipCoords,
+  type TooltipCorner,
 } from '../../hooks/anchoredTooltip.js';
 import {
   useTooltipRevealBinding,
@@ -166,6 +167,51 @@ const gridTooltipShellStyle: CSSProperties = {
   boxSizing: 'border-box',
 };
 
+/** Gold of the tooltip's frame and title, for the corner that points at the item. */
+const TOOLTIP_GOLD = '#ffcc66';
+const CORNER_BRACKET_PX = 14;
+
+/** A gold corner bracket and a small diamond just outside it, pointing at the item. */
+function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
+  const top = corner.startsWith('top');
+  const left = corner.endsWith('left');
+  const edge = (horizontal: 'left' | 'right', vertical: 'top' | 'bottom', offset: number): CSSProperties => ({
+    [horizontal]: offset,
+    [vertical]: offset,
+  });
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          ...edge(left ? 'left' : 'right', top ? 'top' : 'bottom', -1),
+          width: CORNER_BRACKET_PX,
+          height: CORNER_BRACKET_PX,
+          [top ? 'borderTop' : 'borderBottom']: `2px solid ${TOOLTIP_GOLD}`,
+          [left ? 'borderLeft' : 'borderRight']: `2px solid ${TOOLTIP_GOLD}`,
+          [`border${top ? 'Top' : 'Bottom'}${left ? 'Left' : 'Right'}Radius`]: 8,
+          boxSizing: 'border-box',
+          pointerEvents: 'none',
+        }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          ...edge(left ? 'left' : 'right', top ? 'top' : 'bottom', -7),
+          width: 7,
+          height: 7,
+          background: TOOLTIP_GOLD,
+          transform: 'rotate(45deg)',
+          boxShadow: '0 0 6px rgba(255, 204, 102, 0.6)',
+          pointerEvents: 'none',
+        }}
+      />
+    </>
+  );
+}
+
 type GridTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 
 interface GridTooltipState {
@@ -270,7 +316,7 @@ export function SolutionGridOverlay({
   const activeTriggerRef = useRef<HTMLElement | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<GridTooltipState | null>(null);
-  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(
+  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number; corner: TooltipCorner } | null>(
     null,
   );
   const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
@@ -307,7 +353,6 @@ export function SolutionGridOverlay({
       return;
     }
 
-    const anchorX = tooltip.anchor.anchorX;
     const container = overlayRef.current;
     const trigger = activeTriggerRef.current;
     const tooltipElement = tooltipRef.current;
@@ -325,14 +370,21 @@ export function SolutionGridOverlay({
         return;
       }
 
-      setTooltipPlacement(
-        clampAnchoredTooltipPlacement(
-          containerRect,
-          triggerRect,
-          tooltipRect,
-          anchorX,
-        ),
-      );
+      // Toward the middle of the picture, anchored by a corner, clear of the frame.
+      // Bounded by the encounter picture itself (the panel can be taller than
+      // it), then converted to the panel's coordinates.
+      const pictureRect = container.closest('[data-morkahja-encounter-art]')?.getBoundingClientRect()
+        ?? document.querySelector('[data-morkahja-encounter-art]')?.getBoundingClientRect()
+        ?? containerRect;
+      const placement = placeTooltipTowardCenter(pictureRect, triggerRect, tooltipRect);
+      // Measurements are screen pixels; on desktop the stage is scaled, and the
+      // tooltip is positioned in the stage's own (unscaled) pixels.
+      const scale = container.offsetWidth > 0 ? containerRect.width / container.offsetWidth : 1;
+      setTooltipPlacement({
+        ...placement,
+        left: (placement.left + pictureRect.left - containerRect.left) / scale,
+        top: (placement.top + pictureRect.top - containerRect.top) / scale,
+      });
     }
 
     measureAndPlace();
@@ -496,12 +548,12 @@ export function SolutionGridOverlay({
             ...gridTooltipShellStyle,
             left: tooltipPlacement?.left ?? tooltip.anchor.x,
             top: tooltipPlacement?.top ?? tooltip.anchor.y,
-            transform: tooltipPlacement
-              ? 'none'
-              : tooltipTransform(tooltip.anchor.anchorX),
+            // Measured first, then shown in place: no flash in the wrong spot.
+            visibility: tooltipPlacement ? 'visible' : 'hidden',
           }}
         >
           <SolutionGridTooltipPanel item={tooltip.item} />
+          {tooltipPlacement ? tooltipCornerMarker(tooltipPlacement.corner) : null}
         </div>
       ) : null}
     </aside>

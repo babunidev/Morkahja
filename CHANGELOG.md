@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-12 — Unreleased: inventory tooltips open toward the centre and stay in the picture
+
+- **Change (Babuni's direction):** Inventory and Skillbook tooltips were placed above an item (or below if needed) and clamped only to the panel, which reaches under the frame, so they could slide under the frame or be cut off. They now open toward the middle of the picture (right of an item on the left, above an item in the lower half, and so on), anchored by the tooltip's nearest corner a short diagonal distance from the item's centre, with a gold corner bracket and marker in the tooltip's title colour pointing at the item. They stay at least 14 px inside the encounter picture, flipping or clamping when needed (`placeTooltipTowardCenter` in `client/src/ui/hooks/anchoredTooltip.ts`, used by `SolutionGridOverlay`). Positions account for the scaled desktop stage, and a tooltip is shown only once placed.
+- **Verification:** new unit tests for the placement; in headless Chrome the first and last Inventory and Skillbook items at 1400 × 900, 412 × 915 and 360 × 780 showed tooltips fully inside the picture, opening toward its centre. Client tests (18) and production build passed. **Not deployed.**
+
 ## 2026-11-12 — Unreleased: game screen centred on phones and desktop
 
 - **Fix (Babuni's report):** on phones the game screen was anchored to the left and cut off on the right, and the pop-up notifications sat off-centre. The layout grid's column grew to the party strip's width (three 148 px slots and gaps, 464 px), wider than a phone; phone browsers then also widened the page, which moved the fixed-position notifications. The grid column is now capped at the stage width (`minmax(0, 1fr)` in `gameScreenLayout.ts`), the party slots share the screen width on phones (desktop keeps 148 px), and the action menu's buttons may shrink when the row is narrower than 378 px. The same overflow had placed the desktop game about 37 design pixels (48 screen pixels at 1400 × 900) right of centre; it is now centred.
