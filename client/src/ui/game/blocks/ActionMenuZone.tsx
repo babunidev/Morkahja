@@ -11,8 +11,8 @@ function menuTooltip(alt: string, helpCalled: boolean): GameTooltipContent {
   const text: Record<string, [string, string]> = {
     'Get help': helpCalled
       ? ['Call for help', 'Help has already been called for this encounter']
-      : ['Call for help', 'Call nearby adventurers and friends to help with this encounter'],
-    Inventory: ['Inventory', 'The items you carry to solve encounters'],
+      : ['Call for help', 'Call nearby adventurers to help!'],
+    Inventory: ['Inventory', 'The items you carry'],
     Skillbook: ['Skillbook', 'Your skills and spells'],
     Lore: ['Lore', 'Read the story of this encounter'],
   };
