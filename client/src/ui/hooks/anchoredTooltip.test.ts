@@ -36,3 +36,15 @@ test('a tooltip too wide for either side next to a central item is still kept in
   assert.ok(p.left >= 14 && p.left + wide.width <= 386);
   assert.ok(p.top >= 14 && p.top + wide.height <= 386);
 });
+
+test('middle-column item: tooltip is centred on it, touching it with the middle of an edge', () => {
+  const lower = placeTooltipTowardCenter(container, item(200, 300), tooltip);
+  assert.equal(lower.corner, 'bottom-center');
+  assert.equal(lower.left, 200 - tooltip.width / 2);
+  assert.equal(lower.top, 300 - 30 - 6 - tooltip.height);
+  const upper = placeTooltipTowardCenter(container, item(200, 90), tooltip);
+  assert.equal(upper.corner, 'top-center');
+  assert.equal(upper.top, 90 + 30 + 6);
+  assert.ok(inside(lower) && inside(upper));
+});
+

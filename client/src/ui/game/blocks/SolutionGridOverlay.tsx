@@ -171,9 +171,48 @@ const gridTooltipShellStyle: CSSProperties = {
 const TOOLTIP_GOLD = '#ffcc66';
 const CORNER_BRACKET_PX = 14;
 
-/** A gold corner bracket and a small diamond just outside it, pointing at the item. */
+/**
+ * A gold marker where the tooltip touches its item: a corner bracket with a
+ * small diamond, or for a middle-column item a short edge line with a diamond
+ * in the middle of the top or bottom edge.
+ */
 function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
   const top = corner.startsWith('top');
+  if (corner.endsWith('center')) {
+    return (
+      <>
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            [top ? 'top' : 'bottom']: -1,
+            width: 2 * CORNER_BRACKET_PX,
+            height: 2,
+            background: TOOLTIP_GOLD,
+            transform: 'translateX(-50%)',
+            borderRadius: 1,
+            pointerEvents: 'none',
+          }}
+        />
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            [top ? 'top' : 'bottom']: -4,
+            width: 7,
+            height: 7,
+            marginLeft: -3.5,
+            background: TOOLTIP_GOLD,
+            transform: 'rotate(45deg)',
+            boxShadow: '0 0 6px rgba(255, 204, 102, 0.6)',
+            pointerEvents: 'none',
+          }}
+        />
+      </>
+    );
+  }
   const left = corner.endsWith('left');
   const edge = (horizontal: 'left' | 'right', vertical: 'top' | 'bottom', offset: number): CSSProperties => ({
     [horizontal]: offset,

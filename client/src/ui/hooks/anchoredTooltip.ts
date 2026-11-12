@@ -91,8 +91,17 @@ export function clampAnchoredTooltipPlacement(
   return { left, top };
 }
 
-/** Which corner of the tooltip touches the item. */
-export type TooltipCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+/**
+ * Where the tooltip touches the item: one of its corners, or the middle of its
+ * top or bottom edge for an item in the middle column.
+ */
+export type TooltipCorner =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'bottom-center';
 
 export interface CornerAnchoredPlacement {
   /** Position of the tooltip relative to the container. */
@@ -133,6 +142,26 @@ export function placeTooltipTowardCenter(
   let goRight = centerX <= containerRect.width / 2;
   let goUp = centerY > containerRect.height / 2;
 
+  const clamp = (value: number, low: number, high: number): number => (
+    high < low ? low : Math.max(low, Math.min(value, high))
+  );
+
+  // An item in the middle column: centre the tooltip on it, above or below,
+  // touching it with the middle of an edge (a corner would point at a neighbour).
+  if (Math.abs(centerX - containerRect.width / 2) <= triggerRect.width / 2) {
+    const gap = 6;
+    const above = centerY - triggerRect.height / 2 - gap - height;
+    const below = centerY + triggerRect.height / 2 + gap;
+    let up = goUp;
+    if (up && above < minY && below + height <= maxY) up = false;
+    if (!up && below + height > maxY && above >= minY) up = true;
+    return {
+      left: clamp(centerX - width / 2, minX, maxX - width),
+      top: clamp(up ? above : below, minY, maxY - height),
+      corner: up ? 'bottom-center' : 'top-center',
+    };
+  }
+
   const leftFor = (right: boolean): number => (right ? centerX + offset : centerX - offset - width);
   const topFor = (up: boolean): number => (up ? centerY - offset - height : centerY + offset);
   const fitsX = (left: number): boolean => left >= minX && left + width <= maxX;
@@ -145,9 +174,6 @@ export function placeTooltipTowardCenter(
     goUp = !goUp;
   }
 
-  const clamp = (value: number, low: number, high: number): number => (
-    high < low ? low : Math.max(low, Math.min(value, high))
-  );
   return {
     left: clamp(leftFor(goRight), minX, maxX - width),
     top: clamp(topFor(goUp), minY, maxY - height),
