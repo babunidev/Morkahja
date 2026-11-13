@@ -21,7 +21,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
   gap: 12,
@@ -34,6 +35,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {

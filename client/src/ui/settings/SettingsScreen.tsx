@@ -17,6 +17,7 @@ import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
 import PatchNotesOverlay from './PatchNotesOverlay.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -33,7 +34,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 420px)',
   maxHeight: 'min(90vh, 720px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
@@ -45,6 +47,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const panelHeaderStyle: CSSProperties = {
@@ -98,7 +101,7 @@ const panelFooterStyle: CSSProperties = {
   // Inside the panel's line frame, so its edge and background stay clear of it.
   margin: '0 9px 9px',
   padding: '12px 9px 7px',
-  borderTop: '1px solid rgba(255, 204, 102, 0.28)',
+  ...frameDividerStyle({ side: 'top' }),
   background: 'rgba(12, 7, 5, 0.98)',
 };
 
@@ -155,9 +158,7 @@ const actionButtonVisualStyle: CSSProperties = {
   justifyContent: 'center',
   minWidth: 120,
   minHeight: 38,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.95rem',
@@ -211,9 +212,7 @@ const patchNotesButtonVisualStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: '4px 14px',
-  border: '1px solid rgba(255, 204, 102, 0.5)',
-  borderRadius: 8,
-  background: 'transparent',
+  ...simpleFrameStyle({ opacity: 0.65 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.85rem',

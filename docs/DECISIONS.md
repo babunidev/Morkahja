@@ -122,3 +122,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own look or released. Exact line widths, the tooltip marker on the cut corner, and which smaller elements count as framed are AI choices open to change.
 
+## D-015 — Simple frame inside panels; the beta number counts development steps (2026-11-13)
+
+**Babuni's direction:** buttons "that have a simple yellow frame" and "the elements in the menus" get the new frame concept; around fields and entries "a simple one. So only the line that we have already, and then one interrupted line around it. No round edges", with the corner triangles. Dividers become "the line plus one disrupted line" that "could be connected to the frame by little triangles"; the achievement progress bar gets "the cut edges". Version: "It's definitely 0.9.0, but it is beta ... now it would be 22, and then ... every development step can be one number there."
+
+**AI implementation:** `simpleFrame.ts` (nine-slice SVG border image) for buttons, fields, cards, badges and bars; `frameDividerStyle` for dividers. Version 0.9.0-beta.42: 22 plus 20 steps, counting the 19 changelog entries since 0.9.0-beta.2.2 that changed the game, its deployment or its tests (documentation-only entries not counted) and this step.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Buttons use the simple frame, not the four-line panel frame (an AI choice; small buttons have little room). Each later development step raises the beta number by one.
+

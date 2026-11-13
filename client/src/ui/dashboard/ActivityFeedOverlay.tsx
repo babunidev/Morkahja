@@ -11,6 +11,7 @@ import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 const POLL_INTERVAL_MS = 10_000;
@@ -28,7 +29,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(72vh, 640px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
@@ -41,6 +43,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -84,23 +87,23 @@ function entryStyle(
   read: boolean,
 ): CSSProperties {
   const glow = importance === 'legendary'
-    ? '0 0 14px rgba(255, 204, 102, 0.45)'
+    ? 'drop-shadow(0 0 7px rgba(255, 204, 102, 0.45))'
     : importance === 'high'
-      ? '0 0 10px rgba(255, 140, 80, 0.28)'
-      : 'none';
+      ? 'drop-shadow(0 0 5px rgba(255, 140, 80, 0.28))'
+      : undefined;
 
   return {
     padding: '10px 12px',
-    borderRadius: 10,
-    border: read
-      ? '1px solid rgba(255, 204, 102, 0.18)'
-      : '1px solid rgba(255, 204, 102, 0.42)',
-    background: read ? 'rgba(24, 12, 8, 0.58)' : 'rgba(24, 12, 8, 0.82)',
-    boxShadow: read ? 'none' : glow,
+    ...simpleFrameStyle({
+      background: read ? 'rgba(24, 12, 8, 0.58)' : 'rgba(24, 12, 8, 0.82)',
+      opacity: read ? 0.4 : 0.75,
+    }),
+    // A glow that follows the cut corners.
+    filter: read ? undefined : glow,
     fontSize: '0.95rem',
     lineHeight: 1.45,
     opacity: read ? 0.78 : 1,
-    transition: 'opacity 280ms ease, border-color 280ms ease, background 280ms ease',
+    transition: 'opacity 280ms ease',
   };
 }
 
@@ -108,8 +111,7 @@ const unreadBadgeStyle: CSSProperties = {
   display: 'inline-block',
   marginLeft: 8,
   padding: '1px 7px',
-  borderRadius: 999,
-  border: '1px solid rgba(255, 204, 102, 0.55)',
+  ...simpleFrameStyle({ opacity: 0.72, scale: 0.6 }),
   color: '#ffcc66',
   fontSize: '0.68rem',
   letterSpacing: '0.08em',
@@ -120,8 +122,7 @@ const unreadBadgeStyle: CSSProperties = {
 const visibilityBadgeStyle: CSSProperties = {
   display: 'inline-block',
   padding: '1px 7px',
-  borderRadius: 999,
-  border: '1px solid rgba(255, 204, 102, 0.35)',
+  ...simpleFrameStyle({ opacity: 0.5, scale: 0.6 }),
   color: 'rgba(247, 239, 224, 0.82)',
   fontSize: '0.64rem',
   letterSpacing: '0.08em',
@@ -174,9 +175,7 @@ const timeStyle: CSSProperties = {
 const joinButtonStyle: CSSProperties = {
   marginTop: 8,
   padding: '6px 14px',
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 8,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   cursor: 'pointer',
   fontFamily: 'Georgia, serif',

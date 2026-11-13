@@ -5,6 +5,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -21,7 +22,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 480px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 516px)',
   maxHeight: 'min(88vh, 680px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
@@ -35,6 +37,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -79,7 +82,7 @@ const introStyle: CSSProperties = {
 const sectionStyle: CSSProperties = {
   margin: '0 0 20px',
   paddingBottom: 18,
-  borderBottom: '1px solid rgba(255, 204, 102, 0.22)',
+  ...frameDividerStyle({ side: 'bottom' }),
 };
 
 const sectionHeadingStyle: CSSProperties = {
@@ -473,7 +476,7 @@ export function PrivacyPolicyOverlay({
             </PolicyParagraph>
           </PolicySection>
 
-          <section style={{ ...sectionStyle, borderBottom: 0, paddingBottom: 0, marginBottom: 0 }}>
+          <section style={{ ...sectionStyle, borderWidth: 0, borderImageSource: 'none', paddingBottom: 0, marginBottom: 0 }}>
             <h3 style={sectionHeadingStyle}>12. Changes to This Policy</h3>
             <PolicyParagraph>
               This Privacy Policy may be updated over time to reflect changes to the game,

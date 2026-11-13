@@ -12,6 +12,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { GameTooltipFrame } from '../game/GameTooltip.js';
+import { frameDividerStyle, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -41,7 +42,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 380px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 416px)',
   display: 'grid',
   gap: 14,
   padding: '20px 18px 18px',
@@ -53,6 +55,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   textAlign: 'center',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -113,9 +116,7 @@ const donateButtonVisualStyle: CSSProperties = {
   justifyContent: 'center',
   width: '100%',
   minHeight: 42,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
@@ -138,7 +139,7 @@ const directDonateSectionStyle: CSSProperties = {
   display: 'grid',
   gap: 10,
   paddingTop: 12,
-  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+  ...frameDividerStyle({ side: 'top' }),
 };
 
 const directDonateButtonWrapStyle: CSSProperties = {

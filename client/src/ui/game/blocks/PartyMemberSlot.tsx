@@ -24,6 +24,7 @@ import {
   PARTY_BADGE_SIZE_PX,
   PartyParticipantChoiceBadge,
 } from './partyParticipantChoiceBadge.js';
+import { simpleFrameStyle } from '../../common/simpleFrame.js';
 
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
 
@@ -125,9 +126,7 @@ const xpPulseDotStyle: CSSProperties = {
 
 const kickButtonStyle: CSSProperties = {
   padding: '4px 10px',
-  borderRadius: 999,
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  background: 'rgba(40, 12, 8, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(40, 12, 8, 0.82)', opacity: 0.81, scale: 0.6 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.62rem',

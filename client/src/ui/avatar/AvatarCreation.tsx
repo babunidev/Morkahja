@@ -29,6 +29,7 @@ import { assetUrl } from '../../assetUrl.js';
 import { randomRingDashArray, seedFromText } from '../game/blocks/encounterFrameGeometry.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { GameTooltipFrame } from '../game/GameTooltip.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -347,10 +348,8 @@ const nameInputStyle: CSSProperties = {
   flexShrink: 0,
   width: 'min(100%, clamp(160px, 50vw, 260px))',
   padding: '6px 10px',
-  border: '1px solid #ffcc66',
-  borderRadius: 8,
+  ...simpleFrameStyle({ background: 'rgba(31, 12, 6, 0.78)', opacity: 0.95 }),
   boxSizing: 'border-box',
-  background: 'rgba(31, 12, 6, 0.78)',
   color: '#ffcc66',
   fontFamily: 'Breathe Fire, Georgia, serif',
   fontSize: 'clamp(18px, 4vw, 28px)',

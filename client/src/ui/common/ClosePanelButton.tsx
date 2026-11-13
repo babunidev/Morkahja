@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { PanelButton } from './PanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { simpleFrameStyle } from './simpleFrame.js';
 
 export const overlayCloseButtonVisualStyle: CSSProperties = {
   display: 'flex',
@@ -8,9 +9,7 @@ export const overlayCloseButtonVisualStyle: CSSProperties = {
   justifyContent: 'center',
   minWidth: 72,
   minHeight: 34,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   textAlign: 'center',

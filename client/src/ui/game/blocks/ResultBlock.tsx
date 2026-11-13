@@ -62,6 +62,7 @@ import {
   fadeTransition,
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { frameDividerStyle } from '../../common/simpleFrame.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -340,7 +341,7 @@ const rewardTooltipMetaStyle: CSSProperties = {
 const rewardTooltipTextStyle: CSSProperties = {
   margin: '2px 0 0',
   paddingTop: 4,
-  borderTop: '1px solid rgba(255, 204, 102, 0.22)',
+  ...frameDividerStyle({ side: 'top', bleed: 6 }),
   color: 'rgba(247, 239, 224, 0.9)',
   fontSize: '0.72rem',
   lineHeight: 1.35,

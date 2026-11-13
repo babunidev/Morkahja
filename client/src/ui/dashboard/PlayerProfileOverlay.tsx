@@ -21,6 +21,7 @@ import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle, simpleFrameVariant } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -37,7 +38,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(86vh, 620px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
@@ -51,6 +53,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -128,15 +131,12 @@ const slotCardStyle: CSSProperties = {
   gap: 14,
   alignItems: 'center',
   padding: '12px 14px',
-  border: '1px solid rgba(255, 204, 102, 0.28)',
-  borderRadius: 10,
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.5 }),
 };
 
 const emptySlotStyle: CSSProperties = {
   ...slotCardStyle,
-  borderStyle: 'dashed',
-  borderColor: 'rgba(255, 204, 102, 0.18)',
+  ...simpleFrameVariant({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.28 }),
 };
 
 const slotPortraitStyle: CSSProperties = {
@@ -201,9 +201,7 @@ const titleSelectStyle: CSSProperties = {
   maxWidth: 120,
   minHeight: 38,
   padding: '6px 8px',
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.82rem',
@@ -212,9 +210,7 @@ const titleSelectStyle: CSSProperties = {
 
 const emptySlotPortraitStyle: CSSProperties = {
   ...slotPortraitStyle,
-  borderRadius: 8,
-  border: '1px dashed rgba(255, 204, 102, 0.16)',
-  background: 'rgba(8, 5, 4, 0.35)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.35)', opacity: 0.5, scale: 0.8 }),
 };
 
 const emptySlotLabelStyle: CSSProperties = {
@@ -234,17 +230,15 @@ const diceButtonBaseStyle: CSSProperties = {
   gap: 6,
   justifyItems: 'center',
   padding: 8,
-  borderRadius: 10,
-  border: '1px solid rgba(255, 204, 102, 0.28)',
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.5 }),
   cursor: 'pointer',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
 };
 
 const diceButtonSelectedStyle: CSSProperties = {
-  borderColor: 'rgba(255, 204, 102, 0.88)',
-  boxShadow: '0 0 12px rgba(255, 204, 102, 0.35)',
+  ...simpleFrameVariant({ background: 'rgba(8, 5, 4, 0.55)', opacity: 1, color: '#ffcc66' }),
+  filter: 'drop-shadow(0 0 6px rgba(255, 204, 102, 0.4))',
 };
 
 const dicePreviewStyle: CSSProperties = {
@@ -270,9 +264,7 @@ const diceAddButtonVisualStyle: CSSProperties = {
   gap: 6,
   justifyItems: 'center',
   padding: 8,
-  borderRadius: 10,
-  border: '1px dashed rgba(255, 204, 102, 0.45)',
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.59 }),
   color: '#ffcc66',
   minWidth: 72,
   boxSizing: 'border-box',
@@ -299,9 +291,7 @@ const fameCardStyle: CSSProperties = {
   gap: 10,
   alignItems: 'center',
   padding: '10px 12px',
-  border: '1px solid rgba(180, 90, 70, 0.38)',
-  borderRadius: 10,
-  background: 'rgba(24, 8, 6, 0.62)',
+  ...simpleFrameStyle({ background: 'rgba(24, 8, 6, 0.62)', color: 'rgb(180, 90, 70)', opacity: 0.5 }),
 };
 
 const famePortraitStyle: CSSProperties = {

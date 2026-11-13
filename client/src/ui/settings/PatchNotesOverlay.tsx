@@ -6,6 +6,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -26,6 +27,50 @@ interface PatchRelease {
 
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
+  {
+    id: 'beta-42-nov-4-13',
+    version: '0.9.0-beta.42',
+    period: '4–13 Nov 2026',
+    groups: [
+      {
+        title: 'A new home',
+        notes: [
+          'Morkahja now lives at babuni.dev/Morkahja.',
+          'Game content comes from the server, so new encounters and fixes reach you on your next visit, and the game loads faster.',
+          'Three adventurers live in the world now: Varrokh, Sylvaen and Thalyss. Sylvaen and Thalyss answer Call for help.',
+        ],
+      },
+      {
+        title: 'The game screen',
+        notes: [
+          'A new game screen: the encounter picture on top, your party in the middle, and Call for help, Inventory, Skillbook and Lore below.',
+          'Rewards grow out of the encounter and losses fly in from where you kept them. Tap each one to collect it, and collecting the last one continues.',
+          'Collected items show in your Inventory and Skillbook at once.',
+          'A new frame around the encounter. Its bottom line is a timer that shrinks toward whatever you are waiting for: the dice, a solution, your rewards or Continue.',
+          'Tooltips everywhere on the game screen point at their item, open after a short pause, and appear on a long press on phones without using the item.',
+          'Playing alone, your avatar gets the whole space between the solutions and the buttons.',
+        ],
+      },
+      {
+        title: 'Phones and menus',
+        notes: [
+          'The game, the welcome screen, avatar creation and the menus fit and stay centred on phone screens.',
+          'Avatar creation is rearranged: all choices on top, a big avatar with its name below, and clear rings around what you picked.',
+          'Every panel, menu, button and tooltip has the new line frame with cut corners.',
+        ],
+      },
+      {
+        title: 'Fixes',
+        notes: [
+          'Turns no longer stall after choosing a solution or the dice.',
+          'A level-up can no longer be played twice, and the lore gem flies to your avatar.',
+          'Call for help now reaches players with a paused solo adventure.',
+          'Purchases, lore gems and joining a party are safe against double grants and races; rolls stay secret until you choose.',
+          'Fixed a screen that could freeze the browser tab during an encounter.',
+        ],
+      },
+    ],
+  },
   {
     id: 'beta-2-2-jun-8-9',
     version: '0.9.0-beta.2.2',
@@ -167,6 +212,15 @@ const PATCH_RELEASES: PatchRelease[] = [
 
 const FOOTER_NOTE =
   'You’re playing the public beta. More updates soon — thank you for testing Morkahja.';
+/** Every change in detail, in the public repository. */
+const CHANGELOG_URL = 'https://github.com/babunidev/Morkahja/blob/main/CHANGELOG.md';
+
+const changelogLinkStyle: CSSProperties = {
+  display: 'block',
+  marginTop: 6,
+  color: '#ffcc66',
+  fontSize: '0.82rem',
+};
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',
@@ -181,7 +235,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(86vh, 640px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
@@ -194,6 +249,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -243,7 +299,7 @@ const releaseBlockStyle: CSSProperties = {
   display: 'grid',
   gap: 10,
   paddingBottom: 16,
-  borderBottom: '1px solid rgba(255, 204, 102, 0.22)',
+  ...frameDividerStyle({ side: 'bottom', bleed: 2 }),
 };
 
 const releaseHeadingStyle: CSSProperties = {
@@ -290,7 +346,7 @@ const noteItemStyle: CSSProperties = {
 const footerNoteStyle: CSSProperties = {
   margin: 0,
   paddingTop: 10,
-  borderTop: '1px solid rgba(255, 204, 102, 0.28)',
+  ...frameDividerStyle({ side: 'top', bleed: 9 }),
   color: 'rgba(247, 239, 224, 0.78)',
   fontSize: '0.85rem',
   lineHeight: 1.5,
@@ -360,9 +416,9 @@ export function PatchNotesOverlay({
         <header style={headerStyle}>
           <div style={titleGroupStyle}>
             <h2 id="patch-notes-overlay-title" style={titleStyle}>
-              PATCH NOTES — {APP_VERSION}
+              PATCH NOTES
             </h2>
-            <p style={subtitleStyle}>Newest first</p>
+            <p style={subtitleStyle}>Version {APP_VERSION} · newest first</p>
           </div>
           <ClosePanelButton onClose={onClose} pressKey="patch-notes-close" />
         </header>
@@ -377,7 +433,7 @@ export function PatchNotesOverlay({
                 style={{
                   ...releaseBlockStyle,
                   ...(releaseIndex === PATCH_RELEASES.length - 1
-                    ? { borderBottom: 'none', paddingBottom: 0 }
+                    ? { borderWidth: 0, borderImageSource: 'none', paddingBottom: 0 }
                     : {}),
                 }}
               >
@@ -400,7 +456,12 @@ export function PatchNotesOverlay({
           </div>
         </div>
         <footer>
-          <p style={footerNoteStyle}>{FOOTER_NOTE}</p>
+          <p style={footerNoteStyle}>
+            {FOOTER_NOTE}
+            <a href={CHANGELOG_URL} rel="noopener noreferrer" style={changelogLinkStyle} target="_blank">
+              Full changelog
+            </a>
+          </p>
         </footer>
       </section>
     </div>

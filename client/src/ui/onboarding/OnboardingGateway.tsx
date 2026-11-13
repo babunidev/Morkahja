@@ -26,6 +26,7 @@ import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 async function signedBootstrapInput(
   device: StoredKeypair,
@@ -142,9 +143,7 @@ const panelButtonVisualStyle: CSSProperties = {
   width: '100%',
   minHeight: 44,
   padding: '10px 16px',
-  border: '1px solid rgba(255, 204, 102, 0.7)',
-  borderRadius: 10,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.91 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
@@ -176,9 +175,7 @@ const fullWidthPanelButtonStyle: CSSProperties = {
 const fieldStyle: CSSProperties = {
   minHeight: 40,
   padding: '0 12px',
-  border: '1px solid rgba(255, 204, 102, 0.65)',
-  borderRadius: 8,
-  background: 'rgba(255, 240, 200, 0.92)',
+  ...simpleFrameStyle({ background: 'rgba(255, 240, 200, 0.92)', opacity: 0.85 }),
   color: '#330000',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',

@@ -8,6 +8,7 @@ import {
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -153,7 +154,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(86vh, 620px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
@@ -166,6 +168,7 @@ const panelStyle: CSSProperties = {
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -202,13 +205,11 @@ const donateFooterStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
   paddingTop: 8,
-  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+  ...frameDividerStyle({ side: 'top', bleed: 9 }),
 };
 
 const creditCardStyle: CSSProperties = {
-  border: '1px solid rgba(255, 204, 102, 0.38)',
-  borderRadius: 10,
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.5 }),
   overflow: 'hidden',
 };
 
@@ -315,7 +316,7 @@ const creditLinkFooterStyle: CSSProperties = {
 const costTotalTodayStyle: CSSProperties = {
   margin: '4px 0 0',
   paddingTop: 12,
-  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+  ...frameDividerStyle({ side: 'top' }),
 };
 
 const costTotalTodayLabelStyle: CSSProperties = {

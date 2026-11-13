@@ -8,6 +8,7 @@ import {
 } from '../../protectedImage.js';
 import { assetUrl } from '../../../assetUrl.js';
 import { GameTooltipFrame } from '../GameTooltip.js';
+import { simpleFrameStyle, simpleFrameVariant } from '../../common/simpleFrame.js';
 
 const LOCK_ICON = assetUrl('/UI/01_1_SignIn/LOCK.png');
 const FRIENDS_ICON = assetUrl('/UI/07_FriendsMenu/FriendsButt.webp');
@@ -60,9 +61,7 @@ const menuStyle: CSSProperties = {
 const menuOptionStyle: CSSProperties = {
   margin: 0,
   padding: '7px 10px',
-  border: '1px solid rgba(255, 204, 102, 0.28)',
-  borderRadius: 8,
-  background: 'rgba(24, 14, 8, 0.92)',
+  ...simpleFrameStyle({ background: 'rgba(24, 14, 8, 0.92)', opacity: 0.5 }),
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.82rem',
@@ -72,8 +71,7 @@ const menuOptionStyle: CSSProperties = {
 };
 
 const menuOptionActiveStyle: CSSProperties = {
-  borderColor: 'rgba(255, 204, 102, 0.82)',
-  background: 'rgba(48, 28, 12, 0.96)',
+  ...simpleFrameVariant({ background: 'rgba(48, 28, 12, 0.96)', opacity: 1 }),
   color: '#ffcc66',
 };
 
