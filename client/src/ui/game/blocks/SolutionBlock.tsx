@@ -28,7 +28,17 @@ import {
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
 import { allocateSolutionSetPicks, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
-import { solutionSetSize, type SolutionSetPickAllocation } from '@shared/solutionSet';
+import { solutionSetSize } from '@shared/solutionSet';
+
+/** A locked pick of a solution set, as the server reveals it (D-025). */
+export interface SolutionSetPickRecordView {
+  slot: 'A' | 'B' | 'C' | 'D';
+  solutionId: number;
+  roll: number;
+}
+
+/** After the last solution's roll appears, a moment to read it before the set goes in. */
+const SET_LAST_ROLL_READ_MS = 700;
 import { displayRollAsD20 } from '@shared/diceInterpreter';
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
@@ -364,15 +374,13 @@ const SOLUTION_HOVER_STACK_STEP_PX = 46;
 
 /** Each hovering solution's own roll, shown once the set is committed (D-024). */
 const solutionHoverRollStyle: CSSProperties = {
+  // Font, colour and outline from .morkahja-result-outcome, as the roll on the avatar.
   position: 'absolute',
   inset: 0,
   display: 'grid',
   placeItems: 'center',
-  color: '#ffcc66',
-  fontFamily: 'Georgia, serif',
   fontSize: 24,
-  fontWeight: 700,
-  textShadow: '0 0 6px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9)',
+  lineHeight: 1,
   background: 'radial-gradient(circle, rgba(12, 8, 6, 0.55) 0%, rgba(12, 8, 6, 0) 70%)',
   borderRadius: '50%',
   pointerEvents: 'none',
@@ -671,6 +679,8 @@ export function SolutionBlock({
   encounter,
   inventory,
   setRolls = null,
+  onSetPick,
+  lockedSetPicks,
 }: {
   diceButtonAsset?: string;
   encounterRevealKey: string;
@@ -689,8 +699,12 @@ export function SolutionBlock({
   ) => void;
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
-  /** A committed solution set's own rolls, from the server's result (shown on the hovering solutions). */
+  /** A committed solution set's own rolls, from the server's result (the dice roll shows on the dice). */
   setRolls?: { pickRolls?: number[]; diceFillRoll?: number } | null;
+  /** Locks one more pick of a solution set; resolves with all locked picks and their rolls. */
+  onSetPick?: (slot: SlotLetter) => Promise<SolutionSetPickRecordView[]>;
+  /** Picks the server already locked in this encounter (after a reload). */
+  lockedSetPicks?: SolutionSetPickRecordView[];
 }) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
@@ -708,7 +722,13 @@ export function SolutionBlock({
   const setSize = solutionSetSize(encounter.encounterDifficulty);
   const [setPicks, setSetPicks] = useState<SlotLetter[]>([]);
   const [setCommitted, setSetCommitted] = useState(false);
-  const [committedAllocation, setCommittedAllocation] = useState<SolutionSetPickAllocation[] | null>(null);
+  /** The server's locked picks: the item each takes and its roll (D-025). */
+  const [pickRecords, setPickRecords] = useState<SolutionSetPickRecordView[]>([]);
+  /** How many of them show their roll (a roll appears when its solution arrives). */
+  const [revealedCount, setRevealedCount] = useState(0);
+  const pickBusyRef = useRef(false);
+  const pickRecordsRef = useRef<SolutionSetPickRecordView[]>([]);
+  const encounterKeyRef = useRef(encounter.snapshotId);
   /** The choice being played: everything else fades out meanwhile. */
   const [choiceFade, setChoiceFade] = useState<{ keepSlot: SlotLetter | null; keepDice: boolean } | null>(null);
   // Updated with every change, so taps in quick succession see each other.
@@ -729,7 +749,15 @@ export function SolutionBlock({
     setPicksRef.current = [];
     setSetPicks([]);
     setSetCommitted(false);
-    setCommittedAllocation(null);
+    // Picks already locked (after a reload) hover again, rolls shown.
+    const locked = lockedSetPicks ?? [];
+    setPickRecords(locked);
+    pickRecordsRef.current = locked;
+    setRevealedCount(locked.length);
+    setPicksRef.current = locked.map((pick) => pick.slot);
+    setSetPicks(locked.map((pick) => pick.slot));
+    pickBusyRef.current = false;
+    encounterKeyRef.current = encounter.snapshotId;
     setChoiceFade(null);
 
     let cancelled = false;
@@ -948,6 +976,9 @@ export function SolutionBlock({
     if (setCommitted) {
       return;
     }
+    if (pickBusyRef.current) {
+      return;
+    }
     if (setPicksRef.current.length > 0) {
       // The dice finishes the set, standing in for every missing solution.
       commitSolutionSet(setPicksRef.current, true);
@@ -984,7 +1015,7 @@ export function SolutionBlock({
     }
 
     if (setSize > 1) {
-      handleSetPick(solution);
+      void handleSetPick(solution);
       return;
     }
 
@@ -995,61 +1026,84 @@ export function SolutionBlock({
     return allocateSolutionSetPicks({ encounter, inventory, picks });
   }
 
-  function handleSetPick(solution: VisibleSolutionSlot): void {
-    if (setCommitted || rollRevealTimer.current !== null) {
+  /**
+   * One more solution for the set (D-025): it plays the solution animation on
+   * its slot while the server locks it and reveals its roll; then it rises to
+   * hover (pushing the earlier ones up) and its roll shows as it arrives.
+   * Locked picks cannot be taken back.
+   */
+  async function handleSetPick(solution: VisibleSolutionSlot): Promise<void> {
+    if (setCommitted || pickBusyRef.current || rollRevealTimer.current !== null) {
       return;
     }
     const next = [...setPicksRef.current, solution.slot];
-    const allocation = setAllocation(next);
-    if (!allocation || next.length > setSize) {
+    if (next.length > setSize || !setAllocation(next) || !onSetPick) {
       return;
     }
 
+    pickBusyRef.current = true;
     hideSolutionTooltip();
     playSfx(SOLUTION_SOUND);
-    setPicksRef.current = next;
-    setSetPicks(next);
+    setActiveSolutionSlot(solution.slot);
 
-    if (next.length === 1) {
+    const [records] = await Promise.all([
+      onSetPick(solution.slot).catch((error: unknown) => {
+        console.error('Solution set pick failed', error);
+        return null;
+      }),
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, SOLUTION_ROLL_REVEAL_MS);
+      }),
+    ]);
+    setActiveSolutionSlot(null);
+    if (!records || records.length !== next.length || encounterKeyRef.current !== encounter.snapshotId) {
+      pickBusyRef.current = false;
+      return;
+    }
+
+    if (records.length === 1) {
       // The party sees the first choice, as with a single solution.
-      onActionReveal?.(solution.slot, null, allocation[0]!.solutionId, 'select');
+      onActionReveal?.(solution.slot, null, records[0]!.solutionId, 'select');
     }
-    if (next.length === setSize) {
-      commitSolutionSet(next, false);
+    const slots = records.map((record) => record.slot);
+    setPicksRef.current = slots;
+    setSetPicks(slots);
+    setPickRecords(records);
+    pickRecordsRef.current = records;
+    // The roll shows when the solution arrives at its hover place.
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, SOLUTION_HOVER_RISE_MS);
+    });
+    if (encounterKeyRef.current !== encounter.snapshotId) {
+      return;
     }
-  }
+    setRevealedCount(records.length);
+    pickBusyRef.current = false;
 
-  /** A hovering solution goes back to its slot. */
-  function handleSetPutBack(pickIndex: number): void {
-    if (consumeLongPressActivation() || setCommitted || !actionsReady) {
-      return;
+    if (records.length === setSize) {
+      window.setTimeout(() => {
+        if (encounterKeyRef.current === encounter.snapshotId) {
+          commitSolutionSet(slots, false);
+        }
+      }, SET_LAST_ROLL_READ_MS);
     }
-    const current = setPicksRef.current;
-    if (pickIndex < 0 || pickIndex >= current.length) {
-      return;
-    }
-    const next = current.filter((_, entry) => entry !== pickIndex);
-    hideSolutionTooltip();
-    setPicksRef.current = next;
-    setSetPicks(next);
   }
 
   function commitSolutionSet(picks: SlotLetter[], diceFill: boolean): void {
-    const allocation = setAllocation(picks);
-    if (!allocation || picks.length === 0) {
+    if (picks.length === 0 || setCommitted) {
       return;
     }
 
     clearRollRevealTimer();
     hideSolutionTooltip();
-    setCommittedAllocation(allocation);
     setSetCommitted(true);
     // The hovering set stays; the bar (and the dice, unless it finished the set) fades.
     setChoiceFade({ keepSlot: null, keepDice: diceFill });
 
     const first = picks[0]!;
     const solutionSet = { picks: [...picks], diceFill };
-    const revealMs = diceFill ? DICE_ROLL_ANIMATION_MS : SOLUTION_ROLL_REVEAL_MS;
+    // Every chosen solution already played its animation; only the dice still rolls.
+    const revealMs = diceFill ? DICE_ROLL_ANIMATION_MS : 0;
     if (diceFill) {
       playSfx(DICE_SOUND);
       setDiceRollCount((count) => count + 1);
@@ -1064,7 +1118,7 @@ export function SolutionBlock({
     );
     rollRevealTimer.current = window.setTimeout(() => {
       recordCommittedAction(encounter.snapshotId, first, solutionSet);
-      onActionReveal?.(first, null, allocation[0]!.solutionId, 'commit');
+      onActionReveal?.(first, null, pickRecordsRef.current[0]?.solutionId, 'commit');
       rollRevealTimer.current = null;
     }, revealMs);
   }
@@ -1179,6 +1233,7 @@ export function SolutionBlock({
                   {setCommitted && setRolls?.diceFillRoll !== undefined ? (
                     <span
                       aria-label={`Roll ${displayRollAsD20(setRolls.diceFillRoll)}`}
+                      className="morkahja-result-outcome"
                       style={solutionHoverRollStyle}
                     >
                       {displayRollAsD20(setRolls.diceFillRoll)}
@@ -1220,13 +1275,9 @@ export function SolutionBlock({
             : 'right';
 
           const showAsOwned = visibleSlot.available && inboundFlownSlots.has(slot);
-          // Every chosen copy hovers on its own, stacked upward, showing the
-          // item it really is; once committed, the server's allocation is
-          // frozen (the inventory may change before the solutions fly).
-          const allocationNow = setCommitted
-            ? committedAllocation
-            : (setPicks.length > 0 ? setAllocation(setPicks) : null);
-          const slotPicks = (allocationNow ?? [])
+          // Every locked pick hovers on its own, showing the item the server
+          // took; the newest hovers lowest and pushes the earlier ones up.
+          const slotPicks = pickRecords
             .map((pick, pickIndex) => ({ pick, pickIndex }))
             .filter(({ pick }) => pick.slot === slot);
           // While a set is being chosen, a slot whose solution is all taken dims.
@@ -1236,26 +1287,24 @@ export function SolutionBlock({
 
           return (
             <div key={slot} style={solutionSlotCellStyle}>
-              {slotPicks.map(({ pick, pickIndex }, stackIndex) => {
+              {slotPicks.map(({ pick, pickIndex }, order) => {
                 const pickSolution = solutionsById()[String(pick.solutionId)];
-                const pickRoll = setCommitted ? setRolls?.pickRolls?.[pickIndex] : undefined;
+                const stackIndex = slotPicks.length - 1 - order;
+                const rollShown = pickIndex < revealedCount;
                 return (
-                  <button
-                    aria-label={`Put ${pickSolution?.mSolutionName ?? visibleSlot.name} back`}
-                    className="morkahja-footer-button"
+                  <span
+                    aria-label={`${pickSolution?.mSolutionName ?? visibleSlot.name}${rollShown ? `, roll ${displayRollAsD20(pick.roll)}` : ''}`}
                     data-solution-hover={slot}
                     data-solution-ids={String(pick.solutionId)}
-                    disabled={setCommitted}
-                    key={`${encounterRevealKey}-hover-${slot}-${stackIndex}`}
-                    onClick={() => {
-                      handleSetPutBack(pickIndex);
-                    }}
+                    key={`${encounterRevealKey}-hover-${pickIndex}`}
+                    role="img"
                     style={{
                       ...solutionHoverButtonStyle,
                       bottom: `calc(100% + ${8 + stackIndex * SOLUTION_HOVER_STACK_STEP_PX}px)`,
                       zIndex: 2 + stackIndex,
+                      pointerEvents: 'none',
+                      transition: `bottom ${SOLUTION_HOVER_RISE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
                     }}
-                    type="button"
                   >
                     <span style={solutionHoverRiseStyle}>
                       <span style={solutionHoverBobStyle}>
@@ -1265,7 +1314,6 @@ export function SolutionBlock({
                             ...solutionIconShellStyle,
                             display: 'block',
                             ...solutionHoverGlowStyle,
-                            ...(setCommitted && pickRoll === undefined ? lockpickAnimationStyle : {}),
                           }}
                         >
                           <img
@@ -1276,14 +1324,14 @@ export function SolutionBlock({
                             style={solutionImageStyle}
                           />
                         </span>
-                        {pickRoll !== undefined ? (
-                          <span aria-label={`Roll ${displayRollAsD20(pickRoll)}`} style={solutionHoverRollStyle}>
-                            {displayRollAsD20(pickRoll)}
+                        {rollShown ? (
+                          <span aria-hidden="true" className="morkahja-result-outcome" style={solutionHoverRollStyle}>
+                            {displayRollAsD20(pick.roll)}
                           </span>
                         ) : null}
                       </span>
                     </span>
-                  </button>
+                  </span>
                 );
               })}
               <button

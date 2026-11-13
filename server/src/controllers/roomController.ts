@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { isSolutionSetSlot } from '../../../shared/src/solutionSet.js';
 import type { EncounterAction, ParticipantFocusStateDto } from '../../../shared/src/contracts.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { toEncounterRoomSnapshotDto } from '../services/roomDtoMapper.js';
@@ -20,6 +21,7 @@ import {
   processRoomAway,
   parseClientSolutionSet,
   submitChoice,
+  submitSetPick,
   submitContinue,
   submitSelection,
 } from '../services/roomService.js';
@@ -240,6 +242,28 @@ export async function submitRoomChoiceController(
     const room = await submitChoice(playerId, avatarId, action, solutionId, solutionSet);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function submitRoomSetPickController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const body = req.body as Record<string, unknown>;
+    const avatarId = requireAvatarId(req);
+    if (!isSolutionSetSlot(body.slot)) {
+      throw new RoomError('Invalid slot', 400, 'INVALID_SOLUTION_SET');
+    }
+    const { room, picks } = await submitSetPick(playerId, avatarId, body.slot);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
+      picks,
     });
   } catch (error) {
     handleRoomError(error, res, next);

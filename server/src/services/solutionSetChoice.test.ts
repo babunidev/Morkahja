@@ -13,6 +13,7 @@ import {
   RoomError,
   submitChoice,
   submitContinue,
+  submitSetPick,
 } from './roomService.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
@@ -103,6 +104,33 @@ assert.equal(parseClientSolutionSet(undefined, true), undefined);
   const remaining = flattenInventorySolutionIds(inventory);
   assert.equal(remaining.filter((id) => id === 10001).length, 0);
   assert.equal(remaining.filter((id) => id === 10005).length, 0);
+}
+
+// Picks are locked and revealed one at a time (D-025); the final choice
+// resolves the locked picks, whatever the client sends.
+{
+  await persistInventory(session.playerId, avatarId, {
+    spellbook: [{ solutionId: 10001, solutionType: 1, uses: 1 }],
+    items: [{ solutionId: 10005, solutionType: 6, uses: 1 }],
+    essences: [{ solutionId: 10010, solutionType: 15, uses: 5 }],
+  });
+  await leaveAllRoomsForPlayer(session.playerId);
+  const room = setEncounterRoom(await createRoom(session.playerId, avatarId));
+  await saveEncounterRoom(room);
+
+  const first = await submitSetPick(session.playerId, avatarId, 'A');
+  assert.deepEqual(first.picks, [{ slot: 'A', solutionId: 10001, roll: 90 }]);
+  const second = await submitSetPick(session.playerId, avatarId, 'B');
+  assert.deepEqual(second.picks.map((pick) => pick.roll), [90, 70]);
+  // Nothing left to cover a third pick of A.
+  await assert.rejects(submitSetPick(session.playerId, avatarId, 'A'), RoomError);
+
+  const after = await submitChoice(session.playerId, avatarId, 'B', 10005, { picks: ['B'], diceFill: true });
+  const actor = after.participants.find((entry) => entry.avatarId === avatarId);
+  assert.equal(actor?.preparedResult?.selectedRoll, 58);
+  assert.deepEqual(actor?.preparedResult?.pickRolls, [90, 70]);
+  assert.equal(actor?.preparedResult?.diceFillRoll, 15);
+  await submitContinue(session.playerId, avatarId);
 }
 
 console.log('solutionSetChoice.test.ts: all assertions passed');

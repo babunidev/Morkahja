@@ -124,6 +124,10 @@ function buildParticipantDto(
     resolutionSummary: participant.resolutionSummary,
     preparedResult: participant.preparedResult,
     loreGemCollected: participant.loreGemCollected === true,
+    // A player's own revealed set picks; teammates never see them before the result.
+    ...(participant.playerId === localPlayerId && participant.setPicks?.length
+      ? { setPicks: participant.setPicks }
+      : {}),
     isLocal: participant.playerId === localPlayerId,
   };
 }

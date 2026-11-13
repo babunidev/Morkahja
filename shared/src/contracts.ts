@@ -487,6 +487,8 @@ export interface RoomParticipantDto {
   resolutionSummary?: ParticipantResolutionSummaryDto;
   preparedResult?: ParticipantPreparedResultDto;
   loreGemCollected?: boolean;
+  /** Only for the local player: the solution set picks locked so far, with their rolls. */
+  setPicks?: Array<{ slot: 'A' | 'B' | 'C' | 'D'; solutionId: number; roll: number }>;
   isLocal: boolean;
 }
 

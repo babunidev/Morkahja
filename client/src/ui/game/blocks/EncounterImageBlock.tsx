@@ -8,7 +8,7 @@ import type {
   ParticipantResolutionSummaryDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection } from '../../../api/http.js';
+import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection, submitRoomSetPick } from '../../../api/http.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
@@ -179,6 +179,7 @@ export function EncounterImageBlock({
   witnessAvatarLevel,
   witnessEncounterId,
   holdResultRollReset = false,
+  lockedSetPicks,
 }: {
   avatarId: string;
   avatarLevel: number;
@@ -224,6 +225,8 @@ export function EncounterImageBlock({
   witnessEncounterId?: number;
   /** When true, keep outcome roll visible until reward dismiss finishes. */
   holdResultRollReset?: boolean;
+  /** The local player's solution set picks the server already locked (D-025). */
+  lockedSetPicks?: Array<{ slot: 'A' | 'B' | 'C' | 'D'; solutionId: number; roll: number }>;
 }) {
   const [revealedRoll, setRevealedRoll] = useState<number | null>(null);
   const [selectedAction, setSelectedAction] = useState<EncounterAction>('dice');
@@ -723,6 +726,12 @@ export function EncounterImageBlock({
         setRolls={serverResolution
           ? { pickRolls: serverResolution.pickRolls, diceFillRoll: serverResolution.diceFillRoll }
           : null}
+        lockedSetPicks={lockedSetPicks}
+        onSetPick={async (slot) => {
+          const result = await submitRoomSetPick(avatarId, slot);
+          onRoomSnapshot?.(result.room);
+          return result.picks;
+        }}
       />
       <LoreBlock
         encounterKey={encounter.snapshotId}

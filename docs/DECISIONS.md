@@ -210,6 +210,16 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-13 (release `94cee3ed`, 0.9.0-beta.55).
 
+## D-025 — Each solution reveals its roll as it arrives, and stays chosen (2026-11-14)
+
+**Babuni's direction:** use the same font as the roll on the avatar (Breathe Fire); "for each item, the solution animation has to run ... then it goes up and hovers, and at the same time reveals the roll ... when it arrives at its hover position. Then the next ... pushes the other solution up, and when it reaches its position, also the roll is revealed."
+
+**Babuni's choice (asked by AI, because revealed rolls plus "tap to put back" from D-019 would allow retrying until the numbers look good):** "Locked once revealed": a solution is committed the moment it is tapped; no putting back. This replaces D-019's put-back rule.
+
+**AI implementation:** a server endpoint locks each pick and reveals its roll; locked picks persist in the room and the solo checkpoint and decide the final resolution; the client plays the solution animation, raises the solution, and shows the roll on arrival.
+
+**Status:** implemented on `feat/set-pick-reveal` (0.9.0-beta.56); not merged or released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

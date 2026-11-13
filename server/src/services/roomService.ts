@@ -40,7 +40,12 @@ import type { PlayerDocument } from '../types/player.js';
 import type { EncounterData } from '../engine/types.js';
 import type { PlayerEncounterAction } from '../types/encounterSnapshot.js';
 import type { EncounterSnapshot } from '../types/encounterSnapshot.js';
-import type { AvatarDocument } from '../types/avatar.js';
+import type { AvatarDocument, AvatarInventory } from '../types/avatar.js';
+import { revealSolutionSetPicks } from '../engine/encounterResolver.js';
+import { snapshotToEncounterData, snapshotToRolls } from '../types/encounter.js';
+import { flattenInventorySolutionIds } from './inventoryService.js';
+import { getSolutionMap } from './gameData.js';
+import type { SolutionSetPickRecord } from '../domain/rooms/RoomParticipant.js';
 import { applyExperience, type AvatarProgression } from '../domain/avatar/AvatarProgression.js';
 import {
   formatAvatarDisplayName,
@@ -732,6 +737,7 @@ function resetParticipantsForNewEncounter(participants: RoomParticipant[]): Room
     preparedCommit: undefined,
     outcomeSnapshotId: undefined,
     loreGemCollected: undefined,
+    setPicks: undefined,
     lastInteractionAt: now,
   }));
 }
@@ -2408,13 +2414,25 @@ export async function submitChoice(
     await ensureSlotEncounterSnapshots(existingRoom);
   }
 
-  const playerAction = clientActionToPlayerAction(action, solutionSet);
+  let playerAction = clientActionToPlayerAction(action, solutionSet);
   const now = nowMs();
 
   const updated = await withDocumentTransaction(async (transaction) => {
     let room = await loadEncounterRoomFromTransaction(transaction, roomId);
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
+
+    // Locked set picks are what resolves (D-025); the dice finishes a short set.
+    const lockedPicks = findParticipant(room, playerId)?.setPicks;
+    if (lockedPicks && lockedPicks.length > 0) {
+      const slots = lockedPicks.map((pick) => pick.slot);
+      const setSize = Math.max(1, Math.min(4, room.activeEncounterSnapshot.encounterDifficulty));
+      playerAction = {
+        ...clientActionToPlayerAction(slots[0]!),
+        picks: slots,
+        diceFill: slots.length < setSize,
+      } as PlayerEncounterAction;
     }
 
     room = reengageFromInactivity(room, playerId, now);
@@ -2475,6 +2493,83 @@ export async function submitChoice(
 
   const ticked = await tickRoomById(roomId);
   return ticked ?? updated;
+}
+
+/**
+ * Locks one more pick of a solution set and reveals its roll (D-025). Picks
+ * cannot be taken back: they are stored on the participant (and in the solo
+ * checkpoint), and the final choice resolves exactly these picks.
+ */
+export async function submitSetPick(
+  playerId: string,
+  avatarId: string,
+  slot: SolutionSetSlot,
+): Promise<{ room: EncounterRoom; picks: SolutionSetPickRecord[] }> {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
+    throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+  const now = nowMs();
+
+  return withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room) {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
+    room = reengageFromInactivity(room, playerId, now);
+    if (room.roomState !== 'active_encounter') {
+      throw new RoomError('Room is not accepting choices', 409, 'INVALID_ROOM_STATE');
+    }
+    if (!isEncounterActionReady(room.activeEncounterSnapshot)) {
+      throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
+    }
+    const participant = findParticipant(room, playerId);
+    if (!participant || participant.choiceState === 'disengaged') {
+      throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+    }
+    if (participant.choiceState !== 'choosing' && participant.choiceState !== 'ready') {
+      throw new RoomError('Selection is locked', 409, 'SELECTION_LOCKED');
+    }
+
+    const snapshot = snapshotForParticipant(room, participant);
+    const encounter = snapshotToEncounterData(snapshot);
+    const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+    const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
+    const inventory = inventoryDocument ?? avatar?.inventory;
+    if (!inventory) {
+      throw new RoomError('Inventory not found', 409, 'INVALID_SOLUTION_SET');
+    }
+    const slots = [...(participant.setPicks ?? []).map((pick) => pick.slot), slot];
+    const picks = revealSolutionSetPicks(
+      encounter,
+      flattenInventorySolutionIds(inventory),
+      getSolutionMap(),
+      snapshotToRolls(snapshot),
+      slots,
+    );
+    if (!picks || encounter.mEncounterDifficulty <= 1) {
+      throw new RoomError('This solution cannot be added to the set', 409, 'INVALID_SOLUTION_SET');
+    }
+
+    const first = clientActionToPlayerAction(slots[0]!);
+    const updated: EncounterRoom = {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? {
+            ...entry,
+            setPicks: picks,
+            choiceState: 'ready' as const,
+            selectedAction: first,
+            selectedSolutionId: picks[0]!.solutionId,
+            lastInteractionAt: now,
+          }
+          : entry),
+      updatedAt: now,
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    return { room: updated, picks };
+  });
 }
 
 export async function submitSelection(
