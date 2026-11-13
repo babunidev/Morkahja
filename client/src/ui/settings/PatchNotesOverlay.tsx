@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-51-nov-4-13',
-    version: '0.9.0-beta.51',
+    id: 'beta-52-nov-4-13',
+    version: '0.9.0-beta.52',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -53,6 +53,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Your lives sit on your avatar: five essence slots on the bottom of the portrait. Losses leave from them, new essences fly in, and the next encounter refills them from your inventory.',
           'Each essence slot keeps its own essence: after a loss or a new essence the others no longer change pictures.',
           'Atranor items go to your inventory, not the essence slots, and a bad roll no longer takes them in place of an essence.',
+          'Spent solutions and rewards no longer flash in the corner of the encounter before they fly.',
         ],
       },
       {

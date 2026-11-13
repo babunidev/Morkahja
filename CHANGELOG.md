@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: no flash before solution and reward flights; 0.9.0-beta.52
+
+- **Fix (Babuni's bug report):** spent solutions and rewards flashed for a moment in the top-left corner of the encounter before flying. Every flying icon is a fixed-position image added at `left: 0; top: 0` with no transform; its start position was only applied once the image had loaded and two frames had passed, and it was visible in the meantime. Flyers are now created hidden and shown in the same step that applies their first keyframe (`rewardFlyAnimation.ts`), with no added delay. This covers all flights built on the same helper: spent solutions, rewards growing out of the encounter, rewards to the Inventory/Skillbook/avatar, items into solution slots, loss bubbles and arrivals, and essences into their slots.
+- **Version 0.9.0-beta.52** (D-015). Patch notes line added.
+- **Verification:** a headless Chromium harness (Playwright, desktop 1280×900 and phone emulation 390×844 at 3×) ran all six flight kinds and checked every painted frame for a visible flyer near the top-left: 10 such frames before the fix, 0 after. `npm run release:check` passed on Nobara with local Podman PostgreSQL (game data, typecheck and build, client 36/36, server 40/40). Not checked in the running game, on a real phone, or in Firefox/Safari. **Not deployed.**
+
 ## 2026-11-13 — Released: Atranor items are not essences; 0.9.0-beta.51
 
 - **Fix (Babuni's report and direction, D-018):** a collected Atranor Dragontooth flew into an essence slot and then vanished from it. Atranor items (solution type 77) share the essences container (inventory type 3) with real essences (type 15), and the result screen sent every reward of that container into a slot, while the slots show only real essences. Now only real essences fly into slots; Atranor items fly to the Inventory button (`ResultBlock.tsx`).

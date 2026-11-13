@@ -319,3 +319,7 @@ Right after the release I made a new avatar with three essences, lost one, and t
 ### The Dragontooth is not a life — 2026-11-13
 
 I collected an Atranor Dragontooth and it flew into an essence slot, then vanished from it. Thinking it through, I decided these items don't belong in the slots at all: they are for Atranor, to revive or make the passage certain, not lives to be spent. AI found they share the essence storage on the server, so a bad roll could also take one in place of an essence. Now only real essences go into the slots and are lost on a bad roll; the Atranor items go to the inventory and wait for Atranor (D-018). **Verification:** full release check with new server tests; released as 0.9.0-beta.51 the same morning, not yet seen on screen by AI.
+
+### The flash in the corner — 2026-11-13
+
+Just before a spent solution flew into the encounter, or a reward flew out of it, I kept seeing it blink in the encounter's top-left corner. I asked for the real cause rather than a delay to hide it. AI found that each flying icon was put on the page at the corner, visible, and only moved to its starting point once its picture had loaded and two frames had passed. Now it stays hidden until it is in place, and it shows up exactly where it starts. **Verification:** a frame-by-frame browser check on desktop and phone sizes (corner frames before the fix, none after) and the full release check; not yet seen in the game itself.
