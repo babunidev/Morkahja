@@ -249,7 +249,7 @@ export function TermsOfServiceOverlay({
             <TermsParagraph>Fair play is a core requirement of participation.</TermsParagraph>
             <TermsList
               items={[
-                'Cheating, exploitation of bugs, automation, scripting, reverse engineering, or unauthorized modification is strictly prohibited.',
+                'Cheating, exploiting bugs, or interfering with the live game service is prohibited. These service rules do not restrict rights granted under the published software and content licenses.',
                 'Accounts may be suspended, restricted, or permanently banned at any time.',
                 'Items, progress, or access may be removed in cases of abuse or violation.',
                 'Enforcement decisions are final and may be applied without prior notice.',
@@ -274,8 +274,8 @@ export function TermsOfServiceOverlay({
             <TermsParagraph>Morkahja operates under a hybrid openness model.</TermsParagraph>
             <TermsList
               items={[
-                'Game code, assets, and systems are released under the MIT License where applicable.',
-                'Players and developers may reuse MIT-licensed components in accordance with that license.',
+                'Original game software is licensed under MIT; original creative content is shared under CC BY 4.0 where Babuni holds the relevant rights. See the repository LICENSE and CONTENT_LICENSE.md.',
+                'Commissioned music and externally sourced sounds, fonts, and other third-party assets are not relicensed by those notices; their own rights terms apply.',
                 'The Morkahja name, identity, and branding remain reserved unless explicitly stated otherwise.',
                 'Fan content, streaming, modding, and community creations are permitted and encouraged.',
               ]}
@@ -286,7 +286,7 @@ export function TermsOfServiceOverlay({
             <TermsParagraph>The integrity of the system must not be compromised.</TermsParagraph>
             <TermsList
               items={[
-                'Reverse engineering, automation tools, bots, packet manipulation, or unauthorized clients are strictly forbidden.',
+                'Attacking the service, evading access controls, manipulating other players\' sessions, or accessing data without permission is prohibited. Open-source reuse rights remain governed by the published licenses.',
                 'Exploiting unintended behavior or bugs for advantage is prohibited.',
                 'Attempts to bypass system rules or mechanics may result in enforcement action.',
               ]}
