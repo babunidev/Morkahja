@@ -43,3 +43,7 @@ The original [development log](DEVLOG.md) follows the game's formation from **Ma
 The human creative owns the game's idea, world and design decisions. AI assistance contributes drafts, code and analysis where recorded; it does not replace creative authorship. Named third-party credits, including music contributions, are retained in the project records.
 
 Before changing source or documentation, read [AGENTS.md](AGENTS.md) and [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md).
+
+## License
+
+Original game software uses [MIT](LICENSE). Babuni's original creative content is shared under [CC BY 4.0](CONTENT_LICENSE.md). Commissioned music and independently sourced sounds are excluded; their specific permissions apply.
