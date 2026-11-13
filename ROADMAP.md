@@ -97,7 +97,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] The same line frame on every panel, menu and tooltip (D-014): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
-- [ ] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): fixed locally 2026-11-13 and checked frame by frame in headless Chromium, waiting for Babuni's play test and release.
+- [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
 - [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.
