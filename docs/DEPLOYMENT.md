@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 06:35 UTC (0.9.0-beta.50, essence slot fix)
+
+Approved by Babuni ("yes release it"). `main` at `5022cde9` (PR #31): client fix so each essence slot keeps its own essence; server changes are the version strings only.
+
+- **Before:** backend `ccc6cb20`, frontend `20261113-055920`, no uncommitted files. Previous staging files moved to `prev-20261113-0635`.
+- **Checks before the release:** CI `verify` passed on PR #31; client tests 36/36 and `npm run typecheck` passed on the branch.
+- **Release:** backup `20261113-063531` (2.9 MB; 71 players, 104 avatars, 104 inventories, 1 purchase, 327 achievement rows; sha256 `7a087d2a…`). Backend fast-forwarded to `5022cde9`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-063533` (`index-4B1KP1zr.js`, contains `0.9.0-beta.50`), public checks passed. Bots back online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); the fix was not checked on screen by AI in production or locally.
+
 ## Production release — 2026-11-13, 05:59 UTC (0.9.0-beta.49)
 
 Requested by Babuni ("i wanna deploy the latest changes to the live server"). The 22 commits on `fix/mobile-centering` (beta.43 → beta.49) had not been pushed or merged. AI merged `main` into them (keeping both sides of the documentation conflicts in `DECISIONS.md` and `DEVLOG.md`), ran the release gate, and squash-merged PR #29, so `main` is now `ccc6cb20`. The server changes only the version strings; no dependency, schema or game-content changes since `e78cde2f`.

@@ -2,12 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-13 — Unreleased: essence slots keep their own essences; 0.9.0-beta.50
+## 2026-11-13 — Released: essence slots keep their own essences; 0.9.0-beta.50
 
 - **Fix (reported by Babuni after the beta.49 release):** after losing an essence, the remaining slots showed different essences than before; a gained essence also changed pictures in the next encounter. The server's inventory was right: a local run of a new avatar (API only) lost exactly the reported essence and kept the other two. The slots were wrong in two ways: each slot showed "the n-th essence in the inventory list", and a loss always emptied the outermost slot, not the one holding the lost essence, so the remaining essences shifted into other slots. The slots also counted inventory entries instead of charges, so a second charge of an essence already held (stacked as ×2) lost its slot on the next encounter.
 - **Now** each slot remembers its essence (`client/src/ui/game/essenceSlots.ts`). A loss empties the slot holding that essence; one lost from the inventory beyond the five slots flies from the Inventory button and leaves the slots as they are (before, a slot always emptied). Refills bring essences not already in a slot, and a collected essence keeps the slot it flew into. Party members' rings count charges as well (`EssenceSlotsRing.tsx`, `ResultBlock.tsx`).
 - **Version 0.9.0-beta.50** (D-015). Patch notes line added.
-- **Verification:** client typecheck, tests (36, including both reported cases) and production build passed. **Not checked on screen**: no browser play-through of a loss or a gained essence. **Not deployed.**
+- **Verification:** client typecheck, tests (36, including both reported cases) and production build passed. **Not checked on screen**: no browser play-through of a loss or a gained essence. **Deployed** 2026-11-13 06:35 UTC from `5022cde9` (PR #31); see `docs/DEPLOYMENT.md`.
 
 ## 2026-11-13 — Released: 0.9.0-beta.43 to beta.49 live
 
