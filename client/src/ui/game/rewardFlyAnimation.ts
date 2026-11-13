@@ -923,15 +923,16 @@ export function recordCommittedAction(
   committedAction = { snapshotId, action, spendTaken: false, solutionSet };
 }
 
-/**
- * A committed solution set first shows each solution's own roll on it, then
- * the solutions fly into the encounter (and the rewards wait for them).
- */
-export const SET_ROLLS_DISPLAY_MS = 1300;
+/** How long a dice-finished set shows the dice roll before the solutions fly in. */
+export const SET_ROLLS_DISPLAY_MS = 1000;
 
-/** How long the result waits before the spent solutions fly: only for a committed set. */
+/**
+ * How long the result waits before the spent solutions fly. Each solution's
+ * roll already showed as it arrived (D-025); only the dice that finished a set
+ * reveals its roll with the result, so that set waits a moment.
+ */
 export function setRollsPauseMs(snapshotId: string | undefined): number {
-  return committedSolutionSetFor(snapshotId) ? SET_ROLLS_DISPLAY_MS : 0;
+  return committedSolutionSetFor(snapshotId)?.diceFill ? SET_ROLLS_DISPLAY_MS : 0;
 }
 
 /** The solution set the player committed in this encounter, if it was one. */

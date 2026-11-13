@@ -21,6 +21,13 @@ export type ParticipantFocusState =
   | 'skillbook'
   | 'avatar_details';
 
+/** A locked pick of a solution set: its slot, the item it takes, and its revealed roll (D-025). */
+export interface SolutionSetPickRecord {
+  slot: 'A' | 'B' | 'C' | 'D';
+  solutionId: number;
+  roll: number;
+}
+
 export interface ParticipantResolutionSummary {
   success: boolean;
   message: string;
@@ -65,6 +72,8 @@ export interface RoomParticipant {
   joinedAt: number;
   choiceState: ParticipantChoiceState;
   focusState: ParticipantFocusState;
+  /** Solution set picks locked so far in this encounter, revealed one at a time (D-025). */
+  setPicks?: SolutionSetPickRecord[];
   selectedAction?: PlayerEncounterAction;
   selectedSolutionId?: number;
   continuePressed: boolean;

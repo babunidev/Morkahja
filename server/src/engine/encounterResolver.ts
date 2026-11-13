@@ -382,6 +382,33 @@ function evaluateSolutionSet(
   };
 }
 
+/**
+ * The picks of a solution set chosen so far, each with the item it takes and
+ * its own roll; null when the inventory cannot cover them. Each pick is locked
+ * and revealed as it is chosen (D-025); the final resolution uses the same
+ * allocation, so the revealed rolls are the ones that count.
+ */
+export function revealSolutionSetPicks(
+  encounter: EncounterData,
+  inventory: number[],
+  solutionMap: SolutionDataMap,
+  rolls: EncounterRollSnapshot,
+  picks: EncounterSlotLetter[],
+): Array<{ slot: EncounterSlotLetter; solutionId: EntityId; roll: number }> | null {
+  if (picks.length === 0 || picks.length > solutionSetSize(encounter.mEncounterDifficulty)) {
+    return null;
+  }
+  const allocation = allocateSolutionSet(
+    picks,
+    buildSlotRequirements(encounter),
+    inventory,
+    (solutionId) => lookupSolution(solutionMap, solutionId)?.mSolutionType,
+  );
+  return allocation
+    ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick) }))
+    : null;
+}
+
 function randomInt(maxExclusive: number): number {
   return cryptoRandomInt(0, maxExclusive);
 }

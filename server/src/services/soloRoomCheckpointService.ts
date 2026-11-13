@@ -35,6 +35,7 @@ export interface SoloRoomCheckpoint {
     | 'focusState'
     | 'loreGemCollected'
     | 'resolutionSummary'
+    | 'setPicks'
   >;
   lockedChoice?: LockedEncounterChoice;
   createdAt: number;
@@ -97,6 +98,8 @@ export function checkpointFromRoom(room: EncounterRoom): SoloRoomCheckpoint | nu
       focusState: leader.focusState,
       loreGemCollected: leader.loreGemCollected,
       resolutionSummary: leader.resolutionSummary,
+      // Locked set picks survive leaving and reloading: a reload cannot undo them.
+      setPicks: leader.setPicks,
     },
     lockedChoice,
     createdAt: room.createdAt,

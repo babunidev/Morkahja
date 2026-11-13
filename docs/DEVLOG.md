@@ -350,3 +350,7 @@ I picked up a lore gem in an encounter that then gave me five rewards. The gem w
 
 With several solutions hovering, I only saw the final roll on my avatar, and twice it looked as if one of my chosen items was swapped for another as they flew in. AI found that one hovering icon stood for all copies of a slot and showed only the first copy's picture, so an alternative item of the same type looked like a replacement, and that the icons were matched against the inventory again after the commit. Now every copy hovers on its own, stacked upward as I first imagined, shows the item it really is, and shows its own roll before they fly in together; the dice shows its roll when it finishes the set (D-024). **Verification:** release check, a new server test, and two local play-throughs; released as 0.9.0-beta.55 the same night.
 
+### One solution at a time — 2026-11-14
+
+The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; not yet released.
+

@@ -467,6 +467,20 @@ export async function submitRoomChoice(
   return response.room;
 }
 
+/** Locks one more solution of a set and reveals its roll (D-025). */
+export async function submitRoomSetPick(
+  avatarId: string,
+  slot: 'A' | 'B' | 'C' | 'D',
+): Promise<{
+  room: EncounterRoomSnapshotDto;
+  picks: Array<{ slot: 'A' | 'B' | 'C' | 'D'; solutionId: number; roll: number }>;
+}> {
+  return request('/room/set-pick', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, slot }),
+  });
+}
+
 export async function submitRoomSelection(
   avatarId: string,
   action: EncounterAction,

@@ -101,6 +101,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Encounters that need several solutions, chosen one at a time (D-019), 0.9.0-beta.53: released 2026-11-13 for Babuni's tests with high-level accounts. Still to check: a party with other players choosing sets.
 - [ ] Smooth fades, menus that open once loaded, inventory taps on phones, About Us and costs update (D-020), 0.9.0-beta.54: released 2026-11-13.
 - [ ] Terms and privacy policy rewritten to match the game, "Use Your Key" (D-021), 0.9.0-beta.54: released 2026-11-13. Open: consent to immediate delivery at checkout, if the right of withdrawal should ever be excluded.
+- [ ] Solution sets reveal each roll on arrival, picks locked (D-025), 0.9.0-beta.56: implemented locally 2026-11-14; waiting for Babuni's play test and release. Still to check: sets in a party.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
 - [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.

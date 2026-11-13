@@ -29,9 +29,9 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-55-nov-4-13',
-    version: '0.9.0-beta.55',
-    period: '4–13 Nov 2026',
+    id: 'beta-56-nov-4-14',
+    version: '0.9.0-beta.56',
+    period: '4–14 Nov 2026',
     groups: [
       {
         title: 'A new home',
@@ -67,7 +67,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Undo and redo in avatar creation: step back to an earlier combination, change it, and step forward again.',
           'Every panel, menu, button and tooltip has the new line frame with cut corners.',
           'Menus, Lore, Inventory and Skillbook open once their pictures are loaded; the button you pressed pulses meanwhile. A new avatar fades in once it is ready.',
-          'In encounters that need several solutions, each chosen copy hovers on its own above its slot and shows its own roll before they fly in together; the dice shows its roll when it finishes the set.',
+          'In encounters that need several solutions, each solution plays its animation, rises to hover above its slot and shows its own roll as it arrives; a chosen solution stays chosen. The dice shows its roll when it finishes the set.',
           'A lore gem you pick up flies to the top left of your avatar and waits there; when you continue, it sinks into your avatar. It no longer takes a reward place.',
           'About Us has Privacy Policy and Terms of Service buttons at the bottom, next to Donation.',
           'New Terms of Service and Privacy Policy in plain words, and the welcome screen\'s Restore button is now called Use Your Key.',

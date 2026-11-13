@@ -15,6 +15,7 @@ import {
   submitRoomContinueController,
   submitRoomFocusController,
   submitRoomSelectionController,
+  submitRoomSetPickController,
   activateRoomLoreGemController,
   kickRoomParticipantController,
 } from '../controllers/roomController.js';
@@ -32,6 +33,7 @@ roomRoutes.post('/kick', kickRoomParticipantController);
 roomRoutes.post('/slot', setSlotStateController);
 roomRoutes.post('/choice', submitRoomChoiceController);
 roomRoutes.post('/selection', submitRoomSelectionController);
+roomRoutes.post('/set-pick', submitRoomSetPickController);
 roomRoutes.post('/focus', submitRoomFocusController);
 roomRoutes.post('/continue', submitRoomContinueController);
 roomRoutes.post('/lore-gem/activate', activateRoomLoreGemController);
