@@ -239,3 +239,6 @@ Right after the release I levelled up a new avatar twice and each time got the l
 
 After collecting a reward I opened the inventory and the item was not there; it only turned up in the next encounter. The server adds rewards when the round is committed, which happens on continuing, so a collected item was in limbo for one step. AI kept the game's single source of truth and changed only what is shown: the inventory panels and the avatar's essence row now include what was just collected or lost, until the next encounter arrives with the server's committed inventory. **Verification:** client typecheck, tests and build passed; my own check in the game is next. **Not deployed yet.**
 
+## 2026-11-13 — Giving the repository clear permissions
+
+Public source alone did not explain what others could reuse, so I approved MIT for original game code and CC BY 4.0 for original creative work, with music and other people's sound files excluded. AI assistance added the license and brought the project notes into agreement, without changing how the application runs. Other people's content retains its own terms.
