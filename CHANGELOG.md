@@ -2,7 +2,7 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-13 — Unreleased: smooth fades, menus that open when ready, About Us and costs; 0.9.0-beta.54
+## 2026-11-13 — Released: smooth fades, menus that open when ready, About Us, new terms and privacy policy; 0.9.0-beta.54
 
 - **Solutions (D-020):** while the chosen solution, set or dice plays, the other choices fade out over 0.7 s instead of vanishing with the bar afterwards (`SolutionBlock.tsx`).
 - **Menus open when ready:** the dashboard menus (Scribes, Settings, Friends, Profile, Achievements, Expansions, and the panels opened from them) and the in-game Lore, Inventory and Skillbook open once the pictures inside are decoded, capped at 3 s; Friends and Scribes also wait for their first list. The opening button pulses meanwhile (`ui/transitions/menuReadiness.ts`). Menus no longer catch clicks while still invisible.
@@ -17,7 +17,7 @@
 - **Welcome screen:** "Restore Existing Journey" is now "Use Your Key"; the Settings hint refers to it.
 - **Patch notes:** "Full changelog" opens the babuni.dev living grid on Morkahja's Changelog (`https://www.babuni.dev/#project=morkahja-rpg&bloom=big&read=changes`).
 - **Version 0.9.0-beta.54** (D-015). Patch notes lines added.
-- **Verification:** `npm run release:check` passed on Nobara with local Podman PostgreSQL (game data, typecheck and build, client 36/36, server 41/41). Local headless Chromium against a local server: frame logs show the other solutions fading 1 → 0.35 → 0 over 0.7 s while the chosen one stays; Lore and Friends pulse their button until ready, then fade in; About Us shows each paragraph once; phone emulation: a tap shows the inventory tooltip, it stays, a second tap hides it, and taps at a cell's corner reach the item. The deep link opened the Changelog module on the live website. Not checked on a real phone or a slow connection. **Not merged or deployed.**
+- **Verification:** `npm run release:check` passed on Nobara with local Podman PostgreSQL (game data, typecheck and build, client 36/36, server 41/41). Local headless Chromium against a local server: frame logs show the other solutions fading 1 → 0.35 → 0 over 0.7 s while the chosen one stays; Lore and Friends pulse their button until ready, then fade in; About Us shows each paragraph once; phone emulation: a tap shows the inventory tooltip, it stays, a second tap hides it, and taps at a cell's corner reach the item. The deep link opened the Changelog module on the live website. Not checked on a real phone or a slow connection. CI `verify` passed on PR #39. **Deployed** 2026-11-13 21:27 UTC from `14f7bf6d` (PR #39); see `docs/DEPLOYMENT.md`.
 
 ## 2026-11-13 — Released: encounters that need several solutions; 0.9.0-beta.53
 
