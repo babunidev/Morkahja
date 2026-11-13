@@ -2,13 +2,13 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-14 — Unreleased: each solution of a set reveals its roll as it arrives; 0.9.0-beta.56
+## 2026-11-14 — Released: each solution of a set reveals its roll as it arrives; 0.9.0-beta.56
 
 - **Set picks revealed one at a time (Babuni's direction, D-025):** in an encounter that needs several solutions, each tap plays the usual solution animation on its slot, then the solution rises to hover (the newest lowest, pushing the earlier ones up) and its roll appears as it arrives. A tap during an animation is ignored. The set goes in 0.7 s after the last roll appears; a set finished by the dice shows the dice roll with the result for 1 s, then flies in.
 - **Locked picks (Babuni's choice):** a revealed pick cannot be put back. The new `POST /room/set-pick` locks one pick, checks it against the inventory and the set size, and returns all locked picks with their rolls; the picks are stored on the participant and in the solo checkpoint (a reload brings them back, rolls shown), sent only to the player themself, and the final choice resolves exactly the locked picks whatever the client sends (`revealSolutionSetPicks` in the resolver uses the same allocation as the resolution).
 - **Roll font:** the rolls on hovering solutions and on the dice use the result font of the avatar's roll (`.morkahja-result-outcome`, Breathe Fire) instead of Georgia.
 - **Version 0.9.0-beta.56** (D-015). Patch notes line updated.
-- **Verification:** `npm run release:check` passed on Nobara with local Podman PostgreSQL (client 36/36, server 41/41; `solutionSetChoice.test.ts` now locks two picks, refuses a third the inventory cannot cover, and checks that the final choice resolves the locked picks with the dice). Local headless Chromium on an encounter needing three: frame log of each tap (1.8 s animation, rise, roll after 0.3 s), the earlier solution sliding up, a tap during an animation ignored; reload with two locked picks restored them with rolls; the third completed the set (three Magic Missiles flew in, avatar 16). **Not merged or deployed.**
+- **Verification:** `npm run release:check` passed on Nobara with local Podman PostgreSQL (client 36/36, server 41/41; `solutionSetChoice.test.ts` now locks two picks, refuses a third the inventory cannot cover, and checks that the final choice resolves the locked picks with the dice). Local headless Chromium on an encounter needing three: frame log of each tap (1.8 s animation, rise, roll after 0.3 s), the earlier solution sliding up, a tap during an animation ignored; reload with two locked picks restored them with rolls; the third completed the set (three Magic Missiles flew in, avatar 16). CI `verify` passed on PR #43. **Deployed** 2026-11-13 23:13 UTC (2026-11-14 local time) from `151a6e89` (PR #43); see `docs/DEPLOYMENT.md`.
 
 ## 2026-11-13 — Released: legal texts in About Us, Scribes in one voice, lore gem on the avatar, set rolls; 0.9.0-beta.55
 

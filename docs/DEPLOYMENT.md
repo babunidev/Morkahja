@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 23:13 UTC (0.9.0-beta.56, set picks revealed one at a time)
+
+Approved by Babuni ("release"). `main` at `151a6e89` (PR #43): each solution of a set locks and reveals its roll as it arrives (D-025), new `POST /room/set-pick`, locked picks stored on the participant and in the solo checkpoint (new optional fields in the room and checkpoint documents; no table change), roll font from the result style.
+
+- **Before:** backend `94cee3ed`, frontend `20261113-224255`, no uncommitted files. Previous staging files moved to `prev-20261113-2312`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 41/41); CI `verify` passed on PR #43; uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261113-231305` (73 players, 109 avatars; sha256 `09aa0b56…`). Backend fast-forwarded to `151a6e89`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-231307` (`index-DtwcCnhz.js`, contains `0.9.0-beta.56` and `/room/set-pick`). `/Morkahja/` and health return 200; an unauthenticated `POST /Morkahja/api/room/set-pick` returns 401. API and bots online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI in production.
+
 ## Production release — 2026-11-13, 22:42 UTC (0.9.0-beta.55, About Us legal buttons, Scribes, lore gem, set rolls)
 
 Approved by Babuni ("release"). `main` at `94cee3ed` (PR #41): Privacy Policy and Terms of Service in the About Us footer, Scribes rewritten (D-022), the lore gem waiting on the avatar (D-023), and per-copy hovering solutions with their own rolls (D-024). Server changes: Scribe texts and the result now carries `pickRolls`/`diceFillRoll` after commit; no schema, dependency or game-content change.

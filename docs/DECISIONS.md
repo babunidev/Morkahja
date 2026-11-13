@@ -218,7 +218,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** a server endpoint locks each pick and reveals its roll; locked picks persist in the room and the solo checkpoint and decide the final resolution; the client plays the solution animation, raises the solution, and shows the roll on arrival.
 
-**Status:** implemented on `feat/set-pick-reveal` (0.9.0-beta.56); not merged or released.
+**Status:** live since 2026-11-14 (release `151a6e89`, 0.9.0-beta.56).
 
 ## 2026-11-13 — Licensing decision
 
