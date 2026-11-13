@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 21:27 UTC (0.9.0-beta.54, fades, menus, legal texts)
+
+Approved by Babuni ("deploy that please"). `main` at `14f7bf6d` (PR #39): smooth fades and menus that open once their pictures are decoded (D-020), About Us changes and new contacts, and the rewritten Terms of Service and Privacy Policy with "Use Your Key" (D-021). Client-only behavior and text changes plus the version bump; no server logic, schema, dependency or game-content change.
+
+- **Before:** backend `c6e6dd20`, frontend `20261113-175326`, no uncommitted files. Previous staging files moved to `prev-20261113-2127`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 41/41); CI `verify` passed on PR #39; uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261113-212733` (73 players, 109 avatars, 109 inventories; sha256 `cdbdc531…`). Backend fast-forwarded to `14f7bf6d`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-212735` (`index-D_s8w1XR.js`). From outside: the public script contains `0.9.0-beta.54`, "Use Your Key", "Alexander Ludwig aka Babuni", support@babuni.dev, the menu-readiness code and the changelog deep link, and no longer the old Gmail contact; `/Morkahja/`, health and content return 200. API and bots online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI in production.
+
 ## Production release — 2026-11-13, 17:53 UTC (0.9.0-beta.53, solution sets)
 
 Requested by Babuni ("bring it online, I need to test it with the high level accounts"). `main` at `c6e6dd20` (PR #37): encounters that need several solutions are chosen one at a time (D-019). Server rules change (`encounterResolver.ts`, `/room/choice` accepts `picks`/`diceFill`), new snapshots carry per-copy rolls (`extraRolls`); no schema migration, dependency or game-content change. Encounters already open at release reuse each slot's roll for every copy.

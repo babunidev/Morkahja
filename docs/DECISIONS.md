@@ -174,7 +174,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Also from this request:** the Babuni.dev and Nikita Malko texts in About Us were shown twice (a rendering bug, now once); Claude is named among the tools; the "Operational Costs" card with its figures is removed at Babuni's request ("I don't think anyone needs to know that ... if they are interested, they can ask") and replaced by "Keeping Morkahja Alive": one person pays for everything, the game earns nothing yet, donations are very welcome and in-game purchases even more (revenue could one day help find an investor), and support buys time for the game, with babuni@babuni.dev as the contact; the author card shows "Alexander Ludwig aka Babuni" (Babuni's own wording and choice to be named publicly in the game) with a Website button to babuni.dev; the privacy policy contact becomes support@babuni.dev (from Babuni's list babuni@, feedback@, support@; the policy's effective date left as it was) and the donation panel says "Donate directly to Babuni"; "Full changelog" opens the babuni.dev living grid on Morkahja's Changelog (`#project=morkahja-rpg&bloom=big&read=changes`).
 
-**Status:** implemented on `feat/smooth-fades-preload` (0.9.0-beta.54); not merged or released.
+**Status:** live since 2026-11-13 (release `14f7bf6d`, 0.9.0-beta.54).
 
 ## D-021 — Terms and privacy policy describe the game as it is (2026-11-13)
 
@@ -184,7 +184,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Not legal advice; open points:** EU consumers normally have a 14-day right of withdrawal for digital content unless they agree, before delivery, to immediate supply and acknowledge losing that right. Without that consent at checkout, the softened wording leaves the statutory right in place rather than excluding it. The seven-year purchase-record period follows Swedish bookkeeping law and should be confirmed for Babuni's situation.
 
-**Status:** implemented on `feat/smooth-fades-preload` (0.9.0-beta.54); not merged or released.
+**Status:** live since 2026-11-13 (release `14f7bf6d`, 0.9.0-beta.54).
 
 ## 2026-11-13 — Licensing decision
 
