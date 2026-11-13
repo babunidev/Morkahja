@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 16:37 UTC (0.9.0-beta.52, flight flash fix)
+
+Approved by Babuni ("release"). `main` at `e12c2fec` (PR #35): flying icons are created hidden and shown only once their first keyframe applies, so spent solutions and rewards no longer flash in the encounter's top-left corner (`rewardFlyAnimation.ts`). Client-only behavior change plus the version bump; no dependency, schema or game-content changes.
+
+- **Before:** backend `49fb6809`, frontend `20261113-071758`, no uncommitted files. Previous staging files moved to `prev-20261113-1637`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 40/40); CI `verify` passed on PR #35; uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261113-163750` (73 players, 109 avatars, 109 inventories; sha256 `da409322…`). Backend fast-forwarded to `e12c2fec`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-163751` (`index-DiSwY3sN.js`). Public checks passed; the public script contains `0.9.0-beta.52` and the hidden-until-start flyer code. Bots back online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI.
+
 ## Production release — 2026-11-13, 07:17 UTC (0.9.0-beta.51, Atranor items)
 
 Approved by Babuni ("yes release"). `main` at `49fb6809` (PR #33): Atranor items no longer fill essence slots (client) and are no longer lost as lives on Hardship/Misery (server, `inventoryService.ts`). No dependency, schema or game-content changes.
