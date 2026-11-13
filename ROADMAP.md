@@ -98,6 +98,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
+- [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
+- [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
 - [x] Fixed and released (`e78cde2f`, 2026-11-11): a level-up event could be played twice after leaving or reloading mid-event (rewards twice).
 - [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.

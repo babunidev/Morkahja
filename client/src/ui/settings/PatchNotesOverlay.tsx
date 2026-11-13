@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-43-nov-4-13',
-    version: '0.9.0-beta.43',
+    id: 'beta-44-nov-4-13',
+    version: '0.9.0-beta.44',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -46,7 +46,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'A new game screen: the encounter picture on top, your party in the middle, and Call for help, Inventory, Skillbook and Lore below.',
           'Rewards grow out of the encounter and losses fly in from where you kept them. Tap each one to collect it, and collecting the last one continues.',
           'Collected items show in your Inventory and Skillbook at once.',
-          'A new frame around the encounter. Its bottom line is a timer that shrinks toward whatever you are waiting for: the dice, a solution, your rewards or Continue.',
+          'A new frame around the encounter. Its bottom line is a timer: from a new encounter until its solutions are ready, and from your choice until your rewards, losses or Continue can be used.',
           'Tooltips everywhere on the game screen point at their item, open after a short pause, and appear on a long press on phones without using the item.',
           'Playing alone, your avatar gets the whole space between the solutions and the buttons.',
         ],

@@ -9,7 +9,7 @@ import {
   randomGapDashArray,
   timerSegments,
 } from './encounterFrameGeometry.js';
-import { replacesTimer } from '../frameTimer.js';
+import { fractionAt, planPhase } from '../frameTimer.js';
 
 test('every line cuts its corners along the corner triangles (parallel 45° cuts)', () => {
   // The cut line of a line `offset` outside the picture is x + y = leg - 2*offset
@@ -43,12 +43,28 @@ test('the timer shrinks from both ends toward its target, clamped to the line', 
   assert.deepEqual(timerSegments(500, 900, 10).right, { from: 490, to: 490 });
 });
 
-test('overlapping waits: the line follows the one that finishes last', () => {
-  const running = { id: 1, target: null, startedAt: 0, durationMs: 1000 };
-  assert.equal(replacesTimer(running, { startedAt: 200, durationMs: 500 }, 200), false);
-  assert.equal(replacesTimer(running, { startedAt: 200, durationMs: 900 }, 200), true);
-  assert.equal(replacesTimer(running, { startedAt: 1200, durationMs: 100 }, 1200), true, 'a finished wait never blocks');
-  assert.equal(replacesTimer(null, { startedAt: 0, durationMs: 1 }, 0), true);
+test('a phase is one line: later steps re-time it from its current length, never restart it', () => {
+  let ids = 0;
+  const newId = (): number => ++ids;
+  // Using a solution: the phase starts full, guessed to end at 7300.
+  const used = planPhase(null, 'act:1', null, 0, 7300, false, newId)!;
+  assert.equal(used.startFraction, 1);
+  // Rewards start emerging at 2500 and need until 9000: same line, re-timed from what is left.
+  const emerging = planPhase(used, 'act:1', null, 2500, 6500, false, newId)!;
+  assert.equal(emerging.id, used.id);
+  assert.ok(Math.abs(emerging.startFraction - fractionAt(used, 2500)) < 1e-9);
+  assert.equal(emerging.planEnd, 9000);
+  // A shorter guess does not cut the phase short...
+  assert.equal(planPhase(emerging, 'act:1', null, 3000, 1000, false, newId), emerging);
+  // ...but the step that knows the real end may.
+  const exact = planPhase(emerging, 'act:1', null, 4000, 3000, true, newId)!;
+  assert.equal(exact.planEnd, 7000);
+  assert.equal(exact.id, used.id);
+  assert.ok(fractionAt(exact, 4000) > 0 && fractionAt(exact, 7000) === 0);
+  // The next phase starts a new, full line.
+  const next = planPhase(exact, 'actions:2', null, 8000, 5000, false, newId)!;
+  assert.notEqual(next.id, used.id);
+  assert.equal(next.startFraction, 1);
 });
 
 test('a selection ring with random gaps closes exactly and differs per item', async () => {

@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: the frame timer counts two phases; 0.9.0-beta.44
+
+- **Change (Babuni's direction): the timer on the encounter frame's bottom line counts whole phases, not single animations.** Before, each animation restarted the line at full length (the actions appearing, then the solutions flying in; the roll, then the used solution's flight, the rewards, the losses, the wait to collect). Now there are two lines per encounter: from the encounter appearing until its solutions can be used (they wobble), and from using a solution or the dice until the rewards, losses or Continue arrow can be used (they wobble). Each step re-plans when its phase ends and the line is re-timed from its current length, never restarted (`planFramePhase`/`endFramePhase` in `client/src/ui/game/frameTimer.ts`; drawn with the Web Animations API in `DecorativeEdgeFrame.tsx`). A first guess (`RESULT_READY_ESTIMATE_MS`) covers the wait for the server's result; the last step sets the real end.
+- **Checked (website):** babuni.dev's living grid reads nothing from the address (no hash or query parameters), so no link can open the grid at the Morkahja project with its changelog reader. The patch notes keep linking to the project's changelog page; a deep link is a request for the website.
+- **Version 0.9.0-beta.44** (D-015). Patch notes text for the timer updated.
+- **Verification:** client typecheck, tests (26, the timer test rewritten for phases) and production build passed. Headless Chrome at 1400 × 900, the line traced every 200 ms: rolling the dice gave one line shrinking for about 5.8 s until the rewards could be collected (before: three restarts); the next encounter gave one line until its solutions were ready. In that trace the next encounter's line started about 2.2 s after Continue, when the new encounter appeared. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: hover seams fixed, framed title picker, Friends fixes, 0.9.0-beta.43
 
 - **Fix (Babuni's report): lines across buttons when they grow on hover.** The simple frame was a nine-slice `border-image` with its background baked in; Chrome drew faint seams between the slices, most visibly when scaled. It is now drawn as CSS background layers (four corner images, solid lines and `repeating-linear-gradient` gapped lines) over the element's own background, cut to the octagon with `clip-path` (`simpleFrame.ts`). The hover glow moved from the scaled visual to the button around it, so it follows the cut corners. Two clipped glows that no longer showed were replaced: important Scribes entries get a brighter frame, the selected die keeps its gold frame.

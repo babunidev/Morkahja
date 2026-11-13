@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { FrameLinesSvg, useElementSize } from '../../common/LineFrame.js';
-import { subscribeFrameTimer, type FrameTimer } from '../frameTimer.js';
+import { fractionAt, subscribeFrameTimer, type FrameTimer } from '../frameTimer.js';
 import {
   ENCOUNTER_FRAME,
   FRAME_OUTSET_PX,
@@ -28,14 +28,11 @@ const svgStyle: CSSProperties = {
 };
 
 const TIMER_FADE_IN_MS = 280;
-const TIMER_KEYFRAMES = '@keyframes morkahja-frame-timer-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }'
-  + ' @keyframes morkahja-frame-timer-fade-in { from { opacity: 0; } to { opacity: 1; } }';
+const TIMER_KEYFRAMES = '@keyframes morkahja-frame-timer-fade-in { from { opacity: 0; } to { opacity: 1; } }';
 
 interface ShownTimer {
   timer: FrameTimer;
   targetX: number;
-  /** How far the wait had run when this frame picked it up. */
-  elapsedMs: number;
 }
 
 /**
@@ -63,19 +60,23 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
         setShownTimer(null);
         return;
       }
-      // Measured on screen; drawn in the (possibly scaled) stage's own pixels.
-      const frameRect = node.getBoundingClientRect();
-      const scale = node.offsetWidth > 0 ? frameRect.width / node.offsetWidth : 1;
-      const targetRect = timer.target?.isConnected ? timer.target.getBoundingClientRect() : null;
-      const targetX = targetRect && targetRect.width > 0
-        ? (targetRect.left + targetRect.width / 2 - frameRect.left) / scale
-        : node.offsetWidth / 2;
-      const elapsedMs = Math.max(0, performance.now() - timer.startedAt);
-      setShownTimer({ timer, targetX, elapsedMs: Math.round(elapsedMs) });
-      const remaining = timer.durationMs - elapsedMs;
+      setShownTimer((shown) => {
+        // The line keeps its place for the whole phase; only its timing changes.
+        if (shown?.timer.id === timer.id) {
+          return { ...shown, timer };
+        }
+        // Measured on screen; drawn in the (possibly scaled) stage's own pixels.
+        const frameRect = node.getBoundingClientRect();
+        const scale = node.offsetWidth > 0 ? frameRect.width / node.offsetWidth : 1;
+        const targetRect = timer.target?.isConnected ? timer.target.getBoundingClientRect() : null;
+        const targetX = targetRect && targetRect.width > 0
+          ? (targetRect.left + targetRect.width / 2 - frameRect.left) / scale
+          : node.offsetWidth / 2;
+        return { timer, targetX };
+      });
       clearTimer = window.setTimeout(() => {
-        setShownTimer((shown) => (shown?.timer.id === timer.id ? null : shown));
-      }, Math.max(0, remaining));
+        setShownTimer((shown) => (shown?.timer.id === timer.id && shown.timer.revision === timer.revision ? null : shown));
+      }, Math.max(0, timer.planEnd - performance.now()));
     });
     return () => {
       unsubscribe();
@@ -84,6 +85,27 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
       }
     };
   }, [showTimer]);
+
+  // Each plan re-times the shrink from the line's current length to nothing.
+  const barRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const timerRevision = shownTimer ? `${shownTimer.timer.id}:${shownTimer.timer.revision}` : '';
+  useLayoutEffect(() => {
+    const timer = shownTimer?.timer;
+    if (!timer) {
+      return undefined;
+    }
+    const now = performance.now();
+    const from = fractionAt(timer, now);
+    const duration = Math.max(1, timer.planEnd - now);
+    const animations = barRefs.current
+      .filter((bar): bar is HTMLDivElement => Boolean(bar))
+      .map((bar) => bar.animate(
+        [{ transform: `scaleX(${from})` }, { transform: 'scaleX(0)' }],
+        { duration, easing: 'linear', fill: 'forwards' },
+      ));
+    return () => animations.forEach((animation) => animation.cancel());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerRevision, size.width]);
 
   const pictureWidth = size.width - 2 * FRAME_OUTSET_PX;
   const pictureHeight = size.height - 2 * FRAME_OUTSET_PX;
@@ -100,14 +122,15 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
       borderRadius: TIMER_THICKNESS_PX,
       background: TIMER_COLOR,
       boxShadow: '0 0 8px 1px rgba(255, 222, 150, 0.95), 0 0 3px rgba(255, 255, 255, 0.8)',
-      // Fades in, then shrinks toward the target until the wait is over.
-      animation: `morkahja-frame-timer-shrink ${shownTimer.timer.durationMs}ms linear -${shownTimer.elapsedMs}ms forwards, `
-        + `morkahja-frame-timer-fade-in ${TIMER_FADE_IN_MS}ms ease-out`,
+      // Fades in when the phase starts; the shrink is animated from the plan above.
+      transform: `scaleX(${fractionAt(shownTimer.timer, performance.now())})`,
+      animation: `morkahja-frame-timer-fade-in ${TIMER_FADE_IN_MS}ms ease-out`,
     };
     timerBars = (
       <>
         <div
           key={`l${shownTimer.timer.id}`}
+          ref={(bar) => { barRefs.current[0] = bar; }}
           style={{
             ...barBase,
             left: segments.left.from,
@@ -117,6 +140,7 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
         />
         <div
           key={`r${shownTimer.timer.id}`}
+          ref={(bar) => { barRefs.current[1] = bar; }}
           style={{
             ...barBase,
             left: segments.right.from,
