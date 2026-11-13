@@ -138,3 +138,9 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Realigned Firestarter/Pathfinder milestones: one avatar starts visible progress, two avatars earn Firestarter, three earn Pathfinder, followed by 15 and 30 combined levels.
 - Firestarter ranks are never lowered: a rank earned under the earlier milestones is kept, while new rank-ups follow the revised ones. Legacy rank-4 decoding is retained and stale unlock timestamps are corrected.
 - Added threshold, reward, title and Scribes notification regression tests; all 11 achievement tests passed in GitHub Actions run 41766029656. Overall CI remained blocked by an existing unavailable PostgreSQL endpoint in the session-auth test; no gameplay deployment is claimed.
+
+## 2026-11-13 — License and rights
+
+- Established MIT for original code and CC BY 4.0 for eligible original creative work, excluding music and external effects and updated repository documentation to explain the permission boundary.
+- Updated the in-game terms to distinguish open licensing from live-service conduct rules.
+- Preserved third-party authorship and external assets' separate terms. No gameplay or runtime verification is claimed.
