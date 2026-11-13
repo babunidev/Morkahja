@@ -134,8 +134,15 @@ interface IconFlightMotion {
   nearEndLeadMs?: number;
 }
 
+/**
+ * A flyer is created hidden: its image still has to load and its start
+ * position is only applied when the flight begins (`runAnimatedFlyer`). A
+ * visible flyer would show for those frames at the containing block's top-left
+ * corner (left: 0, top: 0, no transform).
+ */
 function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTMLImageElement {
   const flyer = document.createElement('img');
+  flyer.style.visibility = 'hidden';
   flyer.dataset.morkahjaIconFlyer = 'true';
   flyer.alt = '';
   flyer.draggable = false;
@@ -199,6 +206,8 @@ function runAnimatedFlyer(
           easing,
           fill: 'forwards',
         });
+        // Shown only now that the first keyframe holds its start position.
+        flyer.style.visibility = 'visible';
 
         animation.finished.then(finish).catch(finish);
       });
