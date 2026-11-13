@@ -607,16 +607,23 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       // Each loss appears where it was kept and travels to its place in the
-      // loss row: an essence from its slot on the avatar (which empties), an
+      // loss row: an essence from the slot holding it on the avatar (which
+      // empties) or, when it was not in a slot, from the Inventory button; an
       // item or skill from its Inventory or Skillbook button.
       const avatarRect = getAvatarPortraitRect();
       const essenceSlotRect = (loss: (typeof losses)[number]): DOMRect | null => {
         if (readOnlyWitness) {
           return avatarRect;
         }
-        const [position] = takeFromEssenceSlots(loss.quantity, `${arrivalKey}:${loss.solution.mSolutionID}`);
+        const [position] = takeFromEssenceSlots(
+          loss.solution.mSolutionID,
+          loss.quantity,
+          `${arrivalKey}:${loss.solution.mSolutionID}`,
+        );
         const slot = position === undefined ? null : essenceSlotElement(position);
-        return slot?.getBoundingClientRect() ?? avatarRect;
+        return slot?.getBoundingClientRect()
+          ?? getFooterButtonRect(rewardFlyTargetKind(ESSENCE_INVENTORY_TYPE))
+          ?? avatarRect;
       };
       const flights: Array<LossArrivalSpec & { key: string }> = losses.flatMap((loss) => {
         const inventoryType = loss.solution.mSolutionInventoryType;
@@ -1041,16 +1048,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
       ? rewards.find((reward) => reward.solution.mSolutionID === solutionId
         && reward.solution.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE)
       : undefined;
-    let essencesIntoSlots = 0;
+    const essenceSlotsReserved: number[] = [];
     if (essenceReward && !readOnlyWitness) {
       let firstSlot: number | null = null;
       for (let index = 0; index < essenceReward.quantity; index += 1) {
-        const position = reserveEssenceSlot();
+        const position = reserveEssenceSlot(solutionId);
         if (position === null) {
           break;
         }
         firstSlot ??= position;
-        essencesIntoSlots += 1;
+        essenceSlotsReserved.push(position);
       }
       if (firstSlot !== null) {
         const slot = essenceSlotElement(firstSlot);
@@ -1077,9 +1084,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     const flight = isReward
       ? playRewardFlights(rewardFlights, { keepOtherFlyers: true }).then(() => {
-        for (let index = 0; index < essencesIntoSlots; index += 1) {
-          landEssenceInSlot();
-        }
+        essenceSlotsReserved.forEach(landEssenceInSlot);
       })
       : playLossBubblesFromTargets(lossFlights, { keepOtherFlyers: true });
     if (!isLast) {

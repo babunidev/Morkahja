@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-49-nov-4-13',
-    version: '0.9.0-beta.49',
+    id: 'beta-50-nov-4-13',
+    version: '0.9.0-beta.50',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -51,6 +51,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Playing alone, your avatar gets the whole space between the solutions and the buttons.',
           'Tapping an avatar opens its details in a framed card that points at it, like the tooltips.',
           'Your lives sit on your avatar: five essence slots on the bottom of the portrait. Losses leave from them, new essences fly in, and the next encounter refills them from your inventory.',
+          'Each essence slot keeps its own essence: after a loss or a new essence the others no longer change pictures.',
         ],
       },
       {
