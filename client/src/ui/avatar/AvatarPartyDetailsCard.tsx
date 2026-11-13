@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { AvatarInventoryDto } from '@shared/contracts';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
-import { EssenceLivesRow } from './EssenceLivesRow.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
 import { TooltipDivider } from '../game/GameTooltip.js';
 
@@ -117,12 +116,9 @@ export function experienceRequiredForNextLevel(level: number): number {
 
 export function AvatarPartyDetailsCard({
   avatar,
-  inventory,
-  inventorySeed,
   statusLabel,
   statusInactive = false,
   footer,
-  slotSide = 'center',
 }: {
   avatar: {
     name: string;
@@ -172,7 +168,6 @@ export function AvatarPartyDetailsCard({
       <span style={xpTextStyle}>
         XP {currentExperience}/{nextLevelExperience}
       </span>
-      <EssenceLivesRow essences={inventory?.essences} seed={`${inventorySeed}:${slotSide}`} />
       {statusLabel ? (
         <span
           className={statusInactive ? 'morkahja-party-status-badge-inactive' : undefined}

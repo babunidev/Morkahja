@@ -25,6 +25,7 @@ import {
 } from './partyParticipantChoiceBadge.js';
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
 import { AnchoredGamePopover } from '../GameTooltip.js';
+import { EssenceSlotsRing } from '../../avatar/EssenceSlotsRing.js';
 
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
 
@@ -311,6 +312,7 @@ export function PartyMemberSlot({
                 }}
                 portrait={portraitSrc}
               />
+              <EssenceSlotsRing avatarId={participant.avatar.id} essences={participant.avatar.inventory?.essences} />
               <PartyParticipantChoiceBadge
                 hidden={detailsOpen}
                 participant={participant}

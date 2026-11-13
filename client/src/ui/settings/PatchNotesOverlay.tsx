@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-47-nov-4-13',
-    version: '0.9.0-beta.47',
+    id: 'beta-48-nov-4-13',
+    version: '0.9.0-beta.48',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -50,6 +50,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Tooltips everywhere on the game screen point at their item, open after a short pause, and appear on a long press on phones without using the item. A line now separates each title from its text.',
           'Playing alone, your avatar gets the whole space between the solutions and the buttons.',
           'Tapping an avatar opens its details in a framed card that points at it, like the tooltips.',
+          'Your lives sit on your avatar: five essence slots on the bottom of the portrait. Losses leave from them, new essences fly in, and the next encounter refills them from your inventory.',
         ],
       },
       {

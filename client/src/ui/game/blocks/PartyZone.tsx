@@ -170,6 +170,7 @@ export function PartyZone({
               <div style={mainAvatarAnchorStyle(alone)}>
                 <AvatarPanel
                   avatar={avatar}
+                  encounterKey={room?.activeEncounter?.snapshotId}
                   hidePortraitForHandoff={hideAvatarPortraitForHandoff}
                   homeVisible={homeVisible}
                   onDetailsVisibleChange={(visible) => {

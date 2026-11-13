@@ -139,3 +139,12 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **AI implementation:** the second description: a change after undo is inserted after the current step and later steps remain (`creationHistory.ts`). Typing a name amends the current step.
 
 **Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Switching to the first description (drop later steps) is a one-line change if preferred.
+
+## D-017 — Essence slots on the avatar (2026-11-13)
+
+**Babuni's direction:** essences shown not in the tooltip but on the bottom edge of the round avatar, five small symbols: "one in the middle, down in the center, and then 2 on the left, 2 on the right". A loss is "consumed from these 5 slots"; emptied slots are "replenished with some from the inventory whenever we enter the next encounter"; a collected essence "should move in the slot directly" if a slot is free, otherwise into the inventory.
+
+**AI implementation:** a client-side slot store (`essenceSlots.ts`) over the server inventory; slots fill centre-out and empty outside-in (an AI choice); the refill starts 0.7 s after a new encounter appears, staggered per slot.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released.
+

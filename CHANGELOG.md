@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: essence slots on the avatar; 0.9.0-beta.48
+
+- **New (Babuni's direction): the avatar's lives are five essence slots on the bottom edge of its round portrait**, one at the bottom centre and two on each side, instead of a row in the details card (`client/src/ui/avatar/EssenceSlotsRing.tsx`, removed `EssenceLivesRow.tsx`). Party members show theirs the same way, without animations.
+- **The local avatar's slots have their own timing** (`client/src/ui/game/essenceSlots.ts`): slots fill from the centre outward and empty from the outside in. A lost essence now flies to the loss row from its slot, which stays empty for the rest of the encounter (it used to come from the middle of the avatar). When the next encounter begins, empty slots are refilled from the inventory while it holds more essences, each flying from the Inventory button into its slot. A collected essence flies into a free slot; with all five filled it goes to the Inventory button as before. The server's inventory is unchanged; the slots are a view of it.
+- **Version 0.9.0-beta.48** (D-015). Patch notes line added.
+- **Verification:** client typecheck, tests (32, three new for the slot rules) and production build passed. Headless Chrome at 412 × 915: the ring shows on the portrait (a test avatar with three essences: three filled, two empty sockets). Traced through a round with an essence loss: the slot emptied as the loss arrived (3 → 2) and the count followed on collecting. **Not seen on screen:** the refill at the next encounter and a collected essence flying into a slot, since the test avatar had no essences beyond its slots; both rules are covered by the unit tests. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: avatar details open like a tooltip; 0.9.0-beta.47
 
 - **Change (Babuni's direction): the avatar details card is framed and anchored like the game tooltips.** Clicking your avatar or a party member opened an unframed card laid over the portrait. It now opens in `AnchoredGamePopover` (`GameTooltip.tsx`): the tooltip frame, placed by the same rule as the item tooltips (toward the middle of the game screen; for the centred avatar above it with the gold marker in the middle of the edge, for a side slot anchored by a corner), fading in, and staying until closed so its Return home or Kick button works. The placement code is shared with the tooltips (`placeNearTrigger`). A divider separates the name from the details.

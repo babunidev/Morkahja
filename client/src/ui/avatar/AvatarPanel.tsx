@@ -7,6 +7,7 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
+import { EssenceSlotsRing } from './EssenceSlotsRing.js';
 
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
@@ -188,6 +189,8 @@ export function AvatarPanel({
 
   slotSide = 'center',
 
+  encounterKey,
+
 }: {
 
   avatar: PersistedAvatar;
@@ -209,6 +212,9 @@ export function AvatarPanel({
   xpGainAmount?: number;
 
   slotSide?: AvatarDetailsSlotSide;
+
+  /** The current encounter: the essence slots refill when it changes. */
+  encounterKey?: string;
 
 }) {
 
@@ -353,6 +359,12 @@ export function AvatarPanel({
 
               </div>
 
+              <EssenceSlotsRing
+                avatarId={avatar.id}
+                encounterKey={encounterKey}
+                essences={avatar.inventory?.essences}
+                local
+              />
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge

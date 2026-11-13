@@ -295,3 +295,7 @@ Avatar creation used to let me go back to an earlier avatar, and I wanted that b
 ### Avatar details with a frame — 2026-11-13
 
 One element still had no frame: the details card that opens when I tap an avatar. It now opens like the tooltips, in the same frame, popping out above my avatar with the marker in the middle, and for the side slots anchored by a corner the way the item tooltips are. **Verification:** checked for my own avatar at phone and desktop sizes in a headless browser; the side slots still need my own look with a party; tests and build passed. **Not deployed yet.**
+
+### Lives on the avatar — 2026-11-13
+
+I wanted my lives where I can see them: five essence slots on the bottom edge of my avatar's portrait, one at the bottom and two on each side, instead of a row hidden in the details. They now behave like a small belt. A lost essence leaves from its slot and the slot stays empty. At the next encounter, essences from my inventory fly in to fill the gaps, and a new essence I collect goes straight into a free slot, or into the inventory once all five are full. **Verification:** in a headless browser at phone size the slots showed on the avatar, and a lost essence emptied its slot; the refill and collecting into a slot are covered by tests but still need a look in play. **Not deployed yet.**

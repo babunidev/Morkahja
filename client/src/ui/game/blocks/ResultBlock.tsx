@@ -62,6 +62,7 @@ import {
   fadeTransition,
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -606,13 +607,21 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       // Each loss appears where it was kept and travels to its place in the
-      // loss row: an essence from the middle of the avatar, an item or skill
-      // from its Inventory or Skillbook button.
+      // loss row: an essence from its slot on the avatar (which empties), an
+      // item or skill from its Inventory or Skillbook button.
       const avatarRect = getAvatarPortraitRect();
+      const essenceSlotRect = (loss: (typeof losses)[number]): DOMRect | null => {
+        if (readOnlyWitness) {
+          return avatarRect;
+        }
+        const [position] = takeFromEssenceSlots(loss.quantity, `${arrivalKey}:${loss.solution.mSolutionID}`);
+        const slot = position === undefined ? null : essenceSlotElement(position);
+        return slot?.getBoundingClientRect() ?? avatarRect;
+      };
       const flights: Array<LossArrivalSpec & { key: string }> = losses.flatMap((loss) => {
         const inventoryType = loss.solution.mSolutionInventoryType;
         const sourceRect = inventoryType === ESSENCE_INVENTORY_TYPE
-          ? avatarRect
+          ? essenceSlotRect(loss)
           : getFooterButtonRect(rewardFlyTargetKind(inventoryType));
         const targetRect = lossButtonRefs.current.get(loss.solution.mSolutionID)?.getBoundingClientRect();
         if (!sourceRect || !targetRect || sourceRect.width <= 0 || targetRect.width <= 0) {
@@ -1026,7 +1035,28 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const flightId = isReward
       ? (solutionId === LORE_GEM_REWARD_ID ? 'reward-fly-lore-gem' : `reward-fly-${solutionId}`)
       : `loss-dismiss-${solutionId}`;
-    const rewardFlights = isReward ? buildRewardFlights().filter((flight) => flight.id === flightId) : [];
+    let rewardFlights = isReward ? buildRewardFlights().filter((flight) => flight.id === flightId) : [];
+    // An essence goes into a free slot on the avatar; with all five filled, to the inventory.
+    const essenceReward = isReward
+      ? rewards.find((reward) => reward.solution.mSolutionID === solutionId
+        && reward.solution.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE)
+      : undefined;
+    let essencesIntoSlots = 0;
+    if (essenceReward && !readOnlyWitness) {
+      let firstSlot: number | null = null;
+      for (let index = 0; index < essenceReward.quantity; index += 1) {
+        const position = reserveEssenceSlot();
+        if (position === null) {
+          break;
+        }
+        firstSlot ??= position;
+        essencesIntoSlots += 1;
+      }
+      if (firstSlot !== null) {
+        const slot = essenceSlotElement(firstSlot);
+        rewardFlights = rewardFlights.map((flight) => ({ ...flight, targetElement: slot }));
+      }
+    }
     const lossFlights = isReward ? [] : buildLossFlights().filter((flight) => flight.id === flightId);
 
     collectedRef.current = new Set(collectedRef.current).add(key);
@@ -1046,7 +1076,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     playSfx(isLast ? CONTINUE_SOUND : DEFAULT_BUTTON_SOUND);
 
     const flight = isReward
-      ? playRewardFlights(rewardFlights, { keepOtherFlyers: true })
+      ? playRewardFlights(rewardFlights, { keepOtherFlyers: true }).then(() => {
+        for (let index = 0; index < essencesIntoSlots; index += 1) {
+          landEssenceInSlot();
+        }
+      })
       : playLossBubblesFromTargets(lossFlights, { keepOtherFlyers: true });
     if (!isLast) {
       void flight;
