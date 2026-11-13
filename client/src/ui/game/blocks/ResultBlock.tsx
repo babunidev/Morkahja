@@ -17,6 +17,8 @@ import {
   type EncounterInventoryChange,
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import { actPhaseKey, endFramePhase, middleElement, planFramePhase } from '../frameTimer.js';
+import { GameTooltipCard, TooltipDivider, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import {
   animationAlreadyPlayed,
@@ -27,8 +29,10 @@ import {
   getFooterButtonRect,
   landingRevealMs,
   LOSS_ARRIVAL_MS,
+  LOSS_ARRIVAL_STAGGER_MS,
   LOSS_ROW_FADE_IN_MS,
   REWARD_EMERGE_MS,
+  REWARD_EMERGE_STAGGER_MS,
   playLossArrivals,
   playLossBubblesFromTargets,
   playRewardEmergence,
@@ -58,6 +62,7 @@ import {
   fadeTransition,
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -80,13 +85,6 @@ interface VisibleReward {
   solution: SolutionRecord;
 }
 
-type ItemTooltipState = {
-  name: string;
-  quantityLabel: string;
-  description?: string;
-  x: number;
-  y: number;
-};
 
 /**
  * The result uses the solution bar's place and grid (A, B, dice, C, D; see
@@ -323,23 +321,6 @@ function lossIconStyle(inventoryType: number): CSSProperties {
     : lossItemImageStyle;
 }
 
-const rewardTooltipStyle: CSSProperties = {
-  position: 'absolute',
-  zIndex: 50,
-  display: 'grid',
-  gap: 4,
-  minWidth: 148,
-  maxWidth: 'min(280px, 72vw)',
-  padding: '8px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.94)',
-  fontFamily: 'Georgia, serif',
-  textShadow: '0 2px 5px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
-  pointerEvents: 'none',
-  transform: 'translate(-50%, calc(-100% - 12px))',
-};
 
 const rewardTooltipTitleStyle: CSSProperties = {
   margin: 0,
@@ -358,9 +339,7 @@ const rewardTooltipMetaStyle: CSSProperties = {
 };
 
 const rewardTooltipTextStyle: CSSProperties = {
-  margin: '2px 0 0',
-  paddingTop: 4,
-  borderTop: '1px solid rgba(255, 204, 102, 0.22)',
+  margin: '3px 0 0',
   color: 'rgba(247, 239, 224, 0.9)',
   fontSize: '0.72rem',
   lineHeight: 1.35,
@@ -439,7 +418,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueSubmitInFlight, setContinueSubmitInFlight] = useState(false);
   const [continuePressAnimating, setContinuePressAnimating] = useState(false);
   const [rewardDismissInProgress, setRewardDismissInProgress] = useState(false);
-  const [itemTooltip, setItemTooltip] = useState<ItemTooltipState | null>(null);
+  // The game's shared tooltip (toward the picture's centre, corner marker, delay, fade).
+  const resultTips = useGameTooltip();
   const [rewardsFlyingAway, setRewardsFlyingAway] = useState(false);
   const [lossesFlyingAway, setLossesFlyingAway] = useState(false);
   const [lossesRevealed, setLossesRevealed] = useState(true);
@@ -627,13 +607,21 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       // Each loss appears where it was kept and travels to its place in the
-      // loss row: an essence from the middle of the avatar, an item or skill
-      // from its Inventory or Skillbook button.
+      // loss row: an essence from its slot on the avatar (which empties), an
+      // item or skill from its Inventory or Skillbook button.
       const avatarRect = getAvatarPortraitRect();
+      const essenceSlotRect = (loss: (typeof losses)[number]): DOMRect | null => {
+        if (readOnlyWitness) {
+          return avatarRect;
+        }
+        const [position] = takeFromEssenceSlots(loss.quantity, `${arrivalKey}:${loss.solution.mSolutionID}`);
+        const slot = position === undefined ? null : essenceSlotElement(position);
+        return slot?.getBoundingClientRect() ?? avatarRect;
+      };
       const flights: Array<LossArrivalSpec & { key: string }> = losses.flatMap((loss) => {
         const inventoryType = loss.solution.mSolutionInventoryType;
         const sourceRect = inventoryType === ESSENCE_INVENTORY_TYPE
-          ? avatarRect
+          ? essenceSlotRect(loss)
           : getFooterButtonRect(rewardFlyTargetKind(inventoryType));
         const targetRect = lossButtonRefs.current.get(loss.solution.mSolutionID)?.getBoundingClientRect();
         if (!sourceRect || !targetRect || sourceRect.width <= 0 || targetRect.width <= 0) {
@@ -673,6 +661,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       claimAnimationOnce(arrivalKey);
+      // The frame timer's phase 2 lasts at least through the losses' arrival
+      // and the wait until they can be collected.
+      planFramePhase(
+        actPhaseKey(encounterSnapshotId),
+        middleElement(lossButtonRefs.current.values()),
+        LOSS_ARRIVAL_MS + (flights.length - 1) * LOSS_ARRIVAL_STAGGER_MS + CONTINUE_REVEAL_TOTAL_MS,
+      );
       const flightKeys = flights.map((flight) => flight.key);
       const arrived = new Set<string>();
       await playLossArrivals(flights, (index) => {
@@ -743,6 +738,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       setContinueRevealPlaying(true);
+      // Counts down to the moment the player can act: toward the Continue
+      // arrow, or in collect mode toward the rewards and losses, which can be
+      // picked up when this reveal ends.
+      const waitTarget = blockRef.current?.querySelector('[aria-label="Continue"]')
+        ?? middleElement([...rewardButtonRefs.current.values(), ...lossButtonRefs.current.values()]);
+      // Now the real end of phase 2 is known.
+      planFramePhase(actPhaseKey(encounterSnapshotId), waitTarget, CONTINUE_REVEAL_TOTAL_MS, { exact: true });
 
       await waitForNextPaint();
       if (cancelled || postPressContinueRef.current) {
@@ -760,6 +762,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
       setContinueRevealPlaying(false);
       setContinueEnableRattle(true);
       setContinueInteractive(true);
+      // Rewards, losses or Continue can be used: phase 2 is over.
+      endFramePhase(actPhaseKey(encounterSnapshotId));
       activationRevealDoneRef.current = true;
 
       await new Promise<void>((resolve) => {
@@ -912,6 +916,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }));
 
   async function handleContinueClick(): Promise<void> {
+    if (resultTips.consumeLongPressActivation()) {
+      return;
+    }
     if (
       disabled
       || hidden
@@ -1014,6 +1021,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
   }
 
   async function collectItem(key: string): Promise<void> {
+    if (resultTips.consumeLongPressActivation()) {
+      return;
+    }
     if (!canCollect || collectedRef.current.has(key)) {
       return;
     }
@@ -1025,7 +1035,28 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const flightId = isReward
       ? (solutionId === LORE_GEM_REWARD_ID ? 'reward-fly-lore-gem' : `reward-fly-${solutionId}`)
       : `loss-dismiss-${solutionId}`;
-    const rewardFlights = isReward ? buildRewardFlights().filter((flight) => flight.id === flightId) : [];
+    let rewardFlights = isReward ? buildRewardFlights().filter((flight) => flight.id === flightId) : [];
+    // An essence goes into a free slot on the avatar; with all five filled, to the inventory.
+    const essenceReward = isReward
+      ? rewards.find((reward) => reward.solution.mSolutionID === solutionId
+        && reward.solution.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE)
+      : undefined;
+    let essencesIntoSlots = 0;
+    if (essenceReward && !readOnlyWitness) {
+      let firstSlot: number | null = null;
+      for (let index = 0; index < essenceReward.quantity; index += 1) {
+        const position = reserveEssenceSlot();
+        if (position === null) {
+          break;
+        }
+        firstSlot ??= position;
+        essencesIntoSlots += 1;
+      }
+      if (firstSlot !== null) {
+        const slot = essenceSlotElement(firstSlot);
+        rewardFlights = rewardFlights.map((flight) => ({ ...flight, targetElement: slot }));
+      }
+    }
     const lossFlights = isReward ? [] : buildLossFlights().filter((flight) => flight.id === flightId);
 
     collectedRef.current = new Set(collectedRef.current).add(key);
@@ -1045,7 +1076,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     playSfx(isLast ? CONTINUE_SOUND : DEFAULT_BUTTON_SOUND);
 
     const flight = isReward
-      ? playRewardFlights(rewardFlights, { keepOtherFlyers: true })
+      ? playRewardFlights(rewardFlights, { keepOtherFlyers: true }).then(() => {
+        for (let index = 0; index < essencesIntoSlots; index += 1) {
+          landEssenceInSlot();
+        }
+      })
       : playLossBubblesFromTargets(lossFlights, { keepOtherFlyers: true });
     if (!isLast) {
       void flight;
@@ -1057,33 +1092,38 @@ export const ResultBlock = forwardRef(function ResultBlock(
     await proceedAfterCollecting();
   }
 
-  function showItemTooltip(
+  function itemTooltipContent(
     change: EncounterInventoryChange | VisibleReward,
     sign: '+' | '-' | 'used',
-    event: { currentTarget: HTMLElement },
-  ): void {
-    const blockRect = blockRef.current?.getBoundingClientRect();
-    const itemRect = event.currentTarget.getBoundingClientRect();
-    const x = blockRect ? itemRect.left - blockRect.left + itemRect.width / 2 : itemRect.width / 2;
-    const y = blockRect ? itemRect.top - blockRect.top : 0;
+  ): GameTooltipContent {
     const quantityLabel = sign === 'used'
       ? `Used (−${change.quantity})`
       : `${sign}${change.quantity}`;
-
     const description = change.solution.mSolutionText?.trim();
-
-    setItemTooltip({
-      name: change.solution.mSolutionName,
-      quantityLabel,
-      description: description || undefined,
-      x,
-      y,
-    });
+    return {
+      key: `${sign}${change.solution.mSolutionID}`,
+      shellStyle: { width: 200, maxWidth: 200 },
+      body: (
+        <>
+          <p style={rewardTooltipTitleStyle}>{change.solution.mSolutionName}</p>
+          <TooltipDivider />
+          <p style={rewardTooltipMetaStyle}>{quantityLabel}</p>
+          {description ? <p style={rewardTooltipTextStyle}>{description}</p> : null}
+        </>
+      ),
+    };
   }
+
+  const continueTooltip = (): GameTooltipContent => ({
+    key: 'continue',
+    shellStyle: { width: 'max-content', maxWidth: 200 },
+    body: <GameTooltipCard title="Continue" lines={['Continue to the next encounter']} />,
+  });
 
   function hideItemTooltip(): void {
-    setItemTooltip(null);
+    resultTips.hide();
   }
+
 
   function renderLoreGemRewardIcon(placement: CSSProperties = {}) {
     const loreGemReward: VisibleReward = {
@@ -1111,16 +1151,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
           }
           rewardButtonRefs.current.delete(LORE_GEM_REWARD_ID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(loreGemReward, '+', event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(loreGemReward, '+', event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(loreGemReward, '+'))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={() => { void collectItem(`r:${LORE_GEM_REWARD_ID}`); }}
         style={{ ...loreGemRewardButtonStyle, ...placement, ...collectStyle(`r:${LORE_GEM_REWARD_ID}`) }}
         type="button"
@@ -1172,16 +1204,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
           rewardButtonRefs.current.delete(change.solution.mSolutionID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(change, sign, event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(change, sign, event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(change, sign))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={trackRewardRef ? () => { void collectItem(`r:${change.solution.mSolutionID}`); } : undefined}
         style={trackRewardRef ? { ...buttonStyle, ...collectStyle(`r:${change.solution.mSolutionID}`) } : buttonStyle}
         type="button"
@@ -1234,16 +1258,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
           lossButtonRefs.current.delete(loss.solution.mSolutionID);
         }}
-        onBlur={hideItemTooltip}
-        onFocus={(event) => {
-          showItemTooltip(loss, '-', event);
-        }}
-        onPointerCancel={hideItemTooltip}
-        onPointerEnter={(event) => {
-          showItemTooltip(loss, '-', event);
-        }}
+        {...resultTips.bindTooltip(() => itemTooltipContent(loss, '-'))}
         onContextMenu={preventImageContextMenu}
-        onPointerLeave={hideItemTooltip}
         onClick={() => { void collectItem(`l:${loss.solution.mSolutionID}`); }}
         style={{
           ...rewardItemStyle,
@@ -1365,7 +1381,18 @@ export const ResultBlock = forwardRef(function ResultBlock(
       && usedSolutions.length > 0;
 
     async function emerge(): Promise<void> {
+      // The frame's bottom line counts down toward the rewards, through the
+      // used solution's flight and the rewards' arrival.
+      const startRewardTimer = (durationMs: number): void => {
+        // Phase 2 lasts at least through this and the wait until collecting.
+        planFramePhase(
+          actPhaseKey(encounterSnapshotId),
+          middleElement(rewardButtonRefs.current.values()),
+          durationMs + CONTINUE_REVEAL_TOTAL_MS,
+        );
+      };
       if (solutionFlew) {
+        startRewardTimer(Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {
           window.setTimeout(resolve, Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
         });
@@ -1388,6 +1415,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
           targetRect,
         }];
       });
+
+      if (flights.length > 0) {
+        startRewardTimer(REWARD_EMERGE_MS + (flights.length - 1) * REWARD_EMERGE_STAGGER_MS);
+      }
 
       // Each reward fades in under its own flyer as it lands.
       const landed = new Set<string>();
@@ -1491,6 +1522,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           onClick={() => {
             void handleContinueClick();
           }}
+          {...resultTips.bindTooltip(continueTooltip)}
           onContextMenu={preventImageContextMenu}
           style={{
             ...continueButtonStyle,
@@ -1606,22 +1638,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           </>
         );
       })()}
-      {itemTooltip ? (
-        <div
-          role="tooltip"
-          style={{
-            ...rewardTooltipStyle,
-            left: itemTooltip.x,
-            top: itemTooltip.y,
-          }}
-        >
-          <p style={rewardTooltipTitleStyle}>{itemTooltip.name}</p>
-          <p style={rewardTooltipMetaStyle}>{itemTooltip.quantityLabel}</p>
-          {itemTooltip.description ? (
-            <p style={rewardTooltipTextStyle}>{itemTooltip.description}</p>
-          ) : null}
-        </div>
-      ) : null}
+      {resultTips.layer}
     </div>
   );
 });

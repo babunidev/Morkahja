@@ -4,6 +4,8 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -20,7 +22,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 480px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 516px)',
   maxHeight: 'min(88vh, 680px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
@@ -34,6 +37,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -64,7 +68,7 @@ const scrollBodyStyle: CSSProperties = {
 const sectionStyle: CSSProperties = {
   margin: '0 0 20px',
   paddingBottom: 18,
-  borderBottom: '1px solid rgba(255, 204, 102, 0.22)',
+  ...frameDividerStyle({ side: 'bottom' }),
 };
 
 const sectionHeadingStyle: CSSProperties = {
@@ -164,8 +168,9 @@ export function TermsOfServiceOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="terms-of-service-title" style={titleStyle}>
             Morkahja Terms of Service
@@ -371,7 +376,7 @@ export function TermsOfServiceOverlay({
             <TermsParagraph>These Terms are governed by the laws of Sweden.</TermsParagraph>
           </TermsSection>
 
-          <section style={{ ...sectionStyle, borderBottom: 0, paddingBottom: 0, marginBottom: 0 }}>
+          <section style={{ ...sectionStyle, borderWidth: 0, borderImageSource: 'none', paddingBottom: 0, marginBottom: 0 }}>
             <h3 style={sectionHeadingStyle}>18. Final Principle</h3>
             <TermsParagraph>
               Morkahja is not a fixed product but a continuing world. Participation implies acceptance

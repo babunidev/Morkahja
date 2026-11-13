@@ -90,3 +90,93 @@ export function clampAnchoredTooltipPlacement(
 
   return { left, top };
 }
+
+/**
+ * Where the tooltip touches the item: one of its corners, or the middle of its
+ * top or bottom edge for an item in the middle column.
+ */
+export type TooltipCorner =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'bottom-center';
+
+export interface CornerAnchoredPlacement {
+  /** Position of the tooltip relative to the container. */
+  left: number;
+  top: number;
+  corner: TooltipCorner;
+}
+
+interface RectLike {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Babuni's placement for item tooltips in the encounter picture: the tooltip
+ * opens toward the middle of the picture (right of an item on the left, above
+ * an item in the lower half, and so on), its nearest corner anchored a short
+ * diagonal distance from the item's centre, and it always stays inside the
+ * picture, clear of the frame. If the preferred side does not fit, it flips.
+ */
+export function placeTooltipTowardCenter(
+  containerRect: RectLike,
+  triggerRect: RectLike,
+  tooltipSize: { width: number; height: number },
+  { insetPx = 14, cornerOffsetRatio = 0.3 }: { insetPx?: number; cornerOffsetRatio?: number } = {},
+): CornerAnchoredPlacement {
+  const minX = insetPx;
+  const minY = insetPx;
+  const maxX = containerRect.width - insetPx;
+  const maxY = containerRect.height - insetPx;
+  const centerX = triggerRect.left - containerRect.left + triggerRect.width / 2;
+  const centerY = triggerRect.top - containerRect.top + triggerRect.height / 2;
+  const offset = Math.min(triggerRect.width, triggerRect.height) * cornerOffsetRatio;
+  const { width, height } = tooltipSize;
+
+  let goRight = centerX <= containerRect.width / 2;
+  let goUp = centerY > containerRect.height / 2;
+
+  const clamp = (value: number, low: number, high: number): number => (
+    high < low ? low : Math.max(low, Math.min(value, high))
+  );
+
+  // An item in the middle column: centre the tooltip on it, above or below,
+  // touching it with the middle of an edge (a corner would point at a neighbour).
+  if (Math.abs(centerX - containerRect.width / 2) <= triggerRect.width / 2) {
+    const gap = 6;
+    const above = centerY - triggerRect.height / 2 - gap - height;
+    const below = centerY + triggerRect.height / 2 + gap;
+    let up = goUp;
+    if (up && above < minY && below + height <= maxY) up = false;
+    if (!up && below + height > maxY && above >= minY) up = true;
+    return {
+      left: clamp(centerX - width / 2, minX, maxX - width),
+      top: clamp(up ? above : below, minY, maxY - height),
+      corner: up ? 'bottom-center' : 'top-center',
+    };
+  }
+
+  const leftFor = (right: boolean): number => (right ? centerX + offset : centerX - offset - width);
+  const topFor = (up: boolean): number => (up ? centerY - offset - height : centerY + offset);
+  const fitsX = (left: number): boolean => left >= minX && left + width <= maxX;
+  const fitsY = (top: number): boolean => top >= minY && top + height <= maxY;
+
+  if (!fitsX(leftFor(goRight)) && fitsX(leftFor(!goRight))) {
+    goRight = !goRight;
+  }
+  if (!fitsY(topFor(goUp)) && fitsY(topFor(!goUp))) {
+    goUp = !goUp;
+  }
+
+  return {
+    left: clamp(leftFor(goRight), minX, maxX - width),
+    top: clamp(topFor(goUp), minY, maxY - height),
+    corner: `${goUp ? 'bottom' : 'top'}-${goRight ? 'left' : 'right'}` as TooltipCorner,
+  };
+}

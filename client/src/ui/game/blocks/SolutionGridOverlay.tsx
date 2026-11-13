@@ -11,15 +11,16 @@ import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
   anchorXForGridColumn,
   anchoredTooltipCoords,
-  clampAnchoredTooltipPlacement,
-  tooltipTransform,
+  placeTooltipTowardCenter,
   type AnchoredTooltipCoords,
+  type TooltipCorner,
 } from '../../hooks/anchoredTooltip.js';
 import {
   useTooltipRevealBinding,
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
+import { GAME_TOOLTIP_DELAY_MS, tooltipCornerMarker } from '../GameTooltip.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
@@ -166,6 +167,12 @@ const gridTooltipShellStyle: CSSProperties = {
   boxSizing: 'border-box',
 };
 
+/** Soft, short fade in and out for item tooltips. */
+const TOOLTIP_FADE_MS = 120;
+const TOOLTIP_FADE_KEYFRAMES = '@keyframes morkahja-grid-tooltip-in { from { opacity: 0; } to { opacity: 1; } }'
+  + ' @keyframes morkahja-grid-tooltip-out { from { opacity: 1; } to { opacity: 0; } }';
+
+
 type GridTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 
 interface GridTooltipState {
@@ -270,7 +277,13 @@ export function SolutionGridOverlay({
   const activeTriggerRef = useRef<HTMLElement | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<GridTooltipState | null>(null);
-  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(
+  /** The previous tooltip, kept on screen while it fades out. */
+  const [fadingTooltip, setFadingTooltip] = useState<{
+    key: number;
+    item: SolutionGridEntry;
+    placement: { left: number; top: number; corner: TooltipCorner };
+  } | null>(null);
+  const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number; corner: TooltipCorner } | null>(
     null,
   );
   const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
@@ -302,12 +315,23 @@ export function SolutionGridOverlay({
     activeTriggerRef.current = null;
   }, [itemSignature]);
 
+  useEffect(() => {
+    if (!fadingTooltip) {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setFadingTooltip(null);
+    }, TOOLTIP_FADE_MS);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fadingTooltip]);
+
   useLayoutEffect(() => {
     if (!tooltip || !overlayRef.current || !tooltipRef.current || !activeTriggerRef.current) {
       return;
     }
 
-    const anchorX = tooltip.anchor.anchorX;
     const container = overlayRef.current;
     const trigger = activeTriggerRef.current;
     const tooltipElement = tooltipRef.current;
@@ -325,14 +349,21 @@ export function SolutionGridOverlay({
         return;
       }
 
-      setTooltipPlacement(
-        clampAnchoredTooltipPlacement(
-          containerRect,
-          triggerRect,
-          tooltipRect,
-          anchorX,
-        ),
-      );
+      // Toward the middle of the picture, anchored by a corner, clear of the frame.
+      // Bounded by the encounter picture itself (the panel can be taller than
+      // it), then converted to the panel's coordinates.
+      const pictureRect = container.closest('[data-morkahja-encounter-art]')?.getBoundingClientRect()
+        ?? document.querySelector('[data-morkahja-encounter-art]')?.getBoundingClientRect()
+        ?? containerRect;
+      const placement = placeTooltipTowardCenter(pictureRect, triggerRect, tooltipRect);
+      // Measurements are screen pixels; on desktop the stage is scaled, and the
+      // tooltip is positioned in the stage's own (unscaled) pixels.
+      const scale = container.offsetWidth > 0 ? containerRect.width / container.offsetWidth : 1;
+      setTooltipPlacement({
+        ...placement,
+        left: (placement.left + pictureRect.left - containerRect.left) / scale,
+        top: (placement.top + pictureRect.top - containerRect.top) / scale,
+      });
     }
 
     measureAndPlace();
@@ -343,18 +374,50 @@ export function SolutionGridOverlay({
     };
   }, [tooltip]);
 
+  const hoverDelayTimerRef = useRef<number | null>(null);
+
+  function clearHoverDelay(): void {
+    if (hoverDelayTimerRef.current !== null) {
+      window.clearTimeout(hoverDelayTimerRef.current);
+      hoverDelayTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => clearHoverDelay, []);
+
   function showItemTooltip(
     item: SolutionGridEntry,
     columnIndex: number,
     event: GridTooltipTriggerEvent,
   ): void {
-    const trigger = event.currentTarget;
+    clearHoverDelay();
+    // A mouse hover waits a moment, like every game tooltip; clicks, focus and
+    // touch long presses show at once.
+    if (event.type === 'mouseenter' || event.type === 'mouseover') {
+      const trigger = event.currentTarget;
+      hoverDelayTimerRef.current = window.setTimeout(() => {
+        hoverDelayTimerRef.current = null;
+        showItemTooltipNow(item, columnIndex, trigger);
+      }, GAME_TOOLTIP_DELAY_MS);
+      return;
+    }
+    showItemTooltipNow(item, columnIndex, event.currentTarget);
+  }
+
+  function showItemTooltipNow(
+    item: SolutionGridEntry,
+    columnIndex: number,
+    trigger: EventTarget | null,
+  ): void {
 
     if (!(trigger instanceof HTMLElement) || !overlayRef.current) {
       return;
     }
 
     const anchorX = anchorXForGridColumn(columnIndex, GRID_COLUMNS);
+    if (activeTriggerRef.current !== trigger) {
+      retireShownTooltip();
+    }
     activeTriggerRef.current = trigger;
     setSelectedItemId(item.solutionId);
     setTooltipPlacement(null);
@@ -364,7 +427,16 @@ export function SolutionGridOverlay({
     });
   }
 
+  /** Let the tooltip on screen fade out instead of vanishing. */
+  function retireShownTooltip(): void {
+    if (tooltip && tooltipPlacement) {
+      setFadingTooltip({ key: Date.now(), item: tooltip.item, placement: tooltipPlacement });
+    }
+  }
+
   function hideItemTooltip(): void {
+    clearHoverDelay();
+    retireShownTooltip();
     activeTriggerRef.current = null;
     setTooltip(null);
     setTooltipPlacement(null);
@@ -405,6 +477,7 @@ export function SolutionGridOverlay({
     >
       <style>
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
+        {TOOLTIP_FADE_KEYFRAMES}
       </style>
       <DecorativeEdgeFrame zIndex={27} />
       <div style={panelTitleWrapStyle}>
@@ -496,12 +569,30 @@ export function SolutionGridOverlay({
             ...gridTooltipShellStyle,
             left: tooltipPlacement?.left ?? tooltip.anchor.x,
             top: tooltipPlacement?.top ?? tooltip.anchor.y,
-            transform: tooltipPlacement
-              ? 'none'
-              : tooltipTransform(tooltip.anchor.anchorX),
+            // Measured first, then faded in place: no flash in the wrong spot.
+            visibility: tooltipPlacement ? 'visible' : 'hidden',
+            animation: tooltipPlacement
+              ? `morkahja-grid-tooltip-in ${TOOLTIP_FADE_MS}ms ease-out`
+              : 'none',
           }}
         >
           <SolutionGridTooltipPanel item={tooltip.item} />
+          {tooltipPlacement ? tooltipCornerMarker(tooltipPlacement.corner) : null}
+        </div>
+      ) : null}
+      {fadingTooltip ? (
+        <div
+          aria-hidden="true"
+          key={fadingTooltip.key}
+          style={{
+            ...gridTooltipShellStyle,
+            left: fadingTooltip.placement.left,
+            top: fadingTooltip.placement.top,
+            animation: `morkahja-grid-tooltip-out ${TOOLTIP_FADE_MS}ms ease-in forwards`,
+          }}
+        >
+          <SolutionGridTooltipPanel item={fadingTooltip.item} />
+          {tooltipCornerMarker(fadingTooltip.placement.corner)}
         </div>
       ) : null}
     </aside>

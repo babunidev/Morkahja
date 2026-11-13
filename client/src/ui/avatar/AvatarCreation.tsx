@@ -26,6 +26,11 @@ import {
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { randomRingDashArray, seedFromText } from '../game/blocks/encounterFrameGeometry.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { GameTooltipFrame } from '../game/GameTooltip.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
+import { amendStep, canRedo, canUndo, recordStep, redoStep, startHistory, undoStep } from './creationHistory.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -89,6 +94,9 @@ const overlayStyle: CSSProperties = {
   inset: 0,
   zIndex: 24,
   display: 'grid',
+  // A definite track, so the panel's height can follow the screen.
+  gridTemplateRows: 'minmax(0, 1fr)',
+  gridTemplateColumns: 'minmax(0, 1fr)',
   placeItems: 'center',
   padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
   boxSizing: 'border-box',
@@ -97,13 +105,16 @@ const overlayStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 520px)',
-  maxHeight: 'min(92vh, 760px)',
-  minHeight: 'min(86vh, 640px)',
+  // Padding included, so the panel fits a phone screen and stays centred.
+  width: 'min(100%, 520px)',
+  height: 'min(100%, 860px)',
+  boxSizing: 'border-box',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
-  gap: 20,
-  padding: '22px 18px 20px',
+  gap: 2,
+  // No side padding: the scrolling body reaches almost to the edge, so hover
+  // glows have room instead of being cut off (they pass under the frame lines).
+  padding: '18px 2px 16px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
   borderRadius: 14,
   background: 'rgba(12, 7, 5, 0.92)',
@@ -116,6 +127,7 @@ const headerStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  padding: '0 12px',
 };
 
 const titleStyle: CSSProperties = {
@@ -131,40 +143,99 @@ const acceptButtonStyle: CSSProperties = {
   width: 'clamp(52px, 11vw, 76px)',
 };
 
+/**
+ * Babuni's layout (2026-11-12): all settings in one block on top (races, roles,
+ * then frame and sex side by side), and below it the avatar with its name on
+ * top, as big as the remaining space allows, between Cancel and Accept.
+ */
 const panelBodyStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
-  display: 'grid',
-  gap: 22,
-  justifyItems: 'center',
-  padding: '14px 10px 12px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 14,
+  // Room for a hovered button's growth and glow (14 px) inside the scroll area.
+  padding: '14px 14px 2px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
 };
 
+const settingsBlockStyle: CSSProperties = {
+  display: 'grid',
+  gap: 8,
+  width: '100%',
+  flexShrink: 0,
+};
+
+const frameAndSexRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-evenly',
+  gap: 12,
+  width: '100%',
+  flexWrap: 'wrap',
+};
+
+const avatarAreaStyle: CSSProperties = {
+  flex: '1 1 auto',
+  minHeight: 240,
+  display: 'grid',
+  gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+  gridTemplateRows: 'minmax(0, 1fr)',
+  alignItems: 'center',
+  justifyItems: 'center',
+  columnGap: 4,
+  width: '100%',
+};
+
+/** NAME_ROW_PX: the name field plus its gap, which sits right on top of the avatar. */
+const NAME_ROW_PX = 52;
+
+const previewWrapStyle: CSSProperties = {
+  gridColumn: '1 / 4',
+  gridRow: 1,
+  width: '100%',
+  height: '100%',
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  // The avatar sizes itself to this space (container units below).
+  containerType: 'size',
+};
+
+/**
+ * Sized by the frame, the outermost image: the box is the frame's square, as big
+ * as the space allows, with room for the 6 % grow on hover or press so the
+ * frame never reaches past the panel.
+ */
 const previewStyle: CSSProperties = {
-  width: 'min(54vw, 268px)',
-  aspectRatio: '1 / 1.18',
+  width: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.92)`,
+  height: `calc(min(100cqw, 100cqh - ${NAME_ROW_PX}px) * 0.92)`,
+  flexShrink: 0,
 };
 
 const previewVisualStyle: CSSProperties = {
   display: 'grid',
   placeItems: 'center',
   width: '100%',
-  aspectRatio: '1 / 1.18',
+  height: '100%',
 };
 
+/** Portraits are 600 px and frames 700 px square: the portrait fills 6/7 of the frame. */
 const previewImageStyle: CSSProperties = {
   gridArea: '1 / 1',
-  width: '92%',
-  height: '92%',
+  width: `${(600 / 700) * 100}%`,
+  height: `${(600 / 700) * 100}%`,
   objectFit: 'contain',
 };
 
 const previewFrameStyle: CSSProperties = {
   gridArea: '1 / 1',
-  width: '105%',
-  height: '105%',
+  width: '100%',
+  height: '100%',
   objectFit: 'contain',
 };
 
@@ -182,7 +253,16 @@ const rowStyle: CSSProperties = {
 const raceRowStyle: CSSProperties = {
   ...rowStyle,
   flexWrap: 'nowrap',
-  gap: 8,
+  gap: 10,
+  // Room for the selection rings and glow at the ends of the row.
+  padding: '8px 8px',
+};
+
+const roleRowStyle: CSSProperties = {
+  ...rowStyle,
+  flexWrap: 'nowrap',
+  gap: 12,
+  padding: '8px 8px',
 };
 
 const sectionLabelStyle: CSSProperties = {
@@ -208,51 +288,10 @@ const frameControlsStyle: CSSProperties = {
   gap: 4,
 };
 
-const avatarWorkbenchStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'auto minmax(0, 1fr) auto',
-  gridTemplateRows: 'auto auto',
-  alignItems: 'center',
-  justifyItems: 'center',
-  columnGap: 'clamp(10px, 2.5vw, 18px)',
-  rowGap: 18,
-  width: '100%',
-  marginTop: -4,
-  padding: '4px 8px 0',
-  boxSizing: 'border-box',
-};
-
-const frameColumnStyle: CSSProperties = {
-  gridColumn: 1,
-  gridRow: 1,
-  alignSelf: 'center',
-  justifySelf: 'start',
+const frameControlsColumnStyle: CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
-  gap: 4,
-};
-
-const avatarCenterColumnStyle: CSSProperties = {
-  gridColumn: 2,
-  gridRow: '1 / 3',
-  alignSelf: 'start',
-  display: 'grid',
-  justifyItems: 'center',
-  gap: 16,
-  width: '100%',
-  paddingTop: 4,
-};
-
-const genderColumnStyle: CSSProperties = {
-  gridColumn: 3,
-  gridRow: 1,
-  alignSelf: 'start',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 5,
-  paddingTop: 14,
+  gap: 8,
 };
 
 const buttonImageStyle: CSSProperties = {
@@ -265,15 +304,19 @@ const arrowButtonStyle: CSSProperties = {
   width: 48,
 };
 
+// Races and roles share the width of the panel, so they fill a phone screen.
 const optionButtonStyle: CSSProperties = {
-  width: 'clamp(72px, 18vw, 118px)',
+  flex: '1 1 0',
+  minWidth: 0,
+  maxWidth: 140,
   borderRadius: 10,
 };
 
 const raceOptionButtonStyle: CSSProperties = {
-  width: 'clamp(56px, 14vw, 92px)',
+  flex: '1 1 0',
+  minWidth: 0,
+  maxWidth: 118,
   borderRadius: 10,
-  flex: '0 1 auto',
 };
 
 const confirmSideButtonStyle: CSSProperties = {
@@ -282,13 +325,22 @@ const confirmSideButtonStyle: CSSProperties = {
 };
 
 const genderButtonStyle: CSSProperties = {
-  width: 'clamp(48px, 11vw, 72px)',
+  width: 'clamp(52px, 14vw, 72px)',
   borderRadius: 10,
 };
 
+const genderRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+};
+
+/** Cancel and Accept sit in the bottom corners, beside the avatar. */
 const workbenchActionButtonStyle: CSSProperties = {
+  gridRow: 1,
   alignSelf: 'end',
-  marginTop: 10,
+  position: 'relative',
+  zIndex: 1,
 };
 
 const footerImageButtonShellStyle: CSSProperties = {
@@ -298,13 +350,13 @@ const footerImageButtonShellStyle: CSSProperties = {
 };
 
 const nameInputStyle: CSSProperties = {
-  width: 'min(100%, clamp(140px, 34vw, 230px))',
-  marginTop: 4,
+  flexShrink: 0,
+  // Leaves room for the undo and redo buttons beside it.
+  width: 'clamp(130px, 46vw, 240px)',
+  minWidth: 0,
   padding: '6px 10px',
-  border: '1px solid #ffcc66',
-  borderRadius: 8,
+  ...simpleFrameStyle({ background: 'rgba(31, 12, 6, 0.78)', opacity: 0.95 }),
   boxSizing: 'border-box',
-  background: 'rgba(31, 12, 6, 0.78)',
   color: '#ffcc66',
   fontFamily: 'Breathe Fire, Georgia, serif',
   fontSize: 'clamp(18px, 4vw, 28px)',
@@ -335,17 +387,15 @@ const optionTooltipShellStyle: CSSProperties = {
 
 const optionTooltipPanelStyle: CSSProperties = {
   margin: 0,
-  padding: '10px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.96)',
+  position: 'relative',
+  isolation: 'isolate',
+  padding: '12px 14px',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.9rem',
   lineHeight: 1.4,
   textAlign: 'center',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   boxSizing: 'border-box',
 };
 
@@ -477,8 +527,114 @@ function CreationImageButton({
             style={imageStyle}
           />
         )}
+        {selected ? <SelectionRings seed={seedFromText(ariaLabel)} /> : null}
       </span>
     </button>
+  );
+}
+
+interface Combination {
+  portraitIndex: number;
+  frameIndex: number;
+  avatarName: string;
+}
+
+function sameCombination(a: Combination, b: Combination): boolean {
+  return a.portraitIndex === b.portraitIndex && a.frameIndex === b.frameIndex && a.avatarName === b.avatarName;
+}
+
+const nameRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  maxWidth: '100%',
+  flexShrink: 0,
+};
+
+const historyButtonVisualStyle: CSSProperties = {
+  width: 30,
+  height: 30,
+  borderRadius: '50%',
+  border: '1px solid rgba(255, 204, 102, 0.45)',
+  background: 'rgba(31, 12, 6, 0.7)',
+  color: 'rgba(255, 204, 102, 0.85)',
+  boxSizing: 'border-box',
+};
+
+/** A subtle round undo or redo button with a curved arrow (Babuni's direction, 2026-11-13). */
+function HistoryButton({
+  direction,
+  disabled,
+  onClick,
+}: {
+  direction: 'undo' | 'redo';
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const label = direction === 'undo' ? 'Undo: previous combination' : 'Redo: next combination';
+  return (
+    <button
+      aria-label={label}
+      className="morkahja-panel-button"
+      disabled={disabled}
+      onClick={() => {
+        playSfx(DEFAULT_BUTTON_SOUND);
+        onClick();
+      }}
+      style={{ flexShrink: 0, opacity: disabled ? 0.35 : 1 }}
+      title={direction === 'undo' ? 'Undo' : 'Redo'}
+      type="button"
+    >
+      <span className="morkahja-panel-button-visual" style={historyButtonVisualStyle}>
+        <svg
+          aria-hidden="true"
+          height="16"
+          style={{ transform: direction === 'redo' ? 'scaleX(-1)' : undefined }}
+          viewBox="0 0 24 24"
+          width="16"
+        >
+          <path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+          <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
+const SELECTION_GOLD = '#ffcc66';
+
+/**
+ * Around a selected option (Babuni's direction, 2026-11-13): a 1 px gold ring
+ * just outside the button, a ring with random gaps around that, and the
+ * selection glow over both (the glow is the button's drop shadow).
+ */
+function SelectionRings({ seed }: { seed: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: -7,
+        width: 'calc(100% + 14px)',
+        height: 'calc(100% + 14px)',
+        overflow: 'visible',
+        pointerEvents: 'none',
+      }}
+    >
+      <circle cx="50%" cy="50%" fill="none" stroke={SELECTION_GOLD} strokeWidth={1} style={{ r: 'calc(50% - 4.5px)' } as CSSProperties} />
+      <circle
+        cx="50%"
+        cy="50%"
+        fill="none"
+        pathLength={100}
+        stroke={SELECTION_GOLD}
+        strokeDasharray={randomRingDashArray(seed).join(' ')}
+        strokeOpacity={0.85}
+        strokeWidth={1.5}
+        style={{ r: 'calc(50% - 1.5px)' } as CSSProperties}
+      />
+    </svg>
   );
 }
 
@@ -525,9 +681,17 @@ export function AvatarCreation({
     },
     [frames, presetAvatar],
   );
-  const [portraitIndex, setPortraitIndex] = useState(initialPortraitIndex);
-  const [frameIndex, setFrameIndex] = useState(initialFrameIndex);
-  const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
+  // Every combination chosen, for undo and redo (creationHistory.ts).
+  const [history, setHistory] = useState(() => startHistory<Combination>({
+    portraitIndex: initialPortraitIndex,
+    frameIndex: initialFrameIndex,
+    avatarName: presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar',
+  }));
+  const current = history.entries[history.index]!;
+  const { portraitIndex, frameIndex, avatarName } = current;
+  const commit = (next: Combination): void => {
+    setHistory((existing) => recordStep(existing, next, sameCombination));
+  };
   const [optionTooltip, setOptionTooltip] = useState<OptionTooltipState | null>(null);
   const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -590,9 +754,8 @@ export function AvatarCreation({
   const role = roleFromPortrait(portrait);
   const gender = genderFromPortrait(portrait);
 
-  function selectPortraitIndex(nextIndex: number): void {
-    setPortraitIndex(nextIndex);
-    setAvatarName(portraits[nextIndex].avatarName);
+  function selectPortraitIndex(nextIndex: number, nextFrameIndex = frameIndex): void {
+    commit({ portraitIndex: nextIndex, frameIndex: nextFrameIndex, avatarName: portraits[nextIndex].avatarName });
   }
 
   function matchingPortraits(nextRace: AvatarRace, nextRole: AvatarRole, nextGender: AvatarGender): PortraitRecord[] {
@@ -624,8 +787,8 @@ export function AvatarCreation({
     const selectedPortrait = randomEntry(candidates.length > 0 ? candidates : portraits);
     const nextIndex = portraits.findIndex((candidate) => candidate.avatarID === selectedPortrait.avatarID);
 
-    selectPortraitIndex(nextIndex >= 0 ? nextIndex : 0);
-    setFrameIndex(randomIndex(frames.length));
+    // Portrait and frame change together: one step.
+    selectPortraitIndex(nextIndex >= 0 ? nextIndex : 0, randomIndex(frames.length));
   }
 
   function showOptionTooltip(
@@ -704,8 +867,9 @@ export function AvatarCreation({
           event.stopPropagation();
         }}
         role="dialog"
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="avatar-creation-title" style={titleStyle}>CREATE AVATAR</h2>
         </header>
@@ -742,78 +906,134 @@ export function AvatarCreation({
   opacity: 1;
 }`}
           </style>
-        <div aria-label="Choose race" style={raceRowStyle}>
-          {RACES.map((raceOption) => (
-            <CreationImageButton
-              ariaLabel={`Choose ${raceOption}`}
-              imageSrc={raceAsset(raceOption)}
-              isPressed={isPressed}
-              key={raceOption}
-              onClick={() => {
-                chooseRandomPortrait(raceOption, role, gender);
-              }}
-              pressAnimation={pressAnimation}
-              pressKey={`avatar-race-${raceOption}`}
-              pulse={pulse}
-              selected={race === raceOption}
-              style={raceOptionButtonStyle}
-              tooltipHandlers={bindOptionTooltip(RACE_DESCRIPTIONS[raceOption])}
-            />
-          ))}
-        </div>
-
-        <div aria-label="Choose role" style={rowStyle}>
-          {ROLES.map((roleOption) => (
-            <CreationImageButton
-              ariaLabel={`Choose ${roleOption}`}
-              imageSrc={roleAsset(roleOption)}
-              isPressed={isPressed}
-              key={roleOption}
-              onClick={() => {
-                chooseRandomPortrait(race, roleOption, gender);
-              }}
-              pressAnimation={pressAnimation}
-              pressKey={`avatar-role-${roleOption}`}
-              pulse={pulse}
-              selected={role === roleOption}
-              style={optionButtonStyle}
-              tooltipHandlers={bindOptionTooltip(ROLE_DESCRIPTIONS[roleOption])}
-            />
-          ))}
-        </div>
-
-        <div style={avatarWorkbenchStyle}>
-          <div aria-label="Choose frame" style={frameColumnStyle}>
-            <span style={frameLabelStyle}>Frame</span>
-            <div style={frameControlsStyle}>
+        <div aria-label="Avatar settings" style={settingsBlockStyle}>
+          <div aria-label="Choose race" style={raceRowStyle}>
+            {RACES.map((raceOption) => (
               <CreationImageButton
-                ariaLabel="Previous frame"
-                imageSrc={`${UI_ROOT}/im_button_arrowb_left.webp`}
+                ariaLabel={`Choose ${raceOption}`}
+                imageSrc={raceAsset(raceOption)}
                 isPressed={isPressed}
+                key={raceOption}
                 onClick={() => {
-                  setFrameIndex((current) => wrapIndex(current - 1, frames.length));
+                  chooseRandomPortrait(raceOption, role, gender);
                 }}
                 pressAnimation={pressAnimation}
-                pressKey="avatar-frame-prev"
+                pressKey={`avatar-race-${raceOption}`}
                 pulse={pulse}
-                style={arrowButtonStyle}
+                selected={race === raceOption}
+                style={raceOptionButtonStyle}
+                tooltipHandlers={bindOptionTooltip(RACE_DESCRIPTIONS[raceOption])}
+              />
+            ))}
+          </div>
+
+          <div aria-label="Choose role" style={roleRowStyle}>
+            {ROLES.map((roleOption) => (
+              <CreationImageButton
+                ariaLabel={`Choose ${roleOption}`}
+                imageSrc={roleAsset(roleOption)}
+                isPressed={isPressed}
+                key={roleOption}
+                onClick={() => {
+                  chooseRandomPortrait(race, roleOption, gender);
+                }}
+                pressAnimation={pressAnimation}
+                pressKey={`avatar-role-${roleOption}`}
+                pulse={pulse}
+                selected={role === roleOption}
+                style={optionButtonStyle}
+                tooltipHandlers={bindOptionTooltip(ROLE_DESCRIPTIONS[roleOption])}
+              />
+            ))}
+          </div>
+
+          <div style={frameAndSexRowStyle}>
+            <div aria-label="Choose frame" style={frameControlsColumnStyle}>
+              <span style={frameLabelStyle}>Frame</span>
+              <div style={frameControlsStyle}>
+                <CreationImageButton
+                  ariaLabel="Previous frame"
+                  imageSrc={`${UI_ROOT}/im_button_arrowb_left.webp`}
+                  isPressed={isPressed}
+                  onClick={() => {
+                    commit({ ...current, frameIndex: wrapIndex(frameIndex - 1, frames.length) });
+                  }}
+                  pressAnimation={pressAnimation}
+                  pressKey="avatar-frame-prev"
+                  pulse={pulse}
+                  style={arrowButtonStyle}
+                />
+                <CreationImageButton
+                  ariaLabel="Next frame"
+                  imageSrc={`${UI_ROOT}/im_button_arrowb_right.webp`}
+                  isPressed={isPressed}
+                  onClick={() => {
+                    commit({ ...current, frameIndex: wrapIndex(frameIndex + 1, frames.length) });
+                  }}
+                  pressAnimation={pressAnimation}
+                  pressKey="avatar-frame-next"
+                  pulse={pulse}
+                  style={arrowButtonStyle}
+                />
+              </div>
+            </div>
+            <div aria-label="Choose gender" style={genderRowStyle}>
+              <CreationImageButton
+                ariaLabel="Choose Male"
+                imageSrc={genderAsset('Male')}
+                isPressed={isPressed}
+                onClick={() => {
+                  chooseRandomPortrait(race, role, 'Male');
+                }}
+                pressAnimation={pressAnimation}
+                pressKey="avatar-gender-male"
+                pulse={pulse}
+                selected={gender === 'Male'}
+                style={genderButtonStyle}
               />
               <CreationImageButton
-                ariaLabel="Next frame"
-                imageSrc={`${UI_ROOT}/im_button_arrowb_right.webp`}
+                ariaLabel="Choose Female"
+                imageSrc={genderAsset('Female')}
                 isPressed={isPressed}
                 onClick={() => {
-                  setFrameIndex((current) => wrapIndex(current + 1, frames.length));
+                  chooseRandomPortrait(race, role, 'Female');
                 }}
                 pressAnimation={pressAnimation}
-                pressKey="avatar-frame-next"
+                pressKey="avatar-gender-female"
                 pulse={pulse}
-                style={arrowButtonStyle}
+                selected={gender === 'Female'}
+                style={genderButtonStyle}
               />
             </div>
           </div>
-          <div style={avatarCenterColumnStyle}>
-            <div className="morkahja-avatar-randomize-preview">
+        </div>
+
+        <div style={avatarAreaStyle}>
+          <div className="morkahja-avatar-randomize-preview" style={previewWrapStyle}>
+            <div style={nameRowStyle}>
+              <HistoryButton
+                direction="undo"
+                disabled={!canUndo(history)}
+                onClick={() => setHistory(undoStep)}
+              />
+              <input
+                aria-label="Avatar name"
+                onChange={(event) => {
+                  // Typing changes the current step instead of adding steps.
+                  const name = event.target.value;
+                  setHistory((existing) => amendStep(existing, { ...existing.entries[existing.index]!, avatarName: name }));
+                }}
+                style={nameInputStyle}
+                type="text"
+                value={avatarName}
+              />
+              <HistoryButton
+                direction="redo"
+                disabled={!canRedo(history)}
+                onClick={() => setHistory(redoStep)}
+              />
+            </div>
+            <div style={{ position: 'relative', display: 'grid' }}>
               <CreationImageButton
                 ariaLabel="Randomize portrait"
                 isPressed={isPressed}
@@ -831,43 +1051,6 @@ export function AvatarCreation({
                 Randomize
               </span>
             </div>
-            <input
-              aria-label="Avatar name"
-              onChange={(event) => {
-                setAvatarName(event.target.value);
-              }}
-              style={nameInputStyle}
-              type="text"
-              value={avatarName}
-            />
-          </div>
-          <div aria-label="Choose gender" style={genderColumnStyle}>
-            <CreationImageButton
-              ariaLabel="Choose Male"
-              imageSrc={genderAsset('Male')}
-              isPressed={isPressed}
-              onClick={() => {
-                chooseRandomPortrait(race, role, 'Male');
-              }}
-              pressAnimation={pressAnimation}
-              pressKey="avatar-gender-male"
-              pulse={pulse}
-              selected={gender === 'Male'}
-              style={genderButtonStyle}
-            />
-            <CreationImageButton
-              ariaLabel="Choose Female"
-              imageSrc={genderAsset('Female')}
-              isPressed={isPressed}
-              onClick={() => {
-                chooseRandomPortrait(race, role, 'Female');
-              }}
-              pressAnimation={pressAnimation}
-              pressKey="avatar-gender-female"
-              pulse={pulse}
-              selected={gender === 'Female'}
-              style={genderButtonStyle}
-            />
           </div>
           <CreationImageButton
             ariaLabel="Cancel avatar creation"
@@ -877,7 +1060,7 @@ export function AvatarCreation({
             pressAnimation={pressAnimation}
             pressKey="avatar-cancel"
             pulse={pulse}
-            style={{ ...confirmSideButtonStyle, ...workbenchActionButtonStyle, gridColumn: 1, gridRow: 2, justifySelf: 'start' }}
+            style={{ ...confirmSideButtonStyle, ...workbenchActionButtonStyle, gridColumn: 1, justifySelf: 'start' }}
           />
           <CreationImageButton
             ariaLabel="Accept avatar creation"
@@ -887,7 +1070,7 @@ export function AvatarCreation({
             pressAnimation={pressAnimation}
             pressKey="avatar-ok"
             pulse={pulse}
-            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, gridRow: 2 }}
+            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, justifySelf: 'end' }}
           />
         </div>
         </div>
@@ -905,7 +1088,10 @@ export function AvatarCreation({
               : tooltipTransform(optionTooltip.anchor.anchorX),
           }}
         >
-          <p style={optionTooltipPanelStyle}>{optionTooltip.text}</p>
+          <p style={optionTooltipPanelStyle}>
+            <GameTooltipFrame />
+            {optionTooltip.text}
+          </p>
         </div>
       ) : null}
     </div>

@@ -18,11 +18,15 @@ import {
   saveIdentityKeypair,
   signChallenge,
   type StoredKeypair,
+  secureConnectionMissing,
+  SECURE_CONNECTION_MESSAGE,
 } from '../../sessionKeys.js';
 import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
 import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 async function signedBootstrapInput(
   device: StoredKeypair,
@@ -80,7 +84,9 @@ const screenStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(86vw, 520px)',
+  // Padding and border included, so the panel never overflows a phone screen.
+  width: 'min(100%, 520px)',
+  boxSizing: 'border-box',
   display: 'grid',
   gap: 14,
   padding: '24px 22px',
@@ -137,9 +143,7 @@ const panelButtonVisualStyle: CSSProperties = {
   width: '100%',
   minHeight: 44,
   padding: '10px 16px',
-  border: '1px solid rgba(255, 204, 102, 0.7)',
-  borderRadius: 10,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.91 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
@@ -171,9 +175,7 @@ const fullWidthPanelButtonStyle: CSSProperties = {
 const fieldStyle: CSSProperties = {
   minHeight: 40,
   padding: '0 12px',
-  border: '1px solid rgba(255, 204, 102, 0.65)',
-  borderRadius: 8,
-  background: 'rgba(255, 240, 200, 0.92)',
+  ...simpleFrameStyle({ background: 'rgba(255, 240, 200, 0.92)', opacity: 0.85 }),
   color: '#330000',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
@@ -347,7 +349,9 @@ export function OnboardingGateway({
       await finishOnboarding(session);
     } catch (error) {
       console.error('New journey bootstrap failed', error);
-      setMessage('Could not create journey. Check the backend connection.');
+      setMessage(secureConnectionMissing()
+        ? SECURE_CONNECTION_MESSAGE
+        : 'Could not create journey. Check the backend connection.');
       setBusy(false);
     }
   }
@@ -373,7 +377,9 @@ export function OnboardingGateway({
       await finishOnboarding(session);
     } catch (error) {
       console.error('Restore journey failed', error);
-      setMessage('Could not restore journey from this key.');
+      setMessage(secureConnectionMissing()
+        ? SECURE_CONNECTION_MESSAGE
+        : 'Could not restore journey from this key.');
       setBusy(false);
     }
   }
@@ -403,7 +409,8 @@ export function OnboardingGateway({
         tabIndex={-1}
         type="file"
       />
-      <section style={panelStyle}>
+      <section style={framedStyle(panelStyle)}>
+        <LineFrame background={panelStyle.background} />
         <div style={titleGroupStyle}>
           <h1 style={titleStyle}>Morkahja</h1>
           <p style={welcomeStyle}>Welcome, Adventurer!</p>

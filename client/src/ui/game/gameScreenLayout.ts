@@ -27,6 +27,10 @@ export function gameScreenRootStyle(): CSSProperties {
     height: '100%',
     display: 'grid',
     gridTemplateRows: `minmax(0, ${encounterRowFr}fr) minmax(0, ${partyRowFr}fr) minmax(0, ${actionMenuRowFr}fr)`,
+    // One column, never wider than the stage. Without it the column grew to the
+    // party strip's width (3 x 148 px + gaps), which pushed the whole screen off
+    // centre: left-anchored and cut off on phones, 37 px right of centre on desktop.
+    gridTemplateColumns: 'minmax(0, 1fr)',
     overflow: 'visible',
     minHeight: 0,
   };
@@ -112,5 +116,8 @@ export function actionMenuRowStyle(): CSSProperties {
     gap: GAME_SCREEN_LAYOUT.actionMenuGap,
     padding: GAME_SCREEN_LAYOUT.actionMenuPadding,
     boxSizing: 'border-box',
+    // Never wider than the screen; on narrow phones the buttons shrink instead.
+    width: '100%',
+    maxWidth: 4 * GAME_SCREEN_LAYOUT.actionMenuButtonMaxWidthPx + 3 * GAME_SCREEN_LAYOUT.actionMenuGap + 36,
   };
 }

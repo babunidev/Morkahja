@@ -8,3 +8,6 @@ morkahja-cbt-firebase-adminsdk-dinxd-7b9e95108c.json
 Key.js
 server/scripts/.dev-bot-*.json
 server/scripts/.bot-account-*.json
+
+# Local https certificate for phone testing (private key)
+client/.dev-cert/

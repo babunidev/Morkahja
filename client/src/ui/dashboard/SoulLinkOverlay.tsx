@@ -7,6 +7,8 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -57,7 +59,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(86vh, 560px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
@@ -71,6 +74,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -111,9 +115,7 @@ const inputStyle: CSSProperties = {
   width: '100%',
   minHeight: 40,
   padding: '8px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.45)',
-  borderRadius: 9,
-  background: 'rgba(8, 5, 4, 0.72)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.72)', opacity: 0.59 }),
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.95rem',
@@ -123,9 +125,7 @@ const inputStyle: CSSProperties = {
 const linkButtonStyle: CSSProperties = {
   width: '100%',
   minHeight: 42,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   cursor: 'pointer',
   fontFamily: 'Breathe Fire, Georgia, serif',
@@ -157,9 +157,7 @@ const linkedCardStyle: CSSProperties = {
   gap: 4,
   justifyItems: 'center',
   padding: '18px 16px',
-  border: '1px solid rgba(140, 230, 160, 0.45)',
-  borderRadius: 12,
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', color: 'rgb(140, 230, 160)', opacity: 0.59 }),
   boxShadow: 'inset 0 0 0 1px rgba(140, 230, 160, 0.18)',
 };
 
@@ -289,8 +287,9 @@ export function SoulLinkOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="soul-link-overlay-title" style={titleStyle}>
             SOUL LINK

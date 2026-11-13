@@ -10,6 +10,7 @@ import {
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 
@@ -23,9 +24,7 @@ const achievementCardStyle: CSSProperties = {
   display: 'grid',
   gap: 12,
   padding: '14px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.28)',
-  borderRadius: 12,
-  background: 'rgba(18, 10, 7, 0.72)',
+  ...simpleFrameStyle({ background: 'rgba(18, 10, 7, 0.72)', opacity: 0.5 }),
   ...protectedOverlayTextStyle,
 };
 
@@ -72,15 +71,17 @@ const achievementTextStyle: CSSProperties = {
 };
 
 const progressTrackStyle: CSSProperties = {
-  height: 10,
-  borderRadius: 999,
-  background: 'rgba(255, 204, 102, 0.16)',
+  // A small frame with cut corners (Babuni's direction), the fill inside it.
+  height: 16,
+  boxSizing: 'border-box',
+  padding: 3,
+  ...simpleFrameStyle({ background: 'rgba(40, 24, 10, 0.7)', opacity: 0.85, scale: 0.55 }),
   overflow: 'hidden',
 };
 
 const progressFillStyle: CSSProperties = {
   height: '100%',
-  borderRadius: 'inherit',
+  clipPath: simpleFrameClipPath(1, 3),
   background: 'linear-gradient(90deg, rgba(255, 140, 72, 0.95), rgba(255, 204, 102, 0.98))',
   boxShadow: '0 0 10px rgba(255, 204, 102, 0.55)',
   transition: 'width 420ms ease',
@@ -134,9 +135,7 @@ const dailyRewardGemsIconStyle: CSSProperties = {
 
 const claimButtonStyle: CSSProperties = {
   minHeight: 36,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   cursor: 'pointer',
   fontFamily: 'Georgia, serif',

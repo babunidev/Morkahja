@@ -17,6 +17,8 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle } from '../common/simpleFrame.js';
 
 const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 
@@ -35,7 +37,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 420px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 456px)',
   maxHeight: 'min(86vh, 620px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
@@ -49,6 +52,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const scrollBodyStyle: CSSProperties = {
@@ -85,7 +89,7 @@ const gemsFooterStyle: CSSProperties = {
   marginTop: 'auto',
   paddingTop: 8,
   paddingBottom: 0,
-  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+  ...frameDividerStyle({ side: 'top', bleed: 9 }),
 };
 
 const gemsIconStyle: CSSProperties = {
@@ -236,8 +240,9 @@ export function AchievementsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="achievements-overlay-title" style={titleStyle}>ACHIEVEMENTS</h2>
           <ClosePanelButton onClose={onClose} pressKey="achievements-close" />
