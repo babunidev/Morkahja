@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 22:42 UTC (0.9.0-beta.55, About Us legal buttons, Scribes, lore gem, set rolls)
+
+Approved by Babuni ("release"). `main` at `94cee3ed` (PR #41): Privacy Policy and Terms of Service in the About Us footer, Scribes rewritten (D-022), the lore gem waiting on the avatar (D-023), and per-copy hovering solutions with their own rolls (D-024). Server changes: Scribe texts and the result now carries `pickRolls`/`diceFillRoll` after commit; no schema, dependency or game-content change.
+
+- **Before:** backend `14f7bf6d`, frontend `20261113-212735`, no uncommitted files. Previous staging files moved to `prev-20261113-2242`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 41/41); CI `verify` passed on PR #41; uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261113-224253` (73 players, 109 avatars; sha256 `55983543…`). Backend fast-forwarded to `94cee3ed`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-224255` (`index-0Gns1ehx.js`). From outside: the public script contains `0.9.0-beta.55`, the lore gem badge, the About Us legal buttons, the hovering-copy markers and `pickRolls`; `/Morkahja/`, health and content return 200. API and bots online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI in production.
+
 ## Production release — 2026-11-13, 21:27 UTC (0.9.0-beta.54, fades, menus, legal texts)
 
 Approved by Babuni ("deploy that please"). `main` at `14f7bf6d` (PR #39): smooth fades and menus that open once their pictures are decoded (D-020), About Us changes and new contacts, and the rewritten Terms of Service and Privacy Policy with "Use Your Key" (D-021). Client-only behavior and text changes plus the version bump; no server logic, schema, dependency or game-content change.

@@ -192,7 +192,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** support lines in Babuni's first person instead of "the team"/"us"; key reminder in the "your key is your key" wording of D-021; a reader's own entries in the second person, everyone else's (and the admin console) in the third; small fixes (full stop, gem name); texts for never-written Scribe types removed. Triggers and audiences are unchanged.
 
-**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+**Status:** live since 2026-11-13 (release `94cee3ed`, 0.9.0-beta.55).
 
 ## D-023 — The lore gem waits on the avatar (2026-11-13)
 
@@ -200,7 +200,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** the gem is no longer a result reward. Picking it up notes where it was, the server confirms as before, and a badge on the avatar's top left receives it with a flight from the Lore window; for other party members it fades in. It sinks into the avatar when the room advances or a system event starts, or when the next encounter clears the flag. No server change.
 
-**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+**Status:** live since 2026-11-13 (release `94cee3ed`, 0.9.0-beta.55).
 
 ## D-024 — Each hovering solution shows its own roll (2026-11-13)
 
@@ -208,7 +208,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** one hovering icon per chosen copy, stacked upward (as in Babuni's original description of sets, "they move up"), each showing its own item; the allocation is frozen at commit; the server adds each pick's roll and the dice-fill roll to the revealed result; the icons show them for 1.3 s before flying in. The rolls stay secret until the commit, like the final roll.
 
-**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+**Status:** live since 2026-11-13 (release `94cee3ed`, 0.9.0-beta.55).
 
 ## 2026-11-13 — Licensing decision
 
