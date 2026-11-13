@@ -5,7 +5,7 @@ import {
   type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { GameTooltipFrame } from './GameTooltip.js';
+import { GameTooltipFrame, TooltipDivider } from './GameTooltip.js';
 
 /** Above encounter overlays, party slots, and reward fly animations. */
 export const ENCOUNTER_TOOLTIP_Z_INDEX = 1000;
@@ -30,7 +30,7 @@ export const encounterTooltipFrameStyle: CSSProperties = {
 };
 
 export const encounterTooltipTitleStyle: CSSProperties = {
-  margin: '0 0 4px',
+  margin: 0,
   color: '#ffcc66',
   fontSize: '0.86rem',
   fontWeight: 700,
@@ -87,6 +87,7 @@ export function EncounterTooltip({
       >
         {label}
       </div>
+      {description || detail ? <TooltipDivider /> : null}
       {description ? (
         <div style={encounterTooltipDescriptionStyle}>{description}</div>
       ) : null}

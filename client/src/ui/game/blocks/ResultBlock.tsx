@@ -18,7 +18,7 @@ import {
 } from '../encounterInventoryPreview.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import { actPhaseKey, endFramePhase, middleElement, planFramePhase } from '../frameTimer.js';
-import { GameTooltipCard, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
+import { GameTooltipCard, TooltipDivider, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import {
   animationAlreadyPlayed,
@@ -62,7 +62,6 @@ import {
   fadeTransition,
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
-import { frameDividerStyle } from '../../common/simpleFrame.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -339,9 +338,7 @@ const rewardTooltipMetaStyle: CSSProperties = {
 };
 
 const rewardTooltipTextStyle: CSSProperties = {
-  margin: '2px 0 0',
-  paddingTop: 4,
-  ...frameDividerStyle({ side: 'top', bleed: 6 }),
+  margin: '3px 0 0',
   color: 'rgba(247, 239, 224, 0.9)',
   fontSize: '0.72rem',
   lineHeight: 1.35,
@@ -1075,6 +1072,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       body: (
         <>
           <p style={rewardTooltipTitleStyle}>{change.solution.mSolutionName}</p>
+          <TooltipDivider />
           <p style={rewardTooltipMetaStyle}>{quantityLabel}</p>
           {description ? <p style={rewardTooltipTextStyle}>{description}</p> : null}
         </>

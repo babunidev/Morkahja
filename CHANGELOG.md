@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: a divider under every tooltip title; 0.9.0-beta.45
+
+- **Change (Babuni's direction): every game tooltip separates its title from its text with the frame divider**, as the reward tooltips did (the line plus a gapped line, its ends meeting the tooltip frame). Shared as `TooltipDivider` in `GameTooltip.tsx` and used by solutions (including the dice and "not in inventory"), rewards and losses (now always under the title, also without a description), Inventory and Skillbook items, the menu buttons, the avatar preview, Continue and the party tooltips (`encounterTooltip.tsx`).
+- **Fix:** the dice and "not in inventory" tooltips had their own 6 px padding, so their text sat on the tooltip frame's lines; their padding now clears the frame.
+- **Version 0.9.0-beta.45** (D-015).
+- **Verification:** client typecheck, tests (26) and production build passed. Headless Chrome: long-press tooltips at 412 × 915 (a solution, a solution not in inventory, the dice, the menu buttons, the avatar, Continue) and Inventory and Skillbook item tooltips at 1400 × 900 all show the divider. Reward and loss tooltips were not reached in this run. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: the frame timer counts two phases; 0.9.0-beta.44
 
 - **Change (Babuni's direction): the timer on the encounter frame's bottom line counts whole phases, not single animations.** Before, each animation restarted the line at full length (the actions appearing, then the solutions flying in; the roll, then the used solution's flight, the rewards, the losses, the wait to collect). Now there are two lines per encounter: from the encounter appearing until its solutions can be used (they wobble), and from using a solution or the dice until the rewards, losses or Continue arrow can be used (they wobble). Each step re-plans when its phase ends and the line is re-timed from its current length, never restarted (`planFramePhase`/`endFramePhase` in `client/src/ui/game/frameTimer.ts`; drawn with the Web Animations API in `DecorativeEdgeFrame.tsx`). A first guess (`RESULT_READY_ESTIMATE_MS`) covers the wait for the server's result; the last step sets the real end.

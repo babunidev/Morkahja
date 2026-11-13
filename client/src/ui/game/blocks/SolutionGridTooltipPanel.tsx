@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { GameTooltipFrame, gameTooltipFrameStyle } from '../GameTooltip.js';
+import { GameTooltipFrame, TooltipDivider, gameTooltipFrameStyle } from '../GameTooltip.js';
 import type { SolutionGridEntry } from './SolutionGridOverlay.js';
 
 const tooltipPanelStyle: CSSProperties = {
@@ -10,7 +10,7 @@ const tooltipPanelStyle: CSSProperties = {
 };
 
 const tooltipTitleStyle: CSSProperties = {
-  margin: '0 0 4px',
+  margin: 0,
   color: '#ffcc66',
   fontSize: 'clamp(0.78rem, 3vw, 0.92rem)',
   fontWeight: 700,
@@ -36,6 +36,7 @@ export function SolutionGridTooltipPanel({ item }: { item: SolutionGridEntry }) 
     <div role="tooltip" style={tooltipPanelStyle}>
       <GameTooltipFrame />
       <p style={tooltipTitleStyle}>{item.name}</p>
+      <TooltipDivider />
       <p style={tooltipTextStyle}>{item.text}</p>
       <p style={tooltipMetaStyle}>Charges: {item.uses}</p>
       <p style={tooltipMetaStyle}>Type: {item.typeLabel}</p>

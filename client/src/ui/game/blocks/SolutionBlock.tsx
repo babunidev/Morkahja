@@ -7,7 +7,7 @@ import type {
   InventoryItem,
 } from '../../../api/http.js';
 import { DICE_SOUND, playSfx, SOLUTION_SOUND } from '../../sfx.js';
-import { useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
+import { useGameTooltip, type GameTooltipContent, TooltipDivider } from '../GameTooltip.js';
 import {
   PROTECTED_SURFACE_ATTR,
 } from '../../protectedImage.js';
@@ -214,12 +214,12 @@ interface SolutionTooltipState {
 const unavailableSolutionTooltipStyle: CSSProperties = {
   width: 160,
   maxWidth: 160,
-  padding: '6px 9px',
+  padding: '9px 12px',
   textAlign: 'center',
 };
 
 const unavailableTooltipTitleStyle: CSSProperties = {
-  margin: '0 0 3px',
+  margin: 0,
   color: '#ffcc66',
   fontSize: '0.8rem',
   fontWeight: 700,
@@ -236,12 +236,12 @@ const unavailableTooltipDetailStyle: CSSProperties = {
 const compactDiceTooltipStyle: CSSProperties = {
   width: 'max-content',
   maxWidth: 'min(70vw, 220px)',
-  padding: '6px 11px',
+  padding: '9px 13px',
   textAlign: 'center',
 };
 
 const compactDiceTooltipTitleStyle: CSSProperties = {
-  margin: '0 0 2px',
+  margin: 0,
   color: '#ffcc66',
   fontSize: '0.8rem',
   fontWeight: 700,
@@ -809,16 +809,19 @@ export function SolutionBlock({
       body: info.unavailable ? (
         <>
           <div style={unavailableTooltipTitleStyle}>{info.name}</div>
+          <TooltipDivider bleed={5.5} />
           <div style={unavailableTooltipDetailStyle}>{info.detail}</div>
         </>
       ) : compact ? (
         <>
           <div style={compactDiceTooltipTitleStyle}>{info.name}</div>
+          <TooltipDivider />
           <div style={compactDiceTooltipDetailStyle}>{info.detail}</div>
         </>
       ) : (
         <>
           <div style={encounterTooltipTitleStyle}>{info.name}</div>
+          <TooltipDivider />
           {info.description ? (
             <div style={encounterTooltipDescriptionStyle}>{info.description}</div>
           ) : null}

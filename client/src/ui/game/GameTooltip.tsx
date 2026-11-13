@@ -18,6 +18,7 @@ import {
   type TooltipRevealHandlerProps,
 } from '../hooks/useTooltipReveal.js';
 import { LineFrame } from '../common/LineFrame.js';
+import { frameDividerStyle } from '../common/simpleFrame.js';
 import { TOOLTIP_FRAME, cornerLegAt } from './blocks/encounterFrameGeometry.js';
 
 /**
@@ -76,15 +77,26 @@ const cardTitleStyle: CSSProperties = {
 };
 
 const cardLineStyle: CSSProperties = {
-  margin: '3px 0 0',
+  margin: '1px 0 0',
   color: '#f7efe0',
 };
+
+/**
+ * The line between a tooltip's title and its text (Babuni's direction,
+ * 2026-11-13, after the reward tooltips): the frame's line plus a gapped
+ * line, its ends meeting the tooltip frame. `bleed` = the tooltip's side
+ * padding minus the frame's depth.
+ */
+export function TooltipDivider({ bleed = 6 }: { bleed?: number }) {
+  return <div aria-hidden="true" style={{ ...frameDividerStyle({ side: 'top', bleed }), margin: '4px 0 3px' }} />;
+}
 
 /** A small text tooltip: a gold title and optional lines below it. */
 export function GameTooltipCard({ title, lines = [] }: { title: string; lines?: string[] }) {
   return (
     <>
       <p style={cardTitleStyle}>{title}</p>
+      {lines.length > 0 ? <TooltipDivider /> : null}
       {lines.map((line) => (
         <p key={line} style={cardLineStyle}>{line}</p>
       ))}

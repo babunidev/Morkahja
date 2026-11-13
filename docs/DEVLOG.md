@@ -283,3 +283,7 @@ Trying the new frames, I saw lines flicker across the buttons whenever they grew
 ### One countdown per wait — 2026-11-13
 
 Watching the frame timer, I saw it start over for every little animation: once for the dice appearing, again for the solutions flying in, and several times between using a solution and getting the reward. For me those are two waits, not many. The first runs from a new encounter until its solutions shake to say they are ready. The second runs from using a solution until the reward, loss or Continue arrow is ready. AI turned the timer into those two phases: each animation along the way only adjusts how fast the line runs out, so it never jumps back to full. I also wanted the changelog link to open my website's living grid right at the Morkahja changelog reader, but the grid has no address for that yet; that is a request for the website. **Verification:** traced in a headless browser through a roll and the next encounter; tests and build passed. **Not deployed yet.**
+
+### A line under every tooltip title — 2026-11-13
+
+The reward tooltips had a small divider between the item's name and its text, and I liked it enough to want it everywhere: on the solutions, the losses and the inventory. AI made it one shared piece and put it in every game tooltip with a title and text, and gave the dice tooltip enough room inside its frame along the way. **Verification:** screenshots of the tooltips at phone and desktop sizes in a headless browser; tests and build passed. **Not deployed yet.**
