@@ -154,7 +154,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** only solution type 15 counts as an essence for the avatar's slots and for Hardship/Misery losses; Atranor items (type 77) stay in the essences container for storage and are only used as solutions in Atranor.
 
-**Status:** implemented on `fix/atranor-items-not-essences`; release pending.
+**Status:** live since 2026-11-13 (release `49fb6809`, 0.9.0-beta.51).
 
 ## 2026-11-13 — Licensing decision
 
