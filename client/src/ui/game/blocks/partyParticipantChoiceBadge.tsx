@@ -39,9 +39,10 @@ function solutionsById(): Record<string, SolutionRecord> {
 }
 
 const choiceBadgeOverlayStyle: CSSProperties = {
+  // Top right of the portrait: the bottom edge holds the essence slots.
   position: 'absolute',
   right: '4%',
-  bottom: '10%',
+  top: '10%',
   zIndex: 7,
   width: PARTY_BADGE_SIZE_PX,
   height: PARTY_BADGE_SIZE_PX,

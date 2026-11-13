@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: choice badge in the top-right corner of the avatar; 0.9.0-beta.49
+
+- **Change (Babuni's direction):** the badge showing the solution or dice a player used, with the roll, moved from the bottom-right to the top-right corner of the portrait, since the bottom edge now holds the essence slots (`partyParticipantChoiceBadge.tsx`).
+- **Version 0.9.0-beta.49** (D-015).
+- **Verification:** client typecheck, tests (32) and production build passed; headless Chrome at 412 × 915 after a dice roll shows the badge at the top right, clear of the essence slots. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: essence slots on the avatar; 0.9.0-beta.48
 
 - **New (Babuni's direction): the avatar's lives are five essence slots on the bottom edge of its round portrait**, one at the bottom centre and two on each side, instead of a row in the details card (`client/src/ui/avatar/EssenceSlotsRing.tsx`, removed `EssenceLivesRow.tsx`). Party members show theirs the same way, without animations.

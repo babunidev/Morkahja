@@ -299,3 +299,7 @@ One element still had no frame: the details card that opens when I tap an avatar
 ### Lives on the avatar — 2026-11-13
 
 I wanted my lives where I can see them: five essence slots on the bottom edge of my avatar's portrait, one at the bottom and two on each side, instead of a row hidden in the details. They now behave like a small belt. A lost essence leaves from its slot and the slot stays empty. At the next encounter, essences from my inventory fly in to fill the gaps, and a new essence I collect goes straight into a free slot, or into the inventory once all five are full. **Verification:** in a headless browser at phone size the slots showed on the avatar, and a lost essence emptied its slot; the refill and collecting into a slot are covered by tests but still need a look in play. **Not deployed yet.**
+
+### Making room on the avatar — 2026-11-13
+
+With the essence slots along the bottom of my avatar, the badge showing what I used and what I rolled sat in their way. It moved to the top-right corner of the portrait. **Verification:** screenshot after a roll at phone size; tests and build passed. **Not deployed yet.**

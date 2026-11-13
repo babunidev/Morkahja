@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-48-nov-4-13',
-    version: '0.9.0-beta.48',
+    id: 'beta-49-nov-4-13',
+    version: '0.9.0-beta.49',
     period: '4–13 Nov 2026',
     groups: [
       {
