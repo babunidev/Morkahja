@@ -24,6 +24,7 @@ import {
   animationAlreadyPlayed,
   claimAnimationOnce,
   committedActionFor,
+  committedSolutionSetFor,
   takeCommittedSolutionSpend,
   getAvatarPortraitRect,
   getFooterButtonRect,
@@ -1340,6 +1341,41 @@ export const ResultBlock = forwardRef(function ResultBlock(
     // Only for a solution the player really committed in this encounter, once.
     if (!takeCommittedSolutionSpend(encounterSnapshotId, resolutionAction)) {
       return;
+    }
+
+    // A solution set: every chosen solution flies from where it hovers above
+    // its slot, all together, and the hovering icon hides as its flyer takes over.
+    const hovering = committedSolutionSetFor(encounterSnapshotId)
+      ? Array.from(document.querySelectorAll<HTMLElement>('[data-solution-hover]'))
+      : [];
+    if (hovering.length > 0) {
+      const flights = hovering.flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) {
+          return [];
+        }
+        const ids = (element.dataset.solutionIds ?? '')
+          .split(',')
+          .map(Number)
+          .filter((id) => id > 0);
+        return ids.map((solutionId, index) => {
+          const solution = solutionsById()[String(solutionId)] as SolutionRecord | undefined;
+          return solution ? {
+            imageSrc: solutionImagePath(solution),
+            size: Math.round(Math.min(rect.width, rect.height)),
+            sourceRect: rect,
+            onTakeOff: index === 0
+              ? () => {
+                element.style.visibility = 'hidden';
+              }
+              : undefined,
+          } : null;
+        }).filter((flight) => flight !== null);
+      });
+      if (flights.length > 0) {
+        void playUsedSolutionsIntoEncounter(flights);
+        return;
+      }
     }
 
     const slotElement = document.querySelector(`[data-solution-slot="${resolutionAction}"]`);

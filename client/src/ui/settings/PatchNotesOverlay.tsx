@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-52-nov-4-13',
-    version: '0.9.0-beta.52',
+    id: 'beta-53-nov-4-13',
+    version: '0.9.0-beta.53',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -54,6 +54,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Each essence slot keeps its own essence: after a loss or a new essence the others no longer change pictures.',
           'Atranor items go to your inventory, not the essence slots, and a bad roll no longer takes them in place of an essence.',
           'Spent solutions and rewards no longer flash in the corner of the encounter before they fly.',
+          'Encounters that need several solutions: tap them one at a time and they hover above their slots until the set is complete, then fly in together. Each one rolls on its own and the rolls are averaged; with too few, the dice rolls for the missing ones.',
         ],
       },
       {

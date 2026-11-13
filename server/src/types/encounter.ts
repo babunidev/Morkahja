@@ -65,6 +65,8 @@ export interface EncounterSnapshot {
   rollSecondaryC: number;
   rollSecondaryD: number;
   rollE: number;
+  /** Rolls for further copies of a slot in a solution set; absent on older snapshots. */
+  extraRolls?: EncounterRollSnapshot['extraRolls'];
 
   // Rewards are selected at encounter creation, then conditionally granted.
   rewardIds: number[];
@@ -88,11 +90,25 @@ export interface EncounterSnapshot {
 
 /** Client-submitted action; server maps to resolver input. */
 export type PlayerEncounterAction =
-  | { type: 'primaryA' }
-  | { type: 'secondaryB' }
-  | { type: 'primaryC' }
-  | { type: 'secondaryD' }
+  | ({ type: 'primaryA' } & SolutionSetChoice)
+  | ({ type: 'secondaryB' } & SolutionSetChoice)
+  | ({ type: 'primaryC' } & SolutionSetChoice)
+  | ({ type: 'secondaryD' } & SolutionSetChoice)
   | { type: 'dice' };
+
+/**
+ * A solution set chosen one solution at a time (the slot repeats for each
+ * copy), finished by the dice when `diceFill` is set. Absent: the action's
+ * slot alone, as many copies as the encounter needs (older clients, bots).
+ */
+export interface SolutionSetChoice {
+  picks?: ('A' | 'B' | 'C' | 'D')[];
+  diceFill?: boolean;
+}
+
+function setChoiceFields(action: SolutionSetChoice): SolutionSetChoice {
+  return action.picks ? { picks: [...action.picks], diceFill: action.diceFill === true } : {};
+}
 
 export function encounterToSnapshotFields(
   encounter: EncounterData,
@@ -183,6 +199,7 @@ export function snapshotToRolls(
     rollSecondaryC: snapshot.rollSecondaryC ?? snapshot.rollD,
     rollSecondaryD: snapshot.rollSecondaryD ?? snapshot.rollD,
     rollE: snapshot.rollE,
+    extraRolls: snapshot.extraRolls,
   });
 }
 
@@ -191,13 +208,13 @@ export function toSelectedEncounterAction(
 ): SelectedEncounterAction {
   switch (action.type) {
     case 'primaryA':
-      return { mode: 'slot', slot: 'A' };
+      return { mode: 'slot', slot: 'A', ...setChoiceFields(action) };
     case 'secondaryB':
-      return { mode: 'slot', slot: 'B' };
+      return { mode: 'slot', slot: 'B', ...setChoiceFields(action) };
     case 'primaryC':
-      return { mode: 'slot', slot: 'C' };
+      return { mode: 'slot', slot: 'C', ...setChoiceFields(action) };
     case 'secondaryD':
-      return { mode: 'slot', slot: 'D' };
+      return { mode: 'slot', slot: 'D', ...setChoiceFields(action) };
     case 'dice':
       return { mode: 'dice' };
   }

@@ -1,3 +1,5 @@
+import type { SolutionSetSubmission } from '../../api/http.js';
+
 export type RewardFlyTargetKind = 'skillbook' | 'inventory';
 
 const FOOTER_TARGET_SELECTOR = '[data-morkahja-footer-target';
@@ -906,10 +908,24 @@ export async function playRewardEmergence(
  * the previous roll and slot while the encounter id is already the new one,
  * which must not replay the spending animation with the new slot's image.
  */
-let committedAction: { snapshotId: string; action: string; spendTaken: boolean } | null = null;
+let committedAction: {
+  snapshotId: string;
+  action: string;
+  spendTaken: boolean;
+  solutionSet: SolutionSetSubmission | null;
+} | null = null;
 
-export function recordCommittedAction(snapshotId: string, action: string): void {
-  committedAction = { snapshotId, action, spendTaken: false };
+export function recordCommittedAction(
+  snapshotId: string,
+  action: string,
+  solutionSet: SolutionSetSubmission | null = null,
+): void {
+  committedAction = { snapshotId, action, spendTaken: false, solutionSet };
+}
+
+/** The solution set the player committed in this encounter, if it was one. */
+export function committedSolutionSetFor(snapshotId: string | undefined): SolutionSetSubmission | null {
+  return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.solutionSet : null;
 }
 
 /** The action the player committed in this encounter, if any. */

@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { EncounterAction } from '../../../shared/src/contracts.js';
+import {
+  MAX_SOLUTION_SET_SIZE,
+  isSolutionSetSlot,
+  type SolutionSetSlot,
+} from '../../../shared/src/solutionSet.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
 import type {
   ParticipantFocusState,
@@ -160,7 +165,37 @@ async function loadEncounterRoomFromTransaction(
   return normalizeEncounterRoom(room);
 }
 
-export function clientActionToPlayerAction(action: EncounterAction): PlayerEncounterAction {
+/** A solution set as submitted by the client: validated shape only; the resolver checks inventory. */
+export interface ClientSolutionSet {
+  picks: SolutionSetSlot[];
+  diceFill: boolean;
+}
+
+export function parseClientSolutionSet(value: unknown, diceFillValue: unknown): ClientSolutionSet | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(value)
+    || value.length === 0
+    || value.length > MAX_SOLUTION_SET_SIZE
+    || !value.every(isSolutionSetSlot)
+  ) {
+    throw new RoomError('Invalid solution set', 400, 'INVALID_SOLUTION_SET');
+  }
+  return { picks: [...value], diceFill: diceFillValue === true };
+}
+
+export function clientActionToPlayerAction(
+  action: EncounterAction,
+  solutionSet?: ClientSolutionSet,
+): PlayerEncounterAction {
+  if (solutionSet && action !== 'dice') {
+    if (solutionSet.picks[0] !== action) {
+      throw new RoomError('Solution set does not start with the action', 400, 'INVALID_SOLUTION_SET');
+    }
+    return { ...clientActionToPlayerAction(action), picks: solutionSet.picks, diceFill: solutionSet.diceFill } as PlayerEncounterAction;
+  }
   switch (action) {
     case 'A':
       return { type: 'primaryA' };
@@ -2361,6 +2396,7 @@ export async function submitChoice(
   avatarId: string,
   action: EncounterAction,
   solutionId?: number,
+  solutionSet?: ClientSolutionSet,
 ): Promise<EncounterRoom> {
   const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   if (!roomId) {
@@ -2372,7 +2408,7 @@ export async function submitChoice(
     await ensureSlotEncounterSnapshots(existingRoom);
   }
 
-  const playerAction = clientActionToPlayerAction(action);
+  const playerAction = clientActionToPlayerAction(action, solutionSet);
   const now = nowMs();
 
   const updated = await withDocumentTransaction(async (transaction) => {

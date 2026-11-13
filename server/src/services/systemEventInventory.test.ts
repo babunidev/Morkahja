@@ -63,6 +63,8 @@ function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRo
       primarySolutionA: 10001,
       secondarySolutionTypeA: 1,
       rollPrimaryA: index === slotIndex ? 10 : 96,
+      // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
+      extraRolls: undefined,
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],
     updatedAt: Date.now(),
@@ -207,11 +209,15 @@ await persistInventory(session.playerId, avatarId, {
     activeEncounterSnapshot: {
       ...readyEncounterRoom(room, slotIndex).activeEncounterSnapshot,
       rollPrimaryA: 96,
+      // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
+      extraRolls: undefined,
     },
     slotEncounterSnapshots: readyEncounterRoom(room, slotIndex).slotEncounterSnapshots.map(
       (snapshot, index) => ({
         ...snapshot,
         rollPrimaryA: index === slotIndex ? 96 : 50,
+        // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
+        extraRolls: undefined,
         // The encounter's own rewards are drawn at random and could include an
         // essence or spell 10001, which would make the totals below vary between
         // runs. This scenario is about the level-up event, so the normal encounter
