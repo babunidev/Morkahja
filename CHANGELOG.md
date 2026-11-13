@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: avatar details open like a tooltip; 0.9.0-beta.47
+
+- **Change (Babuni's direction): the avatar details card is framed and anchored like the game tooltips.** Clicking your avatar or a party member opened an unframed card laid over the portrait. It now opens in `AnchoredGamePopover` (`GameTooltip.tsx`): the tooltip frame, placed by the same rule as the item tooltips (toward the middle of the game screen; for the centred avatar above it with the gold marker in the middle of the edge, for a side slot anchored by a corner), fading in, and staying until closed so its Return home or Kick button works. The placement code is shared with the tooltips (`placeNearTrigger`). A divider separates the name from the details.
+- **Fix:** `TooltipDivider` now stretches inside centring layouts (it shrank to a stub there).
+- **Version 0.9.0-beta.47** (D-015). Patch notes line added.
+- **Verification:** client typecheck, tests (29) and production build passed. Headless Chrome at 412 × 915 and 1400 × 900: the solo avatar's card opened above the portrait, centred, with the marker in the middle of its bottom edge. A side slot could not be checked: the local helper bots only answer Babuni's account, so the test player had no party member. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: undo and redo in avatar creation; 0.9.0-beta.46
 
 - **New (Babuni's direction, a feature brought back): undo and redo in Create Avatar.** Subtle round buttons with curved arrows sit left (undo) and right (redo) of the name. Every action saves the combination of portrait, frame and name in one list: a race, role or sex, randomizing (portrait and frame together are one step) and the frame arrows. Typing a name changes the current step without adding steps. A change made after stepping back is inserted right after the current step and the later steps are kept, so redo still reaches them (Babuni: "it still keeps these changes inside this gap, and I go forward to the next stuff that I did afterwards"). Logic in `client/src/ui/avatar/creationHistory.ts` with tests.

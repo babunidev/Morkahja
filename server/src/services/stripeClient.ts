@@ -26,7 +26,7 @@ export function getStripeClient(): Stripe {
   }
 
   client = new Stripe(secretKey, {
-    appInfo: { name: 'Morkahja', version: '0.9.0-beta.46' },
+    appInfo: { name: 'Morkahja', version: '0.9.0-beta.47' },
   });
 
   return client;

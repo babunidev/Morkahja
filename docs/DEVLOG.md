@@ -291,3 +291,7 @@ The reward tooltips had a small divider between the item's name and its text, an
 ### Stepping back through avatars — 2026-11-13
 
 Avatar creation used to let me go back to an earlier avatar, and I wanted that back, now with redo as well. Every pick and every randomize is saved in a list, and two small round arrow buttons beside the name step back and forward through it. If I step back and change something, the change slots in at that point and everything I did afterwards stays reachable. **Verification:** stepped through randomizing, undoing, changing and redoing in a headless browser at phone size; tests and build passed. **Not deployed yet.**
+
+### Avatar details with a frame — 2026-11-13
+
+One element still had no frame: the details card that opens when I tap an avatar. It now opens like the tooltips, in the same frame, popping out above my avatar with the marker in the middle, and for the side slots anchored by a corner the way the item tooltips are. **Verification:** checked for my own avatar at phone and desktop sizes in a headless browser; the side slots still need my own look with a party; tests and build passed. **Not deployed yet.**

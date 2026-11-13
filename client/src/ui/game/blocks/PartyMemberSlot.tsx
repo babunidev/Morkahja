@@ -8,7 +8,6 @@ import type {
 } from '../../../api/http.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
 import AvatarPartyDetailsCard, {
-  avatarDetailsOverlayStyle,
   type AvatarDetailsSlotSide,
 } from '../../avatar/AvatarPartyDetailsCard.js';
 import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
@@ -25,6 +24,7 @@ import {
   PartyParticipantChoiceBadge,
 } from './partyParticipantChoiceBadge.js';
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
+import { AnchoredGamePopover } from '../GameTooltip.js';
 
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
 
@@ -254,7 +254,7 @@ export function PartyMemberSlot({
   const focusPresence = useOpacityPresence(showFocusBadge);
   const [displayFocusIcon, setDisplayFocusIcon] = useState(focusIconSrc);
   const [displayFocusTooltip, setDisplayFocusTooltip] = useState(focusTooltip);
-  const compact = slotSide !== 'center';
+  const detailsAnchorRef = useRef<HTMLButtonElement>(null);
   const badge = statusLabel(participant, roomState);
 
   useEffect(() => {
@@ -287,6 +287,7 @@ export function PartyMemberSlot({
       <div style={columnStyle}>
         <div style={portraitWrapStyle}>
           <button
+            ref={detailsAnchorRef}
             aria-expanded={detailsOpen}
             aria-label={`${participant.avatar.name}, level ${participant.avatar.level}. ${badge || 'party member'}. ${detailsOpen ? 'Hide' : 'Show'} details`}
             className={[
@@ -329,7 +330,7 @@ export function PartyMemberSlot({
             </span>
           </button>
           {detailsOpen ? (
-            <div style={avatarDetailsOverlayStyle(slotSide, compact)}>
+            <AnchoredGamePopover anchorRef={detailsAnchorRef}>
               <AvatarPartyDetailsCard
                 avatar={participant.avatar}
                 footer={canKick && onKick ? (
@@ -351,7 +352,7 @@ export function PartyMemberSlot({
                 statusInactive={disengaged}
                 statusLabel={badge || undefined}
               />
-            </div>
+            </AnchoredGamePopover>
           ) : null}
         </div>
       </div>

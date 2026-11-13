@@ -3,18 +3,17 @@ import type { AvatarInventoryDto } from '@shared/contracts';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { EssenceLivesRow } from './EssenceLivesRow.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
+import { TooltipDivider } from '../game/GameTooltip.js';
 
 export type AvatarDetailsSlotSide = 'left' | 'center' | 'right';
 
 const cardStyle: CSSProperties = {
+  // Shown in a framed AnchoredGamePopover, which gives it its frame and background.
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   width: '100%',
-  padding: '8px 10px',
-  borderRadius: 10,
-  background: 'rgba(6, 6, 10, 0.78)',
   pointerEvents: 'none',
   textAlign: 'center',
   boxSizing: 'border-box',
@@ -115,27 +114,6 @@ export function experienceRequiredForNextLevel(level: number): number {
   return 7 * 2 ** (Math.max(1, level) - 1);
 }
 
-export function avatarDetailsOverlayStyle(
-  _slotSide: AvatarDetailsSlotSide = 'center',
-  _compact = false,
-): CSSProperties {
-  return {
-    position: 'absolute',
-    left: '50%',
-    bottom: '2%',
-    transform: 'translateX(-50%)',
-    zIndex: 12,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 'clamp(6px, 1.4vw, 10px)',
-    width: '100%',
-    maxWidth: '100%',
-    boxSizing: 'border-box',
-    pointerEvents: 'none',
-  };
-}
 
 export function AvatarPartyDetailsCard({
   avatar,
@@ -172,13 +150,14 @@ export function AvatarPartyDetailsCard({
   const baseName = avatar.name.trim() || 'Adventurer';
 
   return (
-    <div role="tooltip" style={cardStyle}>
+    <div role="dialog" aria-label={`${avatar.name} details`} style={cardStyle}>
       <div style={nameBlockStyle}>
         {displayTitle ? (
           <span style={titleStyle}>{displayTitle}</span>
         ) : null}
         <span style={displayTitle ? avatarNameStyle : soloNameStyle}>{baseName}</span>
       </div>
+      <TooltipDivider />
       <span style={levelStyle}>
         Level {avatar.level} · {avatar.race} {avatar.role}
       </span>

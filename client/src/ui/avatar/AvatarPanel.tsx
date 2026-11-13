@@ -11,9 +11,8 @@ import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.j
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
-import { GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
+import { AnchoredGamePopover, GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
 import AvatarPartyDetailsCard, {
-  avatarDetailsOverlayStyle,
   type AvatarDetailsSlotSide,
 } from './AvatarPartyDetailsCard.js';
 
@@ -214,10 +213,10 @@ export function AvatarPanel({
 }) {
 
   const [showDetails, setShowDetails] = useState(false);
+  const detailsAnchorRef = useRef<HTMLButtonElement>(null);
 
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
-  const compact = slotSide !== 'center';
 
 
 
@@ -269,6 +268,7 @@ export function AvatarPanel({
 
         <button
 
+          ref={detailsAnchorRef}
           aria-expanded={showDetails}
 
           aria-label={`Show details for ${avatar.name}`}
@@ -377,7 +377,7 @@ export function AvatarPanel({
 
         {showDetails ? (
 
-          <div style={avatarDetailsOverlayStyle(slotSide, compact)}>
+          <AnchoredGamePopover anchorRef={detailsAnchorRef}>
 
             <AvatarPartyDetailsCard
 
@@ -473,7 +473,7 @@ export function AvatarPanel({
 
             />
 
-          </div>
+          </AnchoredGamePopover>
 
         ) : null}
 

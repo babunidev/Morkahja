@@ -6,6 +6,7 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import {
   placeTooltipTowardCenter,
@@ -88,7 +89,8 @@ const cardLineStyle: CSSProperties = {
  * padding minus the frame's depth.
  */
 export function TooltipDivider({ bleed = 6 }: { bleed?: number }) {
-  return <div aria-hidden="true" style={{ ...frameDividerStyle({ side: 'top', bleed }), margin: '4px 0 3px' }} />;
+  // Stretches across even inside a centring flex column.
+  return <div aria-hidden="true" style={{ ...frameDividerStyle({ side: 'top', bleed }), alignSelf: 'stretch', margin: '4px 0 3px' }} />;
 }
 
 /** A small text tooltip: a gold title and optional lines below it. */
@@ -170,6 +172,110 @@ export function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
         style={{ ...diamond, [horizontal]: MARKER_CORNER_LEG_PX / 2, [vertical]: MARKER_CORNER_LEG_PX / 2 }}
       />
     </>
+  );
+}
+
+/**
+ * Where a tooltip-like element goes: toward the middle of `boundsSelector`'s
+ * element from `trigger` (placeTooltipTowardCenter), converted to the
+ * element's own positioning parent, which may be a scaled stage.
+ */
+export function placeNearTrigger(
+  element: HTMLElement,
+  trigger: Element,
+  boundsSelector: string,
+): CornerAnchoredPlacement | null {
+  const container = element.offsetParent;
+  if (!(container instanceof HTMLElement) || !trigger.isConnected) {
+    return null;
+  }
+  const containerRect = container.getBoundingClientRect();
+  const tooltipRect = element.getBoundingClientRect();
+  if (tooltipRect.width <= 0 || tooltipRect.height <= 0) {
+    return null;
+  }
+  const boundsRect = document.querySelector(boundsSelector)?.getBoundingClientRect() ?? containerRect;
+  const next = placeTooltipTowardCenter(boundsRect, trigger.getBoundingClientRect(), tooltipRect);
+  // Measured in screen pixels; positioned in the (possibly scaled) stage's own pixels.
+  const scale = container.offsetWidth > 0 ? containerRect.width / container.offsetWidth : 1;
+  return {
+    ...next,
+    left: (next.left + boundsRect.left - containerRect.left) / scale,
+    top: (next.top + boundsRect.top - containerRect.top) / scale,
+  };
+}
+
+/**
+ * A framed card that opens from an element like a game tooltip (Babuni's
+ * direction, 2026-11-13: the avatar details): toward the middle of the game
+ * screen, above or below, anchored by a corner or, for a centred element, by
+ * the middle of an edge, with the gold marker. It stays until closed and can
+ * hold buttons.
+ */
+export function AnchoredGamePopover({
+  anchorRef,
+  boundsSelector = GAME_SCREEN_SELECTOR,
+  children,
+  width = 200,
+}: {
+  anchorRef: RefObject<HTMLElement | null>;
+  boundsSelector?: string;
+  children: ReactNode;
+  width?: number;
+}) {
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const [placement, setPlacement] = useState<CornerAnchoredPlacement | null>(null);
+
+  useLayoutEffect(() => {
+    const element = popoverRef.current;
+    const trigger = anchorRef.current;
+    if (!element || !trigger) {
+      return undefined;
+    }
+    const place = (): void => {
+      const next = placeNearTrigger(element, trigger, boundsSelector);
+      if (next) {
+        setPlacement((previous) => (
+          previous
+          && Math.abs(previous.left - next.left) < 0.5
+          && Math.abs(previous.top - next.top) < 0.5
+          && previous.corner === next.corner
+            ? previous
+            : next
+        ));
+      }
+    };
+    place();
+    const frame = window.requestAnimationFrame(place);
+    const observer = new ResizeObserver(place);
+    observer.observe(element);
+    window.addEventListener('resize', place);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('resize', place);
+    };
+  }, [anchorRef, boundsSelector]);
+
+  return (
+    <div
+      ref={popoverRef}
+      style={{
+        ...gameTooltipFrameStyle,
+        position: 'absolute',
+        zIndex: 60,
+        width,
+        left: placement?.left ?? 0,
+        top: placement?.top ?? 0,
+        visibility: placement ? 'visible' : 'hidden',
+        animation: placement ? `morkahja-game-tooltip-in ${GAME_TOOLTIP_FADE_MS}ms ease-out` : 'none',
+      }}
+    >
+      <style>{FADE_KEYFRAMES}</style>
+      <GameTooltipFrame />
+      {children}
+      {placement ? tooltipCornerMarker(placement.corner) : null}
+    </div>
   );
 }
 
@@ -277,29 +383,15 @@ export function useGameTooltip({
 
   useLayoutEffect(() => {
     const element = tooltipRef.current;
-    const container = element?.offsetParent;
-    if (!active || !element || !(container instanceof HTMLElement)) {
+    if (!active || !element) {
       return;
     }
 
     const place = (): void => {
-      if (!active.trigger.isConnected) {
-        return;
+      const next = placeNearTrigger(element, active.trigger, boundsSelector);
+      if (next) {
+        setPlacement(next);
       }
-      const containerRect = container.getBoundingClientRect();
-      const tooltipRect = element.getBoundingClientRect();
-      if (tooltipRect.width <= 0 || tooltipRect.height <= 0) {
-        return;
-      }
-      const boundsRect = document.querySelector(boundsSelector)?.getBoundingClientRect() ?? containerRect;
-      const next = placeTooltipTowardCenter(boundsRect, active.trigger.getBoundingClientRect(), tooltipRect);
-      // Measured in screen pixels; positioned in the (possibly scaled) stage's own pixels.
-      const scale = container.offsetWidth > 0 ? containerRect.width / container.offsetWidth : 1;
-      setPlacement({
-        ...next,
-        left: (next.left + boundsRect.left - containerRect.left) / scale,
-        top: (next.top + boundsRect.top - containerRect.top) / scale,
-      });
     };
 
     place();
