@@ -267,3 +267,7 @@ Avatar creation on my phone was cramped and off-centre, with small race buttons.
 
 On my phone the new avatar creation was close, but the frame still clipped past the edges. AI now sizes the preview by the frame, not the portrait inside it. I also wanted the selected race, role and sex easier to see. Each now has a thin gold ring, a ring with random gaps around it, and the glow. In the game, when I play alone, my avatar now takes the whole space between the solutions and the bottom buttons, instead of a slot sized for three party members. **Verification:** measured and screenshotted at two phone sizes and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
 
+
+### One frame for everything — 2026-11-13
+
+The new encounter frame looked so much better than the rounded gold borders everywhere else that I wanted it on every panel and tooltip: the menus, avatar creation, the tooltips, all with the same lines, the gapped line, the thin line, the little gap, the outer line and the corner triangles, just a little thinner. AI made one shared frame and put it on all of them, in a panel size and a smaller tooltip size, and moved the tooltips' gold corner marker onto the cut corner. **Verification:** screenshots of the menus, avatar creation and tooltips at phone size and on desktop in a headless browser; tests and build passed. **Not deployed yet.**

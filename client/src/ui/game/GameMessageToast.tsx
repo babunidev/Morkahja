@@ -4,6 +4,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const TOAST_ICON = assetUrl('/UI/03_DASHBOARD/im_button_news_a.webp');
 const ENTER_MS = 420;
@@ -173,17 +174,19 @@ export function GameMessageToast({
             onClick();
             onDismiss();
           }}
-          style={buttonPanelStyle}
+          style={framedStyle(buttonPanelStyle)}
           type="button"
         >
+          <LineFrame background={panelStyle.background} />
           {content}
         </button>
       ) : (
         <div
           aria-label={message}
           className={toastClass(phase)}
-          style={panelStyle}
+          style={framedStyle(panelStyle)}
         >
+          <LineFrame background={panelStyle.background} />
           {content}
         </div>
       )}

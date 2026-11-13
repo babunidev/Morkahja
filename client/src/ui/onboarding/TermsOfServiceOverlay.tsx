@@ -4,6 +4,7 @@ import {
   protectedOverlaySurfaceProps,
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -164,8 +165,9 @@ export function TermsOfServiceOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="terms-of-service-title" style={titleStyle}>
             Morkahja Terms of Service

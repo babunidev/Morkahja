@@ -10,6 +10,8 @@ import {
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { GameTooltipFrame } from '../game/GameTooltip.js';
 
 const OVERLAY_FADE_MS = 300;
 const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
@@ -155,16 +157,13 @@ const directDonateTooltipStyle: CSSProperties = {
   bottom: 'calc(100% + 10px)',
   transform: 'translateX(-50%)',
   width: 'min(300px, 92vw)',
-  padding: '10px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.45)',
-  borderRadius: 9,
-  background: 'rgba(8, 5, 4, 0.96)',
+  padding: '12px 14px',
+  isolation: 'isolate',
   color: 'rgba(247, 239, 224, 0.9)',
   fontSize: '0.82rem',
   lineHeight: 1.45,
   textAlign: 'center',
   pointerEvents: 'none',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   boxSizing: 'border-box',
   zIndex: 10,
 };
@@ -193,6 +192,7 @@ function DirectDeveloperDonateSection() {
             visibility: showTooltip ? 'visible' : 'hidden',
           }}
         >
+          <GameTooltipFrame background="rgba(8, 5, 4, 0.96)" />
           {DEVELOPER_DONATION_TOOLTIP}
         </span>
         <PanelButton
@@ -311,8 +311,9 @@ export function DonationOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="donation-overlay-title" style={titleStyle}>DONATE</h2>
           <ClosePanelButton

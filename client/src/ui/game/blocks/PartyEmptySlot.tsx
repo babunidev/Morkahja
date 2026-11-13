@@ -7,6 +7,7 @@ import {
   protectedImageProps,
 } from '../../protectedImage.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { GameTooltipFrame } from '../GameTooltip.js';
 
 const LOCK_ICON = assetUrl('/UI/01_1_SignIn/LOCK.png');
 const FRIENDS_ICON = assetUrl('/UI/07_FriendsMenu/FriendsButt.webp');
@@ -51,11 +52,8 @@ const menuStyle: CSSProperties = {
   display: 'grid',
   gap: 4,
   minWidth: 148,
-  padding: '6px',
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  borderRadius: 10,
-  background: 'rgba(12, 7, 5, 0.96)',
-  boxShadow: '0 10px 24px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 204, 102, 0.18)',
+  padding: 10,
+  isolation: 'isolate',
   pointerEvents: 'auto',
 };
 
@@ -205,6 +203,7 @@ export function PartyEmptySlot({
           role="menu"
           style={menuStyle}
         >
+          <GameTooltipFrame background="rgba(12, 7, 5, 0.96)" />
           {SLOT_OPTIONS.map((option) => {
             const active = option.value === slotState;
             return (

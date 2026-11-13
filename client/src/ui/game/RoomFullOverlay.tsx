@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import PanelButton from '../common/PanelButton.js';
 import { protectedOverlayTextStyle } from '../protectedImage.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 280;
 
@@ -99,7 +100,8 @@ export default function RoomFullOverlay({
         opacity: visible ? 1 : 0,
       }}
     >
-      <div style={panelStyle}>
+      <div style={framedStyle(panelStyle)}>
+        <LineFrame background={panelStyle.background} />
         <h2 id="room-full-title" style={titleStyle}>
           Room full
         </h2>

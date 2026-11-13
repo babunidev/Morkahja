@@ -524,10 +524,9 @@ button:focus-visible {
   position: absolute;
   z-index: 6;
   margin: 0;
-  padding: 5px 10px;
-  border: 1px solid rgba(255, 204, 102, 0.34);
-  border-radius: 8px;
-  background: rgba(12, 8, 6, 0.88);
+  /* Framed by a LineFrame inside (the game's one frame); padding clears it. */
+  padding: 9px 13px;
+  isolation: isolate;
   color: rgba(247, 239, 224, 0.94);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 0.78rem;
@@ -643,11 +642,9 @@ button:focus-visible {
   gap: 3px;
   min-width: min(92%, 168px);
   margin: 0;
-  padding: 8px 16px;
-  border: 1px solid rgba(255, 204, 102, 0.34);
-  border-radius: 8px;
-  background: rgba(12, 8, 6, 0.9);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  /* Framed by a LineFrame inside (the game's one frame); padding clears it. */
+  padding: 11px 17px;
+  isolation: isolate;
   color: rgba(247, 239, 224, 0.94);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 0.78rem;

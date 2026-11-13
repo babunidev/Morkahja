@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: one line frame for panels, menus and tooltips
+
+- **Change (Babuni's direction): every framed panel and tooltip now uses the encounter's frame, a little thinner.** The rounded gold borders are replaced by the same lines as around the encounter picture (a line, a line with random gaps, a thin line, a small gap and an outer line), with cut-off corners and small corner triangles, drawn inside the element's edge. One shared component, `client/src/ui/common/LineFrame.tsx`, draws the lines and the background cut to the octagon with its shadow; the encounter frame now uses the same drawing code. Two sizes: panels (lines 1.5 / 1.5 gapped / 0.75 / 0.75 px) and tooltips (1 / 1 gapped / 0.6 / 0.75 px), defined in `encounterFrameGeometry.ts`.
+- **Where:** all main-menu overlays (Settings, Patch notes, About us, Friends, Soul link, Profile, Scribes, Achievements, Expansions, Dice shop, Donation), Create Avatar, the welcome panel, Terms, Privacy, Recovery key info, Room full, game messages; the game tooltips (solutions, dice, rewards, Continue, menu buttons, avatar, Inventory and Skillbook items, party badges), the option tooltips in Create Avatar, the main-menu button tooltips, the avatar slot tooltips, the donation tooltip and the party slot menu. Buttons, inner cards and the avatar death screen keep their look.
+- **Tooltip marker:** the gold corner bracket became a bright line along the tooltip's cut corner with the diamond on it; tooltip padding grew so text clears the lines. The Settings footer now sits inside the frame.
+- **Verification:** client typecheck, tests (26, including a new check that both sizes keep the encounter's line order and parallel corner cuts) and production build passed. Screenshots in headless Chrome at 412 × 915 (Settings, Friends, Profile, Expansions, Create Avatar, solution and menu tooltips via long press) and 1400 × 900 (main-menu tooltips). **Not deployed.**
+
 ## 2026-11-13 — Unreleased: bigger avatar when alone, clearer selection in avatar creation
 
 - **Change (Babuni's direction): the avatar grows when playing alone.** With no one else in the encounter, the avatar uses the party strip's free height, from just below the solutions to just above the bottom buttons, and the empty side slots share the rest (`PartyZone.tsx`, sized with container units). On a 412 × 915 phone it grew from 131 to 195 px wide; on desktop it now stays clear of the solutions (176–180 px wide in the scaled stage, before 192 px overlapping them). With party members the slots are unchanged.

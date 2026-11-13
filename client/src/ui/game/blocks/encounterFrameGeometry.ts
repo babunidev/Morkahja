@@ -27,6 +27,55 @@ export const FRAME_OUTSET_PX = 11;
 /** Legs of the triangles that fill the picture's corners. */
 export const FRAME_CORNER_CUT_PX = 12;
 
+/**
+ * One frame style: its lines, how far they reach outside what they frame, the
+ * corner triangles' legs, and how long the gapped line's dashes and gaps are
+ * (1 = the encounter's).
+ */
+export interface FrameSpec {
+  lines: readonly FrameLine[];
+  outset: number;
+  cut: number;
+  dashScale: number;
+}
+
+/** Around the encounter picture. */
+export const ENCOUNTER_FRAME: FrameSpec = {
+  lines: FRAME_LINES,
+  outset: FRAME_OUTSET_PX,
+  cut: FRAME_CORNER_CUT_PX,
+  dashScale: 1,
+};
+
+/**
+ * Panels and menus (Babuni's direction, 2026-11-13): the encounter's frame with
+ * thinner lines, drawn inside the panel's edge.
+ */
+export const PANEL_FRAME: FrameSpec = {
+  lines: [
+    { offset: 0.75, width: 1.5, opacity: 0.95 },
+    { offset: 3.25, width: 1.5, opacity: 0.8, gapped: true },
+    { offset: 5.5, width: 0.75, opacity: 0.75 },
+    { offset: 8.5, width: 0.75, opacity: 0.6 },
+  ],
+  outset: 9,
+  cut: 10,
+  dashScale: 0.8,
+};
+
+/** Tooltips: the same frame, smaller still. */
+export const TOOLTIP_FRAME: FrameSpec = {
+  lines: [
+    { offset: 0.5, width: 1, opacity: 0.95 },
+    { offset: 2.25, width: 1, opacity: 0.8, gapped: true },
+    { offset: 3.9, width: 0.6, opacity: 0.75 },
+    { offset: 6, width: 0.75, opacity: 0.6 },
+  ],
+  outset: 6.5,
+  cut: 7,
+  dashScale: 0.55,
+};
+
 const SQRT2 = Math.SQRT2;
 
 /**
@@ -99,15 +148,16 @@ export const FRAME_GAP_SEED = 0x4d6f726b;
 
 /**
  * A stroke-dasharray that interrupts a line of `length` px at random places:
- * dashes of 18–110 px separated by gaps of 3–9 px, covering the whole length.
+ * dashes of 18–110 px separated by gaps of 3–9 px (times `scale`, gaps at
+ * least 2 px), covering the whole length.
  */
-export function randomGapDashArray(length: number, seed = FRAME_GAP_SEED): number[] {
+export function randomGapDashArray(length: number, seed = FRAME_GAP_SEED, scale = 1): number[] {
   const random = seededRandom(seed);
   const dashes: number[] = [];
   let covered = 0;
   while (covered < length) {
-    const dash = 18 + random() * 92;
-    const gap = 3 + random() * 6;
+    const dash = (18 + random() * 92) * scale;
+    const gap = Math.max(2, (3 + random() * 6) * scale);
     dashes.push(round(dash), round(gap));
     covered += dash + gap;
   }

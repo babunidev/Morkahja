@@ -40,6 +40,7 @@ import AvatarCreation from './AvatarCreation.js';
 import AvatarCard from './AvatarCard.js';
 import { formatAvatarDisplayName, readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { assetUrl } from '../../assetUrl.js';
+import { GameTooltipFrame } from '../game/GameTooltip.js';
 
 const CREATE_AVATAR_ASSET = assetUrl('/UI/03_DASHBOARD/CreateAvatar.webp');
 
@@ -185,6 +186,7 @@ function AvatarSlot({
             }`}
             role="tooltip"
           >
+            <GameTooltipFrame background="rgba(12, 8, 6, 0.9)" />
             <span className="morkahja-avatar-slot-tooltip-title">Create avatar</span>
             <span className="morkahja-avatar-slot-tooltip-meta">Empty slot</span>
           </span>
@@ -226,6 +228,7 @@ function AvatarSlot({
           }`}
           role="tooltip"
         >
+          <GameTooltipFrame background="rgba(12, 8, 6, 0.9)" />
           {avatarSlotTooltipContent(avatar)}
         </span>
         <div

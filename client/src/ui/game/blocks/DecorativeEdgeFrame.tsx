@@ -1,18 +1,15 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { FrameLinesSvg, useElementSize } from '../../common/LineFrame.js';
 import { subscribeFrameTimer, type FrameTimer } from '../frameTimer.js';
 import {
-  FRAME_LINES,
+  ENCOUNTER_FRAME,
   FRAME_OUTSET_PX,
   cornerLegAt,
-  cornerTrianglesPath,
-  octagonPath,
-  octagonPerimeter,
-  randomGapDashArray,
   timerSegments,
 } from './encounterFrameGeometry.js';
 
 const FRAME_Z_INDEX = 25;
-export const FRAME_LINE_COLOR = '#d8b06a';
+export { FRAME_LINE_COLOR } from '../../common/LineFrame.js';
 const TIMER_COLOR = '#fff4cf';
 /** The line the timer runs along: the gapped one, in the middle of the frame. */
 const TIMER_LINE_OFFSET = 4;
@@ -26,11 +23,6 @@ const frameLayerStyle: CSSProperties = {
 };
 
 const svgStyle: CSSProperties = {
-  position: 'absolute',
-  inset: 0,
-  width: '100%',
-  height: '100%',
-  overflow: 'visible',
   // Keeps the thin lines readable on bright pictures.
   filter: 'drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.85))',
 };
@@ -53,22 +45,8 @@ interface ShownTimer {
  */
 export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false }: { zIndex?: number; showTimer?: boolean }) {
   const frameRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const size = useElementSize(frameRef);
   const [shownTimer, setShownTimer] = useState<ShownTimer | null>(null);
-
-  useEffect(() => {
-    const node = frameRef.current;
-    if (!node) {
-      return undefined;
-    }
-    const updateSize = (): void => {
-      setSize({ width: node.clientWidth, height: node.clientHeight });
-    };
-    updateSize();
-    const observer = new ResizeObserver(updateSize);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!showTimer) {
@@ -152,25 +130,7 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
 
   return (
     <div ref={frameRef} aria-hidden="true" style={{ ...frameLayerStyle, zIndex }}>
-      {drawable ? (
-        <svg style={svgStyle} viewBox={`0 0 ${size.width} ${size.height}`}>
-          <path d={cornerTrianglesPath(pictureWidth, pictureHeight, FRAME_OUTSET_PX)} fill={FRAME_LINE_COLOR} opacity={0.95} />
-          {FRAME_LINES.map((line) => (
-            <path
-              key={line.offset}
-              d={octagonPath(pictureWidth, pictureHeight, line.offset, FRAME_OUTSET_PX)}
-              fill="none"
-              opacity={line.opacity}
-              stroke={FRAME_LINE_COLOR}
-              strokeDasharray={line.gapped
-                ? randomGapDashArray(octagonPerimeter(pictureWidth, pictureHeight, line.offset)).join(' ')
-                : undefined}
-              strokeLinejoin="miter"
-              strokeWidth={line.width}
-            />
-          ))}
-        </svg>
-      ) : null}
+      <FrameLinesSvg height={size.height} spec={ENCOUNTER_FRAME} style={svgStyle} width={size.width} />
       {timerBars ? (
         <>
           <style>{TIMER_KEYFRAMES}</style>

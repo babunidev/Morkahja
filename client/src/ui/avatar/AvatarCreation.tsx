@@ -27,6 +27,8 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
 import { randomRingDashArray, seedFromText } from '../game/blocks/encounterFrameGeometry.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { GameTooltipFrame } from '../game/GameTooltip.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -379,17 +381,15 @@ const optionTooltipShellStyle: CSSProperties = {
 
 const optionTooltipPanelStyle: CSSProperties = {
   margin: 0,
-  padding: '10px 12px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.96)',
+  position: 'relative',
+  isolation: 'isolate',
+  padding: '12px 14px',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.9rem',
   lineHeight: 1.4,
   textAlign: 'center',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   boxSizing: 'border-box',
 };
 
@@ -785,8 +785,9 @@ export function AvatarCreation({
           event.stopPropagation();
         }}
         role="dialog"
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="avatar-creation-title" style={titleStyle}>CREATE AVATAR</h2>
         </header>
@@ -991,7 +992,10 @@ export function AvatarCreation({
               : tooltipTransform(optionTooltip.anchor.anchorX),
           }}
         >
-          <p style={optionTooltipPanelStyle}>{optionTooltip.text}</p>
+          <p style={optionTooltipPanelStyle}>
+            <GameTooltipFrame />
+            {optionTooltip.text}
+          </p>
         </div>
       ) : null}
     </div>

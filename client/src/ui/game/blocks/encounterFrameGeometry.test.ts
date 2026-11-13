@@ -60,3 +60,21 @@ test('a selection ring with random gaps closes exactly and differs per item', as
   assert.deepEqual(randomRingDashArray(seedFromText('Grimnir')), grimnir);
   assert.notDeepEqual(randomRingDashArray(seedFromText('Rokur')), grimnir);
 });
+
+test('panel and tooltip frames: the same lines, thinner, inside their outset', async () => {
+  const { ENCOUNTER_FRAME, PANEL_FRAME, TOOLTIP_FRAME } = await import('./encounterFrameGeometry.js');
+  for (const spec of [PANEL_FRAME, TOOLTIP_FRAME]) {
+    assert.equal(spec.lines.length, ENCOUNTER_FRAME.lines.length);
+    assert.deepEqual(spec.lines.map((line) => Boolean(line.gapped)), ENCOUNTER_FRAME.lines.map((line) => Boolean(line.gapped)));
+    spec.lines.forEach((line, index) => {
+      assert.ok(line.width <= ENCOUNTER_FRAME.lines[index]!.width, 'thinner or equal');
+      assert.ok(line.offset + line.width / 2 <= spec.outset, 'inside the element');
+      const leg = cornerLegAt(line.offset, spec.cut);
+      assert.ok(Math.abs((spec.cut - (leg - 2 * line.offset)) / Math.SQRT2 - line.offset) < 1e-9, 'parallel cut');
+    });
+    const dashes = randomGapDashArray(300, undefined, spec.dashScale);
+    for (let index = 1; index < dashes.length; index += 2) {
+      assert.ok(dashes[index]! >= 2, 'gaps stay visible');
+    }
+  }
+});

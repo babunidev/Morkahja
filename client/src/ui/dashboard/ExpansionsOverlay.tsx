@@ -12,6 +12,7 @@ import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const EXPANSION_UI_ROOT = assetUrl('/UI/03_DASHBOARD/expansions');
 const ENCOUNTER_IMAGE_ROOT = assetUrl('/game/encounterimages');
@@ -831,8 +832,9 @@ export function ExpansionsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="expansions-overlay-title" style={titleStyle}>
             EXPANSIONS

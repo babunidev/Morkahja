@@ -16,6 +16,7 @@ import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
 import PatchNotesOverlay from './PatchNotesOverlay.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -94,7 +95,9 @@ const scrollHintButtonStyle: CSSProperties = {
 };
 
 const panelFooterStyle: CSSProperties = {
-  padding: '12px 18px 16px',
+  // Inside the panel's line frame, so its edge and background stay clear of it.
+  margin: '0 9px 9px',
+  padding: '12px 9px 7px',
   borderTop: '1px solid rgba(255, 204, 102, 0.28)',
   background: 'rgba(12, 7, 5, 0.98)',
 };
@@ -364,8 +367,9 @@ export function SettingsScreen({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <style>
           {`[data-settings-scroll]::-webkit-scrollbar { display: none; }
 @keyframes morkahja-settings-scroll-hint-bounce {

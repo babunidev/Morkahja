@@ -16,6 +16,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AchievementPanel from './AchievementPanel.js';
 import SoulLinkOverlay from './SoulLinkOverlay.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const FRIENDS_UI_ROOT = assetUrl('/UI/07_FriendsMenu');
 const ADD_FRIEND_BUTTON = `${FRIENDS_UI_ROOT}/im_button_add_friend.webp`;
@@ -611,8 +612,9 @@ export function FriendsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           {selectedFriend ? (
             <button

@@ -7,6 +7,7 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -289,8 +290,9 @@ export function SoulLinkOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="soul-link-overlay-title" style={titleStyle}>
             SOUL LINK

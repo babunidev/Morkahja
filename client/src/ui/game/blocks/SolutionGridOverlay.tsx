@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type ReactNode,
 } from 'react';
 import { gameSolutions } from '../../../data/gameContent.js';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
@@ -21,7 +20,7 @@ import {
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
-import { GAME_TOOLTIP_DELAY_MS } from '../GameTooltip.js';
+import { GAME_TOOLTIP_DELAY_MS, tooltipCornerMarker } from '../GameTooltip.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
@@ -168,93 +167,11 @@ const gridTooltipShellStyle: CSSProperties = {
   boxSizing: 'border-box',
 };
 
-/** Gold of the tooltip's frame and title, for the corner that points at the item. */
-const TOOLTIP_GOLD = '#ffcc66';
-const CORNER_BRACKET_PX = 14;
 /** Soft, short fade in and out for item tooltips. */
 const TOOLTIP_FADE_MS = 120;
 const TOOLTIP_FADE_KEYFRAMES = '@keyframes morkahja-grid-tooltip-in { from { opacity: 0; } to { opacity: 1; } }'
   + ' @keyframes morkahja-grid-tooltip-out { from { opacity: 1; } to { opacity: 0; } }';
 
-/**
- * A gold marker where the tooltip touches its item: a corner bracket with a
- * small diamond, or for a middle-column item a short edge line with a diamond
- * in the middle of the top or bottom edge.
- */
-function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
-  const top = corner.startsWith('top');
-  if (corner.endsWith('center')) {
-    return (
-      <>
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            [top ? 'top' : 'bottom']: -1,
-            width: 2 * CORNER_BRACKET_PX,
-            height: 2,
-            background: TOOLTIP_GOLD,
-            transform: 'translateX(-50%)',
-            borderRadius: 1,
-            pointerEvents: 'none',
-          }}
-        />
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            [top ? 'top' : 'bottom']: -4,
-            width: 7,
-            height: 7,
-            marginLeft: -3.5,
-            background: TOOLTIP_GOLD,
-            transform: 'rotate(45deg)',
-            boxShadow: '0 0 6px rgba(255, 204, 102, 0.6)',
-            pointerEvents: 'none',
-          }}
-        />
-      </>
-    );
-  }
-  const left = corner.endsWith('left');
-  const edge = (horizontal: 'left' | 'right', vertical: 'top' | 'bottom', offset: number): CSSProperties => ({
-    [horizontal]: offset,
-    [vertical]: offset,
-  });
-  return (
-    <>
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          ...edge(left ? 'left' : 'right', top ? 'top' : 'bottom', -1),
-          width: CORNER_BRACKET_PX,
-          height: CORNER_BRACKET_PX,
-          [top ? 'borderTop' : 'borderBottom']: `2px solid ${TOOLTIP_GOLD}`,
-          [left ? 'borderLeft' : 'borderRight']: `2px solid ${TOOLTIP_GOLD}`,
-          [`border${top ? 'Top' : 'Bottom'}${left ? 'Left' : 'Right'}Radius`]: 8,
-          boxSizing: 'border-box',
-          pointerEvents: 'none',
-        }}
-      />
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          ...edge(left ? 'left' : 'right', top ? 'top' : 'bottom', -7),
-          width: 7,
-          height: 7,
-          background: TOOLTIP_GOLD,
-          transform: 'rotate(45deg)',
-          boxShadow: '0 0 6px rgba(255, 204, 102, 0.6)',
-          pointerEvents: 'none',
-        }}
-      />
-    </>
-  );
-}
 
 type GridTooltipTriggerEvent = Parameters<TooltipRevealCallbacks['onShow']>[0];
 

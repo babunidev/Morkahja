@@ -114,3 +114,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own play or released. Line colour, thickness of the timer and the corner size are AI choices open to change.
 
+## D-014 — The encounter's line frame on every panel and tooltip (2026-11-13)
+
+**Babuni's direction:** all elements that have a frame — "the tooltips, the avatar creation, all the menus in the main menu" — get "the same concept of a frame that we have on the encounter", possibly "a little thinner": a line, a disrupted line, a thin line, a little gap and another line, with a little triangle in each corner.
+
+**AI implementation:** one `LineFrame` component drawn inside the element's edge, with the background cut to the frame's octagon; two thinner sizes (panel, tooltip) of the encounter's line set; buttons and inner cards keep their borders.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own look or released. Exact line widths, the tooltip marker on the cut corner, and which smaller elements count as framed are AI choices open to change.
+

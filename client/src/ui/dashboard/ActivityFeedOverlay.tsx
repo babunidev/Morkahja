@@ -10,6 +10,7 @@ import {
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { loadScribesReadIds, markScribesEntriesRead } from './scribesReadState.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 const POLL_INTERVAL_MS = 10_000;
@@ -341,8 +342,9 @@ export function ActivityFeedOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="scribes-feed-title" style={titleStyle}>SCRIBES</h2>
           <ClosePanelButton onClose={onClose} pressKey="scribes-close" />

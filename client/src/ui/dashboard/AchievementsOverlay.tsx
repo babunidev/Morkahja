@@ -17,6 +17,7 @@ import {
 } from '../protectedImage.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 
@@ -236,8 +237,9 @@ export function AchievementsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="achievements-overlay-title" style={titleStyle}>ACHIEVEMENTS</h2>
           <ClosePanelButton onClose={onClose} pressKey="achievements-close" />

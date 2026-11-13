@@ -7,6 +7,7 @@ import {
   protectedOverlayTextStyle,
 } from '../protectedImage.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -489,8 +490,9 @@ export function AboutUsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="about-us-overlay-title" style={titleStyle}>ABOUT US</h2>
           <ClosePanelButton onClose={onClose} pressKey="about-close" />

@@ -25,6 +25,7 @@ import PrivacyPolicyOverlay from './PrivacyPolicyOverlay.js';
 import RecoveryKeyInfoOverlay from './RecoveryKeyInfoOverlay.js';
 import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
 
 async function signedBootstrapInput(
   device: StoredKeypair,
@@ -411,7 +412,8 @@ export function OnboardingGateway({
         tabIndex={-1}
         type="file"
       />
-      <section style={panelStyle}>
+      <section style={framedStyle(panelStyle)}>
+        <LineFrame background={panelStyle.background} />
         <div style={titleGroupStyle}>
           <h1 style={titleStyle}>Morkahja</h1>
           <p style={welcomeStyle}>Welcome, Adventurer!</p>

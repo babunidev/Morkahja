@@ -17,6 +17,8 @@ import {
   type TooltipRevealCallbacks,
   type TooltipRevealHandlerProps,
 } from '../hooks/useTooltipReveal.js';
+import { LineFrame } from '../common/LineFrame.js';
+import { TOOLTIP_FRAME, cornerLegAt } from './blocks/encounterFrameGeometry.js';
 
 /**
  * One tooltip style for the game screen (Babuni's direction, 2026-11-12):
@@ -29,6 +31,9 @@ export const GAME_TOOLTIP_DELAY_MS = 350;
 export const GAME_TOOLTIP_FADE_MS = 120;
 export const TOOLTIP_GOLD = '#ffcc66';
 const CORNER_BRACKET_PX = 14;
+/** Where the tooltip frame's outer line cuts its corners. */
+const MARKER_CORNER_LEG_PX = cornerLegAt(TOOLTIP_FRAME.outset, TOOLTIP_FRAME.cut);
+const MARKER_CUT_LINE_PX = MARKER_CORNER_LEG_PX * Math.SQRT2 + 4;
 
 /** The encounter picture; the default bounds for tooltips on the encounter. */
 export const ENCOUNTER_PICTURE_SELECTOR = '[data-morkahja-encounter-art]';
@@ -38,21 +43,29 @@ export const GAME_SCREEN_SELECTOR = '[data-morkahja-game-screen]';
 const FADE_KEYFRAMES = '@keyframes morkahja-game-tooltip-in { from { opacity: 0; } to { opacity: 1; } }'
   + ' @keyframes morkahja-game-tooltip-out { from { opacity: 1; } to { opacity: 0; } }';
 
-/** The frame every game tooltip shares. */
+export const TOOLTIP_BACKGROUND = 'rgba(12, 9, 8, 0.96)';
+export const TOOLTIP_SHADOW = '0 6px 10px rgba(0, 0, 0, 0.5)';
+
+/**
+ * The look every game tooltip shares; its frame is a LineFrame with
+ * TOOLTIP_FRAME (see GameTooltipFrame), so the padding clears the lines.
+ */
 export const gameTooltipFrameStyle: CSSProperties = {
-  padding: '6px 10px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.96)',
+  padding: '9px 13px',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: 'clamp(0.68rem, 2.8vw, 0.82rem)',
   lineHeight: 1.3,
   textAlign: 'center',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   boxSizing: 'border-box',
+  isolation: 'isolate',
 };
+
+/** The tooltip frame: put inside a positioned tooltip box. */
+export function GameTooltipFrame({ background = TOOLTIP_BACKGROUND }: { background?: string }) {
+  return <LineFrame background={background} shadow={TOOLTIP_SHADOW} spec={TOOLTIP_FRAME} />;
+}
 
 const cardTitleStyle: CSSProperties = {
   margin: 0,
@@ -80,9 +93,9 @@ export function GameTooltipCard({ title, lines = [] }: { title: string; lines?: 
 }
 
 /**
- * A gold marker where the tooltip touches its item: a corner bracket with a
- * small diamond, or for a centred item a short edge line with a diamond in the
- * middle of the top or bottom edge.
+ * A gold marker where the tooltip touches its item: a bright line along the
+ * frame's cut corner with a small diamond on it, or for a centred item a short
+ * edge line with a diamond in the middle of the top or bottom edge.
  */
 export function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
   const top = corner.startsWith('top');
@@ -90,6 +103,7 @@ export function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
     position: 'absolute',
     width: 7,
     height: 7,
+    margin: -3.5,
     background: TOOLTIP_GOLD,
     transform: 'rotate(45deg)',
     boxShadow: '0 0 6px rgba(255, 204, 102, 0.6)',
@@ -103,7 +117,7 @@ export function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
           style={{
             position: 'absolute',
             left: '50%',
-            [top ? 'top' : 'bottom']: -1,
+            [top ? 'top' : 'bottom']: 0,
             width: 2 * CORNER_BRACKET_PX,
             height: 2,
             background: TOOLTIP_GOLD,
@@ -112,31 +126,37 @@ export function tooltipCornerMarker(corner: TooltipCorner): ReactNode {
             pointerEvents: 'none',
           }}
         />
-        <span aria-hidden="true" style={{ ...diamond, left: '50%', marginLeft: -3.5, [top ? 'top' : 'bottom']: -4 }} />
+        <span aria-hidden="true" style={{ ...diamond, left: '50%', [top ? 'top' : 'bottom']: 0.5 }} />
       </>
     );
   }
   const left = corner.endsWith('left');
   const horizontal = left ? 'left' : 'right';
   const vertical = top ? 'top' : 'bottom';
+  // The cut runs up to the right at the top-left and bottom-right corners.
+  const angle = left === top ? -45 : 45;
   return (
     <>
       <span
         aria-hidden="true"
         style={{
           position: 'absolute',
-          [horizontal]: -1,
-          [vertical]: -1,
-          width: CORNER_BRACKET_PX,
-          height: CORNER_BRACKET_PX,
-          [top ? 'borderTop' : 'borderBottom']: `2px solid ${TOOLTIP_GOLD}`,
-          [left ? 'borderLeft' : 'borderRight']: `2px solid ${TOOLTIP_GOLD}`,
-          [`border${top ? 'Top' : 'Bottom'}${left ? 'Left' : 'Right'}Radius`]: 8,
-          boxSizing: 'border-box',
+          // Centred on the cut, as long as the cut plus a little.
+          [horizontal]: MARKER_CORNER_LEG_PX / 2 - MARKER_CUT_LINE_PX / 2,
+          [vertical]: MARKER_CORNER_LEG_PX / 2 - 1,
+          width: MARKER_CUT_LINE_PX,
+          height: 2,
+          background: TOOLTIP_GOLD,
+          borderRadius: 1,
+          transform: `rotate(${angle}deg)`,
+          boxShadow: '0 0 4px rgba(255, 204, 102, 0.5)',
           pointerEvents: 'none',
         }}
       />
-      <span aria-hidden="true" style={{ ...diamond, [horizontal]: -7, [vertical]: -7 }} />
+      <span
+        aria-hidden="true"
+        style={{ ...diamond, [horizontal]: MARKER_CORNER_LEG_PX / 2, [vertical]: MARKER_CORNER_LEG_PX / 2 }}
+      />
     </>
   );
 }
@@ -300,6 +320,7 @@ export function useGameTooltip({
             animation: placement ? `morkahja-game-tooltip-in ${GAME_TOOLTIP_FADE_MS}ms ease-out` : 'none',
           }}
         >
+          <GameTooltipFrame />
           {active.body}
           {placement ? tooltipCornerMarker(placement.corner) : null}
         </div>
@@ -316,6 +337,7 @@ export function useGameTooltip({
             animation: `morkahja-game-tooltip-out ${GAME_TOOLTIP_FADE_MS}ms ease-in forwards`,
           }}
         >
+          <GameTooltipFrame />
           {fading.body}
           {tooltipCornerMarker(fading.placement.corner)}
         </div>

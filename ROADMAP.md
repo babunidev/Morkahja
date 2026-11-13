@@ -94,6 +94,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
   - [x] First step (2026-11-12): the game screen and notifications are centred and fit the screen on phones; still to check on real devices, and the dashboard and overlays on phones.
   - [x] Welcome screen and avatar creation fit and are centred on phones (2026-11-12); avatar creation rearranged to Babuni's layout.
 - [ ] Line frame with wait timer on the bottom edge (D-013): implemented locally 2026-11-12, waiting for Babuni's play test and release.
+- [ ] The same line frame on every panel, menu and tooltip (D-014): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
 - [x] Fixed and released (`e78cde2f`, 2026-11-11): a level-up event could be played twice after leaving or reloading mid-event (rewards twice).
 - [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.
