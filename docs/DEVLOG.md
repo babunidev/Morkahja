@@ -311,3 +311,7 @@ Public source alone did not explain what others could reuse, so I approved MIT f
 ### Live on the server — 2026-11-13
 
 I wanted the latest changes live, from the centred phone screen to the essence slots on my avatar. AI merged the work into `main` (PR #29), checked it, and released backend and frontend together as 0.9.0-beta.49. **Verification:** release gate and CI passed; the server's health gate and public checks passed; the bots came back as the same accounts. The pre-release backup was not restored as a test this time, and a real game in production was not played by AI.
+
+### Essences that changed their faces — 2026-11-13
+
+Right after the release I made a new avatar with three essences, lost one, and the two left over showed different essences, in the slots and, as it looked to me, in the inventory too. It had happened before when I gained one. AI checked the server first: a fresh local avatar lost exactly the essence the result named and kept the other two. The slots were the problem. They showed "the first, second, third essence in the list" rather than holding a particular one, and a loss always emptied the outermost slot, so the survivors moved over. Now each slot keeps its own essence, and a loss leaves from the slot that actually held it. **Verification:** client tests with my two cases replayed, typecheck and build; not yet seen on screen or deployed.

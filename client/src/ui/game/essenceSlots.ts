@@ -4,14 +4,20 @@
  * round portrait. They are a view of the essences in the inventory, with
  * their own timing:
  *
- * - A lost essence leaves from a slot (the last one filled) and the slot
- *   stays empty for the rest of that encounter.
+ * - Each slot holds one particular essence and keeps it: the slots never
+ *   reshuffle when another essence comes or goes (fix, 2026-11-13: slots used
+ *   to show "the n-th essence in the list", so the remaining ones changed
+ *   pictures after a loss).
+ * - A lost essence leaves from the slot that holds it, and that slot stays
+ *   empty for the rest of the encounter. An essence lost from the inventory
+ *   beyond the five slots leaves no slot empty.
  * - When the next encounter begins, empty slots are refilled from the
- *   inventory, as long as it holds more essences.
+ *   inventory with essences not already in a slot, as long as it holds more.
  * - A collected essence flies into a free slot; with all five filled it goes
  *   to the inventory.
  *
- * This store only counts slots; the inventory remains the server's.
+ * Counts are charges (an essence with two uses fills two slots), not
+ * inventory entries. This store only shows; the inventory remains the server's.
  */
 
 export const ESSENCE_SLOT_COUNT = 5;
@@ -23,20 +29,33 @@ export const ESSENCE_SLOT_COUNT = 5;
  */
 export const ESSENCE_FILL_ORDER = [2, 1, 3, 0, 4] as const;
 
+/** An essence's solution id in each slot position 0–4, or null. */
+export type EssenceSlotContents = readonly (number | null)[];
+
 export interface EssenceSlotState {
   avatarId: string | null;
-  /** Slots showing an essence. */
-  filled: number;
-  /** Slots an essence is flying into (shown empty until it lands). */
-  incoming: number;
+  /** The essence shown in each slot position. */
+  slots: EssenceSlotContents;
+  /** The essence flying into each slot position (shown empty until it lands). */
+  incoming: EssenceSlotContents;
 }
 
-let state: EssenceSlotState = { avatarId: null, filled: 0, incoming: 0 };
+const EMPTY: EssenceSlotContents = Array.from({ length: ESSENCE_SLOT_COUNT }, () => null);
+
+let state: EssenceSlotState = { avatarId: null, slots: EMPTY, incoming: EMPTY };
 const listeners = new Set<() => void>();
 const consumedKeys = new Set<string>();
 
+function sameContents(left: EssenceSlotContents, right: EssenceSlotContents): boolean {
+  return left.every((value, index) => value === right[index]);
+}
+
 function set(next: EssenceSlotState): void {
-  if (next.avatarId === state.avatarId && next.filled === state.filled && next.incoming === state.incoming) {
+  if (
+    next.avatarId === state.avatarId
+    && sameContents(next.slots, state.slots)
+    && sameContents(next.incoming, state.incoming)
+  ) {
     return;
   }
   state = next;
@@ -54,20 +73,79 @@ export function subscribeEssenceSlots(listener: () => void): () => void {
   };
 }
 
-/** Pure rules, for tests. */
-export function syncedState(current: EssenceSlotState, avatarId: string, total: number): EssenceSlotState {
-  if (current.avatarId !== avatarId) {
-    // Another avatar (or the first time): show what it carries, no animation.
-    return { avatarId, filled: Math.min(ESSENCE_SLOT_COUNT, total), incoming: 0 };
-  }
-  // Never show more essences than the avatar has.
-  const filled = Math.min(current.filled, total);
-  return { ...current, filled, incoming: Math.min(current.incoming, Math.max(0, total - filled)) };
+/** One entry per charge, in inventory order: [A, B, B] for A×1 and B×2. */
+export function essenceCharges(
+  essences: ReadonlyArray<{ solutionId: number; uses: number }> | undefined,
+): number[] {
+  return (essences ?? []).flatMap((item) =>
+    item.uses > 0 ? Array.from({ length: item.uses }, () => item.solutionId) : [],
+  );
 }
 
-/** Keeps the slots in step with the avatar and its essence count. */
-export function syncEssenceSlots(avatarId: string, total: number): void {
-  set(syncedState(state, avatarId, total));
+function countCharges(charges: readonly number[]): Map<number, number> {
+  const counts = new Map<number, number>();
+  for (const id of charges) {
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/** The first `count` charges placed from the centre outward. */
+function placed(charges: readonly number[]): (number | null)[] {
+  const slots: (number | null)[] = [...EMPTY];
+  charges.slice(0, ESSENCE_SLOT_COUNT).forEach((id, index) => {
+    slots[ESSENCE_FILL_ORDER[index]!] = id;
+  });
+  return slots;
+}
+
+/** Charges the inventory holds beyond those already in a slot (or flying into one). */
+export function chargesNotInSlots(current: EssenceSlotState, charges: readonly number[]): number[] {
+  const inSlots = countCharges(
+    [...current.slots, ...current.incoming].filter((id): id is number => id !== null),
+  );
+  return charges.filter((id) => {
+    const left = inSlots.get(id) ?? 0;
+    if (left > 0) {
+      inSlots.set(id, left - 1);
+      return false;
+    }
+    return true;
+  });
+}
+
+/** Pure rules, for tests. */
+export function syncedState(current: EssenceSlotState, avatarId: string, charges: readonly number[]): EssenceSlotState {
+  if (current.avatarId !== avatarId) {
+    // Another avatar (or the first time): show what it carries, no animation.
+    return { avatarId, slots: placed(charges), incoming: EMPTY };
+  }
+  // Keep every slot whose essence the avatar still has; a slot whose essence
+  // is gone empties. Inner slots claim the charges first, so when an essence
+  // has fewer charges than slots showing it, the outermost of those empties.
+  const available = countCharges(charges);
+  const slots: (number | null)[] = [...current.slots];
+  for (const position of ESSENCE_FILL_ORDER) {
+    const id = slots[position];
+    if (id === null || id === undefined) {
+      continue;
+    }
+    const left = available.get(id) ?? 0;
+    if (left > 0) {
+      available.set(id, left - 1);
+    } else {
+      slots[position] = null;
+    }
+  }
+  return { ...current, slots };
+}
+
+/** Keeps the slots in step with the avatar and its essences. */
+export function syncEssenceSlots(
+  avatarId: string,
+  essences: ReadonlyArray<{ solutionId: number; uses: number }> | undefined,
+): void {
+  set(syncedState(state, avatarId, essenceCharges(essences)));
 }
 
 /** The position of the slot at fill index `index`. */
@@ -76,37 +154,55 @@ export function slotPosition(index: number): number {
 }
 
 /**
- * Empties up to `count` slots for a loss, once per `key` (a result can
- * re-render). Returns the emptied slots' positions, last filled first.
+ * Empties the slots holding the lost essence, up to `count`, once per `key`
+ * (a result can re-render). Returns the emptied slots' positions, outermost
+ * first; empty when the lost essence was not in a slot.
  */
-export function takeFromEssenceSlots(count: number, key: string): number[] {
+export function takeFromEssenceSlots(solutionId: number, count: number, key: string): number[] {
   if (consumedKeys.has(key)) {
     return [];
   }
   consumedKeys.add(key);
-  const taken = Math.min(count, state.filled);
-  const positions = Array.from({ length: taken }, (_, index) => slotPosition(state.filled - 1 - index));
-  set({ ...state, filled: state.filled - taken });
+  const slots = [...state.slots];
+  const positions: number[] = [];
+  for (const position of [...ESSENCE_FILL_ORDER].reverse()) {
+    if (positions.length >= count) {
+      break;
+    }
+    if (slots[position] === solutionId) {
+      slots[position] = null;
+      positions.push(position);
+    }
+  }
+  set({ ...state, slots });
   return positions;
 }
 
 /** Reserves the next free slot for an arriving essence; null when all five are taken. */
-export function reserveEssenceSlot(): number | null {
-  const used = state.filled + state.incoming;
-  if (used >= ESSENCE_SLOT_COUNT) {
+export function reserveEssenceSlot(solutionId: number): number | null {
+  const position = ESSENCE_FILL_ORDER.find(
+    (candidate) => state.slots[candidate] === null && state.incoming[candidate] === null,
+  );
+  if (position === undefined) {
     return null;
   }
-  set({ ...state, incoming: state.incoming + 1 });
-  return slotPosition(used);
+  const incoming = [...state.incoming];
+  incoming[position] = solutionId;
+  set({ ...state, incoming });
+  return position;
 }
 
-/** An essence reached its slot. */
-export function landEssenceInSlot(): void {
-  set({
-    ...state,
-    incoming: Math.max(0, state.incoming - 1),
-    filled: Math.min(ESSENCE_SLOT_COUNT, state.filled + 1),
-  });
+/** The essence flying into `position` reached its slot. */
+export function landEssenceInSlot(position: number): void {
+  const id = state.incoming[position];
+  if (id === null || id === undefined) {
+    return;
+  }
+  const slots = [...state.slots];
+  const incoming = [...state.incoming];
+  slots[position] = id;
+  incoming[position] = null;
+  set({ ...state, slots, incoming });
 }
 
 /** The slot element on screen, for flights. */

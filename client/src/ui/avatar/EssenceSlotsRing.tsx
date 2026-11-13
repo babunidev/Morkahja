@@ -6,6 +6,8 @@ import { protectedImageProps } from '../protectedImage.js';
 import {
   ESSENCE_FILL_ORDER,
   ESSENCE_SLOT_COUNT,
+  chargesNotInSlots,
+  essenceCharges,
   essenceSlotElement,
   getEssenceSlots,
   landEssenceInSlot,
@@ -40,11 +42,11 @@ export function essenceItems(essences: InventoryItemDto[] | undefined): Inventor
     : [];
 }
 
-function essenceImage(item: InventoryItemDto | undefined): string | null {
-  if (!item) {
+function essenceImage(solutionId: number | null | undefined): string | null {
+  if (solutionId === null || solutionId === undefined) {
     return null;
   }
-  const solution = (gameSolutions() as Record<string, { mSolutionIconName: string } | undefined>)[String(item.solutionId)];
+  const solution = (gameSolutions() as Record<string, { mSolutionIconName: string } | undefined>)[String(solutionId)];
   return solution ? `${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp` : null;
 }
 
@@ -93,20 +95,20 @@ export function EssenceSlotsRing({
   local?: boolean;
 }) {
   const items = useMemo(() => essenceItems(essences), [essences]);
-  const total = items.length;
+  const charges = useMemo(() => essenceCharges(items), [items]);
+  const total = charges.length;
+  const chargesKey = charges.join(',');
   const slots = useSyncExternalStore(subscribeEssenceSlots, getEssenceSlots);
 
-  useEffect(() => {
-    if (local) {
-      syncEssenceSlots(avatarId, total);
-    }
-  }, [avatarId, local, total]);
-
-  // When a new encounter begins, essences from the inventory fill the empty slots.
-  const totalRef = useRef(total);
-  totalRef.current = total;
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  useEffect(() => {
+    if (local) {
+      syncEssenceSlots(avatarId, itemsRef.current);
+    }
+  }, [avatarId, local, chargesKey]);
+
+  // When a new encounter begins, essences from the inventory fill the empty slots.
   const lastEncounterRef = useRef(encounterKey);
   useEffect(() => {
     if (!local || !encounterKey || lastEncounterRef.current === encounterKey) {
@@ -116,39 +118,44 @@ export function EssenceSlotsRing({
     lastEncounterRef.current = encounterKey;
     const timers: number[] = [];
     timers.push(window.setTimeout(() => {
-      syncEssenceSlots(avatarId, totalRef.current);
-      const current = getEssenceSlots();
-      const missing = Math.min(ESSENCE_SLOT_COUNT, totalRef.current) - current.filled - current.incoming;
-      for (let index = 0; index < missing; index += 1) {
-        const position = reserveEssenceSlot();
+      syncEssenceSlots(avatarId, itemsRef.current);
+      // Essences in the inventory but not yet in a slot, in inventory order.
+      const waiting = chargesNotInSlots(getEssenceSlots(), essenceCharges(itemsRef.current));
+      for (let index = 0; index < waiting.length; index += 1) {
+        const solutionId = waiting[index]!;
+        const position = reserveEssenceSlot(solutionId);
         if (position === null) {
           break;
         }
         timers.push(window.setTimeout(() => {
           const sourceRect = getFooterButtonRect('inventory');
           const target = essenceSlotElement(position);
-          const image = essenceImage(itemsRef.current[(current.filled + index) % Math.max(1, itemsRef.current.length)]);
+          const image = essenceImage(solutionId);
           if (!sourceRect || !target || !image) {
-            landEssenceInSlot();
+            landEssenceInSlot(position);
             return;
           }
           ejectFooterButton('inventory');
           const size = Math.round(target.getBoundingClientRect().width * 1.16);
-          void playIconFlightToElement(sourceRect, target, image, size).then(landEssenceInSlot);
+          void playIconFlightToElement(sourceRect, target, image, size).then(() => landEssenceInSlot(position));
         }, index * REFILL_STAGGER_MS));
       }
     }, REFILL_DELAY_MS));
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [avatarId, encounterKey, local]);
 
-  const filled = local && slots.avatarId === avatarId ? slots.filled : Math.min(ESSENCE_SLOT_COUNT, total);
+  // The local avatar's slots keep their own essences; a party member's show what it carries.
+  const shownSlots = local && slots.avatarId === avatarId
+    ? slots.slots
+    : ESSENCE_FILL_ORDER.reduce<(number | null)[]>((result, position, index) => {
+      result[position] = charges[index] ?? null;
+      return result;
+    }, Array.from({ length: ESSENCE_SLOT_COUNT }, () => null));
 
   return (
     <div aria-label={`${total} ${total === 1 ? 'essence' : 'essences'}`} role="img" style={ringStyle}>
       {SLOT_ANGLES.map((_, position) => {
-        const fillIndex = (ESSENCE_FILL_ORDER as readonly number[]).indexOf(position);
-        const shown = fillIndex < filled;
-        const image = shown ? essenceImage(items[fillIndex % Math.max(1, items.length)]) : null;
+        const image = essenceImage(shownSlots[position]);
         return (
           <span data-essence-slot={local ? position : undefined} key={position} style={slotStyle(position)}>
             {image ? (
