@@ -29,7 +29,7 @@ interface PatchRelease {
 const PATCH_RELEASES: PatchRelease[] = [
   {
     id: 'beta-51-nov-4-13',
-    version: '0.9.0-beta.50',
+    version: '0.9.0-beta.51',
     period: '4–13 Nov 2026',
     groups: [
       {
