@@ -58,6 +58,7 @@ import {
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
 import { witnessSystemEventDisplay } from './witnessSystemEventDisplay.js';
+import { committedSolutionSetFor } from './rewardFlyAnimation.js';
 import { shouldPlayLevelUpSound } from './levelUpSoundCue.js';
 import {
   encounterSnapshotAdvanced,
@@ -707,6 +708,7 @@ export function GameEnvironment({
         avatarRef.current.id,
         action,
         selectedSolutionId ?? undefined,
+        committedSolutionSetFor(currentRoom.activeEncounter.snapshotId),
       );
       applySnapshotOnly(nextRoom);
 

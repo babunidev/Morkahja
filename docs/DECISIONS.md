@@ -156,6 +156,16 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-13 (release `49fb6809`, 0.9.0-beta.51).
 
+## D-019 — Encounters that need several solutions are chosen one at a time (2026-11-13)
+
+**Babuni's direction:** in an encounter that needs two or more solutions, "the solution that I choose ... hover[s] over the slot, waiting for another solution"; when the last one needed is pressed, "all of them move into the encounter". The set can mix items and skills from different slots. With too few solutions, the chosen ones still hover and the dice finishes the set. "Each item that I use for this encounter ... needs to have its own roll", and the rolls "should be combined to one outcome, and that defines my success."
+
+**Babuni's choices (asked by AI, answered 2026-11-13):** the rolls are **averaged**; the dice roll **counts once for each missing solution** (one item and the dice for two missing: the item counts once, the dice twice); the **same slot can be tapped again** for another copy (shown as ×2); **tapping a hovering solution puts it back**, and nothing is spent until the set is complete.
+
+**AI implementation:** the number needed is the encounter's difficulty (1–4), which also used to be "how many copies of one slot's item"; a slot is now usable with a single charge. Shared rules in `shared/src/solutionSet.ts`; per-copy rolls in the same ranges as the slot's own (items 61–100, alternatives 50–100); losses, rewards and the outcome table are unchanged and read the averaged roll. Encounters needing one solution play as before.
+
+**Status:** implemented on `feat/multi-solution-sets` (0.9.0-beta.53); not merged or released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

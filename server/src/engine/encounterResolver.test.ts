@@ -143,3 +143,74 @@ const favorableRolls = createEncounterRollSnapshot({
 }
 
 console.log('encounterResolver.test.ts: all assertions passed');
+
+// Solution sets (D-019): each chosen solution rolls on its own; the rolls are
+// averaged, and the dice stands in for each missing solution.
+{
+  const setRolls = createEncounterRollSnapshot({
+    ...favorableRolls,
+    rollPrimaryA: 90,
+    rollSecondaryB: 60,
+    rollE: 20,
+    extraRolls: {
+      primary: { A: [70, 80, 100], B: [61, 61, 61], C: [61, 61, 61], D: [61, 61, 61] },
+      secondary: { A: [50, 50, 50], B: [50, 50, 50], C: [50, 50, 50], D: [50, 50, 50] },
+    },
+  });
+  const encounter = {
+    ...baseEncounter(3),
+    mEncounterSolutiuonB: 0,
+    mEncounterSolutiuonTypeB: 5,
+  };
+
+  // Two copies of A and an alternative in B: (90 + 70 + 60) / 3 = 73 → success.
+  const full = resolveEncounter(encounter, [10, 10, 20], solutionMap, setRolls, {
+    mode: 'slot', slot: 'A', picks: ['A', 'A', 'B'],
+  });
+  assert.equal(full.success, true);
+  assert.equal(full.selectedRoll, 73);
+  assert.deepEqual(full.usedInventorySolutions, [10, 10, 20]);
+
+  // One item and the dice for the two missing: (90 + 20 + 20) / 3 = 43 → fails, the item is still spent.
+  const diceFilled = resolveEncounter(encounter, [10], solutionMap, setRolls, {
+    mode: 'slot', slot: 'A', picks: ['A'], diceFill: true,
+  });
+  assert.equal(diceFilled.success, false);
+  assert.equal(diceFilled.selectedRoll, 43);
+  assert.deepEqual(diceFilled.usedInventorySolutions, [10]);
+
+  // An incomplete set without the dice, or more picks than needed, is not valid.
+  const incomplete = resolveEncounter(encounter, [10, 10, 20], solutionMap, setRolls, {
+    mode: 'slot', slot: 'A', picks: ['A', 'B'],
+  });
+  assert.equal(incomplete.success, false);
+  assert.deepEqual(incomplete.usedInventorySolutions, []);
+  const tooMany = resolveEncounter(encounter, [10, 10, 10, 20], solutionMap, setRolls, {
+    mode: 'slot', slot: 'A', picks: ['A', 'A', 'A', 'B'],
+  });
+  assert.deepEqual(tooMany.usedInventorySolutions, []);
+
+  // A copy the inventory does not hold is not valid either (one item 10, tapped twice).
+  const missingCopy = resolveEncounter(encounter, [10], solutionMap, setRolls, {
+    mode: 'slot', slot: 'A', picks: ['A', 'A'], diceFill: true,
+  });
+  assert.equal(missingCopy.success, false);
+  assert.deepEqual(missingCopy.usedInventorySolutions, []);
+
+  // An alternative never takes the item a primary pick needs: A primary 10 and
+  // B's alternative type 5 with only [10, 21] in the inventory.
+  const shared = resolveEncounter(encounter, [10, 21], solutionMap, setRolls, {
+    mode: 'slot', slot: 'B', picks: ['B', 'A'], diceFill: true,
+  });
+  assert.deepEqual(shared.usedInventorySolutions, [21, 10]);
+}
+
+// Snapshots from before solution sets have no extra rolls: copies reuse the slot's roll.
+{
+  const result = resolveEncounter(baseEncounter(2), [10, 10], solutionMap, createEncounterRollSnapshot({
+    ...favorableRolls,
+    rollPrimaryA: 70,
+  }), { mode: 'slot', slot: 'A', picks: ['A', 'A'] });
+  assert.equal(result.selectedRoll, 70);
+  assert.equal(result.success, true);
+}

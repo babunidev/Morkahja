@@ -1,9 +1,23 @@
 import { createEncounterRollSnapshot } from './encounterResolver.js';
-import type { EncounterRollSnapshot } from './encounterResolver.js';
+import type { EncounterRollSnapshot, SolutionSetExtraRolls } from './encounterResolver.js';
+import { MAX_SOLUTION_SET_SIZE } from '@shared/solutionSet.js';
 
 /** Inclusive integer in [min, max]. */
 export function randomInt(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+function laneExtras(min: number): Record<'A' | 'B' | 'C' | 'D', number[]> {
+  const extras = (): number[] => Array.from(
+    { length: MAX_SOLUTION_SET_SIZE - 1 },
+    () => randomInt(min, 100),
+  );
+  return { A: extras(), B: extras(), C: extras(), D: extras() };
+}
+
+/** Rolls for further copies of one slot in a solution set, same ranges as the slot's own. */
+export function generateSolutionSetExtraRolls(): SolutionSetExtraRolls {
+  return { primary: laneExtras(61), secondary: laneExtras(50) };
 }
 
 /**
@@ -34,5 +48,6 @@ export function generateEncounterRollSnapshot(): EncounterRollSnapshot {
     rollSecondaryC,
     rollSecondaryD,
     rollE: randomInt(1, 100),
+    extraRolls: generateSolutionSetExtraRolls(),
   });
 }

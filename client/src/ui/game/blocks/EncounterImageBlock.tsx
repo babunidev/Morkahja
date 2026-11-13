@@ -25,6 +25,7 @@ import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { FRAME_OUTSET_PX } from './encounterFrameGeometry.js';
 import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
+import { committedSolutionSetFor } from '../rewardFlyAnimation.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
@@ -431,7 +432,12 @@ export function EncounterImageBlock({
     attempt = 0,
   ): Promise<void> {
     try {
-      const nextRoom = await submitRoomChoice(avatarId, action, solutionId);
+      const nextRoom = await submitRoomChoice(
+        avatarId,
+        action,
+        solutionId,
+        committedSolutionSetFor(encounter.snapshotId),
+      );
       onRoomSnapshot?.(nextRoom);
     } catch (error) {
       if (
@@ -488,7 +494,7 @@ export function EncounterImageBlock({
     }
 
     choiceCommitInFlightRef.current = true;
-    void submitRoomChoice(avatarId, action, solutionId)
+    void submitRoomChoice(avatarId, action, solutionId, committedSolutionSetFor(encounter.snapshotId))
       .then((nextRoom) => {
         onRoomSnapshot?.(nextRoom);
       })
@@ -537,7 +543,12 @@ export function EncounterImageBlock({
   const usedSolutionIds = serverResolution?.usedInventorySolutions?.length
     ? serverResolution.usedInventorySolutions
     : outcomeAction && outcomeAction !== 'dice'
-      ? predictUsedSolutionIds({ encounter, inventory, action: outcomeAction })
+      ? predictUsedSolutionIds({
+        encounter,
+        inventory,
+        action: outcomeAction,
+        picks: committedSolutionSetFor(encounter.snapshotId)?.picks,
+      })
       : [];
 
   return (

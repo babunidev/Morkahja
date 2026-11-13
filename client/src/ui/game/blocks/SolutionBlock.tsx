@@ -27,7 +27,8 @@ import {
   encounterTooltipDetailStyle,
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
-import { predictUsedSolutionIds, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
+import { allocateSolutionSetPicks, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
+import { solutionSetSize } from '@shared/solutionSet';
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
@@ -63,7 +64,6 @@ interface VisibleSolutionSlot {
   displayedUses: number;
   imageSrc: string;
   isPrimary: boolean;
-  itemsUsed: number;
   name: string;
   poolUses: number;
   requiredUses: number;
@@ -326,6 +326,60 @@ const solutionImageStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+/** A chosen solution of an unfinished set rises above its slot and hovers there. */
+const SOLUTION_HOVER_RISE_MS = 300;
+
+const solutionHoverButtonStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  bottom: 'calc(100% + 8px)',
+  width: SOLUTION_ACTION_SIZE_PX,
+  height: SOLUTION_ACTION_SIZE_PX,
+  marginLeft: -SOLUTION_ACTION_SIZE_PX / 2,
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+  zIndex: 2,
+};
+
+const solutionHoverRiseStyle: CSSProperties = {
+  display: 'block',
+  animation: `morkahja-solution-hover-rise ${SOLUTION_HOVER_RISE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1) both`,
+};
+
+const solutionHoverBobStyle: CSSProperties = {
+  display: 'block',
+  animation: `morkahja-solution-hover-bob 1800ms ease-in-out ${SOLUTION_HOVER_RISE_MS}ms infinite`,
+};
+
+const solutionHoverGlowStyle: CSSProperties = {
+  boxShadow: '0 0 16px rgba(255, 204, 102, 0.6), 0 8px 14px rgba(0, 0, 0, 0.45)',
+};
+
+const solutionHoverCountStyle: CSSProperties = {
+  position: 'absolute',
+  right: -6,
+  bottom: -4,
+  minWidth: 22,
+  padding: '1px 5px',
+  borderRadius: 10,
+  background: 'rgba(20, 14, 8, 0.88)',
+  border: '1px solid rgba(255, 204, 102, 0.75)',
+  color: '#ffcc66',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+  lineHeight: 1.3,
+  textAlign: 'center',
+  pointerEvents: 'none',
+};
+
+const solutionSlotCellStyle: CSSProperties = {
+  position: 'relative',
+  display: 'grid',
+  placeItems: 'center',
+};
+
 const lockpickAnimationStyle: CSSProperties = {
   animation: 'morkahja-solution-lockpick 1500ms cubic-bezier(0.2, 0.8, 0.2, 1)',
   transformOrigin: '50% 50%',
@@ -477,7 +531,6 @@ function formatSolutionChargeTooltipDetail(solution: VisibleSolutionSlot): strin
     available,
     displayedUses,
     isPrimary,
-    itemsUsed,
     poolUses,
     requiredUses,
   } = solution;
@@ -490,24 +543,19 @@ function formatSolutionChargeTooltipDetail(solution: VisibleSolutionSlot): strin
 
     return [
       `Charges: ${displayedUses}`,
-      `${poolLabel}: ${poolUses} / ${requiredUses} needed`,
+      `${poolLabel}: ${poolUses}`,
     ].join('\n');
   }
 
-  if (requiredUses <= 1 && itemsUsed <= 1) {
+  if (requiredUses <= 1) {
     return `Charges: ${displayedUses}`;
   }
 
-  const lines = [
+  return [
     `Charges: ${displayedUses}`,
-    `${poolLabel}: ${poolUses} (${requiredUses} needed)`,
-  ];
-
-  if (itemsUsed > 1) {
-    lines.push(`Items used: ${itemsUsed}`);
-  }
-
-  return lines.join('\n');
+    `${poolLabel}: ${poolUses}`,
+    `This encounter needs ${requiredUses} solutions`,
+  ].join('\n');
 }
 
 function solutionForSlot(
@@ -549,9 +597,6 @@ function solutionForSlot(
       displayedUses: matchedItem.uses,
       imageSrc: solutionImagePath(solution),
       isPrimary: chargeState.isPrimary,
-      itemsUsed: new Set(
-        predictUsedSolutionIds({ encounter, inventory, action: slot }),
-      ).size,
       name: solution.mSolutionName,
       poolUses: chargeState.totalUses,
       requiredUses: chargeState.requiredUses,
@@ -572,7 +617,6 @@ function solutionForSlot(
     displayedUses: 0,
     imageSrc: solutionImagePath(preview.solution),
     isPrimary: preview.isPrimary,
-    itemsUsed: 0,
     name: preview.solution.mSolutionName,
     poolUses: chargeState.totalUses,
     requiredUses: chargeState.requiredUses,
@@ -639,6 +683,13 @@ export function SolutionBlock({
   const [diceEnableRattle, setDiceEnableRattle] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
+  // Solution set (encounters needing more than one solution): the chosen
+  // solutions hover above their slots until the set is complete.
+  const setSize = solutionSetSize(encounter.encounterDifficulty);
+  const [setPicks, setSetPicks] = useState<SlotLetter[]>([]);
+  const [setCommitted, setSetCommitted] = useState(false);
+  // Updated with every change, so taps in quick succession see each other.
+  const setPicksRef = useRef<SlotLetter[]>([]);
   const [inboundFlownSlots, setInboundFlownSlots] = useState<Set<SlotLetter>>(
     () => new Set(),
   );
@@ -652,6 +703,9 @@ export function SolutionBlock({
     setDiceRollCount(0);
     solutionTips.hide();
     setInboundFlownSlots(new Set());
+    setPicksRef.current = [];
+    setSetPicks([]);
+    setSetCommitted(false);
 
     let cancelled = false;
     const phaseKey = actionsPhaseKey(encounter.snapshotId);
@@ -841,7 +895,11 @@ export function SolutionBlock({
   }
 
   function diceTooltip(): GameTooltipContent | null {
-    return solutionTooltipContent('dice', { name: 'Dice', description: '', detail: 'try your luck', unavailable: false });
+    const missing = setSize - setPicks.length;
+    const detail = setSize > 1 && setPicks.length > 0
+      ? `rolls for the ${missing} missing`
+      : 'try your luck';
+    return solutionTooltipContent('dice', { name: 'Dice', description: '', detail, unavailable: false });
   }
 
   function hideSolutionTooltip(): void {
@@ -862,6 +920,15 @@ export function SolutionBlock({
   }
 
   function handleDiceClick(): void {
+    if (setCommitted) {
+      return;
+    }
+    if (setPicksRef.current.length > 0) {
+      // The dice finishes the set, standing in for every missing solution.
+      commitSolutionSet(setPicksRef.current, true);
+      return;
+    }
+
     clearRollRevealTimer();
     hideSolutionTooltip();
 
@@ -890,7 +957,88 @@ export function SolutionBlock({
       return;
     }
 
+    if (setSize > 1) {
+      handleSetPick(solution);
+      return;
+    }
+
     handleSolutionClick(solution);
+  }
+
+  function setAllocation(picks: readonly SlotLetter[]) {
+    return allocateSolutionSetPicks({ encounter, inventory, picks });
+  }
+
+  function handleSetPick(solution: VisibleSolutionSlot): void {
+    if (setCommitted || rollRevealTimer.current !== null) {
+      return;
+    }
+    const next = [...setPicksRef.current, solution.slot];
+    const allocation = setAllocation(next);
+    if (!allocation || next.length > setSize) {
+      return;
+    }
+
+    hideSolutionTooltip();
+    playSfx(SOLUTION_SOUND);
+    setPicksRef.current = next;
+    setSetPicks(next);
+
+    if (next.length === 1) {
+      // The party sees the first choice, as with a single solution.
+      onActionReveal?.(solution.slot, null, allocation[0]!.solutionId, 'select');
+    }
+    if (next.length === setSize) {
+      commitSolutionSet(next, false);
+    }
+  }
+
+  /** A hovering solution goes back to its slot (the last copy chosen for that slot). */
+  function handleSetPutBack(slot: SlotLetter): void {
+    if (consumeLongPressActivation() || setCommitted || !actionsReady) {
+      return;
+    }
+    const current = setPicksRef.current;
+    const index = current.lastIndexOf(slot);
+    if (index < 0) {
+      return;
+    }
+    const next = current.filter((_, entry) => entry !== index);
+    hideSolutionTooltip();
+    setPicksRef.current = next;
+    setSetPicks(next);
+  }
+
+  function commitSolutionSet(picks: SlotLetter[], diceFill: boolean): void {
+    const allocation = setAllocation(picks);
+    if (!allocation || picks.length === 0) {
+      return;
+    }
+
+    clearRollRevealTimer();
+    hideSolutionTooltip();
+    setSetCommitted(true);
+
+    const first = picks[0]!;
+    const solutionSet = { picks: [...picks], diceFill };
+    const revealMs = diceFill ? DICE_ROLL_ANIMATION_MS : SOLUTION_ROLL_REVEAL_MS;
+    if (diceFill) {
+      playSfx(DICE_SOUND);
+      setDiceRollCount((count) => count + 1);
+    }
+    // Phase 2 of the frame timer: from completing the set until the result can be used.
+    planFramePhase(
+      actPhaseKey(encounter.snapshotId),
+      diceFill
+        ? blockRef.current?.querySelector('[aria-label="Roll dice"]')
+        : blockRef.current?.querySelector(`[data-solution-slot="${first}"]`),
+      revealMs + RESULT_READY_ESTIMATE_MS,
+    );
+    rollRevealTimer.current = window.setTimeout(() => {
+      recordCommittedAction(encounter.snapshotId, first, solutionSet);
+      onActionReveal?.(first, null, allocation[0]!.solutionId, 'commit');
+      rollRevealTimer.current = null;
+    }, revealMs);
   }
 
   function handleSolutionClick(solution: VisibleSolutionSlot): void {
@@ -933,6 +1081,8 @@ export function SolutionBlock({
         {'@keyframes morkahja-solution-reveal-dice { 0% { opacity: 0; transform: rotate(-12deg) scale(0.92); } 55% { opacity: 0.42; transform: rotate(-5deg) scale(0.96); } 82% { opacity: 0.88; transform: rotate(-1deg) scale(0.99); } 100% { opacity: 1; transform: rotate(0deg) scale(1); } }'}
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
         {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
+        {'@keyframes morkahja-solution-hover-rise { 0% { opacity: 0; transform: translateY(72px) scale(0.86); } 100% { opacity: 1; transform: translateY(0) scale(1); } }'}
+        {'@keyframes morkahja-solution-hover-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }'}
         {'@keyframes morkahja-dice-roll { 0% { transform: rotate(0deg) translateY(0); } 12.5% { transform: rotate(90deg) translateY(-8px); } 25% { transform: rotate(180deg) translateY(0); } 37.5% { transform: rotate(270deg) translateY(-7px); } 50% { transform: rotate(360deg) translateY(0); } 62.5% { transform: rotate(450deg) translateY(-6px); } 75% { transform: rotate(540deg) translateY(0); } 87.5% { transform: rotate(630deg) translateY(-3px); } 100% { transform: rotate(720deg) translateY(0); } }'}
       </style>
       <div
@@ -1025,8 +1175,62 @@ export function SolutionBlock({
             : 'right';
 
           const showAsOwned = visibleSlot.available && inboundFlownSlots.has(slot);
+          const hoveringCount = setPicks.filter((pick) => pick === slot).length;
+          // While a set is being chosen, a slot whose solution is all taken dims.
+          const addable = !setCommitted
+            && (setPicks.length === 0 || setAllocation([...setPicks, slot]) !== null);
+          const dimForSet = setSize > 1 && setPicks.length > 0 && visibleSlot.available && !addable;
+          const hoveringIds = hoveringCount > 0
+            ? (setAllocation(setPicks) ?? [])
+              .filter((pick) => pick.slot === slot)
+              .map((pick) => pick.solutionId)
+            : [];
+          const hoveringSolution = hoveringIds.length > 0
+            ? solutionsById()[String(hoveringIds[0])]
+            : undefined;
 
           return (
+            <div key={slot} style={solutionSlotCellStyle}>
+              {hoveringCount > 0 ? (
+                <button
+                  aria-label={`Put ${hoveringSolution?.mSolutionName ?? visibleSlot.name} back`}
+                  className="morkahja-footer-button"
+                  data-solution-hover={slot}
+                  data-solution-ids={hoveringIds.join(',')}
+                  disabled={setCommitted}
+                  key={`${encounterRevealKey}-hover-${slot}`}
+                  onClick={() => {
+                    handleSetPutBack(slot);
+                  }}
+                  style={solutionHoverButtonStyle}
+                  type="button"
+                >
+                  <span style={solutionHoverRiseStyle}>
+                    <span style={solutionHoverBobStyle}>
+                      <span
+                        className="morkahja-footer-button-visual"
+                        style={{
+                          ...solutionIconShellStyle,
+                          display: 'block',
+                          ...solutionHoverGlowStyle,
+                          ...(setCommitted ? lockpickAnimationStyle : {}),
+                        }}
+                      >
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                          src={hoveringSolution ? solutionImagePath(hoveringSolution) : visibleSlot.imageSrc}
+                          style={solutionImageStyle}
+                        />
+                      </span>
+                    </span>
+                  </span>
+                  {hoveringCount > 1 ? (
+                    <span aria-hidden="true" style={solutionHoverCountStyle}>{`×${hoveringCount}`}</span>
+                  ) : null}
+                </button>
+              ) : null}
               <button
                 aria-disabled={!actionsReady || !visibleSlot.available}
                 aria-label={
@@ -1039,7 +1243,6 @@ export function SolutionBlock({
                 }`}
                 data-solution-slot={slot}
                 disabled={!actionsReady}
-                key={slot}
                 {...solutionTips.bindTooltip(() => solutionTooltipFor(visibleSlot))}
                 onClick={() => {
                   handleSolutionButtonClick(visibleSlot);
@@ -1047,6 +1250,7 @@ export function SolutionBlock({
                 style={{
                   ...solutionButtonStyle,
                   ...solutionInboundButtonStyle(actionsRevealing),
+                  ...(dimForSet ? { opacity: 0.45 } : {}),
                 }}
                 type="button"
               >
@@ -1081,6 +1285,7 @@ export function SolutionBlock({
                   />
                 </span>
               </button>
+            </div>
             );
         })}
       </div>

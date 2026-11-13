@@ -9,6 +9,22 @@ import {
   SolutionDataMap,
   encounterDifficultyLossMultiplier,
 } from './types.js';
+import {
+  allocateSolutionSet,
+  combineSolutionSetRolls,
+  solutionSetSize,
+  type SolutionSetPickAllocation,
+} from '@shared/solutionSet.js';
+
+/**
+ * Rolls for the second, third … copy of one slot's lane in a solution set
+ * (the first copy uses the slot's own roll). Absent on snapshots created
+ * before solution sets: every copy then reuses the slot's roll.
+ */
+export interface SolutionSetExtraRolls {
+  readonly primary: Readonly<Record<EncounterSlotLetter, readonly number[]>>;
+  readonly secondary: Readonly<Record<EncounterSlotLetter, readonly number[]>>;
+}
 
 /**
  * Immutable precomputed rolls assigned at encounter creation.
@@ -28,11 +44,23 @@ export interface EncounterRollSnapshot {
   readonly rollSecondaryC: number;
   readonly rollSecondaryD: number;
   readonly rollE: number;
+  readonly extraRolls?: SolutionSetExtraRolls;
 }
 
 export type SelectedEncounterAction =
   | { mode: 'dice' }
-  | { mode: 'slot'; slot: EncounterSlotLetter };
+  | {
+    mode: 'slot';
+    slot: EncounterSlotLetter;
+    /**
+     * The solution set, one entry per chosen solution (a slot repeats for
+     * each copy). Absent from older clients: the slot alone, as many copies
+     * as the encounter needs.
+     */
+    picks?: EncounterSlotLetter[];
+    /** The dice finished the set, standing in for each missing solution. */
+    diceFill?: boolean;
+  };
 
 export interface EncounterSlotResults {
   A: boolean;
@@ -86,6 +114,7 @@ export function createEncounterRollSnapshot(
     rollSecondaryC: rolls.rollSecondaryC,
     rollSecondaryD: rolls.rollSecondaryD,
     rollE: rolls.rollE,
+    ...(rolls.extraRolls ? { extraRolls: rolls.extraRolls } : {}),
   });
 }
 
@@ -272,6 +301,83 @@ function evaluateSlot(
   );
 }
 
+interface SolutionSetEvaluation {
+  valid: boolean;
+  success: boolean;
+  roll: number;
+  usedSolutionIds: EntityId[];
+  allocation: SolutionSetPickAllocation[];
+  diceFill: boolean;
+}
+
+function rollForSetPick(
+  rolls: EncounterRollSnapshot,
+  pick: SolutionSetPickAllocation,
+): number {
+  const base = pick.lane === 'primary'
+    ? primaryRollForSlot(rolls, pick.slot)
+    : secondaryRollForSlot(rolls, pick.slot);
+  if (pick.copyIndex === 0) {
+    return base;
+  }
+  return rolls.extraRolls?.[pick.lane][pick.slot][pick.copyIndex - 1] ?? base;
+}
+
+function evaluateSolutionSet(
+  encounter: EncounterData,
+  requirements: SlotRequirementMap,
+  inventory: number[],
+  solutionMap: SolutionDataMap,
+  rolls: EncounterRollSnapshot,
+  selectedAction: Extract<SelectedEncounterAction, { mode: 'slot' }>,
+): SolutionSetEvaluation {
+  const setSize = solutionSetSize(encounter.mEncounterDifficulty);
+  const picks = selectedAction.picks ?? Array.from({ length: setSize }, () => selectedAction.slot);
+  const diceFill = selectedAction.picks !== undefined && selectedAction.diceFill === true;
+  const invalid: SolutionSetEvaluation = {
+    valid: false,
+    success: false,
+    roll: primaryRollForSlot(rolls, selectedAction.slot),
+    usedSolutionIds: [],
+    allocation: [],
+    diceFill,
+  };
+
+  if (
+    picks.length === 0
+    || picks.length > setSize
+    || (picks.length < setSize && !diceFill)
+    || (picks.length === setSize && diceFill)
+  ) {
+    return invalid;
+  }
+
+  const allocation = allocateSolutionSet(
+    picks,
+    requirements,
+    inventory,
+    (solutionId) => lookupSolution(solutionMap, solutionId)?.mSolutionType,
+  );
+  if (!allocation) {
+    return invalid;
+  }
+
+  const roll = combineSolutionSetRolls(
+    allocation.map((pick) => rollForSetPick(rolls, pick)),
+    setSize,
+    diceFill ? rolls.rollE : null,
+  );
+
+  return {
+    valid: true,
+    success: isRollFavorable(roll),
+    roll,
+    usedSolutionIds: allocation.map((pick) => pick.solutionId),
+    allocation,
+    diceFill,
+  };
+}
+
 function randomInt(maxExclusive: number): number {
   return cryptoRandomInt(0, maxExclusive);
 }
@@ -323,7 +429,7 @@ function buildMessage(
   selectedAction: SelectedEncounterAction,
   rolls: EncounterRollSnapshot,
   failedSlots: EncounterSlotLetter[],
-  actionEvaluation?: SlotEvaluation,
+  setEvaluation?: SolutionSetEvaluation,
 ): string {
   const title =
     encounter.mEncounterTitle || `Encounter ${encounter.mEncounterID}`;
@@ -336,21 +442,19 @@ function buildMessage(
   }
 
   const slot = selectedAction.slot;
-  const requirement = buildSlotRequirements(encounter)[slot];
-  const lane = actionEvaluation?.lane
-    ?? (requirement.primarySolutionId !== 0 ? 'primary' : 'secondary');
-  const roll = actionEvaluation?.roll
-    ?? (lane === 'primary'
-      ? primaryRollForSlot(rolls, slot)
-      : secondaryRollForSlot(rolls, slot));
+  const roll = setEvaluation?.roll ?? primaryRollForSlot(rolls, slot);
   const outcome = interpretRoll(roll) ?? 'unmapped';
+  const set = setEvaluation?.valid
+    ? setEvaluation.allocation.map((pick) => `${pick.slot}(${pick.lane})`).join('+')
+      + (setEvaluation.diceFill ? '+dice' : '')
+    : `slot ${slot}`;
 
   if (success) {
-    return `${title}: slot ${slot} (${lane}) succeeded (roll${slot}=${roll}→${outcome}).`;
+    return `${title}: ${set} succeeded (roll=${roll}→${outcome}).`;
   }
 
   const parts = [
-    `slot ${slot} (${lane}) failed (roll${slot}=${roll}→${outcome})`,
+    `${set} failed (roll=${roll}→${outcome})`,
   ];
 
   if (failedSlots.length > 0) {
@@ -442,27 +546,24 @@ export function resolveEncounter(
     }
   }
 
-  const actionEvaluation = evaluateSlot(
-    selectedAction.slot,
-    requirements[selectedAction.slot],
+  const setEvaluation = evaluateSolutionSet(
+    encounter,
+    requirements,
     inventory,
     solutionMap,
     frozenRolls,
-    requiredUses,
+    selectedAction,
   );
 
-  const success = actionEvaluation.inventoryValid && actionEvaluation.satisfied;
-  const selectedRoll = actionEvaluation.roll
-    ?? primaryRollForSlot(frozenRolls, selectedAction.slot);
+  const success = setEvaluation.valid && setEvaluation.success;
+  const selectedRoll = setEvaluation.roll;
 
   return {
     encounterId: encounter.mEncounterID,
     success,
     selectedRoll,
     slotResults,
-    usedInventorySolutions: actionEvaluation.inventoryValid
-      ? actionEvaluation.usedSolutionIds
-      : [],
+    usedInventorySolutions: setEvaluation.usedSolutionIds,
     failurePenalty,
     rewards: success ? (rewardIds ?? pickRewards(encounter, solutionMap)) : [],
     message: buildMessage(
@@ -471,7 +572,7 @@ export function resolveEncounter(
       selectedAction,
       frozenRolls,
       failedSlots.filter((s) => s !== selectedAction.slot),
-      actionEvaluation,
+      setEvaluation,
     ),
   };
 }

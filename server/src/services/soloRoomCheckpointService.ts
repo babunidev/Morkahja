@@ -153,7 +153,14 @@ function actionsEqual(
   left: PlayerEncounterAction,
   right: PlayerEncounterAction,
 ): boolean {
-  return left.type === right.type;
+  if (left.type !== right.type) {
+    return false;
+  }
+  const leftPicks = left.type === 'dice' ? undefined : left.picks;
+  const rightPicks = right.type === 'dice' ? undefined : right.picks;
+  const leftDice = left.type === 'dice' ? false : left.diceFill === true;
+  const rightDice = right.type === 'dice' ? false : right.diceFill === true;
+  return (leftPicks ?? []).join() === (rightPicks ?? []).join() && leftDice === rightDice;
 }
 
 export class ChoiceLockedError extends Error {

@@ -1,6 +1,13 @@
 import { gameSolutions } from '../../data/gameContent.js';
 import type { AvatarInventory, EncounterAction, InventoryItem } from '../../api/http.js';
 export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
+import {
+  allocateSolutionSet,
+  solutionSetSize,
+  type SolutionSetPickAllocation,
+  type SolutionSetRequirements,
+  type SolutionSetSlot,
+} from '@shared/solutionSet';
 
 interface SolutionRecord {
   mSolutionIconName: string;
@@ -111,34 +118,42 @@ function secondaryRequirementForSlot(
   }
 }
 
-function pickUsedSolutionIdsForPrimary(
-  inventory: number[],
-  primarySolutionId: number,
-  requiredUses: number,
-): number[] {
-  const matches = inventory.filter((solutionId) => solutionId === primarySolutionId);
+type SlotRequirementFields = {
+  encounterDifficulty?: number;
+  primarySolutionA?: number;
+  primarySolutionB?: number;
+  primarySolutionC?: number;
+  primarySolutionD?: number;
+  secondarySolutionTypeA?: number;
+  secondarySolutionTypeB?: number;
+  secondarySolutionTypeC?: number;
+  secondarySolutionTypeD?: number;
+};
 
-  if (matches.length < requiredUses) {
-    return [];
-  }
-
-  return matches.slice(0, requiredUses);
+function solutionSetRequirements(encounter: SlotRequirementFields): SolutionSetRequirements {
+  const requirement = (slot: SolutionSetSlot) => ({
+    primarySolutionId: primaryRequirementForSlot(encounter, slot),
+    secondarySolutionType: secondaryRequirementForSlot(encounter, slot),
+  });
+  return { A: requirement('A'), B: requirement('B'), C: requirement('C'), D: requirement('D') };
 }
 
-function pickUsedSolutionIdsForSecondary(
-  inventory: number[],
-  requiredType: number,
-  requiredUses: number,
-): number[] {
-  const matches = inventory
-    .filter((solutionId) => solutionsById()[String(solutionId)]?.mSolutionType === requiredType)
-    .sort((left, right) => left - right);
-
-  if (matches.length < requiredUses) {
-    return [];
-  }
-
-  return matches.slice(0, requiredUses);
+/** The server's allocation of inventory charges to a solution set, or null if it cannot be covered. */
+export function allocateSolutionSetPicks({
+  encounter,
+  inventory,
+  picks,
+}: {
+  encounter: SlotRequirementFields;
+  inventory: AvatarInventory | undefined;
+  picks: readonly SolutionSetSlot[];
+}): SolutionSetPickAllocation[] | null {
+  return allocateSolutionSet(
+    picks,
+    solutionSetRequirements(encounter),
+    flattenSolutionUses(inventoryItems(inventory)),
+    (solutionId) => solutionsById()[String(solutionId)]?.mSolutionType,
+  );
 }
 
 export function slotHasEnoughSolutionCharges({
@@ -165,17 +180,18 @@ export function slotHasEnoughSolutionCharges({
   }
 
   const items = inventoryItems(inventory);
-  const requiredUses = scaledUses(1, encounter.encounterDifficulty ?? 1);
+  const requiredUses = solutionSetSize(encounter.encounterDifficulty);
   const primaryId = primaryRequirementForSlot(encounter, slot);
   const secondaryType = secondaryRequirementForSlot(encounter, slot);
   const primaryTotal = primaryId > 0 ? totalPrimarySolutionUses(items, primaryId) : 0;
   const secondaryTotal = secondaryType > 0 ? totalSecondaryTypeUses(items, secondaryType) : 0;
 
-  if (primaryId > 0 && primaryTotal >= requiredUses) {
+  // A solution set takes one solution at a time: one charge makes a slot usable.
+  if (primaryId > 0 && primaryTotal >= 1) {
     return { available: true, isPrimary: true, requiredUses, totalUses: primaryTotal };
   }
 
-  if (secondaryType > 0 && secondaryTotal >= requiredUses) {
+  if (secondaryType > 0 && secondaryTotal >= 1) {
     return { available: true, isPrimary: false, requiredUses, totalUses: secondaryTotal };
   }
 
@@ -192,40 +208,24 @@ export function predictUsedSolutionIds({
   encounter,
   inventory,
   action,
+  picks,
 }: {
-  encounter: {
-    encounterDifficulty?: number;
-    primarySolutionA?: number;
-    primarySolutionB?: number;
-    primarySolutionC?: number;
-    primarySolutionD?: number;
-    secondarySolutionTypeA?: number;
-    secondarySolutionTypeB?: number;
-    secondarySolutionTypeC?: number;
-    secondarySolutionTypeD?: number;
-  };
+  encounter: SlotRequirementFields;
   inventory: AvatarInventory | undefined;
   action: EncounterAction | null;
+  /** The committed solution set; without it, the action's slot as many times as needed. */
+  picks?: readonly SolutionSetSlot[] | null;
 }): number[] {
   if (!inventory || !action || action === 'dice') {
     return [];
   }
 
-  const requiredUses = scaledUses(1, encounter.encounterDifficulty ?? 1);
-  const flatInventory = flattenSolutionUses(inventoryItems(inventory));
-  const primaryId = primaryRequirementForSlot(encounter, action);
-  const secondaryType = secondaryRequirementForSlot(encounter, action);
-  const primaryUsed = primaryId > 0
-    ? pickUsedSolutionIdsForPrimary(flatInventory, primaryId, requiredUses)
-    : [];
-
-  if (primaryUsed.length >= requiredUses) {
-    return primaryUsed;
-  }
-
-  return secondaryType > 0
-    ? pickUsedSolutionIdsForSecondary(flatInventory, secondaryType, requiredUses)
-    : [];
+  const setPicks = picks ?? Array.from(
+    { length: solutionSetSize(encounter.encounterDifficulty) },
+    () => action,
+  );
+  const allocation = allocateSolutionSetPicks({ encounter, inventory, picks: setPicks });
+  return allocation ? allocation.map((pick) => pick.solutionId) : [];
 }
 
 function inventoryChangesFromSolutionIds(

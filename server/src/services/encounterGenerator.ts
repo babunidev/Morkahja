@@ -252,6 +252,7 @@ export function generateSnapshotRolls(): Pick<
   | 'rollSecondaryC'
   | 'rollSecondaryD'
   | 'rollE'
+  | 'extraRolls'
 > {
   return generateEncounterRollSnapshot();
 }

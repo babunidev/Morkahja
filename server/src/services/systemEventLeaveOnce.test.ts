@@ -85,6 +85,8 @@ async function playerInLevelUpEventWithChoiceMade(label: string): Promise<{ play
       primarySolutionA: 10001,
       secondarySolutionTypeA: 1,
       rollPrimaryA: 96,
+      // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
+      extraRolls: undefined,
       actionReadyAt: Date.now() - 1,
     },
     slotEncounterSnapshots: room.slotEncounterSnapshots.map((snapshot, index) => ({
@@ -93,6 +95,8 @@ async function playerInLevelUpEventWithChoiceMade(label: string): Promise<{ play
       primarySolutionA: 10001,
       secondarySolutionTypeA: 1,
       rollPrimaryA: index === slotIndex ? 96 : 50,
+      // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
+      extraRolls: undefined,
       rewardIds: [] as number[],
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],

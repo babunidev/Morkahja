@@ -18,6 +18,7 @@ import {
   setFocusState,
   setSlotState,
   processRoomAway,
+  parseClientSolutionSet,
   submitChoice,
   submitContinue,
   submitSelection,
@@ -234,7 +235,9 @@ export async function submitRoomChoiceController(
     const action = body.action as EncounterAction;
     const solutionId = typeof body.solutionId === 'number' ? body.solutionId : undefined;
 
-    const room = await submitChoice(playerId, avatarId, action, solutionId);
+    const solutionSet = parseClientSolutionSet(body.picks, body.diceFill);
+
+    const room = await submitChoice(playerId, avatarId, action, solutionId, solutionSet);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
     });

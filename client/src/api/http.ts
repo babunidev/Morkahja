@@ -443,14 +443,26 @@ export async function createEncounterRoom(
   return response.room;
 }
 
+/** A solution set: one slot per chosen solution (repeating for copies); the dice finished it when `diceFill`. */
+export interface SolutionSetSubmission {
+  picks: ('A' | 'B' | 'C' | 'D')[];
+  diceFill: boolean;
+}
+
 export async function submitRoomChoice(
   avatarId: string,
   action: EncounterAction,
   solutionId?: number,
+  solutionSet?: SolutionSetSubmission | null,
 ): Promise<EncounterRoomSnapshotDto> {
   const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/choice', {
     method: 'POST',
-    body: JSON.stringify({ avatarId, action, solutionId }),
+    body: JSON.stringify({
+      avatarId,
+      action,
+      solutionId,
+      ...(solutionSet && action !== 'dice' ? { picks: solutionSet.picks, diceFill: solutionSet.diceFill } : {}),
+    }),
   });
   return response.room;
 }
