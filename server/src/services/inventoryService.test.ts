@@ -133,3 +133,34 @@ const alwaysFirst = () => 0;
 }
 
 console.log('inventoryService.test.ts: all assertions passed');
+
+// Atranor items (type 77) share the essences container but are never lost as
+// lives on Hardship or Misery (Babuni, 2026-11-13).
+{
+  const DRAGONTOOTH = 10018;
+  const inventory: AvatarInventory = {
+    spellbook: [],
+    items: [{ solutionId: 10012, solutionType: 2, uses: 1 }],
+    essences: [
+      { solutionId: DRAGONTOOTH, solutionType: 77, uses: 1 },
+      { solutionId: 10010, solutionType: 15, uses: 1 },
+    ],
+  };
+
+  const hardship = applyFailurePenaltyToInventoryState(inventory, 'Hardship', 1, { randomInt: alwaysFirst });
+  assert.deepEqual(hardship.lostSolutionIds, [10010], 'the essence goes, not the Dragontooth');
+  assert.deepEqual(hardship.inventory.essences.map((item) => item.solutionId), [DRAGONTOOTH]);
+
+  const misery = applyFailurePenaltyToInventoryState(inventory, 'Misery', 1, { randomInt: alwaysFirst });
+  assert.deepEqual(misery.lostSolutionIds, [10010, 10012]);
+  assert.deepEqual(misery.inventory.essences.map((item) => item.solutionId), [DRAGONTOOTH]);
+
+  const onlyTooth = applyFailurePenaltyToInventoryState(
+    { ...inventory, essences: [{ solutionId: DRAGONTOOTH, solutionType: 77, uses: 1 }] },
+    'Hardship',
+    2,
+    { randomInt: alwaysFirst },
+  );
+  assert.deepEqual(onlyTooth.lostSolutionIds, [], 'no essence left: nothing is lost, the Dragontooth stays');
+  assert.equal(onlyTooth.inventory.essences[0]?.uses, 1);
+}

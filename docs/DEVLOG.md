@@ -315,3 +315,7 @@ I wanted the latest changes live, from the centred phone screen to the essence s
 ### Essences that changed their faces — 2026-11-13
 
 Right after the release I made a new avatar with three essences, lost one, and the two left over showed different essences, in the slots and, as it looked to me, in the inventory too. It had happened before when I gained one. AI checked the server first: a fresh local avatar lost exactly the essence the result named and kept the other two. The slots were the problem. They showed "the first, second, third essence in the list" rather than holding a particular one, and a loss always emptied the outermost slot, so the survivors moved over. Now each slot keeps its own essence, and a loss leaves from the slot that actually held it. **Verification:** client tests with my two cases replayed, typecheck and build; released as 0.9.0-beta.50 the same morning, not yet seen on screen by AI.
+
+### The Dragontooth is not a life — 2026-11-13
+
+I collected an Atranor Dragontooth and it flew into an essence slot, then vanished from it. Thinking it through, I decided these items don't belong in the slots at all: they are for Atranor, to revive or make the passage certain, not lives to be spent. AI found they share the essence storage on the server, so a bad roll could also take one in place of an essence. Now only real essences go into the slots and are lost on a bad roll; the Atranor items go to the inventory and wait for Atranor (D-018). **Verification:** full release check with new server tests; not yet seen on screen.
