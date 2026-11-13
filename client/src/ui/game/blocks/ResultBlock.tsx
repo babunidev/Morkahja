@@ -71,12 +71,16 @@ const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_ACTIVATE_MS = 700;
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 const ESSENCE_INVENTORY_TYPE = 3;
+/** A real essence (a life); Atranor items share the inventory type but not the slots. */
+const ESSENCE_SOLUTION_TYPE = 15;
 interface SolutionRecord {
   mSolutionIconName: string;
   mSolutionID: number;
   mSolutionInventoryType: number;
   mSolutionName: string;
   mSolutionText?: string;
+  /** 15 for a real essence, 77 for an Atranor item. */
+  mSolutionType?: number;
   mSolutionUses: number;
 }
 
@@ -1046,7 +1050,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     // An essence goes into a free slot on the avatar; with all five filled, to the inventory.
     const essenceReward = isReward
       ? rewards.find((reward) => reward.solution.mSolutionID === solutionId
-        && reward.solution.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE)
+        && reward.solution.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE
+        && reward.solution.mSolutionType === ESSENCE_SOLUTION_TYPE)
       : undefined;
     const essenceSlotsReserved: number[] = [];
     if (essenceReward && !readOnlyWitness) {

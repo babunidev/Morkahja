@@ -250,12 +250,23 @@ export function consumeSolutionFromInventoryState(
   return next;
 }
 
+/** Solution type of a real essence (a life). */
+export const ESSENCE_SOLUTION_TYPE = 15;
+
+/**
+ * Only real essences are lost on Hardship or Misery. The essences container
+ * also holds the Atranor items (solution type 77), which are used in Atranor
+ * to revive or secure the passage, never lost as lives (Babuni, 2026-11-13).
+ */
+const isEssence = (item: InventoryItem): boolean => item.solutionType === ESSENCE_SOLUTION_TYPE;
+
 function flattenContainerChargeSolutionIds(
   inventory: AvatarInventory,
   container: InventoryContainerName,
+  include: (item: InventoryItem) => boolean = () => true,
 ): number[] {
   return inventory[container].flatMap((item) =>
-    item.uses > 0 ? Array.from({ length: item.uses }, () => item.solutionId) : [],
+    item.uses > 0 && include(item) ? Array.from({ length: item.uses }, () => item.solutionId) : [],
   );
 }
 
@@ -264,12 +275,13 @@ function consumeRandomChargesFromContainerState(
   container: InventoryContainerName,
   amount: number,
   randomInt: RandomIntFn = defaultRandomInt,
+  include?: (item: InventoryItem) => boolean,
 ): { inventory: AvatarInventory; lostSolutionIds: number[] } {
   let next = normalizeInventory(inventory);
   const lostSolutionIds: number[] = [];
 
   for (let index = 0; index < amount; index += 1) {
-    const charges = flattenContainerChargeSolutionIds(next, container);
+    const charges = flattenContainerChargeSolutionIds(next, container, include);
     if (charges.length === 0) {
       break;
     }
@@ -307,6 +319,7 @@ export function applyFailurePenaltyToInventoryState(
       'essences',
       amount,
       randomInt,
+      isEssence,
     );
   }
 
@@ -316,6 +329,7 @@ export function applyFailurePenaltyToInventoryState(
       'essences',
       amount,
       randomInt,
+      isEssence,
     );
     const itemLoss = consumeRandomChargesFromContainerState(
       essenceLoss.inventory,

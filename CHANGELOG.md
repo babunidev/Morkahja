@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: Atranor items are not essences; 0.9.0-beta.51
+
+- **Fix (Babuni's report and direction, D-018):** a collected Atranor Dragontooth flew into an essence slot and then vanished from it. Atranor items (solution type 77) share the essences container (inventory type 3) with real essences (type 15), and the result screen sent every reward of that container into a slot, while the slots show only real essences. Now only real essences fly into slots; Atranor items fly to the Inventory button (`ResultBlock.tsx`).
+- **Fix (server):** Hardship and Misery took a random charge from the whole essences container, so an Atranor item could be lost in place of an essence. Now only real essences are lost (`inventoryService.ts`). With no essence left, nothing is lost from that container and the Atranor items stay for Atranor; the death check already counted only real essences.
+- **Version 0.9.0-beta.51** (D-015). Patch notes line added.
+- **Verification:** `npm run release:check` passed on Nobara with local Podman PostgreSQL (game data, typecheck and build, client 36/36, server 40/40; new server assertions for a Dragontooth beside an essence and alone). Not checked on screen. **Not deployed.**
+
 ## 2026-11-13 — Released: essence slots keep their own essences; 0.9.0-beta.50
 
 - **Fix (reported by Babuni after the beta.49 release):** after losing an essence, the remaining slots showed different essences than before; a gained essence also changed pictures in the next encounter. The server's inventory was right: a local run of a new avatar (API only) lost exactly the reported essence and kept the other two. The slots were wrong in two ways: each slot showed "the n-th essence in the inventory list", and a loss always emptied the outermost slot, not the one holding the lost essence, so the remaining essences shifted into other slots. The slots also counted inventory entries instead of charges, so a second charge of an essence already held (stacked as ×2) lost its slot on the next encounter.

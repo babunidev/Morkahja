@@ -148,6 +148,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/mobile-centering`, not yet accepted or released.
 
+## D-018 — Atranor items are not essences (2026-11-13)
+
+**Babuni's direction:** Atranor items (Elixir, Scroll, Stone, Dragontooth) "should not go to the slot at all. They should go to the inventory, because they are used in Atranor ... to revive or make the passage guaranteed", and they should not be used up like an essence.
+
+**AI implementation:** only solution type 15 counts as an essence for the avatar's slots and for Hardship/Misery losses; Atranor items (type 77) stay in the essences container for storage and are only used as solutions in Atranor.
+
+**Status:** implemented on `fix/atranor-items-not-essences`; release pending.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
