@@ -214,3 +214,28 @@ console.log('encounterResolver.test.ts: all assertions passed');
   assert.equal(result.selectedRoll, 70);
   assert.equal(result.success, true);
 }
+
+// Each chosen solution's own roll is reported with the result (D-024).
+{
+  const rolls = createEncounterRollSnapshot({
+    ...favorableRolls,
+    rollPrimaryA: 90,
+    rollE: 20,
+    extraRolls: {
+      primary: { A: [70, 80, 61], B: [61, 61, 61], C: [61, 61, 61], D: [61, 61, 61] },
+      secondary: { A: [50, 50, 50], B: [50, 50, 50], C: [50, 50, 50], D: [50, 50, 50] },
+    },
+  });
+  const full = resolveEncounter(baseEncounter(3), [10, 10, 10], solutionMap, rolls, {
+    mode: 'slot', slot: 'A', picks: ['A', 'A', 'A'],
+  });
+  assert.deepEqual(full.pickRolls, [90, 70, 80]);
+  assert.equal(full.diceFillRoll, undefined);
+  const withDice = resolveEncounter(baseEncounter(3), [10], solutionMap, rolls, {
+    mode: 'slot', slot: 'A', picks: ['A'], diceFill: true,
+  });
+  assert.deepEqual(withDice.pickRolls, [90]);
+  assert.equal(withDice.diceFillRoll, 20);
+  const single = resolveEncounter(baseEncounter(1), [10], solutionMap, rolls, { mode: 'slot', slot: 'A' });
+  assert.equal(single.pickRolls, undefined);
+}

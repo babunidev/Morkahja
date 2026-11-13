@@ -80,6 +80,10 @@ export interface EncounterResolution {
   failurePenalty: number;
   rewards: number[];
   message: string;
+  /** Solution sets: each chosen solution's own roll, in the order chosen. */
+  pickRolls?: number[];
+  /** Solution sets finished by the dice: the dice roll (counted once per missing solution). */
+  diceFillRoll?: number;
 }
 
 interface SlotRequirement {
@@ -307,6 +311,7 @@ interface SolutionSetEvaluation {
   roll: number;
   usedSolutionIds: EntityId[];
   allocation: SolutionSetPickAllocation[];
+  pickRolls: number[];
   diceFill: boolean;
 }
 
@@ -340,6 +345,7 @@ function evaluateSolutionSet(
     roll: primaryRollForSlot(rolls, selectedAction.slot),
     usedSolutionIds: [],
     allocation: [],
+    pickRolls: [],
     diceFill,
   };
 
@@ -362,11 +368,8 @@ function evaluateSolutionSet(
     return invalid;
   }
 
-  const roll = combineSolutionSetRolls(
-    allocation.map((pick) => rollForSetPick(rolls, pick)),
-    setSize,
-    diceFill ? rolls.rollE : null,
-  );
+  const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick));
+  const roll = combineSolutionSetRolls(pickRolls, setSize, diceFill ? rolls.rollE : null);
 
   return {
     valid: true,
@@ -374,6 +377,7 @@ function evaluateSolutionSet(
     roll,
     usedSolutionIds: allocation.map((pick) => pick.solutionId),
     allocation,
+    pickRolls,
     diceFill,
   };
 }
@@ -564,6 +568,12 @@ export function resolveEncounter(
     selectedRoll,
     slotResults,
     usedInventorySolutions: setEvaluation.usedSolutionIds,
+    ...(setEvaluation.valid && (setEvaluation.pickRolls.length > 1 || setEvaluation.diceFill)
+      ? {
+        pickRolls: setEvaluation.pickRolls,
+        ...(setEvaluation.diceFill ? { diceFillRoll: frozenRolls.rollE } : {}),
+      }
+      : {}),
     failurePenalty,
     rewards: success ? (rewardIds ?? pickRewards(encounter, solutionMap)) : [],
     message: buildMessage(

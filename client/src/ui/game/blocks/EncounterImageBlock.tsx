@@ -151,7 +151,6 @@ export function EncounterImageBlock({
   encounter,
   loreGemCollected = false,
   onRoomSnapshot,
-  showLoreGemReward = false,
   imageSrc,
   inventory,
   displayInventory,
@@ -191,7 +190,6 @@ export function EncounterImageBlock({
   encounter: EncounterSnapshot;
   loreGemCollected?: boolean;
   onRoomSnapshot?: (room: EncounterRoomSnapshotDto) => void;
-  showLoreGemReward?: boolean;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
   /** Inventory shown in the Inventory and Skillbook panels, including items collected this round. */
@@ -680,7 +678,6 @@ export function EncounterImageBlock({
           continueWaitingAfterPress={continueWaitingAfterPress}
           deferRewardDismiss={deferRewardDismiss}
           disabled={continuePending}
-          showLoreGemReward={showLoreGemReward}
           encounterId={encounter.encounterId}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={avatarLevel}
@@ -723,6 +720,9 @@ export function EncounterImageBlock({
         }
         inventory={inventory}
         onActionReveal={handleActionReveal}
+        setRolls={serverResolution
+          ? { pickRolls: serverResolution.pickRolls, diceFillRoll: serverResolution.diceFillRoll }
+          : null}
       />
       <LoreBlock
         encounterKey={encounter.snapshotId}

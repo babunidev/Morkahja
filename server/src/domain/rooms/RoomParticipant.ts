@@ -36,6 +36,10 @@ export interface ParticipantResolutionSummary {
   loreGemGranted?: boolean;
   /** XP granted by the resolved encounter outcome shown to this participant. */
   gainedExperience?: number;
+  /** Solution sets: each chosen solution's own roll, in the order chosen. */
+  pickRolls?: number[];
+  /** Solution sets finished by the dice: the dice roll. */
+  diceFillRoll?: number;
 }
 
 /** Reveal-only outcome attached after prepare; not persisted to avatar until room commit. */

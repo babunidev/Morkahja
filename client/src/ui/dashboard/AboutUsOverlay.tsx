@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import DonationOverlay from './DonationOverlay.js';
+import PrivacyPolicyOverlay from '../onboarding/PrivacyPolicyOverlay.js';
+import TermsOfServiceOverlay from '../onboarding/TermsOfServiceOverlay.js';
 import { ClosePanelButton, overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import {
@@ -136,11 +138,21 @@ const creditListStyle: CSSProperties = {
   gap: 12,
 };
 
+/** Privacy Policy and Terms of Service on the left, Donation on the right. */
 const donateFooterStyle: CSSProperties = {
   display: 'flex',
-  justifyContent: 'center',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
   paddingTop: 8,
   ...frameDividerStyle({ side: 'top', bleed: 9 }),
+};
+
+const legalButtonsStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
 };
 
 const creditCardStyle: CSSProperties = {
@@ -309,12 +321,16 @@ export function AboutUsOverlay({
 }) {
   const [visible, setVisible] = useState(false);
   const [donationOpen, setDonationOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       setDonationOpen(false);
+      setPrivacyOpen(false);
+      setTermsOpen(false);
       setExpandedIds(new Set());
       return;
     }
@@ -395,6 +411,28 @@ export function AboutUsOverlay({
           </div>
         </div>
         <footer style={donateFooterStyle}>
+          <div style={legalButtonsStyle}>
+            <PanelButton
+              onClick={() => {
+                playSfx(DEFAULT_BUTTON_SOUND);
+                setPrivacyOpen(true);
+              }}
+              pressKey="about-privacy-policy"
+              visualStyle={overlayCloseButtonVisualStyle}
+            >
+              Privacy Policy
+            </PanelButton>
+            <PanelButton
+              onClick={() => {
+                playSfx(DEFAULT_BUTTON_SOUND);
+                setTermsOpen(true);
+              }}
+              pressKey="about-terms-of-service"
+              visualStyle={overlayCloseButtonVisualStyle}
+            >
+              Terms of Service
+            </PanelButton>
+          </div>
           <PanelButton
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
@@ -413,6 +451,26 @@ export function AboutUsOverlay({
         }}
         open={donationOpen}
       />
+      {/* Opened above About Us; their clicks must not reach its backdrop (which closes it). */}
+      <div
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        role="presentation"
+      >
+        <PrivacyPolicyOverlay
+          onClose={() => {
+            setPrivacyOpen(false);
+          }}
+          open={privacyOpen}
+        />
+        <TermsOfServiceOverlay
+          onClose={() => {
+            setTermsOpen(false);
+          }}
+          open={termsOpen}
+        />
+      </div>
     </div>
   );
 }

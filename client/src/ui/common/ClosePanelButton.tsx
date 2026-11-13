@@ -9,6 +9,9 @@ export const overlayCloseButtonVisualStyle: CSSProperties = {
   justifyContent: 'center',
   minWidth: 72,
   minHeight: 34,
+  // Longer labels (Privacy Policy, Terms of Service) keep clear of the frame.
+  padding: '0 10px',
+  boxSizing: 'border-box',
   ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',

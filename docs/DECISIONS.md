@@ -186,6 +186,30 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-13 (release `14f7bf6d`, 0.9.0-beta.54).
 
+## D-022 — The Scribes speak in the game's own voice (2026-11-13)
+
+**Babuni's direction:** after an AI overview of every Scribe (trigger, audience, text) and a list of inconsistencies, "you can rewrite these as well. See what makes sense and how, and that it has the right tone to fit." Player names for account matters and avatar names for game moments stay as they are.
+
+**AI implementation:** support lines in Babuni's first person instead of "the team"/"us"; key reminder in the "your key is your key" wording of D-021; a reader's own entries in the second person, everyone else's (and the admin console) in the third; small fixes (full stop, gem name); texts for never-written Scribe types removed. Triggers and audiences are unchanged.
+
+**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+
+## D-023 — The lore gem waits on the avatar (2026-11-13)
+
+**Babuni's report and direction:** a lore gem with five rewards "didn't have a slot to go to, so it got kind of stuck in the middle of the encounter image". Instead: "when we pick ... the lore gem, in the lore window, ... it can go on the top left of ... one's avatar", and "when I continue, it goes inside my avatar and disappears."
+
+**AI implementation:** the gem is no longer a result reward. Picking it up notes where it was, the server confirms as before, and a badge on the avatar's top left receives it with a flight from the Lore window; for other party members it fades in. It sinks into the avatar when the room advances or a system event starts, or when the next encounter clears the flag. No server change.
+
+**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+
+## D-024 — Each hovering solution shows its own roll (2026-11-13)
+
+**Babuni's direction:** "when the difficulty is higher than 1, we want to see the roll of the hovering solution ... of each that is hovering." Report: choosing the same item two or three times, "when it moves into the encounter ... one of them gets replaced."
+
+**AI implementation:** one hovering icon per chosen copy, stacked upward (as in Babuni's original description of sets, "they move up"), each showing its own item; the allocation is frozen at commit; the server adds each pick's roll and the dice-fill roll to the revealed result; the icons show them for 1.3 s before flying in. The rolls stay secret until the commit, like the final roll.
+
+**Status:** implemented on `feat/about-legal-scribes` (0.9.0-beta.55); not merged or released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

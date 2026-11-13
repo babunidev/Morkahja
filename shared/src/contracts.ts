@@ -434,6 +434,10 @@ export interface ParticipantResolutionSummaryDto {
   leveledUp?: boolean;
   loreGemGranted?: boolean;
   gainedExperience?: number;
+  /** Solution sets: each chosen solution's own roll, in the order chosen. */
+  pickRolls?: number[];
+  /** Solution sets finished by the dice: the dice roll. */
+  diceFillRoll?: number;
 }
 
 export interface RoomSystemEventDto {
@@ -463,6 +467,8 @@ export interface ParticipantPreparedResultDto {
   leveledUp?: boolean;
   loreGemGranted?: boolean;
   gainedExperience?: number;
+  pickRolls?: number[];
+  diceFillRoll?: number;
 }
 
 export interface RoomParticipantDto {

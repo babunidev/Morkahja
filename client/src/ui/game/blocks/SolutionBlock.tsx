@@ -28,11 +28,13 @@ import {
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
 import { allocateSolutionSetPicks, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
-import { solutionSetSize } from '@shared/solutionSet';
+import { solutionSetSize, type SolutionSetPickAllocation } from '@shared/solutionSet';
+import { displayRollAsD20 } from '@shared/diceInterpreter';
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
   recordCommittedAction,
+  SET_ROLLS_DISPLAY_MS,
   getFooterButtonRect,
   landingRevealMs,
   SOLUTION_SLOT_INBOUND_FLIGHT_MS,
@@ -357,21 +359,24 @@ const solutionHoverGlowStyle: CSSProperties = {
   boxShadow: '0 0 16px rgba(255, 204, 102, 0.6), 0 8px 14px rgba(0, 0, 0, 0.45)',
 };
 
-const solutionHoverCountStyle: CSSProperties = {
+/** Further copies of the same slot hover above each other. */
+const SOLUTION_HOVER_STACK_STEP_PX = 46;
+
+/** Each hovering solution's own roll, shown once the set is committed (D-024). */
+const solutionHoverRollStyle: CSSProperties = {
   position: 'absolute',
-  right: -6,
-  bottom: -4,
-  minWidth: 22,
-  padding: '1px 5px',
-  borderRadius: 10,
-  background: 'rgba(20, 14, 8, 0.88)',
-  border: '1px solid rgba(255, 204, 102, 0.75)',
+  inset: 0,
+  display: 'grid',
+  placeItems: 'center',
   color: '#ffcc66',
-  fontSize: '0.72rem',
+  fontFamily: 'Georgia, serif',
+  fontSize: 24,
   fontWeight: 700,
-  lineHeight: 1.3,
-  textAlign: 'center',
+  textShadow: '0 0 6px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9)',
+  background: 'radial-gradient(circle, rgba(12, 8, 6, 0.55) 0%, rgba(12, 8, 6, 0) 70%)',
+  borderRadius: '50%',
   pointerEvents: 'none',
+  animation: 'morkahja-solution-roll-in 260ms ease-out both',
 };
 
 /**
@@ -665,6 +670,7 @@ export function SolutionBlock({
   onActionReveal,
   encounter,
   inventory,
+  setRolls = null,
 }: {
   diceButtonAsset?: string;
   encounterRevealKey: string;
@@ -683,6 +689,8 @@ export function SolutionBlock({
   ) => void;
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
+  /** A committed solution set's own rolls, from the server's result (shown on the hovering solutions). */
+  setRolls?: { pickRolls?: number[]; diceFillRoll?: number } | null;
 }) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
@@ -700,6 +708,7 @@ export function SolutionBlock({
   const setSize = solutionSetSize(encounter.encounterDifficulty);
   const [setPicks, setSetPicks] = useState<SlotLetter[]>([]);
   const [setCommitted, setSetCommitted] = useState(false);
+  const [committedAllocation, setCommittedAllocation] = useState<SolutionSetPickAllocation[] | null>(null);
   /** The choice being played: everything else fades out meanwhile. */
   const [choiceFade, setChoiceFade] = useState<{ keepSlot: SlotLetter | null; keepDice: boolean } | null>(null);
   // Updated with every change, so taps in quick succession see each other.
@@ -720,6 +729,7 @@ export function SolutionBlock({
     setPicksRef.current = [];
     setSetPicks([]);
     setSetCommitted(false);
+    setCommittedAllocation(null);
     setChoiceFade(null);
 
     let cancelled = false;
@@ -1009,17 +1019,16 @@ export function SolutionBlock({
     }
   }
 
-  /** A hovering solution goes back to its slot (the last copy chosen for that slot). */
-  function handleSetPutBack(slot: SlotLetter): void {
+  /** A hovering solution goes back to its slot. */
+  function handleSetPutBack(pickIndex: number): void {
     if (consumeLongPressActivation() || setCommitted || !actionsReady) {
       return;
     }
     const current = setPicksRef.current;
-    const index = current.lastIndexOf(slot);
-    if (index < 0) {
+    if (pickIndex < 0 || pickIndex >= current.length) {
       return;
     }
-    const next = current.filter((_, entry) => entry !== index);
+    const next = current.filter((_, entry) => entry !== pickIndex);
     hideSolutionTooltip();
     setPicksRef.current = next;
     setSetPicks(next);
@@ -1033,6 +1042,7 @@ export function SolutionBlock({
 
     clearRollRevealTimer();
     hideSolutionTooltip();
+    setCommittedAllocation(allocation);
     setSetCommitted(true);
     // The hovering set stays; the bar (and the dice, unless it finished the set) fades.
     setChoiceFade({ keepSlot: null, keepDice: diceFill });
@@ -1101,6 +1111,7 @@ export function SolutionBlock({
         {'@keyframes morkahja-solution-lockpick { 0% { transform: rotate(0deg) scale(1); filter: brightness(1); } 12% { transform: rotate(-16deg) scale(1.05); filter: brightness(1.15); } 24% { transform: rotate(14deg) scale(1.03); } 36% { transform: rotate(-10deg) scale(1.06); } 48% { transform: rotate(8deg) scale(1.04); } 60% { transform: rotate(-5deg) scale(1.07); filter: brightness(1.35); } 72% { transform: rotate(3deg) scale(1.02); } 84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); } 100% { transform: rotate(0deg) scale(1); filter: brightness(1); } }'}
         {'@keyframes morkahja-solution-enable-rattle { 0%, 100% { transform: rotate(0deg) scale(1); } 18% { transform: rotate(-3.5deg) scale(1.04); } 36% { transform: rotate(3.5deg) scale(1.03); } 54% { transform: rotate(-2.5deg) scale(1.05); } 72% { transform: rotate(2deg) scale(1.02); } 86% { transform: rotate(-1deg) scale(1.03); } }'}
         {'@keyframes morkahja-solution-hover-rise { 0% { opacity: 0; transform: translateY(72px) scale(0.86); } 100% { opacity: 1; transform: translateY(0) scale(1); } }'}
+        {'@keyframes morkahja-solution-roll-in { 0% { opacity: 0; transform: scale(1.4); } 100% { opacity: 1; transform: scale(1); } }'}
         {'@keyframes morkahja-solution-hover-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }'}
         {'@keyframes morkahja-dice-roll { 0% { transform: rotate(0deg) translateY(0); } 12.5% { transform: rotate(90deg) translateY(-8px); } 25% { transform: rotate(180deg) translateY(0); } 37.5% { transform: rotate(270deg) translateY(-7px); } 50% { transform: rotate(360deg) translateY(0); } 62.5% { transform: rotate(450deg) translateY(-6px); } 75% { transform: rotate(540deg) translateY(0); } 87.5% { transform: rotate(630deg) translateY(-3px); } 100% { transform: rotate(720deg) translateY(0); } }'}
       </style>
@@ -1108,7 +1119,8 @@ export function SolutionBlock({
         aria-label="Solution actions"
         style={{
           ...solutionActionsLayerStyle,
-          opacity: hidden ? 0 : 1,
+          // A committed set stays: its solutions show their rolls, then fly in.
+          opacity: hidden && !setCommitted ? 0 : 1,
           pointerEvents: hidden || !actionsReady ? 'none' : 'auto',
           transition: fadeTransition,
         }}
@@ -1122,6 +1134,10 @@ export function SolutionBlock({
                 ...diceSlotStyle,
                 ...diceRevealStyle(actionsRevealing, actionsReady),
                 ...(choiceFade && !choiceFade.keepDice ? otherChoicesFadeStyle : {}),
+                // The dice that finished a set shows its roll, then makes room for the result.
+                ...(choiceFade?.keepDice && setCommitted && hidden
+                  ? { ...otherChoicesFadeStyle, transitionDelay: `${SET_ROLLS_DISPLAY_MS}ms` }
+                  : {}),
               }}
             >
               <button
@@ -1160,6 +1176,14 @@ export function SolutionBlock({
                       />
                     </span>
                   </span>
+                  {setCommitted && setRolls?.diceFillRoll !== undefined ? (
+                    <span
+                      aria-label={`Roll ${displayRollAsD20(setRolls.diceFillRoll)}`}
+                      style={solutionHoverRollStyle}
+                    >
+                      {displayRollAsD20(setRolls.diceFillRoll)}
+                    </span>
+                  ) : null}
                 </span>
               </button>
             </div>
@@ -1196,62 +1220,72 @@ export function SolutionBlock({
             : 'right';
 
           const showAsOwned = visibleSlot.available && inboundFlownSlots.has(slot);
-          const hoveringCount = setPicks.filter((pick) => pick === slot).length;
+          // Every chosen copy hovers on its own, stacked upward, showing the
+          // item it really is; once committed, the server's allocation is
+          // frozen (the inventory may change before the solutions fly).
+          const allocationNow = setCommitted
+            ? committedAllocation
+            : (setPicks.length > 0 ? setAllocation(setPicks) : null);
+          const slotPicks = (allocationNow ?? [])
+            .map((pick, pickIndex) => ({ pick, pickIndex }))
+            .filter(({ pick }) => pick.slot === slot);
           // While a set is being chosen, a slot whose solution is all taken dims.
           const addable = !setCommitted
             && (setPicks.length === 0 || setAllocation([...setPicks, slot]) !== null);
           const dimForSet = setSize > 1 && setPicks.length > 0 && visibleSlot.available && !addable;
-          const hoveringIds = hoveringCount > 0
-            ? (setAllocation(setPicks) ?? [])
-              .filter((pick) => pick.slot === slot)
-              .map((pick) => pick.solutionId)
-            : [];
-          const hoveringSolution = hoveringIds.length > 0
-            ? solutionsById()[String(hoveringIds[0])]
-            : undefined;
 
           return (
             <div key={slot} style={solutionSlotCellStyle}>
-              {hoveringCount > 0 ? (
-                <button
-                  aria-label={`Put ${hoveringSolution?.mSolutionName ?? visibleSlot.name} back`}
-                  className="morkahja-footer-button"
-                  data-solution-hover={slot}
-                  data-solution-ids={hoveringIds.join(',')}
-                  disabled={setCommitted}
-                  key={`${encounterRevealKey}-hover-${slot}`}
-                  onClick={() => {
-                    handleSetPutBack(slot);
-                  }}
-                  style={solutionHoverButtonStyle}
-                  type="button"
-                >
-                  <span style={solutionHoverRiseStyle}>
-                    <span style={solutionHoverBobStyle}>
-                      <span
-                        className="morkahja-footer-button-visual"
-                        style={{
-                          ...solutionIconShellStyle,
-                          display: 'block',
-                          ...solutionHoverGlowStyle,
-                          ...(setCommitted ? lockpickAnimationStyle : {}),
-                        }}
-                      >
-                        <img
-                          alt=""
-                          aria-hidden="true"
-                          draggable={false}
-                          src={hoveringSolution ? solutionImagePath(hoveringSolution) : visibleSlot.imageSrc}
-                          style={solutionImageStyle}
-                        />
+              {slotPicks.map(({ pick, pickIndex }, stackIndex) => {
+                const pickSolution = solutionsById()[String(pick.solutionId)];
+                const pickRoll = setCommitted ? setRolls?.pickRolls?.[pickIndex] : undefined;
+                return (
+                  <button
+                    aria-label={`Put ${pickSolution?.mSolutionName ?? visibleSlot.name} back`}
+                    className="morkahja-footer-button"
+                    data-solution-hover={slot}
+                    data-solution-ids={String(pick.solutionId)}
+                    disabled={setCommitted}
+                    key={`${encounterRevealKey}-hover-${slot}-${stackIndex}`}
+                    onClick={() => {
+                      handleSetPutBack(pickIndex);
+                    }}
+                    style={{
+                      ...solutionHoverButtonStyle,
+                      bottom: `calc(100% + ${8 + stackIndex * SOLUTION_HOVER_STACK_STEP_PX}px)`,
+                      zIndex: 2 + stackIndex,
+                    }}
+                    type="button"
+                  >
+                    <span style={solutionHoverRiseStyle}>
+                      <span style={solutionHoverBobStyle}>
+                        <span
+                          className="morkahja-footer-button-visual"
+                          style={{
+                            ...solutionIconShellStyle,
+                            display: 'block',
+                            ...solutionHoverGlowStyle,
+                            ...(setCommitted && pickRoll === undefined ? lockpickAnimationStyle : {}),
+                          }}
+                        >
+                          <img
+                            alt=""
+                            aria-hidden="true"
+                            draggable={false}
+                            src={pickSolution ? solutionImagePath(pickSolution) : visibleSlot.imageSrc}
+                            style={solutionImageStyle}
+                          />
+                        </span>
+                        {pickRoll !== undefined ? (
+                          <span aria-label={`Roll ${displayRollAsD20(pickRoll)}`} style={solutionHoverRollStyle}>
+                            {displayRollAsD20(pickRoll)}
+                          </span>
+                        ) : null}
                       </span>
                     </span>
-                  </span>
-                  {hoveringCount > 1 ? (
-                    <span aria-hidden="true" style={solutionHoverCountStyle}>{`×${hoveringCount}`}</span>
-                  ) : null}
-                </button>
-              ) : null}
+                  </button>
+                );
+              })}
               <button
                 aria-disabled={!actionsReady || !visibleSlot.available}
                 aria-label={

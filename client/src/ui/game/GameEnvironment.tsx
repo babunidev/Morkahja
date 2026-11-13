@@ -930,10 +930,6 @@ export function GameEnvironment({
     && room.loreGemActivatedSnapshotId === encounter.snapshotId
     && localParticipant?.choiceState !== 'disengaged';
   const loreGemCollected = localParticipant?.loreGemCollected === true || roomLoreGemEarned;
-  const showLoreGemReward = roomLoreGemEarned
-    || serverResolution?.loreGemGranted === true
-    || localParticipant?.preparedResult?.loreGemGranted === true
-    || localParticipant?.resolutionSummary?.loreGemGranted === true;
   function applyEncounterRoomSnapshot(nextRoom: EncounterRoomSnapshotDto): void {
     applySnapshotOnly(nextRoom);
   }
@@ -968,7 +964,6 @@ export function GameEnvironment({
               loreGemCollected={loreGemCollected}
               onRoomSnapshot={applyEncounterRoomSnapshot}
               isSystemEventActor={room?.systemEvent?.isLocalActor === true}
-              showLoreGemReward={showLoreGemReward}
               imageSrc={imagePath(encounterImageName)}
               inventory={avatar.inventory}
               displayInventory={displayInventory}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { noteLoreGemPickup } from '../loreGemPickup.js';
 import type { LoreGemOfferDto } from '@shared/contracts';
 
 import {
@@ -14,8 +15,6 @@ import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 
 const LORE_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 const LORE_GEM_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
-const LORE_GEM_COLLECT_ANIMATION_MS = 700;
-const LORE_GEM_POPUP_MS = 330;
 const LORE_GEM_TICK_MS = 200;
 
 type LoreGemState = 'waiting' | 'visible' | 'collecting' | 'collected';
@@ -105,37 +104,12 @@ const loreGemFadeInStyle: CSSProperties = {
   animation: `morkahja-lore-gem-fade-in ${FADE_DURATION_MS}ms ease forwards`,
 };
 
-const loreGemCollectingStyle: CSSProperties = {
-  animation: 'morkahja-lore-gem-collect 700ms ease-in forwards',
-};
-
 const loreGemImageStyle: CSSProperties = {
   display: 'block',
   width: '100%',
   height: 'auto',
   filter: 'drop-shadow(0 0 10px rgba(255, 204, 102, 0.75)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55))',
 };
-
-const loreGemPopupStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: 0,
-  zIndex: 31,
-  color: '#ffcc66',
-  fontFamily: 'Georgia, serif',
-  fontSize: 'clamp(0.9rem, 4vw, 1.3rem)',
-  fontWeight: 700,
-  lineHeight: 1,
-  textShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 3px 8px rgba(0, 0, 0, 0.85)',
-  pointerEvents: 'none',
-  animation: 'morkahja-lore-gem-popup 330ms ease-out forwards',
-};
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
 
 function offerDurationMs(offer: LoreGemOfferDto): number {
   if (typeof offer.durationMs === 'number' && offer.durationMs > 0) {
@@ -182,7 +156,6 @@ export function LoreBlock({
   visible: boolean;
 }) {
   const [loreGemState, setLoreGemState] = useState<LoreGemState>('waiting');
-  const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
   const collectedThisEncounterRef = useRef(false);
   const remainingMsRef = useRef<number | null>(null);
   const durationMsRef = useRef(0);
@@ -205,7 +178,6 @@ export function LoreBlock({
 
   useEffect(() => {
     collectedThisEncounterRef.current = false;
-    setLoreGemPopupVisible(false);
     durationMsRef.current = offerEligible ? offerDuration : 0;
     remainingMsRef.current = durationMsRef.current > 0 ? durationMsRef.current : null;
     setLoreGemState(offerEligible ? 'waiting' : 'collected');
@@ -265,14 +237,15 @@ export function LoreBlock({
       return;
     }
 
+    // The gem flies from here to the top left of the avatar once the server
+    // confirms the pickup (LoreGemAvatarBadge), and waits there for Continue.
+    const gemRect = document.querySelector('[data-lore-gem="true"]')?.getBoundingClientRect();
     setLoreGemState('collecting');
-    setLoreGemPopupVisible(true);
-    window.setTimeout(() => {
-      setLoreGemPopupVisible(false);
-    }, LORE_GEM_POPUP_MS);
 
     try {
-      await wait(LORE_GEM_COLLECT_ANIMATION_MS);
+      if (gemRect && gemRect.width > 0) {
+        noteLoreGemPickup(gemRect);
+      }
       await onLoreGemCollect();
       collectedThisEncounterRef.current = true;
       remainingMsRef.current = 0;
@@ -282,8 +255,6 @@ export function LoreBlock({
       if (!collectedThisEncounterRef.current) {
         setLoreGemState('visible');
       }
-    } finally {
-      setLoreGemPopupVisible(false);
     }
   }
 
@@ -312,20 +283,6 @@ export function LoreBlock({
           @keyframes morkahja-lore-gem-fade-in {
             0% { opacity: 0; transform: scale(0.88); }
             100% { opacity: 1; transform: scale(1); }
-          }
-          @keyframes morkahja-lore-gem-collect {
-            0% { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
-            12% { transform: translateX(-4px) rotate(-9deg) scale(1.06); }
-            24% { transform: translateX(4px) rotate(9deg) scale(1.05); }
-            36% { transform: translateX(-3px) rotate(-7deg) scale(1.03); }
-            48% { transform: translateX(3px) rotate(7deg) scale(1.02); }
-            62% { opacity: 0.75; transform: translateX(-2px) rotate(-4deg) scale(0.96); }
-            100% { opacity: 0; transform: translateY(12px) rotate(0deg) scale(0.55); }
-          }
-          @keyframes morkahja-lore-gem-popup {
-            0% { opacity: 0; transform: translate(-50%, -2px) scale(0.9); }
-            18% { opacity: 1; transform: translate(-50%, -12px) scale(1.1); }
-            100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
           }
           @keyframes morkahja-lore-gem-star-pulse {
             0%, 100% { opacity: 0.34; transform: scale(0.78); filter: brightness(0.88); }
@@ -387,7 +344,7 @@ export function LoreBlock({
                 position: 'relative',
                 display: 'block',
                 ...(loreGemState === 'visible' ? loreGemFadeInStyle : {}),
-                ...(loreGemState === 'collecting' ? loreGemCollectingStyle : {}),
+
               }}
             >
               <img
@@ -397,7 +354,6 @@ export function LoreBlock({
                 src={LORE_GEM_ASSET}
                 style={loreGemImageStyle}
               />
-              {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
             </span>
           </button>
         ) : null}
