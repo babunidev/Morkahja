@@ -287,3 +287,7 @@ Watching the frame timer, I saw it start over for every little animation: once f
 ### A line under every tooltip title — 2026-11-13
 
 The reward tooltips had a small divider between the item's name and its text, and I liked it enough to want it everywhere: on the solutions, the losses and the inventory. AI made it one shared piece and put it in every game tooltip with a title and text, and gave the dice tooltip enough room inside its frame along the way. **Verification:** screenshots of the tooltips at phone and desktop sizes in a headless browser; tests and build passed. **Not deployed yet.**
+
+### Stepping back through avatars — 2026-11-13
+
+Avatar creation used to let me go back to an earlier avatar, and I wanted that back, now with redo as well. Every pick and every randomize is saved in a list, and two small round arrow buttons beside the name step back and forward through it. If I step back and change something, the change slots in at that point and everything I did afterwards stays reachable. **Verification:** stepped through randomizing, undoing, changing and redoing in a headless browser at phone size; tests and build passed. **Not deployed yet.**

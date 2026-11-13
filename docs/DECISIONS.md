@@ -132,3 +132,10 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Buttons use the simple frame, not the four-line panel frame (an AI choice; small buttons have little room). Each later development step raises the beta number by one.
 
+## D-016 — Undo and redo in avatar creation keep later steps (2026-11-13)
+
+**Babuni's direction:** an undo button left of the name and a redo button right of it, subtle and round with curved arrows; every action saves the combination in "a normal list". On a change after stepping back, Babuni first said "it removes what followed after", then specified that "it still keeps these changes inside this gap, and I go forward to the next stuff that I did afterwards, so that it fully works going forth and back".
+
+**AI implementation:** the second description: a change after undo is inserted after the current step and later steps remain (`creationHistory.ts`). Typing a name amends the current step.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Switching to the first description (drop later steps) is a one-line change if preferred.

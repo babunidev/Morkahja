@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-45-nov-4-13',
-    version: '0.9.0-beta.45',
+    id: 'beta-46-nov-4-13',
+    version: '0.9.0-beta.46',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -56,6 +56,7 @@ const PATCH_RELEASES: PatchRelease[] = [
         notes: [
           'The game, the welcome screen, avatar creation and the menus fit and stay centred on phone screens.',
           'Avatar creation is rearranged: all choices on top, a big avatar with its name below, and clear rings around what you picked.',
+          'Undo and redo in avatar creation: step back to an earlier combination, change it, and step forward again.',
           'Every panel, menu, button and tooltip has the new line frame with cut corners.',
           'A new title picker on your profile, in the game’s own style.',
           'The Friends list fits on phones, and its buttons grow and glow like the others.',

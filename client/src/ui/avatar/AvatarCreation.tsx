@@ -30,6 +30,7 @@ import { randomRingDashArray, seedFromText } from '../game/blocks/encounterFrame
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { GameTooltipFrame } from '../game/GameTooltip.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
+import { amendStep, canRedo, canUndo, recordStep, redoStep, startHistory, undoStep } from './creationHistory.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -350,7 +351,9 @@ const footerImageButtonShellStyle: CSSProperties = {
 
 const nameInputStyle: CSSProperties = {
   flexShrink: 0,
-  width: 'min(100%, clamp(160px, 50vw, 260px))',
+  // Leaves room for the undo and redo buttons beside it.
+  width: 'clamp(130px, 46vw, 240px)',
+  minWidth: 0,
   padding: '6px 10px',
   ...simpleFrameStyle({ background: 'rgba(31, 12, 6, 0.78)', opacity: 0.95 }),
   boxSizing: 'border-box',
@@ -530,6 +533,75 @@ function CreationImageButton({
   );
 }
 
+interface Combination {
+  portraitIndex: number;
+  frameIndex: number;
+  avatarName: string;
+}
+
+function sameCombination(a: Combination, b: Combination): boolean {
+  return a.portraitIndex === b.portraitIndex && a.frameIndex === b.frameIndex && a.avatarName === b.avatarName;
+}
+
+const nameRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  maxWidth: '100%',
+  flexShrink: 0,
+};
+
+const historyButtonVisualStyle: CSSProperties = {
+  width: 30,
+  height: 30,
+  borderRadius: '50%',
+  border: '1px solid rgba(255, 204, 102, 0.45)',
+  background: 'rgba(31, 12, 6, 0.7)',
+  color: 'rgba(255, 204, 102, 0.85)',
+  boxSizing: 'border-box',
+};
+
+/** A subtle round undo or redo button with a curved arrow (Babuni's direction, 2026-11-13). */
+function HistoryButton({
+  direction,
+  disabled,
+  onClick,
+}: {
+  direction: 'undo' | 'redo';
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const label = direction === 'undo' ? 'Undo: previous combination' : 'Redo: next combination';
+  return (
+    <button
+      aria-label={label}
+      className="morkahja-panel-button"
+      disabled={disabled}
+      onClick={() => {
+        playSfx(DEFAULT_BUTTON_SOUND);
+        onClick();
+      }}
+      style={{ flexShrink: 0, opacity: disabled ? 0.35 : 1 }}
+      title={direction === 'undo' ? 'Undo' : 'Redo'}
+      type="button"
+    >
+      <span className="morkahja-panel-button-visual" style={historyButtonVisualStyle}>
+        <svg
+          aria-hidden="true"
+          height="16"
+          style={{ transform: direction === 'redo' ? 'scaleX(-1)' : undefined }}
+          viewBox="0 0 24 24"
+          width="16"
+        >
+          <path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+          <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 const SELECTION_GOLD = '#ffcc66';
 
 /**
@@ -609,9 +681,17 @@ export function AvatarCreation({
     },
     [frames, presetAvatar],
   );
-  const [portraitIndex, setPortraitIndex] = useState(initialPortraitIndex);
-  const [frameIndex, setFrameIndex] = useState(initialFrameIndex);
-  const [avatarName, setAvatarName] = useState(() => presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar');
+  // Every combination chosen, for undo and redo (creationHistory.ts).
+  const [history, setHistory] = useState(() => startHistory<Combination>({
+    portraitIndex: initialPortraitIndex,
+    frameIndex: initialFrameIndex,
+    avatarName: presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar',
+  }));
+  const current = history.entries[history.index]!;
+  const { portraitIndex, frameIndex, avatarName } = current;
+  const commit = (next: Combination): void => {
+    setHistory((existing) => recordStep(existing, next, sameCombination));
+  };
   const [optionTooltip, setOptionTooltip] = useState<OptionTooltipState | null>(null);
   const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number } | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -674,9 +754,8 @@ export function AvatarCreation({
   const role = roleFromPortrait(portrait);
   const gender = genderFromPortrait(portrait);
 
-  function selectPortraitIndex(nextIndex: number): void {
-    setPortraitIndex(nextIndex);
-    setAvatarName(portraits[nextIndex].avatarName);
+  function selectPortraitIndex(nextIndex: number, nextFrameIndex = frameIndex): void {
+    commit({ portraitIndex: nextIndex, frameIndex: nextFrameIndex, avatarName: portraits[nextIndex].avatarName });
   }
 
   function matchingPortraits(nextRace: AvatarRace, nextRole: AvatarRole, nextGender: AvatarGender): PortraitRecord[] {
@@ -708,8 +787,8 @@ export function AvatarCreation({
     const selectedPortrait = randomEntry(candidates.length > 0 ? candidates : portraits);
     const nextIndex = portraits.findIndex((candidate) => candidate.avatarID === selectedPortrait.avatarID);
 
-    selectPortraitIndex(nextIndex >= 0 ? nextIndex : 0);
-    setFrameIndex(randomIndex(frames.length));
+    // Portrait and frame change together: one step.
+    selectPortraitIndex(nextIndex >= 0 ? nextIndex : 0, randomIndex(frames.length));
   }
 
   function showOptionTooltip(
@@ -877,7 +956,7 @@ export function AvatarCreation({
                   imageSrc={`${UI_ROOT}/im_button_arrowb_left.webp`}
                   isPressed={isPressed}
                   onClick={() => {
-                    setFrameIndex((current) => wrapIndex(current - 1, frames.length));
+                    commit({ ...current, frameIndex: wrapIndex(frameIndex - 1, frames.length) });
                   }}
                   pressAnimation={pressAnimation}
                   pressKey="avatar-frame-prev"
@@ -889,7 +968,7 @@ export function AvatarCreation({
                   imageSrc={`${UI_ROOT}/im_button_arrowb_right.webp`}
                   isPressed={isPressed}
                   onClick={() => {
-                    setFrameIndex((current) => wrapIndex(current + 1, frames.length));
+                    commit({ ...current, frameIndex: wrapIndex(frameIndex + 1, frames.length) });
                   }}
                   pressAnimation={pressAnimation}
                   pressKey="avatar-frame-next"
@@ -931,15 +1010,29 @@ export function AvatarCreation({
 
         <div style={avatarAreaStyle}>
           <div className="morkahja-avatar-randomize-preview" style={previewWrapStyle}>
-            <input
-              aria-label="Avatar name"
-              onChange={(event) => {
-                setAvatarName(event.target.value);
-              }}
-              style={nameInputStyle}
-              type="text"
-              value={avatarName}
-            />
+            <div style={nameRowStyle}>
+              <HistoryButton
+                direction="undo"
+                disabled={!canUndo(history)}
+                onClick={() => setHistory(undoStep)}
+              />
+              <input
+                aria-label="Avatar name"
+                onChange={(event) => {
+                  // Typing changes the current step instead of adding steps.
+                  const name = event.target.value;
+                  setHistory((existing) => amendStep(existing, { ...existing.entries[existing.index]!, avatarName: name }));
+                }}
+                style={nameInputStyle}
+                type="text"
+                value={avatarName}
+              />
+              <HistoryButton
+                direction="redo"
+                disabled={!canRedo(history)}
+                onClick={() => setHistory(redoStep)}
+              />
+            </div>
             <div style={{ position: 'relative', display: 'grid' }}>
               <CreationImageButton
                 ariaLabel="Randomize portrait"

@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: undo and redo in avatar creation; 0.9.0-beta.46
+
+- **New (Babuni's direction, a feature brought back): undo and redo in Create Avatar.** Subtle round buttons with curved arrows sit left (undo) and right (redo) of the name. Every action saves the combination of portrait, frame and name in one list: a race, role or sex, randomizing (portrait and frame together are one step) and the frame arrows. Typing a name changes the current step without adding steps. A change made after stepping back is inserted right after the current step and the later steps are kept, so redo still reaches them (Babuni: "it still keeps these changes inside this gap, and I go forward to the next stuff that I did afterwards"). Logic in `client/src/ui/avatar/creationHistory.ts` with tests.
+- **Version 0.9.0-beta.46** (D-015). Patch notes line added.
+- **Verification:** client typecheck, tests (29, three new) and production build passed. Headless Chrome at 412 × 915: three randomizations, two undos, a race change (inserted), two redos reaching the later steps, one undo; portrait, frame and name followed each step and the buttons were disabled at the ends. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: a divider under every tooltip title; 0.9.0-beta.45
 
 - **Change (Babuni's direction): every game tooltip separates its title from its text with the frame divider**, as the reward tooltips did (the line plus a gapped line, its ends meeting the tooltip frame). Shared as `TooltipDivider` in `GameTooltip.tsx` and used by solutions (including the dice and "not in inventory"), rewards and losses (now always under the title, also without a description), Inventory and Skillbook items, the menu buttons, the avatar preview, Continue and the party tooltips (`encounterTooltip.tsx`).
