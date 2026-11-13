@@ -113,7 +113,7 @@ const gemsDonated = {
 assert.equal(isVisibleInScribesFeed(gemsDonated, 'player-a'), true);
 assert.equal(
   renderEventMessage(gemsDonated),
-  'Babuni donated 50 yellow red gems to the team.',
+  'Babuni gave 50 Yellow Red Gems to Babuni.',
 );
 
 const prosperityTriumph = {
@@ -161,7 +161,7 @@ const atranorPendingDeath = {
 
 assert.equal(
   renderEventMessage(atranorPendingDeath),
-  'Lyra entered Atranor. The gods decide their fate',
+  'Lyra entered Atranor. The gods decide their fate.',
 );
 assert.equal(
   resolveScribesIconUrl(atranorPendingDeath),
@@ -258,7 +258,7 @@ assert.equal(isVisibleInScribesFeed(accountKeyReminder, 'player-a'), true);
 assert.equal(isVisibleInScribesFeed(accountKeyReminder, 'player-b'), false);
 assert.equal(
   renderEventMessage(accountKeyReminder),
-  'Keep your account key safe. You just unlocked Keldor. Back up Morkahja_Babuni.key somewhere secure — losing it means permanent loss of access.',
+  'Keep your key safe. You just unlocked Keldor. Save Morkahja_Babuni.key somewhere secure: your key is your journey, and without it nothing can be restored.',
 );
 assert.equal(
   resolveScribesIconUrl(accountKeyReminder),
@@ -281,7 +281,7 @@ const supportNudge = {
 assert.equal(isVisibleInScribesFeed(supportNudge, 'player-a'), true);
 assert.equal(
   renderEventMessage(supportNudge),
-  'If you\'re enjoying Morkahja, consider supporting us — donate gems, unlock an expansion, or pick up a dice skin. We\'d be super happy!',
+  'Enjoying Morkahja? Donating gems, unlocking an expansion or picking up a dice skin gives me more time to work on the world. Every bit helps. Thank you!',
 );
 
 const encounterFailed = {
@@ -330,7 +330,7 @@ const adventureStarted = {
 assert.equal(isVisibleInScribesFeed(adventureStarted, 'player-b'), true);
 assert.equal(
   renderEventMessage(adventureStarted),
-  'Lyra starts an adventure.',
+  'Lyra sets out on an adventure.',
 );
 
 const roomCreated = {
@@ -338,7 +338,7 @@ const roomCreated = {
   timestamp: Date.now(),
   playerId: 'player-a',
   avatarId: 'avatar-a',
-  type: 'room_created',
+  type: 'room_encounter_started',
   visibility: 'friends' as const,
   importance: 'low' as const,
   payload: {
@@ -349,10 +349,6 @@ const roomCreated = {
   },
 };
 
-assert.equal(
-  renderEventMessage(roomCreated),
-  'Lyra encounters Frozen Pass.',
-);
 
 const roomEncounterStarted = {
   ...roomCreated,
@@ -437,3 +433,26 @@ assert.equal(
 assert.equal(isVisibleInScribesFeed(levelUpMilestone, 'player-b'), true);
 
 console.log('achievementScribes.test.ts passed');
+
+// A reader's own entries are told to them; others' (and the admin console) in the third person.
+assert.equal(
+  renderEventMessage(gemsDonated, gemsDonated.playerId),
+  'You gave 50 Yellow Red Gems to Babuni. Thank you, it helps a lot!',
+);
+assert.equal(
+  renderEventMessage(adventurerRankUp, adventurerRankUp.playerId),
+  'You unlocked the "Explorer" achievement. Congrats!',
+);
+assert.equal(
+  renderEventMessage(adventurerRankUp, 'someone-else'),
+  renderEventMessage(adventurerRankUp),
+);
+assert.equal(
+  renderEventMessage(hearthBlessingClaimed, hearthBlessingClaimed.playerId),
+  'You claimed the Hearth Blessing.',
+);
+assert.match(
+  renderEventMessage(hearthBlessingReady, hearthBlessingReady.playerId),
+  /^Your Hearth Blessing is full after \d+ encounters\. It is ready to claim\.$/,
+);
+

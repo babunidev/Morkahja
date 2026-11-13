@@ -29,8 +29,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-54-nov-4-13',
-    version: '0.9.0-beta.54',
+    id: 'beta-55-nov-4-13',
+    version: '0.9.0-beta.55',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -67,6 +67,9 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Undo and redo in avatar creation: step back to an earlier combination, change it, and step forward again.',
           'Every panel, menu, button and tooltip has the new line frame with cut corners.',
           'Menus, Lore, Inventory and Skillbook open once their pictures are loaded; the button you pressed pulses meanwhile. A new avatar fades in once it is ready.',
+          'In encounters that need several solutions, each chosen copy hovers on its own above its slot and shows its own roll before they fly in together; the dice shows its roll when it finishes the set.',
+          'A lore gem you pick up flies to the top left of your avatar and waits there; when you continue, it sinks into your avatar. It no longer takes a reward place.',
+          'About Us has Privacy Policy and Terms of Service buttons at the bottom, next to Donation.',
           'New Terms of Service and Privacy Policy in plain words, and the welcome screen\'s Restore button is now called Use Your Key.',
           'Tooltips fade softly in and out; inventory items on phones open their tooltip with a tap anywhere on the item.',
           'A new title picker on your profile, in the game’s own style.',

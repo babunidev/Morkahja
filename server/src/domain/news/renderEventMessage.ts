@@ -77,14 +77,24 @@ function outcomeVerb(outcome: string | undefined, success: boolean | undefined):
   }
 }
 
-export function renderEventMessage(event: GameEvent): string {
+function gemCount(amount: number): string {
+  return `${amount} Yellow Red ${amount === 1 ? 'Gem' : 'Gems'}`;
+}
+
+/**
+ * The Scribes' line for an event. `viewingPlayerId` is the reader: their own
+ * entries are told to them ("You …"); without a reader (the admin console)
+ * every entry is told in the third person. Game moments name the avatar,
+ * account matters (achievements, gems, purchases, the Hearth Blessing) the
+ * player.
+ */
+export function renderEventMessage(event: GameEvent, viewingPlayerId?: string): string {
   const payload = event.payload;
+  const own = viewingPlayerId !== undefined && event.playerId === viewingPlayerId;
 
   switch (event.type) {
     case 'avatar_created':
       return `${avatarLabel(payload)} joined the world as a ${readString(payload, 'race') ?? 'mysterious'} ${readString(payload, 'role') ?? 'traveler'}.`;
-    case 'encounter_started':
-      return `${avatarLabel(payload)} entered ${encounterLabel(payload)}.`;
     case 'encounter_resolved': {
       const outcome = readString(payload, 'outcome')?.toLowerCase();
       const label = encounterLabel(payload);
@@ -96,8 +106,7 @@ export function renderEventMessage(event: GameEvent): string {
         return `${avatar} failed at ${label}.`;
       }
       const success = payload.success === true;
-      const base = `${avatar} ${outcomeVerb(outcome, success)} ${label}.`;
-      return base;
+      return `${avatar} ${outcomeVerb(outcome, success)} ${label}.`;
     }
     case 'encounter_failed':
       return `${avatarLabel(payload)} failed at ${encounterLabel(payload)}.`;
@@ -109,55 +118,59 @@ export function renderEventMessage(event: GameEvent): string {
     }
     case 'avatar_died':
       if (payload.pendingDeathEncounter === true) {
-        return `${avatarLabel(payload)} entered Atranor. The gods decide their fate`;
+        return `${avatarLabel(payload)} entered Atranor. The gods decide their fate.`;
       }
       return `${avatarLabel(payload)} didn't receive the blessing of the gods.`;
     case 'item_obtained': {
       const itemName = readString(payload, 'solutionName') ?? 'a treasure';
       return `${avatarLabel(payload)} claimed ${itemName}.`;
     }
-    case 'spell_obtained': {
-      const spellName = readString(payload, 'solutionName') ?? 'a spell';
-      return `${avatarLabel(payload)} learned ${spellName}.`;
-    }
     case 'gems_received': {
       const amount = readNumber(payload, 'amount') ?? 1;
-      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
-      return `${playerLabel(payload)} received ${amount} ${gemLabel}.`;
+      return own
+        ? `You received ${gemCount(amount)}.`
+        : `${playerLabel(payload)} received ${gemCount(amount)}.`;
     }
     case 'gems_donated': {
       const amount = readNumber(payload, 'amount') ?? 1;
-      const gemLabel = amount === 1 ? 'yellow red gem' : 'yellow red gems';
-      return `${playerLabel(payload)} donated ${amount} ${gemLabel} to the team.`;
+      return own
+        ? `You gave ${gemCount(amount)} to Babuni. Thank you, it helps a lot!`
+        : `${playerLabel(payload)} gave ${gemCount(amount)} to Babuni.`;
     }
     case 'support_purchase': {
       const itemLabel = readString(payload, 'itemLabel') ?? 'new content';
-      return `${playerLabel(payload)} supported Morkahja's development and unlocked ${itemLabel}. Thank you for keeping the adventure alive!`;
+      return own
+        ? `You unlocked ${itemLabel} and supported Morkahja. Thank you: it gives me more time for this world!`
+        : `${playerLabel(payload)} unlocked ${itemLabel} and supported Morkahja.`;
     }
     case 'account_key_security_reminder': {
-      const filename = readString(payload, 'recoveryKeyFilename') ?? 'your recovery key file';
+      const filename = readString(payload, 'recoveryKeyFilename') ?? 'your key file';
       const itemLabel = readString(payload, 'itemLabel');
       const unlockNote = itemLabel ? ` You just unlocked ${itemLabel}.` : '';
-      return `Keep your account key safe.${unlockNote} Back up ${filename} somewhere secure — losing it means permanent loss of access.`;
+      return `Keep your key safe.${unlockNote} Save ${filename} somewhere secure: your key is your journey, and without it nothing can be restored.`;
     }
     case 'support_appreciation_nudge':
-      return 'If you\'re enjoying Morkahja, consider supporting us — donate gems, unlock an expansion, or pick up a dice skin. We\'d be super happy!';
+      return 'Enjoying Morkahja? Donating gems, unlocking an expansion or picking up a dice skin gives me more time to work on the world. Every bit helps. Thank you!';
     case 'achievement_unlocked': {
       const rankTitle = readString(payload, 'rankTitle');
-      return formatAchievementUnlockMessage(rankTitle, 'public', playerLabel(payload));
+      return own
+        ? formatAchievementUnlockMessage(rankTitle, 'self')
+        : formatAchievementUnlockMessage(rankTitle, 'public', playerLabel(payload));
     }
     case 'hearth_blessing_ready': {
       const encountersRequired = readNumber(payload, 'encountersRequired') ?? 42;
-      return `${playerLabel(payload)} filled the Hearth Blessing (${encountersRequired} encounters). It is ready to claim.`;
+      return own
+        ? `Your Hearth Blessing is full after ${encountersRequired} encounters. It is ready to claim.`
+        : `${playerLabel(payload)} filled the Hearth Blessing (${encountersRequired} encounters). It is ready to claim.`;
     }
     case 'daily_reward_claimed':
-      return `${playerLabel(payload)} claimed the Hearth Blessing.`;
+      return own
+        ? 'You claimed the Hearth Blessing.'
+        : `${playerLabel(payload)} claimed the Hearth Blessing.`;
     case 'help_requested':
-    case 'help_called':
       return `${avatarLabel(payload)} calls out for help.`;
     case 'adventure_started':
-      return `${avatarLabel(payload)} starts an adventure.`;
-    case 'room_created':
+      return `${avatarLabel(payload)} sets out on an adventure.`;
     case 'room_encounter_started':
       return `${avatarLabel(payload)} encounters ${encounterLabel(payload)}.`;
     default:

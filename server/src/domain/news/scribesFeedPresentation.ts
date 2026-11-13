@@ -105,8 +105,7 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
       const rewardIconName = readString(payload, 'rewardIconName');
       return rewardIconName ? `${SOLUTION_IMAGE_ROOT}/${rewardIconName}.webp` : undefined;
     }
-    case 'item_obtained':
-    case 'spell_obtained': {
+    case 'item_obtained': {
       const iconName = readString(payload, 'solutionIconName');
       return iconName ? `${SOLUTION_IMAGE_ROOT}/${iconName}.webp` : undefined;
     }

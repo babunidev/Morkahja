@@ -538,10 +538,7 @@ async function resolveJoinAction(
     if (toPlayerId !== viewingPlayerId) {
       return undefined;
     }
-  } else if (
-    event.type !== 'adventure_started'
-    && event.type !== 'help_called'
-  ) {
+  } else if (event.type !== 'adventure_started') {
     return undefined;
   }
 
@@ -592,7 +589,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       eventId: event.eventId,
       timestamp: event.timestamp,
       authorName: resolveEventAuthorName(event, playerNames),
-      message: renderEventMessage(event),
+      message: renderEventMessage(event, playerId),
       importance: event.importance,
       eventType: event.type,
       visibility: resolveActivityFeedVisibility(event),

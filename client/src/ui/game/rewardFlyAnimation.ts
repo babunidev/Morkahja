@@ -923,6 +923,17 @@ export function recordCommittedAction(
   committedAction = { snapshotId, action, spendTaken: false, solutionSet };
 }
 
+/**
+ * A committed solution set first shows each solution's own roll on it, then
+ * the solutions fly into the encounter (and the rewards wait for them).
+ */
+export const SET_ROLLS_DISPLAY_MS = 1300;
+
+/** How long the result waits before the spent solutions fly: only for a committed set. */
+export function setRollsPauseMs(snapshotId: string | undefined): number {
+  return committedSolutionSetFor(snapshotId) ? SET_ROLLS_DISPLAY_MS : 0;
+}
+
 /** The solution set the player committed in this encounter, if it was one. */
 export function committedSolutionSetFor(snapshotId: string | undefined): SolutionSetSubmission | null {
   return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.solutionSet : null;

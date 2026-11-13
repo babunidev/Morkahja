@@ -25,6 +25,7 @@ import {
   claimAnimationOnce,
   committedActionFor,
   committedSolutionSetFor,
+  setRollsPauseMs,
   takeCommittedSolutionSpend,
   getAvatarPortraitRect,
   getFooterButtonRect,
@@ -59,17 +60,12 @@ import {
 } from '../visibleEncounterRewards.js';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
-  FADE_DURATION_MS,
   fadeTransition,
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
 import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
-const LORE_GEM_REWARD_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
-const LORE_GEM_REWARD_ID = 90_001;
-const LORE_GEM_POPUP_MS = 330;
-const LORE_GEM_ACTIVATE_MS = 700;
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 const ESSENCE_INVENTORY_TYPE = 3;
 /** A real essence (a life); Atranor items share the inventory type but not the slots. */
@@ -257,43 +253,6 @@ const rewardImageStyle: CSSProperties = {
 
 
 
-const loreGemRewardButtonStyle: CSSProperties = {
-  ...rewardItemStyle,
-  position: 'relative',
-};
-
-const loreGemOutcomeImageStyle: CSSProperties = {
-  ...solutionIconImageBaseStyle,
-  width: 48,
-  height: 48,
-  boxShadow: '0 0 12px rgba(255, 204, 102, 0.42), 0 5px 10px rgba(0, 0, 0, 0.46)',
-  animation: 'morkahja-reward-shake 3.2s ease-in-out infinite',
-  transformOrigin: '50% 50%',
-};
-
-const loreGemFadeInStyle: CSSProperties = {
-  animation: `morkahja-lore-gem-fade-in ${FADE_DURATION_MS}ms ease forwards`,
-};
-
-const loreGemActivateStyle: CSSProperties = {
-  animation: `morkahja-lore-gem-collect ${LORE_GEM_ACTIVATE_MS}ms ease-in forwards`,
-};
-
-const loreGemPopupStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: 0,
-  zIndex: 31,
-  color: '#ffcc66',
-  fontFamily: 'Georgia, serif',
-  fontSize: 'clamp(0.9rem, 4vw, 1.3rem)',
-  fontWeight: 700,
-  lineHeight: 1,
-  textShadow: '0 0 7px rgba(255, 204, 102, 0.95), 0 3px 8px rgba(0, 0, 0, 0.85)',
-  pointerEvents: 'none',
-  animation: 'morkahja-lore-gem-popup 330ms ease-out forwards',
-};
-
 const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
 /** More than four rewards (some level-ups): the rest float above the bar. */
@@ -369,7 +328,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueWaitingAfterPress = false,
     deferRewardDismiss = false,
     disabled = false,
-    showLoreGemReward = false,
     encounterDifficulty: _encounterDifficulty,
     avatarLevel = 1,
     encounterId,
@@ -394,7 +352,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     continueWaitingAfterPress?: boolean;
     deferRewardDismiss?: boolean;
     disabled?: boolean;
-    showLoreGemReward?: boolean;
     encounterDifficulty: number;
     avatarLevel?: number;
     encounterId: number;
@@ -444,8 +401,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const [continueEnableRattle, setContinueEnableRattle] = useState(false);
   const [continuePressAnimationDone, setContinuePressAnimationDone] = useState(false);
   const [continueFloatingAfterPress, setContinueFloatingAfterPress] = useState(false);
-  const [loreGemPopupVisible, setLoreGemPopupVisible] = useState(false);
-  const [loreGemActivating, setLoreGemActivating] = useState(false);
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rewardButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const lossButtonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
@@ -490,7 +445,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     ? []
     : [
       ...rewards.map((reward) => `r:${reward.solution.mSolutionID}`),
-      ...(showLoreGemReward && roll !== null ? [`r:${LORE_GEM_REWARD_ID}`] : []),
       ...losses.map((loss) => `l:${loss.solution.mSolutionID}`),
     ];
   const collectMode = collectibleKeys.length > 0;
@@ -528,36 +482,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setContinueEnableRattle(false);
     setContinuePressAnimationDone(false);
     setContinueFloatingAfterPress(false);
-    setLoreGemPopupVisible(false);
-    setLoreGemActivating(false);
     activationRevealDoneRef.current = false;
     postPressContinueRef.current = false;
     rewardButtonRefs.current.clear();
     lossButtonRefs.current.clear();
   }, [roll, losses.length, encounterSnapshotId]);
-
-  useEffect(() => {
-    if (readOnlyWitness || !showLoreGemReward || roll === null || hidden) {
-      setLoreGemPopupVisible(false);
-      setLoreGemActivating(false);
-      return undefined;
-    }
-
-    setLoreGemActivating(true);
-    setLoreGemPopupVisible(true);
-
-    const activateTimer = window.setTimeout(() => {
-      setLoreGemActivating(false);
-    }, LORE_GEM_ACTIVATE_MS);
-    const popupTimer = window.setTimeout(() => {
-      setLoreGemPopupVisible(false);
-    }, LORE_GEM_POPUP_MS);
-
-    return () => {
-      window.clearTimeout(activateTimer);
-      window.clearTimeout(popupTimer);
-    };
-  }, [hidden, roll, showLoreGemReward]);
 
   useEffect(() => {
     if (!localContinuePressed || !continueWaitingAfterPress) {
@@ -834,25 +763,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
   function buildRewardFlights(): RewardFlightSpec[] {
     const flights: RewardFlightSpec[] = [];
 
-    if (showLoreGemReward && !collectedRef.current.has(`r:${LORE_GEM_REWARD_ID}`)) {
-      const button = rewardButtonRefs.current.get(LORE_GEM_REWARD_ID)
-        ?? document.querySelector<HTMLButtonElement>(
-          `[data-reward-fly-source="${LORE_GEM_REWARD_ID}"]`,
-        );
-      const sourceRect = button?.getBoundingClientRect();
-
-      if (sourceRect && sourceRect.width > 0 && sourceRect.height > 0) {
-        flights.push({
-          id: 'reward-fly-lore-gem',
-          imageSrc: LORE_GEM_REWARD_ASSET,
-          size: Math.round(sourceRect.width),
-          sourceRect,
-          // Gems belong to the player, not the inventory: onto the avatar.
-          target: 'avatar',
-        });
-      }
-    }
-
     for (const reward of rewards) {
       const solutionId = reward.solution.mSolutionID;
       if (collectedRef.current.has(`r:${solutionId}`)) {
@@ -1045,7 +955,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const isReward = key.startsWith('r:');
     const solutionId = Number(key.slice(2));
     const flightId = isReward
-      ? (solutionId === LORE_GEM_REWARD_ID ? 'reward-fly-lore-gem' : `reward-fly-${solutionId}`)
+      ? `reward-fly-${solutionId}`
       : `loss-dismiss-${solutionId}`;
     let rewardFlights = isReward ? buildRewardFlights().filter((flight) => flight.id === flightId) : [];
     // An essence goes into a free slot on the avatar; with all five filled, to the inventory.
@@ -1078,7 +988,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const collectedChange = isReward
       ? rewards.find((reward) => reward.solution.mSolutionID === solutionId)
       : losses.find((loss) => loss.solution.mSolutionID === solutionId);
-    if (collectedChange && solutionId !== LORE_GEM_REWARD_ID) {
+    if (collectedChange) {
       onItemCollected?.({
         solutionId,
         quantity: collectedChange.quantity,
@@ -1135,59 +1045,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
     resultTips.hide();
   }
 
-
-  function renderLoreGemRewardIcon(placement: CSSProperties = {}) {
-    const loreGemReward: VisibleReward = {
-      quantity: 1,
-      solution: {
-        mSolutionIconName: 'lore_gem_currency',
-        mSolutionID: LORE_GEM_REWARD_ID,
-        mSolutionInventoryType: 0,
-        mSolutionName: 'Yellow Red Gem',
-        mSolutionText: 'A rare gem earned from hidden lore.',
-        mSolutionUses: 1,
-      },
-    };
-
-    return (
-      <button
-        aria-label="Yellow Red Gem, quantity +1"
-        className="morkahja-footer-button"
-        data-reward-fly-source={LORE_GEM_REWARD_ID}
-        key="lore-gem-reward"
-        ref={(element) => {
-          if (element) {
-            rewardButtonRefs.current.set(LORE_GEM_REWARD_ID, element);
-            return;
-          }
-          rewardButtonRefs.current.delete(LORE_GEM_REWARD_ID);
-        }}
-        {...resultTips.bindTooltip(() => itemTooltipContent(loreGemReward, '+'))}
-        onContextMenu={preventImageContextMenu}
-        onClick={() => { void collectItem(`r:${LORE_GEM_REWARD_ID}`); }}
-        style={{ ...loreGemRewardButtonStyle, ...placement, ...collectStyle(`r:${LORE_GEM_REWARD_ID}`) }}
-        type="button"
-      >
-        <span
-          className="morkahja-footer-button-visual"
-          style={{
-            position: 'relative',
-            display: 'block',
-            ...(loreGemActivating ? loreGemActivateStyle : loreGemFadeInStyle),
-          }}
-        >
-          <img
-            alt=""
-            aria-hidden="true"
-            {...protectedImageProps}
-            src={LORE_GEM_REWARD_ASSET}
-            style={loreGemOutcomeImageStyle}
-          />
-          {loreGemPopupVisible ? <span style={loreGemPopupStyle}>+1</span> : null}
-        </span>
-      </button>
-    );
-  }
 
   function renderSolutionIcon(
     change: EncounterInventoryChange | VisibleReward,
@@ -1373,7 +1230,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
         }).filter((flight) => flight !== null);
       });
       if (flights.length > 0) {
-        void playUsedSolutionsIntoEncounter(flights);
+        // The rolls on the hovering solutions are read first, then they fly.
+        // Not cancelled on a re-render: the spend is taken once per encounter.
+        window.setTimeout(() => {
+          void playUsedSolutionsIntoEncounter(flights);
+        }, setRollsPauseMs(encounterSnapshotId));
         return;
       }
     }
@@ -1438,9 +1299,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
         );
       };
       if (solutionFlew) {
-        startRewardTimer(Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
+        const pauseMs = setRollsPauseMs(encounterSnapshotId);
+        startRewardTimer(pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {
-          window.setTimeout(resolve, Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
+          window.setTimeout(resolve, pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
         });
       }
       await waitForNextPaint();
@@ -1629,11 +1491,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
         </button>
       ) : null}
       {(() => {
-        // One row in the solution bar's places: rewards, an earned lore gem,
-        // then losses, filled middle first; anything beyond five floats above.
+        // One row in the solution bar's places: rewards, then losses
+        // (the lore gem waits on the avatar instead, LoreGemAvatarBadge), filled middle first; anything beyond five floats above.
         const showRewards = !rewardsFlyingAway && !rewardDismissInProgress;
         const showLosses = losses.length > 0 && !lossesFlyingAway;
-        const showLoreGem = showRewards && !readOnlyWitness && showLoreGemReward && roll !== null;
         const rewardShown = (key: string): CSSProperties => ({
           opacity: rewardsEmerged || emergedRewardKeys.has(key) ? 1 : 0,
           // Fades in under its landed flyer, which then fades out over it.
@@ -1647,12 +1508,6 @@ export const ResultBlock = forwardRef(function ResultBlock(
               rewardImageStyle,
               { ...rewardItemStyle, ...placement, ...rewardShown(`r:${reward.solution.mSolutionID}`) },
             ))
-            : []),
-          ...(showLoreGem
-            ? [(placement: CSSProperties) => renderLoreGemRewardIcon({
-              ...placement,
-              ...rewardShown(`r:${LORE_GEM_REWARD_ID}`),
-            })]
             : []),
           ...(showLosses
             ? losses.map((loss) => (placement: CSSProperties) => renderLossIcon(loss, {

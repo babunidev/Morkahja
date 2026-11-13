@@ -6,7 +6,6 @@ const ROOM_START_JOIN_TOAST_EVENT_TYPES = new Set([
 
 const HELP_JOIN_TOAST_EVENT_TYPES = new Set([
   'help_requested',
-  'help_called',
 ]);
 
 export function isActivityJoinToastCandidate(entry: {

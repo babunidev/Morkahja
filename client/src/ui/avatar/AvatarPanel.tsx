@@ -8,6 +8,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
 import { EssenceSlotsRing } from './EssenceSlotsRing.js';
+import { LoreGemAvatarBadge } from '../game/blocks/LoreGemAvatarBadge.js';
 
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
@@ -365,6 +366,7 @@ export function AvatarPanel({
                 essences={avatar.inventory?.essences}
                 local
               />
+              <LoreGemAvatarBadge held={roomParticipant?.loreGemCollected === true} roomState={roomState} />
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge

@@ -1135,6 +1135,8 @@ export function preparedResultFromResolve(
     avatarDied: result.avatarDied,
     leveledUp: result.eventContext.leveledUp,
     gainedExperience: result.gainedExperience,
+    ...(result.resolution.pickRolls ? { pickRolls: result.resolution.pickRolls } : {}),
+    ...(result.resolution.diceFillRoll !== undefined ? { diceFillRoll: result.resolution.diceFillRoll } : {}),
   };
 }
 

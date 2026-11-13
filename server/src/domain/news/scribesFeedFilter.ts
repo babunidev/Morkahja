@@ -32,7 +32,6 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'encounter_failed':
       return isEncounterOutcomeVisible(event.payload);
     case 'item_obtained':
-    case 'spell_obtained':
       return isLootVisible(event.payload);
     case 'gems_received':
     case 'gems_donated':
@@ -48,16 +47,12 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
       return true;
     case 'adventure_started':
       return true;
-    case 'encounter_started':
-      return false;
     case 'help_requested':
       if (!viewingPlayerId) {
         return false;
       }
       return readString(event.payload, 'toPlayerId') === viewingPlayerId;
-    case 'room_created':
     case 'room_encounter_started':
-    case 'help_called':
       return true;
     default:
       return false;

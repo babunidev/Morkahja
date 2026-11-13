@@ -336,3 +336,17 @@ I like how the game behaves now, but a few things still pop. When I choose a sol
 
 I asked AI to read the Terms of Service and the Privacy Policy against the game we are actually making. Several things had drifted: Stripe payments were not mentioned, the terms said there was no way to restore a journey while the welcome screen offered exactly that, friends could be added one-sidedly without the texts saying so, and an old company name stood where my own should be. I decided that the key is simply the key, so the welcome button now says "Use Your Key"; that friends stay a one-sided link for playing together, now stated openly; that Morkahja is for adults, and children play only with their parents, with an on/off setting if mature content ever arrives; and that the documentation and development logs on my website show how the game is made. I did not want an extra step before payment, so the refund wording is gentler instead. AI rewrote both texts in a warmer voice and checked the facts in the code and on the server (D-021). **Verification:** release check and both texts read in the browser; not legal advice; released as 0.9.0-beta.54 the same evening.
 
+### The rules where people look for them — 2026-11-13
+
+The Terms of Service and the Privacy Policy could only be read on the welcome screen. I wanted them in About Us, next to the Donation button and in the same style: the two texts on the left, Donation on the right. AI added them there and gave the shared button style some room, so the longer labels no longer touch their frames. **Verification:** release check and a browser check on desktop and phone sizes; not yet released.
+
+AI then gave me an overview of every Scribe: when it is written, who sees it and what it says. Some lines still spoke of "the team" and "us", the key reminder used older words, and my own achievements were told back to me in the third person. I asked for the same tone as the new texts, and now the Scribes speak for one person, tell you about your own moments as "you", and use the same words for the key as the rest of the game (D-022).
+
+### The gem that had nowhere to go — 2026-11-13
+
+I picked up a lore gem in an encounter that then gave me five rewards. The gem wanted the sixth place in the reward row, there was none, and it got stuck halfway into the picture. I decided the gem does not belong in that row at all: when I take it in the Lore window, it flies to the top left of my avatar and waits; when I continue, it sinks into the avatar and disappears. AI built it on the avatar itself, with no change to how the server grants the gem, and played my exact case locally (D-023). **Verification:** release check and a local play-through with a gem and five rewards; not yet released.
+
+### Seeing every roll — 2026-11-13
+
+With several solutions hovering, I only saw the final roll on my avatar, and twice it looked as if one of my chosen items was swapped for another as they flew in. AI found that one hovering icon stood for all copies of a slot and showed only the first copy's picture, so an alternative item of the same type looked like a replacement, and that the icons were matched against the inventory again after the commit. Now every copy hovers on its own, stacked upward as I first imagined, shows the item it really is, and shows its own roll before they fly in together; the dice shows its roll when it finishes the set (D-024). **Verification:** release check, a new server test, and two local play-throughs; not yet released.
+

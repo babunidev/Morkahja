@@ -26,6 +26,7 @@ import {
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
 import { AnchoredGamePopover } from '../GameTooltip.js';
 import { EssenceSlotsRing } from '../../avatar/EssenceSlotsRing.js';
+import { LoreGemAvatarBadge } from './LoreGemAvatarBadge.js';
 
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
 
@@ -313,6 +314,7 @@ export function PartyMemberSlot({
                 portrait={portraitSrc}
               />
               <EssenceSlotsRing avatarId={participant.avatar.id} essences={participant.avatar.inventory?.essences} />
+              <LoreGemAvatarBadge held={participant.loreGemCollected === true} roomState={roomState} />
               <PartyParticipantChoiceBadge
                 hidden={detailsOpen}
                 participant={participant}
