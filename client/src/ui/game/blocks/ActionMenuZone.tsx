@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { menuPreparingClass, useMenuPreparingCheck } from '../../transitions/menuReadiness.js';
 import { GAME_FOOTER_BUTTONS } from '../gameUiAssets.js';
 import { DEFAULT_BUTTON_SOUND, LORE_SOUND, playSfx } from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
@@ -65,6 +66,7 @@ export function ActionMenuZone({
   const [footerRattling, setFooterRattling] = useState(false);
   const menuTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const isMenuPreparing = useMenuPreparingCheck();
 
   useEffect(() => {
     if (!readyRattleToken) {
@@ -91,7 +93,7 @@ export function ActionMenuZone({
         <button
           aria-label={isHelp ? 'Call for help' : button.alt}
           disabled={helpSpent}
-          className="morkahja-footer-button"
+          className={`morkahja-footer-button${menuPreparingClass(isMenuPreparing(`game:${button.alt.toLowerCase()}`))}`}
           data-morkahja-footer-target={button.target}
           key={button.alt}
           {...tip}

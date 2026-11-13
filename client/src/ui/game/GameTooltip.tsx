@@ -30,7 +30,7 @@ import { TOOLTIP_FRAME, cornerLegAt } from './blocks/encounterFrameGeometry.js';
  * item; appears after a short hover delay and fades in and out.
  */
 export const GAME_TOOLTIP_DELAY_MS = 350;
-export const GAME_TOOLTIP_FADE_MS = 120;
+export const GAME_TOOLTIP_FADE_MS = 200;
 export const TOOLTIP_GOLD = '#ffcc66';
 const CORNER_BRACKET_PX = 14;
 /** Where the tooltip frame's outer line cuts its corners. */

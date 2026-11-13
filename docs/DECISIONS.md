@@ -166,6 +166,26 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-13 (release `c6e6dd20`, 0.9.0-beta.53), released at Babuni's request to test with high-level accounts.
 
+## D-020 — Everything fades; menus open once their pictures are loaded (2026-11-13)
+
+**Babuni's direction:** "all elements need to fade in and fade out", including the other solutions while the chosen one plays, the result on the avatar and the in-game tooltips. Menus and Lore were "less smooth" the first time: "load it first and then show it", and "pulsate the button that we pressed, until everything that is inside the menu is loaded", so that, for example, the Friends list has its avatar pictures ready. A newly created avatar should be added "with 0 opacity and then bring it to 100 as soon as it is in position and ready, loaded". Inventory tooltips on phones glitched: "make the hitbox a little bit bigger".
+
+**AI implementation:** the other choices fade out over 0.7 s while the chosen solution, set or dice plays; every game tooltip fades over 200 ms (the avatar and choice-badge tooltips had no fade); menus and the Lore, Inventory and Skillbook panels open once their pictures are decoded (at most 3 s), with the opening button pulsing; avatar slots fade in once their pictures are decoded. On phones an inventory item is a plain tap (show, tap again to hide): the long press and the browser's emulated mouse and focus events after a touch made the tooltip flicker. The whole grid cell is the touch target, and the panel title no longer covers the top edge of the first row.
+
+**Also from this request:** the Babuni.dev and Nikita Malko texts in About Us were shown twice (a rendering bug, now once); Claude is named among the tools; the "Operational Costs" card with its figures is removed at Babuni's request ("I don't think anyone needs to know that ... if they are interested, they can ask") and replaced by "Keeping Morkahja Alive": one person pays for everything, the game earns nothing yet, donations are very welcome and in-game purchases even more (revenue could one day help find an investor), and support buys time for the game, with babuni@babuni.dev as the contact; the author card shows "Alexander Ludwig aka Babuni" (Babuni's own wording and choice to be named publicly in the game) with a Website button to babuni.dev; the privacy policy contact becomes support@babuni.dev (from Babuni's list babuni@, feedback@, support@; the policy's effective date left as it was) and the donation panel says "Donate directly to Babuni"; "Full changelog" opens the babuni.dev living grid on Morkahja's Changelog (`#project=morkahja-rpg&bloom=big&read=changes`).
+
+**Status:** implemented on `feat/smooth-fades-preload` (0.9.0-beta.54); not merged or released.
+
+## D-021 — Terms and privacy policy describe the game as it is (2026-11-13)
+
+**Babuni's direction (after an AI review of both texts):** "the key is the key", so the welcome button says "Use Your Key"; the operator is "my actual name ... on my AKA", Alexander Ludwig aka Babuni, without "Babunigaming"; fix the outdated and missing points; friendships stay one-sided ("Friends is more like a link between people to play together") and the texts disclose that; the bots are only for testing and need no mention; the game is 18+, "kids only with their parents", with a kid-friendly or adult-content on/off setting in the future "whenever there is adult content added"; a warmer tone for the terms; instead of naming AI tools, point to the documentation and development logs on babuni.dev; refunds: no extra step before Stripe, so soften the wording in the terms.
+
+**AI implementation:** both texts rewritten against the code and the server: Stripe checkout and the stored purchase record, one-sided friend links and what friends see, IP addresses only in web server logs (14-day rotation, checked read-only on the server) and briefly in memory for sign-in rate limiting, Hetzner in Finland, no third-party resources loaded. Added the right to complain to IMY, US transfers by Stripe and PayPal, retention periods, and a contact in the terms. Refund wording: "normally final ... we will find a fair solution. This does not limit any rights you have under consumer law."
+
+**Not legal advice; open points:** EU consumers normally have a 14-day right of withdrawal for digital content unless they agree, before delivery, to immediate supply and acknowledge losing that right. Without that consent at checkout, the softened wording leaves the statutory right in place rather than excluding it. The seven-year purchase-record period follows Swedish bookkeeping law and should be confirmed for Babuni's situation.
+
+**Status:** implemented on `feat/smooth-fades-preload` (0.9.0-beta.54); not merged or released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

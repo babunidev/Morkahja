@@ -537,8 +537,8 @@ button:focus-visible {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.94);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease;
+    opacity 200ms ease,
+    transform 200ms ease;
 }
 
 .morkahja-nav-tooltip--visible {
@@ -666,8 +666,8 @@ button:focus-visible {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.94);
   transition:
-    opacity 160ms ease,
-    transform 160ms ease;
+    opacity 200ms ease,
+    transform 200ms ease;
 }
 
 .morkahja-avatar-slot-tooltip--visible {
@@ -802,4 +802,14 @@ button:focus-visible {
 .morkahja-continue-float {
   animation: morkahja-continue-leaf-float 3.8s ease-in-out infinite;
   transform-origin: 50% 50%;
+}
+
+/* A menu button whose menu is still loading its pictures pulses softly (menuReadiness.ts). */
+.morkahja-menu-preparing {
+  animation: morkahja-menu-preparing-pulse 900ms ease-in-out 80ms infinite;
+}
+
+@keyframes morkahja-menu-preparing-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35) drop-shadow(0 0 12px rgba(255, 204, 102, 0.75)); }
 }

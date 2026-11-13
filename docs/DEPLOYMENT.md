@@ -61,7 +61,7 @@ No server routes, database schema, Stripe logic or game rules were changed.
 
 ### Not changed (deliberately)
 
-- `client/src/ui/settings/PatchNotesOverlay.tsx` mentions the former domain in a historical release note. `client/src/ui/onboarding/PrivacyPolicyOverlay.tsx` lists a contact email on the former domain. Neither is a URL the game loads. The privacy contact is a legal/notice decision for Babuni and was left as is.
+- `client/src/ui/settings/PatchNotesOverlay.tsx` mentions the former domain in a historical release note. `client/src/ui/onboarding/PrivacyPolicyOverlay.tsx` listed an old contact email; neither is a URL the game loads. On 2026-11-13 Babuni chose new addresses and the privacy contact became support@babuni.dev (D-020).
 - `client/public/UI/01_2_Agreement/menuBGplayerCreation.webp` is referenced by onboarding but has never been in the repository. It returns 404, and the CSS falls back to `menuBG.webp`. This predates the migration.
 
 ## Production configuration
@@ -299,7 +299,7 @@ Fix `0d217fc7` commits on the reveal phase and lets the server's resolution supp
 
 The origin changes from the former domain to `https://www.babuni.dev`. Browser storage is per origin, so the old session, device key and **identity key** in the former domain's `localStorage` do not carry over. The former domain is no longer under the project's control, so no redirect or storage hand-off is possible.
 
-Existing players can return only by using **Restore Existing Journey** with their downloaded Morkahja recovery-key file (`Morkahja_<name>.key`). The server matches the key's identity public key to the existing player record and issues a new device/session. This requires the **same production database**.
+Existing players can return only by using **Use Your Key** (called "Restore Existing Journey" until 0.9.0-beta.54) with their downloaded Morkahja recovery-key file (`Morkahja_<name>.key`). The server matches the key's identity public key to the existing player record and issues a new device/session. This requires the **same production database**.
 
 - Do not promise recovery to players without a key file. There is no other recovery mechanism in the code. Handle such cases individually, and never silently create a replacement player.
 - An installed PWA from the former domain will not move. Players need to install again from `https://www.babuni.dev/Morkahja/`.

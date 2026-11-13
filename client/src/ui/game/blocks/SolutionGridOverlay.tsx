@@ -16,7 +16,6 @@ import {
   type TooltipCorner,
 } from '../../hooks/anchoredTooltip.js';
 import {
-  useTooltipRevealBinding,
   type TooltipRevealCallbacks,
 } from '../../hooks/useTooltipReveal.js';
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
@@ -130,22 +129,39 @@ const panelTitleWrapStyle: CSSProperties = {
   position: 'relative',
   zIndex: 1,
   flexShrink: 0,
+  // The title overlaps the top edge of the first row; taps there reach the items.
+  pointerEvents: 'none',
 };
 
 const itemGridStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
-  gap: 'clamp(8px, 2vw, 14px)',
+  columnGap: 'clamp(8px, 2vw, 14px)',
+  // The buttons' own 4 px above and below make up the rest of the row gap.
+  rowGap: 'max(0px, calc(clamp(8px, 2vw, 14px) - 8px))',
   justifyItems: 'center',
 };
 
+/**
+ * The whole grid cell is the touch target (a little padding above and below
+ * too), so a tap slightly beside the picture still hits its item; the
+ * picture itself stays at most 72 px wide.
+ */
 const itemButtonStyle: CSSProperties = {
   width: '100%',
-  maxWidth: 72,
-  padding: 0,
+  padding: '4px 0',
   border: 0,
   background: 'transparent',
+  touchAction: 'manipulation',
 };
+
+const itemVisualStyle: CSSProperties = {
+  maxWidth: 72,
+  margin: '0 auto',
+};
+
+/** Browsers send mouse and focus events after a touch; a touch is handled as a tap only. */
+const TOUCH_EMULATION_GUARD_MS = 900;
 
 const itemImageStyle: CSSProperties = {
   display: 'block',
@@ -168,7 +184,7 @@ const gridTooltipShellStyle: CSSProperties = {
 };
 
 /** Soft, short fade in and out for item tooltips. */
-const TOOLTIP_FADE_MS = 120;
+const TOOLTIP_FADE_MS = 200;
 const TOOLTIP_FADE_KEYFRAMES = '@keyframes morkahja-grid-tooltip-in { from { opacity: 0; } to { opacity: 1; } }'
   + ' @keyframes morkahja-grid-tooltip-out { from { opacity: 1; } to { opacity: 0; } }';
 
@@ -286,9 +302,6 @@ export function SolutionGridOverlay({
   const [tooltipPlacement, setTooltipPlacement] = useState<{ left: number; top: number; corner: TooltipCorner } | null>(
     null,
   );
-  const { bind: bindTooltipReveal, consumeLongPressActivation } = useTooltipRevealBinding(
-    visible,
-  );
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const items = useMemo(
     () => inventoryEntries(inventory, sourceContainer, inventoryType),
@@ -375,6 +388,11 @@ export function SolutionGridOverlay({
   }, [tooltip]);
 
   const hoverDelayTimerRef = useRef<number | null>(null);
+  const lastTouchAtRef = useRef(-Infinity);
+
+  function recentTouch(): boolean {
+    return performance.now() - lastTouchAtRef.current < TOUCH_EMULATION_GUARD_MS;
+  }
 
   function clearHoverDelay(): void {
     if (hoverDelayTimerRef.current !== null) {
@@ -447,10 +465,6 @@ export function SolutionGridOverlay({
     columnIndex: number,
     event: GridTooltipTriggerEvent,
   ): void {
-    if (consumeLongPressActivation()) {
-      return;
-    }
-
     if (selectedItemId === item.solutionId && tooltip !== null) {
       setSelectedItemId(null);
       hideItemTooltip();
@@ -465,6 +479,7 @@ export function SolutionGridOverlay({
       aria-hidden={!visible}
       aria-label={ariaLabel}
       className="morkahja-solution-grid-overlay"
+      data-morkahja-menu={`game-${ariaLabel.toLowerCase()}`}
       inert={visible ? undefined : true}
       ref={overlayRef}
       style={{
@@ -498,12 +513,6 @@ export function SolutionGridOverlay({
               const itemKey = String(item.solutionId);
               const columnIndex = itemIndex % GRID_COLUMNS;
               const isSelected = selectedItemId === item.solutionId;
-              const touchTooltipHandlers = bindTooltipReveal({
-                onShow: (event) => {
-                  showItemTooltip(item, columnIndex, event);
-                },
-                onHide: hideItemTooltip,
-              });
               return (
                 <button
                   aria-label={item.name}
@@ -513,18 +522,26 @@ export function SolutionGridOverlay({
                   }`}
                   data-grid-item-id={item.solutionId}
                   key={item.solutionId}
-                  onBlur={hideItemTooltip}
+                  onBlur={() => {
+                    if (!recentTouch()) {
+                      hideItemTooltip();
+                    }
+                  }}
                   onClick={(event) => {
                     handleItemClick(item, columnIndex, event);
                   }}
                   onFocus={(event) => {
-                    showItemTooltip(item, columnIndex, event);
+                    if (!recentTouch()) {
+                      showItemTooltip(item, columnIndex, event);
+                    }
                   }}
                   onMouseEnter={(event) => {
-                    showItemTooltip(item, columnIndex, event);
+                    if (!recentTouch()) {
+                      showItemTooltip(item, columnIndex, event);
+                    }
                   }}
                   onMouseLeave={(event) => {
-                    if (isRelatedTargetInside(event.currentTarget, event.relatedTarget)) {
+                    if (recentTouch() || isRelatedTargetInside(event.currentTarget, event.relatedTarget)) {
                       return;
                     }
 
@@ -532,15 +549,14 @@ export function SolutionGridOverlay({
                   }}
                   onPointerDown={(event) => {
                     pulse(itemKey);
-                    touchTooltipHandlers.onPointerDown?.(event);
+                    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+                      lastTouchAtRef.current = performance.now();
+                    }
                   }}
-                  onPointerUp={touchTooltipHandlers.onPointerUp}
-                  onPointerCancel={touchTooltipHandlers.onPointerCancel}
-                  onPointerLeave={touchTooltipHandlers.onPointerLeave}
                   style={itemButtonStyle}
                   type="button"
                 >
-                  <span className="morkahja-grid-item-button-visual">
+                  <span className="morkahja-grid-item-button-visual" style={itemVisualStyle}>
                     <img
                       alt=""
                       aria-hidden="true"

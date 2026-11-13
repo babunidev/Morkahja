@@ -374,6 +374,18 @@ const solutionHoverCountStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+/**
+ * While the chosen solution (or the dice) plays its animation, the other
+ * choices fade out instead of vanishing with the bar afterwards.
+ */
+const OTHER_CHOICES_FADE_MS = 700;
+
+const otherChoicesFadeStyle: CSSProperties = {
+  opacity: 0,
+  transition: `opacity ${OTHER_CHOICES_FADE_MS}ms ease`,
+  pointerEvents: 'none',
+};
+
 const solutionSlotCellStyle: CSSProperties = {
   position: 'relative',
   display: 'grid',
@@ -688,6 +700,8 @@ export function SolutionBlock({
   const setSize = solutionSetSize(encounter.encounterDifficulty);
   const [setPicks, setSetPicks] = useState<SlotLetter[]>([]);
   const [setCommitted, setSetCommitted] = useState(false);
+  /** The choice being played: everything else fades out meanwhile. */
+  const [choiceFade, setChoiceFade] = useState<{ keepSlot: SlotLetter | null; keepDice: boolean } | null>(null);
   // Updated with every change, so taps in quick succession see each other.
   const setPicksRef = useRef<SlotLetter[]>([]);
   const [inboundFlownSlots, setInboundFlownSlots] = useState<Set<SlotLetter>>(
@@ -706,6 +720,7 @@ export function SolutionBlock({
     setPicksRef.current = [];
     setSetPicks([]);
     setSetCommitted(false);
+    setChoiceFade(null);
 
     let cancelled = false;
     const phaseKey = actionsPhaseKey(encounter.snapshotId);
@@ -933,6 +948,7 @@ export function SolutionBlock({
     hideSolutionTooltip();
 
     onActionReveal?.('dice', null, undefined, 'select');
+    setChoiceFade({ keepSlot: null, keepDice: true });
     playSfx(DICE_SOUND);
     setDiceRollCount((count) => count + 1);
     // Phase 2 of the frame timer: from rolling until the result can be used.
@@ -1018,6 +1034,8 @@ export function SolutionBlock({
     clearRollRevealTimer();
     hideSolutionTooltip();
     setSetCommitted(true);
+    // The hovering set stays; the bar (and the dice, unless it finished the set) fades.
+    setChoiceFade({ keepSlot: null, keepDice: diceFill });
 
     const first = picks[0]!;
     const solutionSet = { picks: [...picks], diceFill };
@@ -1048,6 +1066,7 @@ export function SolutionBlock({
     const roll = rollForSolutionSlot(encounter, solution);
     playSfx(SOLUTION_SOUND);
     setActiveSolutionSlot(solution.slot);
+    setChoiceFade({ keepSlot: solution.slot, keepDice: false });
     // Phase 2 of the frame timer: from using the solution until the result can be used.
     planFramePhase(
       actPhaseKey(encounter.snapshotId),
@@ -1102,6 +1121,7 @@ export function SolutionBlock({
               style={{
                 ...diceSlotStyle,
                 ...diceRevealStyle(actionsRevealing, actionsReady),
+                ...(choiceFade && !choiceFade.keepDice ? otherChoicesFadeStyle : {}),
               }}
             >
               <button
@@ -1163,6 +1183,7 @@ export function SolutionBlock({
                   ...(!actionsRevealSettled && actionsRevealing
                     ? solutionRevealSpinStyle(emptyDirection)
                     : {}),
+                  ...(choiceFade ? otherChoicesFadeStyle : {}),
                   width: SOLUTION_ACTION_SIZE_PX,
                   height: SOLUTION_ACTION_SIZE_PX,
                 }}
@@ -1251,6 +1272,7 @@ export function SolutionBlock({
                   ...solutionButtonStyle,
                   ...solutionInboundButtonStyle(actionsRevealing),
                   ...(dimForSet ? { opacity: 0.45 } : {}),
+                  ...(choiceFade && choiceFade.keepSlot !== slot ? otherChoicesFadeStyle : {}),
                 }}
                 type="button"
               >

@@ -2,7 +2,7 @@
   "name": "@morkahja/server",
   "author": "Babuni.dev",
   "private": true,
-  "version": "0.9.0-beta.53",
+  "version": "0.9.0-beta.54",
   "type": "module",
   "scripts": {
     "dev": "tsx src/server.ts",

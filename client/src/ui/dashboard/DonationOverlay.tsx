@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import { donateGems, fetchPlayer } from '../../api/http.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
@@ -204,7 +205,7 @@ function DirectDeveloperDonateSection() {
           visualStyle={donateButtonVisualStyle}
           {...tooltipHandlers}
         >
-          Donate directly to Babuni.dev
+          Donate directly to Babuni
         </PanelButton>
       </div>
     </div>
@@ -234,9 +235,14 @@ export function DonationOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      null,
+      () => document.querySelector('[data-morkahja-menu="donation"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     let cancelled = false;
 
@@ -256,7 +262,7 @@ export function DonationOverlay({
 
     return () => {
       cancelled = true;
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -297,6 +303,7 @@ export function DonationOverlay({
 
   return (
     <div
+      data-morkahja-menu="donation"
       aria-label="Donate gems"
       onClick={onClose}
       role="presentation"
@@ -304,6 +311,7 @@ export function DonationOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { menuPreparingClass, useMenuPreparingCheck } from '../transitions/menuReadiness.js';
 import type {
   ActivityFeedJoinRoomActionDto,
   FriendSummaryDto,
@@ -281,6 +282,7 @@ export function Dashboard({
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
   const { bind: bindNavTooltip, isVisible: isNavTooltipVisible } = useTooltipRevealGroup();
+  const isMenuPreparing = useMenuPreparingCheck();
   const session = loadStoredSession();
   const playerId = session?.playerId ?? '';
   const playerName = session?.playerName?.trim() ?? '';
@@ -578,7 +580,7 @@ export function Dashboard({
                     ? 'Achievements, new progress'
                     : button.label
               }
-              className="morkahja-nav-radial-button"
+              className={`morkahja-nav-radial-button${menuPreparingClass(isMenuPreparing(`nav:${button.label}`))}`}
               disabled={!clickable || !navOpen}
               key={button.label}
               {...navTooltipHandlers}

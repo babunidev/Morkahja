@@ -207,271 +207,220 @@ export function PrivacyPolicyOverlay({
         </header>
         <div data-privacy-policy-scroll="" style={scrollBodyStyle}>
           <p style={effectiveDateStyle}>
-            <strong>Effective Date:</strong> May 27, 2026
+            <strong>Effective Date:</strong> November 13, 2026
           </p>
           <p style={introStyle}>
-            Morkahja is operated by Babunigaming, Sweden. This Privacy Policy explains what
-            information is processed when you use Morkahja, how that information is used, and
-            what rights you have regarding your data.
+            Morkahja is made and run by Alexander Ludwig aka Babuni, Sweden, who is responsible for
+            your data (the data controller). This policy explains what information the game
+            processes, why, and what rights you have.
           </p>
           <p style={introStyle}>
-            Morkahja is designed with minimal data collection in mind. The game does not require
-            email registration, advertisements, or third-party social logins.
+            Morkahja keeps as little as possible: no email registration, no advertising, no
+            analytics or tracking, and no third-party social logins. The game loads nothing from
+            other websites.
           </p>
 
           <PolicySection heading="1. Information We Process">
-            <h4 style={subHeadingStyle}>Account and Identity Data</h4>
+            <h4 style={subHeadingStyle}>Account and Identity</h4>
             <PolicyParagraph>
-              When creating a new journey in Morkahja, the game generates a cryptographic identity
-              linked to your account.
+              Starting a journey creates a cryptographic key on your device. Your key stays with
+              you; the server only keeps what it needs to recognise you:
             </PolicyParagraph>
-            <PolicyParagraph>We may process:</PolicyParagraph>
             <PolicyList
               items={[
-                'Player name',
-                'Public cryptographic identity keys',
-                'Device identifiers derived from cryptographic device keys',
+                'Player name (names do not have to be unique)',
+                'Public part of your identity key',
+                'Device identifiers derived from device keys',
                 'Session tokens and authentication data',
-                'Account creation and activity timestamps',
+                'When the account was created and last active',
               ]}
             />
-            <PolicyParagraph>Player names are not required to be unique.</PolicyParagraph>
-
-            <h4 style={subHeadingStyle}>Gameplay Data</h4>
-            <PolicyParagraph>
-              To provide game functionality and progression, we process gameplay-related information
-              including:
-            </PolicyParagraph>
+            <h4 style={subHeadingStyle}>Gameplay</h4>
             <PolicyList
               items={[
-                'Avatars and avatar progression',
-                'Inventory and equipment',
+                'Avatars and their progression',
+                'Inventory and skills',
                 'Achievements and unlocked content',
                 'Encounter progress and active encounters',
-                'Multiplayer room participation',
-                'Friend relationships',
-                'Daily rewards and currencies',
-                'Activity feed events ("Scribes")',
+                'Party and room participation',
+                'Friend links',
+                'Daily rewards and gems',
+                'Activity feed entries ("Scribes")',
                 'Wall of Fame records',
               ]}
             />
             <PolicyParagraph>
-              This information is stored on the server to allow persistent progression across
-              sessions and devices.
+              This is stored on the server so your progress follows you across sessions and
+              devices.
             </PolicyParagraph>
-
-            <h4 style={subHeadingStyle}>Technical and Security Data</h4>
+            <h4 style={subHeadingStyle}>Purchases</h4>
             <PolicyParagraph>
-              We may process limited technical information necessary to operate and secure the game,
-              including:
+              When you buy an expansion or dice skin, the server records your account, the item,
+              the amount, the currency, the time and Stripe&apos;s payment reference. Card and
+              billing details are entered on Stripe&apos;s checkout page and never reach the
+              Morkahja server.
             </PolicyParagraph>
+            <h4 style={subHeadingStyle}>Technical and Security</h4>
             <PolicyList
               items={[
-                'Session heartbeat timestamps',
-                'Device activity timestamps',
-                'Server request logs',
+                'Session heartbeat and device activity timestamps',
+                'Web server access logs, which include IP addresses',
                 'Error and diagnostic logs',
-                'IP addresses processed through server infrastructure and security systems',
-                'Browser storage identifiers',
               ]}
             />
             <PolicyParagraph>
-              This information is used only for security, stability, abuse prevention, and service
-              operation.
+              IP addresses are also used briefly, in memory only, to limit repeated sign-in
+              attempts.
             </PolicyParagraph>
-
             <h4 style={subHeadingStyle}>Browser Storage</h4>
             <PolicyParagraph>
-              Morkahja uses browser storage technologies such as localStorage to store:
-            </PolicyParagraph>
-            <PolicyList
-              items={[
-                'Session information',
-                'Cryptographic identity keys',
-                'Device keys',
-                'User preferences',
-                'Read states and interface settings',
-              ]}
-            />
-            <PolicyParagraph>
-              This data remains on your device unless removed by you or cleared by the browser.
+              Morkahja uses your browser&apos;s local storage for your identity and device keys,
+              your session, your settings and what you have already read. This stays on your
+              device until you or your browser remove it.
             </PolicyParagraph>
           </PolicySection>
 
           <PolicySection heading="2. How Information Is Used">
-            <PolicyParagraph>Your information is processed to:</PolicyParagraph>
             <PolicyList
               items={[
-                'Create and maintain player accounts',
-                'Authenticate users securely',
-                'Save and synchronize progression',
-                'Enable multiplayer gameplay',
-                'Display player profiles and game activity',
-                'Operate social systems such as friends and encounter rooms',
-                'Maintain game security and prevent abuse',
-                'Diagnose technical issues and improve stability',
-                'Restore accounts using cryptographic recovery methods',
+                'Sign you in securely and keep your account',
+                'Save and synchronise your progress',
+                'Run parties, rooms, friends and other shared play',
+                'Show player profiles, Scribes and the Wall of Fame',
+                'Process purchases and unlock what you bought',
+                'Keep the game secure, prevent abuse and fix technical problems',
               ]}
             />
-            <PolicyParagraph>Morkahja does not sell personal data.</PolicyParagraph>
             <PolicyParagraph>
-              Morkahja does not use advertising networks or third-party behavioral tracking systems.
+              Personal data is never sold, and there is no advertising or behavioural tracking.
             </PolicyParagraph>
           </PolicySection>
 
-          <PolicySection heading="3. Multiplayer and Visible Information">
-            <PolicyParagraph>
-              Certain information is visible to other players during gameplay and social
-              interactions, including:
-            </PolicyParagraph>
+          <PolicySection heading="3. What Other Players Can See">
             <PolicyList
               items={[
-                'Player names',
-                'Avatar names and appearance',
-                'Levels and titles',
-                'Online presence in multiplayer rooms',
-                'Public activity feed entries ("Scribes")',
-                'Wall of Fame records',
+                'Your player name, avatar names and appearance, levels and titles',
+                'Whether you are online, and what you choose in a shared encounter',
+                'Your Scribes entries and Wall of Fame records',
               ]}
             />
-            <PolicyParagraph>Morkahja does not provide open text chat between players.</PolicyParagraph>
+            <PolicyParagraph>
+              Adding a friend is one-sided: anyone who knows your player name can add you. Friends
+              can see whether you are online, your avatars, levels and achievements, and can join
+              you. There is no chat or messaging, so no one can write to you through the game.
+            </PolicyParagraph>
           </PolicySection>
 
-          <PolicySection heading="4. Legal Basis for Processing">
+          <PolicySection heading="4. Legal Basis">
+            <h4 style={subHeadingStyle}>Contract</h4>
             <PolicyParagraph>
-              Under the General Data Protection Regulation (GDPR), data is processed under the
-              following legal bases:
+              Running the game you chose to play: signing in, saving progress, shared play, social
+              features and purchases.
             </PolicyParagraph>
-            <h4 style={subHeadingStyle}>Contractual Necessity</h4>
-            <PolicyParagraph>
-              Processing required to operate the game and provide gameplay features, including:
-            </PolicyParagraph>
-            <PolicyList
-              items={[
-                'Authentication',
-                'Progress saving',
-                'Multiplayer synchronization',
-                'Social and account systems',
-              ]}
-            />
             <h4 style={subHeadingStyle}>Legitimate Interests</h4>
-            <PolicyParagraph>Processing necessary to:</PolicyParagraph>
+            <PolicyParagraph>
+              Keeping the service secure, preventing abuse and unauthorised access, and finding and
+              fixing errors.
+            </PolicyParagraph>
+            <h4 style={subHeadingStyle}>Legal Obligation</h4>
+            <PolicyParagraph>Keeping purchase records as bookkeeping law requires.</PolicyParagraph>
+          </PolicySection>
+
+          <PolicySection heading="5. Service Providers">
             <PolicyList
               items={[
-                'Secure the service',
-                'Prevent abuse and unauthorized access',
-                'Maintain server functionality',
-                'Diagnose errors and technical issues',
+                'Hetzner Online GmbH (Germany) hosts the game server in the European Union (Finland).',
+                'Stripe processes payments. It receives what you enter on its checkout page together with the item and a reference to your account.',
+                'PayPal receives optional donations. A donation takes you to PayPal’s own site.',
               ]}
             />
-          </PolicySection>
-
-          <PolicySection heading="5. Third Parties and Hosting">
-            <PolicyParagraph>Morkahja is hosted on infrastructure provided by:</PolicyParagraph>
-            <ul style={listStyle}>
-              <li>
-                <a href="https://www.hetzner.com" rel="noreferrer" style={linkStyle} target="_blank">
-                  Hetzner
-                </a>
-              </li>
-            </ul>
             <PolicyParagraph>
-              Additional infrastructure services may include HTTPS certificate providers and server
-              management tools necessary for secure operation.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              Morkahja does not integrate third-party advertising SDKs, analytics SDKs, or social
-              login systems.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              Optional donations may redirect users to external services such as PayPal (
-              <a href="https://www.paypal.com" rel="noreferrer" style={linkStyle} target="_blank">
-                https://www.paypal.com
+              Stripe and PayPal handle payment data under their own privacy policies:{' '}
+              <a href="https://stripe.com/privacy" rel="noreferrer" style={linkStyle} target="_blank">
+                Stripe
               </a>
-              ). External services operate under their own privacy policies.
+              ,{' '}
+              <a href="https://www.paypal.com/privacy" rel="noreferrer" style={linkStyle} target="_blank">
+                PayPal
+              </a>
+              . No advertising, analytics or social login services are used.
             </PolicyParagraph>
           </PolicySection>
 
-          <PolicySection heading="6. Data Retention">
-            <PolicyParagraph>
-              Gameplay and account data are retained while the account remains active or reasonably
-              necessary to operate the service.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              Technical logs and security-related information may be retained temporarily for
-              maintenance, security, and abuse prevention purposes.
-            </PolicyParagraph>
-            <PolicyParagraph>Users may request deletion of their account data.</PolicyParagraph>
+          <PolicySection heading="6. How Long Data Is Kept">
+            <PolicyList
+              items={[
+                'Account and gameplay data: as long as your account exists. Inactive accounts are not deleted automatically. You can delete avatars in the game and ask for your whole account to be deleted.',
+                'Purchase records: as long as bookkeeping law requires (seven years in Sweden).',
+                'Web server access logs with IP addresses: deleted after 14 days.',
+                'Error and diagnostic logs: as long as they are needed to find and fix problems.',
+              ]}
+            />
           </PolicySection>
 
           <PolicySection heading="7. Your Rights">
-            <PolicyParagraph>
-              Under applicable data protection laws, including GDPR, you may have the right to:
-            </PolicyParagraph>
+            <PolicyParagraph>Under the GDPR you can ask to:</PolicyParagraph>
             <PolicyList
               items={[
-                'Request access to your stored data',
-                'Request correction of inaccurate data',
-                'Request deletion of your data',
-                'Restrict or object to certain processing',
-                'Request a copy of your stored data',
+                'See the data stored about you and get a copy of it',
+                'Correct data that is wrong',
+                'Delete your data',
+                'Restrict or object to some processing',
               ]}
             />
             <PolicyParagraph>
-              Requests may be submitted using the contact information below.
+              Write to the contact below and include your player name. Never send your key: I will
+              never ask for it.
+            </PolicyParagraph>
+            <PolicyParagraph>
+              You can also complain to the Swedish data protection authority,{' '}
+              <a href="https://www.imy.se" rel="noreferrer" style={linkStyle} target="_blank">
+                Integritetsskyddsmyndigheten (IMY)
+              </a>
+              , or to the authority in the country where you live.
             </PolicyParagraph>
           </PolicySection>
 
           <PolicySection heading="8. Children">
             <PolicyParagraph>
-              Morkahja is not directed toward children under the age of 13.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              If you believe a child has provided personal information in violation of applicable
-              law, please contact the developer.
+              Morkahja is meant for players aged 18 and over. Children may play only together with
+              a parent or guardian, who is responsible for their play. If you believe a child is
+              playing without one, write to the contact below and the account will be deleted.
             </PolicyParagraph>
           </PolicySection>
 
           <PolicySection heading="9. Security">
-            <PolicyParagraph>
-              Morkahja uses reasonable technical and organizational measures to protect stored
-              information, including:
-            </PolicyParagraph>
             <PolicyList
               items={[
                 'HTTPS encryption',
-                'Cryptographic authentication systems',
-                'Session validation',
-                'Server access controls',
+                'Cryptographic sign-in without passwords',
+                'Session checks',
+                'Restricted server access',
               ]}
             />
-            <PolicyParagraph>No system can guarantee absolute security.</PolicyParagraph>
             <PolicyParagraph>
-              Users are responsible for securely storing their recovery keys and account
-              credentials.
+              No system is perfectly secure. Keep your key safe: anyone who has it can play as you.
             </PolicyParagraph>
           </PolicySection>
 
-          <PolicySection heading="10. International Data Processing">
+          <PolicySection heading="10. Where Data Is Processed">
             <PolicyParagraph>
-              Data may be processed on servers located within the European Union.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              If infrastructure providers process data outside your jurisdiction, appropriate
-              safeguards are used where required by applicable law.
+              The game server is in the European Union. Stripe and PayPal may also process payment
+              data outside the EU, including in the United States, using safeguards recognised by
+              EU law such as the EU–US Data Privacy Framework and standard contractual clauses.
             </PolicyParagraph>
           </PolicySection>
 
           <PolicySection heading="11. Contact">
             <PolicyParagraph>
-              Babunigaming
+              Alexander Ludwig aka Babuni
               <br />
               Sweden
             </PolicyParagraph>
             <PolicyParagraph>
               Email:{' '}
-              <a href="mailto:arcanitebrothers@gmail.com" style={linkStyle}>
-                arcanitebrothers@gmail.com
+              <a href="mailto:support@babuni.dev" style={linkStyle}>
+                support@babuni.dev
               </a>
             </PolicyParagraph>
           </PolicySection>
@@ -479,12 +428,8 @@ export function PrivacyPolicyOverlay({
           <section style={{ ...sectionStyle, borderWidth: 0, borderImageSource: 'none', paddingBottom: 0, marginBottom: 0 }}>
             <h3 style={sectionHeadingStyle}>12. Changes to This Policy</h3>
             <PolicyParagraph>
-              This Privacy Policy may be updated over time to reflect changes to the game,
-              infrastructure, or legal obligations.
-            </PolicyParagraph>
-            <PolicyParagraph>
-              Continued use of Morkahja after changes become effective constitutes acceptance of the
-              updated policy.
+              This policy may be updated as the game, its infrastructure or the law change; the
+              date at the top shows the latest version.
             </PolicyParagraph>
           </section>
         </div>
