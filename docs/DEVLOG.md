@@ -307,3 +307,7 @@ With the essence slots along the bottom of my avatar, the badge showing what I u
 ## 2026-11-13 — Giving the repository clear permissions
 
 Public source alone did not explain what others could reuse, so I approved MIT for original game code and CC BY 4.0 for original creative work, with music and other people's sound files excluded. AI assistance added the license and brought the project notes into agreement, without changing how the application runs. Other people's content retains its own terms.
+
+### Live on the server — 2026-11-13
+
+I wanted the latest changes live, from the centred phone screen to the essence slots on my avatar. AI merged the work into `main` (PR #29), checked it, and released backend and frontend together as 0.9.0-beta.49. **Verification:** release gate and CI passed; the server's health gate and public checks passed; the bots came back as the same accounts. The pre-release backup was not restored as a test this time, and a real game in production was not played by AI.

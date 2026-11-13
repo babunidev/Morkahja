@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Released: 0.9.0-beta.43 to beta.49 live
+
+- **Deployed** to https://www.babuni.dev/Morkahja/ at 05:59 UTC from `main` at `ccc6cb20` (PR #29): the entries below marked "Unreleased" from beta.43 to beta.49 are now live, backend and frontend together. Backup `20261113-055919` taken before the release (restore not yet proven). Details in `docs/DEPLOYMENT.md`.
+
 ## 2026-11-13 — Unreleased: choice badge in the top-right corner of the avatar; 0.9.0-beta.49
 
 - **Change (Babuni's direction):** the badge showing the solution or dice a player used, with the roll, moved from the bottom-right to the top-right corner of the portrait, since the bottom edge now holds the essence slots (`partyParticipantChoiceBadge.tsx`).

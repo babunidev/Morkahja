@@ -166,6 +166,18 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 05:59 UTC (0.9.0-beta.49)
+
+Requested by Babuni ("i wanna deploy the latest changes to the live server"). The 22 commits on `fix/mobile-centering` (beta.43 → beta.49) had not been pushed or merged. AI merged `main` into them (keeping both sides of the documentation conflicts in `DECISIONS.md` and `DEVLOG.md`), ran the release gate, and squash-merged PR #29, so `main` is now `ccc6cb20`. The server changes only the version strings; no dependency, schema or game-content changes since `e78cde2f`.
+
+- **Before:** backend `main` at `e78cde2f`, frontend `20261111-080433`, no uncommitted files on the server. Unreleased files staged on 12 November were moved to a dated folder in the staging directory, not deleted.
+- **Release gate:** `npm run release:check` on the merged tree (Nobara, local Podman PostgreSQL) exited 0: game data verified, typecheck and client build, client tests 32/32, server tests 40/40. CI `verify` passed on PR #29.
+- **Uploads:** client build of `ccc6cb20` (`index-CJPwKA8p.js`) and a Git bundle of `e78cde2f..main`; checksums verified on the server.
+- **Release:** backup `20261113-055919` (2.9 MB, 17 tables with data; 71 players, 102 avatars, 21 sessions, 76 devices, 102 inventories, 1 purchase, 324 achievement rows; sha256 `9d2dde3b…`). Backend fast-forwarded to `ccc6cb20`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-055920`, public checks passed.
+- **Bots:** Varrokh, Sylvaen and Thalyss signed in again as the same player ids.
+- **Live check from outside:** website, `/Morkahja/` and the API health endpoint answered 200; the page loads `index-CJPwKA8p.js`, which contains `0.9.0-beta.49`.
+- **Not done:** the backup was not downloaded and restored this time (downloading the dump was blocked by the session's permission rules), so the restore of `20261113-055919` is **unproven**. No browser play-through, real mobile browser, multiplayer or Stripe checkout in production was checked by AI.
+
 ## Production release — 2026-11-11 (PR #18 live)
 
 Requested by Babuni ("do the next deploy and update the server and client together"). AI assistance prepared and uploaded the release and ran every step; Babuni ran only the one-time `sudo` installation of `morkahja-deploy`. Times are the server's clock (UTC).
