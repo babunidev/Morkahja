@@ -20,3 +20,7 @@ Repository visibility is now public, verified on 31 October 2026. The agent did 
 ## Direction and alternatives
 
 **Human direction:** Babuni.dev requests publication of actual projects and retirement of separate documentation editions after review. **AI assistance:** repository/history inspection and this preparation record. Keeping implementation private with curated public summaries was the earlier approach; it is superseded as the intended destination, but remains the working bridge until publication checks pass. No creative design, license or asset-rights decision was invented by this review.
+
+## 13 November 2026 — Licensing update
+
+Babuni explicitly selected MIT for original software and CC BY 4.0 for eligible original creative material. [LICENSE](../LICENSE) and [CONTENT_LICENSE.md](../CONTENT_LICENSE.md) now record these grants. The in-game Terms of Service were updated to reflect the distinction. This resolves the former absence of a root software license; **it does not establish redistribution permission for commissioned music, downloaded sound effects, or other third-party media**. The historical October review above is retained as dated evidence.
