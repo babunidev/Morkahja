@@ -2,6 +2,17 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-13 — Unreleased: hover seams fixed, framed title picker, Friends fixes, 0.9.0-beta.43
+
+- **Fix (Babuni's report): lines across buttons when they grow on hover.** The simple frame was a nine-slice `border-image` with its background baked in; Chrome drew faint seams between the slices, most visibly when scaled. It is now drawn as CSS background layers (four corner images, solid lines and `repeating-linear-gradient` gapped lines) over the element's own background, cut to the octagon with `clip-path` (`simpleFrame.ts`). The hover glow moved from the scaled visual to the button around it, so it follows the cut corners. Two clipped glows that no longer showed were replaced: important Scribes entries get a brighter frame, the selected die keeps its gold frame.
+- **Fix (Babuni's report): hover glows cut off in Create Avatar.** The scrolling body now reaches almost to the panel edge with the spacing moved inside it, so a hovered race, role or sex button has room for its growth and 14 px glow (the glow passes under the frame lines). The layout is unchanged.
+- **Fix (Babuni's report): friend entries wider than the Friends panel.** A framed element at 100 % width added its padding on top; the simple frame now includes padding and border in an element's size. The Soul Link, Back, Join and add-friend buttons now grow and glow on hover like Close.
+- **New (Babuni's direction): framed title picker.** The profile's title `<select>`, whose open list the browser drew in its own style, is replaced by `client/src/ui/common/FramedSelect.tsx`: a smaller framed button and a framed list in the same colours, opening below (or above when there is no room), with keyboard support (arrows, Enter, Escape) and closing on an outside click or scroll.
+- **Patch notes:** "Full changelog" now opens the changelog page on babuni.dev (`https://www.babuni.dev/projects/morkahja-rpg/changes/`) instead of GitHub. That page is built from the repository's changelog by the website and currently shows the state of `main` at `7af69cd3`. Two notes added for this step.
+- **Checked, not changed (website):** the Morkahja page on babuni.dev links to the game (`https://www.babuni.dev/Morkahja/`) only as the bare address, without a "Play" label; that belongs to the website.
+- **Version 0.9.0-beta.43** (one development step after beta.42, D-015).
+- **Verification:** client typecheck, tests (26) and production build passed. Headless Chrome: hovered Close at 1400 × 900 before (seams) and after (clean); Friends with three friends (local bots) at 412 × 915 fits; the title list opened at 412 × 915 and 1400 × 900; race and role hover glows in Create Avatar at 1400 × 900. **Not deployed.**
+
 ## 2026-11-13 — Unreleased: simple frame on buttons, fields and cards; dividers; patch notes; version 0.9.0-beta.42
 
 - **Change (Babuni's direction): a simple frame on everything inside the panels.** Buttons, text fields, the title selector, cards (friends, avatars, achievements, expansions, dice, credits, Scribes entries), badges and the party slot menu options lose their rounded gold borders and get the simple frame: the frame's solid line with one gapped line around it, cut corners and small corner triangles. It is a nine-slice SVG border image with the background baked in (`client/src/ui/common/simpleFrame.ts`, `simpleFrameStyle`), so only the styles changed; hover glows follow the cut shape. Green "unlocked" and "last played" cards keep their colour.

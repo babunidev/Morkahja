@@ -6,9 +6,11 @@ import { cornerLegAt, cornerTrianglesPath } from '../game/blocks/encounterFrameG
  * cards, badges and bars inside panels: the frame's solid line with one gapped
  * line around it, no rounded corners, cut corners with small triangles.
  *
- * Drawn as a nine-slice SVG border image (with its background baked in), so an
- * element only needs a style change: no extra child, no measuring, and a hover
- * glow (CSS drop-shadow) follows the cut shape.
+ * Drawn as a nine-slice SVG border image (the lines) over the element's own
+ * background cut to the frame's octagon with clip-path, so an element only
+ * needs a style change: no extra child and no measuring. The background is not
+ * baked into the border image: scaled on hover, its slices showed seams.
+ * A glow belongs on a parent (a drop-shadow there follows the cut shape).
  */
 
 export const SIMPLE_FRAME_COLOR = '#d8b06a';
@@ -77,24 +79,83 @@ function gappedPath(): string {
 
 const imageCache = new Map<string, string>();
 
-/** The border image for a simple frame in `color`, with `background` filling the cut shape. */
-export function simpleFrameImage(color = SIMPLE_FRAME_COLOR, opacity = 0.9, background = 'none'): string {
-  const key = `${color}|${opacity}|${background}`;
+/** The frame drawn on an IMAGE × IMAGE square; corners are cut from it with viewBox. */
+function frameDrawing(color: string, opacity: number): string {
+  return `<g opacity="${opacity}">`
+    + `<path d="${cornerTrianglesPath(IMAGE - 2 * INSET, IMAGE - 2 * INSET, INSET, CUT)}" fill="${color}"/>`
+    + `<path d="${pathOf(octagonPoints(SOLID_OFFSET), true)}" fill="none" stroke="${color}" stroke-width="${LINE_WIDTH}" stroke-linejoin="miter"/>`
+    + `<path d="${gappedPath()}" fill="none" stroke="${color}" stroke-width="${LINE_WIDTH}" stroke-linecap="butt"/>`
+    + '</g>';
+}
+
+/** One corner (SLICE × SLICE) of the frame, as an image URL. */
+function cornerImage(corner: 'tl' | 'tr' | 'br' | 'bl', color: string, opacity: number): string {
+  const key = `${corner}|${color}|${opacity}`;
   const cached = imageCache.get(key);
   if (cached) {
     return cached;
   }
-  const fillOffset = GAPPED_OFFSET + LINE_WIDTH / 2;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${IMAGE} ${IMAGE}" width="${IMAGE}" height="${IMAGE}">`
-    + (background !== 'none' ? `<path d="${pathOf(octagonPoints(fillOffset), true)}" fill="${background}"/>` : '')
-    + `<g opacity="${opacity}">`
-    + `<path d="${cornerTrianglesPath(IMAGE - 2 * INSET, IMAGE - 2 * INSET, INSET, CUT)}" fill="${color}"/>`
-    + `<path d="${pathOf(octagonPoints(SOLID_OFFSET), true)}" fill="none" stroke="${color}" stroke-width="${LINE_WIDTH}" stroke-linejoin="miter"/>`
-    + `<path d="${gappedPath()}" fill="none" stroke="${color}" stroke-width="${LINE_WIDTH}" stroke-linecap="butt"/>`
-    + '</g></svg>';
+  const x = corner === 'tr' || corner === 'br' ? IMAGE - SLICE : 0;
+  const y = corner === 'bl' || corner === 'br' ? IMAGE - SLICE : 0;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${SLICE} ${SLICE}" width="${SLICE}" height="${SLICE}">`
+    + frameDrawing(color, opacity) + '</svg>';
   const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   imageCache.set(key, url);
   return url;
+}
+
+/** The whole frame as one SVG (for checks and previews). */
+export function simpleFrameImage(color = SIMPLE_FRAME_COLOR, opacity = 0.9): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${IMAGE} ${IMAGE}" width="${IMAGE}" height="${IMAGE}">`
+    + frameDrawing(color, opacity) + '</svg>';
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+/** A colour with an opacity, for gradients. */
+function withOpacity(color: string, opacity: number): string {
+  const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+  if (hex) {
+    const [r, g, b] = hex.slice(1).map((part) => parseInt(part, 16));
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  const rgb = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
+  return rgb ? `rgba(${rgb[1]}, ${rgb[2]}, ${rgb[3]}, ${opacity})` : color;
+}
+
+/** Background layers that draw the frame: four corner images, two straight and two gapped lines per side. */
+function frameLayers(color: string, opacity: number, scale: number): string[] {
+  const c = withOpacity(color, opacity);
+  const px = (value: number): string => `${round(value * scale)}px`;
+  const slice = px(SLICE);
+  const span = `calc(100% - ${round(2 * SLICE * scale)}px)`;
+  const w = px(LINE_WIDTH);
+  const solidAt = px(INSET - SOLID_OFFSET - LINE_WIDTH / 2);
+  const gappedAt = px(INSET - GAPPED_OFFSET - LINE_WIDTH / 2);
+  const solid = `linear-gradient(${c}, ${c})`;
+  const stops: string[] = [];
+  let at = 0;
+  SIMPLE_FRAME_EDGE_PATTERN.forEach((length, index) => {
+    const from = px(at);
+    at += length;
+    stops.push(`${index % 2 === 0 ? c : 'transparent'} ${from} ${px(at)}`);
+  });
+  const gapped = (direction: string): string => `repeating-linear-gradient(${direction}, ${stops.join(', ')})`;
+  const right = (inset: string): string => `right ${inset} top ${slice}`;
+  const bottom = (inset: string): string => `left ${slice} bottom ${inset}`;
+  return [
+    `${cornerImage('tl', color, opacity)} left top / ${slice} ${slice} no-repeat`,
+    `${cornerImage('tr', color, opacity)} right top / ${slice} ${slice} no-repeat`,
+    `${cornerImage('br', color, opacity)} right bottom / ${slice} ${slice} no-repeat`,
+    `${cornerImage('bl', color, opacity)} left bottom / ${slice} ${slice} no-repeat`,
+    `${solid} left ${slice} top ${solidAt} / ${span} ${w} no-repeat`,
+    `${solid} ${bottom(solidAt)} / ${span} ${w} no-repeat`,
+    `${solid} left ${solidAt} top ${slice} / ${w} ${span} no-repeat`,
+    `${solid} ${right(solidAt)} / ${w} ${span} no-repeat`,
+    `${gapped('to right')} left ${slice} top ${gappedAt} / ${span} ${w} no-repeat`,
+    `${gapped('to left')} ${bottom(gappedAt)} / ${span} ${w} no-repeat`,
+    `${gapped('to top')} left ${gappedAt} top ${slice} / ${w} ${span} no-repeat`,
+    `${gapped('to bottom')} ${right(gappedAt)} / ${w} ${span} no-repeat`,
+  ];
 }
 
 /**
@@ -113,28 +174,31 @@ export function simpleFrameStyle({
   opacity?: number;
   scale?: number;
 } = {}): CSSProperties {
+  const layers = frameLayers(color, opacity, scale);
   return {
+    // Padding and border included, so a framed element at 100 % width never overflows.
+    boxSizing: 'border-box',
     borderStyle: 'solid',
     borderWidth: 1,
     borderColor: 'transparent',
     borderRadius: 0,
-    borderImageSource: simpleFrameImage(color, opacity, background ?? 'none'),
-    borderImageSlice: `${SLICE} fill`,
-    borderImageWidth: `${round(SLICE * scale)}px`,
-    borderImageRepeat: 'round',
-    background: 'none',
+    background: [...layers, background && background !== 'none' ? background : 'transparent'].join(', '),
+    backgroundOrigin: 'border-box',
+    clipPath: simpleFrameClipPath(scale),
   };
 }
 
-/** Only the border image of a simple frame, for a variant that changes its colour. */
+/** Only the lines and background of a simple frame, for a variant that changes its colour. */
 export function simpleFrameVariant(options: Parameters<typeof simpleFrameStyle>[0]): CSSProperties {
-  const { borderImageSource } = simpleFrameStyle(options);
-  return { borderImageSource };
+  const { background } = simpleFrameStyle(options);
+  return { background };
 }
 
 /** Clip path cutting an element (an image, a bar fill) to the simple frame's corners at `scale`. */
 export function simpleFrameClipPath(scale = 1, insetLeg?: number): string {
-  const leg = round(insetLeg ?? (cornerLegAt(GAPPED_OFFSET, CUT) + INSET - GAPPED_OFFSET) * scale);
+  // Just outside the gapped line's corner cut (its outer stroke edge).
+  const outer = 2 * (INSET - GAPPED_OFFSET) + cornerLegAt(GAPPED_OFFSET, CUT) + LINE_WIDTH / Math.SQRT2;
+  const leg = round(insetLeg ?? outer * scale);
   const l = `${leg}px`;
   const r = `calc(100% - ${leg}px)`;
   return `polygon(${l} 0, ${r} 0, 100% ${l}, 100% ${r}, ${r} 100%, ${l} 100%, 0 ${r}, 0 ${l})`;

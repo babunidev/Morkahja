@@ -70,7 +70,6 @@ const xpBarShellStyle: CSSProperties = {
   boxSizing: 'border-box',
   padding: 2,
   ...simpleFrameStyle({ background: 'rgba(20, 8, 4, 0.72)', opacity: 0.95, scale: 0.4 }),
-  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65))',
   overflow: 'hidden',
 };
 

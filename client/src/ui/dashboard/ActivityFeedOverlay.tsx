@@ -86,20 +86,20 @@ function entryStyle(
   importance: ActivityFeedEntryDto['importance'],
   read: boolean,
 ): CSSProperties {
-  const glow = importance === 'legendary'
-    ? 'drop-shadow(0 0 7px rgba(255, 204, 102, 0.45))'
+  // Important entries get a brighter frame (a glow would be cut by the frame's corners).
+  const frameColor = importance === 'legendary'
+    ? '#ffcc66'
     : importance === 'high'
-      ? 'drop-shadow(0 0 5px rgba(255, 140, 80, 0.28))'
+      ? 'rgb(255, 160, 100)'
       : undefined;
 
   return {
     padding: '10px 12px',
     ...simpleFrameStyle({
       background: read ? 'rgba(24, 12, 8, 0.58)' : 'rgba(24, 12, 8, 0.82)',
-      opacity: read ? 0.4 : 0.75,
+      opacity: read ? 0.4 : frameColor ? 1 : 0.75,
+      color: read ? undefined : frameColor,
     }),
-    // A glow that follows the cut corners.
-    filter: read ? undefined : glow,
     fontSize: '0.95rem',
     lineHeight: 1.45,
     opacity: read ? 0.78 : 1,

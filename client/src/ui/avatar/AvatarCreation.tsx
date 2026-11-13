@@ -110,8 +110,10 @@ const panelStyle: CSSProperties = {
   boxSizing: 'border-box',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
-  gap: 12,
-  padding: '18px 14px 16px',
+  gap: 2,
+  // No side padding: the scrolling body reaches almost to the edge, so hover
+  // glows have room instead of being cut off (they pass under the frame lines).
+  padding: '18px 2px 16px',
   border: '1px solid rgba(255, 204, 102, 0.62)',
   borderRadius: 14,
   background: 'rgba(12, 7, 5, 0.92)',
@@ -124,6 +126,7 @@ const headerStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  padding: '0 12px',
 };
 
 const titleStyle: CSSProperties = {
@@ -150,7 +153,8 @@ const panelBodyStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 14,
-  padding: '4px 2px 2px',
+  // Room for a hovered button's growth and glow (14 px) inside the scroll area.
+  padding: '14px 14px 2px',
   scrollbarWidth: 'none',
   msOverflowStyle: 'none',
 };

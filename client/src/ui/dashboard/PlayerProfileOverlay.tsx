@@ -22,6 +22,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { simpleFrameStyle, simpleFrameVariant } from '../common/simpleFrame.js';
+import { FramedSelect } from '../common/FramedSelect.js';
 
 const OVERLAY_FADE_MS = 300;
 
@@ -196,16 +197,10 @@ const titleSelectLabelStyle: CSSProperties = {
 };
 
 const titleSelectStyle: CSSProperties = {
+  // The button around the framed dropdown (FramedSelect draws the frame).
   width: '100%',
-  minWidth: 108,
-  maxWidth: 120,
-  minHeight: 38,
-  padding: '6px 8px',
-  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
-  color: '#ffcc66',
-  fontFamily: 'Georgia, serif',
-  fontSize: '0.82rem',
-  cursor: 'pointer',
+  minWidth: 96,
+  maxWidth: 132,
 };
 
 const emptySlotPortraitStyle: CSSProperties = {
@@ -238,7 +233,6 @@ const diceButtonBaseStyle: CSSProperties = {
 
 const diceButtonSelectedStyle: CSSProperties = {
   ...simpleFrameVariant({ background: 'rgba(8, 5, 4, 0.55)', opacity: 1, color: '#ffcc66' }),
-  filter: 'drop-shadow(0 0 6px rgba(255, 204, 102, 0.4))',
 };
 
 const dicePreviewStyle: CSSProperties = {
@@ -367,32 +361,23 @@ function CurrentAvatarSlot({
         </p>
         <p style={slotLevelStyle}>Level {avatar.level}</p>
       </div>
-      <label style={titleSelectWrapStyle}>
+      <div style={titleSelectWrapStyle}>
         <span style={titleSelectLabelStyle}>Title</span>
-        <select
-          aria-label={`Select title for ${avatar.name}`}
+        <FramedSelect
+          ariaLabel={`Select title for ${avatar.name}`}
           disabled={titleSavePending}
-          onChange={(event) => {
-            const nextTitle = event.target.value;
+          onChange={(nextTitle) => {
             onTitleChange(avatar.id, nextTitle.length > 0 ? nextTitle : null);
           }}
+          options={[
+            { value: '', label: 'No title' },
+            ...(!currentTitleListed && hasCurrentTitle ? [{ value: selectedTitle, label: selectedTitle }] : []),
+            ...unlockedTitles.map((option) => ({ value: option.title, label: option.title })),
+          ]}
           style={titleSelectStyle}
-          value={currentTitleListed ? selectedTitle : ''}
-        >
-          <option value="">No title</option>
-          {!currentTitleListed && hasCurrentTitle ? (
-            <option value={selectedTitle}>{selectedTitle}</option>
-          ) : null}
-          {unlockedTitles.map((option) => (
-            <option
-              key={`${option.achievementId}-${option.rank}`}
-              value={option.title}
-            >
-              {option.title}
-            </option>
-          ))}
-        </select>
-      </label>
+          value={currentTitleListed || hasCurrentTitle ? selectedTitle : ''}
+        />
+      </div>
     </article>
   );
 }

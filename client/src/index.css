@@ -602,10 +602,21 @@ button:focus-visible {
     filter 220ms ease;
 }
 
+.morkahja-panel-button {
+  transition: filter 220ms ease;
+}
+
+/* The glow sits on the button, around its framed visual, so it follows the
+   visual's cut corners instead of being clipped by them. */
+.morkahja-panel-button:hover:not(:disabled),
+.morkahja-panel-button:focus-visible:not(:disabled) {
+  filter: drop-shadow(0 0 7px rgba(255, 204, 102, 0.38));
+}
+
 .morkahja-panel-button:hover:not(:disabled) .morkahja-panel-button-visual,
 .morkahja-panel-button:focus-visible:not(:disabled) .morkahja-panel-button-visual {
   transform: scale(1.06) translateY(-2px);
-  filter: brightness(1.1) drop-shadow(0 0 14px rgba(255, 204, 102, 0.38));
+  filter: brightness(1.1);
 }
 
 .morkahja-panel-button:disabled .morkahja-panel-button-visual {

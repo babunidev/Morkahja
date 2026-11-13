@@ -28,8 +28,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-42-nov-4-13',
-    version: '0.9.0-beta.42',
+    id: 'beta-43-nov-4-13',
+    version: '0.9.0-beta.43',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -57,6 +57,8 @@ const PATCH_RELEASES: PatchRelease[] = [
           'The game, the welcome screen, avatar creation and the menus fit and stay centred on phone screens.',
           'Avatar creation is rearranged: all choices on top, a big avatar with its name below, and clear rings around what you picked.',
           'Every panel, menu, button and tooltip has the new line frame with cut corners.',
+          'A new title picker on your profile, in the game’s own style.',
+          'The Friends list fits on phones, and its buttons grow and glow like the others.',
         ],
       },
       {
@@ -212,8 +214,8 @@ const PATCH_RELEASES: PatchRelease[] = [
 
 const FOOTER_NOTE =
   'You’re playing the public beta. More updates soon — thank you for testing Morkahja.';
-/** Every change in detail, in the public repository. */
-const CHANGELOG_URL = 'https://github.com/babunidev/Morkahja/blob/main/CHANGELOG.md';
+/** Every change in detail, on the Morkahja project page of babuni.dev. */
+const CHANGELOG_URL = 'https://www.babuni.dev/projects/morkahja-rpg/changes/';
 
 const changelogLinkStyle: CSSProperties = {
   display: 'block',
