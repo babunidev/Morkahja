@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useState,
   type CSSProperties,
@@ -98,7 +99,13 @@ export function EncounterTooltip({
   );
 }
 
-/** Renders a tooltip in a top-level portal so it is not clipped by party/encounter stacking. */
+/** How long an anchored tooltip fades in and out. */
+const ANCHORED_TOOLTIP_FADE_MS = 200;
+
+/**
+ * Renders a tooltip in a top-level portal so it is not clipped by party/encounter
+ * stacking. It fades in where it belongs and fades out where it was.
+ */
 export function AnchoredEncounterTooltip({
   anchorRef,
   visible,
@@ -113,11 +120,11 @@ export function AnchoredEncounterTooltip({
   detail?: string;
 }) {
   const [positionStyle, setPositionStyle] = useState<CSSProperties | null>(null);
+  const [shown, setShown] = useState(false);
 
   useLayoutEffect(() => {
     if (!visible) {
-      setPositionStyle(null);
-      return;
+      return undefined;
     }
 
     function updatePosition(): void {
@@ -139,7 +146,21 @@ export function AnchoredEncounterTooltip({
     };
   }, [anchorRef, visible, label, description, detail]);
 
-  if (!visible || !positionStyle) {
+  // Fade in on the frame after it is placed; on hiding, fade out, then unmount.
+  useEffect(() => {
+    if (visible) {
+      const frame = window.requestAnimationFrame(() => setShown(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const frame = window.requestAnimationFrame(() => setShown(false));
+    const timer = window.setTimeout(() => setPositionStyle(null), ANCHORED_TOOLTIP_FADE_MS);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [visible]);
+
+  if (!positionStyle) {
     return null;
   }
 
@@ -148,7 +169,11 @@ export function AnchoredEncounterTooltip({
       description={description}
       detail={detail}
       label={label}
-      positionStyle={positionStyle}
+      positionStyle={{
+        ...positionStyle,
+        opacity: visible && shown ? 1 : 0,
+        transition: `opacity ${ANCHORED_TOOLTIP_FADE_MS}ms ease`,
+      }}
     />,
     document.body,
   );

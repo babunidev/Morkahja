@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import type { ActivityFeedEntryDto, ActivityFeedJoinRoomActionDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
 import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
@@ -264,6 +265,8 @@ export function ActivityFeedOverlay({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [joinPendingId, setJoinPendingId] = useState<string | null>(null);
+  /** The feed arrived at least once since opening (the menu shows after it). */
+  const menuDataLoadedRef = useRef(false);
 
   async function refreshFeed(): Promise<void> {
     setLoading(true);
@@ -276,18 +279,26 @@ export function ActivityFeedOverlay({
       setError(refreshError instanceof Error ? refreshError.message : 'Could not load scribes');
     } finally {
       setLoading(false);
+      menuDataLoadedRef.current = true;
     }
   }
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
+      menuDataLoadedRef.current = false;
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      'nav:News',
+      () => document.querySelector('[data-morkahja-menu="scribes"]'),
+      () => {
+        setVisible(true);
+      },
+      () => menuDataLoadedRef.current,
+    );
 
     void refreshFeed();
 
@@ -296,7 +307,7 @@ export function ActivityFeedOverlay({
     }, POLL_INTERVAL_MS);
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
       window.clearInterval(pollTimer);
     };
   }, [open]);
@@ -326,6 +337,7 @@ export function ActivityFeedOverlay({
 
   return (
     <div
+      data-morkahja-menu="scribes"
       aria-label="Scribes"
       onClick={onClose}
       role="presentation"
@@ -333,6 +345,7 @@ export function ActivityFeedOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

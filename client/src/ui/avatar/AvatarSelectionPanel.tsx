@@ -1,11 +1,13 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type PointerEvent,
   type ReactNode,
 } from 'react';
+import { useImagesReady } from '../transitions/menuReadiness.js';
 import {
   createAvatar,
   fetchAvatars,
@@ -149,6 +151,13 @@ function AvatarSlot({
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const pressKey = `avatar-slot-${index}`;
+  // A slot (a newly created avatar above all) appears once its pictures are
+  // decoded, fading in where it belongs instead of popping in piece by piece.
+  const artboardRef = useRef<HTMLDivElement | null>(null);
+  const imagesReady = useImagesReady(
+    artboardRef,
+    avatar ? `${avatar.id}:${avatar.portrait}:${avatar.frame}` : 'create',
+  );
   const tooltipEnabled = clickable && !hiddenDuringEnter;
   const { visible: showTooltip, handlers: tooltipHandlers } = useTooltipReveal(tooltipEnabled);
 
@@ -164,7 +173,7 @@ function AvatarSlot({
       ...slotButtonStyle,
       ...style,
       cursor: clickable ? 'pointer' : 'default',
-      opacity: hiddenDuringEnter ? 0 : 1,
+      opacity: hiddenDuringEnter || !imagesReady ? 0 : 1,
       transition: `opacity ${AVATAR_ENTER_FADE_MS}ms ease`,
     },
     type: 'button' as const,
@@ -191,6 +200,7 @@ function AvatarSlot({
             <span className="morkahja-avatar-slot-tooltip-meta">Empty slot</span>
           </span>
           <div
+            ref={artboardRef}
             style={{
               ...slotArtboardStyle,
               animation: pressAnimation(isPressed(pressKey)),
@@ -232,6 +242,7 @@ function AvatarSlot({
           {avatarSlotTooltipContent(avatar)}
         </span>
         <div
+          ref={artboardRef}
           style={{
             ...slotArtboardStyle,
             animation: pressAnimation(isPressed(pressKey)),

@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import DonationOverlay from './DonationOverlay.js';
 import { ClosePanelButton, overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
@@ -12,24 +13,11 @@ import { frameDividerStyle, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
 
-interface CostLine {
-  amount: string;
-  title: string;
-  detail: string;
-}
-
-interface CostSection {
-  heading?: string;
-  lines: CostLine[];
-}
-
 interface CreditEntry {
   id: string;
   name: string;
   roles: string;
   paragraphs: string[];
-  costSections?: CostSection[];
-  totalToday?: string;
   externalLink?: {
     label: string;
     url: string;
@@ -37,39 +25,23 @@ interface CreditEntry {
 }
 
 const NIKITA_INSTAGRAM_URL = 'https://www.instagram.com/nikitamalkomusic/';
-
-const OPERATIONAL_MONTHLY = {
-  server: 4.99,
-  cursor: 20,
-  midjourney: 20,
-  serverUsageMay: 2.18,
-  cursorOneTime: 189.69,
-  cursorTotalToDate: 209.69,
-} as const;
-
-const OPERATIONAL_MONTHLY_TOTAL = (
-  OPERATIONAL_MONTHLY.server
-  + OPERATIONAL_MONTHLY.midjourney
-  + OPERATIONAL_MONTHLY.cursor
-).toFixed(2);
-
-const OPERATIONAL_TOTAL_TODAY = (
-  OPERATIONAL_MONTHLY.server
-  + OPERATIONAL_MONTHLY.serverUsageMay
-  + OPERATIONAL_MONTHLY.midjourney
-  + OPERATIONAL_MONTHLY.cursorTotalToDate
-).toFixed(2);
+const BABUNI_WEBSITE_URL = 'https://www.babuni.dev/';
+const BABUNI_CONTACT_EMAIL = 'babuni@babuni.dev';
 
 const CREDITS: CreditEntry[] = [
   {
     id: 'babuni-dev',
-    name: 'Babuni.dev',
+    name: 'Alexander Ludwig aka Babuni',
     roles: 'Author · Game Design · Visual Design · Worldbuilding · Software Development',
+    externalLink: {
+      label: 'Website',
+      url: BABUNI_WEBSITE_URL,
+    },
     paragraphs: [
       'This project is created out of a deep love for worldbuilding, game design, and creative expression. It is a way of bringing ideas to life and shaping imagined worlds into something playable and real. Every part of the process — from visuals to systems to narrative to implementation — is driven by a clear personal vision and a strong desire to explore and realize those ideas fully.',
       'The game is made first and foremost for myself, guided by a defined creative direction, with the hope that others can find joy in it as well. Nothing means more than knowing that players enjoy it, even if only a fraction as much as the enjoyment that goes into creating it.',
       'Deep gratitude to everyone who has supported the project — those who gave feedback, tested, played, and continue to engage with it. That support shapes the work in ways that cannot be measured, and it is sincerely appreciated.',
-      'Tools used: Midjourney (image generation), Photoshop (curation and refinement), Cursor (programming assistance), ChatGPT (storytelling and worldbuilding)',
+      'Tools used: Midjourney (image generation), Photoshop (curation and refinement), Cursor and Claude (programming assistance), ChatGPT (storytelling and worldbuilding)',
     ],
   },
   {
@@ -88,56 +60,19 @@ const CREDITS: CreditEntry[] = [
     ],
   },
   {
-    id: 'operational-costs',
-    name: `Operational Costs · ${OPERATIONAL_MONTHLY_TOTAL}€/mo`,
-    roles: 'What keeps Morkahja running',
+    id: 'keeping-morkahja-alive',
+    name: 'Keeping Morkahja Alive',
+    roles: 'How the game is made and maintained',
     paragraphs: [
-      'Recurring costs for keeping Morkahja alive and evolving, plus separate usage and one-time expenses where noted:',
-      'These expenses are personally covered to keep the game free, independent, and stable. Donations support ongoing development and world expansion rather than unlocking content or advantages.',
+      'Morkahja is made by one person. Everything behind it, from the server that keeps the world running to the tools for art, writing and code, is paid out of my own pocket, and gladly so: building this world is what I love to do.',
+      'So far the game does not earn money. That is fine. Even without any income, I would happily keep paying for it and keep working on Morkahja at a calmer pace. What support changes is time: every bit of it means more hours I can put into new encounters, new adventurers and a richer world.',
+      'That is why every donation is very welcome, and every purchase inside the game is even more welcome. Purchases show that Morkahja can stand on its own, and one day that might help me find someone willing to invest in its future.',
+      `Every little bit helps, and every big bit helps a lot. If you are curious about the details, or want to say hello, write to me at ${BABUNI_CONTACT_EMAIL}. Thank you for playing, and for being part of this world.`,
     ],
-    costSections: [
-      {
-        heading: 'Monthly',
-        lines: [
-          {
-            amount: `${OPERATIONAL_MONTHLY.server}€/mo`,
-            title: 'Server hosting',
-            detail: 'Keeps the world running and scales as more adventurers join.',
-          },
-          {
-            amount: `${OPERATIONAL_MONTHLY.cursor}€/mo`,
-            title: 'Development tools (Cursor Pro)',
-            detail: 'Used to build, refine, and debug the game systems continuously.',
-          },
-          {
-            amount: `${OPERATIONAL_MONTHLY.midjourney}€/mo`,
-            title: 'Creative assets (Midjourney)',
-            detail: 'Generates encounter art, environments, and visual storytelling pieces.',
-          },
-        ],
-      },
-      {
-        heading: 'Usage (May)',
-        lines: [
-          {
-            amount: `${OPERATIONAL_MONTHLY.serverUsageMay}€`,
-            title: 'Server usage',
-            detail: 'Billed separately on top of the monthly hosting plan; varies with traffic.',
-          },
-        ],
-      },
-      {
-        heading: 'One-time',
-        lines: [
-          {
-            amount: `${OPERATIONAL_MONTHLY.cursorOneTime}€`,
-            title: 'Cursor Pro (prepaid)',
-            detail: `One-time spend on top of the ${OPERATIONAL_MONTHLY.cursor}€/mo plan (${OPERATIONAL_MONTHLY.cursorTotalToDate}€ total to date).`,
-          },
-        ],
-      },
-    ],
-    totalToday: OPERATIONAL_TOTAL_TODAY,
+    externalLink: {
+      label: 'Contact',
+      url: `mailto:${BABUNI_CONTACT_EMAIL}`,
+    },
   },
 ];
 
@@ -287,49 +222,18 @@ const bodyTextStyle: CSSProperties = {
   textAlign: 'center',
 };
 
-const costLineLabelStyle: CSSProperties = {
-  ...bodyTextStyle,
-  margin: '0 0 4px',
-  color: 'rgba(255, 204, 102, 0.92)',
-};
-
-const costLineDetailStyle: CSSProperties = {
-  ...bodyTextStyle,
-  margin: '0 0 14px',
-};
-
-const costSectionHeadingStyle: CSSProperties = {
-  ...bodyTextStyle,
-  margin: '4px 0 0',
-  color: 'rgba(255, 204, 102, 0.78)',
-  fontSize: '0.78rem',
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
-};
-
 const creditLinkFooterStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
   paddingTop: 4,
 };
 
-const costTotalTodayStyle: CSSProperties = {
-  margin: '4px 0 0',
-  paddingTop: 12,
-  ...frameDividerStyle({ side: 'top' }),
-};
-
-const costTotalTodayLabelStyle: CSSProperties = {
-  ...costSectionHeadingStyle,
-  margin: '0 0 6px',
-};
-
-const costTotalTodayAmountStyle: CSSProperties = {
-  ...nameStyle,
-  fontSize: '1.1rem',
-};
-
 function openExternalLink(url: string): void {
+  // A mail link hands over to the mail app; a new tab would stay empty.
+  if (url.startsWith('mailto:')) {
+    window.location.href = url;
+    return;
+  }
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
@@ -370,43 +274,11 @@ function CreditCard({
           style={creditBodyStyle}
         >
           <div style={creditBodyColumnStyle}>
-            {credit.paragraphs.slice(0, credit.costSections ? 1 : undefined).map((paragraph) => (
+            {credit.paragraphs.map((paragraph) => (
               <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
                 {paragraph}
               </p>
             ))}
-            {credit.costSections?.map((section) => (
-              <div key={section.heading ?? section.lines[0]?.title ?? 'cost-section'}>
-                {section.heading ? (
-                  <p style={costSectionHeadingStyle}>{section.heading}</p>
-                ) : null}
-                {section.lines.map((line) => (
-                  <div key={`${line.amount}-${line.title}`}>
-                    <p style={costLineLabelStyle}>
-                      {line.amount} {line.title}
-                    </p>
-                    <p style={costLineDetailStyle}>{line.detail}</p>
-                  </div>
-                ))}
-              </div>
-            ))}
-            {credit.costSections
-              ? credit.paragraphs.slice(1).map((paragraph) => (
-                  <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
-                    {paragraph}
-                  </p>
-                ))
-              : credit.paragraphs.map((paragraph) => (
-                  <p key={paragraph.slice(0, 24)} style={bodyTextStyle}>
-                    {paragraph}
-                  </p>
-                ))}
-            {credit.totalToday ? (
-              <div style={costTotalTodayStyle}>
-                <p style={costTotalTodayLabelStyle}>Total today</p>
-                <p style={costTotalTodayAmountStyle}>{credit.totalToday}€</p>
-              </div>
-            ) : null}
             {credit.externalLink ? (
               <div style={creditLinkFooterStyle}>
                 <PanelButton
@@ -447,12 +319,17 @@ export function AboutUsOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      null,
+      () => document.querySelector('[data-morkahja-menu="about"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -476,6 +353,7 @@ export function AboutUsOverlay({
 
   return (
     <div
+      data-morkahja-menu="about"
       aria-label="About us"
       onClick={onClose}
       role="presentation"
@@ -483,6 +361,7 @@ export function AboutUsOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

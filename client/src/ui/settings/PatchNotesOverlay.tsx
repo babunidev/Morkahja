@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import { APP_VERSION } from '../../appVersion.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import {
@@ -28,8 +29,8 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-53-nov-4-13',
-    version: '0.9.0-beta.53',
+    id: 'beta-54-nov-4-13',
+    version: '0.9.0-beta.54',
     period: '4–13 Nov 2026',
     groups: [
       {
@@ -54,6 +55,7 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Each essence slot keeps its own essence: after a loss or a new essence the others no longer change pictures.',
           'Atranor items go to your inventory, not the essence slots, and a bad roll no longer takes them in place of an essence.',
           'Spent solutions and rewards no longer flash in the corner of the encounter before they fly.',
+          'When you choose a solution, the other choices fade out while it plays.',
           'Encounters that need several solutions: tap them one at a time and they hover above their slots until the set is complete, then fly in together. Each one rolls on its own and the rolls are averaged; with too few, the dice rolls for the missing ones.',
         ],
       },
@@ -64,6 +66,9 @@ const PATCH_RELEASES: PatchRelease[] = [
           'Avatar creation is rearranged: all choices on top, a big avatar with its name below, and clear rings around what you picked.',
           'Undo and redo in avatar creation: step back to an earlier combination, change it, and step forward again.',
           'Every panel, menu, button and tooltip has the new line frame with cut corners.',
+          'Menus, Lore, Inventory and Skillbook open once their pictures are loaded; the button you pressed pulses meanwhile. A new avatar fades in once it is ready.',
+          'New Terms of Service and Privacy Policy in plain words, and the welcome screen\'s Restore button is now called Use Your Key.',
+          'Tooltips fade softly in and out; inventory items on phones open their tooltip with a tap anywhere on the item.',
           'A new title picker on your profile, in the game’s own style.',
           'The Friends list fits on phones, and its buttons grow and glow like the others.',
         ],
@@ -221,8 +226,8 @@ const PATCH_RELEASES: PatchRelease[] = [
 
 const FOOTER_NOTE =
   'You’re playing the public beta. More updates soon — thank you for testing Morkahja.';
-/** Every change in detail, on the Morkahja project page of babuni.dev. */
-const CHANGELOG_URL = 'https://www.babuni.dev/projects/morkahja-rpg/changes/';
+/** Opens the babuni.dev living grid on Morkahja's Changelog module. */
+const CHANGELOG_URL = 'https://www.babuni.dev/#project=morkahja-rpg&bloom=big&read=changes';
 
 const changelogLinkStyle: CSSProperties = {
   display: 'block',
@@ -389,12 +394,17 @@ export function PatchNotesOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      null,
+      () => document.querySelector('[data-morkahja-menu="patch-notes"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -404,6 +414,7 @@ export function PatchNotesOverlay({
 
   return (
     <div
+      data-morkahja-menu="patch-notes"
       aria-label="Patch notes"
       onClick={onClose}
       role="presentation"
@@ -411,6 +422,7 @@ export function PatchNotesOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

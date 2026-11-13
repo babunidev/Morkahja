@@ -440,7 +440,7 @@ export function OnboardingGateway({
               style={fullWidthPanelButtonStyle}
               visualStyle={panelButtonVisualStyle}
             >
-              Restore Existing Journey
+              Use Your Key
             </PanelButton>
           </>
         ) : null}

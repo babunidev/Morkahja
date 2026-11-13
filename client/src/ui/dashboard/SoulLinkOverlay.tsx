@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import type { SoulLinkDto } from '@shared/contracts';
 import { createSoulLink, fetchSoulLink } from '../../api/http.js';
 import {
@@ -205,9 +206,14 @@ export function SoulLinkOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      null,
+      () => document.querySelector('[data-morkahja-menu="soul-link"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     setLoadPending(true);
     let cancelled = false;
@@ -231,7 +237,7 @@ export function SoulLinkOverlay({
 
     return () => {
       cancelled = true;
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -272,6 +278,7 @@ export function SoulLinkOverlay({
 
   return (
     <div
+      data-morkahja-menu="soul-link"
       aria-label="Soul Link"
       onClick={onClose}
       role="presentation"
@@ -279,6 +286,7 @@ export function SoulLinkOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import type {
   AchievementProgressDto,
   FriendAvatarDto,
@@ -439,6 +440,8 @@ export function FriendsOverlay({
   const [joiningFriendId, setJoiningFriendId] = useState<string | null>(null);
   const [soulLinkOpen, setSoulLinkOpen] = useState(false);
   const friendDetailRequestRef = useRef(0);
+  /** The list arrived at least once since opening (the menu shows after it). */
+  const menuDataLoadedRef = useRef(false);
 
   const refreshFriends = useCallback(async (): Promise<void> => {
     setLoadPending(true);
@@ -458,6 +461,7 @@ export function FriendsOverlay({
       setLoadError(error instanceof Error ? error.message : 'Could not load friends');
     } finally {
       setLoadPending(false);
+      menuDataLoadedRef.current = true;
     }
   }, []);
 
@@ -503,6 +507,7 @@ export function FriendsOverlay({
   useEffect(() => {
     if (!open) {
       setVisible(false);
+      menuDataLoadedRef.current = false;
       friendDetailRequestRef.current += 1;
       setSelectedFriend(null);
       setFriendAchievements([]);
@@ -515,12 +520,18 @@ export function FriendsOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      'nav:Social',
+      () => document.querySelector('[data-morkahja-menu="friends"]'),
+      () => {
+        setVisible(true);
+      },
+      () => menuDataLoadedRef.current,
+    );
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -587,6 +598,7 @@ export function FriendsOverlay({
   return (
     <>
     <div
+      data-morkahja-menu="friends"
       aria-label="Friends"
       onClick={onClose}
       role="presentation"
@@ -594,6 +606,7 @@ export function FriendsOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

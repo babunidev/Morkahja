@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import {
@@ -266,12 +267,17 @@ export function SettingsScreen({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      'nav:Settings',
+      () => document.querySelector('[data-morkahja-menu="settings"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -351,6 +357,7 @@ export function SettingsScreen({
 
   return (
     <div
+      data-morkahja-menu="settings"
       aria-label="Settings"
       onClick={onClose}
       role="presentation"
@@ -358,6 +365,7 @@ export function SettingsScreen({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section
@@ -413,7 +421,7 @@ export function SettingsScreen({
                 </p>
               ) : !canDownloadKey ? (
                 <p style={keyNoticeStyle}>
-                  Use Restore Journey with your existing {recoveryFileName || 'Morkahja recovery key'} on this device to save a copy here.
+                  Choose Use Your Key on the welcome screen with your existing {recoveryFileName || 'Morkahja recovery key'} on this device to save a copy here.
                 </p>
               ) : (
                 <p style={keyNoticeStyle}>

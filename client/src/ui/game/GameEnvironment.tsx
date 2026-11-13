@@ -59,6 +59,7 @@ import {
 } from './roomContinue.js';
 import { witnessSystemEventDisplay } from './witnessSystemEventDisplay.js';
 import { committedSolutionSetFor } from './rewardFlyAnimation.js';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import { shouldPlayLevelUpSound } from './levelUpSoundCue.js';
 import {
   encounterSnapshotAdvanced,
@@ -209,6 +210,7 @@ export function GameEnvironment({
   const [loreOpen, setLoreOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
+  const cancelPanelRevealRef = useRef<(() => void) | null>(null);
   const [homeVisible, setHomeVisible] = useState(false);
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
   const [resultRollVisible, setResultRollVisible] = useState(false);
@@ -663,6 +665,31 @@ export function GameEnvironment({
     return roomAfterContinue;
   }
 
+  /**
+   * Lore, Inventory and Skillbook open only once their pictures are decoded
+   * (the first opening otherwise stutters); the button pulses meanwhile.
+   * Closing is immediate, and one panel opening closes the others.
+   */
+  function toggleGamePanel(panel: 'lore' | 'inventory' | 'skillbook'): void {
+    const isOpen = { lore: loreOpen, inventory: inventoryOpen, skillbook: skillbookOpen }[panel];
+    cancelPanelRevealRef.current?.();
+    cancelPanelRevealRef.current = null;
+    if (isOpen) {
+      ({ lore: setLoreOpen, inventory: setInventoryOpen, skillbook: setSkillbookOpen })[panel](false);
+      return;
+    }
+    cancelPanelRevealRef.current = revealMenuWhenReady(
+      `game:${panel}`,
+      () => document.querySelector(`[data-morkahja-menu="game-${panel}"]`),
+      () => {
+        cancelPanelRevealRef.current = null;
+        setLoreOpen(panel === 'lore');
+        setInventoryOpen(panel === 'inventory');
+        setSkillbookOpen(panel === 'skillbook');
+      },
+    );
+  }
+
   async function handleContinueEncounter(
     action: EncounterAction,
     _selectedRoll: number | null,
@@ -1002,34 +1029,13 @@ export function GameEnvironment({
           <div style={bottomDelay}>
             <ActionMenuZone
               onInventoryToggle={() => {
-                setInventoryOpen((open) => {
-                  const next = !open;
-                  if (next) {
-                    setLoreOpen(false);
-                    setSkillbookOpen(false);
-                  }
-                  return next;
-                });
+                toggleGamePanel('inventory');
               }}
               onSkillbookToggle={() => {
-                setSkillbookOpen((open) => {
-                  const next = !open;
-                  if (next) {
-                    setLoreOpen(false);
-                    setInventoryOpen(false);
-                  }
-                  return next;
-                });
+                toggleGamePanel('skillbook');
               }}
               onLoreToggle={() => {
-                setLoreOpen((open) => {
-                  const next = !open;
-                  if (next) {
-                    setInventoryOpen(false);
-                    setSkillbookOpen(false);
-                  }
-                  return next;
-                });
+                toggleGamePanel('lore');
               }}
               helpCalled={helpCalled}
               onCallForHelp={() => {

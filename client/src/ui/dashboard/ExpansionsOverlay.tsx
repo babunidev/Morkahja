@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import { createCheckoutSession, fetchPlayer, unlockExpansion } from '../../api/http.js';
 import { formatEurCents } from '../commerce/formatPrice.js';
 import { gameEncounters, gameExpansions } from '../../data/gameContent.js';
@@ -712,12 +713,17 @@ export function ExpansionsOverlay({
       return;
     }
 
-    const showTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, 0);
+    // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
+    const cancelReveal = revealMenuWhenReady(
+      'nav:Expansions',
+      () => document.querySelector('[data-morkahja-menu="expansions"]'),
+      () => {
+        setVisible(true);
+      },
+    );
 
     return () => {
-      window.clearTimeout(showTimer);
+      cancelReveal();
     };
   }, [open]);
 
@@ -818,6 +824,7 @@ export function ExpansionsOverlay({
   return (
     <>
     <div
+      data-morkahja-menu="expansions"
       aria-label="Expansions"
       onClick={onClose}
       role="presentation"
@@ -825,6 +832,7 @@ export function ExpansionsOverlay({
       style={{
         ...backdropStyle,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <section

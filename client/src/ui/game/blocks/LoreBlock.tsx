@@ -297,6 +297,7 @@ export function LoreBlock({
     <aside
       aria-hidden={!visible}
       aria-label="Lore"
+      data-morkahja-menu="game-lore"
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
       onContextMenu={preventImageContextMenu}
       style={{

@@ -65,6 +65,30 @@ const scrollBodyStyle: CSSProperties = {
   scrollbarColor: 'rgba(255, 204, 102, 0.45) transparent',
 };
 
+const effectiveDateStyle: CSSProperties = {
+  margin: '0 0 16px',
+  color: 'rgba(247, 239, 224, 0.78)',
+  fontSize: '0.9rem',
+  lineHeight: 1.4,
+};
+
+const introStyle: CSSProperties = {
+  margin: '0 0 14px',
+  color: 'rgba(247, 239, 224, 0.9)',
+  fontSize: '0.92rem',
+  lineHeight: 1.55,
+};
+
+const linkStyle: CSSProperties = {
+  color: '#ffcc66',
+  textDecoration: 'underline',
+  textUnderlineOffset: 2,
+};
+
+const SUPPORT_EMAIL = 'support@babuni.dev';
+/** The Morkahja project on babuni.dev: documentation and development journal. */
+const PROJECT_PAGE_URL = 'https://www.babuni.dev/#project=morkahja-rpg&bloom=big';
+
 const sectionStyle: CSSProperties = {
   margin: '0 0 20px',
   paddingBottom: 18,
@@ -178,209 +202,153 @@ export function TermsOfServiceOverlay({
           <ClosePanelButton onClose={onClose} pressKey="terms-of-service-close" />
         </header>
         <div data-terms-of-service-scroll="" style={scrollBodyStyle}>
-          <TermsSection heading="1. The World and the Service">
+          <p style={effectiveDateStyle}>
+            <strong>Effective Date:</strong> November 13, 2026
+          </p>
+          <p style={introStyle}>
+            Welcome to Morkahja. These terms are the rules for playing the game, written to be
+            read rather than skipped. When they say &ldquo;I&rdquo; or &ldquo;me&rdquo;, that is
+            Babuni, the person who makes Morkahja.
+          </p>
+
+          <TermsSection heading="1. Who Makes Morkahja">
             <TermsParagraph>
-              Morkahja is an evolving digital world composed of client software, servers, supporting
-              infrastructure, updates, and experimental systems. It is continuously developed and may
-              change over time without prior notice. Access is granted as participation in a living
-              system, not as ownership of any part of it.
+              Morkahja is made and run by one person: Alexander Ludwig aka Babuni, in Sweden.
+            </TermsParagraph>
+            <TermsParagraph>
+              Contact:{' '}
+              <a href={`mailto:${SUPPORT_EMAIL}`} style={linkStyle}>
+                {SUPPORT_EMAIL}
+              </a>
+            </TermsParagraph>
+            <TermsParagraph>
+              How the game is made is public: its documentation and development journal are on{' '}
+              <a href={PROJECT_PAGE_URL} rel="noreferrer" style={linkStyle} target="_blank">
+                my website
+              </a>
+              .
             </TermsParagraph>
           </TermsSection>
 
-          <TermsSection heading="2. Acceptance of Terms">
+          <TermsSection heading="2. A World That Keeps Growing">
             <TermsParagraph>
-              By creating a player identity, generating a key, or entering the world of Morkahja in any
-              form, you agree to these Terms of Service. If you do not agree, you must not access or use
-              the service.
+              Morkahja is a living game. Encounters, systems and stories change as it grows,
+              sometimes without notice. You take part in that world; you do not own a part of it.
+            </TermsParagraph>
+            <TermsParagraph>
+              By starting a journey or using your key, you agree to these terms. If you do not
+              agree, please do not play.
             </TermsParagraph>
           </TermsSection>
 
-          <TermsSection heading="3. Player Identity and Account Keys">
+          <TermsSection heading="3. Your Key Is Your Key">
+            <TermsList
+              items={[
+                'When you start a journey, you receive a key. That key is your journey: using it on any device brings your progress back.',
+                'Keep it safe and private. Anyone who has your key can play as you.',
+                'There is no email, password reset or identity check. If your key is lost, I cannot restore the journey, and access cannot be reassigned to anyone else.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="4. Free to Play, With Optional Purchases">
+            <TermsList
+              items={[
+                'Morkahja is free to play. Gems are earned in the game and cannot be bought.',
+                'Expansions unlock new content; dice skins are purely cosmetic. Both can be unlocked with gems or bought with real money. Payments are handled by Stripe.',
+                'Payment never buys an advantage over other players. There are no loot boxes and nothing random for money.',
+                'Unlocks belong to your key and cannot be transferred. An expansion’s content may be reworked or merged over time; your access is kept wherever technically possible.',
+                'Purchases unlock digital content right away and are normally final. If something went wrong with a purchase, write to me and we will find a fair solution. This does not limit any rights you have under consumer law.',
+                'Donations are voluntary gifts and do not unlock anything.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="5. Playing With Others">
+            <TermsList
+              items={[
+                'There is no chat or messaging in Morkahja. You play together in parties and can call others for help.',
+                'Friends are a link for playing together, nothing more. Adding a friend is one-sided: anyone who knows your player name can add you, and you can add anyone. Friends can see whether you are online, your avatars, levels and achievements, and can join you.',
+                'Your player name is the one thing others see first, so choose one that does not reveal more about you than you want.',
+                'Be kind. Harassment, hate, impersonation and disrupting other players’ games are not allowed.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="6. Fair Play">
+            <TermsList
+              items={[
+                'Please do not cheat, exploit bugs, attack the service or interfere with other players’ sessions. Found a bug? Telling me is very welcome.',
+                'If someone abuses the game, I may restrict or remove the account, items or progress, without prior notice. I try to be fair, and these decisions are mine to make.',
+                'These rules are about the live game; they do not restrict what the open licenses below allow you to do with the published code and content.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="7. Open, With a Few Things Reserved">
+            <TermsList
+              items={[
+                'The original game software is licensed under MIT, and original creative content is shared under CC BY 4.0 where I hold the rights. See LICENSE and CONTENT_LICENSE.md in the repository.',
+                'Commissioned music and externally sourced sounds, fonts and other third-party assets keep their own terms.',
+                'The Morkahja name, identity and branding remain reserved.',
+                'Streaming, recording, fan art, mods and other community creations are welcome, and your fan works are yours. Please do not present them as official, and do not spread harmful modifications.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="8. Age">
+            <TermsList
+              items={[
+                'Morkahja is meant for players aged 18 and over. Children may play only together with a parent or guardian, who is responsible for their play.',
+                'The game contains no explicit content. If mature content is ever added, it will come with a setting to turn it on or off.',
+              ]}
+            />
+          </TermsSection>
+
+          <TermsSection heading="9. Your Data">
             <TermsParagraph>
-              Player identity is defined through a cryptographic key or equivalent session-based
-              identifier.
+              Morkahja keeps only what the game needs: no email, no ads, no tracking, and no data
+              is sold. The Privacy Policy explains the details.
             </TermsParagraph>
+          </TermsSection>
+
+          <TermsSection heading="10. Availability and Changes">
             <TermsList
               items={[
-                'The player is solely responsible for safeguarding their key.',
-                'Lost, deleted, or inaccessible keys cannot be recovered.',
-                'There is no identity verification system, recovery system, or account restoration process.',
-                'Access is defined entirely by possession of the key; ownership cannot be disputed or reassigned.',
+                'Morkahja is a one-person project. Servers may be changed, paused or shut down, and features may change or be removed.',
+                'In rare cases progress may be reset; I will do what I can to preserve it.',
+                'The game is provided as it is. Bugs, interruptions and data loss can happen.',
               ]}
             />
           </TermsSection>
 
-          <TermsSection heading="4. Free-to-Play Structure">
-            <TermsParagraph>Morkahja is free to play.</TermsParagraph>
-            <TermsList
-              items={[
-                'Optional one-time purchases are available for expansions and cosmetic dice skins.',
-                'In-game currency (gems) is not purchasable and can only be earned through gameplay.',
-                'No paid advantages, loot boxes, or randomized monetization systems are included.',
-                'Progression is earned entirely through gameplay, except where expansions grant access to additional content.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="5. Expansions and Paid Access">
-            <TermsParagraph>Certain optional expansions and cosmetic dice skins may be available for purchase, either with earned in-game gems or with real money.</TermsParagraph>
-            <TermsList
-              items={[
-                'Expansions unlock access to additional content, regions, or systems.',
-                'Dice skins are purely cosmetic and do not affect gameplay or odds.',
-                'Purchases do not grant competitive advantage or gameplay power over other players.',
-                'There are no loot boxes, gambling mechanics, or randomized paid rewards.',
-                'Unlocks are permanently tied to the player’s account key.',
-                'Purchases are final and non-refundable.',
-                'Expansions may be updated, reworked, merged, or restructured over time, while access rights are preserved where technically feasible.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="6. Player Interaction and Communication">
+          <TermsSection heading="11. Liability">
             <TermsParagraph>
-              Morkahja does not provide chat, messaging, or direct communication systems.
+              As far as Swedish law allows, I am not liable for losses caused by interruptions,
+              bugs, exploits or data loss. This does not limit any liability that the law does not
+              allow to be excluded.
             </TermsParagraph>
-            <TermsList
-              items={[
-                'Players may experience shared gameplay sessions but must communicate externally through means not provided by the game.',
-                'All forms of harassment, hate speech, impersonation, or disruptive behavior are strictly prohibited.',
-                'Any behavior that undermines the integrity or safety of the experience is not permitted.',
-              ]}
-            />
           </TermsSection>
 
-          <TermsSection heading="7. Fair Play and Enforcement">
-            <TermsParagraph>Fair play is a core requirement of participation.</TermsParagraph>
-            <TermsList
-              items={[
-                'Cheating, exploiting bugs, or interfering with the live game service is prohibited. These service rules do not restrict rights granted under the published software and content licenses.',
-                'Accounts may be suspended, restricted, or permanently banned at any time.',
-                'Items, progress, or access may be removed in cases of abuse or violation.',
-                'Enforcement decisions are final and may be applied without prior notice.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="8. Data, Privacy, and Minimal Collection">
-            <TermsParagraph>Morkahja is designed with a minimal data philosophy.</TermsParagraph>
-            <TermsList
-              items={[
-                'No advertising or behavioral tracking is used.',
-                'No user profiling is performed.',
-                'No data is sold or shared with third parties.',
-                'Only essential data required for gameplay functionality is stored.',
-                'Lost data or lost keys cannot be recovered.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="9. Ownership and Licensing">
-            <TermsParagraph>Morkahja operates under a hybrid openness model.</TermsParagraph>
-            <TermsList
-              items={[
-                'Original game software is licensed under MIT; original creative content is shared under CC BY 4.0 where Babuni holds the relevant rights. See the repository LICENSE and CONTENT_LICENSE.md.',
-                'Commissioned music and externally sourced sounds, fonts, and other third-party assets are not relicensed by those notices; their own rights terms apply.',
-                'The Morkahja name, identity, and branding remain reserved unless explicitly stated otherwise.',
-                'Fan content, streaming, modding, and community creations are permitted and encouraged.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="10. Technical Integrity">
-            <TermsParagraph>The integrity of the system must not be compromised.</TermsParagraph>
-            <TermsList
-              items={[
-                'Attacking the service, evading access controls, manipulating other players\' sessions, or accessing data without permission is prohibited. Open-source reuse rights remain governed by the published licenses.',
-                'Exploiting unintended behavior or bugs for advantage is prohibited.',
-                'Attempts to bypass system rules or mechanics may result in enforcement action.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="11. Service Availability and Changes">
+          <TermsSection heading="12. Governing Law">
             <TermsParagraph>
-              Morkahja is an evolving system without fixed guarantees of continuity.
+              These terms are governed by Swedish law. If you live elsewhere in the EU, the
+              mandatory consumer protections of your country still apply.
             </TermsParagraph>
-            <TermsList
-              items={[
-                'Servers may be modified, paused, or shut down at any time.',
-                'Features, systems, and content may change, evolve, or be removed.',
-                'Temporary or permanent resets may occur in rare cases, with efforts made to preserve progress where possible.',
-                'No guarantee of uninterrupted availability is provided.',
-              ]}
-            />
           </TermsSection>
 
-          <TermsSection heading="12. No Warranty">
+          <TermsSection heading="13. Changes to These Terms">
             <TermsParagraph>
-              The service is provided “as is” and “as available”.
+              These terms may be updated as the game changes; the date at the top shows the latest
+              version. Playing after a change means you accept the updated terms.
             </TermsParagraph>
-            <TermsList
-              items={[
-                'No guarantees are made regarding stability, correctness, or uninterrupted operation.',
-                'Bugs, errors, or data loss may occur.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="13. Limitation of Liability">
-            <TermsParagraph>To the fullest extent permitted under Swedish law:</TermsParagraph>
-            <TermsList
-              items={[
-                'The developer is not liable for losses arising from service interruptions, bugs, exploits, or data loss.',
-                'Use of the service is at the player’s own risk.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="14. Community and Fan Content">
-            <TermsParagraph>
-              Players are free to engage with Morkahja creatively outside the game.
-            </TermsParagraph>
-            <TermsList
-              items={[
-                'Streaming, recording, modding, and fan creations are permitted.',
-                'Fan works remain the property of their creators.',
-                'Misrepresentation of official status is prohibited.',
-                'Malicious redistribution or harmful modification is not allowed.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="15. Age and Responsibility">
-            <TermsParagraph>Morkahja contains no explicit content.</TermsParagraph>
-            <TermsList
-              items={[
-                'There is no enforced age restriction.',
-                'Use of the service by minors is subject to parental or guardian responsibility where applicable.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="16. Paid Expansions and Cosmetics">
-            <TermsParagraph>Morkahja includes optional paid expansions and cosmetic dice skins.</TermsParagraph>
-            <TermsList
-              items={[
-                'Expansions unlock additional content and access rights; dice skins are cosmetic only.',
-                'No gameplay advantages are granted through payment.',
-                'Purchasable in-game currency and consumable microtransactions do not exist; gems are earned through play.',
-                'Purchases are final and non-refundable.',
-                'Unlocks remain tied to the player’s account key and cannot be transferred.',
-                'Content may evolve over time while access rights are preserved where possible.',
-              ]}
-            />
-          </TermsSection>
-
-          <TermsSection heading="17. Governing Law">
-            <TermsParagraph>These Terms are governed by the laws of Sweden.</TermsParagraph>
           </TermsSection>
 
           <section style={{ ...sectionStyle, borderWidth: 0, borderImageSource: 'none', paddingBottom: 0, marginBottom: 0 }}>
-            <h3 style={sectionHeadingStyle}>18. Final Principle</h3>
+            <h3 style={sectionHeadingStyle}>A Final Word</h3>
             <TermsParagraph>
-              Morkahja is not a fixed product but a continuing world. Participation implies acceptance
-              that systems, stories, and structures may change as part of its ongoing evolution.
+              Morkahja is not a finished product but a world in the making. Thank you for being
+              part of it.
             </TermsParagraph>
           </section>
         </div>
