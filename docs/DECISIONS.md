@@ -106,3 +106,6 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-11 (release `a40a6c5c`). **Babuni's decision (2026-11-11):** the bots are not marked as bots: "people don't need to know that it's bots ... It's just could be other players." Babuni also observed them appearing in the activity feed as normal. Their effect on achievements has not been reviewed.
 
+## 2026-11-13 — Licensing decision
+
+To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
