@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 07:17 UTC (0.9.0-beta.51, Atranor items)
+
+Approved by Babuni ("yes release"). `main` at `49fb6809` (PR #33): Atranor items no longer fill essence slots (client) and are no longer lost as lives on Hardship/Misery (server, `inventoryService.ts`). No dependency, schema or game-content changes.
+
+- **Before:** backend `5022cde9`, frontend `20261113-063533`, no uncommitted files. Previous staging files moved to `prev-20261113-0717`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 40/40); CI `verify` passed on PR #33.
+- **Release:** backup `20261113-071757` (71 players, 104 avatars, 104 inventories; sha256 `8414a318…`). Backend fast-forwarded to `49fb6809`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-071758` (`index-CQMDGNY8.js`, contains `0.9.0-beta.51`), public checks passed. Bots back online.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI.
+
 ## Production release — 2026-11-13, 06:35 UTC (0.9.0-beta.50, essence slot fix)
 
 Approved by Babuni ("yes release it"). `main` at `5022cde9` (PR #31): client fix so each essence slot keeps its own essence; server changes are the version strings only.
