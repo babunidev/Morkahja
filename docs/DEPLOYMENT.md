@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-13, 17:53 UTC (0.9.0-beta.53, solution sets)
+
+Requested by Babuni ("bring it online, I need to test it with the high level accounts"). `main` at `c6e6dd20` (PR #37): encounters that need several solutions are chosen one at a time (D-019). Server rules change (`encounterResolver.ts`, `/room/choice` accepts `picks`/`diceFill`), new snapshots carry per-copy rolls (`extraRolls`); no schema migration, dependency or game-content change. Encounters already open at release reuse each slot's roll for every copy.
+
+- **Before:** backend `e12c2fec`, frontend `20261113-163751`, no uncommitted files. Previous staging files moved to `prev-20261113-1753`.
+- **Checks before the release:** `npm run release:check` passed on the branch (client 36/36, server 41/41); CI `verify` passed on PR #37; uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261113-175324` (73 players, 109 avatars, 109 inventories; sha256 `51e74d1d…`). Backend fast-forwarded to `c6e6dd20`, `npm ci`, health gate and content endpoint passed, frontend release `20261113-175326` (`index-DVB4dsGE.js`, contains `0.9.0-beta.53` and the hovering-set code). Public checks passed; bots signed in again and ready.
+- **Not done:** backup restore not proven (dump download not permitted in this session); not checked on screen by AI in production; party play with sets untested.
+
 ## Production release — 2026-11-13, 16:37 UTC (0.9.0-beta.52, flight flash fix)
 
 Approved by Babuni ("release"). `main` at `e12c2fec` (PR #35): flying icons are created hidden and shown only once their first keyframe applies, so spent solutions and rewards no longer flash in the encounter's top-left corner (`rewardFlyAnimation.ts`). Client-only behavior change plus the version bump; no dependency, schema or game-content changes.

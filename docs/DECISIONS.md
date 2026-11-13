@@ -164,7 +164,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** the number needed is the encounter's difficulty (1–4), which also used to be "how many copies of one slot's item"; a slot is now usable with a single charge. Shared rules in `shared/src/solutionSet.ts`; per-copy rolls in the same ranges as the slot's own (items 61–100, alternatives 50–100); losses, rewards and the outcome table are unchanged and read the averaged roll. Encounters needing one solution play as before.
 
-**Status:** implemented on `feat/multi-solution-sets` (0.9.0-beta.53); not merged or released.
+**Status:** live since 2026-11-13 (release `c6e6dd20`, 0.9.0-beta.53), released at Babuni's request to test with high-level accounts.
 
 ## 2026-11-13 — Licensing decision
 
