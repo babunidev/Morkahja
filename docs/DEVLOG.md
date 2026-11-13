@@ -239,6 +239,71 @@ Right after the release I levelled up a new avatar twice and each time got the l
 
 After collecting a reward I opened the inventory and the item was not there; it only turned up in the next encounter. The server adds rewards when the round is committed, which happens on continuing, so a collected item was in limbo for one step. AI kept the game's single source of truth and changed only what is shown: the inventory panels and the avatar's essence row now include what was just collected or lost, until the next encounter arrives with the server's committed inventory. **Verification:** client typecheck, tests and build passed; my own check in the game is next. **Not deployed yet.**
 
+### Centred on every screen — 2026-11-12
+
+On my phone the game leaned to the left and the notifications at the top were off-centre. Phone-sized screenshots of a local test player showed why: the screen's layout grew to fit the party strip, which is wider than a phone, so everything started at the left edge and ran off the right, and the phone browser widened the page as well. The same quirk had nudged the desktop screen off-centre without my noticing. AI capped the layout at the screen width, let the party slots and menu buttons share a narrow screen, and kept the desktop proportions I had approved. **Verification:** measured and screenshotted at two phone sizes and on desktop; client tests and build passed; the test on my own phone comes next, on the local server. **Not deployed yet.**
+
+### Tooltips that point at their item — 2026-11-12
+
+Item descriptions in the Inventory and Skillbook sometimes slid under the frame or off the picture. What I wanted, as I described it: open toward the middle of the picture from wherever the item sits, hold on to the item by one corner, and mark that corner in gold so the two read as connected. AI implemented the placement as a small tested rule bounded by the picture itself, and found along the way that on desktop the tooltip had been positioned in the stage's unscaled pixels while measured in screen pixels. **Verification:** measured in the browser on desktop and two phone sizes; client tests and build passed. **Not deployed yet.**
+
+### One tooltip style for the whole game screen — 2026-11-12
+
+The new inventory tooltips worked so well that I wanted the same everywhere in the game: on the solutions, with the dice centred, on rewards and losses, on the Continue arrow, on the menu buttons with a word about what each does, and a small name-and-level preview on my avatar, all appearing after a short delay. AI built one shared tooltip for all of them. Testing it with simulated long presses turned up an older bug: on a touch screen, releasing a long press still pressed the button, so reading a solution's tooltip could use the solution. That is fixed too. **Verification:** checked with touch long presses in the browser and with tests and a build; the desktop hover delay is for my own test. **Not deployed yet.** When I tried it, the solution tooltips, even the dice's, had scroll bars. A leftover height limit made the frame scrollable, and the gold marker poking out of the frame was enough to trigger them. The tooltips now simply grow with their text.
+
+### A frame that keeps time — 2026-11-12
+
+The long bar graphics around the encounter picture felt heavy. I asked for plain lines instead: a solid one, one with random gaps, a thin one, a little space and an outer line, with small triangles filling the corners and the outer corners cut off as well. Then I wanted the bottom line, the one the solutions and rewards sit on, to work as a timer. Whenever the game plays an animation I have to wait for, it shrinks from the outside toward whatever is busy, so I can see when I am free to act again. While trying it I noticed it was missing the moment I care about most: rewards and losses wait a few seconds before they can be collected. AI added that, and a fade-in so the line does not just pop up. AI drew the frame as lines in the browser, with tests for the cut-corner geometry and timing, and traced the timer through whole rounds in a headless browser on desktop and phone sizes. **Not deployed yet.**
+
+### Trying it on my phone — 2026-11-12
+
+Opening the local game on my phone showed two things. The welcome panel was off-centre and ran off the right edge, on the first screen and on the New Journey form. And I could not create a journey at all. The first was a width that left out the panel's own padding. The second was the connection: phones reach my computer over plain http on the home network, and browsers only allow the cryptography behind the journey keys on secure pages. AI added an https mode for the local server, so the phone gets a secure page after accepting the certificate once. The game now names a missing secure connection instead of blaming the backend. **Verification:** confirmed in a headless browser at phone size over the network address, on http and on https, including creating a journey. **Not deployed yet.**
+
+### Making an avatar on a phone — 2026-11-12
+
+Avatar creation on my phone was cramped and off-centre, with small race buttons. I described the layout I wanted: all the choices in one block on top (races, then roles, then frame and sex next to each other), and underneath a big avatar with its name on top, using the space down to the Cancel and Accept buttons. AI rebuilt the panel that way, fixed the same width mistake as on the welcome screen, and confirmed that the standalone version had no avatar-creation changes we had missed. **Verification:** screenshots and measurements at two phone sizes and on desktop in a headless browser, including creating an avatar; tests and build passed. **Not deployed yet.**
+
+### More room for my avatar — 2026-11-13
+
+On my phone the new avatar creation was close, but the frame still clipped past the edges. AI now sizes the preview by the frame, not the portrait inside it. I also wanted the selected race, role and sex easier to see. Each now has a thin gold ring, a ring with random gaps around it, and the glow. In the game, when I play alone, my avatar now takes the whole space between the solutions and the bottom buttons, instead of a slot sized for three party members. **Verification:** measured and screenshotted at two phone sizes and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
+
+
+### One frame for everything — 2026-11-13
+
+The new encounter frame looked so much better than the rounded gold borders everywhere else that I wanted it on every panel and tooltip: the menus, avatar creation, the tooltips, all with the same lines, the gapped line, the thin line, the little gap, the outer line and the corner triangles, just a little thinner. AI made one shared frame and put it on all of them, in a panel size and a smaller tooltip size, and moved the tooltips' gold corner marker onto the cut corner. **Verification:** screenshots of the menus, avatar creation and tooltips at phone size and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
+
+### Frames all the way down — 2026-11-13
+
+The panels had their new frames, but everything inside still had the old rounded gold lines. I asked for the buttons, fields, friend entries and cards to get a simpler version of the frame: just the line and one gapped line around it, cut corners and the small triangles. Dividers should join the frame with little triangles instead of stopping in a right angle, and the achievement bars should get cut ends too. I had also seen the Friends list run past the right edge on my phone. It was the same width mistake as on the welcome screen, and it is now fixed for every panel. The patch notes had stopped in June, so they now cover everything since, with a link to the full changelog. And I decided on a version rule: every development step counts one up in the beta number, which brings us from 0.9.0-beta.2.2 (read as 22) to 0.9.0-beta.42. AI drew the simple frame as one image per colour, so each element only needed a style change. **Verification:** screenshots of the menus and avatar creation on phone and desktop sizes; tests and build passed. **Not deployed yet.**
+
+### Polishing the frames — 2026-11-13
+
+Trying the new frames, I saw lines flicker across the buttons whenever they grew on hover, like little scroll bars. The cause was in how the browser pieced the frame image together, so AI now draws the frame from plain background layers, and the glow moved outside so the cut corners don't clip it. In avatar creation the hover glow was cut off at the sides; it has room now. The friend entries still poked out of the Friends panel, and their buttons didn't react on hover like the rest; both are fixed. The title choice on the profile opened a plain browser list, so it is now a framed list in the game's colours. The patch notes link to the changelog on my website instead of GitHub. One thing for the website: its Morkahja page shows the game's address but no clear "Play" link. **Verification:** screenshots before and after in a headless browser at phone and desktop sizes; tests and build passed. **Not deployed yet.**
+
+### One countdown per wait — 2026-11-13
+
+Watching the frame timer, I saw it start over for every little animation: once for the dice appearing, again for the solutions flying in, and several times between using a solution and getting the reward. For me those are two waits, not many. The first runs from a new encounter until its solutions shake to say they are ready. The second runs from using a solution until the reward, loss or Continue arrow is ready. AI turned the timer into those two phases: each animation along the way only adjusts how fast the line runs out, so it never jumps back to full. I also wanted the changelog link to open my website's living grid right at the Morkahja changelog reader, but the grid has no address for that yet; that is a request for the website. **Verification:** traced in a headless browser through a roll and the next encounter; tests and build passed. **Not deployed yet.**
+
+### A line under every tooltip title — 2026-11-13
+
+The reward tooltips had a small divider between the item's name and its text, and I liked it enough to want it everywhere: on the solutions, the losses and the inventory. AI made it one shared piece and put it in every game tooltip with a title and text, and gave the dice tooltip enough room inside its frame along the way. **Verification:** screenshots of the tooltips at phone and desktop sizes in a headless browser; tests and build passed. **Not deployed yet.**
+
+### Stepping back through avatars — 2026-11-13
+
+Avatar creation used to let me go back to an earlier avatar, and I wanted that back, now with redo as well. Every pick and every randomize is saved in a list, and two small round arrow buttons beside the name step back and forward through it. If I step back and change something, the change slots in at that point and everything I did afterwards stays reachable. **Verification:** stepped through randomizing, undoing, changing and redoing in a headless browser at phone size; tests and build passed. **Not deployed yet.**
+
+### Avatar details with a frame — 2026-11-13
+
+One element still had no frame: the details card that opens when I tap an avatar. It now opens like the tooltips, in the same frame, popping out above my avatar with the marker in the middle, and for the side slots anchored by a corner the way the item tooltips are. **Verification:** checked for my own avatar at phone and desktop sizes in a headless browser; the side slots still need my own look with a party; tests and build passed. **Not deployed yet.**
+
+### Lives on the avatar — 2026-11-13
+
+I wanted my lives where I can see them: five essence slots on the bottom edge of my avatar's portrait, one at the bottom and two on each side, instead of a row hidden in the details. They now behave like a small belt. A lost essence leaves from its slot and the slot stays empty. At the next encounter, essences from my inventory fly in to fill the gaps, and a new essence I collect goes straight into a free slot, or into the inventory once all five are full. **Verification:** in a headless browser at phone size the slots showed on the avatar, and a lost essence emptied its slot; the refill and collecting into a slot are covered by tests but still need a look in play. **Not deployed yet.**
+
+### Making room on the avatar — 2026-11-13
+
+With the essence slots along the bottom of my avatar, the badge showing what I used and what I rolled sat in their way. It moved to the top-right corner of the portrait. **Verification:** screenshot after a roll at phone size; tests and build passed. **Not deployed yet.**
+
 ## 2026-11-13 — Giving the repository clear permissions
 
 Public source alone did not explain what others could reuse, so I approved MIT for original game code and CC BY 4.0 for original creative work, with music and other people's sound files excluded. AI assistance added the license and brought the project notes into agreement, without changing how the application runs. Other people's content retains its own terms.

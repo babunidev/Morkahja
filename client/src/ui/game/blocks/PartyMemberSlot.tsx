@@ -8,7 +8,6 @@ import type {
 } from '../../../api/http.js';
 import AvatarPortraitStack from '../../avatar/AvatarPortraitStack.js';
 import AvatarPartyDetailsCard, {
-  avatarDetailsOverlayStyle,
   type AvatarDetailsSlotSide,
 } from '../../avatar/AvatarPartyDetailsCard.js';
 import { GAME_FOCUS_BUTTON_ICONS } from '../gameUiAssets.js';
@@ -24,6 +23,9 @@ import {
   PARTY_BADGE_SIZE_PX,
   PartyParticipantChoiceBadge,
 } from './partyParticipantChoiceBadge.js';
+import { simpleFrameStyle } from '../../common/simpleFrame.js';
+import { AnchoredGamePopover } from '../GameTooltip.js';
+import { EssenceSlotsRing } from '../../avatar/EssenceSlotsRing.js';
 
 const PORTRAIT_FALLBACK = 'avatar_verdani_female_mage_a.webp';
 
@@ -125,9 +127,7 @@ const xpPulseDotStyle: CSSProperties = {
 
 const kickButtonStyle: CSSProperties = {
   padding: '4px 10px',
-  borderRadius: 999,
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  background: 'rgba(40, 12, 8, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(40, 12, 8, 0.82)', opacity: 0.81, scale: 0.6 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.62rem',
@@ -255,7 +255,7 @@ export function PartyMemberSlot({
   const focusPresence = useOpacityPresence(showFocusBadge);
   const [displayFocusIcon, setDisplayFocusIcon] = useState(focusIconSrc);
   const [displayFocusTooltip, setDisplayFocusTooltip] = useState(focusTooltip);
-  const compact = slotSide !== 'center';
+  const detailsAnchorRef = useRef<HTMLButtonElement>(null);
   const badge = statusLabel(participant, roomState);
 
   useEffect(() => {
@@ -288,6 +288,7 @@ export function PartyMemberSlot({
       <div style={columnStyle}>
         <div style={portraitWrapStyle}>
           <button
+            ref={detailsAnchorRef}
             aria-expanded={detailsOpen}
             aria-label={`${participant.avatar.name}, level ${participant.avatar.level}. ${badge || 'party member'}. ${detailsOpen ? 'Hide' : 'Show'} details`}
             className={[
@@ -311,6 +312,7 @@ export function PartyMemberSlot({
                 }}
                 portrait={portraitSrc}
               />
+              <EssenceSlotsRing avatarId={participant.avatar.id} essences={participant.avatar.inventory?.essences} />
               <PartyParticipantChoiceBadge
                 hidden={detailsOpen}
                 participant={participant}
@@ -330,7 +332,7 @@ export function PartyMemberSlot({
             </span>
           </button>
           {detailsOpen ? (
-            <div style={avatarDetailsOverlayStyle(slotSide, compact)}>
+            <AnchoredGamePopover anchorRef={detailsAnchorRef}>
               <AvatarPartyDetailsCard
                 avatar={participant.avatar}
                 footer={canKick && onKick ? (
@@ -352,7 +354,7 @@ export function PartyMemberSlot({
                 statusInactive={disengaged}
                 statusLabel={badge || undefined}
               />
-            </div>
+            </AnchoredGamePopover>
           ) : null}
         </div>
       </div>

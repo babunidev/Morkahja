@@ -1,19 +1,18 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { AvatarInventoryDto } from '@shared/contracts';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
-import { EssenceLivesRow } from './EssenceLivesRow.js';
+import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
+import { TooltipDivider } from '../game/GameTooltip.js';
 
 export type AvatarDetailsSlotSide = 'left' | 'center' | 'right';
 
 const cardStyle: CSSProperties = {
+  // Shown in a framed AnchoredGamePopover, which gives it its frame and background.
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   width: '100%',
-  padding: '8px 10px',
-  borderRadius: 10,
-  background: 'rgba(6, 6, 10, 0.78)',
   pointerEvents: 'none',
   textAlign: 'center',
   boxSizing: 'border-box',
@@ -64,19 +63,18 @@ const levelStyle: CSSProperties = {
 const xpBarShellStyle: CSSProperties = {
   display: 'block',
   width: '100%',
-  height: 6,
-  marginTop: 7,
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 999,
-  background: 'rgba(20, 8, 4, 0.72)',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.65)',
+  height: 10,
+  marginTop: 5,
+  boxSizing: 'border-box',
+  padding: 2,
+  ...simpleFrameStyle({ background: 'rgba(20, 8, 4, 0.72)', opacity: 0.95, scale: 0.4 }),
   overflow: 'hidden',
 };
 
 const xpBarFillStyle: CSSProperties = {
   display: 'block',
   height: '100%',
-  borderRadius: 999,
+  clipPath: simpleFrameClipPath(1, 1.5),
   background: 'linear-gradient(90deg, #7e1d12 0%, #ffcc66 100%)',
   boxShadow: '0 0 8px rgba(255, 204, 102, 0.7)',
 };
@@ -93,9 +91,7 @@ const xpTextStyle: CSSProperties = {
 const statusBadgeStyle: CSSProperties = {
   marginTop: 6,
   padding: '3px 8px',
-  borderRadius: 999,
-  border: '1px solid rgba(255, 204, 102, 0.45)',
-  background: 'rgba(24, 14, 8, 0.92)',
+  ...simpleFrameStyle({ background: 'rgba(24, 14, 8, 0.92)', opacity: 0.59, scale: 0.6 }),
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.62rem',
@@ -117,36 +113,12 @@ export function experienceRequiredForNextLevel(level: number): number {
   return 7 * 2 ** (Math.max(1, level) - 1);
 }
 
-export function avatarDetailsOverlayStyle(
-  _slotSide: AvatarDetailsSlotSide = 'center',
-  _compact = false,
-): CSSProperties {
-  return {
-    position: 'absolute',
-    left: '50%',
-    bottom: '2%',
-    transform: 'translateX(-50%)',
-    zIndex: 12,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 'clamp(6px, 1.4vw, 10px)',
-    width: '100%',
-    maxWidth: '100%',
-    boxSizing: 'border-box',
-    pointerEvents: 'none',
-  };
-}
 
 export function AvatarPartyDetailsCard({
   avatar,
-  inventory,
-  inventorySeed,
   statusLabel,
   statusInactive = false,
   footer,
-  slotSide = 'center',
 }: {
   avatar: {
     name: string;
@@ -174,13 +146,14 @@ export function AvatarPartyDetailsCard({
   const baseName = avatar.name.trim() || 'Adventurer';
 
   return (
-    <div role="tooltip" style={cardStyle}>
+    <div role="dialog" aria-label={`${avatar.name} details`} style={cardStyle}>
       <div style={nameBlockStyle}>
         {displayTitle ? (
           <span style={titleStyle}>{displayTitle}</span>
         ) : null}
         <span style={displayTitle ? avatarNameStyle : soloNameStyle}>{baseName}</span>
       </div>
+      <TooltipDivider />
       <span style={levelStyle}>
         Level {avatar.level} · {avatar.race} {avatar.role}
       </span>
@@ -195,7 +168,6 @@ export function AvatarPartyDetailsCard({
       <span style={xpTextStyle}>
         XP {currentExperience}/{nextLevelExperience}
       </span>
-      <EssenceLivesRow essences={inventory?.essences} seed={`${inventorySeed}:${slotSide}`} />
       {statusLabel ? (
         <span
           className={statusInactive ? 'morkahja-party-status-badge-inactive' : undefined}

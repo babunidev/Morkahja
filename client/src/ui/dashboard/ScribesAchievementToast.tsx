@@ -7,6 +7,7 @@ import {
 } from '../protectedImage.js';
 import { rankTitleForAchievement } from './achievementUnlockDetection.js';
 import { assetUrl } from '../../assetUrl.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const SCRIBES_ICON = assetUrl('/UI/03_DASHBOARD/im_button_news_a.webp');
 const ENTER_MS = 420;
@@ -34,9 +35,7 @@ const buttonStyle: CSSProperties = {
   gridTemplateColumns: 'auto minmax(0, 1fr)',
   gap: 12,
   alignItems: 'center',
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  borderRadius: 12,
-  background: 'rgba(12, 7, 5, 0.94)',
+  ...simpleFrameStyle({ background: 'rgba(12, 7, 5, 0.94)', opacity: 0.81 }),
   boxShadow: '0 10px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(255, 204, 102, 0.28)',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',

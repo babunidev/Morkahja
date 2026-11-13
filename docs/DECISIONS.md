@@ -106,6 +106,48 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-11 (release `a40a6c5c`). **Babuni's decision (2026-11-11):** the bots are not marked as bots: "people don't need to know that it's bots ... It's just could be other players." Babuni also observed them appearing in the activity feed as normal. Their effect on achievements has not been reviewed.
 
+## D-013 — Line frame and wait timer on the encounter picture (2026-11-12)
+
+**Babuni's direction:** replace the long bar graphics around the encounter picture with lines: a 2 px line, a 2 px line "randomly interrupted, so it has gaps", a 1 px line, a little distance, and an outer line, with cut-off corners filled by small triangles inside and cut outer corners. The bottom line behind the solutions and rewards acts as a timer: while waiting for an animation, it "shrinks from the outside towards the element that is working right now ... in the timing that the animation needs", including the wait until a reward or loss can be picked, and it fades in.
+
+**AI implementation:** SVG lines with 45° cut corners and seeded random gaps; a small shared timer (`frameTimer.ts`) that each animation starts with its target and duration; overlapping waits follow the one that ends last.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own play or released. Line colour, thickness of the timer and the corner size are AI choices open to change.
+
+**Revision (2026-11-13, Babuni's direction):** the timer counts two phases per encounter instead of single animations: from the encounter appearing until the solutions are usable, and from using a solution until the reward, loss or Continue arrow is usable ("So in the end, we would actually only have two rounds").
+
+## D-014 — The encounter's line frame on every panel and tooltip (2026-11-13)
+
+**Babuni's direction:** all elements that have a frame — "the tooltips, the avatar creation, all the menus in the main menu" — get "the same concept of a frame that we have on the encounter", possibly "a little thinner": a line, a disrupted line, a thin line, a little gap and another line, with a little triangle in each corner.
+
+**AI implementation:** one `LineFrame` component drawn inside the element's edge, with the background cut to the frame's octagon; two thinner sizes (panel, tooltip) of the encounter's line set; buttons and inner cards keep their borders.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted after Babuni's own look or released. Exact line widths, the tooltip marker on the cut corner, and which smaller elements count as framed are AI choices open to change.
+
+## D-015 — Simple frame inside panels; the beta number counts development steps (2026-11-13)
+
+**Babuni's direction:** buttons "that have a simple yellow frame" and "the elements in the menus" get the new frame concept; around fields and entries "a simple one. So only the line that we have already, and then one interrupted line around it. No round edges", with the corner triangles. Dividers become "the line plus one disrupted line" that "could be connected to the frame by little triangles"; the achievement progress bar gets "the cut edges". Version: "It's definitely 0.9.0, but it is beta ... now it would be 22, and then ... every development step can be one number there."
+
+**AI implementation:** `simpleFrame.ts` (nine-slice SVG border image) for buttons, fields, cards, badges and bars; `frameDividerStyle` for dividers. Version 0.9.0-beta.42: 22 plus 20 steps, counting the 19 changelog entries since 0.9.0-beta.2.2 that changed the game, its deployment or its tests (documentation-only entries not counted) and this step.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Buttons use the simple frame, not the four-line panel frame (an AI choice; small buttons have little room). Each later development step raises the beta number by one.
+
+## D-016 — Undo and redo in avatar creation keep later steps (2026-11-13)
+
+**Babuni's direction:** an undo button left of the name and a redo button right of it, subtle and round with curved arrows; every action saves the combination in "a normal list". On a change after stepping back, Babuni first said "it removes what followed after", then specified that "it still keeps these changes inside this gap, and I go forward to the next stuff that I did afterwards, so that it fully works going forth and back".
+
+**AI implementation:** the second description: a change after undo is inserted after the current step and later steps remain (`creationHistory.ts`). Typing a name amends the current step.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released. Switching to the first description (drop later steps) is a one-line change if preferred.
+
+## D-017 — Essence slots on the avatar (2026-11-13)
+
+**Babuni's direction:** essences shown not in the tooltip but on the bottom edge of the round avatar, five small symbols: "one in the middle, down in the center, and then 2 on the left, 2 on the right". A loss is "consumed from these 5 slots"; emptied slots are "replenished with some from the inventory whenever we enter the next encounter"; a collected essence "should move in the slot directly" if a slot is free, otherwise into the inventory.
+
+**AI implementation:** a client-side slot store (`essenceSlots.ts`) over the server inventory; slots fill centre-out and empty outside-in (an AI choice); the refill starts 0.7 s after a new encounter appears, staggered per slot.
+
+**Status:** implemented on `fix/mobile-centering`, not yet accepted or released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

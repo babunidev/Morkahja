@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import PanelButton from '../common/PanelButton.js';
 import { protectedOverlayTextStyle } from '../protectedImage.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 280;
 
@@ -17,7 +19,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 440px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 480px)',
   display: 'grid',
   gap: 18,
   padding: '22px 20px 18px',
@@ -29,6 +32,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   textAlign: 'center',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const titleStyle: CSSProperties = {
@@ -54,9 +58,7 @@ const actionButtonStyle: CSSProperties = {
   width: '100%',
   minHeight: 44,
   padding: '10px 14px',
-  borderRadius: 10,
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  background: 'rgba(24, 14, 10, 0.92)',
+  ...simpleFrameStyle({ background: 'rgba(24, 14, 10, 0.92)', opacity: 0.81 }),
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.95rem',
@@ -99,7 +101,8 @@ export default function RoomFullOverlay({
         opacity: visible ? 1 : 0,
       }}
     >
-      <div style={panelStyle}>
+      <div style={framedStyle(panelStyle)}>
+        <LineFrame background={panelStyle.background} />
         <h2 id="room-full-title" style={titleStyle}>
           Room full
         </h2>

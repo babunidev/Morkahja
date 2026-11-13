@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
@@ -13,6 +14,17 @@ import {
 } from './socialPreview'
 
 const clientDir = path.dirname(fileURLToPath(import.meta.url))
+
+/** Certificate made by scripts/dev-cert.sh, used only with MORKAHJA_DEV_HTTPS=1. */
+function devHttpsOptions(): { cert: Buffer; key: Buffer } | null {
+  const certDir = path.resolve(clientDir, '.dev-cert')
+  const certFile = path.join(certDir, 'cert.pem')
+  const keyFile = path.join(certDir, 'key.pem')
+  if (process.env.MORKAHJA_DEV_HTTPS !== '1' || !existsSync(certFile) || !existsSync(keyFile)) {
+    return null
+  }
+  return { cert: readFileSync(certFile), key: readFileSync(keyFile) }
+}
 
 /**
  * Production deployment: https://www.babuni.dev/Morkahja/ (see docs/DEPLOYMENT.md).
@@ -71,6 +83,7 @@ function socialPreviewPlugin(siteUrl: string, mode: string): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
+  const devHttps = devHttpsOptions()
   const env = loadEnv(mode, clientDir, '')
   const isProduction = mode === 'production'
   // Development keeps serving from `/`; production builds and `vite preview` use the subpath.
@@ -109,6 +122,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      // `npm run dev:phone`: https with a local self-signed certificate, so a
+      // phone on the local network gets a secure page (journey keys need one).
+      ...(devHttps ? { https: devHttps } : {}),
       proxy: {
         ...apiProxy,
         '/activity': 'http://127.0.0.1:3000',

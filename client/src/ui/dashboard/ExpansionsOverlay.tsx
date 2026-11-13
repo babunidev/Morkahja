@@ -12,6 +12,8 @@ import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { LineFrame, framedStyle } from '../common/LineFrame.js';
+import { frameDividerStyle, simpleFrameClipPath, simpleFrameStyle, simpleFrameVariant } from '../common/simpleFrame.js';
 
 const EXPANSION_UI_ROOT = assetUrl('/UI/03_DASHBOARD/expansions');
 const ENCOUNTER_IMAGE_ROOT = assetUrl('/game/encounterimages');
@@ -163,7 +165,8 @@ const backdropStyle: CSSProperties = {
 };
 
 const panelStyle: CSSProperties = {
-  width: 'min(92vw, 440px)',
+  // Padding included, so the panel fits inside a phone screen.
+  width: 'min(100%, 476px)',
   maxHeight: 'min(86vh, 640px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr) auto',
@@ -177,6 +180,7 @@ const panelStyle: CSSProperties = {
   fontFamily: 'Georgia, serif',
   overflow: 'hidden',
   ...protectedOverlayTextStyle,
+  boxSizing: 'border-box',
 };
 
 const headerStyle: CSSProperties = {
@@ -228,7 +232,7 @@ const gemsFooterStyle: CSSProperties = {
   justifyContent: 'space-between',
   gap: 12,
   paddingTop: 8,
-  borderTop: '1px solid rgba(255, 204, 102, 0.32)',
+  ...frameDividerStyle({ side: 'top', bleed: 9 }),
 };
 
 const gemsFooterBalanceStyle: CSSProperties = {
@@ -256,9 +260,9 @@ const gemsCountStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  border: '1px solid rgba(255, 204, 102, 0.38)',
-  borderRadius: 10,
-  background: 'rgba(8, 5, 4, 0.55)',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.6 }),
+  // Keeps the banner inside the frame's lines.
+  padding: 4,
   overflow: 'hidden',
 };
 
@@ -267,7 +271,7 @@ const inactiveCardStyle: CSSProperties = {
 };
 
 const unlockedCardStyle: CSSProperties = {
-  borderColor: 'rgba(120, 220, 140, 0.45)',
+  ...simpleFrameVariant({ background: 'rgba(8, 5, 4, 0.55)', color: 'rgb(120, 220, 140)', opacity: 0.6 }),
 };
 
 const cardHeaderButtonStyle: CSSProperties = {
@@ -288,6 +292,8 @@ const bannerImageStyle: CSSProperties = {
   width: '100%',
   height: 'auto',
   objectFit: 'cover',
+  // The frame's cut corners, so the corner triangles show.
+  clipPath: simpleFrameClipPath(1, 6),
 };
 
 const cardTextBlockStyle: CSSProperties = {
@@ -393,9 +399,7 @@ const expansionButtonVisualStyle: CSSProperties = {
   width: '100%',
   minHeight: 42,
   padding: '8px 10px',
-  border: '1px solid rgba(255, 204, 102, 0.72)',
-  borderRadius: 9,
-  background: 'rgba(51, 0, 0, 0.82)',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   fontSize: '0.95rem',
@@ -422,9 +426,7 @@ const previewListStyle: CSSProperties = {
   margin: 0,
   padding: '10px 12px',
   listStyle: 'none',
-  border: '1px solid rgba(255, 204, 102, 0.28)',
-  borderRadius: 8,
-  background: 'rgba(6, 4, 3, 0.65)',
+  ...simpleFrameStyle({ background: 'rgba(6, 4, 3, 0.65)', opacity: 0.5 }),
 };
 
 const previewRowStyle: CSSProperties = {
@@ -439,9 +441,9 @@ const previewImageStyle: CSSProperties = {
   width: 72,
   height: 48,
   objectFit: 'cover',
-  borderRadius: 6,
-  border: '1px solid rgba(255, 204, 102, 0.35)',
-  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.45)',
+  // Cut corners like the frame (an image cannot carry the frame's lines).
+  clipPath: simpleFrameClipPath(0.8, 5),
+  outline: 'none',
 };
 
 const previewTitleStyle: CSSProperties = {
@@ -831,8 +833,9 @@ export function ExpansionsOverlay({
           event.stopPropagation();
         }}
         {...protectedOverlaySurfaceProps}
-        style={panelStyle}
+        style={framedStyle(panelStyle)}
       >
+        <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
           <h2 id="expansions-overlay-title" style={titleStyle}>
             EXPANSIONS

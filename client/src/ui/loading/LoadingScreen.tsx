@@ -12,6 +12,7 @@ import {
   type LoadingRoute,
   type LoadingStateView,
 } from './loadingStateMachine.js';
+import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const LOGO_ENTER_MS = 1100;
 const LOGO_SWAY_MS = 5600;
@@ -66,9 +67,7 @@ const statusTextStyle: CSSProperties = {
 const retryButtonStyle: CSSProperties = {
   pointerEvents: 'auto',
   padding: '8px 14px',
-  borderRadius: 6,
-  border: '1px solid rgba(255, 204, 102, 0.85)',
-  background: 'rgba(12, 9, 8, 0.8)',
+  ...simpleFrameStyle({ background: 'rgba(12, 9, 8, 0.8)', opacity: 1 }),
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
   cursor: 'pointer',

@@ -5,6 +5,7 @@ import {
 } from '../audioVolume.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
+import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
 
 const SFX_CONTROL_ASSET = assetUrl('/UI/06_SettingsMenu/im_sfx.webp');
 const KNOB_BASE_WIDTH_PX = 54;
@@ -40,18 +41,18 @@ const barStyle: CSSProperties = {
   left: 0,
   right: 0,
   top: '50%',
-  height: 8,
+  height: 12,
   transform: 'translateY(-50%)',
-  border: '1px solid rgba(255, 204, 102, 0.68)',
-  borderRadius: 999,
-  background: 'rgba(17, 7, 4, 0.75)',
+  boxSizing: 'border-box',
+  padding: 2,
+  ...simpleFrameStyle({ background: 'rgba(17, 7, 4, 0.75)', opacity: 0.9, scale: 0.45 }),
   overflow: 'hidden',
   pointerEvents: 'none',
 };
 
 const fillStyle: CSSProperties = {
   height: '100%',
-  borderRadius: 999,
+  clipPath: simpleFrameClipPath(1, 2),
   background: 'linear-gradient(90deg, #330000 0%, #ffcc66 100%)',
 };
 

@@ -93,6 +93,8 @@ export interface RewardFlightSpec {
   sourceRect: DOMRect;
   /** 'avatar': not an inventory item (the lore gem), so it flies onto the avatar portrait. */
   target: RewardFlyTargetKind | 'avatar';
+  /** Flies onto this element instead (an essence into its slot on the avatar). */
+  targetElement?: Element | null;
 }
 
 export const REWARD_FLIGHT_MS = 820;
@@ -370,7 +372,9 @@ function runRewardFlight(
   vibratedTargets: Set<RewardFlyTargetKind>,
 ): Promise<void> {
   const target = flight.target;
-  const targetRect = target === 'avatar' ? getAvatarPortraitRect() : getFooterButtonRect(target);
+  const targetRect = flight.targetElement?.isConnected
+    ? flight.targetElement.getBoundingClientRect()
+    : target === 'avatar' ? getAvatarPortraitRect() : getFooterButtonRect(target);
 
   if (!targetRect) {
     return Promise.resolve();
@@ -383,12 +387,39 @@ function runRewardFlight(
     boxShadow: '0 0 14px rgba(255, 204, 102, 0.45), 0 6px 12px rgba(0, 0, 0, 0.5)',
     nearEndLeadMs: REWARD_FLIGHT_VIBRATE_BEFORE_END_MS,
     onNearEnd: () => {
-      if (target !== 'avatar' && !vibratedTargets.has(target)) {
+      // An essence flying into its slot leaves the menu buttons alone.
+      if (!flight.targetElement && target !== 'avatar' && !vibratedTargets.has(target)) {
         vibrateFooterButton(target);
         vibratedTargets.add(target);
       }
     },
   });
+}
+
+/**
+ * One icon from `sourceRect` onto `target` (an essence from the Inventory
+ * button into its slot on the avatar). Resolves when it lands, or after a
+ * time-out.
+ */
+export async function playIconFlightToElement(
+  sourceRect: DOMRect,
+  target: Element,
+  imageSrc: string,
+  size: number,
+): Promise<void> {
+  await waitForNextFrame();
+  if (!target.isConnected) {
+    return;
+  }
+  await Promise.race([
+    runIconFlight(sourceRect, target.getBoundingClientRect(), imageSrc, size, {
+      durationMs: REWARD_FLIGHT_MS,
+      fadeStartOffset: REWARD_FLIGHT_FADE_START_OFFSET,
+      timeoutMs: REWARD_FLIGHT_TIMEOUT_MS,
+      boxShadow: '0 0 12px rgba(255, 204, 102, 0.45)',
+    }),
+    wait(REWARD_FLIGHT_TIMEOUT_MS + 100),
+  ]);
 }
 
 /** `keepOtherFlyers`: collecting one item must not cut off another item's flight. */

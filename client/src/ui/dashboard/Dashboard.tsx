@@ -24,6 +24,7 @@ import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js
 import { useTooltipRevealGroup } from '../hooks/useTooltipReveal.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 import { assetUrl } from '../../assetUrl.js';
+import { GameTooltipFrame } from '../game/GameTooltip.js';
 
 const PLAY_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_play.webp');
 const PLAY_PREPARE_WHEEL_ASSET = assetUrl('/UI/01_WelcomeScreen/LoadingWheel.webp');
@@ -633,6 +634,7 @@ export function Dashboard({
                 role="tooltip"
                 style={navRadialTooltipStyle(button.x, button.y)}
               >
+                <GameTooltipFrame background="rgba(12, 8, 6, 0.88)" />
                 {button.tooltip}
               </span>
               <span className="morkahja-nav-radial-button-visual">
@@ -696,6 +698,7 @@ export function Dashboard({
               }`}
               role="tooltip"
             >
+              <GameTooltipFrame background="rgba(12, 8, 6, 0.88)" />
               {navOpen ? 'Home' : 'Menu'}
             </span>
             <span className="morkahja-nav-center-button-visual">

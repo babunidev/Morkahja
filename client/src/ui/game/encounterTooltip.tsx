@@ -5,6 +5,7 @@ import {
   type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { GameTooltipFrame, TooltipDivider } from './GameTooltip.js';
 
 /** Above encounter overlays, party slots, and reward fly animations. */
 export const ENCOUNTER_TOOLTIP_Z_INDEX = 1000;
@@ -15,25 +16,21 @@ export const encounterTooltipFrameStyle: CSSProperties = {
   zIndex: ENCOUNTER_TOOLTIP_Z_INDEX,
   width: 220,
   maxWidth: 220,
-  maxHeight: 'min(42vh, 200px)',
-  overflow: 'auto',
-  padding: '7px 10px',
-  border: '1px solid rgba(255, 204, 102, 0.78)',
-  borderRadius: 8,
-  background: 'rgba(12, 9, 8, 0.94)',
+  overflow: 'visible',
+  padding: '10px 13px',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '0.78rem',
   lineHeight: 1.25,
   textAlign: 'left',
   textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
-  boxShadow: '0 8px 18px rgba(0, 0, 0, 0.45)',
   pointerEvents: 'none',
   boxSizing: 'border-box',
+  isolation: 'isolate',
 };
 
 export const encounterTooltipTitleStyle: CSSProperties = {
-  margin: '0 0 4px',
+  margin: 0,
   color: '#ffcc66',
   fontSize: '0.86rem',
   fontWeight: 700,
@@ -81,6 +78,7 @@ export function EncounterTooltip({
         ...positionStyle,
       }}
     >
+      <GameTooltipFrame background="rgba(12, 9, 8, 0.94)" />
       <div
         style={{
           ...encounterTooltipTitleStyle,
@@ -89,6 +87,7 @@ export function EncounterTooltip({
       >
         {label}
       </div>
+      {description || detail ? <TooltipDivider /> : null}
       {description ? (
         <div style={encounterTooltipDescriptionStyle}>{description}</div>
       ) : null}

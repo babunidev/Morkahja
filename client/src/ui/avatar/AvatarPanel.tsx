@@ -7,12 +7,13 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
+import { EssenceSlotsRing } from './EssenceSlotsRing.js';
 
 import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
+import { AnchoredGamePopover, GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
 import AvatarPartyDetailsCard, {
-  avatarDetailsOverlayStyle,
   type AvatarDetailsSlotSide,
 } from './AvatarPartyDetailsCard.js';
 
@@ -188,6 +189,8 @@ export function AvatarPanel({
 
   slotSide = 'center',
 
+  encounterKey,
+
 }: {
 
   avatar: PersistedAvatar;
@@ -210,18 +213,29 @@ export function AvatarPanel({
 
   slotSide?: AvatarDetailsSlotSide;
 
+  /** The current encounter: the essence slots refill when it changes. */
+  encounterKey?: string;
+
 }) {
 
   const [showDetails, setShowDetails] = useState(false);
+  const detailsAnchorRef = useRef<HTMLButtonElement>(null);
 
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
-  const compact = slotSide !== 'center';
 
 
 
   // Report only when the details state changes, not whenever the parent hands
   // over a new callback (inline callbacks are new on every render).
+  const avatarTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
+  const avatarTip = avatarTips.bindTooltip(() => (showDetails
+    ? null
+    : {
+      key: `avatar-${avatar.id}`,
+      shellStyle: { width: 'max-content', maxWidth: 200 },
+      body: <GameTooltipCard title={avatar.name} lines={[`Level ${avatar.level}`]} />,
+    }));
   const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
   onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
@@ -250,6 +264,8 @@ export function AvatarPanel({
 
       <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
 
+        {avatarTips.layer}
+
         {xpGainAmount > 0 ? (
 
           <span aria-hidden="true" style={xpGainBubbleStyle}>+{xpGainAmount} XP</span>
@@ -258,13 +274,24 @@ export function AvatarPanel({
 
         <button
 
+          ref={detailsAnchorRef}
           aria-expanded={showDetails}
 
           aria-label={`Show details for ${avatar.name}`}
 
           className="morkahja-avatar-slot-button"
 
+          {...avatarTip}
+
           onClick={() => {
+
+            avatarTips.hide();
+
+            if (avatarTips.consumeLongPressActivation()) {
+
+              return;
+
+            }
 
             playSfx(DEFAULT_BUTTON_SOUND);
 
@@ -272,9 +299,11 @@ export function AvatarPanel({
 
           }}
 
-          onPointerDown={() => {
+          onPointerDown={(event) => {
 
             pulse('avatar');
+
+            avatarTip.onPointerDown?.(event);
 
           }}
 
@@ -330,6 +359,12 @@ export function AvatarPanel({
 
               </div>
 
+              <EssenceSlotsRing
+                avatarId={avatar.id}
+                encounterKey={encounterKey}
+                essences={avatar.inventory?.essences}
+                local
+              />
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge
@@ -354,7 +389,7 @@ export function AvatarPanel({
 
         {showDetails ? (
 
-          <div style={avatarDetailsOverlayStyle(slotSide, compact)}>
+          <AnchoredGamePopover anchorRef={detailsAnchorRef}>
 
             <AvatarPartyDetailsCard
 
@@ -450,7 +485,7 @@ export function AvatarPanel({
 
             />
 
-          </div>
+          </AnchoredGamePopover>
 
         ) : null}
 

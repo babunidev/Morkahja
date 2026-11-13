@@ -22,6 +22,7 @@ import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import ResultBlock, { type ResultBlockHandle } from './ResultBlock.js';
 import SolutionBlock from './SolutionBlock.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
+import { FRAME_OUTSET_PX } from './encounterFrameGeometry.js';
 import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
@@ -46,7 +47,8 @@ const artFrameStyle: CSSProperties = {
   position: 'relative',
   height: '100%',
   width: 'auto',
-  maxWidth: '100%',
+  // Leaves room for the frame lines outside the picture on narrow screens.
+  maxWidth: `calc(100% - ${2 * FRAME_OUTSET_PX}px)`,
   aspectRatio: '1 / 1',
   flexShrink: 0,
   overflow: 'visible',
@@ -604,7 +606,7 @@ export function EncounterImageBlock({
         />
       )}
         </div>
-        <DecorativeEdgeFrame />
+        <DecorativeEdgeFrame showTimer />
         {!encounterOverlaysOpen ? (
           <div
             aria-hidden="true"
