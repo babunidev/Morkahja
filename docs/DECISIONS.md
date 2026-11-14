@@ -234,7 +234,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** `finalizeRoll` in `shared/src/diceInterpreter.ts` adds the bonus and subtracts the penalty, and keeps the total. Nineteen and above is Prosperity, and two and below is Misery. Solution-set copies use the same bonus, and the set's result is their average. An unresolved snapshot still holding a 1–100 number is given a new total when the first solution of a set is locked, or when the choice is committed. A number already on screen that is above 27 is still shown as its old d20 face. Inventory losses on Hardship and Misery are unchanged.
 
-**Status:** implemented for release as 0.9.0-beta.59, not yet deployed.
+**Status:** live since 2026-11-14 (release `e2aaa790`, 0.9.0-beta.59).
 
 ## 2026-11-13 — Licensing decision
 

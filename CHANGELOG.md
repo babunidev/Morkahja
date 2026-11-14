@@ -2,11 +2,11 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-14 — Unreleased: rolls are a d20 again; 0.9.0-beta.59
+## 2026-11-14 — Released: rolls are a d20 again; 0.9.0-beta.59
 
 - **Change (Babuni's direction, D-027):** each lane rolls 1–20. A primary solution adds 7, a secondary adds 5, and the die adds 0. Difficulty then subtracts one less than its level, including on the die. The number shown is that total, so a natural 20 with a primary solution shows 27. One and two are Misery, three to eight Hardship, nine to twelve Fate, thirteen to eighteen Fortune, and nineteen or higher Prosperity. A total below 1 is Misery. The solution and die tooltips name the roll beside the title, such as `d20+5` or `d20-1`. An encounter still in progress on the old 1–100 scale receives a fresh total when the choice is committed. A result already showing a number above 27 still reads as its old d20 face.
 - **Version 0.9.0-beta.59** (D-015, D-027).
-- **Verification:** client tests passed (37). Server tests passed (41) on local PostgreSQL, including dice totals, solution sets, Atranor, and room follow. Server typecheck passed. **Not deployed.**
+- **Verification:** client tests passed (37). Server tests passed (41) on local PostgreSQL, including dice totals, solution sets, Atranor, and room follow. Server typecheck passed. CI `verify` passed on PR #48. **Deployed** 2026-11-14 21:08 UTC from `e2aaa790`; the live script is `index-Bwd_WBuF.js` and contains `0.9.0-beta.59` and `d20+7`. A roll was not played on the live game. See `docs/DEPLOYMENT.md`.
 
 ## 2026-11-14 — Released: Makaya's voice for rewards, essence losses and the gods; 0.9.0-beta.58
 

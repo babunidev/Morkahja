@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-14, 21:08 UTC (0.9.0-beta.59, d20 totals)
+
+Approved by Babuni ("commit push release", then the publish command). `main` at `e2aaa790` (PR #48): every lane is a fair d20, a primary solution adds 7, a secondary adds 5, the die adds 0, and difficulty subtracts one less than its level. The portrait shows that total, and the tooltip names it (D-027).
+
+- **Before:** backend `83057282`, frontend `20261114-181353`. `server/game/encountersdata.json` was dirty. Its bytes matched `main`, including the Grimnir Vault and Verdani Casket wording already committed after `83057282`, so Babuni checked that file out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261114-1812b`.
+- **Checks before the release:** client tests passed (37) and server tests passed (41) on local PostgreSQL; the server typecheck passed; CI `verify` passed on PR #48. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.59` and `d20+7`.
+- **Release:** backup `20261114-210837` (4.0 MB; 73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `eef3934bf9db4d359eb468643745b953aa59203299cd90d052843386a842b1e3`). Backend fast-forwarded to `e2aaa790`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261114-210839` (`index-Bwd_WBuF.js`). From outside: that script contains `0.9.0-beta.59` and `d20+7`; `/Morkahja/`, health and content return 200. API and bots online (the bots restarted with the API).
+- **Not done:** backup restore not proven; a roll was not played on the live game.
+
 ## Production release — 2026-11-14, 18:13 UTC (0.9.0-beta.58, Makaya's voice)
 
 Approved by Babuni ("I would like to ship that, so do the release for this one. Push and everything."). `main` at `83057282`: Makaya's lines for a taken reward, a lost essence, and each god's essence (PR #46, `af9d3341`), plus the Grimnir Trunk wording already committed on `main`.
