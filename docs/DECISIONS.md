@@ -228,23 +228,31 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `83057282`, 0.9.0-beta.58).
 
-## D-027 — Makaya's lines sit a little under the older sounds (2026-11-14)
+## D-027 — Rolls return to a d20 (2026-11-14)
+
+**Babuni's direction:** stop the hidden 1–100 roll. Every lane rolls 1–20. One and two are Misery, three to eight Hardship, nine to twelve Fate, thirteen to eighteen Fortune, and nineteen and twenty Prosperity. A primary solution adds 7 and a secondary solution adds 5. The die adds nothing for now, and that bonus can change later. Difficulty subtracts one less than its level from every roll, including the die: difficulty 1 subtracts 0, 2 subtracts 1, 3 subtracts 2, and 4 subtracts 3. The same step applies where an encounter's difficulty is already 5, 6, or 7. The number on the portrait is the total, so a natural 20 with +7 shows 27, and 26 stays 26. The tooltip names that roll beside the name: `d20`, `d20+7`, `d20+5`, or `d20-1`.
+
+**AI implementation:** `finalizeRoll` in `shared/src/diceInterpreter.ts` adds the bonus and subtracts the penalty, and keeps the total. Nineteen and above is Prosperity, and two and below is Misery. Solution-set copies use the same bonus, and the set's result is their average. An unresolved snapshot still holding a 1–100 number is given a new total when the first solution of a set is locked, or when the choice is committed. A number already on screen that is above 27 is still shown as its old d20 face. Inventory losses on Hardship and Misery are unchanged.
+
+**Status:** live since 2026-11-14 (release `e2aaa790`, 0.9.0-beta.59).
+
+## D-028 — Makaya's lines sit a little under the older sounds (2026-11-14)
 
 **Babuni's direction:** the new voice lines are a little louder than the older effects. The older effects were already lowered on purpose and stay as they are. Even with the sound slider at full, the new lines should come down a little, and they should sit together.
 
 **AI implementation:** Cursor (Grok 4.7) measured the active level of every effect. The older button is about −25 dB. The loudest new lines were about −15 dB, level with the level-up sound, while some skill lines were already near −35 dB. Each new line was moved to about −28 dB, and a peak that still passed the button was limited. The older files were not changed.
 
-**Status:** superseded the same day by D-030. The files on this branch follow the level-up sound.
+**Status:** superseded the same day by D-031. The files on this branch follow the level-up sound.
 
-## D-028 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
+## D-029 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
 
 **Babuni's direction:** a backpack sound, a skillbook sound and a call-for-help sound for those buttons.
 
 **AI implementation:** Cursor (Grok 4.7) plays `backpack.mp3` for Inventory, `skillbook.mp3` for Skillbook and `callforhelp.mp3` for Call for help. Lore already had its own sound and keeps it. Call for help was measured at about −11 dB, far above the button at −25 dB, so that file was lowered to about −27 dB. The skillbook spike was held to the button's peak. The backpack already sat with the button.
 
-**Status:** implemented on `fix/voice-levels`, not yet released.
+**Status:** implemented on `fix/voice-levels`, not yet released. The later level match (D-031) raises these with the other effects.
 
-## D-029 — The horn reaches five free adventurers, friends first (2026-11-14)
+## D-030 — The horn reaches five free adventurers, friends first (2026-11-14)
 
 **Babuni's direction:** sounding the horn chooses up to five online players who are in the dashboard or another menu, and not in a room. Friends are preferred, so five free friends are the five who hear it. Each receives a Scribes line and a notice at the top. The notice plays the call-for-help sound, only while they are on the dashboard, and only once a minute. A full group disables the button, and the tooltip says why.
 
@@ -252,11 +260,11 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/voice-levels`, not yet released.
 
-## D-030 — Every effect sits with the level-up sound (2026-11-14)
+## D-031 — Every effect sits with the level-up sound (2026-11-14)
 
 **Babuni's direction:** the sounds were still very different from one another. The solution opening was very low, and some reward lines, especially the essences, were quite loud. The dice felt right, and then the ask was that every sound, the dice included, sit on one level with the level-up sound.
 
-**AI implementation:** Cursor (Grok 4.7) measured the loudest brief moment of each effect. The level-up sound is about −4 dB there and was left unchanged. The other effects were raised toward −8 dB, which is the body of that fanfare, and a peak that would have passed full scale was held down. This replaces the D-027 target of sitting under the button.
+**AI implementation:** Cursor (Grok 4.7) measured the loudest brief moment of each effect. The level-up sound is about −4 dB there and was left unchanged. The other effects were raised toward −8 dB, which is the body of that fanfare, and a peak that would have passed full scale was held down. This replaces the D-028 target of sitting under the button. The d20 release had already taken D-027, so these sound decisions continue from D-028.
 
 **Status:** implemented on `fix/voice-levels`, not yet released.
 

@@ -62,7 +62,7 @@ function readyEncounterRoom(room: EncounterRoom, slotIndex: number): EncounterRo
       encounterDifficulty: 2,
       primarySolutionA: 10001,
       secondarySolutionTypeA: 1,
-      rollPrimaryA: index === slotIndex ? 10 : 96,
+      rollPrimaryA: index === slotIndex ? 1 : 96,
       // Every copy of the slot rolls this (no per-copy rolls), as the test intends.
       extraRolls: undefined,
       actionReadyAt: Date.now() - 1,

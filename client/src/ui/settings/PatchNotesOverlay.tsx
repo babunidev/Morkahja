@@ -29,11 +29,19 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-63',
+    version: '0.9.0-beta.63',
+    period: '14 Nov 2026',
+    notes: [
+      'Every sound now sits with the level-up fanfare. The fanfare itself is unchanged.',
+    ],
+  },
+  {
     id: 'beta-62',
     version: '0.9.0-beta.62',
     period: '14 Nov 2026',
     notes: [
-      'Every sound now sits with the level-up fanfare. The fanfare itself is unchanged.',
+      'Call for help reaches up to five free adventurers, friends first. A full group cannot call. The horn on that notice waits a minute before it sounds again.',
     ],
   },
   {
@@ -41,7 +49,7 @@ const PATCH_RELEASES: PatchRelease[] = [
     version: '0.9.0-beta.61',
     period: '14 Nov 2026',
     notes: [
-      'Call for help reaches up to five free adventurers, friends first. A full group cannot call. The horn on that notice waits a minute before it sounds again.',
+      'The backpack, the skillbook and Call for help each play their own sound.',
     ],
   },
   {
@@ -49,7 +57,7 @@ const PATCH_RELEASES: PatchRelease[] = [
     version: '0.9.0-beta.60',
     period: '14 Nov 2026',
     notes: [
-      'The backpack, the skillbook and Call for help each play their own sound.',
+      'Makaya’s voice lines were brought to one level. A later update matches every sound to the level-up fanfare.',
     ],
   },
   {
@@ -57,7 +65,7 @@ const PATCH_RELEASES: PatchRelease[] = [
     version: '0.9.0-beta.59',
     period: '14 Nov 2026',
     notes: [
-      'Makaya’s voice lines are a little quieter, so they sit with the other sounds.',
+      'Rolls are a d20 again. A primary solution is d20+7, a secondary is d20+5, and the total is shown even past 20.',
     ],
   },
   {

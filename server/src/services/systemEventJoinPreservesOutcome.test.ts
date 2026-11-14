@@ -78,7 +78,7 @@ room = {
   slotEncounterSnapshots: room.slotEncounterSnapshots.map((snapshot, index) => ({
     ...snapshot,
     encounterId: DEATH_ENCOUNTER_NUMERIC_ID,
-    rollE: index === actorSlotIndex ? 10 : 50,
+    rollE: index === actorSlotIndex ? 1 : 50,
     actionReadyAt: Date.now() - 1,
   })) as EncounterRoom['slotEncounterSnapshots'],
   roomState: 'system_event',
@@ -107,7 +107,7 @@ assert.equal(actorAfterRoll?.preparedResult?.success, false);
 assert.equal(afterRoll.activeEncounterSnapshot.snapshotId, snapshotIdBefore);
 assert.equal(
   afterRoll.slotEncounterSnapshots[actorSlotIndex].rollE,
-  10,
+  1,
 );
 
 const joinedRoom = await joinRoom(witnessSession.playerId, witnessAvatarId, room.roomId);
@@ -120,7 +120,7 @@ const witnessAfterJoin = joinedRoom.participants.find(
 
 assert.equal(joinedRoom.roomState, 'system_event');
 assert.equal(joinedRoom.activeEncounterSnapshot.snapshotId, snapshotIdBefore);
-assert.equal(joinedRoom.slotEncounterSnapshots[actorSlotIndex].rollE, 10);
+assert.equal(joinedRoom.slotEncounterSnapshots[actorSlotIndex].rollE, 1);
 assert.equal(actorAfterJoin?.choiceState, 'ready_to_continue');
 assert.equal(actorAfterJoin?.preparedResult?.success, false);
 assert.equal(actorAfterJoin?.preparedResult?.selectedRoll, actorAfterRoll?.preparedResult?.selectedRoll);
@@ -136,7 +136,7 @@ try {
 assert.equal(rerollBlocked, true);
 
 const persisted = await loadEncounterRoom(room.roomId);
-assert.equal(persisted?.slotEncounterSnapshots[actorSlotIndex].rollE, 10);
+assert.equal(persisted?.slotEncounterSnapshots[actorSlotIndex].rollE, 1);
 assert.equal(
   persisted?.participants.find((entry) => entry.playerId === actorSession.playerId)?.preparedResult?.success,
   false,

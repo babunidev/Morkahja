@@ -8,7 +8,7 @@
 import { generateEncounterRollSnapshot } from '../engine/encounterRollGenerator.js';
 import { resolveEncounter as runDeterministicResolver } from '../engine/encounterResolver.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
-import { interpretRoll, type RollOutcome } from '../engine/diceInterpreter.js';
+import { interpretRoll, isD20Face, type RollOutcome } from '../engine/diceInterpreter.js';
 import {
   applyPendingLevelUpRewardsFlag,
   createInitialProgression,
@@ -237,7 +237,7 @@ export function preparedSystemEncounter(encounterId: number): PreparedEncounter 
   };
 }
 
-export function generateSnapshotRolls(): Pick<
+export function generateSnapshotRolls(difficulty: number): Pick<
   EncounterSnapshot,
   | 'rollA'
   | 'rollB'
@@ -254,7 +254,75 @@ export function generateSnapshotRolls(): Pick<
   | 'rollE'
   | 'extraRolls'
 > {
-  return generateEncounterRollSnapshot();
+  return generateEncounterRollSnapshot(difficulty);
+}
+
+const STORED_ROLL_KEYS = [
+  'rollA',
+  'rollB',
+  'rollC',
+  'rollD',
+  'rollPrimaryA',
+  'rollPrimaryB',
+  'rollPrimaryC',
+  'rollPrimaryD',
+  'rollSecondaryA',
+  'rollSecondaryB',
+  'rollSecondaryC',
+  'rollSecondaryD',
+  'rollE',
+] as const satisfies readonly (keyof EncounterSnapshot)[];
+
+function storedRollIsLegacy(value: unknown): boolean {
+  return typeof value === 'number' && !isD20Face(value);
+}
+
+/**
+ * True when a stored lane still uses the retired 1–100 scale.
+ * A snapshot marked `rollTotals` already stores the uncapped total, so a 27 stays.
+ */
+export function snapshotHasLegacyPercentRoll(snapshot: EncounterSnapshot): boolean {
+  if (snapshot.rollTotals) {
+    return false;
+  }
+
+  if (STORED_ROLL_KEYS.some((key) => storedRollIsLegacy(snapshot[key]))) {
+    return true;
+  }
+
+  const extras = snapshot.extraRolls;
+  if (!extras) {
+    return false;
+  }
+
+  return (['primary', 'secondary'] as const).some((lane) =>
+    (['A', 'B', 'C', 'D'] as const).some((slot) =>
+      extras[lane][slot].some((roll) => storedRollIsLegacy(roll)),
+    ),
+  );
+}
+
+/**
+ * Unresolved encounters created before the d20 table keep secret 1–100 numbers.
+ * Replace those faces before the choice is resolved. Level-up rewards were
+ * chosen from the old die, so they are cleared and drawn again from the new face.
+ */
+export function replaceLegacyPercentRolls<T extends EncounterSnapshot>(snapshot: T): T {
+  if (!snapshotHasLegacyPercentRoll(snapshot)) {
+    return snapshot;
+  }
+
+  const rolls = generateSnapshotRolls(snapshot.encounterDifficulty);
+  const rewardIds = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+    ? []
+    : snapshot.rewardIds;
+
+  return {
+    ...snapshot,
+    ...rolls,
+    rewardIds,
+    rollTotals: true,
+  };
 }
 
 export function randomRewardsForEncounter(
@@ -303,7 +371,7 @@ export function buildEncounterSnapshot(
   avatar?: AvatarDocument,
 ): EncounterSnapshot {
   const createdAt = Date.now();
-  const rolls = generateSnapshotRolls();
+  const rolls = generateSnapshotRolls(encounter.mEncounterDifficulty);
   const rewardIds = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID
     ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE)
     : randomRewardsForEncounter(encounter);
@@ -315,6 +383,7 @@ export function buildEncounterSnapshot(
     encounterId: encounter.mEncounterID,
     ...encounterToSnapshotFields(encounter),
     ...rolls,
+    rollTotals: true,
     rewardIds,
     prosperityRewardId: randomEssenceReward(),
     resolved: false,
@@ -892,7 +961,8 @@ export async function continueEncounter(
         throw new Error(`Avatar not found: ${avatarId}`);
       }
 
-      let encounterSnapshot = withPrecomputedSnapshotRewards(claimedSnapshot, avatar);
+      const currentFaces = replaceLegacyPercentRolls(claimedSnapshot);
+      let encounterSnapshot = withPrecomputedSnapshotRewards(currentFaces, avatar);
 
       if (encounterSnapshot !== claimedSnapshot) {
         await transaction.setActiveEncounter(playerId, avatarId, encounterSnapshot);
@@ -1273,7 +1343,10 @@ function computeParticipantOutcome(
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
 ): PrepareParticipantOutcomeResult {
-  const snapshot = withPrecomputedSnapshotRewards(encounterSnapshot, avatar);
+  const snapshot = withPrecomputedSnapshotRewards(
+    replaceLegacyPercentRolls(encounterSnapshot),
+    avatar,
+  );
   const actionForResolution = selectedActionForSnapshot(snapshot, action);
   const encounter = snapshotToEncounterData(snapshot);
   const rollsForResolution = snapshotToRolls(snapshot);

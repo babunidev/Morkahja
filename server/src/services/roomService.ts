@@ -61,6 +61,7 @@ import {
   commitPreparedOutcome,
   prepareParticipantOutcome,
   preparedResultFromResolve,
+  replaceLegacyPercentRolls,
   resolveNextEncounterForRoom,
   resolveParticipantInRoom,
   selectNextEncounter,
@@ -1749,6 +1750,18 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
       return room;
     }
 
+    const storedSnapshot = snapshotForParticipant(room, actor);
+    const resolutionSnapshot = actor.preparedCommit
+      ? storedSnapshot
+      : replaceLegacyPercentRolls(storedSnapshot);
+    const roomForResolve: EncounterRoom = resolutionSnapshot === storedSnapshot
+      ? room
+      : {
+          ...room,
+          slotEncounterSnapshots: room.slotEncounterSnapshots.map((snapshot, index) => (
+            index === actor.slotIndex ? resolutionSnapshot : snapshot
+          )) as EncounterRoom['slotEncounterSnapshots'],
+        };
     const result = actor.preparedCommit
       ? await commitPreparedOutcome(
         transaction,
@@ -1760,7 +1773,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
         transaction,
         actor.playerId,
         actor.avatarId,
-        snapshotForParticipant(room, actor),
+        resolutionSnapshot,
         actor.selectedAction,
       );
 
@@ -1789,7 +1802,7 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
     );
 
     let workingRoom: EncounterRoom = {
-      ...room,
+      ...roomForResolve,
       participants: nextParticipants,
       updatedAt: now,
     };
@@ -1891,11 +1904,21 @@ async function applyParticipantPrepare(
     requireCurrentSystemEventActor(room, playerId);
   }
 
+  const storedSnapshot = snapshotForParticipant(room, participant);
+  const resolutionSnapshot = replaceLegacyPercentRolls(storedSnapshot);
+  const roomWithFaces: EncounterRoom = resolutionSnapshot === storedSnapshot
+    ? room
+    : {
+        ...room,
+        slotEncounterSnapshots: room.slotEncounterSnapshots.map((snapshot, index) => (
+          index === participant.slotIndex ? resolutionSnapshot : snapshot
+        )) as EncounterRoom['slotEncounterSnapshots'],
+      };
   const prepared = await prepareParticipantOutcome(
     transaction,
     playerId,
     participant.avatarId,
-    snapshotForParticipant(room, participant),
+    resolutionSnapshot,
     playerAction,
   );
 
@@ -1912,20 +1935,20 @@ async function applyParticipantPrepare(
             prepared.preparedResult,
           ),
           preparedCommit: prepared.preparedCommit,
-          outcomeSnapshotId: snapshotForParticipant(room, participant).snapshotId,
+          outcomeSnapshotId: resolutionSnapshot.snapshotId,
           resolutionSummary: undefined,
           lastInteractionAt: now,
         }
       : entry,
   );
 
-  const canWait = canEnterWaitingContinue({ ...room, participants: nextParticipants });
-  const nextRoomState = canWait && room.roomState !== 'system_event'
+  const canWait = canEnterWaitingContinue({ ...roomWithFaces, participants: nextParticipants });
+  const nextRoomState = canWait && roomWithFaces.roomState !== 'system_event'
     ? 'waiting_continue'
-    : room.roomState;
+    : roomWithFaces.roomState;
 
   const workingRoom: EncounterRoom = {
-    ...room,
+    ...roomWithFaces,
     participants: nextParticipants,
     roomState: nextRoomState,
     updatedAt: now,
@@ -2531,7 +2554,18 @@ export async function submitSetPick(
       throw new RoomError('Selection is locked', 409, 'SELECTION_LOCKED');
     }
 
-    const snapshot = snapshotForParticipant(room, participant);
+    const storedSnapshot = snapshotForParticipant(room, participant);
+    const snapshot = (participant.setPicks?.length ?? 0) === 0
+      ? replaceLegacyPercentRolls(storedSnapshot)
+      : storedSnapshot;
+    if (snapshot !== storedSnapshot) {
+      room = {
+        ...room,
+        slotEncounterSnapshots: room.slotEncounterSnapshots.map((entry, index) => (
+          index === participant.slotIndex ? snapshot : entry
+        )) as EncounterRoom['slotEncounterSnapshots'],
+      };
+    }
     const encounter = snapshotToEncounterData(snapshot);
     const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
     const inventoryDocument = await transaction.getInventory<AvatarInventory>(playerId, avatarId);
@@ -2554,6 +2588,7 @@ export async function submitSetPick(
     const first = clientActionToPlayerAction(slots[0]!);
     const updated: EncounterRoom = {
       ...room,
+      slotEncounterSnapshots: room.slotEncounterSnapshots,
       participants: room.participants.map((entry) =>
         entry.playerId === playerId
           ? {

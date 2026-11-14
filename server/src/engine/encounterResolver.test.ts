@@ -151,11 +151,11 @@ console.log('encounterResolver.test.ts: all assertions passed');
 {
   const setRolls = createEncounterRollSnapshot({
     ...favorableRolls,
-    rollPrimaryA: 90,
-    rollSecondaryB: 60,
-    rollE: 20,
+    rollPrimaryA: 18,
+    rollSecondaryB: 14,
+    rollE: 8,
     extraRolls: {
-      primary: { A: [70, 80, 100], B: [61, 61, 61], C: [61, 61, 61], D: [61, 61, 61] },
+      primary: { A: [16, 80, 100], B: [61, 61, 61], C: [61, 61, 61], D: [61, 61, 61] },
       secondary: { A: [50, 50, 50], B: [50, 50, 50], C: [50, 50, 50], D: [50, 50, 50] },
     },
   });
@@ -165,20 +165,20 @@ console.log('encounterResolver.test.ts: all assertions passed');
     mEncounterSolutiuonTypeB: 5,
   };
 
-  // Two copies of A and an alternative in B: (90 + 70 + 60) / 3 = 73 → success.
+  // Two copies of A and an alternative in B: (18 + 16 + 14) / 3 = 16 → success.
   const full = resolveEncounter(encounter, [10, 10, 20], solutionMap, setRolls, {
     mode: 'slot', slot: 'A', picks: ['A', 'A', 'B'],
   });
   assert.equal(full.success, true);
-  assert.equal(full.selectedRoll, 73);
+  assert.equal(full.selectedRoll, 16);
   assert.deepEqual(full.usedInventorySolutions, [10, 10, 20]);
 
-  // One item and the dice for the two missing: (90 + 20 + 20) / 3 = 43 → fails, the item is still spent.
+  // One item and the dice for the two missing: (18 + 8 + 8) / 3 = 11 → fails, the item is still spent.
   const diceFilled = resolveEncounter(encounter, [10], solutionMap, setRolls, {
     mode: 'slot', slot: 'A', picks: ['A'], diceFill: true,
   });
   assert.equal(diceFilled.success, false);
-  assert.equal(diceFilled.selectedRoll, 43);
+  assert.equal(diceFilled.selectedRoll, 11);
   assert.deepEqual(diceFilled.usedInventorySolutions, [10]);
 
   // An incomplete set without the dice, or more picks than needed, is not valid.
