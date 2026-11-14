@@ -354,3 +354,7 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### The book in two slots — 2026-11-14
+
+The Scholar was showing the Codex of Lost Echoes in the left slot and in the next one. The left slot only takes a speechcraft item, and that book is a learn item, so the same item had two places. Tapping a slot could also spend some other item than the one sitting there, because the picture used the type remembered on the inventory row and the server then picked the lowest item of the catalog type. Each slot now has one item, claimed by name first, and that is the item a tap spends. Another copy of the same slot takes another charge of that same item. **Verification:** the encounter tests passed, including that Scholar-shaped case. **Release in progress as 0.9.0-beta.57.**
+

@@ -41,12 +41,67 @@ export function isSolutionSetSlot(value: unknown): value is SolutionSetSlot {
   return value === 'A' || value === 'B' || value === 'C' || value === 'D';
 }
 
+export interface SolutionSlotFace {
+  solutionId: number;
+  lane: 'primary' | 'secondary';
+}
+
+/**
+ * The one item shown in each slot. A named item is claimed before any
+ * alternative, and an item already claimed is not the face of a second slot.
+ * Types come from the catalog, not from the type stored on the inventory row.
+ */
+export function slotFaces(
+  requirements: SolutionSetRequirements,
+  inventory: readonly number[],
+  solutionTypeOf: (solutionId: number) => number | undefined,
+): Partial<Record<SolutionSetSlot, SolutionSlotFace>> {
+  const uses = new Map<number, number>();
+  for (const solutionId of inventory) {
+    uses.set(solutionId, (uses.get(solutionId) ?? 0) + 1);
+  }
+
+  const faces: Partial<Record<SolutionSetSlot, SolutionSlotFace>> = {};
+  const claimed = new Set<number>();
+
+  for (const slot of SOLUTION_SET_SLOTS) {
+    const primarySolutionId = requirements[slot].primarySolutionId;
+    if (primarySolutionId > 0 && (uses.get(primarySolutionId) ?? 0) >= 1) {
+      faces[slot] = { solutionId: primarySolutionId, lane: 'primary' };
+      claimed.add(primarySolutionId);
+    }
+  }
+
+  for (const slot of SOLUTION_SET_SLOTS) {
+    if (faces[slot]) {
+      continue;
+    }
+    const secondarySolutionType = requirements[slot].secondarySolutionType;
+    if (secondarySolutionType <= 0) {
+      continue;
+    }
+    const candidate = [...uses.entries()]
+      .filter(([solutionId, count]) => (
+        count >= 1
+        && !claimed.has(solutionId)
+        && solutionTypeOf(solutionId) === secondarySolutionType
+      ))
+      .sort((left, right) => left[0] - right[0])[0];
+    if (!candidate) {
+      continue;
+    }
+    faces[slot] = { solutionId: candidate[0], lane: 'secondary' };
+    claimed.add(candidate[0]);
+  }
+
+  return faces;
+}
+
 /**
  * Assigns one inventory charge to every pick, or returns null when the
- * inventory cannot cover the picks. Primary items are taken first for all
- * picks, then the remaining picks take the lowest-id item of their slot's
- * alternative type, so an alternative never takes an item a primary needs.
- * `inventory` holds one entry per charge.
+ * inventory cannot cover the picks. Each pick spends the item placed in that
+ * slot. Another copy of the same slot spends another charge of that same item.
+ * A different item is not substituted. `inventory` holds one entry per charge.
  */
 export function allocateSolutionSet(
   picks: readonly SolutionSetSlot[],
@@ -54,6 +109,7 @@ export function allocateSolutionSet(
   inventory: readonly number[],
   solutionTypeOf: (solutionId: number) => number | undefined,
 ): SolutionSetPickAllocation[] | null {
+  const faces = slotFaces(requirements, inventory, solutionTypeOf);
   const remaining = [...inventory];
   const assigned: (Omit<SolutionSetPickAllocation, 'copyIndex'> | null)[] = picks.map(() => null);
 
@@ -78,17 +134,11 @@ export function allocateSolutionSet(
       continue;
     }
     const slot = picks[index]!;
-    const { secondarySolutionType } = requirements[slot];
-    if (secondarySolutionType <= 0) {
+    const face = faces[slot];
+    if (!face || !take(face.solutionId)) {
       return null;
     }
-    const candidate = remaining
-      .filter((solutionId) => solutionTypeOf(solutionId) === secondarySolutionType)
-      .sort((left, right) => left - right)[0];
-    if (candidate === undefined || !take(candidate)) {
-      return null;
-    }
-    assigned[index] = { slot, lane: 'secondary', solutionId: candidate };
+    assigned[index] = { slot, lane: face.lane, solutionId: face.solutionId };
   }
 
   const copies = new Map<string, number>();

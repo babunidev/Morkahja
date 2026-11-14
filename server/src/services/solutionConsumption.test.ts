@@ -167,21 +167,21 @@ function secondaryEncounter(secondaryType: number, difficulty: EncounterDifficul
     { mode: 'slot', slot: 'A' },
   );
 
-  assert.equal(resolution.success, true);
-  assert.deepEqual(resolution.usedInventorySolutions, [10005, 10006]);
+  assert.equal(resolution.success, false);
+  assert.deepEqual(resolution.usedInventorySolutions, []);
   assert.equal(
     flattenInventorySolutionIds(
       applyEncounterInventoryChanges(
         inventory,
         resolution.usedInventorySolutions,
         [],
-        true,
+        false,
         null,
         2,
         1,
       ).inventory,
     ).length,
-    0,
+    2,
   );
 }
 

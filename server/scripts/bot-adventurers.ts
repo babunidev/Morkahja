@@ -389,19 +389,12 @@ class Bot {
       if (inventory.spellbook.some((entry) => entry.solutionId === solutionId && entry.uses > 0)) return 'skill';
       return null;
     };
-    const owned = [...inventory.items, ...inventory.spellbook].filter((entry) => entry.uses > 0);
-
     const choices: SolutionChoice[] = [];
     for (const slot of SLOTS) {
       const charges = slotHasEnoughSolutionCharges({ encounter: encounter as never, inventory: inventory as never, slot });
       if (!charges.available) continue;
-      // Same item the screen shows for the slot: the exact item for a primary
-      // requirement, otherwise the lowest-id item of the required type.
-      const solutionId = charges.isPrimary
-        ? Number(encounter[`primarySolution${slot}`])
-        : owned
-          .filter((entry) => entry.solutionType === Number(encounter[`secondarySolutionType${slot}`]))
-          .sort((left, right) => left.solutionId - right.solutionId)[0]?.solutionId;
+      // The same item the screen places in the slot.
+      const solutionId = charges.solutionId;
       const kind = solutionId ? kindOf(solutionId) : null;
       if (!solutionId || !kind) continue;
       choices.push({ slot, solutionId, kind, name: solutions[String(solutionId)]?.mSolutionName ?? `#${solutionId}` });
