@@ -52,7 +52,13 @@ import {
   PROTECTED_SURFACE_ATTR,
   protectedImageProps,
 } from '../../protectedImage.js';
-import { CONTINUE_SOUND, DEFAULT_BUTTON_SOUND, playSfx } from '../../sfx.js';
+import {
+  CONTINUE_SOUND,
+  DEFAULT_BUTTON_SOUND,
+  playLossSound,
+  playRewardPickupSound,
+  playSfx,
+} from '../../sfx.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
@@ -996,7 +1002,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
       });
     }
     const isLast = collectibleKeys.every((candidate) => collectedRef.current.has(candidate));
-    playSfx(isLast ? CONTINUE_SOUND : DEFAULT_BUTTON_SOUND);
+    if (isReward) {
+      const inventoryType = rewards.find((reward) => reward.solution.mSolutionID === solutionId)
+        ?.solution.mSolutionInventoryType ?? 0;
+      playRewardPickupSound(inventoryType, solutionId);
+    } else {
+      const loss = losses.find((entry) => entry.solution.mSolutionID === solutionId);
+      if (!playLossSound(loss?.solution.mSolutionInventoryType ?? 0, loss?.solution.mSolutionType ?? 0)) {
+        playSfx(isLast ? CONTINUE_SOUND : DEFAULT_BUTTON_SOUND);
+      }
+    }
 
     const flight = isReward
       ? playRewardFlights(rewardFlights, { keepOtherFlyers: true }).then(() => {
