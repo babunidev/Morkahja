@@ -220,6 +220,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `151a6e89`, 0.9.0-beta.56).
 
+## D-026 — Makaya's voice follows the reward and the god (2026-11-14)
+
+**Babuni's direction:** taking a reward plays a random line from add item one through three, and picking up a skill plays a random line from add skill one through ten. Losing an essence plays a random line from loose essence one through four. Each god's essence has its own line when it is received. Babuni: the essences will stay the same, so the id can be used. The sound follows the solution id, matched by the god's name.
+
+**AI implementation:** the clips are in `client/public/UI/SFX` and play when the reward or loss is tapped. Ids: 10010 Aeriel, 10011 Aetheria, 10026 Ordius, 10027 Ferrumis, 10036 Umbrael, 10037 Stonara, 10038 Solriel, 10039 Khaotys, 10040 Fyraan, 10122 Nereval, 10123 Sylvanus, 10244 Aerisara. An Atranor item shares the essence inventory and keeps the item line; only solution type 15 uses the loss lines.
+
+**Status:** implemented on `feat/essence-voices`, not yet released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

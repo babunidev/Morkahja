@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-58',
+    version: '0.9.0-beta.58',
+    period: '14 Nov 2026',
+    notes: [
+      'Taking a reward plays a voice line. A skill, an item and each god’s essence have their own lines, and losing an essence does too.',
+    ],
+  },
+  {
     id: 'beta-57',
     version: '0.9.0-beta.57',
     period: '14 Nov 2026',

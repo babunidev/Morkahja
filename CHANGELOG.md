@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: Makaya's voice for rewards, essence losses and the gods; 0.9.0-beta.58
+
+- **New (Babuni's direction):** taking a reward plays one of Makaya's lines. A skill uses `addSkill1`–`addSkill10`. An item, the lore gem or an Atranor item uses `addItem1`–`addItem3`. A god's essence plays that god's line, chosen by the solution id, which stays with the essence: 10010 Aeriel's Soar, 10011 Aetheria's Star, 10026 Ordius Balance, 10027 Ferrumis Sturdiness, 10036 Umbrael's Beyond, 10037 Stonara's Might, 10038 Solriel's Radiance, 10039 Khaotys Whirlwind, 10040 Fyraan's Flame, 10122 Nereval's Flow, 10123 Sylvanus Seed, 10244 Aerisara's Breath. Tapping a lost essence plays one of `looseEssence1`–`looseEssence4`. Other losses keep the button and continue sounds.
+- **Version 0.9.0-beta.58** (D-015, D-026).
+- **Verification:** pending. **Not deployed.**
+
 ## 2026-11-14 — Released: the item in a slot is the one that is used; 0.9.0-beta.57
 
 - **Fix:** one item could be the icon of two solution slots, and tapping a slot could spend a different item. On The Scholar the Codex of Lost Echoes (type 2, named by slot B) also appeared in slot A, which only accepts type 18. The icon was matched with the type stored on the inventory row; spending used the catalog type and, for an alternative, the lowest id of that type. A slot now has one face (`slotFaces` in `shared/src/solutionSet.ts`): the named item is claimed first, an item already claimed is not the face of another slot, and the type is the catalog type. A tap spends that item. Another copy of the same slot spends another charge of the same item, and a different item is not substituted.
