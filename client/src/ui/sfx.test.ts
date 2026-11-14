@@ -6,8 +6,11 @@ import { fileURLToPath } from 'node:url';
 import {
   ADD_ITEM_SOUNDS,
   ADD_SKILL_SOUNDS,
+  BACKPACK_SOUND,
+  CALL_FOR_HELP_SOUND,
   ESSENCE_DEITY_SOUNDS,
   LOSE_ESSENCE_SOUNDS,
+  SKILLBOOK_SOUND,
   pickLossSound,
   pickPickupSound,
   rewardPickupKind,
@@ -79,11 +82,18 @@ assert.equal(fileName(rewardVoice(3, 10010, () => 0)), 'essenceAeriel.mp3');
 assert.equal(fileName(rewardVoice(3, 10015, () => 0)), 'addItem1.mp3');
 assert.equal(fileName(rewardVoice(1, 10001, () => 0)), 'addSkill1.mp3');
 
+assert.equal(fileName(BACKPACK_SOUND), 'backpack.mp3');
+assert.equal(fileName(SKILLBOOK_SOUND), 'skillbook.mp3');
+assert.equal(fileName(CALL_FOR_HELP_SOUND), 'callforhelp.mp3');
+
 for (const url of [
   ...ADD_ITEM_SOUNDS,
   ...ADD_SKILL_SOUNDS,
   ...LOSE_ESSENCE_SOUNDS,
   ...Object.values(ESSENCE_DEITY_SOUNDS),
+  BACKPACK_SOUND,
+  SKILLBOOK_SOUND,
+  CALL_FOR_HELP_SOUND,
 ]) {
   const bytes = readFileSync(path.join(sfxDir, fileName(url)));
   assert.ok(bytes.length > 1000, `${fileName(url)} is missing or empty`);

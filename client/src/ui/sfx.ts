@@ -6,6 +6,9 @@ export const CONTINUE_SOUND = assetUrl('/UI/SFX/sfx_continuearrow_press.mp3');
 export const DICE_SOUND = assetUrl('/UI/SFX/sfx_dice_press.mp3');
 export const LEVEL_UP_SOUND = assetUrl('/UI/SFX/sfx_levelup.mp3');
 export const LORE_SOUND = assetUrl('/UI/SFX/sfx_lorebutton_press.mp3');
+export const BACKPACK_SOUND = assetUrl('/UI/SFX/backpack.mp3');
+export const SKILLBOOK_SOUND = assetUrl('/UI/SFX/skillbook.mp3');
+export const CALL_FOR_HELP_SOUND = assetUrl('/UI/SFX/callforhelp.mp3');
 export const SOLUTION_SOUND = assetUrl('/UI/SFX/sfx_solution_press.mp3');
 
 /** Makaya, taking an item, a non-deity essence, or the lore gem. One is chosen at random. */

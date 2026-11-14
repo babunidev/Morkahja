@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: backpack, skillbook and call for help have their own sounds; 0.9.0-beta.60
+
+- **New (Babuni's direction, D-028):** the backpack, the skillbook and Call for help play `backpack.mp3`, `skillbook.mp3` and `callforhelp.mp3`. Lore keeps its own sound. Call for help had been as loud as a shout; it was brought down with the other new lines, a little under the ordinary button.
+- **Version 0.9.0-beta.60** (D-015, D-028).
+- **Verification:** the client sound test names the three files and checks they are mp3s. Loudness measured: backpack already sat with the button; skillbook's spike and the call-for-help shout were brought down. Not listened to in a played turn. **Not deployed.**
+
 ## 2026-11-14 — Unreleased: Makaya's lines sit a little under the older sounds; 0.9.0-beta.59
 
 - **Change (Babuni's direction, D-027):** the new reward, essence and essence-loss lines were louder than the older effects, and uneven with each other. The older effects are unchanged. Each new line was brought to one level, about 3 dB under the button, and spikes that still jumped past the button were held down. The loudest takes, Aetheria and Ordius, had been about as loud as the level-up sound.

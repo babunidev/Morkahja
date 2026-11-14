@@ -236,6 +236,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/voice-levels`, not yet released.
 
+## D-028 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
+
+**Babuni's direction:** a backpack sound, a skillbook sound and a call-for-help sound for those buttons.
+
+**AI implementation:** Cursor (Grok 4.7) plays `backpack.mp3` for Inventory, `skillbook.mp3` for Skillbook and `callforhelp.mp3` for Call for help. Lore already had its own sound and keeps it. Call for help was measured at about −11 dB, far above the button at −25 dB, so that file was lowered to about −27 dB. The skillbook spike was held to the button's peak. The backpack already sat with the button.
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-60',
+    version: '0.9.0-beta.60',
+    period: '14 Nov 2026',
+    notes: [
+      'The backpack, the skillbook and Call for help each play their own sound.',
+    ],
+  },
+  {
     id: 'beta-59',
     version: '0.9.0-beta.59',
     period: '14 Nov 2026',
