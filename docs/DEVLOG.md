@@ -356,7 +356,7 @@ The rolls on the hovering solutions used a plain font; I wanted the same Breathe
 
 ### Makaya speaks when something is gained or an essence is lost — 2026-11-14
 
-Taking a reward only clicked, and so did losing an essence. Makaya's lines now play at that tap: three for an item, ten for a skill, four for a lost essence, and one line for each god when that god's essence is received. The essence ids stay with those essences, so the sound is tied to the id: Aeriel 10010, Aetheria 10011, Ordius 10026, Ferrumis 10027, Umbrael 10036, Stonara 10037, Solriel 10038, Khaotys 10039, Fyraan 10040, Nereval 10122, Sylvanus 10123, Aerisara 10244. The Atranor items are not those essences, so they keep the item line. **Verification:** still to be filled. **Not deployed yet.**
+Taking a reward only clicked, and so did losing an essence. Makaya's lines now play at that tap: three for an item, ten for a skill, four for a lost essence, and one line for each god when that god's essence is received. The essence ids stay with those essences, so the sound is tied to the id: Aeriel 10010, Aetheria 10011, Ordius 10026, Ferrumis 10027, Umbrael 10036, Stonara 10037, Solriel 10038, Khaotys 10039, Fyraan 10040, Nereval 10122, Sylvanus 10123, Aerisara 10244. The Atranor items are not those essences, so they keep the item line. Two of the skill recordings, add skill four and five, are the same file. Cursor (Grok 4.7) wired the lines and published the release. **Verification:** the client tests passed, including the id-to-god check, and one local item reward played an add-item line. Released as 0.9.0-beta.58 the same evening. A god's essence and an essence loss were not heard in a played turn, live or local.
 
 ### The book in two slots — 2026-11-14
 

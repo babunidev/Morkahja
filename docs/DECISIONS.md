@@ -226,7 +226,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** the clips are in `client/public/UI/SFX` and play when the reward or loss is tapped. Ids: 10010 Aeriel, 10011 Aetheria, 10026 Ordius, 10027 Ferrumis, 10036 Umbrael, 10037 Stonara, 10038 Solriel, 10039 Khaotys, 10040 Fyraan, 10122 Nereval, 10123 Sylvanus, 10244 Aerisara. An Atranor item shares the essence inventory and keeps the item line; only solution type 15 uses the loss lines.
 
-**Status:** implemented on `feat/essence-voices`, not yet released.
+**Status:** live since 2026-11-14 (release `83057282`, 0.9.0-beta.58).
 
 ## 2026-11-13 — Licensing decision
 

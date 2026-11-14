@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-14, 18:13 UTC (0.9.0-beta.58, Makaya's voice)
+
+Approved by Babuni ("I would like to ship that, so do the release for this one. Push and everything."). `main` at `83057282`: Makaya's lines for a taken reward, a lost essence, and each god's essence (PR #46, `af9d3341`), plus the Grimnir Trunk wording already committed on `main`.
+
+- **Before:** backend `1aedfe76`, frontend `20261114-162457`. `server/game/encountersdata.json` was dirty. Its bytes matched `83057282` (Grimnir Trunk), so that file was checked out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261114-1812`.
+- **Checks before the release:** client tests passed (37, including the essence id map) on the release worktree; the production client build typechecked (`tsc -b && vite build`); CI `verify` passed on PR #46. Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261114-181351` (73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `6c58ef7f62b72cc35e0db6406d29987481d323df27007095ded548eb601012ec`). Backend fast-forwarded to `83057282`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261114-181353` (`index-ZkolctZo.js`). From outside: that script contains `0.9.0-beta.58` and `essenceFyraan`; `/Morkahja/`, health and content return 200; `addItem1.mp3`, `looseEssence1.mp3` and `essenceFyraan.mp3` return 200. API and bots online (the bots restarted with the API).
+- **After:** a newer uncommitted edit of Grimnir Vault (encounter 20009) appeared on the server and was left in place. It is not in `83057282`.
+- **Not done:** backup restore not proven; a reward, a god's essence and an essence loss were not played on the live game.
+
 ## Production release — 2026-11-14, 16:24 UTC (0.9.0-beta.57, the item in the slot is the one used)
 
 Approved by Babuni ("deploy it", then "the descriptions are fine, we can release"). `main` at `1aedfe76`: a solution slot shows one item, claimed by name before any alternative, using the catalog type; a tap spends that item, and another copy spends another charge of the same item (PR #45, `d11816f4`, plus the live encounter descriptions). Encounter descriptions already edited on the server were kept, including Fae Pastures and Mystic Grass.
