@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-59',
+    version: '0.9.0-beta.59',
+    period: '14 Nov 2026',
+    notes: [
+      'Makaya’s voice lines are a little quieter, so they sit with the other sounds.',
+    ],
+  },
+  {
     id: 'beta-58',
     version: '0.9.0-beta.58',
     period: '14 Nov 2026',

@@ -228,6 +228,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `83057282`, 0.9.0-beta.58).
 
+## D-027 — Makaya's lines sit a little under the older sounds (2026-11-14)
+
+**Babuni's direction:** the new voice lines are a little louder than the older effects. The older effects were already lowered on purpose and stay as they are. Even with the sound slider at full, the new lines should come down a little, and they should sit together.
+
+**AI implementation:** Cursor (Grok 4.7) measured the active level of every effect. The older button is about −25 dB. The loudest new lines were about −15 dB, level with the level-up sound, while some skill lines were already near −35 dB. Each new line was moved to about −28 dB, and a peak that still passed the button was limited. The older files were not changed.
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
