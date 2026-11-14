@@ -228,6 +228,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `83057282`, 0.9.0-beta.58).
 
+## D-027 — Rolls return to a d20 (2026-11-14)
+
+**Babuni's direction:** stop the hidden 1–100 roll. Every lane rolls 1–20. One and two are Misery, three to eight Hardship, nine to twelve Fate, thirteen to eighteen Fortune, and nineteen and twenty Prosperity. A primary solution adds 7 and a secondary solution adds 5. The die adds nothing for now, and that bonus can change later. Difficulty subtracts one less than its level from every roll, including the die: difficulty 1 subtracts 0, 2 subtracts 1, 3 subtracts 2, and 4 subtracts 3. The same step applies where an encounter's difficulty is already 5, 6, or 7. The number on the portrait is the total, so a natural 20 with +7 shows 27, and 26 stays 26. The tooltip names that roll beside the name: `d20`, `d20+7`, `d20+5`, or `d20-1`.
+
+**AI implementation:** `finalizeRoll` in `shared/src/diceInterpreter.ts` adds the bonus and subtracts the penalty, and keeps the total. Nineteen and above is Prosperity, and two and below is Misery. Solution-set copies use the same bonus, and the set's result is their average. An unresolved snapshot still holding a 1–100 number is given a new total when the first solution of a set is locked, or when the choice is committed. A number already on screen that is above 27 is still shown as its old d20 face. Inventory losses on Hardship and Misery are unchanged.
+
+**Status:** implemented for release as 0.9.0-beta.59, not yet deployed.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

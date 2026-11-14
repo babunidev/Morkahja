@@ -201,7 +201,7 @@ assert.equal(
     slotEncounterSnapshots: chainedRoom.slotEncounterSnapshots.map((snapshot, slotIndex) => ({
       ...snapshot,
       encounterId: DEATH_ENCOUNTER_NUMERIC_ID,
-      rollE: slotIndex === actorSlotIndex ? 10 : 96,
+      rollE: slotIndex === actorSlotIndex ? 1 : 96,
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],
     participants: chainedRoom.participants.map((participant) => ({
@@ -268,7 +268,7 @@ assert.equal(
     slotEncounterSnapshots: deathRoom.slotEncounterSnapshots.map((snapshot, slotIndex) => ({
       ...snapshot,
       encounterId: DEATH_ENCOUNTER_NUMERIC_ID,
-      rollE: slotIndex === actorSlotIndex ? 10 : 96,
+      rollE: slotIndex === actorSlotIndex ? 1 : 96,
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],
     participants: deathRoom.participants.map((participant) => ({

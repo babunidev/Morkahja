@@ -26,9 +26,9 @@ function setEncounterRoom(room: EncounterRoom): EncounterRoom {
     secondarySolutionTypeA: 0,
     primarySolutionB: 0,
     secondarySolutionTypeB: 6,
-    rollPrimaryA: 90,
-    rollSecondaryB: 70,
-    rollE: 15,
+    rollPrimaryA: 12,
+    rollSecondaryB: 10,
+    rollE: 11,
     extraRolls: undefined,
     actionReadyAt: Date.now() - 1,
   };
@@ -86,14 +86,14 @@ assert.equal(parseClientSolutionSet(undefined, true), undefined);
     RoomError,
   );
 
-  // The skill in A (90), the item in B as an alternative (70) and the dice for
-  // the third (15): (90 + 70 + 15) / 3 = 58 → Disengage, not a success.
+  // The skill in A (12), the item in B as an alternative (10) and the dice for
+  // the third (11): (12 + 10 + 11) / 3 = 11 → Fate, not a success.
   const after = await submitChoice(session.playerId, avatarId, 'A', 10001, {
     picks: ['A', 'B'],
     diceFill: true,
   });
   const actor = after.participants.find((entry) => entry.avatarId === avatarId);
-  assert.equal(actor?.preparedResult?.selectedRoll, 58);
+  assert.equal(actor?.preparedResult?.selectedRoll, 11);
   assert.equal(actor?.preparedResult?.success, false);
   assert.deepEqual(actor?.preparedResult?.usedInventorySolutions, [10001, 10005]);
   assert.deepEqual(actor?.selectedAction, { type: 'primaryA', picks: ['A', 'B'], diceFill: true });
@@ -119,17 +119,17 @@ assert.equal(parseClientSolutionSet(undefined, true), undefined);
   await saveEncounterRoom(room);
 
   const first = await submitSetPick(session.playerId, avatarId, 'A');
-  assert.deepEqual(first.picks, [{ slot: 'A', solutionId: 10001, roll: 90 }]);
+  assert.deepEqual(first.picks, [{ slot: 'A', solutionId: 10001, roll: 12 }]);
   const second = await submitSetPick(session.playerId, avatarId, 'B');
-  assert.deepEqual(second.picks.map((pick) => pick.roll), [90, 70]);
+  assert.deepEqual(second.picks.map((pick) => pick.roll), [12, 10]);
   // Nothing left to cover a third pick of A.
   await assert.rejects(submitSetPick(session.playerId, avatarId, 'A'), RoomError);
 
   const after = await submitChoice(session.playerId, avatarId, 'B', 10005, { picks: ['B'], diceFill: true });
   const actor = after.participants.find((entry) => entry.avatarId === avatarId);
-  assert.equal(actor?.preparedResult?.selectedRoll, 58);
-  assert.deepEqual(actor?.preparedResult?.pickRolls, [90, 70]);
-  assert.equal(actor?.preparedResult?.diceFillRoll, 15);
+  assert.equal(actor?.preparedResult?.selectedRoll, 11);
+  assert.deepEqual(actor?.preparedResult?.pickRolls, [12, 10]);
+  assert.equal(actor?.preparedResult?.diceFillRoll, 11);
   await submitContinue(session.playerId, avatarId);
 }
 

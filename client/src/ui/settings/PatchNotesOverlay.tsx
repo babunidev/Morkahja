@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-59',
+    version: '0.9.0-beta.59',
+    period: '14 Nov 2026',
+    notes: [
+      'Rolls are a d20 again. A primary solution is d20+7, a secondary is d20+5, and the total is shown even past 20.',
+    ],
+  },
+  {
     id: 'beta-58',
     version: '0.9.0-beta.58',
     period: '14 Nov 2026',

@@ -67,6 +67,11 @@ export interface EncounterSnapshot {
   rollE: number;
   /** Rolls for further copies of a slot in a solution set; absent on older snapshots. */
   extraRolls?: EncounterRollSnapshot['extraRolls'];
+  /**
+   * Stored rolls are the uncapped total. Snapshots without this flag still
+   * hold a retired 1–100 roll that is replaced when the choice is committed.
+   */
+  rollTotals?: boolean;
 
   // Rewards are selected at encounter creation, then conditionally granted.
   rewardIds: number[];
