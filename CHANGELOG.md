@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: rolls are a d20 again; 0.9.0-beta.59
+
+- **Change (Babuni's direction, D-027):** each lane rolls 1–20. A primary solution adds 7, a secondary adds 5, and the die adds 0. Difficulty then subtracts one less than its level, including on the die. The number shown is that total, so a natural 20 with a primary solution shows 27. One and two are Misery, three to eight Hardship, nine to twelve Fate, thirteen to eighteen Fortune, and nineteen or higher Prosperity. A total below 1 is Misery. The solution and die tooltips name the roll beside the title, such as `d20+5` or `d20-1`. An encounter still in progress on the old 1–100 scale receives a fresh total when the choice is committed. A result already showing a number above 27 still reads as its old d20 face.
+- **Version 0.9.0-beta.59** (D-015, D-027).
+- **Verification:** client tests passed (37). Server tests passed (41) on local PostgreSQL, including dice totals, solution sets, Atranor, and room follow. Server typecheck passed. **Not deployed.**
+
 ## 2026-11-14 — Released: Makaya's voice for rewards, essence losses and the gods; 0.9.0-beta.58
 
 - **New (Babuni's direction):** taking a reward plays one of Makaya's lines. A skill uses `addSkill1`–`addSkill10`. An item, the lore gem or an Atranor item uses `addItem1`–`addItem3`. A god's essence plays that god's line, chosen by the solution id, which stays with the essence: 10010 Aeriel's Soar, 10011 Aetheria's Star, 10026 Ordius Balance, 10027 Ferrumis Sturdiness, 10036 Umbrael's Beyond, 10037 Stonara's Might, 10038 Solriel's Radiance, 10039 Khaotys Whirlwind, 10040 Fyraan's Flame, 10122 Nereval's Flow, 10123 Sylvanus Seed, 10244 Aerisara's Breath. Tapping a lost essence plays one of `looseEssence1`–`looseEssence4`. Other losses keep the button and continue sounds.

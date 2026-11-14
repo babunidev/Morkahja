@@ -154,7 +154,7 @@ export function allocateSolutionSet(
 /**
  * The one roll of a set: the average of every chosen solution's roll, with
  * the dice roll counted once for each missing solution. Rounded to the
- * nearest whole roll (1–100).
+ * nearest whole total, which can sit past 20.
  */
 export function combineSolutionSetRolls(
   pickRolls: readonly number[],
@@ -168,5 +168,5 @@ export function combineSolutionSetRolls(
   if (count === 0) {
     return diceRoll ?? 1;
   }
-  return Math.min(100, Math.max(1, Math.round(total / count)));
+  return Math.round(total / count);
 }

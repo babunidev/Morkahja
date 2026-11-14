@@ -902,7 +902,7 @@ assert.notEqual(
 );
 
 assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 70 }), true);
-assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 20 }), false);
+assert.equal(shouldUseEncounterFollow(19667, { success: true, selectedRoll: 8 }), false);
 assert.equal(shouldUseEncounterFollow(19667, { success: false, selectedRoll: 96 }), false);
 
 const FOLLOW_ORIGIN_ID = 19666;

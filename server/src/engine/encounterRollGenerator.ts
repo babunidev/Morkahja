@@ -1,3 +1,9 @@
+import {
+  DICE_ROLL_BONUS,
+  PRIMARY_SOLUTION_ROLL_BONUS,
+  SECONDARY_SOLUTION_ROLL_BONUS,
+  finalizeRoll,
+} from './diceInterpreter.js';
 import { createEncounterRollSnapshot } from './encounterResolver.js';
 import type { EncounterRollSnapshot, SolutionSetExtraRolls } from './encounterResolver.js';
 import { MAX_SOLUTION_SET_SIZE } from '@shared/solutionSet.js';
@@ -7,32 +13,37 @@ export function randomInt(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-function laneExtras(min: number): Record<'A' | 'B' | 'C' | 'D', number[]> {
+function laneExtras(bonus: number, difficulty: number): Record<'A' | 'B' | 'C' | 'D', number[]> {
   const extras = (): number[] => Array.from(
     { length: MAX_SOLUTION_SET_SIZE - 1 },
-    () => randomInt(min, 100),
+    () => finalizeRoll(randomInt(1, 20), bonus, difficulty),
   );
   return { A: extras(), B: extras(), C: extras(), D: extras() };
 }
 
-/** Rolls for further copies of one slot in a solution set, same ranges as the slot's own. */
-export function generateSolutionSetExtraRolls(): SolutionSetExtraRolls {
-  return { primary: laneExtras(61), secondary: laneExtras(50) };
+/** Further copies of one slot use the same bonus and difficulty as that slot. */
+export function generateSolutionSetExtraRolls(difficulty: number): SolutionSetExtraRolls {
+  return {
+    primary: laneExtras(PRIMARY_SOLUTION_ROLL_BONUS, difficulty),
+    secondary: laneExtras(SECONDARY_SOLUTION_ROLL_BONUS, difficulty),
+  };
 }
 
 /**
- * Generate a constrained 5-roll snapshot at encounter creation.
- * Primary lanes (A, C): 61–100 · Secondary lanes (B, D): 50–100 · Dice (E): 1–100
+ * Fair d20 per lane, then the lane bonus and the difficulty penalty.
+ * Primary +7 · Secondary +5 · Dice +0. The stored number is that total, even past 20.
  */
-export function generateEncounterRollSnapshot(): EncounterRollSnapshot {
-  const rollPrimaryA = randomInt(61, 100);
-  const rollPrimaryB = randomInt(61, 100);
-  const rollPrimaryC = randomInt(61, 100);
-  const rollPrimaryD = randomInt(61, 100);
-  const rollSecondaryA = randomInt(50, 100);
-  const rollSecondaryB = randomInt(50, 100);
-  const rollSecondaryC = randomInt(50, 100);
-  const rollSecondaryD = randomInt(50, 100);
+export function generateEncounterRollSnapshot(difficulty: number): EncounterRollSnapshot {
+  const primary = () => finalizeRoll(randomInt(1, 20), PRIMARY_SOLUTION_ROLL_BONUS, difficulty);
+  const secondary = () => finalizeRoll(randomInt(1, 20), SECONDARY_SOLUTION_ROLL_BONUS, difficulty);
+  const rollPrimaryA = primary();
+  const rollPrimaryB = primary();
+  const rollPrimaryC = primary();
+  const rollPrimaryD = primary();
+  const rollSecondaryA = secondary();
+  const rollSecondaryB = secondary();
+  const rollSecondaryC = secondary();
+  const rollSecondaryD = secondary();
 
   return createEncounterRollSnapshot({
     rollA: rollPrimaryA,
@@ -47,7 +58,7 @@ export function generateEncounterRollSnapshot(): EncounterRollSnapshot {
     rollSecondaryB,
     rollSecondaryC,
     rollSecondaryD,
-    rollE: randomInt(1, 100),
-    extraRolls: generateSolutionSetExtraRolls(),
+    rollE: finalizeRoll(randomInt(1, 20), DICE_ROLL_BONUS, difficulty),
+    extraRolls: generateSolutionSetExtraRolls(difficulty),
   });
 }

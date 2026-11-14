@@ -55,19 +55,19 @@ const favorableRolls = createEncounterRollSnapshot({
 });
 
 const unfavorableRolls = createEncounterRollSnapshot({
-  rollA: 10,
-  rollB: 10,
-  rollC: 10,
-  rollD: 10,
-  rollPrimaryA: 10,
-  rollPrimaryB: 10,
-  rollPrimaryC: 10,
-  rollPrimaryD: 10,
-  rollSecondaryA: 10,
-  rollSecondaryB: 10,
-  rollSecondaryC: 10,
-  rollSecondaryD: 10,
-  rollE: 10,
+  rollA: 1,
+  rollB: 1,
+  rollC: 1,
+  rollD: 1,
+  rollPrimaryA: 1,
+  rollPrimaryB: 1,
+  rollPrimaryC: 1,
+  rollPrimaryD: 1,
+  rollSecondaryA: 1,
+  rollSecondaryB: 1,
+  rollSecondaryC: 1,
+  rollSecondaryD: 1,
+  rollE: 1,
 });
 
 function primaryEncounter(primarySolutionId: number, difficulty: EncounterDifficulty = 2): EncounterData {

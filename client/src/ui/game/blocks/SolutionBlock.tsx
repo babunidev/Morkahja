@@ -39,7 +39,13 @@ export interface SolutionSetPickRecordView {
 
 /** After the last solution's roll appears, a moment to read it before the set goes in. */
 const SET_LAST_ROLL_READ_MS = 700;
-import { displayRollAsD20 } from '@shared/diceInterpreter';
+import {
+  DICE_ROLL_BONUS,
+  PRIMARY_SOLUTION_ROLL_BONUS,
+  SECONDARY_SOLUTION_ROLL_BONUS,
+  displayRollAsD20,
+  formatRollNotation,
+} from '@shared/diceInterpreter';
 import { assetUrl } from '../../../assetUrl.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
@@ -220,6 +226,7 @@ interface SolutionTooltipState {
   description: string;
   detail: string;
   name: string;
+  notation: string;
   unavailable: boolean;
 }
 
@@ -268,6 +275,39 @@ const compactDiceTooltipDetailStyle: CSSProperties = {
   lineHeight: 1.1,
   textAlign: 'center',
 };
+
+const tooltipTitleRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  justifyContent: 'space-between',
+  gap: 10,
+  width: '100%',
+  textAlign: 'left',
+};
+
+const tooltipRollNotationStyle: CSSProperties = {
+  flex: 'none',
+  color: '#ffcc66',
+  fontWeight: 700,
+  letterSpacing: '0.01em',
+};
+
+function TooltipTitle({
+  name,
+  notation,
+  nameStyle,
+}: {
+  name: string;
+  notation: string;
+  nameStyle: CSSProperties;
+}) {
+  return (
+    <div style={{ ...nameStyle, ...tooltipTitleRowStyle }}>
+      <span style={{ minWidth: 0 }}>{name}</span>
+      <span style={tooltipRollNotationStyle}>{notation}</span>
+    </div>
+  );
+}
 
 function isCompactDiceTooltip(tooltip: SolutionTooltipState): boolean {
   return tooltip.name === 'Dice' && !tooltip.description && !tooltip.unavailable;
@@ -906,19 +946,19 @@ export function SolutionBlock({
       },
       body: info.unavailable ? (
         <>
-          <div style={unavailableTooltipTitleStyle}>{info.name}</div>
+          <TooltipTitle name={info.name} notation={info.notation} nameStyle={unavailableTooltipTitleStyle} />
           <TooltipDivider bleed={5.5} />
           <div style={unavailableTooltipDetailStyle}>{info.detail}</div>
         </>
       ) : compact ? (
         <>
-          <div style={compactDiceTooltipTitleStyle}>{info.name}</div>
+          <TooltipTitle name={info.name} notation={info.notation} nameStyle={compactDiceTooltipTitleStyle} />
           <TooltipDivider />
           <div style={compactDiceTooltipDetailStyle}>{info.detail}</div>
         </>
       ) : (
         <>
-          <div style={encounterTooltipTitleStyle}>{info.name}</div>
+          <TooltipTitle name={info.name} notation={info.notation} nameStyle={encounterTooltipTitleStyle} />
           <TooltipDivider />
           {info.description ? (
             <div style={encounterTooltipDescriptionStyle}>{info.description}</div>
@@ -930,10 +970,15 @@ export function SolutionBlock({
   }
 
   function solutionTooltipFor(solution: VisibleSolutionSlot): GameTooltipContent | null {
+    const bonus = solution.isPrimary
+      ? PRIMARY_SOLUTION_ROLL_BONUS
+      : SECONDARY_SOLUTION_ROLL_BONUS;
+
     return solutionTooltipContent(`solution-${solution.slot}`, {
       name: solution.name,
       description: solution.available ? solution.description : '',
       detail: formatSolutionChargeTooltipDetail(solution),
+      notation: formatRollNotation(bonus, encounter.encounterDifficulty ?? 1),
       unavailable: !solution.available,
     });
   }
@@ -943,7 +988,13 @@ export function SolutionBlock({
     const detail = setSize > 1 && setPicks.length > 0
       ? `rolls for the ${missing} missing`
       : 'try your luck';
-    return solutionTooltipContent('dice', { name: 'Dice', description: '', detail, unavailable: false });
+    return solutionTooltipContent('dice', {
+      name: 'Dice',
+      description: '',
+      detail,
+      notation: formatRollNotation(DICE_ROLL_BONUS, encounter.encounterDifficulty ?? 1),
+      unavailable: false,
+    });
   }
 
   function hideSolutionTooltip(): void {
