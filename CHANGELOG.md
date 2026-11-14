@@ -5,7 +5,7 @@
 ## 2026-11-14 — Released: Makaya's voice for rewards, essence losses and the gods; 0.9.0-beta.58
 
 - **New (Babuni's direction):** taking a reward plays one of Makaya's lines. A skill uses `addSkill1`–`addSkill10`. An item, the lore gem or an Atranor item uses `addItem1`–`addItem3`. A god's essence plays that god's line, chosen by the solution id, which stays with the essence: 10010 Aeriel's Soar, 10011 Aetheria's Star, 10026 Ordius Balance, 10027 Ferrumis Sturdiness, 10036 Umbrael's Beyond, 10037 Stonara's Might, 10038 Solriel's Radiance, 10039 Khaotys Whirlwind, 10040 Fyraan's Flame, 10122 Nereval's Flow, 10123 Sylvanus Seed, 10244 Aerisara's Breath. Tapping a lost essence plays one of `looseEssence1`–`looseEssence4`. Other losses keep the button and continue sounds.
-- **Content kept:** the Grimnir Trunk wording already on `main` (`83057282`) went out with this release. A later live edit to Grimnir Vault (encounter 20009) was not in the release and was left on the server.
+- **Content kept:** the Grimnir Trunk wording already on `main` (`83057282`) went out with this release. A later Grimnir Vault edit (encounter 20009) was not in the release. The same wording is on `main` as `18d4b414` and is still the uncommitted file on the server.
 - **Version 0.9.0-beta.58** (D-015, D-026).
 - **Verification:** client tests passed, 37 including the id-to-god mapping. The production client build typechecked. CI `verify` passed on PR #46. **Deployed** 2026-11-14 18:13 UTC; the live script is `index-ZkolctZo.js` and contains `0.9.0-beta.58` and `essenceFyraan`. The live item, essence and essence-loss files return 200. Not checked by playing a reward on the live game. See `docs/DEPLOYMENT.md`.
 
