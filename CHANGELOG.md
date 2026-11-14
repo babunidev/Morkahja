@@ -2,6 +2,30 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: every effect sits with the level-up sound; 0.9.0-beta.63
+
+- **Change (Babuni's direction, D-031):** the effects were still uneven. The solution opening was very low, and the essence lines stood out above it. Every effect, the dice included, is now leveled with the level-up sound. The level-up recording itself is unchanged. This replaces the earlier target of sitting a little under the button (D-028).
+- **Version 0.9.0-beta.63** (D-015, D-031).
+- **Verification:** measured before and after. The level-up sound's loudest moment is about −4 dB. Most other effects now land from about −8 dB to −10 dB in that same brief window, and their peaks sit near full scale. A few sharp recordings, including Aerisara, remain a step under that because the peak was already at the ceiling. Not listened to in a played turn. **Not deployed.**
+
+## 2026-11-14 — Unreleased: the horn reaches five free adventurers; 0.9.0-beta.62
+
+- **Change (Babuni's direction, D-030):** one Call for help chooses up to five adventurers who are online and not in a room. Friends fill those places first. Each chosen adventurer already received a Scribes line and a notice at the top; on the dashboard that notice now plays the horn, and the horn waits a minute before it can play again. A group of three dims the button, and the tooltip says the group is full.
+- **Version 0.9.0-beta.62** (D-015, D-030).
+- **Verification:** `helpRecipients.test.ts` passed. Five eligible friends leave no place for a stranger, and two friends are filled out to five. The notice was not watched on a second screen. **Not deployed.**
+
+## 2026-11-14 — Unreleased: backpack, skillbook and call for help have their own sounds; 0.9.0-beta.61
+
+- **New (Babuni's direction, D-029):** the backpack, the skillbook and Call for help play `backpack.mp3`, `skillbook.mp3` and `callforhelp.mp3`. Lore keeps its own sound. Call for help had been as loud as a shout; it was brought down with the other new lines, a little under the ordinary button.
+- **Version 0.9.0-beta.61** (D-015, D-029).
+- **Verification:** the client sound test names the three files and checks they are mp3s. Loudness measured: backpack already sat with the button; skillbook's spike and the call-for-help shout were brought down. Not listened to in a played turn. **Not deployed.**
+
+## 2026-11-14 — Unreleased: Makaya's lines sit a little under the older sounds; 0.9.0-beta.60
+
+- **Change (Babuni's direction, D-028):** the new reward, essence and essence-loss lines were louder than the older effects, and uneven with each other. The older effects are unchanged. Each new line was brought to one level, about 3 dB under the button, and spikes that still jumped past the button were held down. The loudest takes, Aetheria and Ordius, had been about as loud as the level-up sound.
+- **Version 0.9.0-beta.60** (D-015, D-028).
+- **Verification:** measured before and after. The button's active level is −25 dB; the new lines now sit from about −27 dB to −32 dB, and their peaks stay at or under the button's peak. Not listened to in a played turn. **Not deployed.** The later level-up match (D-031) replaces this loudness.
+
 ## 2026-11-14 — Released: rolls are a d20 again; 0.9.0-beta.59
 
 - **Change (Babuni's direction, D-027):** each lane rolls 1–20. A primary solution adds 7, a secondary adds 5, and the die adds 0. Difficulty then subtracts one less than its level, including on the die. The number shown is that total, so a natural 20 with a primary solution shows 27. One and two are Misery, three to eight Hardship, nine to twelve Fate, thirteen to eighteen Fortune, and nineteen or higher Prosperity. A total below 1 is Misery. The solution and die tooltips name the roll beside the title, such as `d20+5` or `d20-1`. An encounter still in progress on the old 1–100 scale receives a fresh total when the choice is committed. A result already showing a number above 27 still reads as its old d20 face.

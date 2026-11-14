@@ -2,7 +2,7 @@
   "name": "@morkahja/shared",
   "author": "Babuni.dev",
   "private": true,
-  "version": "0.9.0-beta.59",
+  "version": "0.9.0-beta.63",
   "type": "module",
   "exports": {
     "./contracts": "./src/contracts.ts",

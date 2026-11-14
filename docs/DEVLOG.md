@@ -354,6 +354,22 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### One level with the level-up sound — 2026-11-14
+
+The effects were still uneven. The solution opening sat very low, and the essence lines stood out beside it. The dice felt right, and the ask became that every sound, the dice included, should sit with the level-up sound. That recording stays as it is. Cursor (Grok 4.7) measured the loudest brief moment of each file and raised it toward the fanfare, holding a peak that would have broken past full scale. **Verification:** measured again afterwards. The level-up sound's loudest moment is about −4 dB, and most other effects now land from about −8 dB to −10 dB. A few sharp lines remain a step under that, because their peaks are already at the ceiling. Not listened to in a played turn, and not released yet.
+
+### Who hears the horn — 2026-11-14
+
+Sounding the horn was already writing a Scribes line and raising a notice, and it already left out anyone in a room. It also invited every free friend and then five more people. One call now chooses up to five, and friends take those places before anyone else. A full group of three cannot call; the button dims and the tooltip says the group is full. The friend on the dashboard hears the horn with that notice, and not again for a minute. Cursor (Grok 4.7) made the choice and the horn timer. **Verification:** the choice test passed. The notice was not watched on a second screen. **Not released yet.**
+
+### A sound for the backpack, the skillbook and the call — 2026-11-14
+
+The three buttons under the party still clicked like every other button. The backpack, the skillbook and Call for help now each have the sound added for them. Lore already had one. Call for help arrived much louder than the clicks, so that recording was brought down with the other new lines. Cursor (Grok 4.7) connected the files and matched the loudness. **Verification:** the sound test finds the three files. Not heard in a played turn, and not released yet.
+
+### Makaya a little quieter — 2026-11-14
+
+At full volume the new lines still jumped out over the clicks. The older sounds stay as they were. The new ones were measured and brought to one level, a little under the button. Aetheria and Ordius had been as loud as the level-up sound; a few skill lines were much quieter than the rest, so those came up. Cursor (Grok 4.7) did the measurement and the level change. **Verification:** measured again afterwards. The button is −25 dB and the new lines sit from about −27 dB to −32 dB. Not listened to in a played turn, and not released yet.
+
 ### Makaya speaks when something is gained or an essence is lost — 2026-11-14
 
 Taking a reward only clicked, and so did losing an essence. Makaya's lines now play at that tap: three for an item, ten for a skill, four for a lost essence, and one line for each god when that god's essence is received. The essence ids stay with those essences, so the sound is tied to the id: Aeriel 10010, Aetheria 10011, Ordius 10026, Ferrumis 10027, Umbrael 10036, Stonara 10037, Solriel 10038, Khaotys 10039, Fyraan 10040, Nereval 10122, Sylvanus 10123, Aerisara 10244. The Atranor items are not those essences, so they keep the item line. Two of the skill recordings, add skill four and five, are the same file. Cursor (Grok 4.7) wired the lines and published the release. **Verification:** the client tests passed, including the id-to-god check, and one local item reward played an add-item line. Released as 0.9.0-beta.58 the same evening. A god's essence and an essence loss were not heard in a played turn, live or local.

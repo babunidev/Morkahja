@@ -236,6 +236,38 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `e2aaa790`, 0.9.0-beta.59).
 
+## D-028 — Makaya's lines sit a little under the older sounds (2026-11-14)
+
+**Babuni's direction:** the new voice lines are a little louder than the older effects. The older effects were already lowered on purpose and stay as they are. Even with the sound slider at full, the new lines should come down a little, and they should sit together.
+
+**AI implementation:** Cursor (Grok 4.7) measured the active level of every effect. The older button is about −25 dB. The loudest new lines were about −15 dB, level with the level-up sound, while some skill lines were already near −35 dB. Each new line was moved to about −28 dB, and a peak that still passed the button was limited. The older files were not changed.
+
+**Status:** superseded the same day by D-031. The files on this branch follow the level-up sound.
+
+## D-029 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
+
+**Babuni's direction:** a backpack sound, a skillbook sound and a call-for-help sound for those buttons.
+
+**AI implementation:** Cursor (Grok 4.7) plays `backpack.mp3` for Inventory, `skillbook.mp3` for Skillbook and `callforhelp.mp3` for Call for help. Lore already had its own sound and keeps it. Call for help was measured at about −11 dB, far above the button at −25 dB, so that file was lowered to about −27 dB. The skillbook spike was held to the button's peak. The backpack already sat with the button.
+
+**Status:** implemented on `fix/voice-levels`, not yet released. The later level match (D-031) raises these with the other effects.
+
+## D-030 — The horn reaches five free adventurers, friends first (2026-11-14)
+
+**Babuni's direction:** sounding the horn chooses up to five online players who are in the dashboard or another menu, and not in a room. Friends are preferred, so five free friends are the five who hear it. Each receives a Scribes line and a notice at the top. The notice plays the call-for-help sound, only while they are on the dashboard, and only once a minute. A full group disables the button, and the tooltip says why.
+
+**AI implementation:** Cursor (Grok 4.7). The Scribes line and the top notice were already sent to the chosen player. The choice is now capped at five, friends first, still skipping anyone whose presence is in a room. The horn plays with the dashboard notice and waits sixty seconds before it can play again. Three engaged adventurers dim Call for help, with the tooltip "The group is full."
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
+## D-031 — Every effect sits with the level-up sound (2026-11-14)
+
+**Babuni's direction:** the sounds were still very different from one another. The solution opening was very low, and some reward lines, especially the essences, were quite loud. The dice felt right, and then the ask was that every sound, the dice included, sit on one level with the level-up sound.
+
+**AI implementation:** Cursor (Grok 4.7) measured the loudest brief moment of each effect. The level-up sound is about −4 dB there and was left unchanged. The other effects were raised toward −8 dB, which is the body of that fanfare, and a peak that would have passed full scale was held down. This replaces the D-028 target of sitting under the button. The d20 release had already taken D-027, so these sound decisions continue from D-028.
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

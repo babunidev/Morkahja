@@ -29,6 +29,38 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-63',
+    version: '0.9.0-beta.63',
+    period: '14 Nov 2026',
+    notes: [
+      'Every sound now sits with the level-up fanfare. The fanfare itself is unchanged.',
+    ],
+  },
+  {
+    id: 'beta-62',
+    version: '0.9.0-beta.62',
+    period: '14 Nov 2026',
+    notes: [
+      'Call for help reaches up to five free adventurers, friends first. A full group cannot call. The horn on that notice waits a minute before it sounds again.',
+    ],
+  },
+  {
+    id: 'beta-61',
+    version: '0.9.0-beta.61',
+    period: '14 Nov 2026',
+    notes: [
+      'The backpack, the skillbook and Call for help each play their own sound.',
+    ],
+  },
+  {
+    id: 'beta-60',
+    version: '0.9.0-beta.60',
+    period: '14 Nov 2026',
+    notes: [
+      'Makaya’s voice lines were brought to one level. A later update matches every sound to the level-up fanfare.',
+    ],
+  },
+  {
     id: 'beta-59',
     version: '0.9.0-beta.59',
     period: '14 Nov 2026',

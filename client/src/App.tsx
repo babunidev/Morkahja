@@ -80,7 +80,7 @@ import {
 } from './ui/transitions/avatarEnterTransition.js';
 import { enrichDeathOverlayAvatar } from './ui/game/roomContinue.js';
 import { seedDefaultAudioVolumesIfUnset } from './ui/audioVolume.js';
-import { LEVEL_UP_SOUND, playSfx } from './ui/sfx.js';
+import { CALL_FOR_HELP_SOUND, LEVEL_UP_SOUND, playSfx } from './ui/sfx.js';
 import LoadingScreen from './ui/loading/LoadingScreen.js';
 import MusicEngine, { type MusicZone } from './ui/music/MusicEngine.js';
 import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
@@ -602,6 +602,19 @@ export default function App() {
       window.clearInterval(pollTimer);
     };
   }, [playerId, screen]);
+
+  const lastHelpHornAtRef = useRef(0);
+  useEffect(() => {
+    if (screen !== 'dashboard' || !helpInviteToast) {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastHelpHornAtRef.current < 60_000) {
+      return;
+    }
+    lastHelpHornAtRef.current = now;
+    playSfx(CALL_FOR_HELP_SOUND);
+  }, [screen, helpInviteToast]);
 
   const loadingHooks = useMemo(
     () => ({
