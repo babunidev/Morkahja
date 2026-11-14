@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: the horn reaches five free adventurers; 0.9.0-beta.61
+
+- **Change (Babuni's direction, D-029):** one Call for help chooses up to five adventurers who are online and not in a room. Friends fill those places first. Each chosen adventurer already received a Scribes line and a notice at the top; on the dashboard that notice now plays the horn, and the horn waits a minute before it can play again. A group of three dims the button, and the tooltip says the group is full.
+- **Version 0.9.0-beta.61** (D-015, D-029).
+- **Verification:** `helpRecipients.test.ts` passed. Five eligible friends leave no place for a stranger, and two friends are filled out to five. The notice was not watched on a second screen. **Not deployed.**
+
 ## 2026-11-14 — Unreleased: backpack, skillbook and call for help have their own sounds; 0.9.0-beta.60
 
 - **New (Babuni's direction, D-028):** the backpack, the skillbook and Call for help play `backpack.mp3`, `skillbook.mp3` and `callforhelp.mp3`. Lore keeps its own sound. Call for help had been as loud as a shout; it was brought down with the other new lines, a little under the ordinary button.

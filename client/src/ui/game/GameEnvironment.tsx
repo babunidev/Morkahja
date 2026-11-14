@@ -787,9 +787,12 @@ export function GameEnvironment({
   );
 
   const helpCalled = room?.helpCalledForEncounter ?? false;
+  const partyFull = (room?.participants.filter(
+    (participant) => participant.choiceState !== 'disengaged',
+  ).length ?? 0) >= 3;
 
   async function handleCallForHelp(): Promise<void> {
-    if (helpCalled) {
+    if (helpCalled || partyFull) {
       return;
     }
 
@@ -1034,6 +1037,7 @@ export function GameEnvironment({
                 toggleGamePanel('lore');
               }}
               helpCalled={helpCalled}
+              partyFull={partyFull}
               onCallForHelp={() => {
                 void handleCallForHelp();
               }}

@@ -244,6 +244,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented on `fix/voice-levels`, not yet released.
 
+## D-029 — The horn reaches five free adventurers, friends first (2026-11-14)
+
+**Babuni's direction:** sounding the horn chooses up to five online players who are in the dashboard or another menu, and not in a room. Friends are preferred, so five free friends are the five who hear it. Each receives a Scribes line and a notice at the top. The notice plays the call-for-help sound, only while they are on the dashboard, and only once a minute. A full group disables the button, and the tooltip says why.
+
+**AI implementation:** Cursor (Grok 4.7). The Scribes line and the top notice were already sent to the chosen player. The choice is now capped at five, friends first, still skipping anyone whose presence is in a room. The horn plays with the dashboard notice and waits sixty seconds before it can play again. Three engaged adventurers dim Call for help, with the tooltip "The group is full."
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

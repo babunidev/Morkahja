@@ -354,6 +354,10 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### Who hears the horn — 2026-11-14
+
+Sounding the horn was already writing a Scribes line and raising a notice, and it already left out anyone in a room. It also invited every free friend and then five more people. One call now chooses up to five, and friends take those places before anyone else. A full group of three cannot call; the button dims and the tooltip says the group is full. The friend on the dashboard hears the horn with that notice, and not again for a minute. Cursor (Grok 4.7) made the choice and the horn timer. **Verification:** the choice test passed. The notice was not watched on a second screen. **Not released yet.**
+
 ### A sound for the backpack, the skillbook and the call — 2026-11-14
 
 The three buttons under the party still clicked like every other button. The backpack, the skillbook and Call for help now each have the sound added for them. Lore already had one. Call for help arrived much louder than the clicks, so that recording was brought down with the other new lines. Cursor (Grok 4.7) connected the files and matched the loudness. **Verification:** the sound test finds the three files. Not heard in a played turn, and not released yet.

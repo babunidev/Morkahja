@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-61',
+    version: '0.9.0-beta.61',
+    period: '14 Nov 2026',
+    notes: [
+      'Call for help reaches up to five free adventurers, friends first. A full group cannot call. The horn on that notice waits a minute before it sounds again.',
+    ],
+  },
+  {
     id: 'beta-60',
     version: '0.9.0-beta.60',
     period: '14 Nov 2026',

@@ -8,11 +8,19 @@ import { actionMenuRowStyle, GAME_SCREEN_LAYOUT } from '../gameScreenLayout.js';
 import { GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 
 /** What each menu button does, shown after a short hover (or a long press). */
-function menuTooltip(alt: string, helpCalled: boolean): GameTooltipContent {
+function helpTooltipLine(helpCalled: boolean, partyFull: boolean): [string, string] {
+  if (partyFull) {
+    return ['Call for help', 'The group is full.'];
+  }
+  if (helpCalled) {
+    return ['Call for help', 'Help has already been called for this encounter'];
+  }
+  return ['Call for help', 'Call nearby adventurers to help!'];
+}
+
+function menuTooltip(alt: string, helpCalled: boolean, partyFull: boolean): GameTooltipContent {
   const text: Record<string, [string, string]> = {
-    'Get help': helpCalled
-      ? ['Call for help', 'Help has already been called for this encounter']
-      : ['Call for help', 'Call nearby adventurers to help!'],
+    'Get help': helpTooltipLine(helpCalled, partyFull),
     Inventory: ['Inventory', 'The items you carry'],
     Skillbook: ['Skillbook', 'Your skills and spells'],
     Lore: ['Lore', 'Read the story of this encounter'],
@@ -49,6 +57,7 @@ const footerButtonImageStyle: CSSProperties = {
 
 export function ActionMenuZone({
   helpCalled = false,
+  partyFull = false,
   onCallForHelp,
   onInventoryToggle,
   onLoreToggle,
@@ -57,6 +66,8 @@ export function ActionMenuZone({
 }: {
   /** Call for help is spent for this encounter; the button stays visible but dimmed. */
   helpCalled?: boolean;
+  /** Three adventurers are already in the group. */
+  partyFull?: boolean;
   onCallForHelp?: () => void;
   onInventoryToggle: () => void;
   onLoreToggle: () => void;
@@ -87,12 +98,12 @@ export function ActionMenuZone({
     <div {...{ [PROTECTED_SURFACE_ATTR]: '' }} aria-label="Footer actions" style={{ ...actionMenuRowStyle(), position: 'relative' }}>
       {FOOTER_BUTTONS.map((button, index) => {
         const isHelp = button.alt === 'Get help';
-        const helpSpent = isHelp && helpCalled;
-        const tip = menuTips.bindTooltip(() => menuTooltip(button.alt, helpCalled));
+        const helpBlocked = isHelp && (helpCalled || partyFull);
+        const tip = menuTips.bindTooltip(() => menuTooltip(button.alt, helpCalled, partyFull));
         return (
         <button
+          aria-disabled={helpBlocked || undefined}
           aria-label={isHelp ? 'Call for help' : button.alt}
-          disabled={helpSpent}
           className={`morkahja-footer-button${menuPreparingClass(isMenuPreparing(`game:${button.alt.toLowerCase()}`))}`}
           data-morkahja-footer-target={button.target}
           key={button.alt}
@@ -103,7 +114,7 @@ export function ActionMenuZone({
               return;
             }
             if (isHelp) {
-              if (helpCalled) {
+              if (helpCalled || partyFull) {
                 return;
               }
               playSfx(CALL_FOR_HELP_SOUND);
@@ -131,8 +142,8 @@ export function ActionMenuZone({
           }}
           style={{
             ...footerButtonStyle,
-            opacity: helpSpent ? 0.42 : 1,
-            cursor: helpSpent ? 'default' : 'pointer',
+            opacity: helpBlocked ? 0.42 : 1,
+            cursor: helpBlocked ? 'default' : 'pointer',
           }}
           type="button"
         >

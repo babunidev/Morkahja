@@ -25,9 +25,9 @@ import type { SlotState } from '../domain/rooms/RoomSlot.js';
 import { DEFAULT_SLOT_STATES } from '../domain/rooms/RoomSlot.js';
 import {
   MAX_PARTICIPANTS,
-  RANDOM_HELP_RECIPIENT_COUNT,
   ROOM_INVITE_TTL_MS,
 } from '../domain/rooms/roomConstants.js';
+import { chooseHelpRecipientIds } from './helpRecipients.js';
 import {
   withDocumentTransaction,
   getProgression,
@@ -2870,15 +2870,6 @@ function isPlayerOnlineAndActive(
   return isPlayerRecentlyActive(player, now);
 }
 
-function shufflePlayerIds(playerIds: string[]): string[] {
-  const shuffled = [...playerIds];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-  return shuffled;
-}
-
 /**
  * Whether a player is actually taking part in a room right now, for Call for
  * help. Leaving a solo adventure only pauses its room (so it can be resumed),
@@ -3063,17 +3054,6 @@ export async function broadcastCallForHelp(
     eligibleFriendIds.push(friendId);
   }
 
-  for (const friendId of eligibleFriendIds) {
-    await sendHelpInvitation(
-      fromPlayerId,
-      friendId,
-      room,
-      fromPlayerName,
-      fromAvatarName,
-      avatarVisual,
-    );
-  }
-
   const randomCandidates: string[] = [];
   for (const candidateId of liveSessionPlayerIds) {
     if (candidateId === fromPlayerId || friendIds.includes(candidateId)) {
@@ -3092,8 +3072,8 @@ export async function broadcastCallForHelp(
     randomCandidates.push(candidateId);
   }
 
-  const strangerTargetIds = shufflePlayerIds(randomCandidates).slice(0, RANDOM_HELP_RECIPIENT_COUNT);
-  for (const targetId of strangerTargetIds) {
+  const chosen = chooseHelpRecipientIds(eligibleFriendIds, randomCandidates);
+  for (const targetId of [...chosen.friendIds, ...chosen.strangerIds]) {
     await sendHelpInvitation(
       fromPlayerId,
       targetId,
@@ -3104,10 +3084,10 @@ export async function broadcastCallForHelp(
     );
   }
 
-  const invitedCount = eligibleFriendIds.length + strangerTargetIds.length;
-  const targetMode: BroadcastCallForHelpResult['targetMode'] = strangerTargetIds.length > 0
-    ? (eligibleFriendIds.length > 0 ? 'friends' : 'random')
-    : (eligibleFriendIds.length > 0 ? 'friends' : 'random');
+  const invitedCount = chosen.friendIds.length + chosen.strangerIds.length;
+  const targetMode: BroadcastCallForHelpResult['targetMode'] = chosen.friendIds.length > 0
+    ? 'friends'
+    : 'random';
 
   return {
     invitedCount,
