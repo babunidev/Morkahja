@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: every effect sits with the level-up sound; 0.9.0-beta.62
+
+- **Change (Babuni's direction, D-030):** the effects were still uneven. The solution opening was very low, and the essence lines stood out above it. Every effect, the dice included, is now leveled with the level-up sound. The level-up recording itself is unchanged. This replaces the earlier target of sitting a little under the button (D-027).
+- **Version 0.9.0-beta.62** (D-015, D-030).
+- **Verification:** measured before and after. The level-up sound's loudest moment is about −4 dB. Most other effects now land from about −8 dB to −10 dB in that same brief window, and their peaks sit near full scale. A few sharp recordings, including Aerisara, remain a step under that because the peak was already at the ceiling. Not listened to in a played turn. **Not deployed.**
+
 ## 2026-11-14 — Unreleased: the horn reaches five free adventurers; 0.9.0-beta.61
 
 - **Change (Babuni's direction, D-029):** one Call for help chooses up to five adventurers who are online and not in a room. Friends fill those places first. Each chosen adventurer already received a Scribes line and a notice at the top; on the dashboard that notice now plays the horn, and the horn waits a minute before it can play again. A group of three dims the button, and the tooltip says the group is full.

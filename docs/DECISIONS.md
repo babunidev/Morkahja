@@ -234,7 +234,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7) measured the active level of every effect. The older button is about −25 dB. The loudest new lines were about −15 dB, level with the level-up sound, while some skill lines were already near −35 dB. Each new line was moved to about −28 dB, and a peak that still passed the button was limited. The older files were not changed.
 
-**Status:** implemented on `fix/voice-levels`, not yet released.
+**Status:** superseded the same day by D-030. The files on this branch follow the level-up sound.
 
 ## D-028 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
 
@@ -249,6 +249,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 **Babuni's direction:** sounding the horn chooses up to five online players who are in the dashboard or another menu, and not in a room. Friends are preferred, so five free friends are the five who hear it. Each receives a Scribes line and a notice at the top. The notice plays the call-for-help sound, only while they are on the dashboard, and only once a minute. A full group disables the button, and the tooltip says why.
 
 **AI implementation:** Cursor (Grok 4.7). The Scribes line and the top notice were already sent to the chosen player. The choice is now capped at five, friends first, still skipping anyone whose presence is in a room. The horn plays with the dashboard notice and waits sixty seconds before it can play again. Three engaged adventurers dim Call for help, with the tooltip "The group is full."
+
+**Status:** implemented on `fix/voice-levels`, not yet released.
+
+## D-030 — Every effect sits with the level-up sound (2026-11-14)
+
+**Babuni's direction:** the sounds were still very different from one another. The solution opening was very low, and some reward lines, especially the essences, were quite loud. The dice felt right, and then the ask was that every sound, the dice included, sit on one level with the level-up sound.
+
+**AI implementation:** Cursor (Grok 4.7) measured the loudest brief moment of each effect. The level-up sound is about −4 dB there and was left unchanged. The other effects were raised toward −8 dB, which is the body of that fanfare, and a peak that would have passed full scale was held down. This replaces the D-027 target of sitting under the button.
 
 **Status:** implemented on `fix/voice-levels`, not yet released.
 

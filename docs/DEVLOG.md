@@ -354,6 +354,10 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### One level with the level-up sound — 2026-11-14
+
+The effects were still uneven. The solution opening sat very low, and the essence lines stood out beside it. The dice felt right, and the ask became that every sound, the dice included, should sit with the level-up sound. That recording stays as it is. Cursor (Grok 4.7) measured the loudest brief moment of each file and raised it toward the fanfare, holding a peak that would have broken past full scale. **Verification:** measured again afterwards. The level-up sound's loudest moment is about −4 dB, and most other effects now land from about −8 dB to −10 dB. A few sharp lines remain a step under that, because their peaks are already at the ceiling. Not listened to in a played turn, and not released yet.
+
 ### Who hears the horn — 2026-11-14
 
 Sounding the horn was already writing a Scribes line and raising a notice, and it already left out anyone in a room. It also invited every free friend and then five more people. One call now chooses up to five, and friends take those places before anyone else. A full group of three cannot call; the button dims and the tooltip says the group is full. The friend on the dashboard hears the horn with that notice, and not again for a minute. Cursor (Grok 4.7) made the choice and the horn timer. **Verification:** the choice test passed. The notice was not watched on a second screen. **Not released yet.**
