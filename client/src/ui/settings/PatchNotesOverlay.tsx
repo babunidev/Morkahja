@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-57',
+    version: '0.9.0-beta.57',
+    period: '14 Nov 2026',
+    notes: [
+      'The item shown in a solution slot is the one that is used. One item stays in a single slot.',
+    ],
+  },
+  {
     id: 'beta-56-nov-4-14',
     version: '0.9.0-beta.56',
     period: '4–14 Nov 2026',

@@ -555,11 +555,10 @@ function formatSolutionChargeTooltipDetail(solution: VisibleSolutionSlot): strin
   const {
     available,
     displayedUses,
-    isPrimary,
     poolUses,
     requiredUses,
   } = solution;
-  const poolLabel = isPrimary ? 'Total available' : 'Total (same type)';
+  const poolLabel = 'This item';
 
   if (!available) {
     if (poolUses <= 0) {
@@ -597,17 +596,9 @@ function solutionForSlot(
     return null;
   }
 
-  const primaryMatch = primaryId > 0
-    ? items.find((item) => item.solutionId === primaryId)
-    : undefined;
-  const secondaryMatch = secondaryType > 0
-    ? items
-        .filter((item) => item.solutionType === secondaryType)
-        .sort((a, b) => a.solutionId - b.solutionId)[0]
-    : undefined;
-  const matchedItem = chargeState.isPrimary
-    ? primaryMatch ?? secondaryMatch
-    : secondaryMatch ?? primaryMatch;
+  const matchedItem = chargeState.solutionId === undefined
+    ? undefined
+    : items.find((item) => item.solutionId === chargeState.solutionId);
 
   if (matchedItem && chargeState.available) {
     const solution = solutionsById()[String(matchedItem.solutionId)];

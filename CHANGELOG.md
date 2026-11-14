@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-14 — Unreleased: the item in a slot is the one that is used; 0.9.0-beta.57
+
+- **Fix:** one item could be the icon of two solution slots, and tapping a slot could spend a different item. On The Scholar the Codex of Lost Echoes (type 2, named by slot B) also appeared in slot A, which only accepts type 18. The icon was matched with the type stored on the inventory row; spending used the catalog type and, for an alternative, the lowest id of that type. A slot now has one face (`slotFaces` in `shared/src/solutionSet.ts`): the named item is claimed first, an item already claimed is not the face of another slot, and the type is the catalog type. A tap spends that item. Another copy of the same slot spends another charge of the same item, and a different item is not substituted.
+- **Content kept:** six encounter descriptions already edited on the live server (`encountersdata.json`) are included so this release does not revert them.
+- **Version 0.9.0-beta.57** (D-015).
+- **Verification:** `encounterResolver.test.ts` and `solutionConsumption.test.ts` passed. Two different items no longer complete two copies of one slot. The Scholar-shaped case places the codex only in slot B, rejects it for slot A, and spends two charges of the codex when slot B is chosen twice. Server and client typechecks passed. **Not yet deployed.**
+
 ## 2026-11-14 — Released: each solution of a set reveals its roll as it arrives; 0.9.0-beta.56
 
 - **Set picks revealed one at a time (Babuni's direction, D-025):** in an encounter that needs several solutions, each tap plays the usual solution animation on its slot, then the solution rises to hover (the newest lowest, pushing the earlier ones up) and its roll appears as it arrives. A tap during an animation is ignored. The set goes in 0.7 s after the last roll appears; a set finished by the dice shows the dice roll with the result for 1 s, then flies in.

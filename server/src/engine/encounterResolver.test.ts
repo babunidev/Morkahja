@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+import { slotFaces } from '@shared/solutionSet.js';
 import {
   createEncounterRollSnapshot,
   resolveEncounter,
@@ -119,8 +120,9 @@ const favorableRolls = createEncounterRollSnapshot({
     { mode: 'slot', slot: 'A' },
   );
 
-  assert.equal(result.success, true);
-  assert.deepEqual(result.usedInventorySolutions, [20, 21]);
+  // Two different items do not add up to two copies of one slot.
+  assert.equal(result.success, false);
+  assert.deepEqual(result.usedInventorySolutions, []);
 }
 
 {
@@ -238,4 +240,48 @@ console.log('encounterResolver.test.ts: all assertions passed');
   assert.equal(withDice.diceFillRoll, 20);
   const single = resolveEncounter(baseEncounter(1), [10], solutionMap, rolls, { mode: 'slot', slot: 'A' });
   assert.equal(single.pickRolls, undefined);
+}
+
+// The Scholar: a type-2 book named by slot B is not also the face of slot A (type 18).
+{
+  const scholarMap: SolutionDataMap = {
+    ...solutionMap,
+    '10162': {
+      mSolutionID: 10162,
+      mSolutionType: 2,
+      mSolutionName: 'Codex of Lost Echoes',
+      mSolutionIconName: '10162_Codex',
+      mSolutionInventoryType: 2,
+      mSolutionRewardType: 2,
+      mSolutionText: 'Test codex',
+      mSolutionUses: 1,
+    },
+  };
+  const requirements = {
+    A: { primarySolutionId: 0, secondarySolutionType: 18 },
+    B: { primarySolutionId: 10162, secondarySolutionType: 2 },
+    C: { primarySolutionId: 0, secondarySolutionType: 1 },
+    D: { primarySolutionId: 0, secondarySolutionType: 17 },
+  };
+  const faces = slotFaces(requirements, [10162], (id) => scholarMap[String(id)]?.mSolutionType);
+  assert.equal(faces.A, undefined);
+  assert.deepEqual(faces.B, { solutionId: 10162, lane: 'primary' });
+
+  const scholar = {
+    ...baseEncounter(2),
+    mEncounterSolutiuonA: 0,
+    mEncounterSolutiuonTypeA: 18,
+    mEncounterSolutiuonB: 10162,
+    mEncounterSolutiuonTypeB: 2,
+  };
+  const onA = resolveEncounter(scholar, [10162], scholarMap, favorableRolls, {
+    mode: 'slot', slot: 'A', picks: ['A'], diceFill: true,
+  });
+  const onB = resolveEncounter(scholar, [10162, 10162], scholarMap, favorableRolls, {
+    mode: 'slot', slot: 'B', picks: ['B', 'B'],
+  });
+  assert.equal(onA.success, false);
+  assert.deepEqual(onA.usedInventorySolutions, []);
+  assert.equal(onB.success, true);
+  assert.deepEqual(onB.usedInventorySolutions, [10162, 10162]);
 }

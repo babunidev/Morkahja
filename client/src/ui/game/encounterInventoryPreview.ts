@@ -3,10 +3,12 @@ import type { AvatarInventory, EncounterAction, InventoryItem } from '../../api/
 export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
 import {
   allocateSolutionSet,
+  slotFaces,
   solutionSetSize,
   type SolutionSetPickAllocation,
   type SolutionSetRequirements,
   type SolutionSetSlot,
+  type SolutionSlotFace,
 } from '@shared/solutionSet';
 
 interface SolutionRecord {
@@ -58,18 +60,6 @@ function flattenSolutionUses(items: InventoryItem[]): number[] {
   }
 
   return flat;
-}
-
-function totalPrimarySolutionUses(items: InventoryItem[], primaryId: number): number {
-  return items
-    .filter((item) => item.solutionId === primaryId)
-    .reduce((total, item) => total + item.uses, 0);
-}
-
-function totalSecondaryTypeUses(items: InventoryItem[], secondaryType: number): number {
-  return items
-    .filter((item) => item.solutionType === secondaryType)
-    .reduce((total, item) => total + item.uses, 0);
 }
 
 function primaryRequirementForSlot(
@@ -138,6 +128,30 @@ function solutionSetRequirements(encounter: SlotRequirementFields): SolutionSetR
   return { A: requirement('A'), B: requirement('B'), C: requirement('C'), D: requirement('D') };
 }
 
+function catalogSolutionType(solutionId: number): number | undefined {
+  return solutionsById()[String(solutionId)]?.mSolutionType;
+}
+
+/** The item placed in one slot: the same item a tap of that slot spends. */
+export function faceForSlot({
+  encounter,
+  inventory,
+  slot,
+}: {
+  encounter: SlotRequirementFields;
+  inventory: AvatarInventory | undefined;
+  slot: EncounterAction;
+}): SolutionSlotFace | null {
+  if (slot === 'dice') {
+    return null;
+  }
+  return slotFaces(
+    solutionSetRequirements(encounter),
+    flattenSolutionUses(inventoryItems(inventory)),
+    catalogSolutionType,
+  )[slot] ?? null;
+}
+
 /** The server's allocation of inventory charges to a solution set, or null if it cannot be covered. */
 export function allocateSolutionSetPicks({
   encounter,
@@ -174,7 +188,13 @@ export function slotHasEnoughSolutionCharges({
   };
   inventory: AvatarInventory | undefined;
   slot: EncounterAction;
-}): { available: boolean; isPrimary: boolean; requiredUses: number; totalUses: number } {
+}): {
+  available: boolean;
+  isPrimary: boolean;
+  requiredUses: number;
+  solutionId?: number;
+  totalUses: number;
+} {
   if (slot === 'dice') {
     return { available: false, isPrimary: false, requiredUses: 0, totalUses: 0 };
   }
@@ -182,20 +202,24 @@ export function slotHasEnoughSolutionCharges({
   const items = inventoryItems(inventory);
   const requiredUses = solutionSetSize(encounter.encounterDifficulty);
   const primaryId = primaryRequirementForSlot(encounter, slot);
-  const secondaryType = secondaryRequirementForSlot(encounter, slot);
-  const primaryTotal = primaryId > 0 ? totalPrimarySolutionUses(items, primaryId) : 0;
-  const secondaryTotal = secondaryType > 0 ? totalSecondaryTypeUses(items, secondaryType) : 0;
+  const face = faceForSlot({ encounter, inventory, slot });
 
-  // A solution set takes one solution at a time: one charge makes a slot usable.
-  if (primaryId > 0 && primaryTotal >= 1) {
-    return { available: true, isPrimary: true, requiredUses, totalUses: primaryTotal };
+  if (face) {
+    const totalUses = items
+      .filter((item) => item.solutionId === face.solutionId)
+      .reduce((total, item) => total + item.uses, 0);
+    return {
+      available: true,
+      isPrimary: face.lane === 'primary',
+      requiredUses,
+      solutionId: face.solutionId,
+      totalUses,
+    };
   }
 
-  if (secondaryType > 0 && secondaryTotal >= 1) {
-    return { available: true, isPrimary: false, requiredUses, totalUses: secondaryTotal };
-  }
-
-  const previewTotal = primaryId > 0 ? primaryTotal : secondaryTotal;
+  const previewTotal = primaryId > 0
+    ? items.filter((item) => item.solutionId === primaryId).reduce((total, item) => total + item.uses, 0)
+    : 0;
   return {
     available: false,
     isPrimary: primaryId > 0,
