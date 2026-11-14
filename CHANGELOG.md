@@ -2,29 +2,29 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-14 — Unreleased: every effect sits with the level-up sound; 0.9.0-beta.63
+## 2026-11-14 — Released: every effect sits with the level-up sound; 0.9.0-beta.63
 
 - **Change (Babuni's direction, D-031):** the effects were still uneven. The solution opening was very low, and the essence lines stood out above it. Every effect, the dice included, is now leveled with the level-up sound. The level-up recording itself is unchanged. This replaces the earlier target of sitting a little under the button (D-028).
 - **Version 0.9.0-beta.63** (D-015, D-031).
-- **Verification:** measured before and after. The level-up sound's loudest moment is about −4 dB. Most other effects now land from about −8 dB to −10 dB in that same brief window, and their peaks sit near full scale. A few sharp recordings, including Aerisara, remain a step under that because the peak was already at the ceiling. Not listened to in a played turn. **Not deployed.**
+- **Verification:** measured before and after. The level-up sound's loudest moment is about −4 dB. Most other effects now land from about −8 dB to −10 dB in that same brief window, and their peaks sit near full scale. A few sharp recordings, including Aerisara, remain a step under that because the peak was already at the ceiling. Client tests passed (37). CI `verify` passed on PR #47. **Deployed** 2026-11-14 23:35 UTC from `1073bd45`; the live script is `index-8HvdfyEK.js` and contains `0.9.0-beta.63`. The live solution, essence, dice, level-up, horn and item sounds return 200. Not listened to in a played turn. See `docs/DEPLOYMENT.md`.
 
-## 2026-11-14 — Unreleased: the horn reaches five free adventurers; 0.9.0-beta.62
+## 2026-11-14 — Released: the horn reaches five free adventurers; 0.9.0-beta.62
 
 - **Change (Babuni's direction, D-030):** one Call for help chooses up to five adventurers who are online and not in a room. Friends fill those places first. Each chosen adventurer already received a Scribes line and a notice at the top; on the dashboard that notice now plays the horn, and the horn waits a minute before it can play again. A group of three dims the button, and the tooltip says the group is full.
 - **Version 0.9.0-beta.62** (D-015, D-030).
-- **Verification:** `helpRecipients.test.ts` passed. Five eligible friends leave no place for a stranger, and two friends are filled out to five. The notice was not watched on a second screen. **Not deployed.**
+- **Verification:** `helpRecipients.test.ts` passed. Five eligible friends leave no place for a stranger, and two friends are filled out to five. The notice was not watched on a second screen. **Deployed** with 0.9.0-beta.63 on 2026-11-14 23:35 UTC from `1073bd45`. See `docs/DEPLOYMENT.md`.
 
-## 2026-11-14 — Unreleased: backpack, skillbook and call for help have their own sounds; 0.9.0-beta.61
+## 2026-11-14 — Released: backpack, skillbook and call for help have their own sounds; 0.9.0-beta.61
 
 - **New (Babuni's direction, D-029):** the backpack, the skillbook and Call for help play `backpack.mp3`, `skillbook.mp3` and `callforhelp.mp3`. Lore keeps its own sound. Call for help had been as loud as a shout; it was brought down with the other new lines, a little under the ordinary button.
 - **Version 0.9.0-beta.61** (D-015, D-029).
-- **Verification:** the client sound test names the three files and checks they are mp3s. Loudness measured: backpack already sat with the button; skillbook's spike and the call-for-help shout were brought down. Not listened to in a played turn. **Not deployed.**
+- **Verification:** the client sound test names the three files and checks they are mp3s. Loudness measured: backpack already sat with the button; skillbook's spike and the call-for-help shout were brought down. Not listened to in a played turn. **Deployed** with 0.9.0-beta.63 on 2026-11-14 23:35 UTC from `1073bd45`. The later level match raises these with the other effects. See `docs/DEPLOYMENT.md`.
 
-## 2026-11-14 — Unreleased: Makaya's lines sit a little under the older sounds; 0.9.0-beta.60
+## 2026-11-14 — Released: Makaya's lines sit a little under the older sounds; 0.9.0-beta.60
 
 - **Change (Babuni's direction, D-028):** the new reward, essence and essence-loss lines were louder than the older effects, and uneven with each other. The older effects are unchanged. Each new line was brought to one level, about 3 dB under the button, and spikes that still jumped past the button were held down. The loudest takes, Aetheria and Ordius, had been about as loud as the level-up sound.
 - **Version 0.9.0-beta.60** (D-015, D-028).
-- **Verification:** measured before and after. The button's active level is −25 dB; the new lines now sit from about −27 dB to −32 dB, and their peaks stay at or under the button's peak. Not listened to in a played turn. **Not deployed.** The later level-up match (D-031) replaces this loudness.
+- **Verification:** measured before and after. The button's active level is −25 dB; the new lines now sit from about −27 dB to −32 dB, and their peaks stay at or under the button's peak. Not listened to in a played turn. **Deployed** with 0.9.0-beta.63 on 2026-11-14 23:35 UTC from `1073bd45`. The later level-up match (D-031) replaces this loudness. See `docs/DEPLOYMENT.md`.
 
 ## 2026-11-14 — Released: rolls are a d20 again; 0.9.0-beta.59
 

@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-14, 23:35 UTC (0.9.0-beta.63, sounds with the level-up fanfare)
+
+Approved by Babuni ("good, release"). `main` at `1073bd45` (PR #47): every effect sits with the level-up sound, the backpack, skillbook and horn play their own sounds, and Call for help reaches up to five free adventurers, friends first (D-029, D-030, D-031). The d20 totals from `e2aaa790` stay.
+
+- **Before:** backend `e2aaa790`, frontend `20261114-210839`. `server/game/encountersdata.json` was dirty. Its bytes matched `65b7ea94` (Hidden Market), which this release contains, so that file was checked out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261114-2334`.
+- **Checks before the release:** client tests passed (37) on the release worktree; `helpRecipients.test.ts` passed; the production client build typechecked. CI `verify` passed on PR #47. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.63`, `d20+7`, `essenceFyraan` and `callforhelp`.
+- **Release:** backup `20261114-233504` (4.0 MB; 73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `59945362b43d67b7f6d45891ac5627bf92e3b570c4686342bb2cf39e91af4ad5`). Backend fast-forwarded to `1073bd45`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261114-233506` (`index-8HvdfyEK.js`). From outside: that script contains `0.9.0-beta.63` and `d20+7`; `/Morkahja/`, health and content return 200; the solution, Aetheria, dice, level-up, horn and item sounds return 200. API and bots online (the bots restarted with the API). After the release the encounter file matches Hidden Market and the working tree is clean.
+- **Not done:** backup restore not proven; a reward, a horn and a roll were not played on the live game.
+
 ## Production release — 2026-11-14, 21:08 UTC (0.9.0-beta.59, d20 totals)
 
 Approved by Babuni ("commit push release", then the publish command). `main` at `e2aaa790` (PR #48): every lane is a fair d20, a primary solution adds 7, a secondary adds 5, the die adds 0, and difficulty subtracts one less than its level. The portrait shows that total, and the tooltip names it (D-027).

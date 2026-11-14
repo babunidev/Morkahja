@@ -242,7 +242,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7) measured the active level of every effect. The older button is about −25 dB. The loudest new lines were about −15 dB, level with the level-up sound, while some skill lines were already near −35 dB. Each new line was moved to about −28 dB, and a peak that still passed the button was limited. The older files were not changed.
 
-**Status:** superseded the same day by D-031. The files on this branch follow the level-up sound.
+**Status:** superseded the same day by D-031. The level-up files shipped in `1073bd45` (0.9.0-beta.63).
 
 ## D-029 — The backpack, skillbook and call for help have their own sounds (2026-11-14)
 
@@ -250,7 +250,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7) plays `backpack.mp3` for Inventory, `skillbook.mp3` for Skillbook and `callforhelp.mp3` for Call for help. Lore already had its own sound and keeps it. Call for help was measured at about −11 dB, far above the button at −25 dB, so that file was lowered to about −27 dB. The skillbook spike was held to the button's peak. The backpack already sat with the button.
 
-**Status:** implemented on `fix/voice-levels`, not yet released. The later level match (D-031) raises these with the other effects.
+**Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63). The level match (D-031) raises these with the other effects.
 
 ## D-030 — The horn reaches five free adventurers, friends first (2026-11-14)
 
@@ -258,7 +258,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). The Scribes line and the top notice were already sent to the chosen player. The choice is now capped at five, friends first, still skipping anyone whose presence is in a room. The horn plays with the dashboard notice and waits sixty seconds before it can play again. Three engaged adventurers dim Call for help, with the tooltip "The group is full."
 
-**Status:** implemented on `fix/voice-levels`, not yet released.
+**Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
 ## D-031 — Every effect sits with the level-up sound (2026-11-14)
 
@@ -266,7 +266,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7) measured the loudest brief moment of each effect. The level-up sound is about −4 dB there and was left unchanged. The other effects were raised toward −8 dB, which is the body of that fanfare, and a peak that would have passed full scale was held down. This replaces the D-028 target of sitting under the button. The d20 release had already taken D-027, so these sound decisions continue from D-028.
 
-**Status:** implemented on `fix/voice-levels`, not yet released.
+**Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
 ## 2026-11-13 — Licensing decision
 
