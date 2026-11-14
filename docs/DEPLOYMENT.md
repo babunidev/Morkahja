@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-14, 16:24 UTC (0.9.0-beta.57, the item in the slot is the one used)
+
+Approved by Babuni ("deploy it", then "the descriptions are fine, we can release"). `main` at `1aedfe76`: a solution slot shows one item, claimed by name before any alternative, using the catalog type; a tap spends that item, and another copy spends another charge of the same item (PR #45, `d11816f4`, plus the live encounter descriptions). Encounter descriptions already edited on the server were kept, including Fae Pastures and Mystic Grass.
+
+- **Before:** backend `151a6e89`, frontend `20261113-231307`. `server/game/encountersdata.json` had those uncommitted descriptions. Babuni checked that file out so the release could proceed; the same wording is in `1aedfe76`, so the fast-forward put it back. Previous staging files moved to `prev-20261114-1607`.
+- **Checks before the release:** `encounterResolver.test.ts` and `solutionConsumption.test.ts` passed; server and client typechecks passed; CI `verify` passed on PR #45. Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261114-162455` (73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `31637a84…`). Backend fast-forwarded to `1aedfe76`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261114-162457` (`index-CHf9aQfm.js`). From outside: that script contains `0.9.0-beta.57`; `/Morkahja/`, health and content return 200. API and bots online (the bots restarted with the API).
+- **Not done:** backup restore not proven; not checked on screen by AI in production.
+
 ## Production release — 2026-11-13, 23:13 UTC (0.9.0-beta.56, set picks revealed one at a time)
 
 Approved by Babuni ("release"). `main` at `151a6e89` (PR #43): each solution of a set locks and reveals its roll as it arrives (D-025), new `POST /room/set-pick`, locked picks stored on the participant and in the solo checkpoint (new optional fields in the room and checkpoint documents; no table change), roll font from the result style.

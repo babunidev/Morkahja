@@ -2,12 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-14 — Unreleased: the item in a slot is the one that is used; 0.9.0-beta.57
+## 2026-11-14 — Released: the item in a slot is the one that is used; 0.9.0-beta.57
 
 - **Fix:** one item could be the icon of two solution slots, and tapping a slot could spend a different item. On The Scholar the Codex of Lost Echoes (type 2, named by slot B) also appeared in slot A, which only accepts type 18. The icon was matched with the type stored on the inventory row; spending used the catalog type and, for an alternative, the lowest id of that type. A slot now has one face (`slotFaces` in `shared/src/solutionSet.ts`): the named item is claimed first, an item already claimed is not the face of another slot, and the type is the catalog type. A tap spends that item. Another copy of the same slot spends another charge of the same item, and a different item is not substituted.
-- **Content kept:** six encounter descriptions already edited on the live server (`encountersdata.json`) are included so this release does not revert them.
+- **Content kept:** encounter descriptions already edited on the live server (`encountersdata.json`) are included so this release does not revert them, including Fae Pastures and Mystic Grass, which were rewritten while the release was waiting.
 - **Version 0.9.0-beta.57** (D-015).
-- **Verification:** `encounterResolver.test.ts` and `solutionConsumption.test.ts` passed. Two different items no longer complete two copies of one slot. The Scholar-shaped case places the codex only in slot B, rejects it for slot A, and spends two charges of the codex when slot B is chosen twice. Server and client typechecks passed. **Not yet deployed.**
+- **Verification:** `encounterResolver.test.ts` and `solutionConsumption.test.ts` passed. Two different items no longer complete two copies of one slot. The Scholar-shaped case places the codex only in slot B, rejects it for slot A, and spends two charges of the codex when slot B is chosen twice. Server and client typechecks passed. CI `verify` passed on PR #45. **Deployed** 2026-11-14 16:24 UTC from `1aedfe76`; the live script is `index-CHf9aQfm.js` and contains `0.9.0-beta.57`. See `docs/DEPLOYMENT.md`. Not checked on screen in production.
 
 ## 2026-11-14 — Released: each solution of a set reveals its roll as it arrives; 0.9.0-beta.56
 
