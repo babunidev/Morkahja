@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
-import type { PersistedAvatar, RoomParticipantDto, RoomStateDto } from '../../api/http.js';
+import type { EncounterSnapshot, PersistedAvatar, RoomParticipantDto, RoomStateDto } from '../../api/http.js';
 
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 
@@ -180,6 +180,8 @@ export function AvatarPanel({
 
   onHome,
 
+  encounter,
+
   roomParticipant,
 
   roomState,
@@ -203,6 +205,8 @@ export function AvatarPanel({
   onDetailsVisibleChange?: (visible: boolean) => void;
 
   onHome?: () => void;
+
+  encounter?: EncounterSnapshot;
 
   roomParticipant?: RoomParticipantDto;
 
@@ -370,6 +374,8 @@ export function AvatarPanel({
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge
+
+                  encounter={encounter}
 
                   hidden={showDetails}
 

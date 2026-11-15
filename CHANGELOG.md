@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — The portrait result shows how the roll was made; 0.9.0-beta.65
+
+- **Change (Babuni's direction, D-033):** the tooltip on the solution or die above the portrait grows a second frame underneath. That frame shows the d20 face and then the modifiers, so a primary 23 reads `16 + 7` and a primary 11 at difficulty 2 reads `5 + 7 − 1`. A set shows one line for each solution, and the die once for each gap it filled.
+- **Version 0.9.0-beta.65** (D-015, D-033).
+- **Verification:** `formatRollBreakdown` and `rollBreakdown.test.ts` passed. The client typecheck passed. The tooltip was not hovered in a played turn. Not deployed.
+
 ## 2026-11-15 — Staying in the same region; 0.9.0-beta.64
 
 - **Change (Babuni's direction, D-032):** a random next encounter stays in the expansion just left, including expansion 0, when a d20 rolls 1–14. A 15–20 leaves for another unlocked expansion. Encounters inside the chosen side stay equally likely. A written follow still wins, and only after a successful Fortune or Prosperity. If the chosen side has no encounters, the other side is used. After a level-up or Atranor, the region is the encounter that led there. The picture preloaded for the next encounter uses the same roll. A second draw that rechecked an already-filtered pool is gone.

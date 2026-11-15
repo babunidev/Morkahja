@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-033 — The portrait result shows the roll and its modifiers (2026-11-15)
+
+**Babuni's direction:** the result above the portrait shows the solution and the number. The tooltip should grow at the bottom, in the same frame, and show how that number was made: the roll, then the modifiers.
+
+**AI implementation:** Cursor (Grok 4.7). A second frame under the existing tooltip shows the d20 face, then `+` the solution bonus and `−` the difficulty penalty. A primary solution is +7, a secondary is +5, and the die is +0. A set lists each part the same way. An old 1–100 number is left without a made-up face.
+
+**Status:** implemented locally on 2026-11-15. Not deployed.
+
 ## D-032 — Stay in the region most of the time (2026-11-15)
 
 **Babuni's direction:** encounters in a pool stay equally likely. The next one should usually be from the same expansion, including expansion 0, so a stretch of the journey stays in one region. A written follow still happens. When there is none, roll a d20: 1–14 stay, 15–20 switch expansion. Ambient tracks are a separate project.

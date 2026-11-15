@@ -170,6 +170,7 @@ export function PartyZone({
               <div style={mainAvatarAnchorStyle(alone)}>
                 <AvatarPanel
                   avatar={avatar}
+                  encounter={room?.activeEncounter}
                   encounterKey={room?.activeEncounter?.snapshotId}
                   hidePortraitForHandoff={hideAvatarPortraitForHandoff}
                   homeVisible={homeVisible}
@@ -198,6 +199,7 @@ export function PartyZone({
             >
               <PartyMemberSlot
                 canKick={canManageSlots}
+                encounter={room?.activeEncounter}
                 onDetailsVisibleChange={(visible) => {
                   setSlotDetailsOpen(visualIndex, visible);
                 }}

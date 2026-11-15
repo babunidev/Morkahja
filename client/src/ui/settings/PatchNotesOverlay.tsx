@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-65',
+    version: '0.9.0-beta.65',
+    period: '15 Nov 2026',
+    notes: [
+      'The result on your portrait shows how the number was made: the roll, then its bonus and the difficulty.',
+    ],
+  },
+  {
     id: 'beta-64',
     version: '0.9.0-beta.64',
     period: '15 Nov 2026',

@@ -60,40 +60,69 @@ function portalPositionForAnchor(anchor: HTMLElement): CSSProperties {
   };
 }
 
+const TOOLTIP_FRAME_BACKGROUND = 'rgba(12, 9, 8, 0.94)';
+
+const rollBreakdownStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontFamily: "'Breathe Fire', Georgia, serif",
+  fontSize: '1.05rem',
+  fontWeight: 700,
+  letterSpacing: '0.04em',
+  lineHeight: 1.15,
+  textAlign: 'center',
+};
+
 export function EncounterTooltip({
   label,
   description,
   detail,
+  breakdown,
   positionStyle,
 }: {
   label: string;
   description?: string;
   detail?: string;
+  /** How the portrait number was made: the d20 face, then each modifier. */
+  breakdown?: string[];
   positionStyle: CSSProperties;
 }) {
+  const lines = breakdown?.filter((line) => line.length > 0) ?? [];
+
   return (
     <div
       role="tooltip"
       style={{
         ...encounterTooltipFrameStyle,
+        padding: 0,
         ...positionStyle,
       }}
     >
-      <GameTooltipFrame background="rgba(12, 9, 8, 0.94)" />
-      <div
-        style={{
-          ...encounterTooltipTitleStyle,
-          ...(!description && !detail ? { margin: 0 } : {}),
-        }}
-      >
-        {label}
+      <div style={{ position: 'relative', padding: '10px 13px' }}>
+        <GameTooltipFrame background={TOOLTIP_FRAME_BACKGROUND} />
+        <div
+          style={{
+            ...encounterTooltipTitleStyle,
+            ...(!description && !detail ? { margin: 0 } : {}),
+          }}
+        >
+          {label}
+        </div>
+        {description || detail ? <TooltipDivider /> : null}
+        {description ? (
+          <div style={encounterTooltipDescriptionStyle}>{description}</div>
+        ) : null}
+        {detail ? (
+          <div style={encounterTooltipDetailStyle}>{detail}</div>
+        ) : null}
       </div>
-      {description || detail ? <TooltipDivider /> : null}
-      {description ? (
-        <div style={encounterTooltipDescriptionStyle}>{description}</div>
-      ) : null}
-      {detail ? (
-        <div style={encounterTooltipDetailStyle}>{detail}</div>
+      {lines.length > 0 ? (
+        <div style={{ position: 'relative', marginTop: 6, padding: '8px 12px' }}>
+          <GameTooltipFrame background={TOOLTIP_FRAME_BACKGROUND} />
+          {lines.map((line, index) => (
+            <p key={`${line}-${index}`} style={rollBreakdownStyle}>{line}</p>
+          ))}
+        </div>
       ) : null}
     </div>
   );
@@ -112,12 +141,14 @@ export function AnchoredEncounterTooltip({
   label,
   description,
   detail,
+  breakdown,
 }: {
   anchorRef: RefObject<HTMLElement | null>;
   visible: boolean;
   label: string;
   description?: string;
   detail?: string;
+  breakdown?: string[];
 }) {
   const [positionStyle, setPositionStyle] = useState<CSSProperties | null>(null);
   const [shown, setShown] = useState(false);
@@ -144,7 +175,7 @@ export function AnchoredEncounterTooltip({
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [anchorRef, visible, label, description, detail]);
+  }, [anchorRef, visible, label, description, detail, breakdown]);
 
   // Fade in on the frame after it is placed; on hiding, fade out, then unmount.
   useEffect(() => {
@@ -166,6 +197,7 @@ export function AnchoredEncounterTooltip({
 
   return createPortal(
     <EncounterTooltip
+      breakdown={breakdown}
       description={description}
       detail={detail}
       label={label}

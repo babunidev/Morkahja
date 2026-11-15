@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { fadeStyle } from '../../transitions/fade.js';
 import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import type {
+  EncounterSnapshot,
   RoomParticipantDto,
   RoomStateDto,
 } from '../../../api/http.js';
+import { choiceRollBreakdown } from './rollBreakdown.js';
 import { gameSolutions } from '../../../data/gameContent.js';
 import {
   diceButtonAssetPath,
@@ -25,6 +27,7 @@ export const PARTY_BADGE_SIZE_PX = 62;
 interface PartyBadgeTooltip {
   label: string;
   description?: string;
+  breakdown?: string[];
 }
 
 interface SolutionRecord {
@@ -213,6 +216,7 @@ function PartyChoiceOverlayBadge({
       {tooltip ? (
         <AnchoredEncounterTooltip
           anchorRef={anchorRef}
+          breakdown={tooltip.breakdown}
           description={tooltip.description}
           label={tooltip.label}
           visible={tooltipVisible}
@@ -228,13 +232,25 @@ interface ChoiceBadgeSnapshot {
   tooltip: PartyBadgeTooltip | null;
 }
 
+function withBreakdown(
+  tooltip: PartyBadgeTooltip | null,
+  breakdown: string[],
+): PartyBadgeTooltip | null {
+  if (!tooltip || breakdown.length === 0) {
+    return tooltip;
+  }
+  return { ...tooltip, breakdown };
+}
+
 export function PartyParticipantChoiceBadge({
+  encounter,
   hidden = false,
   overlayStyle = choiceBadgeOverlayInteractiveStyle,
   participant,
   roomState,
   systemEventActorPlayerId,
 }: {
+  encounter?: EncounterSnapshot;
   hidden?: boolean;
   overlayStyle?: CSSProperties;
   participant: RoomParticipantDto;
@@ -254,6 +270,7 @@ export function PartyParticipantChoiceBadge({
   const diceChoiceSrc = diceChoiceIcon(participant);
   const choiceRoll = participantChoiceRoll(participant);
   const choiceRollDisplay = choiceRoll !== undefined ? displayRollAsD20(choiceRoll) : null;
+  const breakdown = choiceRollBreakdown(participant, encounter, choiceRoll);
   const badgeActive = showChoice && (choiceSolutionSrc !== null || showDiceChoice);
   const presence = useOpacityPresence(badgeActive);
   const snapshotRef = useRef<ChoiceBadgeSnapshot | null>(null);
@@ -262,12 +279,14 @@ export function PartyParticipantChoiceBadge({
     snapshotRef.current = {
       iconSrc: choiceSolutionSrc ?? diceChoiceSrc,
       rollDisplay: choiceRoll,
-      tooltip:
+      tooltip: withBreakdown(
         choiceSolutionTooltip
         ?? (showDiceChoice ? { label: 'Dice' } : null)
         ?? (choiceRollDisplay !== null
           ? { label: `Roll ${choiceRollDisplay}` }
           : null),
+        breakdown,
+      ),
     };
   }
 

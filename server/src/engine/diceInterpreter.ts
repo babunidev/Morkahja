@@ -8,6 +8,7 @@ export {
   difficultyRollPenalty,
   displayRollAsD20,
   finalizeRoll,
+  formatRollBreakdown,
   formatRollNotation,
   interpretRoll,
   isD20Face,
