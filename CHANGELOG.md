@@ -6,7 +6,7 @@
 
 - **Fix (Babuni's report and direction, D-041):** using a resurrection item in Atranor brought the life back and left the item in the inventory. The item is now spent, as a solution is spent in any other encounter. The dice in Atranor still spends nothing.
 - **Fix (Babuni's report, D-041):** solution stacks from the encounter that just ended were still hovering on Atranor and on a level-up. The stack disappears when it flies into the encounter, and a system event does not bring it back.
-- **Version 0.9.0-beta.75** (D-015, D-041). Encounter wording already on main, through Sunlit Dell, goes out with this release.
+- **Version 0.9.0-beta.75** (D-015, D-041). Encounter wording already on main, through Enchanted Hollow, goes out with this release.
 - **Verification:** client tests passed (45). The Atranor inventory test passed, including an Elixir charge that is gone after a successful return and a system event that opens with no locked stack. The server typecheck passed. A played turn was not watched before release.
 
 ## 2026-11-15 — Dice show their rolls and fly in; 0.9.0-beta.74
