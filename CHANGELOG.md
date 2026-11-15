@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: a hovering die or solution has no glow
+
+- **Fix (Babuni's direction):** a die or a solution hovering above its slot wore a gold glow. The glow is gone. The die picture was compared with the one in the slot: the second die is not turned. The gold square around it was the glow, and that square made the die look tipped.
+- **Verification:** the two dice in the reported picture match each other at no rotation. Not watched again in a played turn. Not released.
+
 ## 2026-11-15 — Each die in a set rises after its spin; 0.9.0-beta.73
 
 - **Change (Babuni's direction, D-037):** in an encounter that needs more than one solution, the dice spun in place and then resolved. One press now fills one missing place. The spin finishes, that die rises and hovers, and another press pushes it up, as a solution does. The set resolves when every place is filled. Each die is still its own roll. An encounter that needs one solution is unchanged.

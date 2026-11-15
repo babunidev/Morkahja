@@ -274,7 +274,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). One press fills one missing place. The spin plays on the button, then a copy of the die rises and hovers above the slot. The next press does the same and pushes the earlier die up. Solutions already chosen keep their places. The set resolves when the places are full, and each die is still its own roll. An encounter that needs one solution is unchanged. A die hovered in an unfinished set is not stored on the server, so a reload in the middle keeps the locked solutions and loses the hovering dice.
 
-**Status:** released as 0.9.0-beta.73, 2026-11-15, from `c9d6d144`. The client tests passed, including the step rule, and the production client build typechecked. The rise was not watched in a played turn.
+**Status:** released as 0.9.0-beta.73, 2026-11-15, from `c9d6d144`. The client tests passed, including the step rule, and the production client build typechecked. The rise was not watched in a played turn. The gold glow on a hovering die or solution was removed the same day, after Babuni saw it on the live game. The second die in that picture is not rotated; the glow's square made it look tipped. That correction is not released yet.
 
 ## D-036 — The dice and a solution last 1.73 seconds (2026-11-15)
 

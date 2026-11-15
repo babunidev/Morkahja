@@ -405,10 +405,6 @@ const solutionHoverBobStyle: CSSProperties = {
   animation: `morkahja-solution-hover-bob 1800ms ease-in-out ${SOLUTION_HOVER_RISE_MS}ms infinite`,
 };
 
-const solutionHoverGlowStyle: CSSProperties = {
-  boxShadow: '0 0 16px rgba(255, 204, 102, 0.6), 0 8px 14px rgba(0, 0, 0, 0.45)',
-};
-
 /** Further copies of the same slot hover above each other. */
 const SOLUTION_HOVER_STACK_STEP_PX = 46;
 
@@ -1340,15 +1336,7 @@ export function SolutionBlock({
                           aria-hidden="true"
                           draggable={false}
                           src={diceButtonAsset}
-                          style={{
-                            display: 'block',
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))',
-                            pointerEvents: 'none',
-                            ...solutionHoverGlowStyle,
-                          }}
+                          style={diceImageStyle}
                         />
                         {roll !== undefined ? (
                           <span aria-hidden="true" className="morkahja-result-outcome" style={solutionHoverRollStyle}>
@@ -1475,7 +1463,6 @@ export function SolutionBlock({
                           style={{
                             ...solutionIconShellStyle,
                             display: 'block',
-                            ...solutionHoverGlowStyle,
                           }}
                         >
                           <img
