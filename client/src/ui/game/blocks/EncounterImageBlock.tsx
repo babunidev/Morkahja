@@ -737,6 +737,7 @@ export function EncounterImageBlock({
           : null}
         lockedSetPicks={lockedSetPicks}
         lockedDiceRolls={lockedDiceRolls}
+        restoreLockedHover={roomState !== 'system_event'}
         onSetPick={async (slot) => {
           const result = await submitRoomSetPick(avatarId, slot);
           onRoomSnapshot?.(result.room);

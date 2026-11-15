@@ -936,6 +936,13 @@ export function setRollsPauseMs(snapshotId: string | undefined): number {
   return 0;
 }
 
+/** The hovering set has left its slots and is flying into the encounter. */
+export const HOVER_SET_SPENT_EVENT = 'morkahja-hover-set-spent';
+
+export function markHoverSetSpent(): void {
+  window.dispatchEvent(new CustomEvent(HOVER_SET_SPENT_EVENT));
+}
+
 /** The solution set the player committed in this encounter, if it was one. */
 export function committedSolutionSetFor(snapshotId: string | undefined): SolutionSetSubmission | null {
   return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.solutionSet : null;

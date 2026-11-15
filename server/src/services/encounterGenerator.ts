@@ -50,6 +50,7 @@ import { experienceForSelectedRollOutcome } from '../domain/avatar/AvatarProgres
 import {
   addRewardToInventoryState,
   applyEncounterInventoryChanges,
+  consumeSolutionFromInventoryState,
   createInitialAvatarInventory,
   flattenInventorySolutionIds,
   initializeAvatarInventory,
@@ -749,6 +750,28 @@ function isDeathEncounterFailureOutcome(outcome: RollOutcome | null): boolean {
   return outcome === 'Misery' || outcome === 'Hardship';
 }
 
+/** An Atranor item is spent the way a solution is spent in any other encounter. */
+function inventoryAfterDeathEncounter(
+  inventory: AvatarInventory,
+  avatar: AvatarDocument,
+  selectedRollOutcome: RollOutcome | null,
+  usedSolutionIds: number[],
+): {
+  nextInventory: AvatarInventory;
+  rewardIds: number[];
+} {
+  let spent = inventory;
+  for (const solutionId of usedSolutionIds) {
+    spent = consumeSolutionFromInventoryState(spent, solutionId, 1);
+  }
+
+  const deathOutcome = applyDeathEncounterOutcome(spent, avatar, selectedRollOutcome);
+  return {
+    nextInventory: deathOutcome.nextInventory,
+    rewardIds: deathOutcome.rewardIds,
+  };
+}
+
 function applyDeathEncounterOutcome(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
@@ -840,7 +863,6 @@ function normalizeSystemEncounterResolution(
 
     return {
       ...resolution,
-      usedInventorySolutions: [],
       failurePenalty: 0,
       success: survival,
       rewards: [],
@@ -1020,10 +1042,11 @@ export async function continueEncounter(
       let nextInventory: AvatarInventory;
 
       if (encounterSnapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
-        const deathOutcome = applyDeathEncounterOutcome(
+        const deathOutcome = inventoryAfterDeathEncounter(
           inventory,
           avatar,
           selectedRollOutcome,
+          resolution.usedInventorySolutions,
         );
         nextInventory = deathOutcome.nextInventory;
         resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
@@ -1132,7 +1155,7 @@ export async function continueEncounter(
       if (encounterAvatarDied) {
         updatedAvatar = applyFailedDeathState(
           updatedAvatar,
-          inventory,
+          nextInventory,
           {
             ...progressionResult.progression,
             lastEncounterId: encounterSnapshot.encounterId,
@@ -1402,10 +1425,11 @@ function computeParticipantOutcome(
   let nextInventory: AvatarInventory;
 
   if (snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
-    const deathOutcome = applyDeathEncounterOutcome(
+    const deathOutcome = inventoryAfterDeathEncounter(
       inventory,
       avatar,
       selectedRollOutcome,
+      resolution.usedInventorySolutions,
     );
     nextInventory = deathOutcome.nextInventory;
     resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
@@ -1486,7 +1510,7 @@ function computeParticipantOutcome(
   if (avatarDied) {
     finalAvatar = applyFailedDeathState(
       updatedAvatar,
-      inventory,
+      nextInventory,
       {
         ...progressionResult.progression,
         lastEncounterId: snapshot.encounterId,

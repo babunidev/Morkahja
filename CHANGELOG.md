@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: an Atranor item is spent, and the previous stack stays gone
+
+- **Fix (Babuni's report and direction, D-041):** using a resurrection item in Atranor brought the life back and left the item in the inventory. The item is now spent, as a solution is spent in any other encounter. The dice in Atranor still spends nothing.
+- **Fix (Babuni's report, D-041):** solution stacks from the encounter that just ended were still hovering on Atranor and on a level-up. The stack disappears when it flies into the encounter, and a system event does not bring it back.
+- **Verification:** the Atranor inventory test passed, including an Elixir charge that is gone after a successful return and a system event that opens with no locked stack. The client typecheck passed. A played turn was not watched.
+
 ## 2026-11-15 — Dice show their rolls and fly in; 0.9.0-beta.74
 
 - **Change (Babuni's direction, D-038, D-039, D-040):** in an encounter that needs more than one solution, a die shows its number when it arrives and then flies into the encounter with the solutions. Dice from an encounter that just ended no longer stay on screen when Atranor or a level-up begins. A hovering die or solution no longer glows, and a stack of dice stays upright. A finished total of 25 adds one extra normal item; when the encounter already grants five rewards, one of those gains two charges. The weather fades from one land into the next: the new land rises over one second while the old land falls over two.

@@ -274,7 +274,15 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). Each press asks the server for that die's face, the same face the result will use. The number appears when the die arrives at its hover place. When the result shows, those dice fly into the encounter with the solutions. A reload keeps the revealed faces.
 
-**Status:** released as 0.9.0-beta.74, 2026-11-15. The face rule, the room path and the Atranor reset are tested. A played turn was not watched before release. The same day, those revealed dice were still on the participant when Atranor opened, so they hovered again. Atranor and a level-up now drop them.
+**Status:** released as 0.9.0-beta.74, 2026-11-15. The face rule, the room path and the Atranor reset are tested. A played turn was not watched before release. The same day, those revealed dice were still on the participant when Atranor opened, so they hovered again. Atranor and a level-up now drop them. Solution stacks were still coming back with them; that is D-041.
+
+## D-041 — An Atranor item is spent, and the previous stack does not return (2026-11-15)
+
+**Babuni's direction:** using a resurrection item in Atranor brings the life back, and that is right, but the item has to be consumed the way a solution is consumed in every other encounter. The solution stacks from the encounter that just ended were also still there, on Atranor and on a level-up. Those stacks should disappear when they fly into the encounter, and a system event must not call them back.
+
+**AI implementation:** Cursor (Grok 4.7). Atranor keeps the solutions the roll used and spends those charges before the essence reward is granted. The dice still spends nothing. When the hovering set takes off into the encounter, the stack is cleared. Atranor and a level-up do not restore a stack locked on the encounter that just ended.
+
+**Status:** tested on the room path, including an Atranor Elixir that is gone after a successful return. Not watched in a played turn. Not released.
 
 ## D-039 — A new land crossfades (2026-11-15)
 

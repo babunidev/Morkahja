@@ -50,6 +50,7 @@ import { assetUrl } from '../../../assetUrl.js';
 import { motionForDiceSlot } from './diceSlotMotion.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
+  HOVER_SET_SPENT_EVENT,
   recordCommittedAction,
   SET_ROLLS_DISPLAY_MS,
   getFooterButtonRect,
@@ -711,6 +712,7 @@ export function SolutionBlock({
   onSetDice,
   lockedSetPicks,
   lockedDiceRolls,
+  restoreLockedHover = true,
 }: {
   diceButtonAsset?: string;
   encounterRevealKey: string;
@@ -739,6 +741,11 @@ export function SolutionBlock({
   lockedSetPicks?: SolutionSetPickRecordView[];
   /** Dice faces already revealed in this set (after a reload). */
   lockedDiceRolls?: number[];
+  /**
+   * A system event starts clean. Locked picks from the encounter that just
+   * ended must not hover again on Atranor or a level-up.
+   */
+  restoreLockedHover?: boolean;
 }) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
@@ -778,6 +785,57 @@ export function SolutionBlock({
   const [inboundFlownSlots, setInboundFlownSlots] = useState<Set<SlotLetter>>(
     () => new Set(),
   );
+  const [boundRevealKey, setBoundRevealKey] = useState(encounterRevealKey);
+
+  function carriedHover(): { dice: number[]; picks: SolutionSetPickRecordView[] } {
+    if (!restoreLockedHover) {
+      return { dice: [], picks: [] };
+    }
+    return {
+      dice: lockedDiceRolls ?? [],
+      picks: lockedSetPicks ?? [],
+    };
+  }
+
+  function applyCarriedHover(carried: { dice: number[]; picks: SolutionSetPickRecordView[] }): void {
+    hoveredDiceRef.current = carried.dice.length;
+    setHoveredDice(carried.dice.length);
+    setDiceRolls(carried.dice);
+    setRevealedDiceCount(carried.dice.length);
+    setPickRecords(carried.picks);
+    pickRecordsRef.current = carried.picks;
+    setRevealedCount(carried.picks.length);
+    const slots = carried.picks.map((pick) => pick.slot);
+    setPicksRef.current = slots;
+    setSetPicks(slots);
+    setCommittedRef.current = false;
+    setSetCommitted(false);
+    setChoiceFade(null);
+    encounterKeyRef.current = encounter.snapshotId;
+  }
+
+  // Before paint, so the previous encounter's stack is not drawn on the next one.
+  if (boundRevealKey !== encounterRevealKey) {
+    setBoundRevealKey(encounterRevealKey);
+    applyCarriedHover(carriedHover());
+    setInboundFlownSlots(new Set());
+  }
+
+  useEffect(() => {
+    const onSpent = (): void => {
+      hoveredDiceRef.current = 0;
+      setHoveredDice(0);
+      setDiceRolls([]);
+      setRevealedDiceCount(0);
+      setPicksRef.current = [];
+      setSetPicks([]);
+      setPickRecords([]);
+      pickRecordsRef.current = [];
+      setRevealedCount(0);
+    };
+    window.addEventListener(HOVER_SET_SPENT_EVENT, onSpent);
+    return () => window.removeEventListener(HOVER_SET_SPENT_EVENT, onSpent);
+  }, []);
 
   useEffect(() => {
     setActionsVisible(false);
@@ -786,27 +844,10 @@ export function SolutionBlock({
     setEnableRattleSlots(new Set());
     setDiceEnableRattle(false);
     setDiceRollCount(0);
-    const lockedDice = lockedDiceRolls ?? [];
-    hoveredDiceRef.current = lockedDice.length;
-    setHoveredDice(lockedDice.length);
-    setDiceRolls(lockedDice);
-    setRevealedDiceCount(lockedDice.length);
     solutionTips.hide();
     setInboundFlownSlots(new Set());
-    setPicksRef.current = [];
-    setSetPicks([]);
-    setCommittedRef.current = false;
-    setSetCommitted(false);
-    // Picks already locked (after a reload) hover again, rolls shown.
-    const locked = lockedSetPicks ?? [];
-    setPickRecords(locked);
-    pickRecordsRef.current = locked;
-    setRevealedCount(locked.length);
-    setPicksRef.current = locked.map((pick) => pick.slot);
-    setSetPicks(locked.map((pick) => pick.slot));
+    applyCarriedHover(carriedHover());
     pickBusyRef.current = false;
-    encounterKeyRef.current = encounter.snapshotId;
-    setChoiceFade(null);
 
     let cancelled = false;
     const phaseKey = actionsPhaseKey(encounter.snapshotId);

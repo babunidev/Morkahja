@@ -25,6 +25,7 @@ import {
   claimAnimationOnce,
   committedActionFor,
   committedSolutionSetFor,
+  markHoverSetSpent,
   setRollsPauseMs,
   takeCommittedDiceFlight,
   takeCommittedSolutionSpend,
@@ -1231,6 +1232,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         }
         const hide = (): void => {
           element.style.visibility = 'hidden';
+          markHoverSetSpent();
         };
         if (element.hasAttribute('data-dice-hover')) {
           const imageSrc = element.querySelector('img')?.getAttribute('src');

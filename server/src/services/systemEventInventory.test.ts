@@ -189,6 +189,65 @@ await persistInventory(session.playerId, avatarId, {
   await leaveAllRoomsForPlayer(session.playerId);
   await persistInventory(session.playerId, avatarId, {
     spellbook: [{ solutionId: 10001, solutionType: 1, uses: 2 }],
+    items: [
+      { solutionId: 10005, solutionType: 6, uses: 2 },
+      { solutionId: 10006, solutionType: 6, uses: 2 },
+    ],
+    essences: [
+      { solutionId: 10010, solutionType: 15, uses: 2 },
+      { solutionId: 10015, solutionType: 77, uses: 1 },
+    ],
+  });
+  await setProgression(session.playerId, avatarId, createInitialProgression());
+
+  let room = await createRoom(session.playerId, avatarId);
+  room = readyEncounterRoom(room, room.participants[0]!.slotIndex);
+  await saveEncounterRoom(room);
+
+  await submitChoice(session.playerId, avatarId, 'A');
+  const waiting = await loadEncounterRoom((await submitContinue(session.playerId, avatarId)).roomId);
+  assert.equal(waiting?.roomState, 'system_event');
+  const openedActor = waiting!.participants.find((entry) => entry.avatarId === avatarId);
+  assert.equal(openedActor?.setPicks, undefined);
+  assert.equal(openedActor?.setDiceRolls, undefined);
+
+  const slotIndex = openedActor!.slotIndex;
+  await saveEncounterRoom({
+    ...waiting!,
+    activeEncounterSnapshot: {
+      ...waiting!.activeEncounterSnapshot,
+      encounterDifficulty: 1,
+      primarySolutionA: 10015,
+      rollPrimaryA: 96,
+      actionReadyAt: Date.now() - 1,
+    },
+    slotEncounterSnapshots: waiting!.slotEncounterSnapshots.map((snapshot, index) => ({
+      ...snapshot,
+      encounterId: DEATH_ENCOUNTER_NUMERIC_ID,
+      encounterDifficulty: 1,
+      primarySolutionA: 10015,
+      rollPrimaryA: index === slotIndex ? 96 : 50,
+      actionReadyAt: Date.now() - 1,
+    })) as EncounterRoom['slotEncounterSnapshots'],
+    updatedAt: Date.now(),
+  });
+
+  const afterElixir = await submitChoice(session.playerId, avatarId, 'A');
+  const elixirActor = afterElixir.participants.find((entry) => entry.avatarId === avatarId);
+  assert.deepEqual(elixirActor?.preparedResult?.usedInventorySolutions, [10015]);
+
+  const afterElixirContinue = await submitContinue(session.playerId, avatarId);
+  assert.equal(afterElixirContinue.roomState, 'active_encounter');
+
+  const inventoryAfterElixir = await loadInventory(session.playerId, avatarId);
+  assert.equal(countSolutionCharges(inventoryAfterElixir, 10015), 0);
+  assert.equal(totalEssenceUses(inventoryAfterElixir), 3);
+}
+
+{
+  await leaveAllRoomsForPlayer(session.playerId);
+  await persistInventory(session.playerId, avatarId, {
+    spellbook: [{ solutionId: 10001, solutionType: 1, uses: 2 }],
     items: [],
     essences: [{ solutionId: 10010, solutionType: 15, uses: 5 }],
   });
