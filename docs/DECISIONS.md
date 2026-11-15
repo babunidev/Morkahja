@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-032 — Stay in the region most of the time (2026-11-15)
+
+**Babuni's direction:** encounters in a pool stay equally likely. The next one should usually be from the same expansion, including expansion 0, so a stretch of the journey stays in one region. A written follow still happens. When there is none, roll a d20: 1–14 stay, 15–20 switch expansion. Ambient tracks are a separate project.
+
+**AI implementation:** Cursor (Grok 4.7). The room advance, the continue after a normal encounter, the encounter after a level-up or Atranor, and a newly opened room all use that roll. The region after a system encounter is the encounter that led there. The preloaded next picture uses the same roll from the encounter about to be played. A follow is still taken only on a successful Fortune or Prosperity, and opening a room still jumps to a follow written on the last encounter. The draw that checked expansion again after the pool was already filtered is removed. D-028 was already the sound-level decision, so this is D-032. The version is 0.9.0-beta.64 because 0.9.0-beta.60 through 0.9.0-beta.63 are already on main.
+
+**Status:** implemented locally on 2026-11-15. Not deployed.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

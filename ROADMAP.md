@@ -98,6 +98,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
+- [x] Stay in the current expansion on a d20 of 1–14 (D-032), 0.9.0-beta.64: selection test passed 2026-11-15. Not played, not released.
 - [ ] Encounters that need several solutions, chosen one at a time (D-019), 0.9.0-beta.53: released 2026-11-13 for Babuni's tests with high-level accounts. Still to check: a party with other players choosing sets.
 - [ ] Smooth fades, menus that open once loaded, inventory taps on phones, About Us and costs update (D-020), 0.9.0-beta.54: released 2026-11-13.
 - [ ] Terms and privacy policy rewritten to match the game, "Use Your Key" (D-021), 0.9.0-beta.54: released 2026-11-13. Open: consent to immediate delivery at checkout, if the right of withdrawal should ever be excluded.

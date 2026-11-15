@@ -70,7 +70,8 @@ import type {
 } from '../domain/rooms/RoomParticipant.js';
 
 const RANDOM_ENCOUNTER_MIN_ID = 20001;
-const MAX_EXPANSION_REROLLS = 200;
+/** A d20 of 1–14 stays in the current expansion. 15–20 leaves it. */
+const SAME_EXPANSION_STAY_MAX = 14;
 /** Must match client action unlock timing: reveal delay + fade-in. */
 export const ENCOUNTER_ACTION_ENABLE_DELAY_MS = 3_280;
 /** Atranor death encounter (mEncounterID 1) — queued when essence is depleted. */
@@ -86,6 +87,13 @@ const LEVEL_UP_ENCOUNTER_NUMERIC_ID = Number(LEVEL_UP_ENCOUNTER_ID);
 export interface EncounterSelectionContext {
   unlockedExpansions: number[];
   previousEncounter?: EncounterData | null;
+  /**
+   * Expansion just left. `null` keeps a fair draw across the whole pool.
+   * Omitted uses the previous encounter's expansion when there is no written follow.
+   */
+  currentExpansion?: number | null;
+  /** Inclusive integer draw. Tests pass a fixed sequence. */
+  nextInt?: (min: number, max: number) => number;
 }
 
 export interface ResolveEncounterResult {
@@ -135,6 +143,49 @@ function buildRandomPool(
   );
 }
 
+function findEncounter(
+  encounters: EncounterDataMap,
+  encounterId: number,
+): EncounterData | undefined {
+  return Object.values(encounters).find((encounter) => encounter.mEncounterID === encounterId);
+}
+
+function selectionRegion(context: EncounterSelectionContext): number | null {
+  if (context.currentExpansion !== undefined) {
+    return context.currentExpansion;
+  }
+  return context.previousEncounter?.mEncounterExpansion ?? null;
+}
+
+/**
+ * Fair draw inside the pool the region roll chose.
+ * A written follow is handled before this runs.
+ */
+function drawFromRegionPool(
+  pool: EncounterData[],
+  currentExpansion: number | null,
+  nextInt: (min: number, max: number) => number,
+): EncounterData {
+  let candidates = pool;
+
+  if (currentExpansion !== null) {
+    const same = pool.filter((encounter) => encounter.mEncounterExpansion === currentExpansion);
+    const other = pool.filter((encounter) => encounter.mEncounterExpansion !== currentExpansion);
+    const stay = nextInt(1, 20) <= SAME_EXPANSION_STAY_MAX;
+    if (stay && same.length > 0) {
+      candidates = same;
+    } else if (!stay && other.length > 0) {
+      candidates = other;
+    } else if (same.length > 0) {
+      candidates = same;
+    } else {
+      candidates = other;
+    }
+  }
+
+  return candidates[nextInt(0, candidates.length - 1)]!;
+}
+
 /**
  * Select next encounter: forced follow (hard override) or random pool.
  * Loads static data from game/encountersdata.json via gameData service.
@@ -146,7 +197,8 @@ export function selectNextEncounter(
   const previous = context.previousEncounter;
 
   if (previous && previous.mEncounterFollow > 0) {
-    const followUp = getEncounterById(previous.mEncounterFollow);
+    const followUp = findEncounter(encounters, previous.mEncounterFollow)
+      ?? getEncounterById(previous.mEncounterFollow);
     if (!followUp) {
       throw new Error(
         `Follow encounter not found: ${previous.mEncounterFollow}`,
@@ -161,19 +213,7 @@ export function selectNextEncounter(
     throw new Error('No eligible random encounters for avatar expansions');
   }
 
-  let attempts = 0;
-
-  while (attempts < MAX_EXPANSION_REROLLS) {
-    const candidate = pool[randomInt(0, pool.length - 1)];
-
-    if (isEncounterAllowed(candidate, context.unlockedExpansions)) {
-      return candidate;
-    }
-
-    attempts += 1;
-  }
-
-  throw new Error('Failed to select a valid random encounter after rerolls');
+  return drawFromRegionPool(pool, selectionRegion(context), context.nextInt ?? randomInt);
 }
 
 export function prepareNextEncounter(
@@ -181,46 +221,15 @@ export function prepareNextEncounter(
   unlockedExpansions: number[],
   encounters: EncounterDataMap = getEncounters(),
 ): PreparedEncounter {
-  void currentEncounter;
-
-  const randomEncounter = selectRandomPreparedEncounter(
+  const randomEncounter = selectNextEncounter({
     unlockedExpansions,
-    encounters,
-  );
+    currentExpansion: currentEncounter.mEncounterExpansion,
+  }, encounters);
 
   return {
     encounterId: randomEncounter.mEncounterID,
     followMode: 'random',
   };
-}
-
-function selectRandomPreparedEncounter(
-  unlockedExpansions: number[],
-  encounters: EncounterDataMap,
-): EncounterData {
-  let attempts = 0;
-
-  while (attempts < MAX_EXPANSION_REROLLS) {
-    const candidates = Object.values(encounters).filter(
-      (encounter) =>
-        encounter.mEncounterID >= RANDOM_ENCOUNTER_MIN_ID &&
-        !isSystemEncounterId(encounter.mEncounterID),
-    );
-
-    if (candidates.length === 0) {
-      throw new Error('No random encounters available for prefetch');
-    }
-
-    const candidate = candidates[randomInt(0, candidates.length - 1)];
-
-    if (isEncounterAllowed(candidate, unlockedExpansions)) {
-      return candidate;
-    }
-
-    attempts += 1;
-  }
-
-  throw new Error('Failed to prepare a valid random encounter after rerolls');
 }
 
 export function preparedSystemEncounter(encounterId: number): PreparedEncounter {
@@ -488,7 +497,10 @@ function getNextEncounterAfterResolution(
     return followEncounter;
   }
 
-  return selectRandomPreparedEncounter(unlockedExpansions, getEncounters());
+  return selectNextEncounter({
+    unlockedExpansions,
+    currentExpansion: snapshot.encounterExpansion,
+  }, getEncounters());
 }
 
 /** Next encounter after witnessed system events complete — uses origin lineage, not system snapshot. */
@@ -522,9 +534,10 @@ export function resolveNextEncounterForRoom(
     };
   }
 
+  const origin = getEncounterById(lineage.originEncounterId);
   const encounter = selectNextEncounter({
     unlockedExpansions: mergedExpansions,
-    previousEncounter: null,
+    currentExpansion: origin?.mEncounterExpansion ?? null,
   }, getEncounters());
   return {
     encounter,

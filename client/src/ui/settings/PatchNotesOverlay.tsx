@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-64',
+    version: '0.9.0-beta.64',
+    period: '15 Nov 2026',
+    notes: [
+      'The next encounter usually stays in the same region. A roll of 15 or higher on a d20 leaves for another one.',
+    ],
+  },
+  {
     id: 'beta-63',
     version: '0.9.0-beta.63',
     period: '14 Nov 2026',

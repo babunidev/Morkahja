@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Staying in the same region; 0.9.0-beta.64
+
+- **Change (Babuni's direction, D-032):** a random next encounter stays in the expansion just left, including expansion 0, when a d20 rolls 1–14. A 15–20 leaves for another unlocked expansion. Encounters inside the chosen side stay equally likely. A written follow still wins, and only after a successful Fortune or Prosperity. If the chosen side has no encounters, the other side is used. After a level-up or Atranor, the region is the encounter that led there. The picture preloaded for the next encounter uses the same roll. A second draw that rechecked an already-filtered pool is gone.
+- **Version 0.9.0-beta.64** (D-015, D-032).
+- **Verification:** `regionEncounterSelection.test.ts` passed. A follow does not roll; 14 stays; 15 leaves; expansion 0 stays; a leave roll with nowhere else to go stays. Not played in a browser. Not deployed.
+
 ## 2026-11-14 — Released: every effect sits with the level-up sound; 0.9.0-beta.63
 
 - **Change (Babuni's direction, D-031):** the effects were still uneven. The solution opening was very low, and the essence lines stood out above it. Every effect, the dice included, is now leveled with the level-up sound. The level-up recording itself is unchanged. This replaces the earlier target of sitting a little under the button (D-028).

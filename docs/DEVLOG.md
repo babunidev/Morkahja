@@ -354,6 +354,10 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### Staying in one region — 2026-11-15
+
+A run of encounters jumped between regions, because every allowed encounter was equally likely. Staying put should be the usual path, including in the starting expansion, so a stretch of the journey can share a place. A written follow still comes first. When there is none, a d20 decides: one through fourteen stay, and fifteen through twenty leave (D-032). Cursor (Grok 4.7) put that roll on the random pool and removed a second draw that could never reject an encounter. **Verification:** the selection test passed. Not played in the browser. Not on the live game.
+
 ### Out with the sounds — 2026-11-14
 
 The leveled effects, the backpack, the skillbook, the horn, and the choice of five free friends went to the live game together. The encounter wording already on the server, Hidden Market included, stayed. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-8HvdfyEK.js` and contains `0.9.0-beta.63`. A reward, a horn and a roll were not played on the live game.
