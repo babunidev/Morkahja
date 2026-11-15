@@ -302,6 +302,8 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Later the same night:** Roarback Mauler is Keldor, and Keldor is expansion 1. The encounter stores that land as 1001, and the recordings are filed as 1, so the bed was looking for a folder that does not exist and staying silent. A named land now plays the folder at its place: 1001 plays 1. Urcogor, Everwinter and Aetherion still have no recordings. Shipped 2026-11-15 inside 0.9.0-beta.68. A full cycle was still not heard on the live game.
 
+**Later:** the edited recordings for Urcogor Ravage, expansion 1002, cover all four stages. They are filed as expansion 2: 16 in stage A, 16 in B, 12 in C and 13 in D. The game copies were brought to about −38 LUFS. The edited files in the drop folder were left as given. Everwinter and Aetherion still have no recordings.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.

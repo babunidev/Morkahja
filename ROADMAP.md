@@ -98,6 +98,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
+- [ ] Urcogor Ravage (1002) plays the edited weather filed as expansion 2, 0.9.0-beta.69: 16/16/12/13 pieces in stages A–D, game copies −38.4 to −37.1 LUFS. Not heard through a cycle. Not released.
 - [ ] Keldor (1001), including Roarback Mauler, plays the weather filed as expansion 1, 0.9.0-beta.67: the lookup test passed 2026-11-15. Not heard through a cycle. Not released.
 - [x] Each solution and each dice gap is its own roll (D-035), 0.9.0-beta.68: resolver and breakdown tests. Not played through in a browser. Released 2026-11-15 from `dccf8797`.
 - [x] Stay in the current expansion on a d20 of 1–14 (D-033), 0.9.0-beta.66: selection test passed 2026-11-15. Not played, not released.

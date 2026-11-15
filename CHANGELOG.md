@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: Urcogor Ravage has weather; 0.9.0-beta.69
+
+- **Change (Babuni's direction):** the edited recordings for expansion 1002, Urcogor Ravage, cover all four stages. The game files them as expansion 2: 16 in stage A, 16 in B, 12 in C and 13 in D. The copies in the game were brought to about −38 LUFS, from −56.7 to −12.7 in the edited files. The drop folder was left as edited. Everwinter and Aetherion still have none.
+- **Version 0.9.0-beta.69** (D-015, D-032).
+- **Verification:** the client tests passed, including that expansion 1002 uses the recordings filed as 2. The game copies measured −38.4 to −37.1 LUFS. They were not heard through a cycle. **Not deployed.**
+
 ## 2026-11-15 — Each solution and each die rolls on its own; 0.9.0-beta.68
 
 - **Change (Babuni's direction, D-035):** an encounter of difficulty 2 asks for two separate rolls. Each chosen solution, including a second charge of the same item, plays its animation, rises, and hovers with its own roll. Each gap the dice fills is its own spin and its own roll, so the dice with no solution at difficulty 2 spins twice. The outcome is still the average.

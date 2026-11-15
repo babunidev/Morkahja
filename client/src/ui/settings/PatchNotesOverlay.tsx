@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-69',
+    version: '0.9.0-beta.69',
+    period: '15 Nov 2026',
+    notes: [
+      'Urcogor Ravage has its own weather, through all four stages.',
+    ],
+  },
+  {
     id: 'beta-68',
     version: '0.9.0-beta.68',
     period: '15 Nov 2026',
