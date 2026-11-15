@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: inventory, skillbook and lore 10% quieter; 0.9.0-beta.65
+
+- **Change (Babuni's direction):** the inventory, the skillbook and lore play at nine tenths of the other effects. Call for help stays with the other effects.
+- **Version 0.9.0-beta.65** (D-015).
+- **Verification:** the client tests passed, including the footer scale. The client typecheck passed. The buttons were not compared by ear. **Not deployed.**
+
 ## 2026-11-15 — Unreleased: a weather bed, and quieter effects; 0.9.0-beta.64
 
 - **Change (Babuni's direction, D-032):** the encounter music rests 7–21 seconds. A weather bed plays under it for the encounter's expansion: stage A is 3–7 pieces, then a 20 percent chance of stage B; stage B is 1–7 pieces, then an even chance of stage A or one stage C piece; stage C usually fades into stage D (2–4 pieces that overlap); stage D then returns to stage B or stage A. Pieces fade in over one second and out over two. The bed has its own settings slider, starting at full. Expansion 0 and expansion 1 have recordings. A land with none fades out and stays quiet. Using a solution plays one of eight lines. Every effect plays at nine tenths of the effects slider; the solution lines and the reward lines play at nine tenths of that again.

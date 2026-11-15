@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-65',
+    version: '0.9.0-beta.65',
+    period: '15 Nov 2026',
+    notes: [
+      'Inventory, the skillbook and lore are a little quieter.',
+    ],
+  },
+  {
     id: 'beta-64',
     version: '0.9.0-beta.64',
     period: '15 Nov 2026',

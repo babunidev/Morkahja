@@ -1,7 +1,14 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { menuPreparingClass, useMenuPreparingCheck } from '../../transitions/menuReadiness.js';
 import { GAME_FOOTER_BUTTONS } from '../gameUiAssets.js';
-import { BACKPACK_SOUND, CALL_FOR_HELP_SOUND, LORE_SOUND, SKILLBOOK_SOUND, playSfx } from '../../sfx.js';
+import {
+  BACKPACK_SOUND,
+  CALL_FOR_HELP_SOUND,
+  FOOTER_MENU_PLAYBACK_SCALE,
+  LORE_SOUND,
+  SKILLBOOK_SOUND,
+  playSfx,
+} from '../../sfx.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { PROTECTED_SURFACE_ATTR, protectedImageProps } from '../../protectedImage.js';
 import { actionMenuRowStyle, GAME_SCREEN_LAYOUT } from '../gameScreenLayout.js';
@@ -122,17 +129,17 @@ export function ActionMenuZone({
               return;
             }
             if (button.alt === 'Lore') {
-              playSfx(LORE_SOUND);
+              playSfx(LORE_SOUND, { scale: FOOTER_MENU_PLAYBACK_SCALE });
               onLoreToggle();
               return;
             }
             if (button.alt === 'Skillbook') {
-              playSfx(SKILLBOOK_SOUND);
+              playSfx(SKILLBOOK_SOUND, { scale: FOOTER_MENU_PLAYBACK_SCALE });
               onSkillbookToggle();
               return;
             }
             if (button.alt === 'Inventory') {
-              playSfx(BACKPACK_SOUND);
+              playSfx(BACKPACK_SOUND, { scale: FOOTER_MENU_PLAYBACK_SCALE });
               onInventoryToggle();
             }
           }}
