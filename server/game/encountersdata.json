@@ -521,7 +521,7 @@
     "mEncounterSolutiuonTypeB": 22,
     "mEncounterSolutiuonTypeC": 21,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "Inside a dimly lit cave, a weakened Grimnir warrior rests on her knees, wearied from a relentless battle. Her once impenetrable armor bears the scars of conflict, dented and battered, reflecting her own state. Her normally fierce expression now conveys desperation and exhaustion, as she leans heavily on her weapon for support. Sweat and grime mar her face, making her struggle for survival evident. In need of aid, the wearied Grimnir warrior could greatly benefit from healing assistance or an energy boost. A caring companion or a restorative potion could be her salvation, helping her regain her lost strength.",
+    "mEncounterText": "In the dim hush of the cave, a Grimnir warrior remains on one knee, her weight resting heavily against the haft of her weapon.\n\nHer armor is dented and split in places, marked by fresh blows that have not yet cooled from the struggle. Dust and sweat cling to her face. A dark strand of hair has come loose against her cheek, and when she lifts her head, the effort shows at once.\n\nHer breathing is slow and uneven.\n\nThe stone around her holds the chill of the cave, while the faint smell of iron and disturbed earth lingers in the air. What fire usually lives in her expression has narrowed into something quieter now—pain, fatigue, and the stubborn refusal to yield.\n\nShe stays where she is, gripping her weapon as though it alone keeps her upright.\n\nNothing moves in the cave but her breath.",
     "mEncounterTitle": "Weakened Grimnir",
     "mEncounterType": 3,
     "mEncounterElement": "Metal",
