@@ -972,6 +972,7 @@ export function GameEnvironment({
               holdResultRollReset={holdResultRollReset}
               loreGemCollected={loreGemCollected}
               lockedSetPicks={localParticipant?.setPicks}
+              lockedDiceRolls={localParticipant?.setDiceRolls}
               onRoomSnapshot={applyEncounterRoomSnapshot}
               isSystemEventActor={room?.systemEvent?.isLocalActor === true}
               imageSrc={imagePath(encounterImageName)}

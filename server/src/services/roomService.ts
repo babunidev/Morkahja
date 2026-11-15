@@ -3,6 +3,8 @@ import type { EncounterAction } from '../../../shared/src/contracts.js';
 import {
   MAX_SOLUTION_SET_SIZE,
   isSolutionSetSlot,
+  nextSetDieFace,
+  solutionSetSize,
   type SolutionSetSlot,
 } from '../../../shared/src/solutionSet.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
@@ -739,6 +741,7 @@ function resetParticipantsForNewEncounter(participants: RoomParticipant[]): Room
     outcomeSnapshotId: undefined,
     loreGemCollected: undefined,
     setPicks: undefined,
+    setDiceRolls: undefined,
     lastInteractionAt: now,
   }));
 }
@@ -2555,9 +2558,11 @@ export async function submitSetPick(
     }
 
     const storedSnapshot = snapshotForParticipant(room, participant);
-    const snapshot = (participant.setPicks?.length ?? 0) === 0
-      ? replaceLegacyPercentRolls(storedSnapshot)
-      : storedSnapshot;
+    const setStarted = (participant.setPicks?.length ?? 0) > 0
+      || (participant.setDiceRolls?.length ?? 0) > 0;
+    const snapshot = setStarted
+      ? storedSnapshot
+      : replaceLegacyPercentRolls(storedSnapshot);
     if (snapshot !== storedSnapshot) {
       room = {
         ...room,
@@ -2574,6 +2579,10 @@ export async function submitSetPick(
       throw new RoomError('Inventory not found', 409, 'INVALID_SOLUTION_SET');
     }
     const slots = [...(participant.setPicks ?? []).map((pick) => pick.slot), slot];
+    const setSize = solutionSetSize(encounter.mEncounterDifficulty);
+    if (slots.length + (participant.setDiceRolls?.length ?? 0) > setSize) {
+      throw new RoomError('This solution cannot be added to the set', 409, 'INVALID_SOLUTION_SET');
+    }
     const picks = revealSolutionSetPicks(
       encounter,
       flattenInventorySolutionIds(inventory),
@@ -2604,6 +2613,87 @@ export async function submitSetPick(
     };
     await transaction.setEncounterRoom(roomId, updated);
     return { room: updated, picks };
+  });
+}
+
+/**
+ * Reveals the next die of a solution set (D-040). The face is the one the
+ * resolution will use for that gap. Dice already shown stay shown.
+ */
+export async function submitSetDice(
+  playerId: string,
+  avatarId: string,
+): Promise<{ room: EncounterRoom; rolls: number[] }> {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
+    throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+  const now = nowMs();
+
+  return withDocumentTransaction(async (transaction) => {
+    let room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room) {
+      throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
+    }
+    room = reengageFromInactivity(room, playerId, now);
+    if (room.roomState !== 'active_encounter') {
+      throw new RoomError('Room is not accepting choices', 409, 'INVALID_ROOM_STATE');
+    }
+    if (!isEncounterActionReady(room.activeEncounterSnapshot)) {
+      throw new RoomError('Action is not ready yet', 409, 'ACTION_NOT_READY');
+    }
+    const participant = findParticipant(room, playerId);
+    if (!participant || participant.choiceState === 'disengaged') {
+      throw new RoomError('Not an active participant', 403, 'NOT_PARTICIPANT');
+    }
+    if (participant.choiceState !== 'choosing' && participant.choiceState !== 'ready') {
+      throw new RoomError('Selection is locked', 409, 'SELECTION_LOCKED');
+    }
+
+    const storedSnapshot = snapshotForParticipant(room, participant);
+    const setStarted = (participant.setPicks?.length ?? 0) > 0
+      || (participant.setDiceRolls?.length ?? 0) > 0;
+    const snapshot = setStarted
+      ? storedSnapshot
+      : replaceLegacyPercentRolls(storedSnapshot);
+    if (snapshot !== storedSnapshot) {
+      room = {
+        ...room,
+        slotEncounterSnapshots: room.slotEncounterSnapshots.map((entry, index) => (
+          index === participant.slotIndex ? snapshot : entry
+        )) as EncounterRoom['slotEncounterSnapshots'],
+      };
+    }
+
+    const encounter = snapshotToEncounterData(snapshot);
+    const rollsSnapshot = snapshotToRolls(snapshot);
+    const solutionPicks = participant.setPicks?.length ?? 0;
+    const revealed = participant.setDiceRolls?.length ?? 0;
+    const face = nextSetDieFace(
+      solutionSetSize(encounter.mEncounterDifficulty),
+      solutionPicks,
+      revealed,
+      rollsSnapshot.rollE,
+      rollsSnapshot.diceFillRolls,
+    );
+    if (face === null) {
+      throw new RoomError('The dice cannot fill another place', 409, 'INVALID_SOLUTION_SET');
+    }
+    const rolls = [...(participant.setDiceRolls ?? []), face];
+    const updated: EncounterRoom = {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? {
+            ...entry,
+            setDiceRolls: rolls,
+            lastInteractionAt: now,
+          }
+          : entry),
+      updatedAt: now,
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    return { room: updated, rolls };
   });
 }
 

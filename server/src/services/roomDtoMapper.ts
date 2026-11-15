@@ -128,6 +128,9 @@ function buildParticipantDto(
     ...(participant.playerId === localPlayerId && participant.setPicks?.length
       ? { setPicks: participant.setPicks }
       : {}),
+    ...(participant.playerId === localPlayerId && participant.setDiceRolls?.length
+      ? { setDiceRolls: participant.setDiceRolls }
+      : {}),
     isLocal: participant.playerId === localPlayerId,
   };
 }

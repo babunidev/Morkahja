@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-040 — A die in a set shows its roll, then flies in (2026-11-15)
+
+**Babuni's direction:** when an encounter needs more than one solution, the first die hovers without its result. A normal solution shows its result. The die should behave the same way, and it should also disappear into the encounter as the solutions do.
+
+**AI implementation:** Cursor (Grok 4.7). Each press asks the server for that die's face, the same face the result will use. The number appears when the die arrives at its hover place. When the result shows, those dice fly into the encounter with the solutions. A reload keeps the revealed faces.
+
+**Status:** implemented, not released. The face rule and the room path are tested. A played turn was not watched.
+
 ## D-039 — A new land crossfades (2026-11-15)
 
 **Babuni's direction:** switching expansion should crossfade. The new weather fades in while the old weather fades out. The sound should always fade in.

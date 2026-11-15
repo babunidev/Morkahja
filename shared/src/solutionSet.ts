@@ -177,6 +177,24 @@ export function nextSetDiceRoll(
 }
 
 /**
+ * The face the next die in a set shows. The same face fills that gap when the
+ * set resolves. Null when that press does not add a die.
+ */
+export function nextSetDieFace(
+  setSize: number,
+  solutionPicks: number,
+  revealedDice: number,
+  first: number,
+  further: readonly number[] | undefined,
+): number | null {
+  if (nextSetDiceRoll(setSize, solutionPicks, revealedDice) === 'ignore') {
+    return null;
+  }
+  const faces = diceFacesForGaps(setSize - solutionPicks, first, further);
+  return faces[revealedDice] ?? null;
+}
+
+/**
  * One die face for each gap in a set. Snapshots from before each gap had its
  * own face only stored the first die, and that face fills every gap.
  */

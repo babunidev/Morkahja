@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: a die in a set shows its roll, then flies in
+
+- **Change (Babuni's direction, D-040):** in an encounter that needs more than one solution, a die hovered without its result. The result now appears when the die arrives, as a solution's roll does. Those dice then fly into the encounter with the solutions.
+- **Verification:** the face rule and the room path are tested. A played turn was not watched. Not released.
+
 ## 2026-11-15 — Unreleased: a new land crossfades
 
 - **Change (Babuni's direction, D-039):** changing expansion waited until the old weather had faded out, then faded the new land in. The new land now fades in over one second while the old land fades out over two, both starting together. A land that starts from silence still fades in.

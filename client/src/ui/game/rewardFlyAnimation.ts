@@ -923,16 +923,17 @@ export function recordCommittedAction(
   committedAction = { snapshotId, action, spendTaken: false, solutionSet };
 }
 
-/** How long a dice-finished set shows the dice roll before the solutions fly in. */
+/** How long the dice button stays after a committed roll before it makes room. */
 export const SET_ROLLS_DISPLAY_MS = 1000;
 
 /**
- * How long the result waits before the spent solutions fly. Each solution's
- * roll already showed as it arrived (D-025); only the dice that finished a set
- * reveals its roll with the result, so that set waits a moment.
+ * How long the result waits before the spent solutions fly. Each solution and
+ * each die already showed its roll as it arrived, so the flight starts with
+ * the result.
  */
 export function setRollsPauseMs(snapshotId: string | undefined): number {
-  return committedSolutionSetFor(snapshotId)?.diceFill ? SET_ROLLS_DISPLAY_MS : 0;
+  void snapshotId;
+  return 0;
 }
 
 /** The solution set the player committed in this encounter, if it was one. */
@@ -953,6 +954,21 @@ export function takeCommittedSolutionSpend(snapshotId: string | undefined, slot:
     || slot === 'dice'
     || committedAction?.snapshotId !== snapshotId
     || committedAction.action !== slot
+    || committedAction.spendTaken
+  ) {
+    return false;
+  }
+  committedAction.spendTaken = true;
+  return true;
+}
+
+/** True once when a set finished by the dice alone is committed, so those dice fly in. */
+export function takeCommittedDiceFlight(snapshotId: string | undefined): boolean {
+  if (
+    !snapshotId
+    || committedAction?.snapshotId !== snapshotId
+    || committedAction.action !== 'dice'
+    || !committedAction.solutionSet?.diceFill
     || committedAction.spendTaken
   ) {
     return false;

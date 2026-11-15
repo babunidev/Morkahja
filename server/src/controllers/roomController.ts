@@ -21,6 +21,7 @@ import {
   processRoomAway,
   parseClientSolutionSet,
   submitChoice,
+  submitSetDice,
   submitSetPick,
   submitContinue,
   submitSelection,
@@ -264,6 +265,24 @@ export async function submitRoomSetPickController(
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
       picks,
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function submitRoomSetDiceController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const avatarId = requireAvatarId(req);
+    const { room, rolls } = await submitSetDice(playerId, avatarId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
+      rolls,
     });
   } catch (error) {
     handleRoomError(error, res, next);

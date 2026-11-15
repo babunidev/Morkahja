@@ -13,6 +13,7 @@ import {
   RoomError,
   submitChoice,
   submitContinue,
+  submitSetDice,
   submitSetPick,
 } from './roomService.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
@@ -130,6 +131,40 @@ assert.equal(parseClientSolutionSet(undefined, true), undefined);
   assert.equal(actor?.preparedResult?.selectedRoll, 11);
   assert.deepEqual(actor?.preparedResult?.pickRolls, [12, 10]);
   assert.equal(actor?.preparedResult?.diceFillRoll, 11);
+  await submitContinue(session.playerId, avatarId);
+}
+
+// A die reveals its own face as it is rolled. That face is the one the result uses.
+{
+  await persistInventory(session.playerId, avatarId, {
+    spellbook: [{ solutionId: 10001, solutionType: 1, uses: 1 }],
+    items: [{ solutionId: 10005, solutionType: 6, uses: 1 }],
+    essences: [{ solutionId: 10010, solutionType: 15, uses: 5 }],
+  });
+  await leaveAllRoomsForPlayer(session.playerId);
+  const room = setEncounterRoom(await createRoom(session.playerId, avatarId));
+  await saveEncounterRoom(room);
+
+  const firstDie = await submitSetDice(session.playerId, avatarId);
+  assert.deepEqual(firstDie.rolls, [11]);
+  const secondFace = firstDie.room.slotEncounterSnapshots[0]?.diceFillRolls?.[0];
+  if (typeof secondFace !== 'number') {
+    throw new Error('missing second die face');
+  }
+  const picked = await submitSetPick(session.playerId, avatarId, 'A');
+  assert.equal(picked.picks[0]?.roll, 12);
+  const secondDie = await submitSetDice(session.playerId, avatarId);
+  assert.deepEqual(secondDie.rolls, [11, secondFace]);
+  await assert.rejects(submitSetDice(session.playerId, avatarId), RoomError);
+
+  const after = await submitChoice(session.playerId, avatarId, 'A', 10001, {
+    picks: ['A'],
+    diceFill: true,
+  });
+  const actor = after.participants.find((entry) => entry.avatarId === avatarId);
+  assert.equal(actor?.preparedResult?.selectedRoll, Math.round((12 + 11 + secondFace) / 3));
+  assert.deepEqual(actor?.preparedResult?.diceFillRolls, [11, secondFace]);
+  assert.deepEqual(actor?.setDiceRolls, [11, secondFace]);
   await submitContinue(session.playerId, avatarId);
 }
 

@@ -15,6 +15,7 @@ import {
   submitRoomContinueController,
   submitRoomFocusController,
   submitRoomSelectionController,
+  submitRoomSetDiceController,
   submitRoomSetPickController,
   activateRoomLoreGemController,
   kickRoomParticipantController,
@@ -34,6 +35,7 @@ roomRoutes.post('/slot', setSlotStateController);
 roomRoutes.post('/choice', submitRoomChoiceController);
 roomRoutes.post('/selection', submitRoomSelectionController);
 roomRoutes.post('/set-pick', submitRoomSetPickController);
+roomRoutes.post('/set-dice', submitRoomSetDiceController);
 roomRoutes.post('/focus', submitRoomFocusController);
 roomRoutes.post('/continue', submitRoomContinueController);
 roomRoutes.post('/lore-gem/activate', activateRoomLoreGemController);

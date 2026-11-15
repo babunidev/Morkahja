@@ -78,6 +78,8 @@ export interface RoomParticipant {
   focusState: ParticipantFocusState;
   /** Solution set picks locked so far in this encounter, revealed one at a time (D-025). */
   setPicks?: SolutionSetPickRecord[];
+  /** Dice faces revealed so far in this set, in the order rolled (D-040). */
+  setDiceRolls?: number[];
   selectedAction?: PlayerEncounterAction;
   selectedSolutionId?: number;
   continuePressed: boolean;

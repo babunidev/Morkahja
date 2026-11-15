@@ -481,6 +481,19 @@ export async function submitRoomSetPick(
   });
 }
 
+/** Reveals the next die of a set. The faces are the ones the result will use. */
+export async function submitRoomSetDice(
+  avatarId: string,
+): Promise<{
+  room: EncounterRoomSnapshotDto;
+  rolls: number[];
+}> {
+  return request('/room/set-dice', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId }),
+  });
+}
+
 export async function submitRoomSelection(
   avatarId: string,
   action: EncounterAction,

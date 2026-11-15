@@ -26,6 +26,7 @@ import {
   committedActionFor,
   committedSolutionSetFor,
   setRollsPauseMs,
+  takeCommittedDiceFlight,
   takeCommittedSolutionSpend,
   getAvatarPortraitRect,
   getFooterButtonRect,
@@ -1205,29 +1206,40 @@ export const ResultBlock = forwardRef(function ResultBlock(
       || readOnlyWitness
       || roll === null
       || !resolutionAction
-      || resolutionAction === 'dice'
-      || usedSolutions.length === 0
     ) {
       return;
     }
 
-    // Once per encounter: continuing (collecting) re-renders the result with the
-    // server's final values, which must not replay the spending animation.
-    // Only for a solution the player really committed in this encounter, once.
-    if (!takeCommittedSolutionSpend(encounterSnapshotId, resolutionAction)) {
-      return;
-    }
-
-    // A solution set: every chosen solution flies from where it hovers above
-    // its slot, all together, and the hovering icon hides as its flyer takes over.
+    const solutionFlight = resolutionAction !== 'dice' && usedSolutions.length > 0;
+    // A solution set: every chosen solution, and every die that filled a gap,
+    // flies from where it hovers. The hovering icon hides as its flyer takes over.
     const hovering = committedSolutionSetFor(encounterSnapshotId)
-      ? Array.from(document.querySelectorAll<HTMLElement>('[data-solution-hover]'))
+      ? Array.from(document.querySelectorAll<HTMLElement>('[data-solution-hover], [data-dice-hover]'))
       : [];
-    if (hovering.length > 0) {
+    const diceFlight = hovering.some((element) => element.hasAttribute('data-dice-hover'));
+    if (hovering.length > 0 && (solutionFlight || diceFlight)) {
+      const claimed = solutionFlight
+        ? takeCommittedSolutionSpend(encounterSnapshotId, resolutionAction)
+        : takeCommittedDiceFlight(encounterSnapshotId);
+      if (!claimed) {
+        return;
+      }
       const flights = hovering.flatMap((element) => {
         const rect = element.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) {
           return [];
+        }
+        const hide = (): void => {
+          element.style.visibility = 'hidden';
+        };
+        if (element.hasAttribute('data-dice-hover')) {
+          const imageSrc = element.querySelector('img')?.getAttribute('src');
+          return imageSrc ? [{
+            imageSrc,
+            size: Math.round(Math.min(rect.width, rect.height)),
+            sourceRect: rect,
+            onTakeOff: hide,
+          }] : [];
         }
         const ids = (element.dataset.solutionIds ?? '')
           .split(',')
@@ -1239,22 +1251,29 @@ export const ResultBlock = forwardRef(function ResultBlock(
             imageSrc: solutionImagePath(solution),
             size: Math.round(Math.min(rect.width, rect.height)),
             sourceRect: rect,
-            onTakeOff: index === 0
-              ? () => {
-                element.style.visibility = 'hidden';
-              }
-              : undefined,
+            onTakeOff: index === 0 ? hide : undefined,
           } : null;
         }).filter((flight) => flight !== null);
       });
       if (flights.length > 0) {
-        // The rolls on the hovering solutions are read first, then they fly.
-        // Not cancelled on a re-render: the spend is taken once per encounter.
+        // The rolls are already on the hovering icons. Not cancelled on a
+        // re-render: the flight is taken once per encounter.
         window.setTimeout(() => {
           void playUsedSolutionsIntoEncounter(flights);
         }, setRollsPauseMs(encounterSnapshotId));
         return;
       }
+    }
+
+    if (!solutionFlight) {
+      return;
+    }
+
+    // Once per encounter: continuing (collecting) re-renders the result with the
+    // server's final values, which must not replay the spending animation.
+    // Only for a solution the player really committed in this encounter, once.
+    if (!takeCommittedSolutionSpend(encounterSnapshotId, resolutionAction)) {
+      return;
     }
 
     const slotElement = document.querySelector(`[data-solution-slot="${resolutionAction}"]`);
@@ -1300,10 +1319,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     let cancelled = false;
-    const solutionFlew = !readOnlyWitness
+    const spentFlew = !readOnlyWitness
       && Boolean(resolutionAction)
-      && resolutionAction !== 'dice'
-      && usedSolutions.length > 0;
+      && (
+        (resolutionAction !== 'dice' && usedSolutions.length > 0)
+        || committedSolutionSetFor(encounterSnapshotId)?.diceFill === true
+      );
 
     async function emerge(): Promise<void> {
       // The frame's bottom line counts down toward the rewards, through the
@@ -1316,7 +1337,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           durationMs + CONTINUE_REVEAL_TOTAL_MS,
         );
       };
-      if (solutionFlew) {
+      if (spentFlew) {
         const pauseMs = setRollsPauseMs(encounterSnapshotId);
         startRewardTimer(pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {

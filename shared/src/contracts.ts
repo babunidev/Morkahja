@@ -496,6 +496,8 @@ export interface RoomParticipantDto {
   loreGemCollected?: boolean;
   /** Only for the local player: the solution set picks locked so far, with their rolls. */
   setPicks?: Array<{ slot: 'A' | 'B' | 'C' | 'D'; solutionId: number; roll: number }>;
+  /** Only for the local player: dice faces already revealed in this set, in order. */
+  setDiceRolls?: number[];
   isLocal: boolean;
 }
 

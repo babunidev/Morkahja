@@ -409,7 +409,7 @@ const solutionHoverBobStyle: CSSProperties = {
 /** Further copies of the same slot hover above each other. */
 const SOLUTION_HOVER_STACK_STEP_PX = 46;
 
-/** Each hovering solution's own roll, shown once the set is committed (D-024). */
+/** The roll on a hovering solution or die, the same face as the portrait. */
 const solutionHoverRollStyle: CSSProperties = {
   // Font, colour and outline from .morkahja-result-outcome, as the roll on the avatar.
   position: 'absolute',
@@ -708,7 +708,9 @@ export function SolutionBlock({
   inventory,
   setRolls = null,
   onSetPick,
+  onSetDice,
   lockedSetPicks,
+  lockedDiceRolls,
 }: {
   diceButtonAsset?: string;
   encounterRevealKey: string;
@@ -731,8 +733,12 @@ export function SolutionBlock({
   setRolls?: { pickRolls?: number[]; diceFillRoll?: number; diceFillRolls?: number[] } | null;
   /** Locks one more pick of a solution set; resolves with all locked picks and their rolls. */
   onSetPick?: (slot: SlotLetter) => Promise<SolutionSetPickRecordView[]>;
+  /** Reveals the next die of a set; resolves with every die face shown so far. */
+  onSetDice?: () => Promise<number[]>;
   /** Picks the server already locked in this encounter (after a reload). */
   lockedSetPicks?: SolutionSetPickRecordView[];
+  /** Dice faces already revealed in this set (after a reload). */
+  lockedDiceRolls?: number[];
 }) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
@@ -747,6 +753,9 @@ export function SolutionBlock({
   /** Dice already risen above the slot in this set. The newest sits lowest. */
   const [hoveredDice, setHoveredDice] = useState(0);
   const hoveredDiceRef = useRef(0);
+  /** Faces the server revealed, in the order rolled. Shown once each die arrives. */
+  const [diceRolls, setDiceRolls] = useState<number[]>([]);
+  const [revealedDiceCount, setRevealedDiceCount] = useState(0);
   const [lockpickBurst, setLockpickBurst] = useState(0);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
   // Solution set (encounters needing more than one solution): the chosen
@@ -777,8 +786,11 @@ export function SolutionBlock({
     setEnableRattleSlots(new Set());
     setDiceEnableRattle(false);
     setDiceRollCount(0);
-    hoveredDiceRef.current = 0;
-    setHoveredDice(0);
+    const lockedDice = lockedDiceRolls ?? [];
+    hoveredDiceRef.current = lockedDice.length;
+    setHoveredDice(lockedDice.length);
+    setDiceRolls(lockedDice);
+    setRevealedDiceCount(lockedDice.length);
     solutionTips.hide();
     setInboundFlownSlots(new Set());
     setPicksRef.current = [];
@@ -1077,39 +1089,61 @@ export function SolutionBlock({
       return;
     }
 
+    if (!onSetDice) {
+      return;
+    }
+
     clearRollRevealTimer();
     hideSolutionTooltip();
     pickBusyRef.current = true;
+    const snapshotId = encounter.snapshotId;
     try {
-      await playDiceAnimations(1);
-      if (encounterKeyRef.current !== encounter.snapshotId) {
+      const [rolls] = await Promise.all([
+        onSetDice().catch((error: unknown) => {
+          console.error('Solution set dice failed', error);
+          return null;
+        }),
+        playDiceAnimations(1),
+      ]);
+      if (!rolls || encounterKeyRef.current !== snapshotId) {
         return;
       }
-      const nextDice = hoveredDiceRef.current + 1;
-      hoveredDiceRef.current = nextDice;
-      setHoveredDice(nextDice);
+      const expected = hoveredDiceRef.current + 1;
+      if (rolls.length !== expected) {
+        return;
+      }
+      hoveredDiceRef.current = rolls.length;
+      setHoveredDice(rolls.length);
+      setDiceRolls(rolls);
+      // The roll shows when the die arrives at its hover place.
       await wait(SOLUTION_HOVER_RISE_MS);
-      if (encounterKeyRef.current !== encounter.snapshotId) {
+      if (encounterKeyRef.current !== snapshotId) {
         return;
       }
-      const picks = setPicksRef.current;
+      setRevealedDiceCount(rolls.length);
       if (step === 'hover') {
         return;
       }
-      if (step === 'commit-mixed') {
-        await commitSolutionSet(picks, true, true);
-        return;
-      }
-      setCommittedRef.current = true;
-      setSetCommitted(true);
-      setChoiceFade({ keepSlot: null, keepDice: true });
-      planFramePhase(
-        actPhaseKey(encounter.snapshotId),
-        blockRef.current?.querySelector('[aria-label="Roll dice"]'),
-        RESULT_READY_ESTIMATE_MS,
-      );
-      recordCommittedAction(encounter.snapshotId, 'dice');
-      onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
+      const picks = setPicksRef.current;
+      window.setTimeout(() => {
+        if (encounterKeyRef.current !== snapshotId || setCommittedRef.current) {
+          return;
+        }
+        if (step === 'commit-mixed') {
+          void commitSolutionSet(picks, true, true);
+          return;
+        }
+        setCommittedRef.current = true;
+        setSetCommitted(true);
+        setChoiceFade({ keepSlot: null, keepDice: true });
+        planFramePhase(
+          actPhaseKey(snapshotId),
+          blockRef.current?.querySelector('[aria-label="Roll dice"]'),
+          RESULT_READY_ESTIMATE_MS,
+        );
+        recordCommittedAction(snapshotId, 'dice', { picks: [], diceFill: true });
+        onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
+      }, SET_LAST_ROLL_READ_MS);
     } finally {
       pickBusyRef.current = false;
     }
@@ -1308,17 +1342,15 @@ export function SolutionBlock({
                   hoveredDice > 0,
                 ),
                 ...(choiceFade && !choiceFade.keepDice ? otherChoicesFadeStyle : {}),
-                // The dice that finished a set shows its roll, then makes room for the result.
-                ...(choiceFade?.keepDice && setCommitted && hidden
-                  ? { ...otherChoicesFadeStyle, transitionDelay: `${SET_ROLLS_DISPLAY_MS}ms` }
-                  : {}),
               }}
             >
               {Array.from({ length: hoveredDice }, (_, index) => {
                 const stackIndex = hoveredDice - 1 - index;
-                const rolls = setRolls?.diceFillRolls
-                  ?? (setRolls?.diceFillRoll !== undefined ? [setRolls.diceFillRoll] : []);
-                const roll = setCommitted ? rolls[index] : undefined;
+                const rolls = diceRolls.length > 0
+                  ? diceRolls
+                  : (setRolls?.diceFillRolls
+                    ?? (setRolls?.diceFillRoll !== undefined ? [setRolls.diceFillRoll] : []));
+                const roll = index < revealedDiceCount || setCommitted ? rolls[index] : undefined;
                 return (
                   <span
                     aria-label={roll !== undefined ? `Dice, roll ${displayRollAsD20(roll)}` : 'Dice'}
@@ -1359,7 +1391,13 @@ export function SolutionBlock({
                 disabled={!actionsReady}
                 onClick={handleDiceButtonClick}
                 {...solutionTips.bindTooltip(diceTooltip)}
-                style={diceButtonStyle}
+                style={{
+                  ...diceButtonStyle,
+                  // The button makes room for the result. Hovering dice stay until they fly.
+                  ...(choiceFade?.keepDice && setCommitted && hidden
+                    ? { ...otherChoicesFadeStyle, transitionDelay: `${SET_ROLLS_DISPLAY_MS}ms` }
+                    : {}),
+                }}
                 type="button"
               >
                 <span className="morkahja-footer-button-visual">
