@@ -356,15 +356,19 @@ The rolls on the hovering solutions used a plain font; I wanted the same Breathe
 
 ### Two rolls when the encounter asks for two — 2026-11-15
 
-A difficulty of two was still able to finish on one roll. Two keys, or two charges of one key, have to be two instances: the solution animation, then up, then hovering, each with its own number. With nothing to spend, the dice spins once for each gap, and each spin is its own roll (D-035). The outcome stays the average of those rolls. **Verification:** recorded with the tests for this step. Not played through in a browser. Not on the live game.
+A difficulty of two was still able to finish on one roll. Two keys, or two charges of one key, have to be two instances: the solution animation, then up, then hovering, each with its own number. With nothing to spend, the dice spins once for each gap, and each spin is its own roll (D-035). The outcome stays the average of those rolls. **Verification:** recorded with the tests for this step. Not played through in a browser. On the live game as 0.9.0-beta.68.
+
+### Out together — 2026-11-15
+
+The region stay, the portrait breakdown, Keldor's weather, and one roll for every solution an encounter asks for went to the live game together as 0.9.0-beta.68. Inventory, the skillbook and lore sit at nine tenths of the volume they had. Call for help is unchanged. The encounter wording already on the server, through Stonefist Ironwill, stayed. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-6jYw6G_W.js` and contains `0.9.0-beta.68`. Health, the content, the level-up sound, the dice, the backpack and call for help return 200. A difficulty-2 turn, the portrait tooltip and a stretch in one region were not played on the live game. The backup was not restored into another database.
 
 ### How the number was made — 2026-11-15
 
-The number sitting on the solution above the portrait was only the finished total. A 23 and an 11 gave no hint of the face, the solution's bonus, or the difficulty. The tooltip now grows a second frame at the bottom, the same kind of frame, and that frame shows the face and then the modifiers: `16 + 7`, or `5 + 7 − 1` (D-034). Cursor (Grok 4.7) recovered the face from the total. **Verification:** the breakdown tests passed. The tooltip was not hovered in a played turn. Not on the live game.
+The number sitting on the solution above the portrait was only the finished total. A 23 and an 11 gave no hint of the face, the solution's bonus, or the difficulty. The tooltip now grows a second frame at the bottom, the same kind of frame, and that frame shows the face and then the modifiers: `16 + 7`, or `5 + 7 − 1` (D-034). Cursor (Grok 4.7) recovered the face from the total. **Verification:** the breakdown tests passed. The tooltip was not hovered in a played turn. On the live game as 0.9.0-beta.68.
 
 ### Staying in one region — 2026-11-15
 
-A run of encounters jumped between regions, because every allowed encounter was equally likely. Staying put should be the usual path, including in the starting expansion, so a stretch of the journey can share a place. A written follow still comes first. When there is none, a d20 decides: one through fourteen stay, and fifteen through twenty leave (D-033). The weather bed, this region roll, and the portrait breakdown are one checkout, 0.9.0-beta.66. The four bottom buttons play at 85 percent of the other effects. Cursor (Grok 4.7) put that roll on the random pool and removed a second draw that could never reject an encounter. **Verification:** the selection test passed. Not played in the browser. Not on the live game.
+A run of encounters jumped between regions, because every allowed encounter was equally likely. Staying put should be the usual path, including in the starting expansion, so a stretch of the journey can share a place. A written follow still comes first. When there is none, a d20 decides: one through fourteen stay, and fifteen through twenty leave (D-033). The weather bed, this region roll, and the portrait breakdown are one checkout, 0.9.0-beta.66. Inventory, the skillbook and lore play at nine tenths; call for help stays as it was. Cursor (Grok 4.7) put that roll on the random pool and removed a second draw that could never reject an encounter. **Verification:** the selection test passed. Not played in the browser. On the live game as 0.9.0-beta.68.
 
 ### Out with the sounds — 2026-11-14
 

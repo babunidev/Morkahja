@@ -274,7 +274,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). Each solution pick still locks, animates, and hovers on its own, and a second charge of the same slot starts that animation again. Each gap the dice fills now has its own face and its own spin, instead of one face counted again. Snapshots stored before this repeat their one die. The average is unchanged as the outcome.
 
-**Status:** in the local combined game, 0.9.0-beta.68, 2026-11-15. Not played through in a browser. Not deployed.
+**Status:** released as 0.9.0-beta.68, 2026-11-15, from `dccf8797`. Not played through in a browser.
 
 ## D-034 — The portrait result shows the roll and its modifiers (2026-11-15)
 
@@ -282,7 +282,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). A second frame under the existing tooltip shows the d20 face, then `+` the solution bonus and `−` the difficulty penalty. A primary solution is +7, a secondary is +5, and the die is +0. A set lists each part the same way. An old 1–100 number is left without a made-up face.
 
-**Status:** on the combined line with D-033, 0.9.0-beta.66, 2026-11-15. Not deployed. Not hovered in a played turn.
+**Status:** released with 0.9.0-beta.68, 2026-11-15. Not hovered in a played turn.
 
 ## D-033 — Stay in the region most of the time (2026-11-15)
 
@@ -290,7 +290,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). The room advance, the continue after a normal encounter, the encounter after a level-up or Atranor, and a newly opened room all use that roll. The region after a system encounter is the encounter that led there. The preloaded next picture uses the same roll from the encounter about to be played. A follow is still taken only on a successful Fortune or Prosperity, and opening a room still jumps to a follow written on the last encounter. The draw that checked expansion again after the pool was already filtered is removed. D-032 is the weather bed, so the region is D-033.
 
-**Status:** on the combined line with the weather bed and D-034, 0.9.0-beta.66, 2026-11-15. Not deployed. Not played through in a browser.
+**Status:** released with 0.9.0-beta.68, 2026-11-15. Not played through in a browser.
 
 ## D-032 — A weather bed beside the encounter music (2026-11-15)
 
@@ -300,7 +300,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** implemented for release as 0.9.0-beta.64. The stage rules were tested. A full cycle was not heard.
 
-**Later the same night:** Roarback Mauler is Keldor, and Keldor is expansion 1. The encounter stores that land as 1001, and the recordings are filed as 1, so the bed was looking for a folder that does not exist and staying silent. A named land now plays the folder at its place: 1001 plays 1. Urcogor, Everwinter and Aetherion still have no recordings.
+**Later the same night:** Roarback Mauler is Keldor, and Keldor is expansion 1. The encounter stores that land as 1001, and the recordings are filed as 1, so the bed was looking for a folder that does not exist and staying silent. A named land now plays the folder at its place: 1001 plays 1. Urcogor, Everwinter and Aetherion still have no recordings. Shipped 2026-11-15 inside 0.9.0-beta.68. A full cycle was still not heard on the live game.
 
 ## 2026-11-13 — Licensing decision
 
