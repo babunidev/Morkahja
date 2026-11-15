@@ -14,6 +14,7 @@ import {
 import { APP_VERSION } from '../../appVersion.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
+import AmbianceVolumeSlider from './AmbianceVolumeSlider.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
 import PatchNotesOverlay from './PatchNotesOverlay.js';
@@ -404,6 +405,7 @@ export function SettingsScreen({
           >
             <div ref={scrollContentRef} style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
               <MusicVolumeSlider />
+              <AmbianceVolumeSlider />
               <SfxVolumeSlider />
               <div style={settingRowStyle}>
                 <span>Recovery key</span>

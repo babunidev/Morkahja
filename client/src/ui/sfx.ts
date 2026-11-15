@@ -9,7 +9,16 @@ export const LORE_SOUND = assetUrl('/UI/SFX/sfx_lorebutton_press.mp3');
 export const BACKPACK_SOUND = assetUrl('/UI/SFX/backpack.mp3');
 export const SKILLBOOK_SOUND = assetUrl('/UI/SFX/skillbook.mp3');
 export const CALL_FOR_HELP_SOUND = assetUrl('/UI/SFX/callforhelp.mp3');
-export const SOLUTION_SOUND = assetUrl('/UI/SFX/sfx_solution_press.mp3');
+/** One of eight solution clicks, chosen at random. */
+export const SOLUTION_SOUNDS = [1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+  assetUrl(`/UI/SFX/solution${index}.mp3`)
+));
+
+/** Solution lines sit another tenth under the other effects. */
+export const SOLUTION_PLAYBACK_SCALE = 0.9;
+
+/** Reward lines sit a tenth under the other effects. */
+export const REWARD_PLAYBACK_SCALE = 0.9;
 
 /** Makaya, taking an item, a non-deity essence, or the lore gem. One is chosen at random. */
 export const ADD_ITEM_SOUNDS = [1, 2, 3].map((index) => assetUrl(`/UI/SFX/addItem${index}.mp3`));
@@ -52,8 +61,8 @@ function clearActiveSound(src: string, audio: HTMLAudioElement): void {
   }
 }
 
-export function playSfx(src: string, options?: { overlap?: boolean }): void {
-  const volume = resolveSfxVolume();
+export function playSfx(src: string, options?: { overlap?: boolean; scale?: number }): void {
+  const volume = Math.min(1, Math.max(0, resolveSfxVolume() * (options?.scale ?? 1)));
 
   if (volume <= 0) {
     return;
@@ -90,6 +99,12 @@ export function playSfx(src: string, options?: { overlap?: boolean }): void {
 }
 
 /** `random` is in `[0, 1)`, as from `Math.random`. */
+export function pickSolutionSound(random: () => number = Math.random): string {
+  const index = Math.min(SOLUTION_SOUNDS.length - 1, Math.max(0, Math.floor(random() * SOLUTION_SOUNDS.length)));
+  return SOLUTION_SOUNDS[index]!;
+}
+
+/** `random` is in `[0, 1)`, as from `Math.random`. */
 export function pickPickupSound(kind: 'item' | 'skill', random: () => number = Math.random): string {
   const pool = kind === 'skill' ? ADD_SKILL_SOUNDS : ADD_ITEM_SOUNDS;
   const index = Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)));
@@ -111,7 +126,7 @@ export function rewardVoice(
 }
 
 export function playRewardPickupSound(inventoryType: number, solutionId: number): void {
-  playSfx(rewardVoice(inventoryType, solutionId), { overlap: true });
+  playSfx(rewardVoice(inventoryType, solutionId), { overlap: true, scale: REWARD_PLAYBACK_SCALE });
 }
 
 const ESSENCE_SOLUTION_TYPE = 15;

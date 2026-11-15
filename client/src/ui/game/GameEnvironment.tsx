@@ -98,6 +98,7 @@ interface GameEnvironmentProps {
   initialRoom?: EncounterRoomSnapshotDto | null;
   onAchievementCheck?: () => void;
   onAvatarDeath: (presetAvatar: PersistedAvatar) => void;
+  onEncounterLoaded?: (encounterId: number) => void;
   onKickedFromParty?: () => void;
   onHome: () => void;
 }
@@ -187,6 +188,7 @@ export function GameEnvironment({
   deathPending = false,
   onAchievementCheck,
   onAvatarDeath,
+  onEncounterLoaded,
   onKickedFromParty,
   onHome,
 }: GameEnvironmentProps) {
@@ -206,6 +208,10 @@ export function GameEnvironment({
   const [avatar, setAvatar] = useState(initialAvatar);
   const [encounter, setEncounter] = useState(initialEncounter);
   const [room, setRoom] = useState<EncounterRoomSnapshotDto | null>(initialRoom);
+
+  useEffect(() => {
+    onEncounterLoaded?.(encounter.encounterId);
+  }, [encounter.encounterId, onEncounterLoaded]);
   const [continuePending, setContinuePending] = useState(false);
   const [loreOpen, setLoreOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
