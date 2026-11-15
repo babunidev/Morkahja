@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-15, 03:37 UTC (0.9.0-beta.68, one line)
+
+Approved by Babuni ("release!"). `main` at `dccf8797` (PR #51): a random next encounter stays in the current region on a d20 of 1–14 (D-033), the portrait result shows the face and the modifiers (D-034), a weather bed plays under the encounter and Keldor uses the recordings filed as expansion 1 (D-032), and difficulty asks for one roll and one spin per solution (D-035). Inventory, the skillbook and lore play at nine tenths. Call for help is unchanged. Encounter wording through Stonefist Ironwill is included.
+
+- **Before:** backend `1073bd45`, frontend `20261114-233506`. `server/game/encountersdata.json` was dirty. Its sha256 `dde9da4fa65505cdd8c5aa78173d126577ab0454fb0890df4c196e46cc1982a3` matched this release, so that file was checked out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261115-0335`.
+- **Checks before the release:** client tests passed (43) on the release worktree, including the roll breakdown, and the client typecheck passed. `encounterResolver.test.ts` and `solutionSetChoice.test.ts` had passed on the same tree before the merge. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.68`.
+- **Release:** backup `20261115-033714` (4.2 MB; 73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `3b5f70621facf7213b2004d068b84ffa910f5cbe64cabeec2bc4999b02216bb6`). Backend fast-forwarded to `dccf8797`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261115-033716` (`index-6jYw6G_W.js`). From outside: that script contains `0.9.0-beta.68`, `d20+7` and `Roarback`; `/Morkahja/`, health and content return 200; the level-up, dice, backpack and call-for-help sounds return 200. API and bots online. After the release the encounter file hash is unchanged and the working tree is clean.
+- **Not done:** backup restore not proven; a difficulty-2 turn, the portrait tooltip and a stretch in one region were not played on the live game.
+
 ## Production release — 2026-11-14, 23:35 UTC (0.9.0-beta.63, sounds with the level-up fanfare)
 
 Approved by Babuni ("good, release"). `main` at `1073bd45` (PR #47): every effect sits with the level-up sound, the backpack, skillbook and horn play their own sounds, and Call for help reaches up to five free adventurers, friends first (D-029, D-030, D-031). The d20 totals from `e2aaa790` stay.
