@@ -51,7 +51,14 @@ const PATCH_RELEASES: PatchRelease[] = [
     notes: [
       'The next encounter usually stays in the same region. A roll of 15 or higher on a d20 leaves for another one.',
       'The result on your portrait shows how the number was made: the roll, then its bonus and the difficulty.',
-      'The four buttons along the bottom play a little quieter than the other effects.',
+    ],
+  },
+  {
+    id: 'beta-65',
+    version: '0.9.0-beta.65',
+    period: '15 Nov 2026',
+    notes: [
+      'Inventory, the skillbook and lore are a little quieter.',
     ],
   },
   {

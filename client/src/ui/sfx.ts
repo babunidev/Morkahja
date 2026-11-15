@@ -20,8 +20,8 @@ export const SOLUTION_PLAYBACK_SCALE = 0.9;
 /** Reward lines sit a tenth under the other effects. */
 export const REWARD_PLAYBACK_SCALE = 0.9;
 
-/** The four buttons along the bottom of an encounter sit 15% under the other effects. */
-export const FOOTER_BUTTON_PLAYBACK_SCALE = 0.85;
+/** Inventory, the skillbook and lore play at nine tenths of the volume they had. */
+export const FOOTER_MENU_PLAYBACK_SCALE = 0.9;
 
 /** Makaya, taking an item, a non-deity essence, or the lore gem. One is chosen at random. */
 export const ADD_ITEM_SOUNDS = [1, 2, 3].map((index) => assetUrl(`/UI/SFX/addItem${index}.mp3`));

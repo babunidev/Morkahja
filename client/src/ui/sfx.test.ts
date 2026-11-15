@@ -10,7 +10,7 @@ import {
   BACKPACK_SOUND,
   CALL_FOR_HELP_SOUND,
   ESSENCE_DEITY_SOUNDS,
-  FOOTER_BUTTON_PLAYBACK_SCALE,
+  FOOTER_MENU_PLAYBACK_SCALE,
   REWARD_PLAYBACK_SCALE,
   SOLUTION_PLAYBACK_SCALE,
   SOLUTION_SOUNDS,
@@ -32,7 +32,7 @@ function fileName(url: string): string {
 assert.equal(SFX_PLAYBACK_SCALE, 0.9);
 assert.equal(SOLUTION_PLAYBACK_SCALE, 0.9);
 assert.equal(REWARD_PLAYBACK_SCALE, 0.9);
-assert.equal(FOOTER_BUTTON_PLAYBACK_SCALE, 0.85);
+assert.equal(FOOTER_MENU_PLAYBACK_SCALE, 0.9);
 
 assert.deepEqual(ADD_ITEM_SOUNDS.map(fileName), ['addItem1.mp3', 'addItem2.mp3', 'addItem3.mp3']);
 assert.deepEqual(
