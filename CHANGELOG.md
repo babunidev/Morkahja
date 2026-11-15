@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: a weather bed, and quieter effects; 0.9.0-beta.64
+
+- **Change (Babuni's direction, D-032):** the encounter music rests 7–21 seconds. A weather bed plays under it for the encounter's expansion: stage A is 3–7 pieces, then a 20 percent chance of stage B; stage B is 1–7 pieces, then an even chance of stage A or one stage C piece; stage C usually fades into stage D (2–4 pieces that overlap); stage D then returns to stage B or stage A. Pieces fade in over one second and out over two. The bed has its own settings slider, starting at full. Expansion 0 and expansion 1 have recordings. A land with none fades out and stays quiet. Using a solution plays one of eight lines. Every effect plays at nine tenths of the effects slider; the solution lines and the reward lines play at nine tenths of that again.
+- **Version 0.9.0-beta.64** (D-015, D-032). The local steps on `fix/mobile-centering` had reused 59–67, which were already live as other work, so this release takes the next free number.
+- **Verification:** client tests passed (42) on this release branch, including the stage handoffs and a walk of 4,000 steps through all four stages. One local base-game encounter requested a stage A file. Wind, approach, storm and the return after the quiet were not heard. **Not deployed.**
+
 ## 2026-11-14 — Released: every effect sits with the level-up sound; 0.9.0-beta.63
 
 - **Change (Babuni's direction, D-031):** the effects were still uneven. The solution opening was very low, and the essence lines stood out above it. Every effect, the dice included, is now leveled with the level-up sound. The level-up recording itself is unchanged. This replaces the earlier target of sitting a little under the button (D-028).

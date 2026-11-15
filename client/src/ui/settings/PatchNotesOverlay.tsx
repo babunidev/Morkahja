@@ -29,6 +29,15 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-64',
+    version: '0.9.0-beta.64',
+    period: '15 Nov 2026',
+    notes: [
+      'A weather bed plays under the encounter, with its own volume in Settings. It fades in over one second and out over two.',
+      'Using a solution plays one of eight lines, a little quieter than the other effects. Reward lines are a little quieter too.',
+    ],
+  },
+  {
     id: 'beta-63',
     version: '0.9.0-beta.63',
     period: '14 Nov 2026',

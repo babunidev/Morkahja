@@ -6,7 +6,7 @@ import type {
   EncounterSnapshot,
   InventoryItem,
 } from '../../../api/http.js';
-import { DICE_SOUND, playSfx, SOLUTION_SOUND } from '../../sfx.js';
+import { DICE_SOUND, SOLUTION_PLAYBACK_SCALE, pickSolutionSound, playSfx } from '../../sfx.js';
 import { useGameTooltip, type GameTooltipContent, TooltipDivider } from '../GameTooltip.js';
 import {
   PROTECTED_SURFACE_ATTR,
@@ -1085,7 +1085,7 @@ export function SolutionBlock({
 
     pickBusyRef.current = true;
     hideSolutionTooltip();
-    playSfx(SOLUTION_SOUND);
+    playSfx(pickSolutionSound(), { scale: SOLUTION_PLAYBACK_SCALE });
     setActiveSolutionSlot(solution.slot);
 
     const [records] = await Promise.all([
@@ -1170,7 +1170,7 @@ export function SolutionBlock({
     hideSolutionTooltip();
 
     const roll = rollForSolutionSlot(encounter, solution);
-    playSfx(SOLUTION_SOUND);
+    playSfx(pickSolutionSound(), { scale: SOLUTION_PLAYBACK_SCALE });
     setActiveSolutionSlot(solution.slot);
     setChoiceFade({ keepSlot: solution.slot, keepDice: false });
     // Phase 2 of the frame timer: from using the solution until the result can be used.

@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-032 — A weather bed beside the encounter music (2026-11-15)
+
+**Babuni's direction:** the encounter music rests 7–21 seconds. A third player, Ambiance, runs four stages in every expansion. Stage A plays 3–7 pieces, then a 20 percent chance of stage B. Stage B plays 1–7, then an even chance of stage A or stage C. Stage C is one piece, and an 80 percent chance fades into stage D; otherwise it returns to stage B. Stage D plays 2–4 pieces that fade into each other, then an even chance of stage B or stage A. The bed follows the encounter's expansion, keeps going while that expansion stays the same, and fades when a newly loaded encounter belongs to a different expansion. The recordings are given in one folder. The game sorts them into an expansion folder and a stage folder, at one loudness. Expansion 0 is the base game. Every piece fades in over one second and out over two. The bed has its own settings slider, starting at full, because it was too quiet under the music. Using a solution plays one of eight new lines. All effects sit at nine tenths of the effects slider, and the solution lines and the reward lines sit at nine tenths of that.
+
+**AI implementation:** Cursor (Grok 4.7). The dashboard rest stays 6–14 seconds. Expansion 0 and expansion 1 were copied into `client/public/UI/Ambiance/` and leveled to about −38 LUFS. `11nature` was read as further stage A for expansion 1, and `1wind` as further stage B, because those names collided with files already numbered in those stages. A land with no folder fades the bed out. The current encounter list uses expansions 0, 1001, 1003 and 1004, so the expansion 1 bed plays only when an encounter's expansion field is 1. On this branch the decision was first written as D-021; main already uses D-021 for the terms, so the release records it as D-032. The local beta numbers 59–67 collided with releases already live, so the release is 0.9.0-beta.64.
+
+**Status:** implemented for release as 0.9.0-beta.64. The stage rules were tested. A full cycle was not heard.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
