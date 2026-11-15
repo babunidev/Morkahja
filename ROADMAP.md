@@ -99,6 +99,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
 - [ ] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Not released.
+- [ ] Aetherion (1004) plays the edited weather filed as expansion 4, 0.9.0-beta.72: 12/16/12/12 pieces in stages A–D, game copies −38.6 to −37.9 LUFS. Not heard through a cycle. Not released. Urcogor (1002) is the land still without recordings.
 - [ ] Everwinter Valley (1003) plays the edited weather filed as expansion 3, 0.9.0-beta.70: the same 16/16/12/13 pieces, moved out of folder 2. Not heard through a cycle. Not released.
 - [ ] Urcogor Ravage (1002) plays the edited weather filed as expansion 2, 0.9.0-beta.69: filed by mistake and moved to Everwinter in 0.9.0-beta.70. Urcogor has no recordings.
 - [ ] Keldor (1001), including Roarback Mauler, plays the weather filed as expansion 1, 0.9.0-beta.67: the lookup test passed 2026-11-15. Not heard through a cycle. Not released.

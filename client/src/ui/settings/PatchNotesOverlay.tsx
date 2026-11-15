@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-72',
+    version: '0.9.0-beta.72',
+    period: '15 Nov 2026',
+    notes: [
+      'Aetherion, the city, has its own weather, through all four stages.',
+    ],
+  },
+  {
     id: 'beta-71',
     version: '0.9.0-beta.71',
     period: '15 Nov 2026',

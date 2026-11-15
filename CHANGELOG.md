@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: Aetherion has weather; 0.9.0-beta.72
+
+- **Change (Babuni's direction):** the edited recordings for Aetherion, the city, expansion 1004, cover all four stages. The game files them as expansion 4: 12 in stage A, 16 in B, 12 in C and 12 in D. The copies in the game were brought to about −38 LUFS. The drop folder was left as edited. Urcogor is the land still without recordings.
+- **Version 0.9.0-beta.72** (D-015, D-032).
+- **Verification:** the client tests passed, including that expansion 1004 uses the recordings filed as 4. The game copies measured −38.6 to −37.9 LUFS. They were not heard through a cycle. **Not deployed.**
+
 ## 2026-11-15 — Unreleased: the dice and a solution last the same time; 0.9.0-beta.71
 
 - **Timing (Babuni's direction, D-036):** tapping a solution or the dice played for different lengths. The solution wiggle was 1.5 s, its roll was committed at 1.8 s, and the dice spin was 1.35 s. Both base animations now last 1.73 s, and the roll is committed when that animation ends. The rise after a set pick, the wait after the last roll, and the hover bob are unchanged.

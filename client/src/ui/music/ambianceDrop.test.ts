@@ -50,7 +50,11 @@ if (existsSync(dropFolder)) {
   assert.equal(counts.get('3B'), 16);
   assert.equal(counts.get('3C'), 12);
   assert.equal(counts.get('3D'), 13);
-  assert.equal(counts.size, 12);
+  assert.equal(counts.get('4A'), 12);
+  assert.equal(counts.get('4B'), 16);
+  assert.equal(counts.get('4C'), 12);
+  assert.equal(counts.get('4D'), 12);
+  assert.equal(counts.size, 16);
   const bySource = new Map(placed.map((placement) => [placement.sourceName, placement.number]));
   assert.equal(bySource.get('11nature1.mp3'), 12);
   assert.equal(bySource.get('11nature3.mp3'), 14);
