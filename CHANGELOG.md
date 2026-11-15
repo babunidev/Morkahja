@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: the dice and a solution last the same time; 0.9.0-beta.71
+
+- **Timing (Babuni's direction, D-036):** tapping a solution or the dice played for different lengths. The solution wiggle was 1.5 s, its roll was committed at 1.8 s, and the dice spin was 1.35 s. Both base animations now last 1.73 s, and the roll is committed when that animation ends. The rise after a set pick, the wait after the last roll, and the hover bob are unchanged.
+- **Fix:** a clickable Scribes notice is a button, so the browser's gray face showed as a square behind the dark panel. The button now has no face and no border of its own.
+- **Version 0.9.0-beta.71** (D-015, D-036). The local run script is on this line as well. Everwinter Valley below remains 0.9.0-beta.70.
+- **Verification:** client tests and the client typecheck, recorded with this step. The animations were not watched in a played turn. **Not deployed.**
+
 ## 2026-11-15 — Unreleased: the new weather is Everwinter Valley; 0.9.0-beta.70
 
 - **Change (Babuni's direction):** the recordings just filed as expansion 2 belong to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies live in folder 3. Urcogor has no recordings. The loudness is unchanged.

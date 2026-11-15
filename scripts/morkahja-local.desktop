@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Morkahja (local)
+GenericName=Local Morkahja
+Comment=Start the local Morkahja server and open the game
+Exec=/home/babuni/Projects/MorkahjaWebApp/scripts/play-local.sh
+Icon=/home/babuni/Projects/MorkahjaWebApp/client/public/iconforplaystoreFG.png
+Terminal=false
+Categories=Game;
+Keywords=Morkahja;local;
+StartupNotify=false
