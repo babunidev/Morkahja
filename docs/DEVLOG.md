@@ -362,6 +362,10 @@ A difficulty of two was still able to finish on one roll. Two keys, or two charg
 
 The edited recordings for Urcogor Ravage cover every stage. That land is expansion 1002, so the files belong in folder 2: sixteen calm, sixteen wind, twelve approach and thirteen storm. They arrived at very different loudness, from about −57 to −13 LUFS, and the copies in the game were brought to about −38, with the edited originals left as they were. Everwinter and Aetherion still have none. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.4 to −37.1 LUFS. They were not heard through a cycle. **Not deployed yet.**
 
+### Those files were Everwinter — 2026-11-15
+
+The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies sit in folder 3. The loudness was left as it was. Urcogor has no recordings. Cursor (Grok 4.7) moved the files. **Verification:** the client tests passed, including that 1003 uses folder 3. They were not heard through a cycle. **Not deployed yet.**
+
 ### Out together — 2026-11-15
 
 The region stay, the portrait breakdown, Keldor's weather, and one roll for every solution an encounter asks for went to the live game together as 0.9.0-beta.68. Inventory, the skillbook and lore sit at nine tenths of the volume they had. Call for help is unchanged. The encounter wording already on the server, through Stonefist Ironwill, stayed. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-6jYw6G_W.js` and contains `0.9.0-beta.68`. Health, the content, the level-up sound, the dice, the backpack and call for help return 200. A difficulty-2 turn, the portrait tooltip and a stretch in one region were not played on the live game. The backup was not restored into another database.

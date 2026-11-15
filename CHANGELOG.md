@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: the new weather is Everwinter Valley; 0.9.0-beta.70
+
+- **Change (Babuni's direction):** the recordings just filed as expansion 2 belong to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies live in folder 3. Urcogor has no recordings. The loudness is unchanged.
+- **Version 0.9.0-beta.70** (D-015, D-032).
+- **Verification:** the client tests passed, including that expansion 1003 uses the recordings filed as 3 and expansion 1002 has none. They were not heard through a cycle. **Not deployed.**
+
 ## 2026-11-15 — Unreleased: Urcogor Ravage has weather; 0.9.0-beta.69
 
 - **Change (Babuni's direction):** the edited recordings for expansion 1002, Urcogor Ravage, cover all four stages. The game files them as expansion 2: 16 in stage A, 16 in B, 12 in C and 13 in D. The copies in the game were brought to about −38 LUFS, from −56.7 to −12.7 in the edited files. The drop folder was left as edited. Everwinter and Aetherion still have none.

@@ -29,11 +29,19 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-70',
+    version: '0.9.0-beta.70',
+    period: '15 Nov 2026',
+    notes: [
+      'The new weather belongs to Everwinter Valley.',
+    ],
+  },
+  {
     id: 'beta-69',
     version: '0.9.0-beta.69',
     period: '15 Nov 2026',
     notes: [
-      'Urcogor Ravage has its own weather, through all four stages.',
+      'New weather was prepared for a named land, then placed with Everwinter Valley.',
     ],
   },
   {

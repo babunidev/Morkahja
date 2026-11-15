@@ -24,10 +24,10 @@ const expected: Record<string, number> = {
   '1B': 8,
   '1C': 8,
   '1D': 13,
-  '2A': 16,
-  '2B': 16,
-  '2C': 12,
-  '2D': 13,
+  '3A': 16,
+  '3B': 16,
+  '3C': 12,
+  '3D': 13,
 };
 
 for (const [key, count] of Object.entries(expected)) {
@@ -36,14 +36,15 @@ for (const [key, count] of Object.entries(expected)) {
 
 assert.equal(AMBIANCE_CLIPS.length, 161);
 const expansions = new Set(AMBIANCE_CLIPS.map((clip) => clip.expansion));
-assert.deepEqual([...expansions].sort((a, b) => a - b), [0, 1, 2]);
+assert.deepEqual([...expansions].sort((a, b) => a - b), [0, 1, 3]);
 
 assert.equal(ambiancePackForExpansion(0), 0);
 assert.equal(ambiancePackForExpansion(1), 1);
 assert.equal(ambiancePackForExpansion(1001), 1);
 assert.equal(ambiancePackForExpansion(1004), 4);
-assert.equal(ambiancePackForExpansion(1002), 2);
+assert.equal(ambiancePackForExpansion(1003), 3);
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1001)), true);
-assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1002)), true);
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1003)), true);
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1002)), false);
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1001), false);
-assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1002), false);
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1003), false);

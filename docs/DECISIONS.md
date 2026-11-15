@@ -304,6 +304,8 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Later:** the edited recordings for Urcogor Ravage, expansion 1002, cover all four stages. They are filed as expansion 2: 16 in stage A, 16 in B, 12 in C and 13 in D. The game copies were brought to about −38 LUFS. The edited files in the drop folder were left as given. Everwinter and Aetherion still have no recordings.
 
+**Corrected the same night:** those recordings belong to Everwinter Valley, expansion 1003. The drop-folder names are `3stage`, and the game copies live in folder 3. Urcogor has none. Aetherion still has none.
+
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
