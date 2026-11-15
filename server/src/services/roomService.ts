@@ -955,6 +955,10 @@ export function participantsAtSystemEventStart(
       selectedSolutionId: undefined,
       continuePressed: false,
       focusState: 'none' as const,
+      // The failed encounter's hovering dice and locked picks belong to that
+      // encounter. Atranor and a level-up start clean.
+      setPicks: undefined,
+      setDiceRolls: undefined,
     };
 
     if (participant.playerId === actorPlayerId) {

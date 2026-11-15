@@ -111,4 +111,13 @@ const room = {
   assert.equal(reset.find((entry) => entry.playerId === 'slot-two')?.choiceState, 'witnessing');
 }
 
+{
+  const actor = participant('leader', 0, { success: false, message: 'down', rewards: [] });
+  actor.setDiceRolls = [6, 1];
+  actor.setPicks = [{ slot: 'A', solutionId: 1, roll: 12 }];
+  const reset = participantsAtSystemEventStart([actor], 'leader');
+  assert.equal(reset[0]?.setDiceRolls, undefined);
+  assert.equal(reset[0]?.setPicks, undefined);
+}
+
 console.log('systemEventQueue.test.ts: all assertions passed');

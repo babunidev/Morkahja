@@ -274,7 +274,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). Each press asks the server for that die's face, the same face the result will use. The number appears when the die arrives at its hover place. When the result shows, those dice fly into the encounter with the solutions. A reload keeps the revealed faces.
 
-**Status:** implemented, not released. The face rule and the room path are tested. A played turn was not watched.
+**Status:** implemented, not released. The face rule and the room path are tested. A played turn was not watched. The same day, those revealed dice were still on the participant when Atranor opened, so they hovered again. Atranor and a level-up now drop them. The reset is tested. Not watched in a played turn.
 
 ## D-039 — A new land crossfades (2026-11-15)
 

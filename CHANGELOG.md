@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: dice from a failed encounter stay off Atranor
+
+- **Fix:** two dice that had been rolled stayed on screen when Atranor began. Those rolls belonged to the encounter that had just failed. Atranor and a level-up now start without them.
+- **Verification:** the system-event reset test covers the cleared rolls. Not watched in a played turn.
+
 ## 2026-11-15 — Unreleased: a die in a set shows its roll, then flies in
 
 - **Change (Babuni's direction, D-040):** in an encounter that needs more than one solution, a die hovered without its result. The result now appears when the die arrives, as a solution's roll does. Those dice then fly into the encounter with the solutions.

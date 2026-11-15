@@ -98,7 +98,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
-- [x] A die in a longer set shows its roll when it arrives, then flies into the encounter with the solutions (D-040). The face rule and the room path are tested. Not watched in a played turn. Not released.
+- [x] A die in a longer set shows its roll when it arrives, then flies into the encounter with the solutions (D-040). The face rule and the room path are tested. Not watched in a played turn. Not released. Dice revealed in a failed encounter are cleared when Atranor or a level-up starts. The reset is tested. Not watched in a played turn.
+
 - [x] Each die in a longer set rises and hovers after its spin (D-037), 0.9.0-beta.73: the step test passed. Not watched in a played turn. Released 2026-11-15 from `c9d6d144`. The gold glow on a hovering die or solution, and the left tip of the stack, are fixed locally and not released.
 - [x] A finished total of 25 adds one normal item, or two charges when five rewards are already granted (D-038). The rule is tested. Not played. Not released.
 - [x] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Released 2026-11-15 inside 0.9.0-beta.72.
