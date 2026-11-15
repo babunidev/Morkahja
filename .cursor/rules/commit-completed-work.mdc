@@ -1,0 +1,13 @@
+---
+description: Commit completed repository work without waiting to be asked again
+alwaysApply: true
+---
+
+# Commit completed work
+
+After finishing work the user asked for in this repository, commit it in the same turn. Do not wait for a separate request.
+
+- Follow the repository git safety protocol. Do not push unless the user asks.
+- Include the code, tests, assets and documentation that belong to the change.
+- Leave out secrets, `.env` files, local editor state such as `.obsidian/workspace.json`, and unused files that are not part of the change.
+- One commit per completed piece of work. If several finished pieces are still uncommitted, commit them together only when the user asks for everything outstanding.

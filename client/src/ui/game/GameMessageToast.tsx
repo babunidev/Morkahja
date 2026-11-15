@@ -31,6 +31,9 @@ const clickableRootStyle: CSSProperties = {
 
 const panelStyle: CSSProperties = {
   width: '100%',
+  // The message is a div, so the default content box would add this padding
+  // outside the centred width and hang the banner off the right.
+  boxSizing: 'border-box',
   margin: 0,
   padding: '10px 12px',
   display: 'grid',
@@ -74,6 +77,17 @@ const messageStyle: CSSProperties = {
   fontSize: '0.95rem',
   lineHeight: 1.35,
 };
+
+/** The frame draws the fill. A button must not keep the browser's gray square or border. */
+function toastSurface(style: CSSProperties): CSSProperties {
+  return {
+    ...framedStyle(style),
+    appearance: 'none',
+    backgroundColor: 'transparent',
+    border: 'none',
+    boxSizing: 'border-box',
+  };
+}
 
 function toastClass(phase: ToastPhase): string {
   const classes = ['morkahja-scribes-achievement-toast-button'];
@@ -174,7 +188,7 @@ export function GameMessageToast({
             onClick();
             onDismiss();
           }}
-          style={framedStyle(buttonPanelStyle)}
+          style={toastSurface(buttonPanelStyle)}
           type="button"
         >
           <LineFrame background={panelStyle.background} />
@@ -184,7 +198,7 @@ export function GameMessageToast({
         <div
           aria-label={message}
           className={toastClass(phase)}
-          style={framedStyle(panelStyle)}
+          style={toastSurface(panelStyle)}
         >
           <LineFrame background={panelStyle.background} />
           {content}

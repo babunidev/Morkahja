@@ -29,6 +29,15 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-71',
+    version: '0.9.0-beta.71',
+    period: '15 Nov 2026',
+    notes: [
+      'A solution and the dice both play for 1.73 seconds.',
+      'The Scribes notice no longer sits on a gray square.',
+    ],
+  },
+  {
     id: 'beta-70',
     version: '0.9.0-beta.70',
     period: '15 Nov 2026',

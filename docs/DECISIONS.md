@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-036 — The dice and a solution last 1.73 seconds (2026-11-15)
+
+**Babuni's direction:** the dice spin and the solution wiggle were different lengths, and a solution's roll arrived after the wiggle had stopped. Both base animations last 1.73 seconds, and the roll is committed when that animation ends. The rise after a set pick, the wait after the last roll, and the hover bob stay as they were.
+
+**AI implementation:** Cursor (Grok 4.7). The dice spin, the solution wiggle, and the wait until each roll is committed are 1730 ms. A clickable Scribes notice no longer keeps the browser's gray button face. The local start script is on this line. This had been written against an older checkout and had not reached main.
+
+**Status:** on main as 0.9.0-beta.71, 2026-11-15. Not watched in a played turn. Not deployed.
+
 ## D-035 — Each gap is its own roll (2026-11-15)
 
 **Babuni's direction:** difficulty 2 means two separate instances. Two usable keys are two rolls. The same item with two charges still plays the animation each time: it rises and hovers. With no solution, the dice is rolled twice.

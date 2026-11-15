@@ -93,8 +93,8 @@ const UNAVAILABLE_SOLUTION_OPACITY = 0.37;
 const AVAILABLE_SOLUTION_READY_MS = 560;
 const SOLUTION_REVEAL_TOTAL_MS = ENCOUNTER_ACTIONS_FADE_DURATION_MS + AVAILABLE_SOLUTION_READY_MS;
 const SOLUTION_ENABLE_RATTLE_MS = 520;
-const DICE_ROLL_ANIMATION_MS = 1350;
-const SOLUTION_ROLL_REVEAL_MS = 1800;
+const DICE_ROLL_ANIMATION_MS = 1730;
+const SOLUTION_ROLL_REVEAL_MS = 1730;
 
 const SOLUTION_ACTION_SIZE_PX = 64;
 
@@ -446,7 +446,7 @@ const solutionSlotCellStyle: CSSProperties = {
 };
 
 const lockpickAnimationStyle: CSSProperties = {
-  animation: 'morkahja-solution-lockpick 1500ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+  animation: `morkahja-solution-lockpick ${SOLUTION_ROLL_REVEAL_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`,
   transformOrigin: '50% 50%',
 };
 
