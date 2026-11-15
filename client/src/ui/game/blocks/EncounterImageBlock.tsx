@@ -669,6 +669,7 @@ export function EncounterImageBlock({
           prosperityRewardId={null}
           resolutionAction={witnessResultSnapRef.current.resolutionAction}
           rewardIds={witnessResultSnapRef.current.outcome.rewards}
+          rewardChargeBonus={witnessResultSnapRef.current.outcome.rewardChargeBonus}
           roll={witnessResultSnapRef.current.outcome.selectedRoll ?? null}
           usedSolutionIds={witnessResultSnapRef.current.outcome.usedInventorySolutions ?? []}
           lostSolutionIds={witnessResultSnapRef.current.outcome.lostInventorySolutions ?? []}
@@ -700,6 +701,7 @@ export function EncounterImageBlock({
               : (revealedRoll !== null ? selectedAction : null)
           }
           rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
+          rewardChargeBonus={serverResolution?.rewardChargeBonus}
           roll={outcomeRoll ?? revealedRoll}
           usedSolutionIds={usedSolutionIds}
           lostSolutionIds={serverResolution?.lostInventorySolutions ?? []}

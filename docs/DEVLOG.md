@@ -374,6 +374,12 @@ The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwin
 
 The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
 
+### The stack was tipping — 2026-11-15
+
+The hovering dice do tip left, as a stack, once their rolls are on them. The die still sitting on the button does not, which is why the lean is obvious. The slot that holds the stack was put back into its entrance pose, a turn of twelve degrees to the left, at that moment. It now stays upright as soon as a die is hovering. Cursor (Grok 4.7) found that pose and took it off the stack. **Verification:** the pose rule is tested. The upright stack was not watched in a played turn.
+
+A finished total of 25 now grants one extra normal item, chosen at random (D-038). When the encounter already granted five rewards, the row stays at five and one of those items gains two charges. A level-up cannot total 25, so this stays off that event. **Verification:** the rule is tested. A 25 was not played. Not released.
+
 ### No glow on a hovering die — 2026-11-15
 
 A die that had risen above its slot wore a gold glow, and so did a hovering solution. The glow is off both. In the picture of two dice, the upper and the lower one match the die picture at the same angle. The lower one sat in a gold square, and that square was the glow, which made the die look as if it had tipped to the left after rising. Cursor (Grok 4.7) removed the glow. **Verification:** the two dice in that picture were compared and match at no rotation. Not watched again in a played turn. Not released.

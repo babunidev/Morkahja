@@ -360,7 +360,10 @@ export function applyEncounterInventoryChanges(
   selectedRollOutcome: InventoryPenaltyOutcome | null,
   encounterDifficulty: number,
   rewardAmount: number,
-  options: { randomInt?: RandomIntFn } = {},
+  options: {
+    randomInt?: RandomIntFn;
+    chargeBonus?: { solutionId: number; charges: number } | null;
+  } = {},
 ): EncounterInventoryApplyResult {
   let next = normalizeInventory(inventory);
 
@@ -369,12 +372,17 @@ export function applyEncounterInventoryChanges(
   }
 
   if (success) {
+    let bonus = options.chargeBonus ?? null;
     for (const reward of rewards) {
       const solution = getSolution(reward);
+      const extra = bonus?.solutionId === reward ? bonus.charges : 0;
+      if (extra > 0) {
+        bonus = null;
+      }
       next = addRewardToInventoryState(
         next,
         reward,
-        Math.max(1, solution.mSolutionUses ?? 1),
+        Math.max(1, (solution.mSolutionUses ?? 1) + extra),
       );
     }
     return { inventory: next, lostInventorySolutions: [] };

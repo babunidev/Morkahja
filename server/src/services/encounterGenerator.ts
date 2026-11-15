@@ -13,7 +13,8 @@ import {
   applyPendingLevelUpRewardsFlag,
   createInitialProgression,
 } from '../domain/avatar/AvatarProgression.js';
-import type { EncounterData, EncounterDataMap } from '../engine/types.js';
+import { rewardForRoll25 } from '../engine/roll25Reward.js';
+import { SolutionRewardType, type EncounterData, type EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
 import { applyFailedDeathState } from './avatarDeathService.js';
@@ -1222,6 +1223,9 @@ export function preparedResultFromResolve(
     ...(result.resolution.pickRolls ? { pickRolls: result.resolution.pickRolls } : {}),
     ...(result.resolution.diceFillRoll !== undefined ? { diceFillRoll: result.resolution.diceFillRoll } : {}),
     ...(result.resolution.diceFillRolls ? { diceFillRolls: result.resolution.diceFillRolls } : {}),
+    ...(result.resolution.rewardChargeBonus
+      ? { rewardChargeBonus: result.resolution.rewardChargeBonus }
+      : {}),
   };
 }
 
@@ -1412,6 +1416,21 @@ function computeParticipantOutcome(
       progressionResult.progression.level,
     );
   } else {
+    const adjusted = rewardForRoll25({
+      selectedRoll: resolution.selectedRoll,
+      success: resolution.success,
+      encounterRewards: snapshot.rewardIds,
+      currentRewards: resolution.rewards,
+      normalItemIds: Object.values(getSolutionMap())
+        .filter((solution) => solution.mSolutionRewardType === SolutionRewardType.Items)
+        .map((solution) => solution.mSolutionID),
+      pickIndex: (length) => randomInt(0, length - 1),
+    });
+    resolution = {
+      ...resolution,
+      rewards: adjusted.rewardIds,
+      ...(adjusted.chargeBonus ? { rewardChargeBonus: adjusted.chargeBonus } : {}),
+    };
     const inventoryApply = applyEncounterInventoryChanges(
       inventory,
       resolution.usedInventorySolutions,
@@ -1420,6 +1439,7 @@ function computeParticipantOutcome(
       selectedRollOutcome,
       snapshot.encounterDifficulty,
       snapshot.encounterRewardAmount,
+      { chargeBonus: resolution.rewardChargeBonus ?? null },
     );
     nextInventory = inventoryApply.inventory;
     resolution = {

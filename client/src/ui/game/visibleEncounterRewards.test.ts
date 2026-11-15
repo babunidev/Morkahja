@@ -88,4 +88,17 @@ function getSolutionUses(rewardId: number): number | undefined {
   );
 }
 
+{
+  const rewards = visibleEncounterRewards({
+    encounterId: NORMAL_ENCOUNTER_ID,
+    rewardIds: [101],
+    outcome: 'Prosperity',
+    avatarLevel: 1,
+    getSolutionUses,
+    rewardChargeBonus: { solutionId: 101, charges: 2 },
+  });
+
+  assert.deepEqual(rewards, [{ solutionId: 101, quantity: 5 }]);
+}
+
 console.log('visibleEncounterRewards.test.ts: all assertions passed');

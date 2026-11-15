@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-038 — A total of 25 grants one more normal item (2026-11-15)
+
+**Babuni's direction:** rolling a 25 gives one extra reward, a random normal item. When the encounter already grants five rewards, a sixth item is not added. One of those five gains two charges instead. A level-up cannot reach 25.
+
+**AI implementation:** Cursor (Grok 4.7). The finished total is the one on the result. On 25, and only on a normal encounter, one item of reward type 2 is added, skipping items already in the reward. At five encounter rewards the list is left as it is and one of them is granted with two extra charges. The prosperity essence is unchanged.
+
+**Status:** implemented, not released. The rule is tested. A 25 was not played.
+
 ## D-037 — Each die in a set rises after its spin (2026-11-15)
 
 **Babuni's direction:** in an encounter that needs more than one solution, the dice was not behaving like the other solutions. It should move up after its animation, hover, and wait. Rolling it again should push the earlier die up.

@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: a 25 adds an item; the dice stack stays upright
+
+- **Reward (Babuni's direction, D-038):** a finished total of 25 grants one extra normal item, chosen at random. When the encounter already granted five rewards, that item is not added, and one of those five gains two charges. A level-up cannot reach 25, and this does not apply there.
+- **Fix (Babuni's report):** a stack of dice tipped left once the rolls showed. The slot was using the entrance pose, a turn of twelve degrees, while the die in the button stayed put. The slot stays upright once any die is hovering.
+- **Verification:** the reward rule and the slot pose are tested. A 25 and the upright stack were not watched in a played turn. Not released.
+
 ## 2026-11-15 — Unreleased: a hovering die or solution has no glow
 
 - **Fix (Babuni's direction):** a die or a solution hovering above its slot wore a gold glow. The glow is gone. The die picture was compared with the one in the slot: the second die is not turned. The gold square around it was the glow, and that square made the die look tipped.

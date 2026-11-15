@@ -349,6 +349,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     presenceVisible,
     resolutionAction = null,
     rewardIds = [],
+    rewardChargeBonus = null,
     roll,
     usedSolutionIds = [],
     lostSolutionIds = [],
@@ -375,6 +376,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     presenceVisible?: boolean;
     resolutionAction?: EncounterAction | null;
     rewardIds?: number[];
+    rewardChargeBonus?: { solutionId: number; charges: number } | null;
     roll: number | null;
     usedSolutionIds?: number[];
     lostSolutionIds?: number[];
@@ -429,6 +431,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     outcome,
     avatarLevel,
     getSolutionUses: (rewardId) => solutionsById()[String(rewardId)]?.mSolutionUses,
+    rewardChargeBonus,
   }).flatMap(({ solutionId, quantity }) => {
     const solution = solutionsById()[String(solutionId)];
 

@@ -47,6 +47,7 @@ import {
   formatRollNotation,
 } from '@shared/diceInterpreter';
 import { assetUrl } from '../../../assetUrl.js';
+import { motionForDiceSlot } from './diceSlotMotion.js';
 import type { ActionRevealPhase } from './actionRevealPhase.js';
 import {
   recordCommittedAction,
@@ -1302,7 +1303,10 @@ export function SolutionBlock({
               key={slot}
               style={{
                 ...diceSlotStyle,
-                ...diceRevealStyle(actionsRevealing, actionsReady),
+                ...motionForDiceSlot(
+                  diceRevealStyle(actionsRevealing, actionsReady),
+                  hoveredDice > 0,
+                ),
                 ...(choiceFade && !choiceFade.keepDice ? otherChoicesFadeStyle : {}),
                 // The dice that finished a set shows its roll, then makes room for the result.
                 ...(choiceFade?.keepDice && setCommitted && hidden

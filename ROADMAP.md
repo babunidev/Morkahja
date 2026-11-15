@@ -98,7 +98,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
-- [x] Each die in a longer set rises and hovers after its spin (D-037), 0.9.0-beta.73: the step test passed. Not watched in a played turn. Released 2026-11-15 from `c9d6d144`.
+- [x] Each die in a longer set rises and hovers after its spin (D-037), 0.9.0-beta.73: the step test passed. Not watched in a played turn. Released 2026-11-15 from `c9d6d144`. The gold glow on a hovering die or solution, and the left tip of the stack, are fixed locally and not released.
+- [x] A finished total of 25 adds one normal item, or two charges when five rewards are already granted (D-038). The rule is tested. Not played. Not released.
 - [x] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Released 2026-11-15 inside 0.9.0-beta.72.
 - [x] Aetherion (1004) plays the edited weather filed as expansion 4, 0.9.0-beta.72: 12/16/12/12 pieces in stages A–D, game copies −38.6 to −37.9 LUFS. Not heard through a cycle. Released 2026-11-15 from `89afb765`. Urcogor (1002) is the land still without recordings.
 - [x] Everwinter Valley (1003) plays the edited weather filed as expansion 3, 0.9.0-beta.70: the same 16/16/12/13 pieces, moved out of folder 2. Not heard through a cycle. Released 2026-11-15 inside 0.9.0-beta.72.

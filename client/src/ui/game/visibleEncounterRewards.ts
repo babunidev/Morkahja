@@ -87,6 +87,7 @@ export function visibleEncounterRewards({
   outcome,
   avatarLevel,
   getSolutionUses,
+  rewardChargeBonus,
 }: {
   encounterId: number;
   prosperityRewardId?: number | null;
@@ -94,6 +95,8 @@ export function visibleEncounterRewards({
   outcome: ReturnType<typeof interpretRoll>;
   avatarLevel: number;
   getSolutionUses: (rewardId: number) => number | undefined;
+  /** Two extra charges on one reward when a 25 filled an already full row (D-038). */
+  rewardChargeBonus?: { solutionId: number; charges: number } | null;
 }): VisibleRewardEntry[] {
   const merged = new Map<number, number>();
 
@@ -116,6 +119,17 @@ export function visibleEncounterRewards({
       solutionUses,
     });
     merged.set(rewardId, (merged.get(rewardId) ?? 0) + quantity);
+  }
+
+  if (
+    rewardChargeBonus
+    && rewardChargeBonus.charges > 0
+    && merged.has(rewardChargeBonus.solutionId)
+  ) {
+    merged.set(
+      rewardChargeBonus.solutionId,
+      (merged.get(rewardChargeBonus.solutionId) ?? 0) + rewardChargeBonus.charges,
+    );
   }
 
   return [...merged.entries()]

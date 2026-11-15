@@ -89,6 +89,8 @@ export interface EncounterResolution {
   diceFillRoll?: number;
   /** One dice face per gap the die filled. */
   diceFillRolls?: number[];
+  /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
+  rewardChargeBonus?: { solutionId: number; charges: number };
 }
 
 interface SlotRequirement {
