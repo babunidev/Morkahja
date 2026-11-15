@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-15, 04:50 UTC (0.9.0-beta.73, each die rises)
+
+Approved by Babuni ("commit push and bring it live"). `main` at `c9d6d144`: in an encounter that needs more than one solution, one press of the dice fills one missing place, the spin finishes, and that die rises and hovers; the next press pushes it up (D-037). An encounter that needs one solution is unchanged. Encounter wording already on main, through Ashen Revenant Warlock, is included.
+
+- **Before:** backend `1b443c8e`, frontend `20261115-041216`. `server/game/encountersdata.json` was dirty. Its sha256 `50ed838f328e8284ec0fe3387f15c6291b622c899b98f93d039bd956ebed0a98` matched this release, so that file was checked out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261115-0449`.
+- **Checks before the release:** client tests passed (44), including the dice step rule, and the production build typechecked. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.73`.
+- **Release:** backup `20261115-045018` (4.2 MB; 73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `edc953d172d5ef6bc8462c572ba1db0c81d867d5bea76a0260e3f83810970ca5`). Backend fast-forwarded to `c9d6d144`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261115-045020` (`index-DBbMl_0_.js`). From outside: that script contains `0.9.0-beta.73`; `/Morkahja/`, health and content return 200. API and bots online. After the release the working tree is clean.
+- **Not done:** backup restore not proven; the rise was not played on the live game.
+
 ## Production release — 2026-11-15, 04:10 UTC (0.9.0-beta.72, one main)
 
 Approved by Babuni ("I want it released, everything together"). `main` at `89afb765`: Everwinter Valley plays the weather filed as expansion 3, Aetherion plays the weather filed as expansion 4 (D-032), and the dice and a solution both last 1.73 seconds (D-036). Encounter wording through Blightwraith Huntress is included. Urcogor still has no recordings. The older branches were not merged; each is an earlier copy of work already on this line.

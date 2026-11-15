@@ -6,7 +6,7 @@
 
 - **Change (Babuni's direction, D-037):** in an encounter that needs more than one solution, the dice spun in place and then resolved. One press now fills one missing place. The spin finishes, that die rises and hovers, and another press pushes it up, as a solution does. The set resolves when every place is filled. Each die is still its own roll. An encounter that needs one solution is unchanged.
 - **Version 0.9.0-beta.73** (D-015, D-037). Encounter wording already on main, through Ashen Revenant Warlock, goes out with this release.
-- **Verification:** the client tests passed, including `diceSetStep.test.ts`, and the client typecheck passed. The rise was not watched in a played turn. Releasing.
+- **Verification:** the client tests passed (44), including `diceSetStep.test.ts`, and the production client build typechecked. The rise was not watched in a played turn. **Deployed** 2026-11-15 04:50 UTC from `c9d6d144`. The live script is `index-DBbMl_0_.js` and contains `0.9.0-beta.73`. Health and content return 200. See `docs/DEPLOYMENT.md`.
 
 ## 2026-11-15 — Aetherion has weather; 0.9.0-beta.72
 

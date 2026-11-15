@@ -374,9 +374,13 @@ The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwin
 
 The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
 
+### On the live game — 2026-11-15
+
+The dice that fills a longer set now rises after its spin on the live game, as 0.9.0-beta.73. Encounter wording already on main, through Ashen Revenant Warlock, went with it. The copy on the server matched that wording, so it was checked out and the fast-forward put the same text back. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-DBbMl_0_.js` and contains `0.9.0-beta.73`. Health and content return 200. The rise was not played on the live game. The backup was not restored into another database.
+
 ### The dice rises with the others — 2026-11-15
 
-In an encounter that needs more than one solution, the dice spun where it sat and then the turn moved on. It should do what a solution does: finish the animation, move up, hover, and wait. Another roll pushes that die up. Cursor (Grok 4.7) made one press fill one missing place, and left a single-solution encounter as one spin (D-037). A hovering die in an unfinished set is not kept on the server, so a reload keeps the locked solutions and drops those dice. **Verification:** the client tests passed, including the step test, and the client typecheck passed. The rise was not watched in a played turn. Releasing as 0.9.0-beta.73.
+In an encounter that needs more than one solution, the dice spun where it sat and then the turn moved on. It should do what a solution does: finish the animation, move up, hover, and wait. Another roll pushes that die up. Cursor (Grok 4.7) made one press fill one missing place, and left a single-solution encounter as one spin (D-037). A hovering die in an unfinished set is not kept on the server, so a reload keeps the locked solutions and drops those dice. **Verification:** the client tests passed, including the step test, and the production client build typechecked. The rise was not watched in a played turn. On the live game as 0.9.0-beta.73.
 
 ### One checkout — 2026-11-15
 
