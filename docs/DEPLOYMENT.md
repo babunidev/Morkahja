@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-15, 05:44 UTC (0.9.0-beta.74, dice, weather, a 25)
+
+Approved by Babuni ("ok do the documentation, commit all, push to main, release to live server"). `main` at `2c60b1e4`: a die in a longer set shows its number when it arrives and flies into the encounter (D-040), those dice are cleared when Atranor or a level-up starts, a hovering die or solution has no gold glow and the stack stays upright, a finished total of 25 adds one normal item or two charges when five rewards are already granted (D-038), and the weather crossfades when the land changes (D-039). Encounter wording through Eldertree Grove is included.
+
+- **Before:** backend `c9d6d144`, frontend `20261115-045020`. `server/game/encountersdata.json` was dirty. Its sha256 `50f2ae6c1c2753191be8dd4aaa20e7989baa5c013a7758bcd9f51f11771090ca` matched this release, so that file was checked out and the fast-forward put the same wording back. Previous staging files moved to `prev-20261115-0543`.
+- **Checks before the release:** client tests passed (45), including the die face, the upright slot and the land overlap. The 25-reward rule and the Atranor reset passed. The production client build typechecked. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.74`.
+- **Release:** backup `20261115-054440` (4.2 MB; 73 players, 109 avatars, 23 sessions, 79 devices, 109 inventories, 1 purchase, 333 achievement rows; sha256 `d7a3a1a5c608462bf21883af9b9450cf182f1859c43491c8599ea09633558ef3`). Backend fast-forwarded to `2c60b1e4`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261115-054441` (`index-6iFa0pcB.js`). From outside: that script contains `0.9.0-beta.74`; `/Morkahja/`, health and content return 200. API and bots online.
+- **After:** the encounter file was dirty again, sha256 `5338dabc4aadfbaf3db87b4fdf09619b7bf0900a9222aab452ad1b72c5dd11b6`. The difference is newer wording for Shadowed Hollow, written on the server after this release. It was left in place. The backup was not restored into another database.
+
 ## Production release — 2026-11-15, 04:50 UTC (0.9.0-beta.73, each die rises)
 
 Approved by Babuni ("commit push and bring it live"). `main` at `c9d6d144`: in an encounter that needs more than one solution, one press of the dice fills one missing place, the spin finishes, and that die rises and hovers; the next press pushes it up (D-037). An encounter that needs one solution is unchanged. Encounter wording already on main, through Ashen Revenant Warlock, is included.

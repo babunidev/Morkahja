@@ -6,7 +6,7 @@
 
 - **Change (Babuni's direction, D-038, D-039, D-040):** in an encounter that needs more than one solution, a die shows its number when it arrives and then flies into the encounter with the solutions. Dice from an encounter that just ended no longer stay on screen when Atranor or a level-up begins. A hovering die or solution no longer glows, and a stack of dice stays upright. A finished total of 25 adds one extra normal item; when the encounter already grants five rewards, one of those gains two charges. The weather fades from one land into the next: the new land rises over one second while the old land falls over two.
 - **Version 0.9.0-beta.74** (D-015, D-038, D-039, D-040). Encounter wording already on main, through Eldertree Grove, goes out with this release.
-- **Verification:** client tests passed, including the die face, the upright slot and the land overlap. The system-event reset and the 25-reward rule passed. A played turn of this set was not watched before release.
+- **Verification:** client tests passed (45), including the die face, the upright slot and the land overlap. The system-event reset and the 25-reward rule passed. The production client build typechecked. A played turn of this set was not watched before release. **Deployed** 2026-11-15 05:44 UTC from `2c60b1e4`. The live script is `index-6iFa0pcB.js` and contains `0.9.0-beta.74`. Health and content return 200. See `docs/DEPLOYMENT.md`.
 
 ## 2026-11-15 — Each die in a set rises after its spin; 0.9.0-beta.73
 

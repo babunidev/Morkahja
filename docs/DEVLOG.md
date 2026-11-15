@@ -376,7 +376,7 @@ The city, Aetherion, is expansion 1004, and its edited recordings cover every st
 
 ### Out as 0.9.0-beta.74 — 2026-11-15
 
-The dice that show their numbers and fly into the encounter, the weather that fades from one land into the next, the extra item on a 25, the upright stack, and the glow taken off a hovering die or solution are numbered together as 0.9.0-beta.74. Dice from a failed encounter no longer sit on Atranor. Encounter wording through Eldertree Grove is on this line. Cursor (Grok 4.7) numbered it. **Verification:** the client tests, the 25-reward rule and the Atranor reset passed before release. A played turn of this set was not watched before it went out.
+The dice that show their numbers and fly into the encounter, the weather that fades from one land into the next, the extra item on a 25, the upright stack, and the glow taken off a hovering die or solution are numbered together as 0.9.0-beta.74. Dice from a failed encounter no longer sit on Atranor. Encounter wording through Eldertree Grove is on this line. Cursor (Grok 4.7) numbered it and published it. **Verification:** the client tests passed (45), the 25-reward rule and the Atranor reset passed, and the production client build typechecked. The live script is `index-6iFa0pcB.js` and contains `0.9.0-beta.74`. Health and content return 200. A played turn of this set was not watched on the live game. The backup was not restored into another database.
 
 ### The dice came back on Atranor — 2026-11-15
 
