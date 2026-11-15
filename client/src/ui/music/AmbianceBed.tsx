@@ -11,7 +11,7 @@ import {
   type AmbianceRun,
   type AmbianceStage,
 } from './ambianceCycle.js';
-import { expansionHasClips, stagePool } from './ambianceLibrary.js';
+import { ambiancePackForExpansion, expansionHasClips, stagePool } from './ambianceLibrary.js';
 import type { MusicZone } from './MusicEngine.js';
 
 interface Voice {
@@ -196,10 +196,11 @@ export function AmbianceBed({
     runIdRef.current = id;
     const alive = () => runIdRef.current === id;
     const bedVoices = voices();
+    const land = expansion == null ? null : ambiancePackForExpansion(expansion);
     const shouldPlay = zone === 'ambient'
       && enabled
-      && expansion != null
-      && expansionHasClips(AMBIANCE_CLIPS, expansion);
+      && land != null
+      && expansionHasClips(AMBIANCE_CLIPS, land);
 
     async function fadeOutBed(): Promise<void> {
       await Promise.all(bedVoices.map(async (voice) => {
@@ -295,13 +296,13 @@ export function AmbianceBed({
 
     void (async () => {
       await fadeOutBed();
-      if (!alive() || !shouldPlay || expansion == null) {
+      if (!alive() || !shouldPlay || land == null) {
         for (const voice of bedVoices) {
           voice.audio.pause();
         }
         return;
       }
-      await runBed(expansion);
+      await runBed(land);
     })();
 
     return () => {

@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-67',
+    version: '0.9.0-beta.67',
+    period: '15 Nov 2026',
+    notes: [
+      'The Cursed Forest of Keldor has its own weather, including Roarback Mauler.',
+    ],
+  },
+  {
     id: 'beta-66',
     version: '0.9.0-beta.66',
     period: '15 Nov 2026',
