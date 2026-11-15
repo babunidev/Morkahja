@@ -22,6 +22,18 @@ export const AMBIANCE_FADE_IN_MS = 1000;
 /** A piece, and a land that is leaving, falls over two seconds. */
 export const AMBIANCE_FADE_OUT_MS = 2000;
 
+/**
+ * A new land starts rising at the same moment the old land starts falling,
+ * so the two overlap. A land that begins in silence still fades in.
+ */
+export function landCrossfade(): { fadeOutMs: number; fadeInMs: number; fadeInDelayMs: number } {
+  return {
+    fadeOutMs: AMBIANCE_FADE_OUT_MS,
+    fadeInMs: AMBIANCE_FADE_IN_MS,
+    fadeInDelayMs: 0,
+  };
+}
+
 export function inclusiveCount(random: () => number, min: number, max: number): number {
   return min + Math.floor(random() * (max - min + 1));
 }

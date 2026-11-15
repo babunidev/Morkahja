@@ -101,6 +101,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Each die in a longer set rises and hovers after its spin (D-037), 0.9.0-beta.73: the step test passed. Not watched in a played turn. Released 2026-11-15 from `c9d6d144`. The gold glow on a hovering die or solution, and the left tip of the stack, are fixed locally and not released.
 - [x] A finished total of 25 adds one normal item, or two charges when five rewards are already granted (D-038). The rule is tested. Not played. Not released.
 - [x] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Released 2026-11-15 inside 0.9.0-beta.72.
+- [x] Changing expansion crossfades the weather (D-039): the new land fades in over one second while the old land fades out over two. The overlap is tested. Not heard. Not released.
 - [x] Aetherion (1004) plays the edited weather filed as expansion 4, 0.9.0-beta.72: 12/16/12/12 pieces in stages A–D, game copies −38.6 to −37.9 LUFS. Not heard through a cycle. Released 2026-11-15 from `89afb765`. Urcogor (1002) is the land still without recordings.
 - [x] Everwinter Valley (1003) plays the edited weather filed as expansion 3, 0.9.0-beta.70: the same 16/16/12/13 pieces, moved out of folder 2. Not heard through a cycle. Released 2026-11-15 inside 0.9.0-beta.72.
 - [ ] Urcogor Ravage (1002) plays the edited weather filed as expansion 2, 0.9.0-beta.69: filed by mistake and moved to Everwinter in 0.9.0-beta.70. Urcogor has no recordings.

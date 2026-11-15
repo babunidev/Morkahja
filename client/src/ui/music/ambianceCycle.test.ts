@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
+  landCrossfade,
   openingRun,
   pickPiece,
   stepAfterPiece,
@@ -11,6 +12,12 @@ import {
 
 assert.equal(AMBIANCE_FADE_IN_MS, 1000);
 assert.equal(AMBIANCE_FADE_OUT_MS, 2000);
+
+const handoff = landCrossfade();
+assert.equal(handoff.fadeInMs, AMBIANCE_FADE_IN_MS);
+assert.equal(handoff.fadeOutMs, AMBIANCE_FADE_OUT_MS);
+assert.equal(handoff.fadeInDelayMs, 0);
+assert.ok(handoff.fadeInDelayMs < handoff.fadeOutMs);
 
 function sequence(values: number[]): () => number {
   let index = 0;

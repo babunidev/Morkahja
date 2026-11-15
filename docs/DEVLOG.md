@@ -374,6 +374,10 @@ The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwin
 
 The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
 
+### The land crossfades — 2026-11-15
+
+Changing expansion let the old weather fall all the way out, and only then did the new land rise. The two now move together: the new land fades in over one second while the old one fades out over two (D-039). A land that starts from silence still fades in, and a land with no recordings still fades the bed out. Cursor (Grok 4.7) overlapped the fades. **Verification:** the overlap timing is tested. A land change was not heard. Not released.
+
 ### The stack was tipping — 2026-11-15
 
 The hovering dice do tip left, as a stack, once their rolls are on them. The die still sitting on the button does not, which is why the lean is obvious. The slot that holds the stack was put back into its entrance pose, a turn of twelve degrees to the left, at that moment. It now stays upright as soon as a die is hovering. Cursor (Grok 4.7) found that pose and took it off the stack. **Verification:** the pose rule is tested. The upright stack was not watched in a played turn.

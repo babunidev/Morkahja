@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Unreleased: a new land crossfades
+
+- **Change (Babuni's direction, D-039):** changing expansion waited until the old weather had faded out, then faded the new land in. The new land now fades in over one second while the old land fades out over two, both starting together. A land that starts from silence still fades in.
+- **Verification:** the overlap is tested. A land change was not heard. Not released.
+
 ## 2026-11-15 — Unreleased: a 25 adds an item; the dice stack stays upright
 
 - **Reward (Babuni's direction, D-038):** a finished total of 25 grants one extra normal item, chosen at random. When the encounter already granted five rewards, that item is not added, and one of those five gains two charges. A level-up cannot reach 25, and this does not apply there.

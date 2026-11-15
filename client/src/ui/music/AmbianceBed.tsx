@@ -5,6 +5,7 @@ import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
+  landCrossfade,
   openingRun,
   pickPiece,
   stepAfterPiece,
@@ -62,6 +63,9 @@ async function startVoice(
   initialVolume: number,
   alive: () => boolean,
 ): Promise<boolean> {
+  if (!alive()) {
+    return false;
+  }
   const audio = voice.audio;
   audio.src = assetUrl(url);
   audio.currentTime = 0;
@@ -139,9 +143,9 @@ function reachedFadeOut(audio: HTMLAudioElement): boolean {
 }
 
 /**
- * The encounter bed. It keeps running while the expansion stays the same,
- * and fades to the new land's stage A only when a loaded encounter belongs
- * to a different expansion.
+ * The encounter bed. It keeps running while the expansion stays the same.
+ * A different land crossfades: the new stage A fades in while the old piece
+ * fades out. A land that starts from silence still fades in.
  */
 export function AmbianceBed({
   enabled,
@@ -202,34 +206,54 @@ export function AmbianceBed({
       && land != null
       && expansionHasClips(AMBIANCE_CLIPS, land);
 
-    async function fadeOutBed(): Promise<void> {
-      await Promise.all(bedVoices.map(async (voice) => {
-        if (voice.audio.paused) {
-          voice.audio.volume = 0;
-          return;
-        }
-        await ramp(voice, 'silent', AMBIANCE_FADE_OUT_MS, gain, alive, scriptedRef);
-        voice.audio.pause();
-      }));
+    function spareVoice(): Voice {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.volume = 0;
+      return { audio, fade: 0 };
     }
 
-    async function runBed(land: number): Promise<void> {
+    async function fadeVoiceOut(voice: Voice, durationMs: number): Promise<void> {
+      if (!alive()) {
+        return;
+      }
+      if (voice.audio.paused || voice.audio.volume <= 0.001) {
+        voice.audio.pause();
+        voice.audio.volume = 0;
+        return;
+      }
+      await ramp(voice, 'silent', durationMs, gain, alive, scriptedRef);
+      if (alive() && voice.audio.volume <= 0.001) {
+        voice.audio.pause();
+        voice.audio.volume = 0;
+      }
+    }
+
+    async function runBed(
+      nextLand: number,
+      pair: Voice[],
+      start?: { voice: Voice; file: string },
+    ): Promise<void> {
       let voiceIndex = 0;
-      let current = bedVoices[0]!;
+      let current = pair[0]!;
+      if (start) {
+        const index = pair.indexOf(start.voice);
+        voiceIndex = index >= 0 ? index : 0;
+        current = pair[voiceIndex]!;
+      }
       let run: AmbianceRun = openingRun();
       const lastByStage: Record<AmbianceStage, string | null> = {
-        A: null,
+        A: start?.file ?? null,
         B: null,
         C: null,
         D: null,
       };
-      let queued: string | null = null;
+      let queued: string | null = start?.file ?? null;
 
       while (alive()) {
-        const pool = stagePool(AMBIANCE_CLIPS, land, run.stage);
+        const pool = stagePool(AMBIANCE_CLIPS, nextLand, run.stage);
         if (pool.length === 0) {
-          await ramp(current, 'silent', AMBIANCE_FADE_OUT_MS, gain, alive, scriptedRef);
-          current.audio.pause();
+          await fadeVoiceOut(current, AMBIANCE_FADE_OUT_MS);
           return;
         }
 
@@ -250,10 +274,9 @@ export function AmbianceBed({
 
         const step = stepAfterPiece(run);
         if (step.gap === 'crossfade') {
-          const nextPool = stagePool(AMBIANCE_CLIPS, land, step.next.stage);
+          const nextPool = stagePool(AMBIANCE_CLIPS, nextLand, step.next.stage);
           if (nextPool.length === 0) {
-            await ramp(current, 'silent', AMBIANCE_FADE_OUT_MS, gain, alive, scriptedRef);
-            current.audio.pause();
+            await fadeVoiceOut(current, AMBIANCE_FADE_OUT_MS);
             return;
           }
           const nextFile = pickPiece(nextPool, lastByStage[step.next.stage]);
@@ -264,13 +287,13 @@ export function AmbianceBed({
           }
           const fadeOutMs = edgeMs(current.audio).fadeOutMs;
           const fadeInMs = Math.min(AMBIANCE_FADE_IN_MS, fadeOutMs);
-          const fadingOut = ramp(current, 'silent', fadeOutMs, gain, alive, scriptedRef);
+          const fadingOut = fadeVoiceOut(current, fadeOutMs);
           await waitMs(Math.max(0, fadeOutMs - fadeInMs), alive);
           if (!alive()) {
             await fadingOut;
             return;
           }
-          const nextVoice = bedVoices[1 - voiceIndex]!;
+          const nextVoice = pair[1 - voiceIndex]!;
           const started = await startVoice(nextVoice, nextFile, 0, alive);
           if (!started || !alive()) {
             await fadingOut;
@@ -278,7 +301,6 @@ export function AmbianceBed({
           }
           await ramp(nextVoice, 'full', fadeInMs, gain, alive, scriptedRef);
           await fadingOut;
-          current.audio.pause();
           voiceIndex = 1 - voiceIndex;
           current = nextVoice;
           queued = nextFile;
@@ -287,22 +309,82 @@ export function AmbianceBed({
         }
 
         await waitUntil(() => current.audio.ended || current.audio.error != null || reachedFadeOut(current.audio), alive);
-        await ramp(current, 'silent', edgeMs(current.audio).fadeOutMs, gain, alive, scriptedRef);
-        current.audio.pause();
+        if (!alive()) {
+          return;
+        }
+        await fadeVoiceOut(current, edgeMs(current.audio).fadeOutMs);
         await waitMs(step.restMs, alive);
         run = step.next;
       }
     }
 
     void (async () => {
-      await fadeOutBed();
-      if (!alive() || !shouldPlay || land == null) {
-        for (const voice of bedVoices) {
-          voice.audio.pause();
-        }
+      if (!alive()) {
         return;
       }
-      await runBed(land);
+      if (!shouldPlay || land == null) {
+        await Promise.all(bedVoices.map((voice) => fadeVoiceOut(voice, AMBIANCE_FADE_OUT_MS)));
+        return;
+      }
+
+      const audible = bedVoices.filter((voice) => !voice.audio.paused && voice.audio.volume > 0.001);
+      if (audible.length === 0) {
+        for (const voice of bedVoices) {
+          if (!voice.audio.paused) {
+            voice.audio.pause();
+            voice.audio.volume = 0;
+          }
+        }
+        await runBed(land, bedVoices);
+        return;
+      }
+
+      const handoff = landCrossfade();
+      let incoming = bedVoices.find((voice) => voice.audio.paused);
+      if (!incoming) {
+        incoming = spareVoice();
+        bedVoices.push(incoming);
+      }
+      const pool = stagePool(AMBIANCE_CLIPS, land, 'A');
+      if (pool.length === 0) {
+        await Promise.all(bedVoices.map((voice) => fadeVoiceOut(voice, handoff.fadeOutMs)));
+        return;
+      }
+      const file = pickPiece(pool, null);
+      const fadingOut = Promise.all(
+        bedVoices
+          .filter((voice) => voice !== incoming && !voice.audio.paused)
+          .map((voice) => fadeVoiceOut(voice, handoff.fadeOutMs)),
+      );
+      if (handoff.fadeInDelayMs > 0) {
+        await waitMs(handoff.fadeInDelayMs, alive);
+      }
+      if (!alive()) {
+        await fadingOut;
+        return;
+      }
+      const started = await startVoice(incoming, file, 0, alive);
+      if (!started || !alive()) {
+        await fadingOut;
+        return;
+      }
+      const fadeInMs = Math.min(handoff.fadeInMs, edgeMs(incoming.audio).fadeInMs);
+      await Promise.all([
+        ramp(incoming, 'full', fadeInMs, gain, alive, scriptedRef),
+        fadingOut,
+      ]);
+      if (!alive()) {
+        return;
+      }
+      const spare = bedVoices.find((voice) => voice !== incoming && voice.audio.paused) ?? spareVoice();
+      for (const voice of bedVoices) {
+        if (voice !== incoming && voice !== spare) {
+          voice.audio.pause();
+        }
+      }
+      const pair = [incoming, spare];
+      voicesRef.current = pair;
+      await runBed(land, pair, { voice: incoming, file });
     })();
 
     return () => {

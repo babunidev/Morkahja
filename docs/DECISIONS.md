@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-039 — A new land crossfades (2026-11-15)
+
+**Babuni's direction:** switching expansion should crossfade. The new weather fades in while the old weather fades out. The sound should always fade in.
+
+**AI implementation:** Cursor (Grok 4.7). A land change starts the new stage A at the same moment the old piece starts falling. The rise is one second and the fall is two. A land that starts from silence still fades in over one second. A land with no recordings, or leaving the encounter, still fades the bed out. The fades inside one land are unchanged.
+
+**Status:** implemented, not released. The overlap is tested. A land change was not heard.
+
 ## D-038 — A total of 25 grants one more normal item (2026-11-15)
 
 **Babuni's direction:** rolling a 25 gives one extra reward, a random normal item. When the encounter already grants five rewards, a sixth item is not added. One of those five gains two charges instead. A level-up cannot reach 25.
