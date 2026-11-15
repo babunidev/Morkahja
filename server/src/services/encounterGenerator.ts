@@ -262,6 +262,7 @@ export function generateSnapshotRolls(difficulty: number): Pick<
   | 'rollSecondaryD'
   | 'rollE'
   | 'extraRolls'
+  | 'diceFillRolls'
 > {
   return generateEncounterRollSnapshot(difficulty);
 }
@@ -1220,6 +1221,7 @@ export function preparedResultFromResolve(
     gainedExperience: result.gainedExperience,
     ...(result.resolution.pickRolls ? { pickRolls: result.resolution.pickRolls } : {}),
     ...(result.resolution.diceFillRoll !== undefined ? { diceFillRoll: result.resolution.diceFillRoll } : {}),
+    ...(result.resolution.diceFillRolls ? { diceFillRolls: result.resolution.diceFillRolls } : {}),
   };
 }
 

@@ -99,6 +99,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
 - [ ] Keldor (1001), including Roarback Mauler, plays the weather filed as expansion 1, 0.9.0-beta.67: the lookup test passed 2026-11-15. Not heard through a cycle. Not released.
+- [x] Each solution and each dice gap is its own roll (D-035), 0.9.0-beta.68: resolver and breakdown tests. Not played through in a browser, not released.
 - [x] Stay in the current expansion on a d20 of 1–14 (D-033), 0.9.0-beta.66: selection test passed 2026-11-15. Not played, not released.
 - [x] Portrait result tooltip shows the face and the modifiers (D-034), 0.9.0-beta.66: breakdown tests passed 2026-11-15. Not hovered in a played turn, not released.
 - [ ] Encounters that need several solutions, chosen one at a time (D-019), 0.9.0-beta.53: released 2026-11-13 for Babuni's tests with high-level accounts. Still to check: a party with other players choosing sets.

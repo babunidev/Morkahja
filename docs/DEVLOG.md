@@ -354,6 +354,10 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### Two rolls when the encounter asks for two — 2026-11-15
+
+A difficulty of two was still able to finish on one roll. Two keys, or two charges of one key, have to be two instances: the solution animation, then up, then hovering, each with its own number. With nothing to spend, the dice spins once for each gap, and each spin is its own roll (D-035). The outcome stays the average of those rolls. **Verification:** recorded with the tests for this step. Not played through in a browser. Not on the live game.
+
 ### How the number was made — 2026-11-15
 
 The number sitting on the solution above the portrait was only the finished total. A 23 and an 11 gave no hint of the face, the solution's bonus, or the difficulty. The tooltip now grows a second frame at the bottom, the same kind of frame, and that frame shows the face and then the modifiers: `16 + 7`, or `5 + 7 − 1` (D-034). Cursor (Grok 4.7) recovered the face from the total. **Verification:** the breakdown tests passed. The tooltip was not hovered in a played turn. Not on the live game.

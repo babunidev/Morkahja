@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-035 — Each gap is its own roll (2026-11-15)
+
+**Babuni's direction:** difficulty 2 means two separate instances. Two usable keys are two rolls. The same item with two charges still plays the animation each time: it rises and hovers. With no solution, the dice is rolled twice.
+
+**AI implementation:** Cursor (Grok 4.7). Each solution pick still locks, animates, and hovers on its own, and a second charge of the same slot starts that animation again. Each gap the dice fills now has its own face and its own spin, instead of one face counted again. Snapshots stored before this repeat their one die. The average is unchanged as the outcome.
+
+**Status:** in the local combined game, 0.9.0-beta.68, 2026-11-15. Not played through in a browser. Not deployed.
+
 ## D-034 — The portrait result shows the roll and its modifiers (2026-11-15)
 
 **Babuni's direction:** the result above the portrait shows the solution and the number. The tooltip should grow at the bottom, in the same frame, and show how that number was made: the roll, then the modifiers.

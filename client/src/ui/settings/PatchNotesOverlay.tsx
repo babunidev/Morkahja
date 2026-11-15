@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-68',
+    version: '0.9.0-beta.68',
+    period: '15 Nov 2026',
+    notes: [
+      'A harder encounter rolls once for each solution it asks for. The same item still rises and hovers for every charge. The dice spins once for each roll it owes.',
+    ],
+  },
+  {
     id: 'beta-67',
     version: '0.9.0-beta.67',
     period: '15 Nov 2026',

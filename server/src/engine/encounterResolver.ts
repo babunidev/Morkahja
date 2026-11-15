@@ -12,6 +12,7 @@ import {
 import {
   allocateSolutionSet,
   combineSolutionSetRolls,
+  diceFacesForGaps,
   solutionSetSize,
   type SolutionSetPickAllocation,
 } from '@shared/solutionSet.js';
@@ -45,6 +46,8 @@ export interface EncounterRollSnapshot {
   readonly rollSecondaryD: number;
   readonly rollE: number;
   readonly extraRolls?: SolutionSetExtraRolls;
+  /** Further dice faces after rollE, one per extra gap. Absent: rollE fills every gap. */
+  readonly diceFillRolls?: readonly number[];
 }
 
 export type SelectedEncounterAction =
@@ -82,8 +85,10 @@ export interface EncounterResolution {
   message: string;
   /** Solution sets: each chosen solution's own roll, in the order chosen. */
   pickRolls?: number[];
-  /** Solution sets finished by the dice: the dice roll (counted once per missing solution). */
+  /** Solution sets finished by the dice: the first dice roll. */
   diceFillRoll?: number;
+  /** One dice face per gap the die filled. */
+  diceFillRolls?: number[];
 }
 
 interface SlotRequirement {
@@ -119,6 +124,7 @@ export function createEncounterRollSnapshot(
     rollSecondaryD: rolls.rollSecondaryD,
     rollE: rolls.rollE,
     ...(rolls.extraRolls ? { extraRolls: rolls.extraRolls } : {}),
+    ...(rolls.diceFillRolls ? { diceFillRolls: rolls.diceFillRolls } : {}),
   });
 }
 
@@ -313,6 +319,7 @@ interface SolutionSetEvaluation {
   allocation: SolutionSetPickAllocation[];
   pickRolls: number[];
   diceFill: boolean;
+  diceFaces: number[];
 }
 
 function rollForSetPick(
@@ -347,6 +354,7 @@ function evaluateSolutionSet(
     allocation: [],
     pickRolls: [],
     diceFill,
+    diceFaces: [],
   };
 
   if (
@@ -369,7 +377,10 @@ function evaluateSolutionSet(
   }
 
   const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick));
-  const roll = combineSolutionSetRolls(pickRolls, setSize, diceFill ? rolls.rollE : null);
+  const diceFaces = diceFill
+    ? diceFacesForGaps(setSize - pickRolls.length, rolls.rollE, rolls.diceFillRolls)
+    : [];
+  const roll = combineSolutionSetRolls(pickRolls, diceFaces);
 
   return {
     valid: true,
@@ -379,6 +390,7 @@ function evaluateSolutionSet(
     allocation,
     pickRolls,
     diceFill,
+    diceFaces,
   };
 }
 
@@ -529,12 +541,15 @@ export function resolveEncounter(
   );
 
   if (selectedAction.mode === 'dice') {
-    const success = isRollFavorable(frozenRolls.rollE);
+    const setSize = solutionSetSize(encounter.mEncounterDifficulty);
+    const diceFaces = diceFacesForGaps(setSize, frozenRolls.rollE, frozenRolls.diceFillRolls);
+    const selectedRoll = setSize <= 1 ? frozenRolls.rollE : combineSolutionSetRolls([], diceFaces);
+    const success = isRollFavorable(selectedRoll);
 
     return {
       encounterId: encounter.mEncounterID,
       success,
-      selectedRoll: frozenRolls.rollE,
+      selectedRoll,
       slotResults: emptySlotResults(),
       usedInventorySolutions: [],
       failurePenalty,
@@ -546,6 +561,7 @@ export function resolveEncounter(
         frozenRolls,
         [],
       ),
+      ...(setSize > 1 ? { diceFillRoll: diceFaces[0], diceFillRolls: diceFaces } : {}),
     };
   }
 
@@ -598,7 +614,9 @@ export function resolveEncounter(
     ...(setEvaluation.valid && (setEvaluation.pickRolls.length > 1 || setEvaluation.diceFill)
       ? {
         pickRolls: setEvaluation.pickRolls,
-        ...(setEvaluation.diceFill ? { diceFillRoll: frozenRolls.rollE } : {}),
+        ...(setEvaluation.diceFill
+          ? { diceFillRoll: setEvaluation.diceFaces[0], diceFillRolls: setEvaluation.diceFaces }
+          : {}),
       }
       : {}),
     failurePenalty,

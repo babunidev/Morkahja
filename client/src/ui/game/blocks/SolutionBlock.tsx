@@ -730,8 +730,8 @@ export function SolutionBlock({
   ) => void;
   encounter: EncounterSnapshot;
   inventory: AvatarInventory | undefined;
-  /** A committed solution set's own rolls, from the server's result (the dice roll shows on the dice). */
-  setRolls?: { pickRolls?: number[]; diceFillRoll?: number } | null;
+  /** A committed solution set's own rolls, from the server's result (each dice roll shows on the dice). */
+  setRolls?: { pickRolls?: number[]; diceFillRoll?: number; diceFillRolls?: number[] } | null;
   /** Locks one more pick of a solution set; resolves with all locked picks and their rolls. */
   onSetPick?: (slot: SlotLetter) => Promise<SolutionSetPickRecordView[]>;
   /** Picks the server already locked in this encounter (after a reload). */
@@ -747,6 +747,7 @@ export function SolutionBlock({
   );
   const [diceEnableRattle, setDiceEnableRattle] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
+  const [lockpickBurst, setLockpickBurst] = useState(0);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
   // Solution set (encounters needing more than one solution): the chosen
   // solutions hover above their slots until the set is complete.
@@ -1014,37 +1015,53 @@ export function SolutionBlock({
     handleDiceClick();
   }
 
-  function handleDiceClick(): void {
-    if (setCommitted) {
-      return;
+  function wait(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  /** One spin of the dice for each gap it fills. A difficulty of 2 with no solution spins twice. */
+  async function playDiceAnimations(times: number): Promise<void> {
+    const spins = Math.max(1, times);
+    for (let index = 0; index < spins; index += 1) {
+      playSfx(DICE_SOUND);
+      setDiceRollCount((count) => count + 1);
+      await wait(DICE_ROLL_ANIMATION_MS);
     }
-    if (pickBusyRef.current) {
+  }
+
+  async function handleDiceClick(): Promise<void> {
+    if (setCommitted || pickBusyRef.current) {
       return;
     }
     if (setPicksRef.current.length > 0) {
-      // The dice finishes the set, standing in for every missing solution.
-      commitSolutionSet(setPicksRef.current, true);
+      // The dice finishes the set: one spin, and one roll, for each solution still missing.
+      await commitSolutionSet(setPicksRef.current, true);
       return;
     }
 
     clearRollRevealTimer();
     hideSolutionTooltip();
-
+    const spins = setSize > 1 ? setSize : 1;
     onActionReveal?.('dice', null, undefined, 'select');
     setChoiceFade({ keepSlot: null, keepDice: true });
-    playSfx(DICE_SOUND);
-    setDiceRollCount((count) => count + 1);
-    // Phase 2 of the frame timer: from rolling until the result can be used.
+    pickBusyRef.current = true;
     planFramePhase(
       actPhaseKey(encounter.snapshotId),
       blockRef.current?.querySelector('[aria-label="Roll dice"]'),
-      DICE_ROLL_ANIMATION_MS + RESULT_READY_ESTIMATE_MS,
+      spins * DICE_ROLL_ANIMATION_MS + RESULT_READY_ESTIMATE_MS,
     );
-    rollRevealTimer.current = window.setTimeout(() => {
+    try {
+      await playDiceAnimations(spins);
+      if (encounterKeyRef.current !== encounter.snapshotId) {
+        return;
+      }
       recordCommittedAction(encounter.snapshotId, 'dice');
       onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
-      rollRevealTimer.current = null;
-    }, DICE_ROLL_ANIMATION_MS);
+    } finally {
+      pickBusyRef.current = false;
+    }
   }
 
   function handleSolutionButtonClick(solution: VisibleSolutionSlot): void {
@@ -1086,52 +1103,51 @@ export function SolutionBlock({
     pickBusyRef.current = true;
     hideSolutionTooltip();
     playSfx(pickSolutionSound(), { scale: SOLUTION_PLAYBACK_SCALE });
+    setLockpickBurst((burst) => burst + 1);
     setActiveSolutionSlot(solution.slot);
 
-    const [records] = await Promise.all([
-      onSetPick(solution.slot).catch((error: unknown) => {
-        console.error('Solution set pick failed', error);
-        return null;
-      }),
-      new Promise<void>((resolve) => {
-        window.setTimeout(resolve, SOLUTION_ROLL_REVEAL_MS);
-      }),
-    ]);
-    setActiveSolutionSlot(null);
-    if (!records || records.length !== next.length || encounterKeyRef.current !== encounter.snapshotId) {
+    try {
+      const [records] = await Promise.all([
+        onSetPick(solution.slot).catch((error: unknown) => {
+          console.error('Solution set pick failed', error);
+          return null;
+        }),
+        wait(SOLUTION_ROLL_REVEAL_MS),
+      ]);
+      setActiveSolutionSlot(null);
+      if (!records || records.length !== next.length || encounterKeyRef.current !== encounter.snapshotId) {
+        return;
+      }
+
+      if (records.length === 1) {
+        // The party sees the first choice, as with a single solution.
+        onActionReveal?.(solution.slot, null, records[0]!.solutionId, 'select');
+      }
+      const slots = records.map((record) => record.slot);
+      setPicksRef.current = slots;
+      setSetPicks(slots);
+      setPickRecords(records);
+      pickRecordsRef.current = records;
+      // The roll shows when the solution arrives at its hover place.
+      await wait(SOLUTION_HOVER_RISE_MS);
+      if (encounterKeyRef.current !== encounter.snapshotId) {
+        return;
+      }
+      setRevealedCount(records.length);
+
+      if (records.length === setSize) {
+        window.setTimeout(() => {
+          if (encounterKeyRef.current === encounter.snapshotId) {
+            void commitSolutionSet(slots, false);
+          }
+        }, SET_LAST_ROLL_READ_MS);
+      }
+    } finally {
       pickBusyRef.current = false;
-      return;
-    }
-
-    if (records.length === 1) {
-      // The party sees the first choice, as with a single solution.
-      onActionReveal?.(solution.slot, null, records[0]!.solutionId, 'select');
-    }
-    const slots = records.map((record) => record.slot);
-    setPicksRef.current = slots;
-    setSetPicks(slots);
-    setPickRecords(records);
-    pickRecordsRef.current = records;
-    // The roll shows when the solution arrives at its hover place.
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, SOLUTION_HOVER_RISE_MS);
-    });
-    if (encounterKeyRef.current !== encounter.snapshotId) {
-      return;
-    }
-    setRevealedCount(records.length);
-    pickBusyRef.current = false;
-
-    if (records.length === setSize) {
-      window.setTimeout(() => {
-        if (encounterKeyRef.current === encounter.snapshotId) {
-          commitSolutionSet(slots, false);
-        }
-      }, SET_LAST_ROLL_READ_MS);
     }
   }
 
-  function commitSolutionSet(picks: SlotLetter[], diceFill: boolean): void {
+  async function commitSolutionSet(picks: SlotLetter[], diceFill: boolean): Promise<void> {
     if (picks.length === 0 || setCommitted) {
       return;
     }
@@ -1144,25 +1160,23 @@ export function SolutionBlock({
 
     const first = picks[0]!;
     const solutionSet = { picks: [...picks], diceFill };
-    // Every chosen solution already played its animation; only the dice still rolls.
-    const revealMs = diceFill ? DICE_ROLL_ANIMATION_MS : 0;
-    if (diceFill) {
-      playSfx(DICE_SOUND);
-      setDiceRollCount((count) => count + 1);
-    }
-    // Phase 2 of the frame timer: from completing the set until the result can be used.
+    // Every chosen solution already rose. Each gap the dice fills gets its own spin.
+    const spins = diceFill ? Math.max(1, setSize - picks.length) : 0;
     planFramePhase(
       actPhaseKey(encounter.snapshotId),
       diceFill
         ? blockRef.current?.querySelector('[aria-label="Roll dice"]')
         : blockRef.current?.querySelector(`[data-solution-slot="${first}"]`),
-      revealMs + RESULT_READY_ESTIMATE_MS,
+      spins * DICE_ROLL_ANIMATION_MS + RESULT_READY_ESTIMATE_MS,
     );
-    rollRevealTimer.current = window.setTimeout(() => {
-      recordCommittedAction(encounter.snapshotId, first, solutionSet);
-      onActionReveal?.(first, null, pickRecordsRef.current[0]?.solutionId, 'commit');
-      rollRevealTimer.current = null;
-    }, revealMs);
+    if (spins > 0) {
+      await playDiceAnimations(spins);
+    }
+    if (encounterKeyRef.current !== encounter.snapshotId) {
+      return;
+    }
+    recordCommittedAction(encounter.snapshotId, first, solutionSet);
+    onActionReveal?.(first, null, pickRecordsRef.current[0]?.solutionId, 'commit');
   }
 
   function handleSolutionClick(solution: VisibleSolutionSlot): void {
@@ -1272,17 +1286,27 @@ export function SolutionBlock({
                       />
                     </span>
                   </span>
-                  {setCommitted && setRolls?.diceFillRoll !== undefined ? (
-                    <span
-                      aria-label={`Roll ${displayRollAsD20(setRolls.diceFillRoll)}`}
-                      className="morkahja-result-outcome"
-                      style={solutionHoverRollStyle}
-                    >
-                      {displayRollAsD20(setRolls.diceFillRoll)}
-                    </span>
-                  ) : null}
                 </span>
               </button>
+              {setCommitted && (setRolls?.diceFillRolls ?? (setRolls?.diceFillRoll !== undefined ? [setRolls.diceFillRoll] : [])).map((roll, index, rolls) => (
+                <span
+                  aria-label={`Roll ${displayRollAsD20(roll)}`}
+                  className="morkahja-result-outcome"
+                  key={`dice-roll-${index}`}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    bottom: `calc(100% + ${8 + (rolls.length - 1 - index) * 28}px)`,
+                    transform: 'translateX(-50%)',
+                    fontSize: 22,
+                    lineHeight: 1,
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {displayRollAsD20(roll)}
+                </span>
+              ))}
             </div>
             );
           }
@@ -1402,6 +1426,7 @@ export function SolutionBlock({
               >
                 <span
                   className="morkahja-footer-button-visual"
+                  key={activeSolutionSlot === slot ? `${slot}-use-${lockpickBurst}` : `${slot}-idle`}
                   style={{
                     ...solutionIconShellStyle,
                     ...solutionIconShellRevealStyle(

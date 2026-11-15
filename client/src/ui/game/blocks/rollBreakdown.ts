@@ -46,8 +46,10 @@ export function choiceRollBreakdown(
   const difficulty = encounter.encounterDifficulty ?? 1;
   const result = participant.preparedResult ?? participant.resolutionSummary;
   const pickRolls = result?.pickRolls;
-  const diceFillRoll = result?.diceFillRoll;
-  const isSet = (pickRolls !== undefined && pickRolls.length > 1) || diceFillRoll !== undefined;
+  const diceFillRolls = result?.diceFillRolls
+    ?? (result?.diceFillRoll !== undefined ? [result.diceFillRoll] : undefined);
+  const isSet = (pickRolls !== undefined && pickRolls.length > 1)
+    || (diceFillRolls !== undefined && diceFillRolls.length > 0);
   if (!isSet) {
     const bonus = participant.selectedAction === 'dice' || participant.selectedSolutionId === undefined
       ? DICE_ROLL_BONUS
@@ -67,11 +69,12 @@ export function choiceRollBreakdown(
     }
   }
 
-  if (diceFillRoll !== undefined) {
-    const dieLine = formatRollBreakdown(diceFillRoll, DICE_ROLL_BONUS, difficulty);
-    const filled = Math.max(1, solutionSetSize(difficulty) - picks.length);
-    if (dieLine) {
-      for (let copy = 0; copy < filled; copy += 1) {
+  if (diceFillRolls && diceFillRolls.length > 0) {
+    const gaps = Math.max(diceFillRolls.length, solutionSetSize(difficulty) - picks.length);
+    for (let index = 0; index < gaps; index += 1) {
+      const face = diceFillRolls[index] ?? diceFillRolls[0]!;
+      const dieLine = formatRollBreakdown(face, DICE_ROLL_BONUS, difficulty);
+      if (dieLine) {
         lines.push(dieLine);
       }
     }

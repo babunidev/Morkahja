@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Each solution and each die rolls on its own; 0.9.0-beta.68
+
+- **Change (Babuni's direction, D-035):** an encounter of difficulty 2 asks for two separate rolls. Each chosen solution, including a second charge of the same item, plays its animation, rises, and hovers with its own roll. Each gap the dice fills is its own spin and its own roll, so the dice with no solution at difficulty 2 spins twice. The outcome is still the average.
+- **Version 0.9.0-beta.68** (D-015, D-035).
+- **Verification:** `encounterResolver.test.ts` and `solutionSetChoice.test.ts` passed, including two separate dice faces averaged with the solution. Client tests passed (43), including two different dice lines in the portrait breakdown. The client typecheck passed. Not played through in a browser. Not deployed.
+
 ## 2026-11-15 — Unreleased: Keldor plays the expansion 1 weather; 0.9.0-beta.67
 
 - **Fix (Babuni's direction):** Roarback Mauler is in the Cursed Forest of Keldor. That land is stored as expansion 1001, and the weather recordings are filed as expansion 1, so the bed stayed silent. Keldor now plays those recordings. Urcogor, Everwinter and Aetherion still have none.

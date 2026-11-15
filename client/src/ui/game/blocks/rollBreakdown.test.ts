@@ -83,4 +83,22 @@ assert.deepEqual(
   ['15 + 7 − 2', '7 + 5 − 2', '13 − 2'],
 );
 
+assert.deepEqual(
+  choiceRollBreakdown(
+    participant({
+      selectedAction: 'dice',
+      preparedResult: {
+        success: true,
+        message: '',
+        rewards: [],
+        selectedRoll: 13,
+        diceFillRolls: [15, 9],
+      },
+    }),
+    encounter({ encounterDifficulty: 2 }),
+    12,
+  ),
+  ['16 − 1', '10 − 1'],
+);
+
 console.log('rollBreakdown.test.ts passed');

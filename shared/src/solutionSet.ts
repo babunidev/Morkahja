@@ -3,7 +3,8 @@
  * needs N solutions. The player taps them one at a time (the same slot again
  * for another copy); each chosen solution rolls on its own, and the dice can
  * finish an incomplete set, standing in for every missing solution. The
- * rolls are averaged into one roll that decides the outcome.
+ * rolls are averaged into one roll that decides the outcome. Each gap the
+ * dice fills is its own roll and its own spin.
  *
  * Shared by the server (authoritative) and the client (which slots can still
  * be tapped), so both allocate inventory the same way.
@@ -152,21 +153,37 @@ export function allocateSolutionSet(
 }
 
 /**
- * The one roll of a set: the average of every chosen solution's roll, with
- * the dice roll counted once for each missing solution. Rounded to the
- * nearest whole total, which can sit past 20.
+ * One die face for each gap in a set. Snapshots from before each gap had its
+ * own face only stored the first die, and that face fills every gap.
+ */
+export function diceFacesForGaps(
+  gaps: number,
+  first: number,
+  further: readonly number[] | undefined,
+): number[] {
+  if (gaps <= 0) {
+    return [];
+  }
+  if (!further) {
+    return Array.from({ length: gaps }, () => first);
+  }
+  const faces = [first, ...further];
+  return Array.from({ length: gaps }, (_, index) => faces[index] ?? first);
+}
+
+/**
+ * The one roll of a set: the average of every chosen solution's roll and
+ * every die that filled a gap. Rounded to the nearest whole total, which
+ * can sit past 20.
  */
 export function combineSolutionSetRolls(
   pickRolls: readonly number[],
-  setSize: number,
-  diceRoll: number | null,
+  diceRolls: readonly number[] = [],
 ): number {
-  const missing = Math.max(0, setSize - pickRolls.length);
-  const total = pickRolls.reduce((sum, roll) => sum + roll, 0)
-    + (missing > 0 ? (diceRoll ?? 0) * missing : 0);
-  const count = pickRolls.length + missing;
-  if (count === 0) {
-    return diceRoll ?? 1;
+  const rolls = [...pickRolls, ...diceRolls];
+  if (rolls.length === 0) {
+    return 1;
   }
-  return Math.round(total / count);
+  const total = rolls.reduce((sum, roll) => sum + roll, 0);
+  return Math.round(total / rolls.length);
 }
