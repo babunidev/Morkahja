@@ -60,5 +60,9 @@ export function generateEncounterRollSnapshot(difficulty: number): EncounterRoll
     rollSecondaryD,
     rollE: finalizeRoll(randomInt(1, 20), DICE_ROLL_BONUS, difficulty),
     extraRolls: generateSolutionSetExtraRolls(difficulty),
+    diceFillRolls: Array.from(
+      { length: MAX_SOLUTION_SET_SIZE - 1 },
+      () => finalizeRoll(randomInt(1, 20), DICE_ROLL_BONUS, difficulty),
+    ),
   });
 }

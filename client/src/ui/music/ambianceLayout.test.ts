@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
+import { ambiancePackForExpansion, expansionHasClips } from './ambianceLibrary.js';
 
 const ambianceDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -32,3 +33,10 @@ for (const [key, count] of Object.entries(expected)) {
 assert.equal(AMBIANCE_CLIPS.length, 104);
 const expansions = new Set(AMBIANCE_CLIPS.map((clip) => clip.expansion));
 assert.deepEqual([...expansions].sort((a, b) => a - b), [0, 1]);
+
+assert.equal(ambiancePackForExpansion(0), 0);
+assert.equal(ambiancePackForExpansion(1), 1);
+assert.equal(ambiancePackForExpansion(1001), 1);
+assert.equal(ambiancePackForExpansion(1004), 4);
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1001)), true);
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1001), false);

@@ -59,6 +59,33 @@ export function formatRollNotation(bonus: number, difficulty: number): string {
 }
 
 /**
+ * How a single finished total was made: the d20 face, then the lane bonus, then the difficulty penalty.
+ * Null when the total is not one fair face plus those modifiers (a set average, or an old 1–100 roll).
+ */
+export function formatRollBreakdown(total: number, bonus: number, difficulty: number): string | null {
+  if (!Number.isFinite(total) || !Number.isFinite(bonus)) {
+    return null;
+  }
+
+  const penalty = difficultyRollPenalty(difficulty);
+  const natural = Math.round(total) - Math.round(bonus) + penalty;
+  if (!isD20Face(natural) || finalizeRoll(natural, bonus, difficulty) !== Math.round(total)) {
+    return null;
+  }
+
+  const parts = [String(natural)];
+  if (bonus > 0) {
+    parts.push(`+ ${bonus}`);
+  } else if (bonus < 0) {
+    parts.push(`− ${Math.abs(bonus)}`);
+  }
+  if (penalty > 0) {
+    parts.push(`− ${penalty}`);
+  }
+  return parts.join(' ');
+}
+
+/**
  * Single global interpretation table (no slot-specific logic).
  * 2 or lower Misery · 3–8 Hardship · 9–12 Disengage · 13–18 Fortune · 19 or higher Prosperity.
  * A total past 20, such as 26 or 27, stays Prosperity. A total below 1 stays Misery.

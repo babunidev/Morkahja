@@ -238,6 +238,23 @@ console.log('encounterResolver.test.ts: all assertions passed');
   });
   assert.deepEqual(withDice.pickRolls, [90]);
   assert.equal(withDice.diceFillRoll, 20);
+  assert.deepEqual(withDice.diceFillRolls, [20, 20]);
+  const separateDice = resolveEncounter(baseEncounter(3), [10], solutionMap, createEncounterRollSnapshot({
+    ...rolls,
+    diceFillRolls: [4, 6, 8],
+  }), {
+    mode: 'slot', slot: 'A', picks: ['A'], diceFill: true,
+  });
+  // 90, then the first die 20, then the next die 4: (90 + 20 + 4) / 3 = 38.
+  assert.equal(separateDice.selectedRoll, 38);
+  assert.deepEqual(separateDice.diceFillRolls, [20, 4]);
+  const diceOnly = resolveEncounter(baseEncounter(2), [], solutionMap, createEncounterRollSnapshot({
+    ...rolls,
+    rollE: 10,
+    diceFillRolls: [16],
+  }), { mode: 'dice' });
+  assert.equal(diceOnly.selectedRoll, 13);
+  assert.deepEqual(diceOnly.diceFillRolls, [10, 16]);
   const single = resolveEncounter(baseEncounter(1), [10], solutionMap, rolls, { mode: 'slot', slot: 'A' });
   assert.equal(single.pickRolls, undefined);
 }

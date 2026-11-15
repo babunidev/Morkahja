@@ -769,7 +769,7 @@ function getRoomNextEncounter(
 
   return selectNextEncounter({
     unlockedExpansions: room.mergedExpansions,
-    previousEncounter: null,
+    currentExpansion: currentSnapshot.encounterExpansion,
   }, getEncounters());
 }
 

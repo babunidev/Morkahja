@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { fadeStyle } from '../../transitions/fade.js';
 import { useOpacityPresence } from '../../transitions/opacityPresence.js';
 import type {
+  EncounterSnapshot,
   ParticipantFocusStateDto,
   RoomParticipantDto,
   RoomStateDto,
@@ -226,6 +227,7 @@ function statusLabel(participant: RoomParticipantDto, roomState?: RoomStateDto):
 
 export function PartyMemberSlot({
   canKick = false,
+  encounter,
   onKick,
   onDetailsVisibleChange,
   participant,
@@ -235,6 +237,7 @@ export function PartyMemberSlot({
   xpPulseToken,
 }: {
   canKick?: boolean;
+  encounter?: EncounterSnapshot;
   onKick?: (targetPlayerId: string) => void;
   onDetailsVisibleChange?: (visible: boolean) => void;
   participant: RoomParticipantDto;
@@ -316,6 +319,7 @@ export function PartyMemberSlot({
               <EssenceSlotsRing avatarId={participant.avatar.id} essences={participant.avatar.inventory?.essences} />
               <LoreGemAvatarBadge held={participant.loreGemCollected === true} roomState={roomState} />
               <PartyParticipantChoiceBadge
+                encounter={encounter}
                 hidden={detailsOpen}
                 participant={participant}
                 roomState={roomState}

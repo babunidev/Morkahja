@@ -6,6 +6,7 @@ import {
   difficultyRollPenalty,
   displayRollAsD20 as sharedDisplayRollAsD20,
   finalizeRoll,
+  formatRollBreakdown,
   formatRollNotation,
   interpretRoll as sharedInterpretRoll,
   isD20Face,
@@ -86,6 +87,14 @@ assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 1), 'd20+5');
 assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 1), 'd20+7');
 assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 2), 'd20+6');
 assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 7), 'd20-1');
+assert.equal(formatRollBreakdown(27, PRIMARY_SOLUTION_ROLL_BONUS, 1), '20 + 7');
+assert.equal(formatRollBreakdown(23, PRIMARY_SOLUTION_ROLL_BONUS, 1), '16 + 7');
+assert.equal(formatRollBreakdown(11, PRIMARY_SOLUTION_ROLL_BONUS, 2), '5 + 7 − 1');
+assert.equal(formatRollBreakdown(11, SECONDARY_SOLUTION_ROLL_BONUS, 1), '6 + 5');
+assert.equal(formatRollBreakdown(20, DICE_ROLL_BONUS, 1), '20');
+assert.equal(formatRollBreakdown(-2, DICE_ROLL_BONUS, 4), '1 − 3');
+assert.equal(formatRollBreakdown(11, PRIMARY_SOLUTION_ROLL_BONUS, 1), '4 + 7');
+assert.equal(formatRollBreakdown(96, PRIMARY_SOLUTION_ROLL_BONUS, 1), null);
 
 for (const difficulty of [1, 2, 4, 7]) {
   const penalty = difficultyRollPenalty(difficulty);

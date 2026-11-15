@@ -724,7 +724,11 @@ export function EncounterImageBlock({
         inventory={inventory}
         onActionReveal={handleActionReveal}
         setRolls={serverResolution
-          ? { pickRolls: serverResolution.pickRolls, diceFillRoll: serverResolution.diceFillRoll }
+          ? {
+            pickRolls: serverResolution.pickRolls,
+            diceFillRoll: serverResolution.diceFillRoll,
+            diceFillRolls: serverResolution.diceFillRolls,
+          }
           : null}
         lockedSetPicks={lockedSetPicks}
         onSetPick={async (slot) => {

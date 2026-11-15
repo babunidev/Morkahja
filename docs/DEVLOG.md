@@ -354,6 +354,18 @@ With several solutions hovering, I only saw the final roll on my avatar, and twi
 
 The rolls on the hovering solutions used a plain font; I wanted the same Breathe Fire numbers as on my avatar. And I wanted each solution to have its moment: the usual animation, then it rises, pushes the others up and shows its roll as it arrives. AI pointed out that showing rolls one by one would let me put a bad one back and try again, so I decided that a chosen solution stays chosen. The server now locks each pick and reveals its roll, even across a reload (D-025). **Verification:** release check with a new server test and a local play-through with a reload in the middle of a set; released as 0.9.0-beta.56 the same night.
 
+### Two rolls when the encounter asks for two — 2026-11-15
+
+A difficulty of two was still able to finish on one roll. Two keys, or two charges of one key, have to be two instances: the solution animation, then up, then hovering, each with its own number. With nothing to spend, the dice spins once for each gap, and each spin is its own roll (D-035). The outcome stays the average of those rolls. **Verification:** recorded with the tests for this step. Not played through in a browser. Not on the live game.
+
+### How the number was made — 2026-11-15
+
+The number sitting on the solution above the portrait was only the finished total. A 23 and an 11 gave no hint of the face, the solution's bonus, or the difficulty. The tooltip now grows a second frame at the bottom, the same kind of frame, and that frame shows the face and then the modifiers: `16 + 7`, or `5 + 7 − 1` (D-034). Cursor (Grok 4.7) recovered the face from the total. **Verification:** the breakdown tests passed. The tooltip was not hovered in a played turn. Not on the live game.
+
+### Staying in one region — 2026-11-15
+
+A run of encounters jumped between regions, because every allowed encounter was equally likely. Staying put should be the usual path, including in the starting expansion, so a stretch of the journey can share a place. A written follow still comes first. When there is none, a d20 decides: one through fourteen stay, and fifteen through twenty leave (D-033). The weather bed, this region roll, and the portrait breakdown are one checkout, 0.9.0-beta.66. The four bottom buttons play at 85 percent of the other effects. Cursor (Grok 4.7) put that roll on the random pool and removed a second draw that could never reject an encounter. **Verification:** the selection test passed. Not played in the browser. Not on the live game.
+
 ### Out with the sounds — 2026-11-14
 
 The leveled effects, the backpack, the skillbook, the horn, and the choice of five free friends went to the live game together. The encounter wording already on the server, Hidden Market included, stayed. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-8HvdfyEK.js` and contains `0.9.0-beta.63`. A reward, a horn and a roll were not played on the live game.
@@ -385,6 +397,10 @@ The Scholar was showing the Codex of Lost Echoes in the left slot and in the nex
 ### Back to a d20 — 2026-11-14
 
 The hidden 1–100 roll had made a primary solution a sure win, and the number on the portrait was only a compressed face. The lanes are a fair d20 again. A primary solution adds 7, a secondary adds 5, and the die adds nothing yet. Difficulty takes one less than its level off every roll, including the die. The portrait shows the total, so 20 with +7 reads 27, and the tooltip says `d20+7` beside the name (D-027). An encounter already waiting on the old scale gets a new total when the choice is made, so an old 96 is not shown as 96. **Verification:** client tests passed (37) and server tests passed (41) on local PostgreSQL, including a set whose average is 11 and an Atranor prosperity roll. Released the same evening as 0.9.0-beta.59. The live script contains that version and `d20+7`. A roll was not played on the live game.
+
+### Keldor is expansion one — 2026-11-15
+
+Roarback Mauler sits in the Cursed Forest of Keldor, and that land is expansion one. The encounter stores it as 1001, while the weather recordings are filed as 1, so the bed looked for a folder that is not there and stayed silent. Keldor now plays those recordings. Urcogor, Everwinter and Aetherion still have none. Cursor (Grok 4.7) pointed the bed at the filed place. **Verification:** the client tests passed, including that 1001 uses folder 1. The bed was not heard through a cycle. **Not deployed yet.**
 
 ### A bed under the encounter — 2026-11-15
 

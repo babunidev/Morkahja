@@ -45,8 +45,10 @@ export interface ParticipantResolutionSummary {
   gainedExperience?: number;
   /** Solution sets: each chosen solution's own roll, in the order chosen. */
   pickRolls?: number[];
-  /** Solution sets finished by the dice: the dice roll. */
+  /** Solution sets finished by the dice: the first dice roll. */
   diceFillRoll?: number;
+  /** One dice face per gap the die filled. */
+  diceFillRolls?: number[];
 }
 
 /** Reveal-only outcome attached after prepare; not persisted to avatar until room commit. */

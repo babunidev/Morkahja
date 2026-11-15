@@ -67,6 +67,8 @@ export interface EncounterSnapshot {
   rollE: number;
   /** Rolls for further copies of a slot in a solution set; absent on older snapshots. */
   extraRolls?: EncounterRollSnapshot['extraRolls'];
+  /** Further dice faces after rollE. Absent: the first die fills every gap. */
+  diceFillRolls?: EncounterRollSnapshot['diceFillRolls'];
   /**
    * Stored rolls are the uncapped total. Snapshots without this flag still
    * hold a retired 1–100 roll that is replaced when the choice is committed.
@@ -205,6 +207,7 @@ export function snapshotToRolls(
     rollSecondaryD: snapshot.rollSecondaryD ?? snapshot.rollD,
     rollE: snapshot.rollE,
     extraRolls: snapshot.extraRolls,
+    diceFillRolls: snapshot.diceFillRolls,
   });
 }
 

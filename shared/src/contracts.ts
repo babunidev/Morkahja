@@ -436,8 +436,10 @@ export interface ParticipantResolutionSummaryDto {
   gainedExperience?: number;
   /** Solution sets: each chosen solution's own roll, in the order chosen. */
   pickRolls?: number[];
-  /** Solution sets finished by the dice: the dice roll. */
+  /** Solution sets finished by the dice: the first dice roll. */
   diceFillRoll?: number;
+  /** One dice face per gap the die filled. */
+  diceFillRolls?: number[];
 }
 
 export interface RoomSystemEventDto {
@@ -469,6 +471,7 @@ export interface ParticipantPreparedResultDto {
   gainedExperience?: number;
   pickRolls?: number[];
   diceFillRoll?: number;
+  diceFillRolls?: number[];
 }
 
 export interface RoomParticipantDto {

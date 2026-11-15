@@ -2,6 +2,24 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-15 — Each solution and each die rolls on its own; 0.9.0-beta.68
+
+- **Change (Babuni's direction, D-035):** an encounter of difficulty 2 asks for two separate rolls. Each chosen solution, including a second charge of the same item, plays its animation, rises, and hovers with its own roll. Each gap the dice fills is its own spin and its own roll, so the dice with no solution at difficulty 2 spins twice. The outcome is still the average.
+- **Version 0.9.0-beta.68** (D-015, D-035).
+- **Verification:** `encounterResolver.test.ts` and `solutionSetChoice.test.ts` passed, including two separate dice faces averaged with the solution. Client tests passed (43), including two different dice lines in the portrait breakdown. The client typecheck passed. Not played through in a browser. Not deployed.
+
+## 2026-11-15 — Unreleased: Keldor plays the expansion 1 weather; 0.9.0-beta.67
+
+- **Fix (Babuni's direction):** Roarback Mauler is in the Cursed Forest of Keldor. That land is stored as expansion 1001, and the weather recordings are filed as expansion 1, so the bed stayed silent. Keldor now plays those recordings. Urcogor, Everwinter and Aetherion still have none.
+- **Version 0.9.0-beta.67** (D-015, D-032).
+- **Verification:** the client tests passed, including that expansion 1001 uses the recordings filed as 1. The bed was not heard through a cycle. **Not deployed.**
+
+## 2026-11-15 — One line: the weather bed, the region, and the roll; 0.9.0-beta.66
+
+- **Change (Babuni's direction, D-033, D-034):** the tested main line and the two pieces built on top of it are one checkout. A random next encounter stays in the expansion just left, including expansion 0, when a d20 rolls 1–14. A 15–20 leaves for another unlocked expansion. Encounters inside the chosen side stay equally likely. A written follow still wins, and only after a successful Fortune or Prosperity. If the chosen side has no encounters, the other side is used. After a level-up or Atranor, the region is the encounter that led there. The picture preloaded for the next encounter uses the same roll. The tooltip on the solution or die above the portrait grows a second frame underneath. That frame shows the d20 face and then the modifiers, so a primary 23 reads `16 + 7` and a primary 11 at difficulty 2 reads `5 + 7 − 1`. A set shows one line for each solution, and the die once for each gap it filled. The four buttons along the bottom of an encounter play at 85 percent of the other effects.
+- **Version 0.9.0-beta.66** (D-015, D-033, D-034). The weather bed below remains 0.9.0-beta.64. D-032 stays the weather decision. The region is D-033 and the portrait breakdown is D-034, because both had been written as D-032 on separate lines.
+- **Verification:** on this merged tree, `regionEncounterSelection.test.ts`, `diceInterpreter.test.ts`, and `solutionSetChoice.test.ts` passed. Client tests passed (43), including the roll breakdown, the weather stages, and the 85 percent footer scale. The client typecheck passed. The tooltip was not hovered in a played turn, and a region stretch was not played. Not deployed.
+
 ## 2026-11-15 — Unreleased: inventory, skillbook and lore 10% quieter; 0.9.0-beta.65
 
 - **Change (Babuni's direction):** the inventory, the skillbook and lore play at nine tenths of the volume they had. Call for help is unchanged.
