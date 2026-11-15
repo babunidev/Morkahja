@@ -376,7 +376,7 @@ The city, Aetherion, is expansion 1004, and its edited recordings cover every st
 
 ### The Atranor item stayed, and so did the stack — 2026-11-15
 
-Using a resurrection item in Atranor brought me back and left the item in the inventory. That item is spent now, before the essences are granted, the same way a solution is spent in any other encounter. The dice there still spends nothing. The solution stacks from the encounter that failed were hovering again on Atranor, and again on a level-up. They disappear when they fly into the encounter, and a system event does not call them back (D-041). Cursor (Grok 4.7) spent the item and cleared the stack. **Verification:** the Atranor inventory test passed, including an Elixir that is gone after a successful return. The client typecheck passed. Not watched in a played turn. Not released.
+Using a resurrection item in Atranor brought me back and left the item in the inventory. That item is spent now, before the essences are granted, the same way a solution is spent in any other encounter. The dice there still spends nothing. The solution stacks from the encounter that failed were hovering again on Atranor, and again on a level-up. They disappear when they fly into the encounter, and a system event does not call them back (D-041). Cursor (Grok 4.7) spent the item, cleared the stack, and numbered it 0.9.0-beta.75. **Verification:** client tests passed (45). The Atranor inventory test passed, including an Elixir that is gone after a successful return. The server typecheck passed. A played turn was not watched before release.
 
 ### Out as 0.9.0-beta.74 — 2026-11-15
 

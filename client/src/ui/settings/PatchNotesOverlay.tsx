@@ -29,6 +29,15 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-75',
+    version: '0.9.0-beta.75',
+    period: '15 Nov 2026',
+    notes: [
+      'Using a resurrection item in Atranor spends that item.',
+      'Solution stacks disappear into the encounter when they are finished, and they no longer stay on Atranor or a level-up.',
+    ],
+  },
+  {
     id: 'beta-74',
     version: '0.9.0-beta.74',
     period: '15 Nov 2026',
