@@ -1093,7 +1093,7 @@
     "mEncounterSolutiuonTypeB": 14,
     "mEncounterSolutiuonTypeC": 13,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "A peaceful and tranquil space nestled within the heart of the forest, this clearing is a place of respite and rejuvenation. It is said that the faun would come here to dance and sing, and that the giants would gather to discuss matters of great import. It is a place of balance and harmony, where one can connect with the rhythms of nature and find solace in the simple beauty of the world.",
+    "mEncounterText": "Sunlight spills through an opening in the forest canopy, warming a small clearing surrounded by ancient trees.\n\nSoft grass covers the ground, scattered with tiny wildflowers that sway in the gentle breeze. Butterflies drift between the blossoms, while birdsong mingles with the quiet rustling of leaves overhead. The air carries the sweet scent of flowering herbs and fresh earth.\n\nNear the edge of the clearing, a circle of broad, weathered stones rests beneath the trees. Their surfaces are smooth with age, large enough to have served as seats for the giants who, according to old tales, once gathered here to share their wisdom.\n\nAcross the grass, faint patterns remain where generations of dancing feet have worn gentle paths into the earth. The faun are said to have celebrated beneath these branches, filling the woodland with music and laughter.\n\nNow the clearing rests in peaceful silence, its open sky and soft greenery offering a quiet refuge beneath the sheltering forest.\n\nA warm breeze passes through the grass, carrying the distant melody of birds among the trees.",
     "mEncounterTitle": "Sunlit Dell",
     "mEncounterType": 2,
     "mEncounterElement": "Nature",
