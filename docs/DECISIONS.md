@@ -274,7 +274,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). The dice spin, the solution wiggle, and the wait until each roll is committed are 1730 ms. A clickable Scribes notice no longer keeps the browser's gray button face. The local start script is on this line. This had been written against an older checkout and had not reached main.
 
-**Status:** on main as 0.9.0-beta.71, 2026-11-15. Not watched in a played turn. Not deployed.
+**Status:** released with 0.9.0-beta.72, 2026-11-15. Not watched in a played turn.
 
 ## D-035 — Each gap is its own roll (2026-11-15)
 
@@ -314,7 +314,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Corrected the same night:** those recordings belong to Everwinter Valley, expansion 1003. The drop-folder names are `3stage`, and the game copies live in folder 3. Urcogor has none. Aetherion still has none.
 
-**And Aetherion:** the city, expansion 1004, now has its own four stages, filed as expansion 4: 12 in A, 16 in B, 12 in C and 12 in D. The game copies were brought to about −38 LUFS. The edited files in the drop folder were left as given. Urcogor is the land still without recordings.
+**And Aetherion:** the city, expansion 1004, now has its own four stages, filed as expansion 4: 12 in A, 16 in B, 12 in C and 12 in D. The game copies were brought to about −38 LUFS. The edited files in the drop folder were left as given. Urcogor is the land still without recordings. Released 2026-11-15 as 0.9.0-beta.72. A full cycle was still not heard on the live game.
 
 ## 2026-11-13 — Licensing decision
 

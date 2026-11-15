@@ -2,30 +2,30 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-15 — Unreleased: Aetherion has weather; 0.9.0-beta.72
+## 2026-11-15 — Aetherion has weather; 0.9.0-beta.72
 
 - **Change (Babuni's direction):** the edited recordings for Aetherion, the city, expansion 1004, cover all four stages. The game files them as expansion 4: 12 in stage A, 16 in B, 12 in C and 12 in D. The copies in the game were brought to about −38 LUFS. The drop folder was left as edited. Urcogor is the land still without recordings.
 - **Version 0.9.0-beta.72** (D-015, D-032).
-- **Verification:** the client tests passed, including that expansion 1004 uses the recordings filed as 4. The game copies measured −38.6 to −37.9 LUFS. They were not heard through a cycle. **Not deployed.**
+- **Verification:** the client tests passed, including that expansion 1004 uses the recordings filed as 4. The game copies measured −38.6 to −37.9 LUFS. They were not heard through a cycle. **Deployed** 2026-11-15 04:10 UTC from `89afb765`, then the encounter wording through Tempestwailer Wildheart at 04:12 UTC from `1b443c8e`. The live script is `index-BmfdD2gh.js` and contains `0.9.0-beta.72`. Health, content, and the weather for the base game, Keldor, Everwinter and Aetherion return 200. See `docs/DEPLOYMENT.md`.
 
 ## 2026-11-15 — Unreleased: the dice and a solution last the same time; 0.9.0-beta.71
 
 - **Timing (Babuni's direction, D-036):** tapping a solution or the dice played for different lengths. The solution wiggle was 1.5 s, its roll was committed at 1.8 s, and the dice spin was 1.35 s. Both base animations now last 1.73 s, and the roll is committed when that animation ends. The rise after a set pick, the wait after the last roll, and the hover bob are unchanged.
 - **Fix:** a clickable Scribes notice is a button, so the browser's gray face showed as a square behind the dark panel. The button now has no face and no border of its own.
 - **Version 0.9.0-beta.71** (D-015, D-036). The local run script is on this line as well. Everwinter Valley below remains 0.9.0-beta.70.
-- **Verification:** client tests and the client typecheck, recorded with this step. The animations were not watched in a played turn. **Not deployed.**
+- **Verification:** client tests and the client typecheck, recorded with this step. The animations were not watched in a played turn. Shipped 2026-11-15 inside 0.9.0-beta.72.
 
 ## 2026-11-15 — Unreleased: the new weather is Everwinter Valley; 0.9.0-beta.70
 
 - **Change (Babuni's direction):** the recordings just filed as expansion 2 belong to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies live in folder 3. Urcogor has no recordings. The loudness is unchanged.
 - **Version 0.9.0-beta.70** (D-015, D-032).
-- **Verification:** the client tests passed, including that expansion 1003 uses the recordings filed as 3 and expansion 1002 has none. They were not heard through a cycle. **Not deployed.**
+- **Verification:** the client tests passed, including that expansion 1003 uses the recordings filed as 3 and expansion 1002 has none. They were not heard through a cycle. Shipped 2026-11-15 inside 0.9.0-beta.72.
 
 ## 2026-11-15 — Unreleased: Urcogor Ravage has weather; 0.9.0-beta.69
 
 - **Change (Babuni's direction):** the edited recordings for expansion 1002, Urcogor Ravage, cover all four stages. The game files them as expansion 2: 16 in stage A, 16 in B, 12 in C and 13 in D. The copies in the game were brought to about −38 LUFS, from −56.7 to −12.7 in the edited files. The drop folder was left as edited. Everwinter and Aetherion still have none.
 - **Version 0.9.0-beta.69** (D-015, D-032).
-- **Verification:** the client tests passed, including that expansion 1002 uses the recordings filed as 2. The game copies measured −38.4 to −37.1 LUFS. They were not heard through a cycle. **Not deployed.**
+- **Verification:** the client tests passed, including that expansion 1002 uses the recordings filed as 2. The game copies measured −38.4 to −37.1 LUFS. They were not heard through a cycle. Corrected the same night, and the Everwinter filing shipped 2026-11-15 inside 0.9.0-beta.72.
 
 ## 2026-11-15 — Each solution and each die rolls on its own; 0.9.0-beta.68
 

@@ -356,7 +356,7 @@ The rolls on the hovering solutions used a plain font; I wanted the same Breathe
 
 ### One length for the dice and a solution — 2026-11-15
 
-The dice spin and the solution wiggle took different times, and a solution's roll arrived after the wiggle had already stopped. Both now last 1.73 seconds, and the roll is committed when that animation ends (D-036). The rise after a set pick, the wait after the last roll, and the hover bob stay as they were. A clickable Scribes notice was also sitting on the browser's gray button face, so the dark panel is the notice now. These had been sitting off main, with the local start script. Cursor (Grok 4.7) brought them onto this line. **Verification:** the client tests and the client typecheck. The animations were not watched in a played turn. Not on the live server.
+The dice spin and the solution wiggle took different times, and a solution's roll arrived after the wiggle had already stopped. Both now last 1.73 seconds, and the roll is committed when that animation ends (D-036). The rise after a set pick, the wait after the last roll, and the hover bob stay as they were. A clickable Scribes notice was also sitting on the browser's gray button face, so the dark panel is the notice now. These had been sitting off main, with the local start script. Cursor (Grok 4.7) brought them onto this line. **Verification:** the client tests and the client typecheck. The animations were not watched in a played turn. On the live game as 0.9.0-beta.72.
 
 ### Two rolls when the encounter asks for two — 2026-11-15
 
@@ -364,15 +364,19 @@ A difficulty of two was still able to finish on one roll. Two keys, or two charg
 
 ### Weather for Urcogor — 2026-11-15
 
-The edited recordings for Urcogor Ravage cover every stage. That land is expansion 1002, so the files belong in folder 2: sixteen calm, sixteen wind, twelve approach and thirteen storm. They arrived at very different loudness, from about −57 to −13 LUFS, and the copies in the game were brought to about −38, with the edited originals left as they were. Everwinter and Aetherion still have none. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.4 to −37.1 LUFS. They were not heard through a cycle. **Not deployed yet.**
+The edited recordings for Urcogor Ravage cover every stage. That land is expansion 1002, so the files belong in folder 2: sixteen calm, sixteen wind, twelve approach and thirteen storm. They arrived at very different loudness, from about −57 to −13 LUFS, and the copies in the game were brought to about −38, with the edited originals left as they were. Everwinter and Aetherion still have none. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.4 to −37.1 LUFS. They were not heard through a cycle. Corrected the same night; the Everwinter filing is on the live game as 0.9.0-beta.72.
 
 ### Those files were Everwinter — 2026-11-15
 
-The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies sit in folder 3. The loudness was left as it was. Urcogor has no recordings. Cursor (Grok 4.7) moved the files. **Verification:** the client tests passed, including that 1003 uses folder 3. They were not heard through a cycle. **Not deployed yet.**
+The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwinter Valley, expansion 1003. The drop-folder names are now `3stage`, and the game copies sit in folder 3. The loudness was left as it was. Urcogor has no recordings. Cursor (Grok 4.7) moved the files. **Verification:** the client tests passed, including that 1003 uses folder 3. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
 
 ### Weather for Aetherion — 2026-11-15
 
-The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. **Not deployed yet.**
+The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
+
+### One checkout — 2026-11-15
+
+Everything that was still waiting went to the live game together, from main, as 0.9.0-beta.72. Everwinter and Aetherion have weather. The dice and a solution last the same time. The encounter wording through Tempestwailer Wildheart is included. Urcogor still has no recordings. The other branches are earlier copies of work already on main, so they stayed where they are. Cursor (Grok 4.7) published the release. **Verification:** the live script is `index-BmfdD2gh.js` and contains `0.9.0-beta.72`. Health, the content, and the weather files for the base game, Keldor, Everwinter and Aetherion return 200. A weather cycle and the matched animations were not played on the live game. The backup was not restored into another database.
 
 ### Out together — 2026-11-15
 

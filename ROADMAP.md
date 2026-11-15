@@ -98,20 +98,20 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
-- [ ] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Not released.
-- [ ] Aetherion (1004) plays the edited weather filed as expansion 4, 0.9.0-beta.72: 12/16/12/12 pieces in stages A–D, game copies −38.6 to −37.9 LUFS. Not heard through a cycle. Not released. Urcogor (1002) is the land still without recordings.
-- [ ] Everwinter Valley (1003) plays the edited weather filed as expansion 3, 0.9.0-beta.70: the same 16/16/12/13 pieces, moved out of folder 2. Not heard through a cycle. Not released.
+- [x] The dice and a solution both play for 1.73 seconds (D-036), 0.9.0-beta.71: client tests. Not watched in a played turn. Released 2026-11-15 inside 0.9.0-beta.72.
+- [x] Aetherion (1004) plays the edited weather filed as expansion 4, 0.9.0-beta.72: 12/16/12/12 pieces in stages A–D, game copies −38.6 to −37.9 LUFS. Not heard through a cycle. Released 2026-11-15 from `89afb765`. Urcogor (1002) is the land still without recordings.
+- [x] Everwinter Valley (1003) plays the edited weather filed as expansion 3, 0.9.0-beta.70: the same 16/16/12/13 pieces, moved out of folder 2. Not heard through a cycle. Released 2026-11-15 inside 0.9.0-beta.72.
 - [ ] Urcogor Ravage (1002) plays the edited weather filed as expansion 2, 0.9.0-beta.69: filed by mistake and moved to Everwinter in 0.9.0-beta.70. Urcogor has no recordings.
-- [ ] Keldor (1001), including Roarback Mauler, plays the weather filed as expansion 1, 0.9.0-beta.67: the lookup test passed 2026-11-15. Not heard through a cycle. Not released.
+- [x] Keldor (1001), including Roarback Mauler, plays the weather filed as expansion 1, 0.9.0-beta.67: the lookup test passed 2026-11-15. Not heard through a cycle. Released 2026-11-15 inside 0.9.0-beta.68.
 - [x] Each solution and each dice gap is its own roll (D-035), 0.9.0-beta.68: resolver and breakdown tests. Not played through in a browser. Released 2026-11-15 from `dccf8797`.
-- [x] Stay in the current expansion on a d20 of 1–14 (D-033), 0.9.0-beta.66: selection test passed 2026-11-15. Not played, not released.
-- [x] Portrait result tooltip shows the face and the modifiers (D-034), 0.9.0-beta.66: breakdown tests passed 2026-11-15. Not hovered in a played turn, not released.
+- [x] Stay in the current expansion on a d20 of 1–14 (D-033), 0.9.0-beta.66: selection test passed 2026-11-15. Not played. Released 2026-11-15 inside 0.9.0-beta.68.
+- [x] Portrait result tooltip shows the face and the modifiers (D-034), 0.9.0-beta.66: breakdown tests passed 2026-11-15. Not hovered in a played turn. Released 2026-11-15 inside 0.9.0-beta.68.
 - [ ] Encounters that need several solutions, chosen one at a time (D-019), 0.9.0-beta.53: released 2026-11-13 for Babuni's tests with high-level accounts. Still to check: a party with other players choosing sets.
 - [ ] Smooth fades, menus that open once loaded, inventory taps on phones, About Us and costs update (D-020), 0.9.0-beta.54: released 2026-11-13.
 - [ ] Terms and privacy policy rewritten to match the game, "Use Your Key" (D-021), 0.9.0-beta.54: released 2026-11-13. Open: consent to immediate delivery at checkout, if the right of withdrawal should ever be excluded.
 - [ ] Solution sets reveal each roll on arrival, picks locked (D-025), 0.9.0-beta.56: released 2026-11-14. Still to check: sets in a party.
-- [ ] Inventory, skillbook and lore play at 90% of the volume they had, 0.9.0-beta.65: implemented on main 2026-11-15, waiting for a listen. Call for help is unchanged.
-- [ ] Weather bed and quieter effects, 0.9.0-beta.64 (D-032): release prepared 2026-11-15. Stage rules tested. A full cycle was not heard. Named lands 1001, 1003 and 1004 stay silent until they have a folder.
+- [x] Inventory, skillbook and lore play at 90% of the volume they had, 0.9.0-beta.65: released 2026-11-15 inside 0.9.0-beta.68, waiting for a listen. Call for help is unchanged.
+- [x] Weather bed and quieter effects, 0.9.0-beta.64 (D-032): stage rules tested. A full cycle was not heard. Keldor, Everwinter and Aetherion have folders. Urcogor does not. Released 2026-11-15 as 0.9.0-beta.72.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
 - [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.
