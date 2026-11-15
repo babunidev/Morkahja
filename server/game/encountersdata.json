@@ -499,7 +499,7 @@
     "mEncounterSolutiuonTypeB": 22,
     "mEncounterSolutiuonTypeC": 21,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "In the shade of a tree, a downed Aevis struggles to catch his breath. Exhausted, he has expended every ounce of his magic, leaving his body drained and vulnerable. The Aevis' usually bright and spirited eyes now convey pain and weariness. Signs of magical exhaustion are evident in his gaunt frame and weakened posture. Desperate for aid, the downed Aevis urgently requires healing and attention. Restorative remedies, a helping hand, or gentle care can help rejuvenate his drained spirit and restore him to his former ethereal elegance.",
+    "mEncounterText": "Beneath the shade of a broad tree, an Aevis sits folded against the trunk, struggling to draw a steady breath.\n\nThe air around him is strangely still, as if the last of his magic has only just faded. Faint traces of light cling to his hands and wrists before disappearing altogether. His slender frame looks spent, shoulders lowered, head bowed for a moment before lifting again with visible effort.\n\nHis eyes, usually bright with the easy grace of his kind, are dulled by pain and weariness. One hand rests weakly against the ground, the other pressed near his chest, as though he can still feel the strain of what he has given.\n\nLeaves stir overhead. Somewhere nearby, birds continue their song, untouched by the quiet struggle beneath the branches.\n\nHe remains there in the cooling shade, worn thin by exhaustion, with little strength left to spare.",
     "mEncounterTitle": "Downed Aevis",
     "mEncounterType": 3,
     "mEncounterElement": "Spirit",
