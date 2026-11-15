@@ -98,12 +98,13 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
-- [x] Stay in the current expansion on a d20 of 1–14 (D-032), 0.9.0-beta.64: selection test passed 2026-11-15. Not played, not released.
-- [x] Portrait result tooltip shows the face and the modifiers (D-033), 0.9.0-beta.65: breakdown tests passed 2026-11-15. Not hovered in a played turn, not released.
+- [x] Stay in the current expansion on a d20 of 1–14 (D-033), 0.9.0-beta.66: selection test passed 2026-11-15. Not played, not released.
+- [x] Portrait result tooltip shows the face and the modifiers (D-034), 0.9.0-beta.66: breakdown tests passed 2026-11-15. Not hovered in a played turn, not released.
 - [ ] Encounters that need several solutions, chosen one at a time (D-019), 0.9.0-beta.53: released 2026-11-13 for Babuni's tests with high-level accounts. Still to check: a party with other players choosing sets.
 - [ ] Smooth fades, menus that open once loaded, inventory taps on phones, About Us and costs update (D-020), 0.9.0-beta.54: released 2026-11-13.
 - [ ] Terms and privacy policy rewritten to match the game, "Use Your Key" (D-021), 0.9.0-beta.54: released 2026-11-13. Open: consent to immediate delivery at checkout, if the right of withdrawal should ever be excluded.
 - [ ] Solution sets reveal each roll on arrival, picks locked (D-025), 0.9.0-beta.56: released 2026-11-14. Still to check: sets in a party.
+- [ ] Weather bed and quieter effects, 0.9.0-beta.64 (D-032): release prepared 2026-11-15. Stage rules tested. A full cycle was not heard. Named lands 1001, 1003 and 1004 stay silent until they have a folder.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
 - [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.

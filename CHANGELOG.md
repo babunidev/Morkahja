@@ -2,17 +2,17 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-15 — The portrait result shows how the roll was made; 0.9.0-beta.65
+## 2026-11-15 — One line: the weather bed, the region, and the roll; 0.9.0-beta.66
 
-- **Change (Babuni's direction, D-033):** the tooltip on the solution or die above the portrait grows a second frame underneath. That frame shows the d20 face and then the modifiers, so a primary 23 reads `16 + 7` and a primary 11 at difficulty 2 reads `5 + 7 − 1`. A set shows one line for each solution, and the die once for each gap it filled.
-- **Version 0.9.0-beta.65** (D-015, D-033).
-- **Verification:** `formatRollBreakdown` and `rollBreakdown.test.ts` passed. The client typecheck passed. The tooltip was not hovered in a played turn. Not deployed.
+- **Change (Babuni's direction, D-033, D-034):** the tested main line and the two pieces built on top of it are one checkout. A random next encounter stays in the expansion just left, including expansion 0, when a d20 rolls 1–14. A 15–20 leaves for another unlocked expansion. Encounters inside the chosen side stay equally likely. A written follow still wins, and only after a successful Fortune or Prosperity. If the chosen side has no encounters, the other side is used. After a level-up or Atranor, the region is the encounter that led there. The picture preloaded for the next encounter uses the same roll. The tooltip on the solution or die above the portrait grows a second frame underneath. That frame shows the d20 face and then the modifiers, so a primary 23 reads `16 + 7` and a primary 11 at difficulty 2 reads `5 + 7 − 1`. A set shows one line for each solution, and the die once for each gap it filled. The four buttons along the bottom of an encounter play at 85 percent of the other effects.
+- **Version 0.9.0-beta.66** (D-015, D-033, D-034). The weather bed below remains 0.9.0-beta.64. D-032 stays the weather decision. The region is D-033 and the portrait breakdown is D-034, because both had been written as D-032 on separate lines.
+- **Verification:** on this merged tree, `regionEncounterSelection.test.ts`, `diceInterpreter.test.ts`, and `solutionSetChoice.test.ts` passed. Client tests passed (43), including the roll breakdown, the weather stages, and the 85 percent footer scale. The client typecheck passed. The tooltip was not hovered in a played turn, and a region stretch was not played. Not deployed.
 
-## 2026-11-15 — Staying in the same region; 0.9.0-beta.64
+## 2026-11-15 — Unreleased: a weather bed, and quieter effects; 0.9.0-beta.64
 
-- **Change (Babuni's direction, D-032):** a random next encounter stays in the expansion just left, including expansion 0, when a d20 rolls 1–14. A 15–20 leaves for another unlocked expansion. Encounters inside the chosen side stay equally likely. A written follow still wins, and only after a successful Fortune or Prosperity. If the chosen side has no encounters, the other side is used. After a level-up or Atranor, the region is the encounter that led there. The picture preloaded for the next encounter uses the same roll. A second draw that rechecked an already-filtered pool is gone.
-- **Version 0.9.0-beta.64** (D-015, D-032).
-- **Verification:** `regionEncounterSelection.test.ts` passed. A follow does not roll; 14 stays; 15 leaves; expansion 0 stays; a leave roll with nowhere else to go stays. Not played in a browser. Not deployed.
+- **Change (Babuni's direction, D-032):** the encounter music rests 7–21 seconds. A weather bed plays under it for the encounter's expansion: stage A is 3–7 pieces, then a 20 percent chance of stage B; stage B is 1–7 pieces, then an even chance of stage A or one stage C piece; stage C usually fades into stage D (2–4 pieces that overlap); stage D then returns to stage B or stage A. Pieces fade in over one second and out over two. The bed has its own settings slider, starting at full. Expansion 0 and expansion 1 have recordings. A land with none fades out and stays quiet. Using a solution plays one of eight lines. Every effect plays at nine tenths of the effects slider; the solution lines and the reward lines play at nine tenths of that again.
+- **Version 0.9.0-beta.64** (D-015, D-032). The local steps on `fix/mobile-centering` had reused 59–67, which were already live as other work, so this release takes the next free number.
+- **Verification:** client tests passed (42) on this release branch, including the stage handoffs and a walk of 4,000 steps through all four stages. One local base-game encounter requested a stage A file. Wind, approach, storm and the return after the quiet were not heard. **Not deployed.**
 
 ## 2026-11-14 — Released: every effect sits with the level-up sound; 0.9.0-beta.63
 

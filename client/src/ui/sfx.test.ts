@@ -3,12 +3,18 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { SFX_PLAYBACK_SCALE } from './audioVolume.js';
 import {
   ADD_ITEM_SOUNDS,
   ADD_SKILL_SOUNDS,
   BACKPACK_SOUND,
   CALL_FOR_HELP_SOUND,
   ESSENCE_DEITY_SOUNDS,
+  FOOTER_BUTTON_PLAYBACK_SCALE,
+  REWARD_PLAYBACK_SCALE,
+  SOLUTION_PLAYBACK_SCALE,
+  SOLUTION_SOUNDS,
+  pickSolutionSound,
   LOSE_ESSENCE_SOUNDS,
   SKILLBOOK_SOUND,
   pickLossSound,
@@ -22,6 +28,11 @@ const sfxDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..
 function fileName(url: string): string {
   return url.slice(url.lastIndexOf('/') + 1);
 }
+
+assert.equal(SFX_PLAYBACK_SCALE, 0.9);
+assert.equal(SOLUTION_PLAYBACK_SCALE, 0.9);
+assert.equal(REWARD_PLAYBACK_SCALE, 0.9);
+assert.equal(FOOTER_BUTTON_PLAYBACK_SCALE, 0.85);
 
 assert.deepEqual(ADD_ITEM_SOUNDS.map(fileName), ['addItem1.mp3', 'addItem2.mp3', 'addItem3.mp3']);
 assert.deepEqual(
@@ -82,6 +93,14 @@ assert.equal(fileName(rewardVoice(3, 10010, () => 0)), 'essenceAeriel.mp3');
 assert.equal(fileName(rewardVoice(3, 10015, () => 0)), 'addItem1.mp3');
 assert.equal(fileName(rewardVoice(1, 10001, () => 0)), 'addSkill1.mp3');
 
+assert.deepEqual(
+  SOLUTION_SOUNDS.map(fileName),
+  [1, 2, 3, 4, 5, 6, 7, 8].map((index) => `solution${index}.mp3`),
+);
+assert.equal(pickSolutionSound(() => 0), SOLUTION_SOUNDS[0]);
+assert.equal(pickSolutionSound(() => 0.999), SOLUTION_SOUNDS[7]);
+assert.equal(pickSolutionSound(() => 1), SOLUTION_SOUNDS[7]);
+
 assert.equal(fileName(BACKPACK_SOUND), 'backpack.mp3');
 assert.equal(fileName(SKILLBOOK_SOUND), 'skillbook.mp3');
 assert.equal(fileName(CALL_FOR_HELP_SOUND), 'callforhelp.mp3');
@@ -94,6 +113,7 @@ for (const url of [
   BACKPACK_SOUND,
   SKILLBOOK_SOUND,
   CALL_FOR_HELP_SOUND,
+  ...SOLUTION_SOUNDS,
 ]) {
   const bytes = readFileSync(path.join(sfxDir, fileName(url)));
   assert.ok(bytes.length > 1000, `${fileName(url)} is missing or empty`);

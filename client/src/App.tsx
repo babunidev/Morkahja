@@ -87,7 +87,8 @@ import OnboardingGateway from './ui/onboarding/OnboardingGateway.js';
 import { useMobileFullscreen } from './ui/layout/useMobileFullscreen.js';
 import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
-import { setGameContent } from './data/gameContent.js';
+import { gameEncounters, setGameContent } from './data/gameContent.js';
+import { expansionFromEncounterMap } from './ui/music/encounterExpansion.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
@@ -101,6 +102,18 @@ interface RoomFullPromptState {
 
 function isAchievementWatchScreen(screen: AppScreen): boolean {
   return screen === 'game' || screen === 'dashboard';
+}
+
+function ambianceExpansionFor(encounterId: number | null): number | null {
+  if (encounterId == null) {
+    return null;
+  }
+
+  try {
+    return expansionFromEncounterMap(gameEncounters(), encounterId);
+  } catch {
+    return null;
+  }
 }
 
 function musicZoneForScreen(screen: AppScreen): MusicZone {
@@ -157,6 +170,16 @@ export default function App() {
   const [avatarSelectionPrepared, setAvatarSelectionPrepared] = useState(false);
   const [avatarSlotsVisible, setAvatarSlotsVisible] = useState(false);
   const [musicFadeOutSignal, setMusicFadeOutSignal] = useState(0);
+  const [loadedEncounterId, setLoadedEncounterId] = useState<number | null>(null);
+  const handleEncounterLoaded = useCallback((encounterId: number) => {
+    setLoadedEncounterId(encounterId);
+  }, []);
+
+  useEffect(() => {
+    if (screen !== 'game') {
+      setLoadedEncounterId(null);
+    }
+  }, [screen]);
   const [gameEnterHandoff, setGameEnterHandoff] = useState(false);
   const [avatarEnterHandoff, setAvatarEnterHandoff] =
     useState<AvatarEnterHandoffSnapshot | null>(null);
@@ -751,6 +774,9 @@ export default function App() {
       <MusicEngine
         ambientRace={screen === 'game' ? activeAvatar?.race : null}
         ambientRole={screen === 'game' ? activeAvatar?.role : null}
+        ambianceExpansion={ambianceExpansionFor(
+          screen === 'game' ? (loadedEncounterId ?? activeEncounter?.encounterId ?? null) : null,
+        )}
         fadeOutSignal={musicFadeOutSignal}
         zone={musicZoneForScreen(screen)}
       >
@@ -897,6 +923,7 @@ export default function App() {
             initialAvatar={activeAvatar}
             initialEncounter={activeEncounter}
             initialRoom={activeRoom}
+            onEncounterLoaded={handleEncounterLoaded}
             onHome={() => {
               setActiveAvatar(null);
               setActiveEncounter(null);

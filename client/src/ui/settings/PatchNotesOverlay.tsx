@@ -29,11 +29,13 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
-    id: 'beta-65',
-    version: '0.9.0-beta.65',
+    id: 'beta-66',
+    version: '0.9.0-beta.66',
     period: '15 Nov 2026',
     notes: [
+      'The next encounter usually stays in the same region. A roll of 15 or higher on a d20 leaves for another one.',
       'The result on your portrait shows how the number was made: the roll, then its bonus and the difficulty.',
+      'The four buttons along the bottom play a little quieter than the other effects.',
     ],
   },
   {
@@ -41,7 +43,8 @@ const PATCH_RELEASES: PatchRelease[] = [
     version: '0.9.0-beta.64',
     period: '15 Nov 2026',
     notes: [
-      'The next encounter usually stays in the same region. A roll of 15 or higher on a d20 leaves for another one.',
+      'A weather bed plays under the encounter, with its own volume in Settings. It fades in over one second and out over two.',
+      'Using a solution plays one of eight lines, a little quieter than the other effects. Reward lines are a little quieter too.',
     ],
   },
   {

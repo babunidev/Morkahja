@@ -268,21 +268,29 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
-## D-033 — The portrait result shows the roll and its modifiers (2026-11-15)
+## D-034 — The portrait result shows the roll and its modifiers (2026-11-15)
 
 **Babuni's direction:** the result above the portrait shows the solution and the number. The tooltip should grow at the bottom, in the same frame, and show how that number was made: the roll, then the modifiers.
 
 **AI implementation:** Cursor (Grok 4.7). A second frame under the existing tooltip shows the d20 face, then `+` the solution bonus and `−` the difficulty penalty. A primary solution is +7, a secondary is +5, and the die is +0. A set lists each part the same way. An old 1–100 number is left without a made-up face.
 
-**Status:** implemented locally on 2026-11-15. Not deployed.
+**Status:** on the combined line with D-033, 0.9.0-beta.66, 2026-11-15. Not deployed. Not hovered in a played turn.
 
-## D-032 — Stay in the region most of the time (2026-11-15)
+## D-033 — Stay in the region most of the time (2026-11-15)
 
 **Babuni's direction:** encounters in a pool stay equally likely. The next one should usually be from the same expansion, including expansion 0, so a stretch of the journey stays in one region. A written follow still happens. When there is none, roll a d20: 1–14 stay, 15–20 switch expansion. Ambient tracks are a separate project.
 
-**AI implementation:** Cursor (Grok 4.7). The room advance, the continue after a normal encounter, the encounter after a level-up or Atranor, and a newly opened room all use that roll. The region after a system encounter is the encounter that led there. The preloaded next picture uses the same roll from the encounter about to be played. A follow is still taken only on a successful Fortune or Prosperity, and opening a room still jumps to a follow written on the last encounter. The draw that checked expansion again after the pool was already filtered is removed. D-028 was already the sound-level decision, so this is D-032. The version is 0.9.0-beta.64 because 0.9.0-beta.60 through 0.9.0-beta.63 are already on main.
+**AI implementation:** Cursor (Grok 4.7). The room advance, the continue after a normal encounter, the encounter after a level-up or Atranor, and a newly opened room all use that roll. The region after a system encounter is the encounter that led there. The preloaded next picture uses the same roll from the encounter about to be played. A follow is still taken only on a successful Fortune or Prosperity, and opening a room still jumps to a follow written on the last encounter. The draw that checked expansion again after the pool was already filtered is removed. D-032 is the weather bed, so the region is D-033.
 
-**Status:** implemented locally on 2026-11-15. Not deployed.
+**Status:** on the combined line with the weather bed and D-034, 0.9.0-beta.66, 2026-11-15. Not deployed. Not played through in a browser.
+
+## D-032 — A weather bed beside the encounter music (2026-11-15)
+
+**Babuni's direction:** the encounter music rests 7–21 seconds. A third player, Ambiance, runs four stages in every expansion. Stage A plays 3–7 pieces, then a 20 percent chance of stage B. Stage B plays 1–7, then an even chance of stage A or stage C. Stage C is one piece, and an 80 percent chance fades into stage D; otherwise it returns to stage B. Stage D plays 2–4 pieces that fade into each other, then an even chance of stage B or stage A. The bed follows the encounter's expansion, keeps going while that expansion stays the same, and fades when a newly loaded encounter belongs to a different expansion. The recordings are given in one folder. The game sorts them into an expansion folder and a stage folder, at one loudness. Expansion 0 is the base game. Every piece fades in over one second and out over two. The bed has its own settings slider, starting at full, because it was too quiet under the music. Using a solution plays one of eight new lines. All effects sit at nine tenths of the effects slider, and the solution lines and the reward lines sit at nine tenths of that.
+
+**AI implementation:** Cursor (Grok 4.7). The dashboard rest stays 6–14 seconds. Expansion 0 and expansion 1 were copied into `client/public/UI/Ambiance/` and leveled to about −38 LUFS. `11nature` was read as further stage A for expansion 1, and `1wind` as further stage B, because those names collided with files already numbered in those stages. A land with no folder fades the bed out. The current encounter list uses expansions 0, 1001, 1003 and 1004, so the expansion 1 bed plays only when an encounter's expansion field is 1. On this branch the decision was first written as D-021; main already uses D-021 for the terms, so the release records it as D-032. The local beta numbers 59–67 collided with releases already live, so the release is 0.9.0-beta.64.
+
+**Status:** implemented for release as 0.9.0-beta.64. The stage rules were tested. A full cycle was not heard.
 
 ## 2026-11-13 — Licensing decision
 

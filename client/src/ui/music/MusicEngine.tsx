@@ -12,13 +12,19 @@ import {
   DEFAULT_AMBIENT_TRACKS,
 } from './ambientTracks.js';
 import {
+  AMBIANCE_ENABLED_STORAGE_KEY,
+  AMBIANCE_VOLUME_STORAGE_KEY,
   MUSIC_ENABLED_STORAGE_KEY,
   MUSIC_VOLUME_STORAGE_KEY,
   playbackVolume,
+  storedAmbianceEnabled,
+  storedAmbianceVolume,
   storedMusicEnabled,
   storedMusicVolume,
 } from '../audioVolume.js';
 import { assetUrl } from '../../assetUrl.js';
+import { AmbianceBed } from './AmbianceBed.js';
+import { loopBreakMs } from './musicTiming.js';
 const MORKAHJA_MAIN_TRACKS = [
   assetUrl('/UI/Music/Morkahja_main_full_intro.mp3'),
   assetUrl('/UI/Music/Morkahja_main_intro.mp3'),
@@ -28,8 +34,6 @@ const DASHBOARD_MUSIC_DELAY_MS = 3000;
 const MUSIC_FADE_MS = 420;
 const MUSIC_MENU_EXIT_FADE_MS = 1400;
 const MUSIC_TOGGLE_OFF_FADE_MS = 1400;
-const MENU_LOOP_BREAK_MIN_MS = 6000;
-const MENU_LOOP_BREAK_MAX_MS = 14000;
 
 export type MusicZone = 'silent' | 'menu' | 'ambient';
 
@@ -38,7 +42,9 @@ function wait(ms: number): Promise<void> {
 }
 
 type MusicContextValue = {
+  ambianceVolume: number;
   enabled: boolean;
+  setAmbianceVolume: (volume: number) => void;
   setVolume: (volume: number) => void;
   volume: number;
 };
@@ -58,12 +64,14 @@ export function useMusic(): MusicContextValue {
 export function MusicEngine({
   ambientRace,
   ambientRole,
+  ambianceExpansion = null,
   children,
   fadeOutSignal,
   zone,
 }: {
   ambientRace?: AvatarRace | null;
   ambientRole?: AvatarRole | null;
+  ambianceExpansion?: number | null;
   children: ReactNode;
   fadeOutSignal: number;
   zone: MusicZone;
@@ -85,6 +93,8 @@ export function MusicEngine({
   const menuExitFadeRef = useRef<Promise<void> | null>(null);
   const [enabled, setEnabled] = useState(storedMusicEnabled);
   const [volume, setVolume] = useState(storedMusicVolume);
+  const [ambianceEnabled, setAmbianceEnabled] = useState(storedAmbianceEnabled);
+  const [ambianceVolume, setAmbianceVolume] = useState(storedAmbianceVolume);
   useEffect(() => {
     const audio = new Audio(MORKAHJA_MAIN_TRACKS[0]);
     audio.loop = false;
@@ -190,6 +200,14 @@ export function MusicEngine({
     }
   }, [enabled, volume]);
 
+  useEffect(() => {
+    window.localStorage.setItem(AMBIANCE_ENABLED_STORAGE_KEY, String(ambianceEnabled));
+  }, [ambianceEnabled]);
+
+  useEffect(() => {
+    window.localStorage.setItem(AMBIANCE_VOLUME_STORAGE_KEY, String(ambianceVolume));
+  }, [ambianceVolume]);
+
   async function fadeOutMenuMusic(durationMs = MUSIC_MENU_EXIT_FADE_MS): Promise<void> {
     blockedUntilInactiveRef.current = true;
     clearRestartTimer();
@@ -268,9 +286,7 @@ export function MusicEngine({
   }, [fadeOutSignal, zone]);
 
   function randomLoopBreak(): number {
-    return Math.floor(
-      MENU_LOOP_BREAK_MIN_MS + Math.random() * (MENU_LOOP_BREAK_MAX_MS - MENU_LOOP_BREAK_MIN_MS + 1),
-    );
+    return loopBreakMs(zoneRef.current === 'ambient' ? 'ambient' : 'menu');
   }
 
   function randomTrackFromPool(
@@ -458,14 +474,35 @@ export function MusicEngine({
     void startPlayback();
   }
 
+  function applyAmbianceVolume(nextVolume: number): void {
+    const clamped = Math.max(0, Math.min(nextVolume, 1));
+
+    if (clamped === 0) {
+      setAmbianceEnabled(false);
+      setAmbianceVolume(0);
+      return;
+    }
+
+    setAmbianceVolume(clamped);
+    setAmbianceEnabled(true);
+  }
+
   return (
     <MusicContext.Provider
       value={{
+        ambianceVolume,
         enabled,
+        setAmbianceVolume: applyAmbianceVolume,
         setVolume: applyVolume,
         volume,
       }}
     >
+      <AmbianceBed
+        enabled={ambianceEnabled}
+        expansion={ambianceExpansion}
+        volume={ambianceVolume}
+        zone={zone}
+      />
       {children}
     </MusicContext.Provider>
   );
