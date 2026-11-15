@@ -29,6 +29,18 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-74',
+    version: '0.9.0-beta.74',
+    period: '15 Nov 2026',
+    notes: [
+      'In an encounter that needs more than one solution, a die shows its number when it rises. Those dice then fly into the encounter, as a solution does.',
+      'Dice from an encounter that just ended no longer stay on screen when Atranor or a level-up begins.',
+      'A hovering die or solution no longer glows, and a stack of dice stays upright.',
+      'A finished total of 25 adds one extra normal item. When the encounter already gives five rewards, one of those gains two charges instead.',
+      'The weather fades from one land into the next.',
+    ],
+  },
+  {
     id: 'beta-73',
     version: '0.9.0-beta.73',
     period: '15 Nov 2026',

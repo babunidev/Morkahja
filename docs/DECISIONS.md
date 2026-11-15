@@ -274,7 +274,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). Each press asks the server for that die's face, the same face the result will use. The number appears when the die arrives at its hover place. When the result shows, those dice fly into the encounter with the solutions. A reload keeps the revealed faces.
 
-**Status:** implemented, not released. The face rule and the room path are tested. A played turn was not watched. The same day, those revealed dice were still on the participant when Atranor opened, so they hovered again. Atranor and a level-up now drop them. The reset is tested. Not watched in a played turn.
+**Status:** released as 0.9.0-beta.74, 2026-11-15. The face rule, the room path and the Atranor reset are tested. A played turn was not watched before release. The same day, those revealed dice were still on the participant when Atranor opened, so they hovered again. Atranor and a level-up now drop them.
 
 ## D-039 — A new land crossfades (2026-11-15)
 
@@ -282,7 +282,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). A land change starts the new stage A at the same moment the old piece starts falling. The rise is one second and the fall is two. A land that starts from silence still fades in over one second. A land with no recordings, or leaving the encounter, still fades the bed out. The fades inside one land are unchanged.
 
-**Status:** implemented, not released. The overlap is tested. A land change was not heard.
+**Status:** released as 0.9.0-beta.74, 2026-11-15. The overlap is tested. A land change was not heard before release.
 
 ## D-038 — A total of 25 grants one more normal item (2026-11-15)
 
@@ -290,7 +290,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). The finished total is the one on the result. On 25, and only on a normal encounter, one item of reward type 2 is added, skipping items already in the reward. At five encounter rewards the list is left as it is and one of them is granted with two extra charges. The prosperity essence is unchanged.
 
-**Status:** implemented, not released. The rule is tested. A 25 was not played.
+**Status:** released as 0.9.0-beta.74, 2026-11-15. The rule is tested. A 25 was not played before release.
 
 ## D-037 — Each die in a set rises after its spin (2026-11-15)
 
@@ -298,7 +298,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). One press fills one missing place. The spin plays on the button, then a copy of the die rises and hovers above the slot. The next press does the same and pushes the earlier die up. Solutions already chosen keep their places. The set resolves when the places are full, and each die is still its own roll. An encounter that needs one solution is unchanged. A die hovered in an unfinished set is not stored on the server, so a reload in the middle keeps the locked solutions and loses the hovering dice.
 
-**Status:** released as 0.9.0-beta.73, 2026-11-15, from `c9d6d144`. The client tests passed, including the step rule, and the production client build typechecked. The rise was not watched in a played turn. The gold glow on a hovering die or solution was removed the same day, after Babuni saw it on the live game. The second die in that picture is not rotated; the glow's square made it look tipped. That correction is not released yet.
+**Status:** released as 0.9.0-beta.73, 2026-11-15, from `c9d6d144`. The client tests passed, including the step rule, and the production client build typechecked. The rise was not watched in a played turn. The gold glow on a hovering die or solution was removed the same day, after Babuni saw it on the live game. The second die in that picture is not rotated; the glow's square made it look tipped. The stack was also tipping left once the rolls showed, because the slot used its entrance pose. Both corrections, and the extra item on a 25, went out as 0.9.0-beta.74.
 
 ## D-036 — The dice and a solution last 1.73 seconds (2026-11-15)
 

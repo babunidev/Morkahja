@@ -374,6 +374,10 @@ The new weather had been filed as Urcogor, expansion 1002. It belongs to Everwin
 
 The city, Aetherion, is expansion 1004, and its edited recordings cover every stage. The files belong in folder 4: twelve calm, sixteen wind, twelve approach and twelve storm. The copies in the game were brought to about −38 LUFS, and the edited originals were left as they were. Urcogor is the land still without a folder. Cursor (Grok 4.7) copied and leveled them. **Verification:** the client tests passed, and the game copies measured from −38.6 to −37.9 LUFS. They were not heard through a cycle. On the live game as 0.9.0-beta.72.
 
+### Out as 0.9.0-beta.74 — 2026-11-15
+
+The dice that show their numbers and fly into the encounter, the weather that fades from one land into the next, the extra item on a 25, the upright stack, and the glow taken off a hovering die or solution are numbered together as 0.9.0-beta.74. Dice from a failed encounter no longer sit on Atranor. Encounter wording through Eldertree Grove is on this line. Cursor (Grok 4.7) numbered it. **Verification:** the client tests, the 25-reward rule and the Atranor reset passed before release. A played turn of this set was not watched before it went out.
+
 ### The dice came back on Atranor — 2026-11-15
 
 Two dice were rolled, the encounter failed, the essences were lost, and those same dice were sitting there when Atranor opened. The rolls had been kept so a reload could show them, and Atranor was still reading that list. Atranor and a level-up now start with it empty. Cursor (Grok 4.7) cleared the list. **Verification:** the system-event reset test passed. Not watched in a played turn.

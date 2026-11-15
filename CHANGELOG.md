@@ -2,31 +2,11 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-15 — Unreleased: dice from a failed encounter stay off Atranor
+## 2026-11-15 — Dice show their rolls and fly in; 0.9.0-beta.74
 
-- **Fix:** two dice that had been rolled stayed on screen when Atranor began. Those rolls belonged to the encounter that had just failed. Atranor and a level-up now start without them.
-- **Verification:** the system-event reset test covers the cleared rolls. Not watched in a played turn.
-
-## 2026-11-15 — Unreleased: a die in a set shows its roll, then flies in
-
-- **Change (Babuni's direction, D-040):** in an encounter that needs more than one solution, a die hovered without its result. The result now appears when the die arrives, as a solution's roll does. Those dice then fly into the encounter with the solutions.
-- **Verification:** the face rule and the room path are tested. A played turn was not watched. Not released.
-
-## 2026-11-15 — Unreleased: a new land crossfades
-
-- **Change (Babuni's direction, D-039):** changing expansion waited until the old weather had faded out, then faded the new land in. The new land now fades in over one second while the old land fades out over two, both starting together. A land that starts from silence still fades in.
-- **Verification:** the overlap is tested. A land change was not heard. Not released.
-
-## 2026-11-15 — Unreleased: a 25 adds an item; the dice stack stays upright
-
-- **Reward (Babuni's direction, D-038):** a finished total of 25 grants one extra normal item, chosen at random. When the encounter already granted five rewards, that item is not added, and one of those five gains two charges. A level-up cannot reach 25, and this does not apply there.
-- **Fix (Babuni's report):** a stack of dice tipped left once the rolls showed. The slot was using the entrance pose, a turn of twelve degrees, while the die in the button stayed put. The slot stays upright once any die is hovering.
-- **Verification:** the reward rule and the slot pose are tested. A 25 and the upright stack were not watched in a played turn. Not released.
-
-## 2026-11-15 — Unreleased: a hovering die or solution has no glow
-
-- **Fix (Babuni's direction):** a die or a solution hovering above its slot wore a gold glow. The glow is gone. The die picture was compared with the one in the slot: the second die is not turned. The gold square around it was the glow, and that square made the die look tipped.
-- **Verification:** the two dice in the reported picture match each other at no rotation. Not watched again in a played turn. Not released.
+- **Change (Babuni's direction, D-038, D-039, D-040):** in an encounter that needs more than one solution, a die shows its number when it arrives and then flies into the encounter with the solutions. Dice from an encounter that just ended no longer stay on screen when Atranor or a level-up begins. A hovering die or solution no longer glows, and a stack of dice stays upright. A finished total of 25 adds one extra normal item; when the encounter already grants five rewards, one of those gains two charges. The weather fades from one land into the next: the new land rises over one second while the old land falls over two.
+- **Version 0.9.0-beta.74** (D-015, D-038, D-039, D-040). Encounter wording already on main, through Eldertree Grove, goes out with this release.
+- **Verification:** client tests passed, including the die face, the upright slot and the land overlap. The system-event reset and the 25-reward rule passed. A played turn of this set was not watched before release.
 
 ## 2026-11-15 — Each die in a set rises after its spin; 0.9.0-beta.73
 
