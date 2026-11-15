@@ -102,7 +102,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [ ] Smooth fades, menus that open once loaded, inventory taps on phones, About Us and costs update (D-020), 0.9.0-beta.54: released 2026-11-13.
 - [ ] Terms and privacy policy rewritten to match the game, "Use Your Key" (D-021), 0.9.0-beta.54: released 2026-11-13. Open: consent to immediate delivery at checkout, if the right of withdrawal should ever be excluded.
 - [ ] Solution sets reveal each roll on arrival, picks locked (D-025), 0.9.0-beta.56: released 2026-11-14. Still to check: sets in a party.
-- [ ] Inventory, skillbook and lore play at 90% of the other effects, 0.9.0-beta.65: implemented on main 2026-11-15, waiting for a listen. Call for help is unchanged.
+- [ ] Inventory, skillbook and lore play at 90% of the volume they had, 0.9.0-beta.65: implemented on main 2026-11-15, waiting for a listen. Call for help is unchanged.
 - [ ] Weather bed and quieter effects, 0.9.0-beta.64 (D-032): release prepared 2026-11-15. Stage rules tested. A full cycle was not heard. Named lands 1001, 1003 and 1004 stay silent until they have a folder.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.

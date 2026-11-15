@@ -4,7 +4,7 @@
 
 ## 2026-11-15 — Unreleased: inventory, skillbook and lore 10% quieter; 0.9.0-beta.65
 
-- **Change (Babuni's direction):** the inventory, the skillbook and lore play at nine tenths of the other effects. Call for help stays with the other effects.
+- **Change (Babuni's direction):** the inventory, the skillbook and lore play at nine tenths of the volume they had. Call for help is unchanged.
 - **Version 0.9.0-beta.65** (D-015).
 - **Verification:** the client tests passed, including the footer scale. The client typecheck passed. The buttons were not compared by ear. **Not deployed.**
 

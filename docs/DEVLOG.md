@@ -392,5 +392,5 @@ The encounter music was coming back too soon, and the land had no weather of its
 
 ### Inventory, the skillbook and lore — 2026-11-15
 
-Those three buttons along the bottom were still a little hot. Each now plays at nine tenths of the effects around them. Call for help stays with the other effects. Cursor (Grok 4.7) applied that scale on main. **Verification:** the client tests passed. The buttons were not compared by ear. **Not deployed yet.**
+Inventory, the skillbook and lore now play at nine tenths of the volume they had. Call for help is unchanged. Cursor (Grok 4.7) applied that scale on main. **Verification:** the client tests passed. The buttons were not compared by ear. **Not deployed yet.**
 
