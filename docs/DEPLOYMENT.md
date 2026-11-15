@@ -166,6 +166,14 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-15, 06:09 UTC (0.9.0-beta.75, an Atranor item is spent)
+
+Approved by Babuni ("commit all, push to main and release to the server"). `main` at `a6865336`: using a resurrection item in Atranor spends that item (D-041), and the solution stack from the encounter that just ended disappears when it flies in and is not drawn again on Atranor or a level-up. Encounter wording through Sylvan Sanctuary is included.
+
+- **Before:** backend `2c60b1e4`, frontend `20261115-054441`. `server/game/encountersdata.json` was dirty. Its sha256 `29a60447901fce90c9c35a92182803cf443a2ded05287840fb028e38d55a539e` matched this release (Sylvan Sanctuary), so that file was checked out and the fast-forward put the same wording back.
+- **Checks before the release:** client tests passed (45). The Atranor inventory test passed, including an Elixir charge that is gone after a successful return. The server typecheck passed. The production client build typechecked. Uploads verified by `sha256sum -c` on the server. The built script contains `0.9.0-beta.75`.
+- **Release:** backup `20261115-060949` (4.3 MB; 73 players, 110 avatars, 23 sessions, 79 devices, 110 inventories, 1 purchase, 333 achievement rows; sha256 `aa184dbbfb6f4d2c2387cb9e6dbe1cfa560900bb0e0c30d93104df700bd47988`). Backend fast-forwarded to `a6865336`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261115-060951` (`index-CKrypy23.js`). From outside: that script contains `0.9.0-beta.75`; `/Morkahja/`, health and content return 200. API and bots online. The encounter file was clean after the release. The backup was not restored into another database.
+
 ## Production release — 2026-11-15, 05:44 UTC (0.9.0-beta.74, dice, weather, a 25)
 
 Approved by Babuni ("ok do the documentation, commit all, push to main, release to live server"). `main` at `2c60b1e4`: a die in a longer set shows its number when it arrives and flies into the encounter (D-040), those dice are cleared when Atranor or a level-up starts, a hovering die or solution has no gold glow and the stack stays upright, a finished total of 25 adds one normal item or two charges when five rewards are already granted (D-038), and the weather crossfades when the land changes (D-039). Encounter wording through Eldertree Grove is included.

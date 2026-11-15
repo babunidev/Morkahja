@@ -282,7 +282,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). Atranor keeps the solutions the roll used and spends those charges before the essence reward is granted. The dice still spends nothing. When the hovering set takes off into the encounter, the stack is cleared. Atranor and a level-up do not restore a stack locked on the encounter that just ended.
 
-**Status:** numbered as 0.9.0-beta.75, 2026-11-15. The room path passed, including an Atranor Elixir that is gone after a successful return. A played turn was not watched before release.
+**Status:** released as 0.9.0-beta.75, 2026-11-15, from `a6865336`. The room path passed, including an Atranor Elixir that is gone after a successful return. A played turn was not watched before release. The live script is `index-CKrypy23.js`.
 
 ## D-039 — A new land crossfades (2026-11-15)
 
