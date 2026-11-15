@@ -28,7 +28,7 @@ import {
   encounterTooltipTitleStyle,
 } from '../encounterTooltip.js';
 import { allocateSolutionSetPicks, slotHasEnoughSolutionCharges } from '../encounterInventoryPreview.js';
-import { solutionSetSize } from '@shared/solutionSet';
+import { nextSetDiceRoll, solutionSetSize } from '@shared/solutionSet';
 
 /** A locked pick of a solution set, as the server reveals it (D-025). */
 export interface SolutionSetPickRecordView {
@@ -747,6 +747,9 @@ export function SolutionBlock({
   );
   const [diceEnableRattle, setDiceEnableRattle] = useState(false);
   const [diceRollCount, setDiceRollCount] = useState(0);
+  /** Dice already risen above the slot in this set. The newest sits lowest. */
+  const [hoveredDice, setHoveredDice] = useState(0);
+  const hoveredDiceRef = useRef(0);
   const [lockpickBurst, setLockpickBurst] = useState(0);
   const [activeSolutionSlot, setActiveSolutionSlot] = useState<SlotLetter | null>(null);
   // Solution set (encounters needing more than one solution): the chosen
@@ -754,6 +757,7 @@ export function SolutionBlock({
   const setSize = solutionSetSize(encounter.encounterDifficulty);
   const [setPicks, setSetPicks] = useState<SlotLetter[]>([]);
   const [setCommitted, setSetCommitted] = useState(false);
+  const setCommittedRef = useRef(false);
   /** The server's locked picks: the item each takes and its roll (D-025). */
   const [pickRecords, setPickRecords] = useState<SolutionSetPickRecordView[]>([]);
   /** How many of them show their roll (a roll appears when its solution arrives). */
@@ -776,10 +780,13 @@ export function SolutionBlock({
     setEnableRattleSlots(new Set());
     setDiceEnableRattle(false);
     setDiceRollCount(0);
+    hoveredDiceRef.current = 0;
+    setHoveredDice(0);
     solutionTips.hide();
     setInboundFlownSlots(new Set());
     setPicksRef.current = [];
     setSetPicks([]);
+    setCommittedRef.current = false;
     setSetCommitted(false);
     // Picks already locked (after a reload) hover again, rolls shown.
     const locked = lockedSetPicks ?? [];
@@ -985,9 +992,9 @@ export function SolutionBlock({
   }
 
   function diceTooltip(): GameTooltipContent | null {
-    const missing = setSize - setPicks.length;
-    const detail = setSize > 1 && setPicks.length > 0
-      ? `rolls for the ${missing} missing`
+    const missing = setSize - setPicks.length - hoveredDice;
+    const detail = setSize > 1
+      ? (missing > 1 ? 'one roll, then another' : 'one roll')
       : 'try your luck';
     return solutionTooltipContent('dice', {
       name: 'Dice',
@@ -1032,31 +1039,78 @@ export function SolutionBlock({
   }
 
   async function handleDiceClick(): Promise<void> {
-    if (setCommitted || pickBusyRef.current) {
+    if (setCommitted || setCommittedRef.current || pickBusyRef.current) {
       return;
     }
-    if (setPicksRef.current.length > 0) {
-      // The dice finishes the set: one spin, and one roll, for each solution still missing.
-      await commitSolutionSet(setPicksRef.current, true);
+    if (setSize > 1) {
+      await rollOneDieIntoSet();
       return;
     }
 
     clearRollRevealTimer();
     hideSolutionTooltip();
-    const spins = setSize > 1 ? setSize : 1;
     onActionReveal?.('dice', null, undefined, 'select');
     setChoiceFade({ keepSlot: null, keepDice: true });
     pickBusyRef.current = true;
     planFramePhase(
       actPhaseKey(encounter.snapshotId),
       blockRef.current?.querySelector('[aria-label="Roll dice"]'),
-      spins * DICE_ROLL_ANIMATION_MS + RESULT_READY_ESTIMATE_MS,
+      DICE_ROLL_ANIMATION_MS + RESULT_READY_ESTIMATE_MS,
     );
     try {
-      await playDiceAnimations(spins);
+      await playDiceAnimations(1);
       if (encounterKeyRef.current !== encounter.snapshotId) {
         return;
       }
+      recordCommittedAction(encounter.snapshotId, 'dice');
+      onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
+    } finally {
+      pickBusyRef.current = false;
+    }
+  }
+
+  /**
+   * One press fills one missing place. The spin finishes, then the die rises
+   * and hovers. Another press pushes that die up. The set resolves on the
+   * press that fills the last place.
+   */
+  async function rollOneDieIntoSet(): Promise<void> {
+    const step = nextSetDiceRoll(setSize, setPicksRef.current.length, hoveredDiceRef.current);
+    if (step === 'ignore') {
+      return;
+    }
+
+    clearRollRevealTimer();
+    hideSolutionTooltip();
+    pickBusyRef.current = true;
+    try {
+      await playDiceAnimations(1);
+      if (encounterKeyRef.current !== encounter.snapshotId) {
+        return;
+      }
+      const nextDice = hoveredDiceRef.current + 1;
+      hoveredDiceRef.current = nextDice;
+      setHoveredDice(nextDice);
+      await wait(SOLUTION_HOVER_RISE_MS);
+      if (encounterKeyRef.current !== encounter.snapshotId) {
+        return;
+      }
+      const picks = setPicksRef.current;
+      if (step === 'hover') {
+        return;
+      }
+      if (step === 'commit-mixed') {
+        await commitSolutionSet(picks, true, true);
+        return;
+      }
+      setCommittedRef.current = true;
+      setSetCommitted(true);
+      setChoiceFade({ keepSlot: null, keepDice: true });
+      planFramePhase(
+        actPhaseKey(encounter.snapshotId),
+        blockRef.current?.querySelector('[aria-label="Roll dice"]'),
+        RESULT_READY_ESTIMATE_MS,
+      );
       recordCommittedAction(encounter.snapshotId, 'dice');
       onActionReveal?.('dice', encounter.rollE ?? null, undefined, 'commit');
     } finally {
@@ -1092,11 +1146,15 @@ export function SolutionBlock({
    * Locked picks cannot be taken back.
    */
   async function handleSetPick(solution: VisibleSolutionSlot): Promise<void> {
-    if (setCommitted || pickBusyRef.current || rollRevealTimer.current !== null) {
+    if (setCommitted || setCommittedRef.current || pickBusyRef.current || rollRevealTimer.current !== null) {
       return;
     }
     const next = [...setPicksRef.current, solution.slot];
-    if (next.length > setSize || !setAllocation(next) || !onSetPick) {
+    if (
+      next.length + hoveredDiceRef.current > setSize
+      || !setAllocation(next)
+      || !onSetPick
+    ) {
       return;
     }
 
@@ -1135,10 +1193,11 @@ export function SolutionBlock({
       }
       setRevealedCount(records.length);
 
-      if (records.length === setSize) {
+      if (records.length + hoveredDiceRef.current === setSize) {
+        const withDice = hoveredDiceRef.current > 0;
         window.setTimeout(() => {
           if (encounterKeyRef.current === encounter.snapshotId) {
-            void commitSolutionSet(slots, false);
+            void commitSolutionSet(slots, withDice, withDice);
           }
         }, SET_LAST_ROLL_READ_MS);
       }
@@ -1147,21 +1206,26 @@ export function SolutionBlock({
     }
   }
 
-  async function commitSolutionSet(picks: SlotLetter[], diceFill: boolean): Promise<void> {
-    if (picks.length === 0 || setCommitted) {
+  async function commitSolutionSet(
+    picks: SlotLetter[],
+    diceFill: boolean,
+    skipSpins = false,
+  ): Promise<void> {
+    if (picks.length === 0 || setCommitted || setCommittedRef.current) {
       return;
     }
 
     clearRollRevealTimer();
     hideSolutionTooltip();
+    setCommittedRef.current = true;
     setSetCommitted(true);
     // The hovering set stays; the bar (and the dice, unless it finished the set) fades.
     setChoiceFade({ keepSlot: null, keepDice: diceFill });
 
     const first = picks[0]!;
     const solutionSet = { picks: [...picks], diceFill };
-    // Every chosen solution already rose. Each gap the dice fills gets its own spin.
-    const spins = diceFill ? Math.max(1, setSize - picks.length) : 0;
+    // Every chosen solution already rose. Dice pressed into the set already rose too.
+    const spins = diceFill && !skipSpins ? Math.max(1, setSize - picks.length) : 0;
     planFramePhase(
       actPhaseKey(encounter.snapshotId),
       diceFill
@@ -1250,6 +1314,52 @@ export function SolutionBlock({
                   : {}),
               }}
             >
+              {Array.from({ length: hoveredDice }, (_, index) => {
+                const stackIndex = hoveredDice - 1 - index;
+                const rolls = setRolls?.diceFillRolls
+                  ?? (setRolls?.diceFillRoll !== undefined ? [setRolls.diceFillRoll] : []);
+                const roll = setCommitted ? rolls[index] : undefined;
+                return (
+                  <span
+                    aria-label={roll !== undefined ? `Dice, roll ${displayRollAsD20(roll)}` : 'Dice'}
+                    data-dice-hover=""
+                    key={`${encounterRevealKey}-dice-hover-${index}`}
+                    role="img"
+                    style={{
+                      ...solutionHoverButtonStyle,
+                      bottom: `calc(100% + ${8 + stackIndex * SOLUTION_HOVER_STACK_STEP_PX}px)`,
+                      zIndex: 2 + stackIndex,
+                      pointerEvents: 'none',
+                      transition: `bottom ${SOLUTION_HOVER_RISE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
+                    }}
+                  >
+                    <span style={solutionHoverRiseStyle}>
+                      <span style={solutionHoverBobStyle}>
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                          src={diceButtonAsset}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))',
+                            pointerEvents: 'none',
+                            ...solutionHoverGlowStyle,
+                          }}
+                        />
+                        {roll !== undefined ? (
+                          <span aria-hidden="true" className="morkahja-result-outcome" style={solutionHoverRollStyle}>
+                            {displayRollAsD20(roll)}
+                          </span>
+                        ) : null}
+                      </span>
+                    </span>
+                  </span>
+                );
+              })}
               <button
                 aria-disabled={!actionsReady}
                 aria-label="Roll dice"
@@ -1288,25 +1398,6 @@ export function SolutionBlock({
                   </span>
                 </span>
               </button>
-              {setCommitted && (setRolls?.diceFillRolls ?? (setRolls?.diceFillRoll !== undefined ? [setRolls.diceFillRoll] : [])).map((roll, index, rolls) => (
-                <span
-                  aria-label={`Roll ${displayRollAsD20(roll)}`}
-                  className="morkahja-result-outcome"
-                  key={`dice-roll-${index}`}
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: `calc(100% + ${8 + (rolls.length - 1 - index) * 28}px)`,
-                    transform: 'translateX(-50%)',
-                    fontSize: 22,
-                    lineHeight: 1,
-                    pointerEvents: 'none',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {displayRollAsD20(roll)}
-                </span>
-              ))}
             </div>
             );
           }
@@ -1347,9 +1438,14 @@ export function SolutionBlock({
             .map((pick, pickIndex) => ({ pick, pickIndex }))
             .filter(({ pick }) => pick.slot === slot);
           // While a set is being chosen, a slot whose solution is all taken dims.
+          const roomLeft = setSize - setPicks.length - hoveredDice;
           const addable = !setCommitted
+            && roomLeft > 0
             && (setPicks.length === 0 || setAllocation([...setPicks, slot]) !== null);
-          const dimForSet = setSize > 1 && setPicks.length > 0 && visibleSlot.available && !addable;
+          const dimForSet = setSize > 1
+            && (setPicks.length > 0 || hoveredDice > 0)
+            && visibleSlot.available
+            && !addable;
 
           return (
             <div key={slot} style={solutionSlotCellStyle}>

@@ -268,6 +268,14 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **Status:** live since 2026-11-14 (release `1073bd45`, 0.9.0-beta.63).
 
+## D-037 — Each die in a set rises after its spin (2026-11-15)
+
+**Babuni's direction:** in an encounter that needs more than one solution, the dice was not behaving like the other solutions. It should move up after its animation, hover, and wait. Rolling it again should push the earlier die up.
+
+**AI implementation:** Cursor (Grok 4.7). One press fills one missing place. The spin plays on the button, then a copy of the die rises and hovers above the slot. The next press does the same and pushes the earlier die up. Solutions already chosen keep their places. The set resolves when the places are full, and each die is still its own roll. An encounter that needs one solution is unchanged. A die hovered in an unfinished set is not stored on the server, so a reload in the middle keeps the locked solutions and loses the hovering dice.
+
+**Status:** implemented on the current main line, 2026-11-15. Not released. The client tests passed, including the step rule, and the client typecheck passed. The rise was not watched in a played turn.
+
 ## D-036 — The dice and a solution last 1.73 seconds (2026-11-15)
 
 **Babuni's direction:** the dice spin and the solution wiggle were different lengths, and a solution's roll arrived after the wiggle had stopped. Both base animations last 1.73 seconds, and the roll is committed when that animation ends. The rise after a set pick, the wait after the last roll, and the hover bob stay as they were.

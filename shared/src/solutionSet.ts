@@ -1,9 +1,10 @@
 /**
  * Solution sets (Babuni's design, 2026-11-13): an encounter of difficulty N
  * needs N solutions. The player taps them one at a time (the same slot again
- * for another copy); each chosen solution rolls on its own, and the dice can
- * finish an incomplete set, standing in for every missing solution. The
- * rolls are averaged into one roll that decides the outcome. Each gap the
+ * for another copy); each chosen solution rolls on its own. Each press of the
+ * dice fills one missing place: the die spins, then rises and hovers, and the
+ * next press pushes that die up. The set resolves when the places are full.
+ * The rolls are averaged into one roll that decides the outcome. Each gap the
  * dice fills is its own roll and its own spin.
  *
  * Shared by the server (authoritative) and the client (which slots can still
@@ -150,6 +151,29 @@ export function allocateSolutionSet(
     copies.set(key, copyIndex + 1);
     return { ...pick, copyIndex };
   });
+}
+
+/**
+ * What one more press of the dice does in a set.
+ * A set of one is not this path. A full set ignores the press.
+ * Otherwise the die hovers and the set waits, until the press fills the last place.
+ */
+export function nextSetDiceRoll(
+  setSize: number,
+  solutionPicks: number,
+  hoveredDice: number,
+): 'ignore' | 'hover' | 'commit-dice' | 'commit-mixed' {
+  if (setSize <= 1 || solutionPicks < 0 || hoveredDice < 0) {
+    return 'ignore';
+  }
+  const filled = solutionPicks + hoveredDice;
+  if (filled >= setSize) {
+    return 'ignore';
+  }
+  if (filled + 1 < setSize) {
+    return 'hover';
+  }
+  return solutionPicks > 0 ? 'commit-mixed' : 'commit-dice';
 }
 
 /**
