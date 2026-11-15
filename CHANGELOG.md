@@ -2,10 +2,11 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-15 — Unreleased: each die in a set rises after its spin
+## 2026-11-15 — Each die in a set rises after its spin; 0.9.0-beta.73
 
 - **Change (Babuni's direction, D-037):** in an encounter that needs more than one solution, the dice spun in place and then resolved. One press now fills one missing place. The spin finishes, that die rises and hovers, and another press pushes it up, as a solution does. The set resolves when every place is filled. Each die is still its own roll. An encounter that needs one solution is unchanged.
-- **Verification:** the client tests passed, including `diceSetStep.test.ts`, and the client typecheck passed. The rise was not watched in a played turn. Not released.
+- **Version 0.9.0-beta.73** (D-015, D-037). Encounter wording already on main, through Ashen Revenant Warlock, goes out with this release.
+- **Verification:** the client tests passed, including `diceSetStep.test.ts`, and the client typecheck passed. The rise was not watched in a played turn. Releasing.
 
 ## 2026-11-15 — Aetherion has weather; 0.9.0-beta.72
 

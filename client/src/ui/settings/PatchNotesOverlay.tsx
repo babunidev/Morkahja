@@ -29,6 +29,14 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-73',
+    version: '0.9.0-beta.73',
+    period: '15 Nov 2026',
+    notes: [
+      'In an encounter that needs more than one solution, each die rises and hovers after it spins. Rolling again pushes the earlier die up.',
+    ],
+  },
+  {
     id: 'beta-72',
     version: '0.9.0-beta.72',
     period: '15 Nov 2026',

@@ -376,7 +376,7 @@ The city, Aetherion, is expansion 1004, and its edited recordings cover every st
 
 ### The dice rises with the others — 2026-11-15
 
-In an encounter that needs more than one solution, the dice spun where it sat and then the turn moved on. It should do what a solution does: finish the animation, move up, hover, and wait. Another roll pushes that die up. Cursor (Grok 4.7) made one press fill one missing place, and left a single-solution encounter as one spin (D-037). A hovering die in an unfinished set is not kept on the server, so a reload keeps the locked solutions and drops those dice. **Verification:** the client tests passed, including the step test, and the client typecheck passed. The rise was not watched in a played turn. Not released.
+In an encounter that needs more than one solution, the dice spun where it sat and then the turn moved on. It should do what a solution does: finish the animation, move up, hover, and wait. Another roll pushes that die up. Cursor (Grok 4.7) made one press fill one missing place, and left a single-solution encounter as one spin (D-037). A hovering die in an unfinished set is not kept on the server, so a reload keeps the locked solutions and drops those dice. **Verification:** the client tests passed, including the step test, and the client typecheck passed. The rise was not watched in a played turn. Releasing as 0.9.0-beta.73.
 
 ### One checkout — 2026-11-15
 
