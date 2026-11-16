@@ -27,3 +27,7 @@ A full canon index, rights inventory, approved visual gallery, playable deployme
 ## 2026-10-31 — Publication boundaries
 
 The existing standard documentation is the project source for the future portfolio connection. See [publication preparation](PUBLISHING.md). Preserve contributor credits, canonical-source boundaries and original journals. No private findings, live records or secret values are copied into the portfolio.
+
+## Encounter prose revision — 2026-11-16
+
+The game reads encounter descriptions from `server/game/encountersdata.json`. With the earlier revision already reaching `20052`, I approved completing the remaining 140 narrative encounters in the same cinematic style (D-042). Codex (GPT-6; exact model variant not recorded) supplied the new prose and verification, preserving gameplay fields and the established early passages. The [revision record](ENCOUNTER_REVISION.md) documents coverage, length variation, and verification limits. No production deployment is claimed.

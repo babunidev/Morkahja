@@ -472,3 +472,9 @@ The encounter music was coming back too soon, and the land had no weather of its
 
 Inventory, the skillbook and lore now play at nine tenths of the volume they had. Call for help is unchanged. Cursor (Grok 4.7) applied that scale on main. **Verification:** the client tests passed. The buttons were not compared by ear. **Not deployed yet.**
 
+
+### Completing the encounter prose — 2026-11-16
+
+The revised encounters had reached farther than I remembered: Nagar Elder, `20052`, already used the new style. For the rest, I asked for the same attention from beginning to end, with room for different lengths and paragraph breaks. Codex (GPT-6; exact model variant not recorded) read the catalog, drafted the 140 remaining scenes, and reviewed their player agency, regional details, clues, and repetition. The earlier passages remain intact apart from a stray non-English word in Crumblegheist Roughian.
+
+The new descriptions range from 88 to 140 whitespace-separated words and use two to four paragraphs. Recovery and rewards no longer happen before a choice, and the threatened or peaceful nature of each scene remains distinct. All 203 records and all gameplay fields survive unchanged. Static game-data validation, a complete data comparison, and `git diff --check` passed in the Linux working copy. The [revision record](ENCOUNTER_REVISION.md) lists every rewritten encounter and the checks' limits. The work is prepared for the approved direct commit to `main`; no production deployment or in-game display verification was performed.

@@ -21,7 +21,7 @@ These are parts of a developing game, not an assertion that every system has pas
 | The game idea | [Concept](CONCEPT.md) · [Design](docs/DESIGN.md) |
 | Current work and unresolved risks | [Roadmap](ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) |
 | Code and data boundaries | [Architecture](docs/ARCHITECTURE.md) · [Content](docs/CONTENT.md) |
-| What changed | [Changelog](CHANGELOG.md) |
+| What changed | [Changelog](CHANGELOG.md) · [Encounter prose revision](docs/ENCOUNTER_REVISION.md) |
 | How the project evolved | [Curated journal](docs/DEVLOG.md) · [Original journal](DEVLOG.md) |
 | Creative and technical decisions | [Decisions](docs/DECISIONS.md) · [AI collaboration](docs/AI_COLLABORATION.md) |
 | Dated audits, PR checks and gameplay notes | [Historical status notes](docs/RELEASE_STATUS_HISTORY.md) |

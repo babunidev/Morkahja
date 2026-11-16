@@ -359,3 +359,9 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 ## 2026-11-13 — Licensing decision
 
 To make the reuse terms explicit, I approved MIT for original software and CC BY 4.0 for eligible original creative material, excluding commissioned music and externally sourced sound assets. This applies only to material for which the relevant rights can be granted; third-party contributors keep their own credits and licenses. AI assistance committed the license notice and updated project-facing documentation. This was a legal/documentation change, not a runtime feature or test.
+
+## D-042 — Complete the encounter prose revision (2026-11-16)
+
+For the remaining encounters, I approved the cinematic, present-tense style already used in the game, with varied length and paragraph rhythm, observable details, and no assumed player decisions or outcomes. The source shows that the earlier revision reaches `20052`, Nagar Elder. Those passages remain the reference for the continuation. The instruction includes committing directly to `main` without a new branch.
+
+Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 remaining descriptions and corrected one stray word in `20025`. The game data and existing lore remain authoritative; this is a prose revision, not approval for new mechanics or replacement world canon. See the [scope and verification record](ENCOUNTER_REVISION.md). Publication to GitHub is separate from deployment; no production release is claimed.

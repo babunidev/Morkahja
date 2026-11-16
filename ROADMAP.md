@@ -127,3 +127,9 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Merged into `main` (PR #24) and released backend and frontend together on 2026-11-11 (`a40a6c5c`).
 - [x] Bot adventurers online in production (D-012), with `morkahja-deploy bots-status|bots-start|bots-stop`.
 - [x] Decided: the bot adventurers stay unmarked (D-012); they appear in the activity feed like players. Their effect on achievements is not reviewed.
+
+## Encounter prose — 2026-11-16
+
+- [x] Complete the remaining narrative descriptions after `20052`: 140 rewrites, preserving gameplay data and the earlier revised material (D-042).
+- [x] Validate static content, catalog coverage, unchanged gameplay fields, and engraved-letter clues; record [scope and evidence](docs/ENCOUNTER_REVISION.md).
+- [ ] Verify the revised paragraphs in the game and deploy through the documented release workflow. This prose commit does not claim a production release.
