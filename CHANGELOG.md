@@ -2,12 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-16 — Encounter prose revision (not deployed)
+## 2026-11-16 — Encounter prose revision (deployed 2026-11-16)
 
 - Rewrote the 140 remaining narrative encounters, `20053`–`20193` (the catalog has no `20154`), as present-tense scenes that stop before the player's choice. Preserved named characters, locations, engraved-letter clues, and encounter purposes.
 - Preserved earlier revised descriptions through `20052`, the special encounter chain, Atranor, and the level-up label. Corrected the stray word `удар` to `strike` in `20025`.
 - No changes to IDs, titles, images, solutions, rewards, difficulties, expansion assignments, elements, subtypes, or follow-on links.
-- Verification: static game-data validation and whitespace checks passed; a complete before/after comparison confirmed all 203 records and every non-text value are unchanged. See the [revision record](docs/ENCOUNTER_REVISION.md). Production display and deployment were not tested or performed.
+- Verification: static game-data validation and whitespace checks passed; a complete before/after comparison confirmed all 203 records and every non-text value are unchanged. See the [revision record](docs/ENCOUNTER_REVISION.md). Production display was not tested before release. **Deployed** 2026-11-16 22:56 UTC from `a25ed410` with the unchanged client `0.9.0-beta.75` (`index-CKrypy23.js`); the live `encountersdata.json` matches `main` byte for byte, and health and content return 200. The revised paragraphs were not read in the live game.
 
 ## 2026-11-15 — An Atranor item is spent, and the previous stack stays gone; 0.9.0-beta.75
 

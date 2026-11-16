@@ -22,6 +22,8 @@ Verification ran in a separate Linux working copy based on `a742c3901cbfe869c4d1
 
 Editorial review compared the source and drafts for regional identity, scene purpose, premature outcomes, repeated prose, and unsupported claims. The automated checks establish structural preservation, not literary quality. No application code changed; the full runtime release gate and browser layout checks were not run. No production files were changed and no deployment was performed. Git publication and a later release remain separate events.
 
+**Release, 2026-11-16 22:56 UTC:** at Babuni's request, `a25ed410` went to the live server through `morkahja-deploy release` (see [the deployment record](DEPLOYMENT.md)). The live file now matches this commit byte for byte. The paragraphs were not read in the live game.
+
 ## Revised encounters
 
 Counts below describe the committed prose. The source titles are preserved exactly.

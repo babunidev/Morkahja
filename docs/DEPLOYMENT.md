@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-16, 22:56 UTC (encounter prose through 20193, client 0.9.0-beta.75 unchanged)
+
+Approved by Babuni ("Could you bring them to the live game on the server?"). `main` at `a25ed410`: the rewritten encounter descriptions through `20193` ([revision record](ENCOUNTER_REVISION.md)), including the admin edits for `20044`–`20049` and `20052`. The commits after `a6865336` change only `server/game/encountersdata.json` and documentation, so the client build is the same `index-CKrypy23.js` as before.
+
+- **Before:** backend `a6865336`, frontend `20261115-060951`. `server/game/encountersdata.json` was dirty (sha256 `ee57de4763904961945995fb4835f8292f070d5700129d2203d71ec1599e0dd2`, last written 20:22 UTC). Its bytes matched no commit, so I compared it by encounter id with `a6865336` and `main`: all 203 records exist in both, and every live record either equals `main` or equals `a6865336` where `main` is newer. No live-only edit existed. Babuni reset the file with `sudo -u morkahja git checkout`, because the deploy login cannot write the checkout. Previous staging files moved to `prev-20261116-2250`.
+- **Checks before the release:** `gameData.test.ts` and `encounterResolver.test.ts` passed. The production client build typechecked. Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261116-225600` (5.2 MB; 74 players, 113 avatars, 22 sessions, 79 devices, 113 inventories, 1 purchase, 340 achievement rows; sha256 `cbb87142ea6c414155cce9b45b1d1df1f53b424d1c00c58329a9b1a34e63811f`). Backend fast-forwarded to `a25ed410`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261116-225602` (`index-CKrypy23.js`). From outside: `/Morkahja/`, health and content return 200. API and bots online. The live encounter file is clean and its sha256 (`95b252a8…`) equals `main`.
+- **Backup proven:** the dump was restored into a disposable `postgres:18` container; the row counts above matched exactly. The 14 restore errors were all grants to the roles `babuni_admin` and `babuni_admin_probe`, which the container does not have.
+- **Not done:** the new paragraphs were not read in the live game.
+
 ## Production release — 2026-11-15, 06:09 UTC (0.9.0-beta.75, an Atranor item is spent)
 
 Approved by Babuni ("commit all, push to main and release to the server"). `main` at `a6865336`: using a resurrection item in Atranor spends that item (D-041), and the solution stack from the encounter that just ended disappears when it flies in and is not drawn again on Atranor or a level-up. Encounter wording through Sylvan Sanctuary is included.
