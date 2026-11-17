@@ -383,3 +383,11 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **Status:** released 2026-11-17 as 0.9.0-beta.76 (`83801ca8`).
 
 **Later on 2026-11-17 (D-044):** Babuni asked for the plate to show the encounter's own land from the placement list, because each land is meant to become its own expansion and the base game already tells stories from several of them. Atranor shows its own name; the level-up keeps the land already shown. Not yet deployed.
+
+## D-045 — A spent slot refills from another item of the same kind (2026-11-17)
+
+**Babuni's direction:** in a set (difficulty 3: three solutions), when the item in a slot has only one charge, it grays out after use even though the inventory holds other items of the same kind. "When I have more of the same type, I should be able to refill the slot", so several items of the same kind can solve one encounter, not only the ones shown at the start.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `allocateSolutionSet` keeps spending the slot's own item while it has charges, then takes another item of the slot's alternative type (the encounter's secondary type), lowest id first, never one shown in another slot. Each refill uses the alternative lane's rolls, one per copy. Picks are appended in order, so locked picks keep their item and revealed roll. The slot shows the item it will take next. This replaces D-019's rule that a different item is not substituted.
+
+**Status:** on local `main`, not deployed.

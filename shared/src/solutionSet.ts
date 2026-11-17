@@ -103,7 +103,12 @@ export function slotFaces(
  * Assigns one inventory charge to every pick, or returns null when the
  * inventory cannot cover the picks. Each pick spends the item placed in that
  * slot. Another copy of the same slot spends another charge of that same item.
- * A different item is not substituted. `inventory` holds one entry per charge.
+ * When that item has no charge left, the slot refills from another item of the
+ * slot's alternative type (Babuni, 2026-11-17), lowest id first, never one
+ * shown in another slot. `inventory` holds one entry per charge.
+ *
+ * Picks are only ever added at the end, and earlier picks are assigned first,
+ * so a pick already locked keeps its item when the next one is added.
  */
 export function allocateSolutionSet(
   picks: readonly SolutionSetSlot[],
@@ -137,10 +142,18 @@ export function allocateSolutionSet(
     }
     const slot = picks[index]!;
     const face = faces[slot];
-    if (!face || !take(face.solutionId)) {
+    if (!face) {
       return null;
     }
-    assigned[index] = { slot, lane: face.lane, solutionId: face.solutionId };
+    if (take(face.solutionId)) {
+      assigned[index] = { slot, lane: face.lane, solutionId: face.solutionId };
+      continue;
+    }
+    const refill = refillFor(slot, requirements, faces, remaining, solutionTypeOf);
+    if (refill == null || !take(refill)) {
+      return null;
+    }
+    assigned[index] = { slot, lane: 'secondary', solutionId: refill };
   }
 
   const copies = new Map<string, number>();
@@ -151,6 +164,32 @@ export function allocateSolutionSet(
     copies.set(key, copyIndex + 1);
     return { ...pick, copyIndex };
   });
+}
+
+/**
+ * Another item of `slot`'s alternative type still in `remaining`, for when the
+ * slot's own item is spent. Items shown in other slots stay theirs.
+ */
+function refillFor(
+  slot: SolutionSetSlot,
+  requirements: SolutionSetRequirements,
+  faces: Partial<Record<SolutionSetSlot, SolutionSlotFace>>,
+  remaining: readonly number[],
+  solutionTypeOf: (solutionId: number) => number | undefined,
+): number | null {
+  const type = requirements[slot].secondarySolutionType;
+  if (type <= 0) {
+    return null;
+  }
+  const otherFaces = new Set(
+    SOLUTION_SET_SLOTS.filter((other) => other !== slot)
+      .map((other) => faces[other]?.solutionId)
+      .filter((solutionId): solutionId is number => solutionId != null),
+  );
+  const candidates = [...new Set(remaining)]
+    .filter((solutionId) => !otherFaces.has(solutionId) && solutionTypeOf(solutionId) === type)
+    .sort((left, right) => left - right);
+  return candidates[0] ?? null;
 }
 
 /**

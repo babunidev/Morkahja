@@ -1510,9 +1510,18 @@ export function SolutionBlock({
             .filter(({ pick }) => pick.slot === slot);
           // While a set is being chosen, a slot whose solution is all taken dims.
           const roomLeft = setSize - setPicks.length - hoveredDice;
+          const nextAllocation = setPicks.length > 0 ? setAllocation([...setPicks, slot]) : null;
           const addable = !setCommitted
             && roomLeft > 0
-            && (setPicks.length === 0 || setAllocation([...setPicks, slot]) !== null);
+            && (setPicks.length === 0 || nextAllocation !== null);
+          // When the slot's own item is spent, it refills from another of the
+          // same kind (Babuni, 2026-11-17); the slot shows the item it will take.
+          const nextItemId = addable ? nextAllocation?.[nextAllocation.length - 1]?.solutionId : undefined;
+          const refillSolution = nextItemId != null && nextItemId !== visibleSlot.solutionId
+            ? solutionsById()[String(nextItemId)]
+            : undefined;
+          const slotImageSrc = refillSolution ? solutionImagePath(refillSolution) : visibleSlot.imageSrc;
+          const slotItemName = refillSolution?.mSolutionName ?? visibleSlot.name;
           const dimForSet = setSize > 1
             && (setPicks.length > 0 || hoveredDice > 0)
             && visibleSlot.available
@@ -1570,7 +1579,7 @@ export function SolutionBlock({
                 aria-disabled={!actionsReady || !visibleSlot.available}
                 aria-label={
                   visibleSlot.available
-                    ? `Use ${visibleSlot.name} in slot ${slot}`
+                    ? `Use ${slotItemName} in slot ${slot}`
                     : `${visibleSlot.name} required for slot ${slot}, not available`
                 }
                 className={`morkahja-footer-button${
@@ -1617,7 +1626,7 @@ export function SolutionBlock({
                     alt=""
                     aria-hidden="true"
                     draggable={false}
-                    src={visibleSlot.imageSrc}
+                    src={slotImageSrc}
                     style={solutionImageStyle}
                   />
                 </span>

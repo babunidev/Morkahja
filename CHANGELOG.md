@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-17 — A spent slot refills from the same kind; version on the loading screen (not deployed)
+
+- **Change (Babuni's direction, D-045):** in an encounter that needs several solutions, a slot whose item has no charge left now refills from another item of the slot's alternative type in the inventory, so one encounter can use several items of the same kind. The slot shows the item it will take next. The slot's own item is used while it has charges; refills go lowest id first and never take an item shown in another slot; a refill rolls in the alternative range (50–100) with its own roll per copy. Picks already locked keep their item and roll. This replaces D-019's "a different item is not substituted". Files: `shared/src/solutionSet.ts` (server and client share it), `SolutionBlock.tsx`; tests `server/src/engine/solutionSetRefill.test.ts`, and two older tests updated to the new rule.
+- **Loading screen:** the version (`Version 0.9.0-beta.76`) sits at the bottom, as in Settings. File: `LoadingScreen.tsx`.
+- **Verification:** client tests (48) and server tests (53) passed; the typecheck and production build passed. The loading screen shows the version at phone size. A refill was not played in the game.
+
 ## 2026-11-17 — The plate names the encounter's own land (not deployed)
 
 - **Change (Babuni's direction, D-044):** the plate on the encounter frame now names the land where the encounter happens, from Babuni's placement list, not only the expansion. Base-game stories set elsewhere show their land, such as Swamp of Karrhu, Fyrskar Mountains or Eldertree Forest; the six Aetherion encounters say Aetherion; Atranor says Atranor; the level-up keeps the land already shown. Encounters missing from the list fall back to the expansion name. The music and weather still follow the expansion. Files: `client/src/ui/game/regionName.ts`, `worldMap/encounterLocations.ts` (regenerated with each land's name), `EncounterImageBlock.tsx`.

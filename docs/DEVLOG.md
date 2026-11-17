@@ -506,3 +506,7 @@ Before releasing, I asked for slower endings: every piece now fades out over two
 All of it went to the live game as 0.9.0-beta.76, together with my admin rewrites through Fearfeaster Gobbl. Claude Code (Claude Opus 5.5) checked that the server's copy of the encounters matched main before the release, took the backup and proved it in a throwaway database. **Verification:** the live script carries 0.9.0-beta.76, the cursors load, health and content answer; the map and weather were not yet played live.
 
 The plate on the frame now names the land where the story happens, not just the expansion: a base-game story in the swamp says Swamp of Karrhu. In time every land should become its own expansion, and the base game already visits several of them. Claude Code (Claude Opus 5.5) took the names from my placement list. **Verification:** tests passed; a base-game Grimnir elder shows Fyrskar Mountains in the local game. **Not deployed yet.**
+
+### Refilling a slot — 2026-11-17
+
+In a set of three, an item with one charge grayed out after I used it, even with more of the same kind in my bag. The slot now refills: once its item is spent, it shows and takes the next item of that kind, so a whole set can be solved with several of them. The loading screen also shows the version now. Claude Code (Claude Opus 5.5) changed the shared set rules the server and the game both use. **Verification:** tests and build passed; the refill was not yet played. **Not deployed yet.**

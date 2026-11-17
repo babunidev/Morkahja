@@ -167,21 +167,23 @@ function secondaryEncounter(secondaryType: number, difficulty: EncounterDifficul
     { mode: 'slot', slot: 'A' },
   );
 
-  assert.equal(resolution.success, false);
-  assert.deepEqual(resolution.usedInventorySolutions, []);
+  // Two different items of the slot's kind cover a set of two: the slot refills
+  // from the second when the first is spent (Babuni, 2026-11-17). Both are used.
+  assert.equal(resolution.success, true);
+  assert.deepEqual(resolution.usedInventorySolutions, [10005, 10006]);
   assert.equal(
     flattenInventorySolutionIds(
       applyEncounterInventoryChanges(
         inventory,
         resolution.usedInventorySolutions,
         [],
-        false,
+        true,
         null,
         2,
         1,
       ).inventory,
     ).length,
-    2,
+    0,
   );
 }
 

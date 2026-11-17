@@ -13,6 +13,7 @@ import {
   type LoadingStateView,
 } from './loadingStateMachine.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
+import { APP_VERSION } from '../../appVersion.js';
 
 const LOGO_ENTER_MS = 1100;
 const LOGO_SWAY_MS = 5600;
@@ -62,6 +63,23 @@ const statusTextStyle: CSSProperties = {
   textAlign: 'center',
   textShadow: '0 2px 12px rgba(0, 0, 0, 0.85)',
   textTransform: 'uppercase',
+};
+
+/** The game's version at the bottom of the loading screen (Babuni, 2026-11-17), as in Settings. */
+const versionStyle: CSSProperties = {
+  position: 'fixed',
+  left: 0,
+  right: 0,
+  bottom: 'max(8px, calc(env(safe-area-inset-bottom) + 4px))',
+  zIndex: 3,
+  margin: 0,
+  textAlign: 'center',
+  color: 'rgba(247, 239, 224, 0.55)',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.8rem',
+  letterSpacing: '0.04em',
+  textShadow: '0 1px 6px rgba(0, 0, 0, 0.85)',
+  pointerEvents: 'none',
 };
 
 const retryButtonStyle: CSSProperties = {
@@ -279,6 +297,7 @@ export function LoadingScreen<TSession = unknown, TPlayer = unknown, TAvatar = u
           ) : null}
         </section>
       ) : null}
+      <p style={versionStyle}>Version {APP_VERSION}</p>
     </main>
   );
 }

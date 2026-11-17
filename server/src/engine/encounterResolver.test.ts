@@ -120,9 +120,10 @@ const favorableRolls = createEncounterRollSnapshot({
     { mode: 'slot', slot: 'A' },
   );
 
-  // Two different items do not add up to two copies of one slot.
-  assert.equal(result.success, false);
-  assert.deepEqual(result.usedInventorySolutions, []);
+  // Two items of the slot's kind fill two places: the second refills the slot
+  // when the first is spent (Babuni, 2026-11-17; before, this was refused).
+  assert.equal(result.success, true);
+  assert.deepEqual(result.usedInventorySolutions, [20, 21]);
 }
 
 {
