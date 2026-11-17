@@ -28,7 +28,8 @@ import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 import { committedSolutionSetFor } from '../rewardFlyAnimation.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 import { gameEncounters, gameExpansions } from '../../../data/gameContent.js';
-import { regionNameFor } from '../regionName.js';
+import { plateLabelFor } from '../regionName.js';
+import { ENCOUNTER_LOCATIONS } from '../worldMap/encounterLocations.js';
 import { expansionFromEncounterMap } from '../../music/encounterExpansion.js';
 import WorldMap from '../worldMap/WorldMap.js';
 import { fadeTransition } from '../../transitions/fade.js';
@@ -123,9 +124,9 @@ const missingImageStyle: CSSProperties = {
   transition: encounterFadeTransition,
 };
 
-function regionLabelFor(encounterId: number): string | null {
+function regionLabelFor(encounterId: number): string | null | undefined {
   try {
-    return regionNameFor(gameEncounters(), gameExpansions(), encounterId);
+    return plateLabelFor(encounterId, ENCOUNTER_LOCATIONS, gameEncounters(), gameExpansions());
   } catch {
     return null;
   }
@@ -288,7 +289,13 @@ export function EncounterImageBlock({
   const encounterOverlaysOpen = loreOpen || inventoryOpen || skillbookOpen;
   const panelsOpen = encounterOverlaysOpen || mapOpen;
   const encounterTitleVisible = (encounterTitleHovered || titleIntro === 'in') && !panelsOpen;
-  const regionLabel = regionLabelFor(encounter.encounterId);
+  // The level-up names no land of its own, so the plate keeps the last one.
+  const lastRegionLabelRef = useRef<string | null>(null);
+  const plateLabel = regionLabelFor(encounter.encounterId);
+  if (plateLabel !== undefined) {
+    lastRegionLabelRef.current = plateLabel;
+  }
+  const regionLabel = plateLabel === undefined ? lastRegionLabelRef.current : plateLabel;
   const witnessLabelPresence = useOpacityPresence(showWitnessLabel);
   const witnessResultLatchRef = useRef(false);
   const witnessResultSnapRef = useRef<{

@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-17 — The plate names the encounter's own land (not deployed)
+
+- **Change (Babuni's direction, D-044):** the plate on the encounter frame now names the land where the encounter happens, from Babuni's placement list, not only the expansion. Base-game stories set elsewhere show their land, such as Swamp of Karrhu, Fyrskar Mountains or Eldertree Forest; the six Aetherion encounters say Aetherion; Atranor says Atranor; the level-up keeps the land already shown. Encounters missing from the list fall back to the expansion name. The music and weather still follow the expansion. Files: `client/src/ui/game/regionName.ts`, `worldMap/encounterLocations.ts` (regenerated with each land's name), `EncounterImageBlock.tsx`.
+- **Verification:** client tests passed (48), including the plate rules. In the local game, Venerable Grimnir (a base-game encounter) shows "Fyrskar Mountains". Not deployed.
+
 ## 2026-11-17 — World map, region plate, encounter name on arrival, weather, fades on iOS, cursors; 0.9.0-beta.76
 
 - **Region plate (Babuni's design, D-043):** a slim six-sided plate sits on the middle of the encounter frame's top edge, half on the frame and half on the picture, and names the region: Ethera's Vale for the base game, otherwise the expansion's name from the catalog in title case (The Cursed Forest of Keldor, Everwinter Valley, Aetherion). Gold `#ffcc66` in the title font on dark red `#330000`. The frame's top lines rise 45° around it, run over it and come down again; below the edge the same lines close around it. Files: `encounterFrameGeometry.ts`, `LineFrame.tsx`, `DecorativeEdgeFrame.tsx`, `ui/game/regionName.ts`.

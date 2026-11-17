@@ -35,3 +35,29 @@ export function regionNameFor(
     : undefined;
   return typeof name === 'string' && name.trim() ? regionTitleCase(name) : null;
 }
+
+/** Atranor is a realm of its own, not a land on the map; the level-up happens wherever the player already is. */
+export const ATRANOR_ENCOUNTER_ID = 1;
+export const ATRANOR_REGION_NAME = 'Atranor';
+
+/**
+ * The land shown on the encounter plate (Babuni, 2026-11-17): the encounter's
+ * own place from the placement list, so a base-game story set in Karrhu says
+ * "Swamp of Karrhu". Undefined means "keep the land already shown" (the
+ * level-up). Encounters missing from the list fall back to their expansion.
+ */
+export function plateLabelFor(
+  encounterId: number,
+  locations: Readonly<Record<number, { label: string } | null>>,
+  encounters: Record<string, unknown>,
+  expansions: Record<string, unknown>,
+): string | null | undefined {
+  if (encounterId === ATRANOR_ENCOUNTER_ID) {
+    return ATRANOR_REGION_NAME;
+  }
+  if (encounterId in locations) {
+    const place = locations[encounterId];
+    return place ? place.label : undefined;
+  }
+  return regionNameFor(encounters, expansions, encounterId);
+}
