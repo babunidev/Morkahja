@@ -20,19 +20,20 @@ import { ambiancePackForExpansion, expansionHasClips, stagePool } from './ambian
 import type { MusicZone } from './MusicEngine.js';
 
 /**
- * Test cycle for listening locally (Babuni, 2026-11-17): on the dev server the
- * weather steps A → B → C → D → A, one piece each, and logs each stage to the
- * console. Never in a production build. Turn it off locally with
- * localStorage['morkahja.ambiance.cycleTest'] = '0'.
+ * Test cycle for listening locally (Babuni, 2026-11-17): on the dev server,
+ * with localStorage['morkahja.ambiance.cycleTest'] = '1', the weather steps
+ * A → B → C → D → A, one piece each. Off unless switched on (Babuni heard all
+ * stages and asked for the normal weather back). Never in a production build.
+ * On the dev server every piece's land and stage is logged to the console.
  */
 function cycleTestOn(): boolean {
   if (!import.meta.env.DEV) {
     return false;
   }
   try {
-    return window.localStorage.getItem('morkahja.ambiance.cycleTest') !== '0';
+    return window.localStorage.getItem('morkahja.ambiance.cycleTest') === '1';
   } catch {
-    return true;
+    return false;
   }
 }
 
