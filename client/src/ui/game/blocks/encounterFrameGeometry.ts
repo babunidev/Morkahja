@@ -110,6 +110,136 @@ export function octagonPath(width: number, height: number, offset: number, origi
   return `M ${points.map(([x, y]) => `${round(x)} ${round(y)}`).join(' L ')} Z`;
 }
 
+/**
+ * The region plate on the encounter frame's top edge (Babuni's design,
+ * 2026-11-17): a slim six-sided field, half above the picture and half on it,
+ * with 45° ends. `straight` is the length of its flat top and bottom, `half`
+ * half its height. The frame's top lines rise 45° around it, run straight
+ * over it and come down again; below the edge the same lines close around it.
+ */
+export interface FrameTab {
+  straight: number;
+  half: number;
+}
+
+type Point = [number, number];
+
+function pathOf(points: readonly Point[], closed: boolean): string {
+  return `M ${points.map(([x, y]) => `${round(x)} ${round(y)}`).join(' L ')}${closed ? ' Z' : ''}`;
+}
+
+function lengthOf(points: readonly Point[], closed: boolean): number {
+  let total = 0;
+  const count = closed ? points.length : points.length - 1;
+  for (let index = 0; index < count; index += 1) {
+    const [x1, y1] = points[index]!;
+    const [x2, y2] = points[(index + 1) % points.length]!;
+    total += Math.hypot(x2 - x1, y2 - y1);
+  }
+  return total;
+}
+
+/** The plate's own outline, centred on the picture's top edge. */
+function tabPoints(centerX: number, edgeY: number, tab: FrameTab): Point[] {
+  const s = tab.straight / 2;
+  const a = tab.half;
+  return [
+    [centerX - s - a, edgeY],
+    [centerX - s, edgeY - a],
+    [centerX + s, edgeY - a],
+    [centerX + s + a, edgeY],
+    [centerX + s, edgeY + a],
+    [centerX - s, edgeY + a],
+  ];
+}
+
+/** The tab's outline `offset` px outside it, split where it meets the frame's top line at that offset. */
+function tabRing(centerX: number, edgeY: number, tab: FrameTab, offset: number): { upper: Point[]; lower: Point[] } {
+  const s = tab.straight / 2;
+  const a = tab.half;
+  const d = offset;
+  const slant = d * (SQRT2 - 1);
+  const meetX = s + a + slant;
+  const tipX = s + a + d * SQRT2;
+  const cornerX = s + slant;
+  const lineY = edgeY - d;
+  return {
+    upper: [
+      [centerX - meetX, lineY],
+      [centerX - cornerX, edgeY - a - d],
+      [centerX + cornerX, edgeY - a - d],
+      [centerX + meetX, lineY],
+    ],
+    lower: [
+      [centerX - meetX, lineY],
+      [centerX - tipX, edgeY],
+      [centerX - cornerX, edgeY + a + d],
+      [centerX + cornerX, edgeY + a + d],
+      [centerX + tipX, edgeY],
+      [centerX + meetX, lineY],
+    ],
+  };
+}
+
+/**
+ * How wide a tab may be on a picture `width` px wide, so its widest ring stays
+ * clear of the cut-off corners.
+ */
+export function fitTab(tab: FrameTab, width: number, outset: number, cut = FRAME_CORNER_CUT_PX): FrameTab | null {
+  const room = width - 2 * cornerLegAt(outset, cut) - 2 * (tab.half + outset * SQRT2) - 8;
+  if (room <= 0) {
+    return null;
+  }
+  return { straight: Math.min(tab.straight, room), half: tab.half };
+}
+
+function octagonPoints(width: number, height: number, offset: number, origin: number, cut: number): Point[] {
+  const left = origin - offset;
+  const top = origin - offset;
+  const right = origin + width + offset;
+  const bottom = origin + height + offset;
+  const leg = Math.min(cornerLegAt(offset, cut), (right - left) / 2, (bottom - top) / 2);
+  return [
+    [left + leg, top],
+    [right - leg, top],
+    [right, top + leg],
+    [right, bottom - leg],
+    [right - leg, bottom],
+    [left + leg, bottom],
+    [left, bottom - leg],
+    [left, top + leg],
+  ];
+}
+
+/**
+ * One frame line with a tab on its top edge: the octagon whose top line goes
+ * up and over the tab (`frame`), and the rest of the tab's ring at that
+ * offset, below the frame line (`ring`). Lengths are for the gapped dashes.
+ */
+export function tabbedFrameLine(
+  width: number,
+  height: number,
+  offset: number,
+  origin: number,
+  tab: FrameTab,
+  cut = FRAME_CORNER_CUT_PX,
+): { frame: string; frameLength: number; ring: string; ringLength: number } {
+  const octagon = octagonPoints(width, height, offset, origin, cut);
+  const { upper, lower } = tabRing(origin + width / 2, origin, tab, offset);
+  const framePoints: Point[] = [octagon[0]!, ...upper, ...octagon.slice(1)];
+  return {
+    frame: pathOf(framePoints, true),
+    frameLength: lengthOf(framePoints, true),
+    ring: pathOf(lower, false),
+    ringLength: lengthOf(lower, false),
+  };
+}
+
+/** The plate's filled field, in the same coordinates as `tabbedFrameLine`. */
+export function tabPlatePath(width: number, origin: number, tab: FrameTab): string {
+  return pathOf(tabPoints(origin + width / 2, origin, tab), true);
+}
+
 export function octagonPerimeter(width: number, height: number, offset: number, cut = FRAME_CORNER_CUT_PX): number {
   const outerWidth = width + 2 * offset;
   const outerHeight = height + 2 * offset;

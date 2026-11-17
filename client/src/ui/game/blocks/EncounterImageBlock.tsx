@@ -27,6 +27,12 @@ import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 import { committedSolutionSetFor } from '../rewardFlyAnimation.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
+import { gameEncounters, gameExpansions } from '../../../data/gameContent.js';
+import { regionNameFor } from '../regionName.js';
+import { expansionFromEncounterMap } from '../../music/encounterExpansion.js';
+import WorldMap from '../worldMap/WorldMap.js';
+import { fadeTransition } from '../../transitions/fade.js';
+import { TITLE_INTRO_FADE_IN_MS, TITLE_INTRO_FADE_OUT_MS, TITLE_INTRO_HOLD_MS } from './titleIntro.js';
 
 const ENCOUNTER_IMAGE_RELEASE_BUFFER_MS = 100;
 const SYSTEM_EVENT_CHOICE_RETRY_MS = 400;
@@ -115,6 +121,32 @@ const missingImageStyle: CSSProperties = {
   textAlign: 'center',
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
   transition: encounterFadeTransition,
+};
+
+function regionLabelFor(encounterId: number): string | null {
+  try {
+    return regionNameFor(gameEncounters(), gameExpansions(), encounterId);
+  } catch {
+    return null;
+  }
+}
+
+function expansionFor(encounterId: number): number | null {
+  try {
+    return expansionFromEncounterMap(gameEncounters(), encounterId);
+  } catch {
+    return null;
+  }
+}
+
+/** The world map covers the picture like Lore and the inventory, under the frame. */
+const worldMapLayerStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  // Above the closed Lore, Inventory and Skillbook layers, below the frame.
+  zIndex: 21,
+  overflow: 'hidden',
+  transition: fadeTransition,
 };
 
 function imageFileName(imageSrc: string): string {
@@ -238,6 +270,9 @@ export function EncounterImageBlock({
   const [currentImageSrc, setCurrentImageSrc] = useState(imageSrc);
   const [currentImageFading, setCurrentImageFading] = useState(false);
   const [encounterTitleHovered, setEncounterTitleHovered] = useState(false);
+  const [titleIntro, setTitleIntro] = useState<'idle' | 'in' | 'out'>('idle');
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
   const [transitionImageSrc, setTransitionImageSrc] = useState<string | null>(null);
   const [underlayHoldSrc, setUnderlayHoldSrc] = useState<string | null>(null);
   const underlayImageSrc = transitionImageSrc ?? underlayHoldSrc ?? undefined;
@@ -251,7 +286,9 @@ export function EncounterImageBlock({
   } | null>(null);
   const showWitnessLabel = isWitnessingLabel && !showWitnessResult;
   const encounterOverlaysOpen = loreOpen || inventoryOpen || skillbookOpen;
-  const encounterTitleVisible = encounterTitleHovered && !encounterOverlaysOpen;
+  const panelsOpen = encounterOverlaysOpen || mapOpen;
+  const encounterTitleVisible = (encounterTitleHovered || titleIntro === 'in') && !panelsOpen;
+  const regionLabel = regionLabelFor(encounter.encounterId);
   const witnessLabelPresence = useOpacityPresence(showWitnessLabel);
   const witnessResultLatchRef = useRef(false);
   const witnessResultSnapRef = useRef<{
@@ -268,8 +305,41 @@ export function EncounterImageBlock({
   useEffect(() => {
     if (encounterOverlaysOpen) {
       setEncounterTitleHovered(false);
+      // Lore, the inventory or the skillbook take the picture's place instead.
+      setMapOpen(false);
     }
   }, [encounterOverlaysOpen]);
+
+  useEffect(() => {
+    if (!mapOpen) {
+      return undefined;
+    }
+    setMapMounted(true);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMapOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mapOpen]);
+
+  // Each new encounter shows its name for a moment, then leaves the picture
+  // (Babuni, 2026-11-17): fade in, hold, fade out.
+  useEffect(() => {
+    setTitleIntro('idle');
+    const frame = window.requestAnimationFrame(() => setTitleIntro('in'));
+    const outTimer = window.setTimeout(() => setTitleIntro('out'), TITLE_INTRO_FADE_IN_MS + TITLE_INTRO_HOLD_MS);
+    const doneTimer = window.setTimeout(
+      () => setTitleIntro('idle'),
+      TITLE_INTRO_FADE_IN_MS + TITLE_INTRO_HOLD_MS + TITLE_INTRO_FADE_OUT_MS,
+    );
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(outTimer);
+      window.clearTimeout(doneTimer);
+    };
+  }, [encounter.snapshotId]);
 
   useEffect(() => {
     if (!witnessSuppressLocalResolution) {
@@ -621,8 +691,21 @@ export function EncounterImageBlock({
         />
       )}
         </div>
-        <DecorativeEdgeFrame showTimer />
-        {!encounterOverlaysOpen ? (
+        {mapMounted ? (
+          <div
+            aria-hidden={!mapOpen}
+            style={{ ...worldMapLayerStyle, opacity: mapOpen ? 1 : 0, pointerEvents: mapOpen ? 'auto' : 'none' }}
+          >
+            <WorldMap expansion={expansionFor(encounter.encounterId)} open={mapOpen} />
+          </div>
+        ) : null}
+        <DecorativeEdgeFrame
+          onRegionClick={() => setMapOpen((open) => !open)}
+          regionLabel={regionLabel}
+          regionPressed={mapOpen}
+          showTimer
+        />
+        {!panelsOpen ? (
           <div
             aria-hidden="true"
             onMouseEnter={() => {
@@ -637,6 +720,11 @@ export function EncounterImageBlock({
         <EncounterHeader
           hidden={!encounterTitleVisible}
           title={title}
+          transition={titleIntro === 'in'
+            ? `opacity ${TITLE_INTRO_FADE_IN_MS}ms ease-in-out`
+            : titleIntro === 'out'
+              ? `opacity ${TITLE_INTRO_FADE_OUT_MS}ms ease-in-out`
+              : undefined}
         />
       {witnessLabelPresence.mounted ? (
         <div
@@ -663,7 +751,7 @@ export function EncounterImageBlock({
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={witnessResultSnapRef.current.avatarLevel}
           encounterId={witnessResultSnapRef.current.encounterId}
-          hidden={loreOpen || inventoryOpen || skillbookOpen}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
           localContinuePressed={localContinuePressed}
           onContinue={() => {
             void handleContinue();
@@ -688,7 +776,7 @@ export function EncounterImageBlock({
           encounterId={encounter.encounterId}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={avatarLevel}
-          hidden={loreOpen || inventoryOpen || skillbookOpen}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
           inventory={inventory}
           localContinuePressed={localContinuePressed}
           onContinue={() => {
@@ -722,6 +810,7 @@ export function EncounterImageBlock({
           loreOpen ||
           inventoryOpen ||
           skillbookOpen ||
+          mapOpen ||
           roomState === 'waiting_continue' ||
           roomState === 'advancing' ||
           roomState === 'resolving'

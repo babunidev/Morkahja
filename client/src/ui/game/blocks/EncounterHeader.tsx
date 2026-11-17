@@ -23,12 +23,15 @@ const titleStyle: CSSProperties = {
 export function EncounterHeader({
   hidden = false,
   title,
+  transition,
 }: {
   hidden?: boolean;
   title: string;
+  /** Overrides the usual quick fade, e.g. for the slow fade when an encounter arrives. */
+  transition?: string;
 }) {
   return (
-    <div style={{ ...overlayStyle, opacity: hidden ? 0 : 1 }}>
+    <div style={{ ...overlayStyle, opacity: hidden ? 0 : 1, ...(transition ? { transition } : null) }}>
       <h1 aria-hidden={hidden} className="morkahja-title" style={titleStyle}>
         {title}
       </h1>

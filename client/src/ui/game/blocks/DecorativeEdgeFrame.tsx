@@ -5,6 +5,7 @@ import {
   ENCOUNTER_FRAME,
   FRAME_OUTSET_PX,
   cornerLegAt,
+  fitTab,
   timerSegments,
 } from './encounterFrameGeometry.js';
 
@@ -27,6 +28,29 @@ const svgStyle: CSSProperties = {
   filter: 'drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.85))',
 };
 
+/** The region plate (Babuni's design, 2026-11-17): the title font, gold on the dark red. */
+const REGION_PLATE_HALF_PX = 10;
+const REGION_PLATE_PADDING_PX = 8;
+const REGION_PLATE_FILL = '#330000';
+const REGION_TEXT_COLOR = '#ffcc66';
+
+const regionLabelStyle: CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: FRAME_OUTSET_PX,
+  transform: 'translate(-50%, -50%)',
+  color: REGION_TEXT_COLOR,
+  fontFamily: "'Breathe Fire', Georgia, serif",
+  fontSize: 13,
+  lineHeight: `${2 * REGION_PLATE_HALF_PX}px`,
+  letterSpacing: '0.06em',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  textAlign: 'center',
+  pointerEvents: 'none',
+};
+
 const TIMER_FADE_IN_MS = 280;
 const TIMER_KEYFRAMES = '@keyframes morkahja-frame-timer-fade-in { from { opacity: 0; } to { opacity: 1; } }';
 
@@ -40,9 +64,38 @@ interface ShownTimer {
  * encounterFrameGeometry). With `showTimer`, the bottom line also shows the
  * frame timer: it shrinks toward whatever the player is waiting for.
  */
-export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false }: { zIndex?: number; showTimer?: boolean }) {
+export function DecorativeEdgeFrame({
+  zIndex = FRAME_Z_INDEX,
+  showTimer = false,
+  regionLabel,
+  onRegionClick,
+  regionPressed = false,
+}: {
+  zIndex?: number;
+  showTimer?: boolean;
+  /** The region's name, shown on a plate on the top edge. */
+  regionLabel?: string | null;
+  /** Makes the plate a button (it opens the world map). */
+  onRegionClick?: () => void;
+  regionPressed?: boolean;
+}) {
   const frameRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(frameRef);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [labelWidth, setLabelWidth] = useState(0);
+  useLayoutEffect(() => {
+    const node = labelRef.current;
+    if (!node) {
+      setLabelWidth(0);
+      return undefined;
+    }
+    const measure = (): void => setLabelWidth(node.scrollWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    void document.fonts?.ready.then(measure);
+    return () => observer.disconnect();
+  }, [regionLabel]);
   const [shownTimer, setShownTimer] = useState<ShownTimer | null>(null);
 
   useEffect(() => {
@@ -110,6 +163,13 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
   const pictureWidth = size.width - 2 * FRAME_OUTSET_PX;
   const pictureHeight = size.height - 2 * FRAME_OUTSET_PX;
   const drawable = pictureWidth > 0 && pictureHeight > 0;
+  const tab = drawable && regionLabel && labelWidth > 0
+    ? fitTab(
+      { straight: labelWidth + 2 * REGION_PLATE_PADDING_PX, half: REGION_PLATE_HALF_PX },
+      pictureWidth,
+      FRAME_OUTSET_PX,
+    )
+    : null;
 
   let timerBars = null;
   if (drawable && shownTimer) {
@@ -153,8 +213,53 @@ export function DecorativeEdgeFrame({ zIndex = FRAME_Z_INDEX, showTimer = false 
   }
 
   return (
-    <div ref={frameRef} aria-hidden="true" style={{ ...frameLayerStyle, zIndex }}>
-      <FrameLinesSvg height={size.height} spec={ENCOUNTER_FRAME} style={svgStyle} width={size.width} />
+    <div ref={frameRef} aria-hidden={onRegionClick ? undefined : true} style={{ ...frameLayerStyle, zIndex }}>
+      <FrameLinesSvg
+        height={size.height}
+        spec={ENCOUNTER_FRAME}
+        style={svgStyle}
+        tab={tab}
+        tabFill={REGION_PLATE_FILL}
+        width={size.width}
+      />
+      {regionLabel && tab && onRegionClick ? (
+        <button
+          aria-label={regionPressed ? `Close the world map (${regionLabel})` : `Open the world map (${regionLabel})`}
+          aria-pressed={regionPressed}
+          className="morkahja-region-plate-button"
+          onClick={onRegionClick}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: FRAME_OUTSET_PX,
+            width: tab.straight + 2 * tab.half,
+            height: 2 * tab.half + 8,
+            transform: 'translate(-50%, -50%)',
+            padding: 0,
+            border: 'none',
+            background: 'transparent',
+            pointerEvents: 'auto',
+            cursor: 'pointer',
+            clipPath: `polygon(0 50%, ${tab.half}px 4px, calc(100% - ${tab.half}px) 4px, 100% 50%, calc(100% - ${tab.half}px) calc(100% - 4px), ${tab.half}px calc(100% - 4px))`,
+          }}
+          title={regionPressed ? 'Close the map' : 'Open the map'}
+          type="button"
+        />
+      ) : null}
+      {regionLabel ? (
+        <span
+          aria-hidden="true"
+          ref={labelRef}
+          style={{
+            ...regionLabelStyle,
+            // Measured at full width first; then capped to the plate that fits.
+            maxWidth: tab ? tab.straight - REGION_PLATE_PADDING_PX : undefined,
+            visibility: tab ? 'visible' : 'hidden',
+          }}
+        >
+          {regionLabel}
+        </span>
+      ) : null}
       {timerBars ? (
         <>
           <style>{TIMER_KEYFRAMES}</style>

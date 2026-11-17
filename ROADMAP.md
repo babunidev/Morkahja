@@ -134,3 +134,12 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Validate static content, catalog coverage, unchanged gameplay fields, and engraved-letter clues; record [scope and evidence](docs/ENCOUNTER_REVISION.md).
 - [x] Deploy through the documented release workflow. Released 2026-11-16 22:56 UTC from `a25ed410`.
 - [ ] Read the revised paragraphs in the live game (not done at release).
+
+## Region plate, title on arrival, weather cycle — 2026-11-17
+
+- [x] Region plate on the encounter frame's top edge (D-043). Seen in local screenshots for the base game.
+- [x] Encounter name fades in 1.3 s, holds 0.7 s, fades out 1.3 s when an encounter loads.
+- [x] Ambiance stage cycle continues across lands. Unit-tested; not yet heard in play.
+- [x] Babuni tested locally; released as 0.9.0-beta.76 (2026-11-17).
+- [x] World map behind the region plate (D-044); placements in `docs/WORLD_MAP.md`.
+- [ ] Babuni's review of the map's placements, especially the drawing choices (Fyrskar, Lovely Meadows, Deepstone Hollow).

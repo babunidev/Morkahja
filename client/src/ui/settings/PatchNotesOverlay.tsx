@@ -29,6 +29,18 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-76',
+    version: '0.9.0-beta.76',
+    period: '17 Nov 2026',
+    notes: [
+      "A world map of Morkahja: the name of your land now sits on the top edge of the encounter, and clicking it opens the map where you are. Drag it to explore, and zoom with the wheel or two fingers.",
+      'The encounter name greets you for a moment when you arrive, then leaves the picture.',
+      'The weather moves on more often and keeps its course when you change land, so storms come more often. Music and weather fade in and out, with shorter breaks between pieces.',
+      'Fades and volume now work on iPhone and iPad.',
+      'Morkahja has its own mouse cursors.',
+    ],
+  },
+  {
     id: 'beta-75',
     version: '0.9.0-beta.75',
     period: '15 Nov 2026',

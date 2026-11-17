@@ -6,7 +6,10 @@ import {
   octagonPath,
   octagonPerimeter,
   randomGapDashArray,
+  tabPlatePath,
+  tabbedFrameLine,
   type FrameSpec,
+  type FrameTab,
 } from '../game/blocks/encounterFrameGeometry.js';
 
 /**
@@ -57,11 +60,16 @@ export function FrameLinesSvg({
   width,
   height,
   style,
+  tab = null,
+  tabFill,
 }: {
   spec: FrameSpec;
   width: number;
   height: number;
   style?: CSSProperties;
+  /** A plate on the top edge that the top lines go around (the encounter's region). */
+  tab?: FrameTab | null;
+  tabFill?: string;
 }) {
   const innerWidth = width - 2 * spec.outset;
   const innerHeight = height - 2 * spec.outset;
@@ -71,7 +79,21 @@ export function FrameLinesSvg({
   return (
     <svg aria-hidden="true" focusable="false" style={{ ...svgStyle, ...style }} viewBox={`0 0 ${width} ${height}`}>
       <path d={cornerTrianglesPath(innerWidth, innerHeight, spec.outset, spec.cut)} fill={FRAME_LINE_COLOR} opacity={0.95} />
-      {spec.lines.map((line) => (
+      {tab && tabFill ? (
+        <path d={tabPlatePath(innerWidth, spec.outset, tab)} fill={tabFill} />
+      ) : null}
+      {tab ? spec.lines.map((line) => {
+        const lines = tabbedFrameLine(innerWidth, innerHeight, line.offset, spec.outset, tab, spec.cut);
+        const dash = (length: number, seed?: number) => (line.gapped
+          ? randomGapDashArray(length, seed, spec.dashScale).join(' ')
+          : undefined);
+        return (
+          <g key={line.offset} fill="none" opacity={line.opacity} stroke={FRAME_LINE_COLOR} strokeLinejoin="miter" strokeWidth={line.width}>
+            <path d={lines.frame} strokeDasharray={dash(lines.frameLength)} />
+            <path d={lines.ring} strokeDasharray={dash(lines.ringLength, 0x7265676e)} />
+          </g>
+        );
+      }) : spec.lines.map((line) => (
         <path
           key={line.offset}
           d={octagonPath(innerWidth, innerHeight, line.offset, spec.outset, spec.cut)}

@@ -1,4 +1,4 @@
-import { loopBreakMs } from './musicTiming.js';
+import { loopBreakMs, PIECE_FADE_MS } from './musicTiming.js';
 
 export type AmbianceStage = 'A' | 'B' | 'C' | 'D';
 
@@ -17,10 +17,10 @@ export interface AmbianceStep {
 }
 
 /** A piece, and a new land, rises over one second. */
-export const AMBIANCE_FADE_IN_MS = 1000;
+export const AMBIANCE_FADE_IN_MS = PIECE_FADE_MS;
 
-/** A piece, and a land that is leaving, falls over two seconds. */
-export const AMBIANCE_FADE_OUT_MS = 2000;
+/** A piece, and a land that is leaving, falls over one second (Babuni, 2026-11-17). */
+export const AMBIANCE_FADE_OUT_MS = PIECE_FADE_MS;
 
 /**
  * A new land starts rising at the same moment the old land starts falling,
@@ -38,17 +38,15 @@ export function inclusiveCount(random: () => number, min: number, max: number): 
   return min + Math.floor(random() * (max - min + 1));
 }
 
-function countFor(stage: AmbianceStage, random: () => number): number {
-  if (stage === 'A') {
-    return inclusiveCount(random, 3, 7);
-  }
-  if (stage === 'B') {
-    return inclusiveCount(random, 1, 7);
-  }
-  if (stage === 'C') {
-    return 1;
-  }
-  return inclusiveCount(random, 2, 4);
+/**
+ * How many pieces a stage plays before the next stage is rolled: one to four
+ * in every stage, the approach included (Babuni, 2026-11-17).
+ */
+export const STAGE_RUN_MIN = 1;
+export const STAGE_RUN_MAX = 4;
+
+function countFor(_stage: AmbianceStage, random: () => number): number {
+  return inclusiveCount(random, STAGE_RUN_MIN, STAGE_RUN_MAX);
 }
 
 export function openingRun(random: () => number = Math.random): AmbianceRun {
@@ -80,7 +78,7 @@ export function stepAfterPiece(run: AmbianceRun, random: () => number = Math.ran
   const roll = random();
 
   if (run.stage === 'A') {
-    const stage: AmbianceStage = roll < 0.2 ? 'B' : 'A';
+    const stage: AmbianceStage = roll < 0.5 ? 'B' : 'A';
     return {
       gap: 'rest',
       restMs: loopBreakMs('ambient', random),
@@ -119,6 +117,25 @@ export function stepAfterPiece(run: AmbianceRun, random: () => number = Math.ran
     restMs: loopBreakMs('ambient', random),
     next: { stage, piecesLeft: countFor(stage, random) },
   };
+}
+
+/**
+ * The run a new land starts with when it cuts off a piece that is still
+ * playing (Babuni, 2026-11-17). The cut-off piece counts as played, so the
+ * cycle goes on to the next step instead of starting over at stage A. If the
+ * new land has no pieces for that stage, it starts a fresh stage A instead;
+ * null if it has no stage A either.
+ */
+export function handoffRunFor(
+  current: AmbianceRun | null,
+  hasStage: (stage: AmbianceStage) => boolean,
+  random: () => number = Math.random,
+): AmbianceRun | null {
+  const next = current ? stepAfterPiece(current, random).next : openingRun(random);
+  if (hasStage(next.stage)) {
+    return next;
+  }
+  return hasStage('A') ? openingRun(random) : null;
 }
 
 export function pickPiece<T>(pieces: readonly T[], last: T | null, random: () => number = Math.random): T {

@@ -1,9 +1,15 @@
+/**
+ * Silence between pieces. The minimum is 0 (Babuni, 2026-11-17): a piece can
+ * follow straight on, because every piece fades in and out over one second.
+ */
+export const PIECE_FADE_MS = 1000;
+
 /** Silence between dashboard pieces. */
-export const MENU_LOOP_BREAK_MIN_MS = 6000;
+export const MENU_LOOP_BREAK_MIN_MS = 0;
 export const MENU_LOOP_BREAK_MAX_MS = 14000;
 
 /** Silence between encounter music pieces, and between calm ambiance pieces. */
-export const ENCOUNTER_LOOP_BREAK_MIN_MS = 7000;
+export const ENCOUNTER_LOOP_BREAK_MIN_MS = 0;
 export const ENCOUNTER_LOOP_BREAK_MAX_MS = 21000;
 
 export function loopBreakMs(

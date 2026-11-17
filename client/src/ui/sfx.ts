@@ -1,5 +1,6 @@
 import { resolveSfxVolume } from './audioVolume.js';
 import { assetUrl } from '../assetUrl.js';
+import { releaseWorkingVolume, withWorkingVolume } from './audioGain.js';
 
 export const DEFAULT_BUTTON_SOUND = assetUrl('/UI/SFX/sfx_button_press.mp3');
 export const CONTINUE_SOUND = assetUrl('/UI/SFX/sfx_continuearrow_press.mp3');
@@ -79,8 +80,11 @@ export function playSfx(src: string, options?: { overlap?: boolean; scale?: numb
     }
   }
 
-  const audio = new Audio(src);
+  const audio = withWorkingVolume(new Audio(src));
   audio.volume = volume;
+  const disconnect = (): void => releaseWorkingVolume(audio);
+  audio.addEventListener('ended', disconnect, { once: true });
+  audio.addEventListener('error', disconnect, { once: true });
   if (!overlap) {
     activeSounds.set(src, audio);
   }
@@ -95,6 +99,7 @@ export function playSfx(src: string, options?: { overlap?: boolean; scale?: numb
   }
 
   void audio.play().catch(() => {
+    disconnect();
     if (!overlap) {
       release();
     }

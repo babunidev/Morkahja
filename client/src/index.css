@@ -349,7 +349,8 @@ button:focus-visible {
   color: #ffb08a;
   font-family: Georgia, serif;
   font-size: clamp(10px, 2.3vw, 11px);
-  cursor: pointer;
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer;
 }
 
 @keyframes morkahja-continue-glow-gathering {
@@ -430,13 +431,15 @@ button:focus-visible {
 .morkahja-nav-radial-button,
 .morkahja-nav-center-button,
 .morkahja-footer-button {
-  cursor: pointer;
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer;
 }
 
 .morkahja-nav-radial-button:disabled,
 .morkahja-nav-center-button:disabled,
 .morkahja-footer-button:disabled {
-  cursor: default;
+  cursor: url('/UI/Cursor/arrow.png') 2 2, default;
+  cursor: image-set(url('/UI/Cursor/arrow.png') 1x, url('/UI/Cursor/arrow@2x.png') 2x) 2 2, default;
 }
 
 .morkahja-nav-radial-button-visual,
@@ -468,7 +471,8 @@ button:focus-visible {
 }
 
 .morkahja-grid-item-button {
-  cursor: pointer;
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer;
 }
 
 .morkahja-grid-item-button-visual {
@@ -557,11 +561,13 @@ button:focus-visible {
 }
 
 .morkahja-play-button {
-  cursor: pointer;
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer;
 }
 
 .morkahja-play-button:disabled {
-  cursor: default;
+  cursor: url('/UI/Cursor/arrow.png') 2 2, default;
+  cursor: image-set(url('/UI/Cursor/arrow.png') 1x, url('/UI/Cursor/arrow@2x.png') 2x) 2 2, default;
 }
 
 .morkahja-play-button-visual {
@@ -583,11 +589,13 @@ button:focus-visible {
   padding: 0;
   border: 0;
   background: transparent;
-  cursor: pointer;
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer;
 }
 
 .morkahja-panel-button:disabled {
-  cursor: default;
+  cursor: url('/UI/Cursor/arrow.png') 2 2, default;
+  cursor: image-set(url('/UI/Cursor/arrow.png') 1x, url('/UI/Cursor/arrow@2x.png') 2x) 2 2, default;
 }
 
 .morkahja-panel-button-visual {
@@ -812,4 +820,57 @@ button:focus-visible {
 @keyframes morkahja-menu-preparing-pulse {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.35) drop-shadow(0 0 12px rgba(255, 204, 102, 0.75)); }
+}
+
+/*
+ * Morkahja's own cursor (Babuni, 2026-11-17): a gold arrow with a ruby, and
+ * the same arrow with a gold spark over anything clickable. The second line
+ * of each pair gives sharp screens the 2x image; browsers without image-set
+ * keep the first. Many elements set `cursor: pointer` or `default` inline,
+ * so those are matched by their style attribute. Over something with a
+ * tooltip (`help`), the arrow carries a gold question mark. Touch screens show
+ * no cursor.
+ */
+html,
+body {
+  cursor: url('/UI/Cursor/arrow.png') 2 2, default;
+  cursor: image-set(url('/UI/Cursor/arrow.png') 1x, url('/UI/Cursor/arrow@2x.png') 2x) 2 2, default;
+}
+
+a[href],
+[style*="cursor: pointer"] {
+  cursor: url('/UI/Cursor/hand.png') 2 2, pointer !important;
+  cursor: image-set(url('/UI/Cursor/hand.png') 1x, url('/UI/Cursor/hand@2x.png') 2x) 2 2, pointer !important;
+}
+
+[style*="cursor: help"] {
+  cursor: url('/UI/Cursor/help.png') 2 2, help !important;
+  cursor: image-set(url('/UI/Cursor/help.png') 1x, url('/UI/Cursor/help@2x.png') 2x) 2 2, help !important;
+}
+
+[style*="cursor: default"] {
+  cursor: url('/UI/Cursor/arrow.png') 2 2, default !important;
+  cursor: image-set(url('/UI/Cursor/arrow.png') 1x, url('/UI/Cursor/arrow@2x.png') 2x) 2 2, default !important;
+}
+
+/* The region plate on the encounter frame opens the world map (2026-11-17). */
+.morkahja-region-plate-button:hover,
+.morkahja-region-plate-button:focus-visible,
+.morkahja-region-plate-button[aria-pressed='true'] {
+  background: rgba(255, 204, 102, 0.2) !important;
+  outline: none;
+}
+
+/*
+ * The world map's cursor (Babuni, 2026-11-17): four gold triangles around a
+ * ruby; while dragging they pull in and the gem turns gold.
+ */
+.morkahja-map-cursor {
+  cursor: url('/UI/Cursor/move.png') 16 16, grab;
+  cursor: image-set(url('/UI/Cursor/move.png') 1x, url('/UI/Cursor/move@2x.png') 2x) 16 16, grab;
+}
+
+.morkahja-map-cursor[data-dragging='true'] {
+  cursor: url('/UI/Cursor/move-held.png') 16 16, grabbing;
+  cursor: image-set(url('/UI/Cursor/move-held.png') 1x, url('/UI/Cursor/move-held@2x.png') 2x) 16 16, grabbing;
 }

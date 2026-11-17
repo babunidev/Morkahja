@@ -5,7 +5,9 @@ import {
   FRAME_LINES,
   FRAME_OUTSET_PX,
   cornerLegAt,
+  fitTab,
   octagonPerimeter,
+  tabbedFrameLine,
   randomGapDashArray,
   timerSegments,
 } from './encounterFrameGeometry.js';
@@ -93,4 +95,29 @@ test('panel and tooltip frames: the same lines, thinner, inside their outset', a
       assert.ok(dashes[index]! >= 2, 'gaps stay visible');
     }
   }
+});
+
+function pointsOf(path: string): Array<[number, number]> {
+  return [...path.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((match) => [Number(match[1]), Number(match[2])]);
+}
+
+test('the region tab: top lines rise 45° over it, and its ring closes below the edge (2026-11-17)', () => {
+  const tab = { straight: 120, half: 10 };
+  for (const line of FRAME_LINES) {
+    const { frame, ring } = tabbedFrameLine(400, 400, line.offset, FRAME_OUTSET_PX, tab);
+    const top = pointsOf(frame).slice(1, 5);
+    const lower = pointsOf(ring);
+    const lineY = FRAME_OUTSET_PX - line.offset;
+    // The detour leaves and rejoins the frame's top line, on its own height.
+    assert.ok(Math.abs(top[0]![1] - lineY) < 0.02);
+    assert.ok(Math.abs(top[3]![1] - lineY) < 0.02);
+    // Each rising and falling side is at 45°.
+    assert.ok(Math.abs(Math.abs(top[1]![0] - top[0]![0]) - Math.abs(top[1]![1] - top[0]![1])) < 0.03);
+    // The ring below starts and ends where the detour does, and reaches below the edge.
+    assert.deepEqual(lower[0], top[0]);
+    assert.deepEqual(lower[lower.length - 1], top[3]);
+    assert.ok(Math.max(...lower.map(([, y]) => y)) > FRAME_OUTSET_PX + tab.half);
+  }
+  assert.equal(fitTab({ straight: 1000, half: 10 }, 400, FRAME_OUTSET_PX)!.straight < 400, true);
+  assert.equal(fitTab({ straight: 50, half: 10 }, 20, FRAME_OUTSET_PX), null);
 });

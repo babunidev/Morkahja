@@ -24,14 +24,15 @@ import {
 } from '../audioVolume.js';
 import { assetUrl } from '../../assetUrl.js';
 import { AmbianceBed } from './AmbianceBed.js';
-import { loopBreakMs } from './musicTiming.js';
+import { loopBreakMs, PIECE_FADE_MS } from './musicTiming.js';
+import { withWorkingVolume } from '../audioGain.js';
 const MORKAHJA_MAIN_TRACKS = [
   assetUrl('/UI/Music/Morkahja_main_full_intro.mp3'),
   assetUrl('/UI/Music/Morkahja_main_intro.mp3'),
   assetUrl('/UI/Music/Morkahja_main_track.mp3'),
 ];
 const DASHBOARD_MUSIC_DELAY_MS = 3000;
-const MUSIC_FADE_MS = 420;
+const MUSIC_FADE_MS = PIECE_FADE_MS;
 const MUSIC_MENU_EXIT_FADE_MS = 1400;
 const MUSIC_TOGGLE_OFF_FADE_MS = 1400;
 
@@ -80,6 +81,8 @@ export function MusicEngine({
   const currentTrackRef = useRef<string | null>(null);
   const enabledRef = useRef(storedMusicEnabled());
   const fadeRunRef = useRef(0);
+  /** Each started piece; a newer one stops the older piece's fade-out watch. */
+  const pieceRunRef = useRef(0);
   const lastAmbientTrackRef = useRef<string | null>(null);
   const ambientTracksRef = useRef<string[]>(DEFAULT_AMBIENT_TRACKS);
   const lastMenuTrackRef = useRef<string | null>(null);
@@ -96,7 +99,7 @@ export function MusicEngine({
   const [ambianceEnabled, setAmbianceEnabled] = useState(storedAmbianceEnabled);
   const [ambianceVolume, setAmbianceVolume] = useState(storedAmbianceVolume);
   useEffect(() => {
-    const audio = new Audio(MORKAHJA_MAIN_TRACKS[0]);
+    const audio = withWorkingVolume(new Audio(MORKAHJA_MAIN_TRACKS[0]));
     audio.loop = false;
     audio.volume = 0;
     const handleEnded = () => {
@@ -352,16 +355,35 @@ export function MusicEngine({
     }
 
     audio.currentTime = 0;
-    audio.volume = playbackVolume(volumeRef.current);
+    audio.volume = 0;
 
     try {
       await audio.play();
       audioUnlockedRef.current = true;
       pendingPlaybackRef.current = false;
+      // Every piece fades in and out over one second (Babuni, 2026-11-17).
+      const piece = pieceRunRef.current + 1;
+      pieceRunRef.current = piece;
+      void fadeTo(playbackVolume(volumeRef.current), PIECE_FADE_MS);
+      void fadeOutBeforeEnd(audio, piece);
       return true;
     } catch {
       pendingPlaybackRef.current = true;
       return false;
+    }
+  }
+
+  /** Starts the piece's one-second fade-out so that it reaches silence as the piece ends. */
+  async function fadeOutBeforeEnd(audio: HTMLAudioElement, piece: number): Promise<void> {
+    while (pieceRunRef.current === piece && !audio.paused && !audio.ended) {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        const remainingMs = (audio.duration - audio.currentTime) * 1000;
+        if (remainingMs <= PIECE_FADE_MS + 30) {
+          await fadeTo(0, Math.max(1, remainingMs));
+          return;
+        }
+      }
+      await wait(30);
     }
   }
 

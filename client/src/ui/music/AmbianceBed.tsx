@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { assetUrl } from '../../assetUrl.js';
 import { playbackVolume } from '../audioVolume.js';
+import { withWorkingVolume } from '../audioGain.js';
 import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
+  handoffRunFor,
   landCrossfade,
   openingRun,
   pickPiece,
@@ -144,8 +146,12 @@ function reachedFadeOut(audio: HTMLAudioElement): boolean {
 
 /**
  * The encounter bed. It keeps running while the expansion stays the same.
- * A different land crossfades: the new stage A fades in while the old piece
- * fades out. A land that starts from silence still fades in.
+ * A different land crossfades: the new land's piece fades in while the old
+ * piece fades out. A land that starts from silence still fades in.
+ *
+ * The stage cycle belongs to the player, not to the land (Babuni, 2026-11-17):
+ * changing land does not send it back to stage A. The piece a new land cuts
+ * off counts as played, and the new land plays the stage that comes next.
  */
 export function AmbianceBed({
   enabled,
@@ -161,6 +167,8 @@ export function AmbianceBed({
   const voicesRef = useRef<Voice[] | null>(null);
   const runIdRef = useRef(0);
   const scriptedRef = useRef(0);
+  /** Where the stage cycle stands; kept across lands and across leaving the encounter. */
+  const runRef = useRef<AmbianceRun | null>(null);
   const volumeRef = useRef(volume);
   const enabledRef = useRef(enabled);
   volumeRef.current = volume;
@@ -173,7 +181,7 @@ export function AmbianceBed({
   function voices(): Voice[] {
     if (!voicesRef.current) {
       voicesRef.current = [0, 1].map(() => {
-        const audio = new Audio();
+        const audio = withWorkingVolume(new Audio());
         audio.preload = 'auto';
         audio.volume = 0;
         return { audio, fade: 0 };
@@ -207,7 +215,7 @@ export function AmbianceBed({
       && expansionHasClips(AMBIANCE_CLIPS, land);
 
     function spareVoice(): Voice {
-      const audio = new Audio();
+      const audio = withWorkingVolume(new Audio());
       audio.preload = 'auto';
       audio.volume = 0;
       return { audio, fade: 0 };
@@ -232,7 +240,7 @@ export function AmbianceBed({
     async function runBed(
       nextLand: number,
       pair: Voice[],
-      start?: { voice: Voice; file: string },
+      start?: { voice: Voice; file: string; stage: AmbianceStage },
     ): Promise<void> {
       let voiceIndex = 0;
       let current = pair[0]!;
@@ -241,13 +249,15 @@ export function AmbianceBed({
         voiceIndex = index >= 0 ? index : 0;
         current = pair[voiceIndex]!;
       }
-      let run: AmbianceRun = openingRun();
-      const lastByStage: Record<AmbianceStage, string | null> = {
-        A: start?.file ?? null,
-        B: null,
-        C: null,
-        D: null,
-      };
+      let run: AmbianceRun = runRef.current ?? openingRun();
+      if (stagePool(AMBIANCE_CLIPS, nextLand, run.stage).length === 0) {
+        run = openingRun();
+      }
+      runRef.current = run;
+      const lastByStage: Record<AmbianceStage, string | null> = { A: null, B: null, C: null, D: null };
+      if (start) {
+        lastByStage[start.stage] = start.file;
+      }
       let queued: string | null = start?.file ?? null;
 
       while (alive()) {
@@ -305,6 +315,7 @@ export function AmbianceBed({
           current = nextVoice;
           queued = nextFile;
           run = step.next;
+          runRef.current = run;
           continue;
         }
 
@@ -313,8 +324,9 @@ export function AmbianceBed({
           return;
         }
         await fadeVoiceOut(current, edgeMs(current.audio).fadeOutMs);
-        await waitMs(step.restMs, alive);
         run = step.next;
+        runRef.current = run;
+        await waitMs(step.restMs, alive);
       }
     }
 
@@ -345,12 +357,13 @@ export function AmbianceBed({
         incoming = spareVoice();
         bedVoices.push(incoming);
       }
-      const pool = stagePool(AMBIANCE_CLIPS, land, 'A');
-      if (pool.length === 0) {
+      const handoffRun = handoffRunFor(runRef.current, (stage) => stagePool(AMBIANCE_CLIPS, land, stage).length > 0);
+      if (!handoffRun) {
         await Promise.all(bedVoices.map((voice) => fadeVoiceOut(voice, handoff.fadeOutMs)));
         return;
       }
-      const file = pickPiece(pool, null);
+      runRef.current = handoffRun;
+      const file = pickPiece(stagePool(AMBIANCE_CLIPS, land, handoffRun.stage), null);
       const fadingOut = Promise.all(
         bedVoices
           .filter((voice) => voice !== incoming && !voice.audio.paused)
@@ -384,7 +397,7 @@ export function AmbianceBed({
       }
       const pair = [incoming, spare];
       voicesRef.current = pair;
-      await runBed(land, pair, { voice: incoming, file });
+      await runBed(land, pair, { voice: incoming, file, stage: handoffRun.stage });
     })();
 
     return () => {
