@@ -105,3 +105,16 @@ assert.equal(handoffRunFor({ stage: 'C', piecesLeft: 1 }, every, sequence([0.5, 
 assert.equal(handoffRunFor(null, every, () => 0)?.stage, 'A');
 assert.equal(handoffRunFor({ stage: 'D', piecesLeft: 3 }, (stage) => stage === 'A', () => 0)?.stage, 'A');
 assert.equal(handoffRunFor({ stage: 'D', piecesLeft: 3 }, () => false, () => 0), null);
+
+// The local test cycle walks every stage in order, one piece each (2026-11-17).
+{
+  const { testStepAfterPiece } = await import('./ambianceCycle.js');
+  let run: AmbianceRun = { stage: 'A', piecesLeft: 1 };
+  const seen: string[] = [];
+  for (let index = 0; index < 5; index += 1) {
+    const step = testStepAfterPiece(run);
+    seen.push(`${run.stage}>${step.next.stage}:${step.gap}`);
+    run = step.next;
+  }
+  assert.deepEqual(seen, ['A>B:rest', 'B>C:rest', 'C>D:crossfade', 'D>A:fade-out', 'A>B:rest']);
+}

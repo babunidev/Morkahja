@@ -11,11 +11,40 @@ import {
   openingRun,
   pickPiece,
   stepAfterPiece,
+  testStepAfterPiece,
   type AmbianceRun,
   type AmbianceStage,
+  type AmbianceStep,
 } from './ambianceCycle.js';
 import { ambiancePackForExpansion, expansionHasClips, stagePool } from './ambianceLibrary.js';
 import type { MusicZone } from './MusicEngine.js';
+
+/**
+ * Test cycle for listening locally (Babuni, 2026-11-17): on the dev server the
+ * weather steps A → B → C → D → A, one piece each, and logs each stage to the
+ * console. Never in a production build. Turn it off locally with
+ * localStorage['morkahja.ambiance.cycleTest'] = '0'.
+ */
+function cycleTestOn(): boolean {
+  if (!import.meta.env.DEV) {
+    return false;
+  }
+  try {
+    return window.localStorage.getItem('morkahja.ambiance.cycleTest') !== '0';
+  } catch {
+    return true;
+  }
+}
+
+function nextStep(run: AmbianceRun): AmbianceStep {
+  return cycleTestOn() ? testStepAfterPiece(run) : stepAfterPiece(run);
+}
+
+function logPiece(land: number, stage: AmbianceStage, file: string): void {
+  if (import.meta.env.DEV) {
+    console.info(`[ambiance] land ${land} · stage ${stage}${cycleTestOn() ? ' (test cycle)' : ''} · ${file.split('/').pop()}`);
+  }
+}
 
 interface Voice {
   audio: HTMLAudioElement;
@@ -249,7 +278,7 @@ export function AmbianceBed({
         voiceIndex = index >= 0 ? index : 0;
         current = pair[voiceIndex]!;
       }
-      let run: AmbianceRun = runRef.current ?? openingRun();
+      let run: AmbianceRun = runRef.current ?? (cycleTestOn() ? { stage: 'A', piecesLeft: 1 } : openingRun());
       if (stagePool(AMBIANCE_CLIPS, nextLand, run.stage).length === 0) {
         run = openingRun();
       }
@@ -272,6 +301,7 @@ export function AmbianceBed({
         queued = null;
         if (!alreadyPlaying) {
           lastByStage[run.stage] = file;
+          logPiece(nextLand, run.stage, file);
           const started = await startVoice(current, file, 0, alive);
           if (!started || !alive()) {
             return;
@@ -282,7 +312,7 @@ export function AmbianceBed({
           return;
         }
 
-        const step = stepAfterPiece(run);
+        const step = nextStep(run);
         if (step.gap === 'crossfade') {
           const nextPool = stagePool(AMBIANCE_CLIPS, nextLand, step.next.stage);
           if (nextPool.length === 0) {
@@ -304,6 +334,7 @@ export function AmbianceBed({
             return;
           }
           const nextVoice = pair[1 - voiceIndex]!;
+          logPiece(nextLand, step.next.stage, nextFile);
           const started = await startVoice(nextVoice, nextFile, 0, alive);
           if (!started || !alive()) {
             await fadingOut;
@@ -357,7 +388,12 @@ export function AmbianceBed({
         incoming = spareVoice();
         bedVoices.push(incoming);
       }
-      const handoffRun = handoffRunFor(runRef.current, (stage) => stagePool(AMBIANCE_CLIPS, land, stage).length > 0);
+      const handoffRun = handoffRunFor(
+        runRef.current,
+        (stage) => stagePool(AMBIANCE_CLIPS, land, stage).length > 0,
+        Math.random,
+        (run) => nextStep(run),
+      );
       if (!handoffRun) {
         await Promise.all(bedVoices.map((voice) => fadeVoiceOut(voice, handoff.fadeOutMs)));
         return;
@@ -376,6 +412,7 @@ export function AmbianceBed({
         await fadingOut;
         return;
       }
+      logPiece(land, handoffRun.stage, file);
       const started = await startVoice(incoming, file, 0, alive);
       if (!started || !alive()) {
         await fadingOut;

@@ -130,12 +130,26 @@ export function handoffRunFor(
   current: AmbianceRun | null,
   hasStage: (stage: AmbianceStage) => boolean,
   random: () => number = Math.random,
+  step: (run: AmbianceRun, random: () => number) => AmbianceStep = stepAfterPiece,
 ): AmbianceRun | null {
-  const next = current ? stepAfterPiece(current, random).next : openingRun(random);
+  const next = current ? step(current, random).next : openingRun(random);
   if (hasStage(next.stage)) {
     return next;
   }
   return hasStage('A') ? openingRun(random) : null;
+}
+
+/**
+ * Test cycle (Babuni, 2026-11-17, for listening locally): every stage plays one
+ * piece and always moves on, A → B → C → D → A. C crossfades into D as usual,
+ * the storm's piece fades out alone, and there is no break between pieces.
+ */
+const TEST_ORDER: Record<AmbianceStage, AmbianceStage> = { A: 'B', B: 'C', C: 'D', D: 'A' };
+
+export function testStepAfterPiece(run: AmbianceRun): AmbianceStep {
+  const stage = TEST_ORDER[run.stage];
+  const gap: AmbianceGap = run.stage === 'C' ? 'crossfade' : run.stage === 'D' ? 'fade-out' : 'rest';
+  return { gap, restMs: 0, next: { stage, piecesLeft: 1 } };
 }
 
 export function pickPiece<T>(pieces: readonly T[], last: T | null, random: () => number = Math.random): T {

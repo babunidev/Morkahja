@@ -6,6 +6,7 @@
 
 - **Change (Babuni's direction, D-045):** in an encounter that needs several solutions, a slot whose item has no charge left now refills from another item of the slot's alternative type in the inventory, so one encounter can use several items of the same kind. The slot shows the item it will take next. The slot's own item is used while it has charges; refills go lowest id first and never take an item shown in another slot; a refill rolls in the alternative range (50–100) with its own roll per copy. Picks already locked keep their item and roll. This replaces D-019's "a different item is not substituted". Files: `shared/src/solutionSet.ts` (server and client share it), `SolutionBlock.tsx`; tests `server/src/engine/solutionSetRefill.test.ts`, and two older tests updated to the new rule.
 - **Loading screen:** the version (`Version 0.9.0-beta.76`) sits at the bottom, as in Settings. File: `LoadingScreen.tsx`.
+- **Weather test cycle (local only):** on the dev server the weather steps A → B → C → D → A, one piece each with no break, and logs each piece's land and stage to the browser console, so Babuni can hear every stage. Off with `localStorage['morkahja.ambiance.cycleTest'] = '0'`; not in production builds (checked in `dist`).
 - **Verification:** client tests (48) and server tests (53) passed; the typecheck and production build passed. The loading screen shows the version at phone size. A refill was not played in the game.
 
 ## 2026-11-17 — The plate names the encounter's own land (not deployed)
