@@ -24,7 +24,7 @@ import {
 } from '../audioVolume.js';
 import { assetUrl } from '../../assetUrl.js';
 import { AmbianceBed } from './AmbianceBed.js';
-import { loopBreakMs, PIECE_FADE_MS } from './musicTiming.js';
+import { loopBreakMs, PIECE_FADE_IN_MS, PIECE_FADE_OUT_MS } from './musicTiming.js';
 import { withWorkingVolume } from '../audioGain.js';
 const MORKAHJA_MAIN_TRACKS = [
   assetUrl('/UI/Music/Morkahja_main_full_intro.mp3'),
@@ -32,7 +32,8 @@ const MORKAHJA_MAIN_TRACKS = [
   assetUrl('/UI/Music/Morkahja_main_track.mp3'),
 ];
 const DASHBOARD_MUSIC_DELAY_MS = 3000;
-const MUSIC_FADE_MS = PIECE_FADE_MS;
+/** Music leaving a screen or a profile fades out like a piece's end. */
+const MUSIC_FADE_MS = PIECE_FADE_OUT_MS;
 const MUSIC_MENU_EXIT_FADE_MS = 1400;
 const MUSIC_TOGGLE_OFF_FADE_MS = 1400;
 
@@ -364,7 +365,7 @@ export function MusicEngine({
       // Every piece fades in and out over one second (Babuni, 2026-11-17).
       const piece = pieceRunRef.current + 1;
       pieceRunRef.current = piece;
-      void fadeTo(playbackVolume(volumeRef.current), PIECE_FADE_MS);
+      void fadeTo(playbackVolume(volumeRef.current), PIECE_FADE_IN_MS);
       void fadeOutBeforeEnd(audio, piece);
       return true;
     } catch {
@@ -373,12 +374,12 @@ export function MusicEngine({
     }
   }
 
-  /** Starts the piece's one-second fade-out so that it reaches silence as the piece ends. */
+  /** Starts the piece's two-second fade-out so that it reaches silence as the piece ends. */
   async function fadeOutBeforeEnd(audio: HTMLAudioElement, piece: number): Promise<void> {
     while (pieceRunRef.current === piece && !audio.paused && !audio.ended) {
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         const remainingMs = (audio.duration - audio.currentTime) * 1000;
-        if (remainingMs <= PIECE_FADE_MS + 30) {
+        if (remainingMs <= PIECE_FADE_OUT_MS + 30) {
           await fadeTo(0, Math.max(1, remainingMs));
           return;
         }

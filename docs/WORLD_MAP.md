@@ -36,3 +36,7 @@ The in-game world map (`client/src/ui/game/worldMap/`) opens from the region pla
 Roads leave Aetherion toward every land and streams converge on it, after the Vale's "trade routes" and "converging elemental streams". Not on the map: Atranor (a divine realm, not a place in the world), the Eternal Twilight Grove and other sites with no region in the archive.
 
 **Expansion markers:** 0 → Ethera's Vale, 1001 → Keldor, 1003 → Everwinter Valley, 1004 → Aetherion. Urcogor Ravage (1002) is a world event, not a place, and has no marker.
+
+## Per-encounter markers (2026-11-17)
+
+Babuni's list `docs/data/encounter_locations.csv` places all 203 encounters: a land (`map_region`), how the place was chosen (`placement_basis`: narrative landmark, expansion assignment, or an interpretive proposal not established as canon) and a pixel position measured on the zoomed-out map. `client/src/ui/game/worldMap/encounterLocations.ts` is generated from it: pixels become map units with x = (px − 16) / 0.444 and y = (py + 14) / 0.444, the fit that puts 194 of 195 placed points inside their named land. Points within 12 units of a border move toward the land's middle (19), the six Aetherion encounters sit on the city, and Atranor (1) and the level-up (2) have no place. A test checks that every encounter in `server/game/encountersdata.json` has an entry and lies in its land. To change a placement, edit the CSV and regenerate the module.

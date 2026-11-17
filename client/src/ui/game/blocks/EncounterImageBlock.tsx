@@ -696,7 +696,7 @@ export function EncounterImageBlock({
             aria-hidden={!mapOpen}
             style={{ ...worldMapLayerStyle, opacity: mapOpen ? 1 : 0, pointerEvents: mapOpen ? 'auto' : 'none' }}
           >
-            <WorldMap expansion={expansionFor(encounter.encounterId)} open={mapOpen} />
+            <WorldMap encounterId={encounter.encounterId} expansion={expansionFor(encounter.encounterId)} open={mapOpen} />
           </div>
         ) : null}
         <DecorativeEdgeFrame

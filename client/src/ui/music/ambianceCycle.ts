@@ -1,4 +1,4 @@
-import { loopBreakMs, PIECE_FADE_MS } from './musicTiming.js';
+import { loopBreakMs, PIECE_FADE_IN_MS, PIECE_FADE_OUT_MS } from './musicTiming.js';
 
 export type AmbianceStage = 'A' | 'B' | 'C' | 'D';
 
@@ -17,10 +17,10 @@ export interface AmbianceStep {
 }
 
 /** A piece, and a new land, rises over one second. */
-export const AMBIANCE_FADE_IN_MS = PIECE_FADE_MS;
+export const AMBIANCE_FADE_IN_MS = PIECE_FADE_IN_MS;
 
-/** A piece, and a land that is leaving, falls over one second (Babuni, 2026-11-17). */
-export const AMBIANCE_FADE_OUT_MS = PIECE_FADE_MS;
+/** A piece, and a land that is leaving, falls over two seconds (Babuni, 2026-11-17). */
+export const AMBIANCE_FADE_OUT_MS = PIECE_FADE_OUT_MS;
 
 /**
  * A new land starts rising at the same moment the old land starts falling,

@@ -16,6 +16,7 @@ import {
   type Terrain,
 } from './worldMapData.js';
 import { clampView, scaleLimits, scatterInside, zoomAt, type MapView } from './worldMapGeometry.js';
+import { ENCOUNTER_LOCATIONS } from './encounterLocations.js';
 
 /**
  * Morkahja drawn as a map (Babuni's design, 2026-11-17): gold ground, every
@@ -408,13 +409,24 @@ const MARKER_KEYFRAMES = `
 `;
 
 /**
- * The map, filling its parent. Opens centred on `expansion`'s land; drag to
- * move, wheel or pinch to zoom.
+ * Where the marker goes: the encounter's own place from Babuni's placement
+ * list, else its expansion's land. Atranor and the level-up are not places.
  */
-export function WorldMap({ expansion, open }: { expansion: number | null; open: boolean }) {
+export function mapFocusFor(encounterId: number | null, expansion: number | null): { regionId: string; at: Point } | null {
+  if (encounterId != null && encounterId in ENCOUNTER_LOCATIONS) {
+    return ENCOUNTER_LOCATIONS[encounterId] ?? null;
+  }
+  return expansion != null ? EXPANSION_FOCUS[expansion] ?? null : null;
+}
+
+/**
+ * The map, filling its parent. Opens centred on where the encounter happens;
+ * drag to move, wheel or pinch to zoom.
+ */
+export function WorldMap({ encounterId, expansion, open }: { encounterId: number | null; expansion: number | null; open: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(containerRef);
-  const focus = expansion != null ? EXPANSION_FOCUS[expansion] ?? null : null;
+  const focus = mapFocusFor(encounterId, expansion);
   const [view, setView] = useState<MapView | null>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const viewRef = useRef<MapView | null>(null);
@@ -430,7 +442,7 @@ export function WorldMap({ expansion, open }: { expansion: number | null; open: 
     const at = focus?.at ?? [MAP_WIDTH / 2, MAP_HEIGHT / 2];
     setView(clampView({ cx: at[0], cy: at[1], scale: limits.open }, size.width, size.height, MAP_WIDTH, MAP_HEIGHT, limits));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, expansion, size.width > 0 && size.height > 0]);
+  }, [open, encounterId, expansion, size.width > 0 && size.height > 0]);
 
   function update(next: (current: MapView) => MapView): void {
     if (!limits) {

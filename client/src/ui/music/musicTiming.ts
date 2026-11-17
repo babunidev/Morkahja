@@ -1,8 +1,10 @@
 /**
  * Silence between pieces. The minimum is 0 (Babuni, 2026-11-17): a piece can
- * follow straight on, because every piece fades in and out over one second.
+ * follow straight on, because every piece fades in and out.
  */
-export const PIECE_FADE_MS = 1000;
+/** Every piece fades in over one second and out over two (Babuni, 2026-11-17). */
+export const PIECE_FADE_IN_MS = 1000;
+export const PIECE_FADE_OUT_MS = 2000;
 
 /** Silence between dashboard pieces. */
 export const MENU_LOOP_BREAK_MIN_MS = 0;

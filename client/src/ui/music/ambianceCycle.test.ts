@@ -12,7 +12,7 @@ import {
 } from './ambianceCycle.js';
 
 assert.equal(AMBIANCE_FADE_IN_MS, 1000);
-assert.equal(AMBIANCE_FADE_OUT_MS, 1000);
+assert.equal(AMBIANCE_FADE_OUT_MS, 2000);
 
 const handoff = landCrossfade();
 assert.equal(handoff.fadeInMs, AMBIANCE_FADE_IN_MS);

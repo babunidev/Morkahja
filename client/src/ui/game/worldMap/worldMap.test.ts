@@ -59,3 +59,25 @@ assert.equal(zoomed.cx + (300 - 200) / zoomed.scale, 500 + (300 - 200) / 1);
 assert.equal(zoomed.cy + (100 - 200) / zoomed.scale, 500 + (100 - 200) / 1);
 
 console.log('worldMap.test.ts passed');
+
+// Babuni's placement list (2026-11-17): every encounter in the game has an entry,
+// and every placed one sits inside the land it names.
+{
+  const { readFileSync } = await import('node:fs');
+  const { ENCOUNTER_LOCATIONS } = await import('./encounterLocations.js');
+  const encounters = JSON.parse(readFileSync(new URL('../../../../../server/game/encountersdata.json', import.meta.url), 'utf8')) as Record<string, { mEncounterID: number }>;
+  for (const record of Object.values(encounters)) {
+    assert.ok(record.mEncounterID in ENCOUNTER_LOCATIONS, `encounter ${record.mEncounterID} has a map entry`);
+    const place = ENCOUNTER_LOCATIONS[record.mEncounterID];
+    if (place) {
+      const land = MAP_REGIONS.find((entry) => entry.id === place.regionId)!;
+      assert.ok(pointInPolygon(place.at, land.outline), `encounter ${record.mEncounterID} lies in ${place.regionId}`);
+    }
+  }
+  assert.equal(ENCOUNTER_LOCATIONS[1], null, 'Atranor is not on the map');
+  assert.equal(ENCOUNTER_LOCATIONS[2], null, 'the level-up is not on the map');
+  const { mapFocusFor } = await import('./WorldMap.js');
+  assert.deepEqual(mapFocusFor(20181, 1004)?.at, at('aetherion'), 'an Aetherion encounter sits on the city');
+  assert.equal(mapFocusFor(1, 0), null);
+  assert.deepEqual(mapFocusFor(99999, 1001), EXPANSION_FOCUS[1001], 'unknown encounters fall back to their land');
+}

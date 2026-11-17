@@ -1,0 +1,204 @@
+﻿index,encounter_id,title,expansion_id,map_region,placement_basis,map_x_px,map_y_px,placement_note
+1,1,Atranor,0,Outside the physical map,Off-map,,,"Atranor is an intermediary realm, not a geographic district."
+2,2,Level up!,0,Game-system event,Off-map,,,A level-up event is not a world location.
+3,19001,Nerevals Sanctuary,0,Ethera's Vale,Narrative / landmark,283,277,Placed beside the Nereval sanctuary landmark marked in Ethera's Vale.
+4,19444,Hearthguard Sanctuary,0,Ethera's Vale,Narrative / landmark,247,211,Placed beside the Hearthguard sanctuary landmark on the provided map.
+5,19666,Tangled Depths,1001,Cursed Forest of Keldor,Expansion assignment,133.0,178.2,Directly tied to this region by its mEncounterExpansion value.
+6,19667,Blackwood Guardian,1001,Cursed Forest of Keldor,Expansion assignment,130.9,215.6,Directly tied to this region by its mEncounterExpansion value.
+7,19668,The Hollow Choir,1001,Cursed Forest of Keldor,Expansion assignment,155.2,168.3,Directly tied to this region by its mEncounterExpansion value.
+8,19669,The Weeping Mire,1001,Cursed Forest of Keldor,Expansion assignment,113.1,210.9,Directly tied to this region by its mEncounterExpansion value.
+9,19670,Forgotten Procession,1001,Cursed Forest of Keldor,Expansion assignment,116.5,177.2,Directly tied to this region by its mEncounterExpansion value.
+10,19671,Silent Throne,1001,Cursed Forest of Keldor,Expansion assignment,133.7,189.2,Directly tied to this region by its mEncounterExpansion value.
+11,19672,Verdani’s Vigil,1001,Cursed Forest of Keldor,Expansion assignment,110.0,157.3,Directly tied to this region by its mEncounterExpansion value.
+12,20001,Lovely Meadows,0,Ethera's Vale,Interpretive placement,271.4,232.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+13,20002,Enchanted Glades,0,Ethera's Vale,Narrative / landmark,281.0,261.1,Regional name or identifiable landscape in the encounter narrative.
+14,20003,Fae Pastures,0,Ethera's Vale,Interpretive placement,290.3,261.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+15,20004,Mystic Grass,0,Ethera's Vale,Interpretive placement,270.3,245.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+16,20005,Seraphic Plains,0,Ethera's Vale,Narrative / landmark,189.7,276.2,Regional name or identifiable landscape in the encounter narrative.
+17,20006,Aevis Chest,0,Eldertree Forest,Narrative / landmark,220.8,348.0,Regional name or identifiable landscape in the encounter narrative.
+18,20007,Aevis Lockbox,0,Eldertree Forest,Narrative / landmark,203.2,327.4,Regional name or identifiable landscape in the encounter narrative.
+19,20008,Grimnir Trunk,0,Frostwind Mountains,Narrative / landmark,247.6,126.4,Regional name or identifiable landscape in the encounter narrative.
+20,20009,Grimnir Vault,0,Everwinter Valley,Narrative / landmark,286,72,Everwinter Valley is explicitly named in the encounter prose.
+21,20010,Verdani Casket,0,Evergrove,Narrative / landmark,361.9,429.0,Regional name or identifiable landscape in the encounter narrative.
+22,20011,Magic Source,0,Ethera's Vale,Interpretive placement,205.3,237.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+23,20012,Hidden Market,0,Aetherion,Interpretive placement,237,233,Proposed as an underground market in Aetherion; the prose gives no geographic anchor.
+24,20013,Cauterized Rokur,0,Emberfrost,Interpretive placement,416.0,74.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+25,20014,Downed Aevis,0,Celesterra,Interpretive placement,89.6,409.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+26,20015,Weakened Grimnir,0,Fyrskar Mountains,Interpretive placement,103.4,77.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+27,20016,Ailing Verdani,0,Evergrove,Interpretive placement,362.4,391.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+28,20017,Flameveil Emberheart,0,Emberfrost,Interpretive placement,355.7,96.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+29,20018,Stonefist Ironwill,0,Fyrskar Mountains,Interpretive placement,72.0,88.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+30,20019,Ashen Revenant Witch,0,Emberfrost,Interpretive placement,356.3,115.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+31,20020,Ashen Revenant Seer,0,Emberfrost,Interpretive placement,399.3,127.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+32,20021,Blightwraith Huntress,0,Evergrove,Interpretive placement,353.5,377.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+33,20022,Crumblegheist Mage,0,Shattered Peaks,Narrative / landmark,147.5,55.2,Regional name or identifiable landscape in the encounter narrative.
+34,20023,Tempestwailer Wildheart,0,Celesterra,Interpretive placement,129.7,381.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+35,20024,Blightwraith Rootrot,0,Evergrove,Interpretive placement,422.1,425.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+36,20025,Crumblegheist Roughian,0,Shattered Peaks,Interpretive placement,122.9,51.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+37,20026,Crumblegheist Barbarian,0,Shattered Peaks,Interpretive placement,161.4,23.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+38,20027,Tempestwailer Stormcaller,0,Eldertree Forest,Interpretive placement,198.8,337.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+39,20028,Tempestwailer Seductress,0,Celesterra,Interpretive placement,63.8,351.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+40,20029,Blightwraith Occultist,0,Evergrove,Interpretive placement,352.2,445.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+41,20030,Ashen Revenant Warlock,0,Emberfrost,Interpretive placement,399.6,65.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+42,20031,Pantheon Temple,0,Eldertree Forest,Narrative / landmark,239,324,"South of Eldridia, toward Eldertree Forest, as described."
+43,20032,Rare Treasurechest,0,Ethera's Vale,Narrative / landmark,256.2,286.1,Regional name or identifiable landscape in the encounter narrative.
+44,20033,Wild Bloodfang,0,Evergrove,Interpretive placement,410.8,446.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+45,20034,Menacing Goldhorn,0,Ethera's Vale,Interpretive placement,317.5,212.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+46,20035,Ohgar Skorpo,0,Desert of Ohgar,Narrative / landmark,228,415,Regional name or identifiable landscape in the encounter narrative.
+47,20036,Liani Shadowwolf,0,Eldertree Forest,Interpretive placement,293.5,361.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+48,20037,Flytrap Grotto,0,Swamp of Karrhu,Narrative / landmark,382,224,Regional name or identifiable landscape in the encounter narrative.
+49,20038,Inferno Duck,0,Swamp of Karrhu,Narrative / landmark,372.3,256.5,Regional name or identifiable landscape in the encounter narrative.
+50,20039,Eldertree Grove,0,Eldertree Forest,Interpretive placement,285.7,338.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+51,20040,Shadowed Hollow,0,Eldertree Forest,Interpretive placement,275.3,336.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+52,20041,Sunlit Dell,0,Eldertree Forest,Interpretive placement,265.9,327.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+53,20042,Enchanted Hollow,0,Eldertree Forest,Interpretive placement,207.3,348.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+54,20043,Sylvan Sanctuary,0,Eldertree Forest,Interpretive placement,191.0,348.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+55,20044,Darkwood Thicket,1001,Cursed Forest of Keldor,Expansion assignment,71.6,222.7,Directly tied to this region by its mEncounterExpansion value.
+56,20045,Tranquil Glade,0,Eldertree Forest,Interpretive placement,258.8,335.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+57,20046,Feral Hollow,0,Eldertree Forest,Interpretive placement,294.5,330.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+58,20047,Moonlit Oasis,0,Eldertree Forest,Interpretive placement,221.1,327.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+59,20048,Grimnir Steps,0,Eldertree Forest,Interpretive placement,200.6,356.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+60,20049,Firefly Brook,0,Eldertree Forest,Interpretive placement,240.8,334.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+61,20050,Blackwood Portal,1001,Cursed Forest of Keldor,Expansion assignment,145.6,200.3,Directly tied to this region by its mEncounterExpansion value.
+62,20051,Nagar Charger,0,Ethera's Vale,Narrative / landmark,193.2,198.8,Regional name or identifiable landscape in the encounter narrative.
+63,20052,Nagar Elder,0,Ethera's Vale,Narrative / landmark,238.0,236.0,Regional name or identifiable landscape in the encounter narrative.
+64,20053,Exhausted Verdani,0,Evergrove,Narrative / landmark,337,395,Regional name or identifiable landscape in the encounter narrative.
+65,20054,Drained Aevis,0,Celesterra,Interpretive placement,164.4,340.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+66,20055,Wounded Grimnir,0,Shattered Peaks,Interpretive placement,109.4,24.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+67,20056,Venerable Grimnir,0,Fyrskar Mountains,Interpretive placement,76.9,125.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+68,20057,Verdani Child,0,Swamp of Karrhu,Narrative / landmark,362.6,261.5,Regional name or identifiable landscape in the encounter narrative.
+69,20058,Aevis Lady,0,Celesterra,Interpretive placement,107.5,353.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+70,20059,Rokur Blacksmith,0,Emberfrost,Interpretive placement,404.0,92.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+71,20060,Verdani Treasury,0,Eldertree Forest,Narrative / landmark,212.2,339.6,Regional name or identifiable landscape in the encounter narrative.
+72,20061,Frostwind Junkyard,0,Frostwind Mountains,Narrative / landmark,250,140,Regional name or identifiable landscape in the encounter narrative.
+73,20062,Market of Aetherion,1004,Aetherion,Expansion assignment,247,230,Directly tied to this region by its mEncounterExpansion value.
+74,20063,Ancient Inscription,0,Desert of Ohgar,Narrative / landmark,257,424,Regional name or identifiable landscape in the encounter narrative.
+75,20064,Altar of Umbrael,0,Evergrove,Narrative / landmark,381.9,420.6,Regional name or identifiable landscape in the encounter narrative.
+76,20065,Zeelai Feline,0,Celesterra,Interpretive placement,138.7,365.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+77,20066,Thirsty Grimnir,0,Desert of Ohgar,Narrative / landmark,214,433,Regional name or identifiable landscape in the encounter narrative.
+78,20067,Ferocious Silvermane,0,Eldertree Forest,Interpretive placement,248.5,343.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+79,20068,Fey Greens,0,Ethera's Vale,Interpretive placement,238.8,294.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+80,20069,Celestial Fields,0,Ethera's Vale,Interpretive placement,300.3,246.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+81,20070,Enigmatic Prairies,0,Ethera's Vale,Narrative / landmark,301,212,"Hills northeast of Ethera's Vale, as described."
+82,20071,Arcane Meadows,0,Ethera's Vale,Narrative / landmark,311,225,"Hills northeast of Ethera's Vale, as described."
+83,20072,Tranquil Wilds,0,Ethera's Vale,Interpretive placement,178.5,271.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+84,20073,Celestial Cairn,0,Eldertree Forest,Narrative / landmark,267,353,Regional name or identifiable landscape in the encounter narrative.
+85,20074,Mysterious Cube,0,Ethera's Vale,Interpretive placement,222.4,258.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+86,20075,Grumpy Fence,1001,Cursed Forest of Keldor,Expansion assignment,142.5,182.6,Directly tied to this region by its mEncounterExpansion value.
+87,20076,Aevis Merchant,0,Celesterra,Narrative / landmark,142,350,Regional name or identifiable landscape in the encounter narrative.
+88,20077,Quicksilver Quagmire,0,Swamp of Karrhu,Narrative / landmark,406,247,Regional name or identifiable landscape in the encounter narrative.
+89,20078,Unhinged Gobbl,1001,Cursed Forest of Keldor,Expansion assignment,65.2,202.2,Directly tied to this region by its mEncounterExpansion value.
+90,20079,Fearfeaster Gobbl,1001,Cursed Forest of Keldor,Expansion assignment,92.2,223.4,Directly tied to this region by its mEncounterExpansion value.
+91,20080,Dreamy Valley,0,Ethera's Vale,Interpretive placement,219.9,206.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+92,20081,Arcadian Hills,0,Ethera's Vale,Interpretive placement,248.9,293.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+93,20082,Alluring Fens,0,Swamp of Karrhu,Interpretive placement,429.6,211.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+94,20083,Enchanted Gardens,0,Ethera's Vale,Interpretive placement,227.7,235.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+95,20084,Mystical Vale,0,Ethera's Vale,Interpretive placement,209.0,280.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+96,20085,Bucolic Dale,0,Ethera's Vale,Interpretive placement,181.7,235.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+97,20086,Captivating Downs,0,Ethera's Vale,Interpretive placement,281.2,226.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+98,20087,Radiant Heath,0,Ethera's Vale,Interpretive placement,290.5,232.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+99,20088,Mesmerizing Hillsides,0,Ethera's Vale,Interpretive placement,214.7,294.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+100,20089,Magical Glens,0,Ethera's Vale,Interpretive placement,270.4,272.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+101,20090,Ethereal Glades,0,Ethera's Vale,Interpretive placement,299.2,202.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+102,20091,Nagar Berserk,0,Ethera's Vale,Interpretive placement,269.7,292.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+103,20092,Nagar Boar,0,Ethera's Vale,Narrative / landmark,319.5,234.6,Regional name or identifiable landscape in the encounter narrative.
+104,20093,Bonecrusher,0,Ethera's Vale,Narrative / landmark,319.4,263.0,Regional name or identifiable landscape in the encounter narrative.
+105,20094,Nagar Humpback,0,Ethera's Vale,Narrative / landmark,291.5,195.6,Regional name or identifiable landscape in the encounter narrative.
+106,20095,Nagar Razorback,0,Ethera's Vale,Interpretive placement,203.2,228.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+107,20096,Thunderhoof,0,Ethera's Vale,Interpretive placement,261.3,267.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+108,20097,Yowler,0,Fyrskar Mountains,Interpretive placement,131.4,123.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+109,20098,Common Chest,0,Ethera's Vale,Interpretive placement,207.3,259.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+110,20099,Cliffs of Sarga,0,Fyrskar Mountains,Interpretive placement,97,94,Cliffs of Sarga provisionally placed among the Fyrskar Mountains.
+111,20100,Mountain Pass,0,Frostwind Mountains,Interpretive placement,272.6,121.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+112,20101,Rocks of Ohgar,0,Desert of Ohgar,Narrative / landmark,239,447,Regional name or identifiable landscape in the encounter narrative.
+113,20102,Frostwind Slopes,0,Frostwind Mountains,Narrative / landmark,233.4,120.9,Regional name or identifiable landscape in the encounter narrative.
+114,20103,Strange Boulder,0,Frostwind Mountains,Interpretive placement,211.2,141.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+115,20104,Sudden Rockslide,0,Frostwind Mountains,Narrative / landmark,214.6,157.7,Regional name or identifiable landscape in the encounter narrative.
+116,20105,The Giant,0,Shattered Peaks,Interpretive placement,135.4,37.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+117,20106,Sarga Lioness,0,Fyrskar Mountains,Interpretive placement,108,104,Sarga's cliffs provisionally placed among the Fyrskar Mountains.
+118,20107,Silver Wolf,0,Ethera's Vale,Narrative / landmark,184,205,"Border between Ethera's Vale and southeastern Keldor, as described."
+119,20108,Shena Alpha,0,Ethera's Vale,Narrative / landmark,190,217,"Border between Ethera's Vale and Keldor, as described."
+120,20109,Embersnout,0,Frostwind Mountains,Narrative / landmark,234.1,144.5,Regional name or identifiable landscape in the encounter narrative.
+121,20110,Mother Wolf,0,Ethera's Vale,Interpretive placement,266.2,224.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+122,20111,Young Redeye,0,Ethera's Vale,Interpretive placement,238.3,204.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+123,20112,Cursed Silvermane,1001,Cursed Forest of Keldor,Expansion assignment,55.2,207.1,Directly tied to this region by its mEncounterExpansion value.
+124,20113,Cursed Liani,1001,Cursed Forest of Keldor,Expansion assignment,85.9,182.6,Directly tied to this region by its mEncounterExpansion value.
+125,20114,Liani Guardian,0,Eldertree Forest,Interpretive placement,287.1,352.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+126,20115,Liani Predator,0,Eldertree Forest,Interpretive placement,256.4,361.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+127,20116,Aradia's Perch,0,Swamp of Karrhu,Narrative / landmark,366,238,Regional name or identifiable landscape in the encounter narrative.
+128,20117,Thunderfly Matriarch,0,Eldertree Forest,Interpretive placement,250.6,322.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+129,20118,Firecrest Bloodbeak,1001,Cursed Forest of Keldor,Expansion assignment,99.7,173.1,Directly tied to this region by its mEncounterExpansion value.
+130,20119,Simple Treasure,0,Ethera's Vale,Interpretive placement,179.7,259.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+131,20120,Bronze Vault,0,Frostwind Mountains,Narrative / landmark,251.6,116.8,Regional name or identifiable landscape in the encounter narrative.
+132,20121,Frost Strider,0,Frostwind Mountains,Interpretive placement,238.9,153.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+133,20122,Rocky Tundra,0,Rocky Tundra,Narrative / landmark,101,277,Regional name or identifiable landscape in the encounter narrative.
+134,20123,Everwinter Trading Post,1003,Everwinter Valley,Expansion assignment,272.0,28.8,Directly tied to this region by its mEncounterExpansion value.
+135,20124,Frostfang Alpha,1003,Everwinter Valley,Expansion assignment,258.0,81.8,Directly tied to this region by its mEncounterExpansion value.
+136,20125,Raided Verdani Village,0,Evergrove,Narrative / landmark,397,422,Regional name or identifiable landscape in the encounter narrative.
+137,20126,Disheartened Rokur,0,Emberfrost,Interpretive placement,376.6,102.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+138,20127,Eternal Twilight Grove,0,Evergrove,Interpretive placement,411.4,390.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+139,20128,Grimnir Rebels,0,Fyrskar Mountains,Interpretive placement,63.9,92.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+140,20129,Everwinter Treasurechest,1003,Everwinter Valley,Expansion assignment,223.4,43.6,Directly tied to this region by its mEncounterExpansion value.
+141,20130,Everwinter Guardian,1003,Everwinter Valley,Expansion assignment,226.7,87.9,Directly tied to this region by its mEncounterExpansion value.
+142,20131,Everwinter Cave,1003,Everwinter Valley,Expansion assignment,247.1,43.7,Directly tied to this region by its mEncounterExpansion value.
+143,20132,Frostbite Fergus,1003,Everwinter Valley,Expansion assignment,293.2,66.7,Directly tied to this region by its mEncounterExpansion value.
+144,20133,Kaldric of Nekalos,1003,Everwinter Valley,Expansion assignment,298.0,80.6,Directly tied to this region by its mEncounterExpansion value.
+145,20134,Seal of Nekalos,1003,Everwinter Valley,Expansion assignment,231.5,24.8,Directly tied to this region by its mEncounterExpansion value.
+146,20135,Frostlace,1003,Everwinter Valley,Expansion assignment,196.2,40.9,Directly tied to this region by its mEncounterExpansion value.
+147,20136,Lost Souls of Everwinter,1003,Everwinter Valley,Expansion assignment,267.0,45.8,Directly tied to this region by its mEncounterExpansion value.
+148,20137,The Shattered Seer,1003,Everwinter Valley,Expansion assignment,210.3,59.4,Directly tied to this region by its mEncounterExpansion value.
+149,20138,Skyreach Peak,1003,Everwinter Valley,Expansion assignment,261,36,Directly tied to this region by its mEncounterExpansion value.
+150,20139,Lyria of Nekalos,1003,Everwinter Valley,Expansion assignment,212.7,49.5,Directly tied to this region by its mEncounterExpansion value.
+151,20140,Misthowl,1003,Everwinter Valley,Expansion assignment,207.1,37.7,Directly tied to this region by its mEncounterExpansion value.
+152,20141,Winterwisp Warden,1003,Everwinter Valley,Expansion assignment,199.7,86.9,Directly tied to this region by its mEncounterExpansion value.
+153,20142,Frostfall Cascade,1003,Everwinter Valley,Expansion assignment,237.9,34.2,Directly tied to this region by its mEncounterExpansion value.
+154,20143,Frostforged Vault,1003,Everwinter Valley,Expansion assignment,281.5,89.4,Directly tied to this region by its mEncounterExpansion value.
+155,20144,The Scholar,1003,Everwinter Valley,Expansion assignment,273.6,81.5,Directly tied to this region by its mEncounterExpansion value.
+156,20145,Spirit Stag,1003,Everwinter Valley,Expansion assignment,270.4,60.4,Directly tied to this region by its mEncounterExpansion value.
+157,20146,Eldritch Stronghold,1001,Cursed Forest of Keldor,Expansion assignment,151.0,182.9,Directly tied to this region by its mEncounterExpansion value.
+158,20147,Ironclad Reliquary,1001,Cursed Forest of Keldor,Expansion assignment,60.5,177.4,Directly tied to this region by its mEncounterExpansion value.
+159,20148,Luminous Enclave,1001,Cursed Forest of Keldor,Expansion assignment,121.5,199.1,Directly tied to this region by its mEncounterExpansion value.
+160,20149,Tempest Fury,1001,Cursed Forest of Keldor,Expansion assignment,129.3,149.8,Directly tied to this region by its mEncounterExpansion value.
+161,20150,Timberclaw Wretch,1001,Cursed Forest of Keldor,Expansion assignment,79.6,175.4,Directly tied to this region by its mEncounterExpansion value.
+162,20151,Auraglow Mireling,1001,Cursed Forest of Keldor,Expansion assignment,112.0,166.8,Directly tied to this region by its mEncounterExpansion value.
+163,20152,Echowraith Skulker,1001,Cursed Forest of Keldor,Expansion assignment,90.3,164.7,Directly tied to this region by its mEncounterExpansion value.
+164,20153,Lumbering Necrobrute,1001,Cursed Forest of Keldor,Expansion assignment,68.2,184.8,Directly tied to this region by its mEncounterExpansion value.
+165,20155,Blightwatcher Raven,1001,Cursed Forest of Keldor,Expansion assignment,75.1,197.1,Directly tied to this region by its mEncounterExpansion value.
+166,20156,Twilight Whisper Grove,1001,Cursed Forest of Keldor,Expansion assignment,119.4,154.8,Directly tied to this region by its mEncounterExpansion value.
+167,20157,Enigmas End,1001,Cursed Forest of Keldor,Expansion assignment,104.6,200.0,Directly tied to this region by its mEncounterExpansion value.
+168,20158,Path of Despair,1001,Cursed Forest of Keldor,Expansion assignment,137.8,171.1,Directly tied to this region by its mEncounterExpansion value.
+169,20159,Gloomroot Expanse,1001,Cursed Forest of Keldor,Expansion assignment,142.2,219.4,Directly tied to this region by its mEncounterExpansion value.
+170,20160,Wraithbone Pathway,1001,Cursed Forest of Keldor,Expansion assignment,52.2,156.6,Directly tied to this region by its mEncounterExpansion value.
+171,20161,Skullstone Pass,1001,Cursed Forest of Keldor,Expansion assignment,95.1,208.8,Directly tied to this region by its mEncounterExpansion value.
+172,20162,Sageglow Clearing,1001,Cursed Forest of Keldor,Expansion assignment,129.6,161.6,Directly tied to this region by its mEncounterExpansion value.
+173,20163,Emberlost Wraith,1001,Cursed Forest of Keldor,Expansion assignment,96.1,185.4,Directly tied to this region by its mEncounterExpansion value.
+174,20164,Flamecrazed Wanderer,1001,Cursed Forest of Keldor,Expansion assignment,156.7,199.1,Directly tied to this region by its mEncounterExpansion value.
+175,20165,Gloomthorn Sentinel,1001,Cursed Forest of Keldor,Expansion assignment,109.7,221.9,Directly tied to this region by its mEncounterExpansion value.
+176,20166,Stormshriek Harbinger,1001,Cursed Forest of Keldor,Expansion assignment,69.1,174.5,Directly tied to this region by its mEncounterExpansion value.
+177,20167,Skyshard Guardian,1001,Cursed Forest of Keldor,Expansion assignment,125.4,183.6,Directly tied to this region by its mEncounterExpansion value.
+178,20168,Skyheart Drifter,1001,Cursed Forest of Keldor,Expansion assignment,150.3,155.5,Directly tied to this region by its mEncounterExpansion value.
+179,20169,Meadowheart Lostling,1001,Cursed Forest of Keldor,Expansion assignment,162.0,192.1,Directly tied to this region by its mEncounterExpansion value.
+180,20170,Forestwander Sproutling,1001,Cursed Forest of Keldor,Expansion assignment,54.8,193.6,Directly tied to this region by its mEncounterExpansion value.
+181,20171,Fringebound Escapee,1001,Cursed Forest of Keldor,Expansion assignment,153.7,207.1,Directly tied to this region by its mEncounterExpansion value.
+182,20172,Skylore Scholar,1001,Cursed Forest of Keldor,Expansion assignment,152.1,215.8,Directly tied to this region by its mEncounterExpansion value.
+183,20173,Verdantweave Envoy,1001,Cursed Forest of Keldor,Expansion assignment,51.4,172.2,Directly tied to this region by its mEncounterExpansion value.
+184,20174,Flameheart Purifier,1001,Cursed Forest of Keldor,Expansion assignment,70.8,213.9,Directly tied to this region by its mEncounterExpansion value.
+185,20175,Cinderheart Vanguard,1001,Cursed Forest of Keldor,Expansion assignment,121.5,169.2,Directly tied to this region by its mEncounterExpansion value.
+186,20176,Frostclaw Behemoth,1003,Everwinter Valley,Expansion assignment,298.0,32.2,Directly tied to this region by its mEncounterExpansion value.
+187,20177,Shadowmarket Mystic,1001,Cursed Forest of Keldor,Expansion assignment,128.5,207.3,Directly tied to this region by its mEncounterExpansion value.
+188,20178,Sylvan Rune Gateway,1001,Cursed Forest of Keldor,Expansion assignment,143.0,164.6,Directly tied to this region by its mEncounterExpansion value.
+189,20179,Roarback Mauler,1001,Cursed Forest of Keldor,Expansion assignment,75.9,164.8,Directly tied to this region by its mEncounterExpansion value.
+190,20180,Gloomweaver Colossus,1001,Cursed Forest of Keldor,Expansion assignment,106.6,181.3,Directly tied to this region by its mEncounterExpansion value.
+191,20181,The Archive of Echoes,1004,Aetherion,Expansion assignment,255,237,Directly tied to this region by its mEncounterExpansion value.
+192,20182,Aetherion Forge,1004,Aetherion,Expansion assignment,253,247,Directly tied to this region by its mEncounterExpansion value.
+193,20183,Harmonic Concert,1004,Aetherion,Expansion assignment,243,252,Directly tied to this region by its mEncounterExpansion value.
+194,20184,Garden of Elements,1004,Aetherion,Expansion assignment,234,244,Directly tied to this region by its mEncounterExpansion value.
+195,20185,Earthsinger's Challenge,0,Ethera's Vale,Narrative / landmark,265.5,200.2,Regional name or identifiable landscape in the encounter narrative.
+196,20186,Melody's Bloomwalker,0,Ethera's Vale,Narrative / landmark,249.2,235.9,Regional name or identifiable landscape in the encounter narrative.
+197,20187,Ember's Journeykindler,0,Ethera's Vale,Narrative / landmark,217.5,232.4,Regional name or identifiable landscape in the encounter narrative.
+198,20188,Mystic Hearth's Seal,0,Ethera's Vale,Narrative / landmark,225,198,Regional name or identifiable landscape in the encounter narrative.
+199,20189,Zephyr's Embrace,0,Ethera's Vale,Narrative / landmark,310,245,Regional name or identifiable landscape in the encounter narrative.
+200,20190,Veilwalker,0,Ethera's Vale,Narrative / landmark,308,259,Regional name or identifiable landscape in the encounter narrative.
+201,20191,Slumbering Ogru,0,Evergrove,Interpretive placement,343.0,426.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+202,20192,Nereval Elite,0,Ethera's Vale,Narrative / landmark,308,277,"Where southeastern Ethera's Vale meets Evergrove, as described."
+203,20193,Joyful Riverkeeper,0,Ethera's Vale,Narrative / landmark,293,287,"On the river in southeastern Ethera's Vale, as described."
