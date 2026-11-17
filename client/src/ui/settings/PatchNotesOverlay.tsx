@@ -29,6 +29,18 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-77',
+    version: '0.9.0-beta.77',
+    period: '17 Nov 2026',
+    notes: [
+      'The name on the top of the encounter is now the land where the story happens, and the map opens right where it takes place.',
+      'In an encounter that needs several solutions, an item that runs out is refilled from another item of the same kind.',
+      'A single roll of the dice shows its number for a moment, then flies into the encounter like a solution.',
+      'An encounter you just played waits for three others before it can come back.',
+      'The loading screen shows the version.',
+    ],
+  },
+  {
     id: 'beta-76',
     version: '0.9.0-beta.76',
     period: '17 Nov 2026',
