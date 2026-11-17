@@ -372,7 +372,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). "Ethera's Vale" (spelled as in the game data, e.g. the Aetherion text and item descriptions) is a client constant because the base game has no catalog entry; catalog names are shown in title case ("The cursed forest of Keldor" reads "The Cursed Forest of Keldor"). A piece cut off by a new land counts as played. If the new land lacked the next stage, it would start at A; every land with recordings has all four.
 
-**Status:** on local `main`, not deployed.
+**Status:** released 2026-11-17 as 0.9.0-beta.76 (`83801ca8`).
 
 ## D-044 — A drawn world map behind the region plate (2026-11-17)
 
@@ -380,4 +380,4 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). Placements, sources and the drawing choices made where neither source gives a direction are listed in [WORLD_MAP.md](WORLD_MAP.md). Spellings follow the archive: Ethera's Vale, Celesterra, Ohgar, Karrhu, Eldertree, Deepstone Hollow. Wheel and pinch zoom were added to the requested dragging. Babuni's follow-ups the same day: the marker has four triangles overlapping its ring and pointing inward, and Celesterra is labelled "Aevis homeland", not a sky-city. Babuni then supplied a placement list for all 203 encounters (`docs/data/encounter_locations.csv`); the marker follows it. The list's pixels were measured on the zoomed-out map; the conversion (0.444 px per map unit, offset 16, -14) is the fit that puts 194 of 195 placed points inside the land the list names; points within 12 units of a border were nudged inward (19), Aetherion's six sit on the city.
 
-**Status:** on local `main`, not deployed.
+**Status:** released 2026-11-17 as 0.9.0-beta.76 (`83801ca8`).

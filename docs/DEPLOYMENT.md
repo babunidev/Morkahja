@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-17, 02:07 UTC (0.9.0-beta.76, world map, weather, fades, cursors)
+
+Approved by Babuni ("commit, push, and to the server … take them as well"). `main` at `83801ca8`: the region plate and world map with per-encounter markers (D-043, D-044), the encounter name on arrival, the weather cycle across lands with 1–4 pieces per stage and a 50% chance of wind, 0 s minimum breaks with 1 s fade-ins and 2 s fade-outs, Web Audio volume on iPhone and iPad, and Morkahja cursors. The Admin encounter edits through 20079 (Fearfeaster Gobbl) went with it.
+
+- **Before:** backend `a25ed410`, frontend `20261116-225602`. `server/game/encountersdata.json` held the live Admin edits; its sha256 began `8ee4c002`, identical to `main`, so nothing on the server was missing from the release. Babuni reset the file with `sudo -u morkahja git checkout`, and the fast-forward put the same bytes back. Previous staging files moved to `prev-20261117-0158`.
+- **Checks before the release:** client tests (48) and server tests (47) passed; the typecheck and production client build passed; the built script contains `0.9.0-beta.76`. Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261117-020740` (5.2 MB; 74 players, 113 avatars, 22 sessions, 79 devices, 113 inventories, 1 purchase, 340 achievement rows; sha256 `9d3400ffb854fbda2bc4917df73259502f0430eddb7e2027ef17937bed60f5de`). Backend fast-forwarded to `83801ca8`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261117-020742` (`index-D2Rp-wjO.js`). From outside: the script contains `0.9.0-beta.76`, the cursor images return 200 and the stylesheet points at `/Morkahja/UI/Cursor/`; `/Morkahja/`, health and content return 200. API and bots online. The live encounter file is clean and equals `main`.
+- **Backup proven:** restored into a disposable `postgres:18` container with matching row counts; the only restore errors were grants to `babuni_admin` and `babuni_admin_probe`, which the container lacks.
+- **Not done:** the map, weather and fades were not played on the live game; iPhone/iPad audio is untested on a device.
+
 ## Production release — 2026-11-16, 22:56 UTC (encounter prose through 20193, client 0.9.0-beta.75 unchanged)
 
 Approved by Babuni ("Could you bring them to the live game on the server?"). `main` at `a25ed410`: the rewritten encounter descriptions through `20193` ([revision record](ENCOUNTER_REVISION.md)), including the admin edits for `20044`–`20049` and `20052`. The commits after `a6865336` change only `server/game/encountersdata.json` and documentation, so the client build is the same `index-CKrypy23.js` as before.
