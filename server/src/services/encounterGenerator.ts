@@ -96,6 +96,25 @@ export interface EncounterSelectionContext {
   currentExpansion?: number | null;
   /** Inclusive integer draw. Tests pass a fixed sequence. */
   nextInt?: (min: number, max: number) => number;
+  /** Encounters played most recently: not drawn while others are available. */
+  avoidEncounterIds?: readonly number[];
+}
+
+/**
+ * An encounter waits for at least this many others before it can be drawn
+ * again: after X come three different encounters, and X may return fourth
+ * at the earliest (Babuni, 2026-11-17). Written follows, Atranor and the
+ * level-up are not draws and are exempt.
+ */
+export const ENCOUNTER_REPEAT_GAP = 3;
+
+/** The recent list after `encounterId` was played (random encounters only). */
+export function recentAfter(recent: readonly number[] | undefined, encounterId: number | undefined): number[] {
+  const list = [...(recent ?? [])];
+  if (typeof encounterId === 'number' && encounterId >= RANDOM_ENCOUNTER_MIN_ID && !isSystemEncounterId(encounterId)) {
+    list.push(encounterId);
+  }
+  return list.slice(-ENCOUNTER_REPEAT_GAP);
 }
 
 export interface ResolveEncounterResult {
@@ -164,10 +183,14 @@ function selectionRegion(context: EncounterSelectionContext): number | null {
  * A written follow is handled before this runs.
  */
 function drawFromRegionPool(
-  pool: EncounterData[],
+  allowed: EncounterData[],
   currentExpansion: number | null,
   nextInt: (min: number, max: number) => number,
+  avoid: readonly number[] = [],
 ): EncounterData {
+  // Recently played encounters sit out while anything else is left to draw.
+  const fresh = allowed.filter((encounter) => !avoid.includes(encounter.mEncounterID));
+  const pool = fresh.length > 0 ? fresh : allowed;
   let candidates = pool;
 
   if (currentExpansion !== null) {
@@ -215,7 +238,7 @@ export function selectNextEncounter(
     throw new Error('No eligible random encounters for avatar expansions');
   }
 
-  return drawFromRegionPool(pool, selectionRegion(context), context.nextInt ?? randomInt);
+  return drawFromRegionPool(pool, selectionRegion(context), context.nextInt ?? randomInt, context.avoidEncounterIds);
 }
 
 export function prepareNextEncounter(
@@ -510,6 +533,7 @@ function getNextEncounterAfterResolution(
 export function resolveNextEncounterForRoom(
   lineage: RoomEncounterLineage,
   mergedExpansions: number[],
+  avoidEncounterIds: readonly number[] = [],
 ): { encounter: EncounterData; prepared: PreparedEncounter } {
   if (lineage.preparedEncounter?.followMode === 'system') {
     const encounter = getEncounterById(lineage.preparedEncounter.encounterId);
@@ -541,6 +565,7 @@ export function resolveNextEncounterForRoom(
   const encounter = selectNextEncounter({
     unlockedExpansions: mergedExpansions,
     currentExpansion: origin?.mEncounterExpansion ?? null,
+    avoidEncounterIds,
   }, getEncounters());
   return {
     encounter,

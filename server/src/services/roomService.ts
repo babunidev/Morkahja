@@ -64,6 +64,7 @@ import {
   prepareParticipantOutcome,
   preparedResultFromResolve,
   replaceLegacyPercentRolls,
+  recentAfter,
   resolveNextEncounterForRoom,
   resolveParticipantInRoom,
   selectNextEncounter,
@@ -759,6 +760,7 @@ function slotZeroParticipant(room: EncounterRoom): RoomParticipant | undefined {
 function getRoomNextEncounter(
   currentSnapshot: EncounterSnapshot,
   room: EncounterRoom,
+  avoidEncounterIds: readonly number[] = [],
 ): EncounterData {
   const slotZero = slotZeroParticipant(room);
   const slotZeroSummary = slotZero ? participantOutcomeSummary(slotZero) : undefined;
@@ -773,6 +775,7 @@ function getRoomNextEncounter(
   return selectNextEncounter({
     unlockedExpansions: room.mergedExpansions,
     currentExpansion: currentSnapshot.encounterExpansion,
+    avoidEncounterIds,
   }, getEncounters());
 }
 
@@ -1605,24 +1608,27 @@ async function advanceRoomAfterCommit(
 
   const lineage = roomForAdvance.systemEvent?.lineage;
   const lastEncounterId = lineage?.originEncounterId ?? roomForAdvance.activeEncounterSnapshot.encounterId;
+  // The encounter just finished joins the recent list; none of those is drawn next.
+  const recentEncounterIds = recentAfter(roomForAdvance.recentEncounterIds, lastEncounterId);
 
   let nextEncounter: EncounterData;
   let preparedEncounter: ReturnType<typeof prepareNextEncounter>;
   if (lineage) {
-    const resolved = resolveNextEncounterForRoom(lineage, roomForAdvance.mergedExpansions);
+    const resolved = resolveNextEncounterForRoom(lineage, roomForAdvance.mergedExpansions, recentEncounterIds);
     nextEncounter = resolved.encounter;
     preparedEncounter = resolved.prepared;
   } else {
     nextEncounter = getRoomNextEncounter(roomForAdvance.activeEncounterSnapshot, {
       ...roomForAdvance,
       participants: committedAfterPromotion,
-    });
+    }, recentEncounterIds);
     preparedEncounter = prepareNextEncounter(nextEncounter, roomForAdvance.mergedExpansions);
   }
 
   const advanceDraft: EncounterRoom = {
     ...roomForAdvance,
     lastEncounterId,
+    recentEncounterIds,
     helpCalledSnapshotId: undefined,
     systemEvent: undefined,
     loreGemActivated: undefined,
@@ -2158,9 +2164,12 @@ export async function createRoom(
 
   const roomId = randomUUID();
   const leaderExpansions = await mergeExpansionsForPlayerIds([playerId]);
+  // A new room remembers the avatar's last encounter, so it does not open on it again.
+  const recentEncounterIds = recentAfter([], avatar.progression?.lastEncounterId);
   const encounter = selectNextEncounter({
     unlockedExpansions: leaderExpansions,
     previousEncounter: previousEncounterFromAvatar(avatar),
+    avoidEncounterIds: recentEncounterIds,
   });
   const preparedEncounter = prepareNextEncounter(encounter, leaderExpansions);
 
@@ -2184,6 +2193,7 @@ export async function createRoom(
     ],
     roomState: 'active_encounter',
     lastEncounterId: avatar.progression?.lastEncounterId,
+    recentEncounterIds,
     createdAt: nowMs(),
     updatedAt: nowMs(),
   };
@@ -3496,6 +3506,7 @@ function buildRoomFromCheckpoint(
     roomState: checkpoint.roomState,
     systemEvent: checkpoint.systemEvent,
     lastEncounterId: checkpoint.lastEncounterId,
+    recentEncounterIds: checkpoint.recentEncounterIds,
     helpCalledSnapshotId: checkpoint.helpCalledSnapshotId,
     loreGemActivated: checkpoint.loreGemActivated,
     loreGemActivatedSnapshotId: checkpoint.loreGemActivatedSnapshotId,

@@ -19,6 +19,8 @@ export interface SoloRoomCheckpoint {
   roomState: EncounterRoom['roomState'];
   systemEvent?: EncounterRoom['systemEvent'];
   lastEncounterId?: number;
+  /** The room's recent encounters, so a resumed solo run does not repeat them. */
+  recentEncounterIds?: number[];
   helpCalledSnapshotId?: string;
   loreGemActivated?: boolean;
   loreGemActivatedSnapshotId?: string;
@@ -84,6 +86,7 @@ export function checkpointFromRoom(room: EncounterRoom): SoloRoomCheckpoint | nu
     roomState: room.roomState,
     systemEvent: room.systemEvent,
     lastEncounterId: room.lastEncounterId,
+    recentEncounterIds: room.recentEncounterIds,
     helpCalledSnapshotId: room.helpCalledSnapshotId,
     loreGemActivated: room.loreGemActivated,
     loreGemActivatedSnapshotId: room.loreGemActivatedSnapshotId,

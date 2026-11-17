@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import type { EncounterData, EncounterDataMap } from '../engine/types.js';
-import { prepareNextEncounter, selectNextEncounter } from './encounterGenerator.js';
+import { ENCOUNTER_REPEAT_GAP, prepareNextEncounter, recentAfter, selectNextEncounter } from './encounterGenerator.js';
 
 function encounter(id: number, expansion: number, follow = 0): EncounterData {
   return {
@@ -95,5 +95,41 @@ assert.equal(fromLastEncounter.mEncounterID, 20012);
 const preloaded = prepareNextEncounter(ridge, unlocked, both);
 assert.equal(preloaded.followMode, 'random');
 assert.ok(both[String(preloaded.encounterId)]);
+
+// Babuni (2026-11-17): an encounter waits for three others before it can return.
+{
+  assert.equal(ENCOUNTER_REPEAT_GAP, 3);
+  assert.deepEqual(recentAfter([20001, 20002, 20003], 20004), [20002, 20003, 20004], 'only the last three are kept');
+  assert.deepEqual(recentAfter([20001], 1), [20001], 'Atranor is not remembered');
+  assert.deepEqual(recentAfter([20001], 2), [20001], 'the level-up is not remembered');
+  assert.deepEqual(recentAfter(undefined, undefined), []);
+
+  const valley = mapOf(...[20020, 20021, 20022, 20023, 20024].map((id) => encounter(id, 0)));
+  // Draw many times in a row, always the first candidate: no repeat inside four.
+  let recent: number[] = [];
+  const played: number[] = [];
+  for (let turn = 0; turn < 12; turn += 1) {
+    const next = selectNextEncounter({ unlockedExpansions: [0], currentExpansion: 0, avoidEncounterIds: recent, nextInt: (min) => min }, valley);
+    played.push(next.mEncounterID);
+    recent = recentAfter(recent, next.mEncounterID);
+  }
+  for (let index = 0; index < played.length; index += 1) {
+    const window = played.slice(Math.max(0, index - 3), index);
+    assert.ok(!window.includes(played[index]!), `encounter ${played[index]} came back within three (${played.join(',')})`);
+  }
+
+  // A land with too few encounters still draws: the rule gives way rather than stalls.
+  const tiny = mapOf(encounter(20030, 0), encounter(20031, 0));
+  const forced = selectNextEncounter({ unlockedExpansions: [0], currentExpansion: 0, avoidEncounterIds: [20030, 20031], nextInt: (min) => min }, tiny);
+  assert.ok([20030, 20031].includes(forced.mEncounterID));
+
+  // The region roll still decides the land; the recent ones sit out inside it.
+  const stayFresh = selectNextEncounter({ unlockedExpansions: unlocked, currentExpansion: 1001, avoidEncounterIds: [20011], nextInt: scripted([14, 0]) }, both);
+  assert.equal(stayFresh.mEncounterID, 20012);
+
+  // A written follow is a story, not a draw: it comes even if recent.
+  const story = selectNextEncounter({ unlockedExpansions: unlocked, previousEncounter: encounter(20010, 0, 20012), avoidEncounterIds: [20012] }, both);
+  assert.equal(story.mEncounterID, 20012);
+}
 
 console.log('regionEncounterSelection.test.ts passed');

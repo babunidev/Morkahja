@@ -399,3 +399,11 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **AI implementation:** Claude Code (Claude Opus 5.5). When the result appears, the die and its number are held over the dice button for 0.7 s (the same pause sets use before going in), then the die flies into the picture with the solutions' flight; rewards emerge after it. Sets keep D-040's behaviour.
 
 **Status:** on local `main`, not deployed.
+
+## D-047 — An encounter waits for three others before it returns (2026-11-17)
+
+**Babuni's direction:** the same encounter must not come right after itself; "after it was there, it has to wait at least … 3 encounters to repeat on number 4".
+
+**AI implementation:** Claude Code (Claude Opus 5.5). The room remembers its last three random encounters; the draw leaves them out while anything else is available in the chosen land (`ENCOUNTER_REPEAT_GAP = 3`). The 85% chance to stay in the land (D-033) is unchanged. Written follow-ups, Atranor and the level-up are not draws and are exempt. A new room starts with the avatar's last encounter, and the solo checkpoint keeps the list. Babuni's first sentence said "before 4 other encounters"; the implementation follows the later, specific wording (three others, back on the fourth at the earliest). The gap is one number to change.
+
+**Status:** on local `main`, not deployed.

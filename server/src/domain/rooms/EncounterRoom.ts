@@ -29,6 +29,11 @@ export interface EncounterRoom {
   systemEvent?: RoomSystemEventContext;
   /** Room-level last encounter for shared follow context. */
   lastEncounterId?: number;
+  /**
+   * The last encounters played here, oldest first (at most ENCOUNTER_REPEAT_GAP).
+   * None of them is drawn again until it drops out (Babuni, 2026-11-17).
+   */
+  recentEncounterIds?: number[];
   /** Snapshot id for which Call for Help was already used. */
   helpCalledSnapshotId?: string;
   /** Lore gem UI collected for current snapshot — gems grant on room commit. */
