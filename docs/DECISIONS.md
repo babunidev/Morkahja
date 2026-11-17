@@ -382,7 +382,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Status:** released 2026-11-17 as 0.9.0-beta.76 (`83801ca8`).
 
-**Later on 2026-11-17 (D-044):** Babuni asked for the plate to show the encounter's own land from the placement list, because each land is meant to become its own expansion and the base game already tells stories from several of them. Atranor shows its own name; the level-up keeps the land already shown. Not yet deployed.
+**Later on 2026-11-17 (D-044):** Babuni asked for the plate to show the encounter's own land from the placement list, because each land is meant to become its own expansion and the base game already tells stories from several of them. Atranor shows its own name; the level-up keeps the land already shown. Released 2026-11-17 as 0.9.0-beta.77.
 
 ## D-045 — A spent slot refills from another item of the same kind (2026-11-17)
 
@@ -390,7 +390,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). `allocateSolutionSet` keeps spending the slot's own item while it has charges, then takes another item of the slot's alternative type (the encounter's secondary type), lowest id first, never one shown in another slot. Each refill uses the alternative lane's rolls, one per copy. Picks are appended in order, so locked picks keep their item and revealed roll. The slot shows the item it will take next. This replaces D-019's rule that a different item is not substituted.
 
-**Status:** on local `main`, not deployed.
+**Status:** released 2026-11-17 as 0.9.0-beta.77 (`885f2b41`).
 
 ## D-046 — A single die shows its roll, then flies into the encounter (2026-11-17)
 
@@ -398,7 +398,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). When the result appears, the die and its number are held over the dice button for 0.7 s (the same pause sets use before going in), then the die flies into the picture with the solutions' flight; rewards emerge after it. Sets keep D-040's behaviour.
 
-**Status:** on local `main`, not deployed.
+**Status:** released 2026-11-17 as 0.9.0-beta.77 (`885f2b41`).
 
 ## D-047 — An encounter waits for three others before it returns (2026-11-17)
 
@@ -406,4 +406,4 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). The room remembers its last three random encounters; the draw leaves them out while anything else is available in the chosen land (`ENCOUNTER_REPEAT_GAP = 3`). The 85% chance to stay in the land (D-033) is unchanged. Written follow-ups, Atranor and the level-up are not draws and are exempt. A new room starts with the avatar's last encounter, and the solo checkpoint keeps the list. Babuni's first sentence said "before 4 other encounters"; the implementation follows the later, specific wording (three others, back on the fourth at the earliest). The gap is one number to change.
 
-**Status:** on local `main`, not deployed.
+**Status:** released 2026-11-17 as 0.9.0-beta.77 (`885f2b41`).

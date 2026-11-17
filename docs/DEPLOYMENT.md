@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-17, 03:39 UTC (0.9.0-beta.77, land plate, slot refill, flying die, no quick repeats)
+
+Approved by Babuni ("ship it, commit push and release to the server"). `main` at `885f2b41`: the plate names each encounter's own land (D-044), a spent slot refills from the same kind (D-045), a single die shows its roll and flies in (D-046), an encounter waits for three others before it returns (D-047), the version on the loading screen, and the weather test cycle off by default (dev server only, not in the build). The Admin encounter edits through 20085 (Bucolic Dale) went with it.
+
+- **Before:** backend `83801ca8`, frontend `20261117-020742`. The live `server/game/encountersdata.json` matched `main` at `f0a65a65` exactly (sha256 began `82c1092f`). Babuni reset the file with `sudo -u morkahja git checkout`. An Admin edit of 20085 was committed in the meantime; the bundle was rebuilt to `885f2b41` so it went out with the release. Previous staging files moved to `prev-20261117-0335`.
+- **Checks before the release:** client tests (48) and server tests (53) passed; the typecheck and production build passed; the built script contains `0.9.0-beta.77` and no test-cycle code. Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261117-033915` (5.2 MB; 74 players, 113 avatars, 22 sessions, 79 devices, 113 inventories, 1 purchase, 340 achievement rows; sha256 `c6e6417b4b4f6fd9cf618d424184ced2c979f028957167a424c17c4496eb94cb`). Backend fast-forwarded to `885f2b41`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261117-033917` (`index-uoDAD45A.js`). From outside: the script contains `0.9.0-beta.77`; `/Morkahja/`, health and content return 200. API and bots online. The live encounter file is clean and equals `main` (sha256 begins `dfe5f068`).
+- **Backup proven:** restored into a disposable `postgres:18` container with matching row counts; the only errors were grants to the `babuni_admin` roles.
+- **Not done:** the repeat gap and the flying die were not watched on the live game.
+
 ## Production release — 2026-11-17, 02:07 UTC (0.9.0-beta.76, world map, weather, fades, cursors)
 
 Approved by Babuni ("commit, push, and to the server … take them as well"). `main` at `83801ca8`: the region plate and world map with per-encounter markers (D-043, D-044), the encounter name on arrival, the weather cycle across lands with 1–4 pieces per stage and a 50% chance of wind, 0 s minimum breaks with 1 s fade-ins and 2 s fade-outs, Web Audio volume on iPhone and iPad, and Morkahja cursors. The Admin encounter edits through 20079 (Fearfeaster Gobbl) went with it.
