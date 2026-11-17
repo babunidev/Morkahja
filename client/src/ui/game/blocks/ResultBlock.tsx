@@ -10,7 +10,7 @@ import {
 } from 'react';
 import type { AvatarInventory, EncounterAction } from '../../../api/http.js';
 import { gameSolutions } from '../../../data/gameContent.js';
-import { interpretRoll } from '@shared/diceInterpreter';
+import { displayRollAsD20, interpretRoll } from '@shared/diceInterpreter';
 import {
   encounterLossesFromSolutionIds,
   usedEncounterSolutions,
@@ -42,6 +42,9 @@ import {
   playRewardEmergence,
   playRewardFlights,
   playUsedSolutionsIntoEncounter,
+  showDieFace,
+  SINGLE_DIE_FACE_MS,
+  takeCommittedSingleDiceFlight,
   USED_SOLUTION_FLIGHT_MS,
   resultLossSequenceDurationMs,
   rewardFlyTargetKind,
@@ -1267,6 +1270,32 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
     }
 
+    // A single roll of the dice (Babuni, 2026-11-17): the die shows its number
+    // for a moment where it was rolled, then flies into the encounter like a
+    // solution. The dice button fades with the other choices meanwhile.
+    if (resolutionAction === 'dice' && !committedSolutionSetFor(encounterSnapshotId)) {
+      if (!takeCommittedSingleDiceFlight(encounterSnapshotId)) {
+        return;
+      }
+      const diceButton = document.querySelector<HTMLElement>('[aria-label="Roll dice"]');
+      const visual = diceButton?.querySelector<HTMLElement>('.morkahja-footer-button-visual') ?? diceButton;
+      const rect = visual?.getBoundingClientRect();
+      const imageSrc = visual?.querySelector('img')?.getAttribute('src');
+      if (!rect || rect.width <= 0 || rect.height <= 0 || !imageSrc) {
+        return;
+      }
+      const face = showDieFace(rect, imageSrc, String(displayRollAsD20(roll)));
+      window.setTimeout(() => {
+        void playUsedSolutionsIntoEncounter([{
+          imageSrc,
+          size: Math.round(Math.min(rect.width, rect.height)),
+          sourceRect: rect,
+          onTakeOff: () => face.remove(),
+        }]).finally(() => face.remove());
+      }, SINGLE_DIE_FACE_MS);
+      return;
+    }
+
     if (!solutionFlight) {
       return;
     }
@@ -1321,11 +1350,15 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     let cancelled = false;
+    const singleDieFlew = resolutionAction === 'dice'
+      && !committedSolutionSetFor(encounterSnapshotId)
+      && committedActionFor(encounterSnapshotId) === 'dice';
     const spentFlew = !readOnlyWitness
       && Boolean(resolutionAction)
       && (
         (resolutionAction !== 'dice' && usedSolutions.length > 0)
         || committedSolutionSetFor(encounterSnapshotId)?.diceFill === true
+        || singleDieFlew
       );
 
     async function emerge(): Promise<void> {
@@ -1340,7 +1373,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         );
       };
       if (spentFlew) {
-        const pauseMs = setRollsPauseMs(encounterSnapshotId);
+        const pauseMs = setRollsPauseMs(encounterSnapshotId) + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0);
         startRewardTimer(pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {
           window.setTimeout(resolve, pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));

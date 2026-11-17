@@ -391,3 +391,11 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **AI implementation:** Claude Code (Claude Opus 5.5). `allocateSolutionSet` keeps spending the slot's own item while it has charges, then takes another item of the slot's alternative type (the encounter's secondary type), lowest id first, never one shown in another slot. Each refill uses the alternative lane's rolls, one per copy. Picks are appended in order, so locked picks keep their item and revealed roll. The slot shows the item it will take next. This replaces D-019's rule that a different item is not substituted.
 
 **Status:** on local `main`, not deployed.
+
+## D-046 — A single die shows its roll, then flies into the encounter (2026-11-17)
+
+**Babuni's direction:** with one solution needed, a solution rolls and flies into the encounter, but the dice "just disappears". "We throw our luck inside the encounter", so the die should behave exactly like a solution, and stop a moment, about 0.7 seconds, showing its result first.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). When the result appears, the die and its number are held over the dice button for 0.7 s (the same pause sets use before going in), then the die flies into the picture with the solutions' flight; rewards emerge after it. Sets keep D-040's behaviour.
+
+**Status:** on local `main`, not deployed.

@@ -510,3 +510,5 @@ The plate on the frame now names the land where the story happens, not just the 
 ### Refilling a slot — 2026-11-17
 
 In a set of three, an item with one charge grayed out after I used it, even with more of the same kind in my bag. The slot now refills: once its item is spent, it shows and takes the next item of that kind, so a whole set can be solved with several of them. The loading screen also shows the version now. Claude Code (Claude Opus 5.5) changed the shared set rules the server and the game both use. **Verification:** tests and build passed; the refill was not yet played. **Not deployed yet.**
+
+With one solution needed, the dice used to vanish while a solution flew into the encounter. Now the die shows its number for a moment and then flies in too: we throw our luck into the encounter. Claude Code (Claude Opus 5.5) reused the solutions' flight. **Verification:** in the local game the die held its roll for about 0.7 s, flew in, and the rewards followed. **Not deployed yet.**

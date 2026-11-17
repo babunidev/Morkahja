@@ -953,6 +953,72 @@ export function committedActionFor(snapshotId: string | undefined): string | nul
   return snapshotId && committedAction?.snapshotId === snapshotId ? committedAction.action : null;
 }
 
+/**
+ * A single roll of the dice (Babuni, 2026-11-17): the die shows its number for
+ * a moment where it was rolled, then flies into the encounter like a solution.
+ */
+export const SINGLE_DIE_FACE_MS = 700;
+
+/** True once for a single die (not a set) actually rolled in this encounter. */
+export function takeCommittedSingleDiceFlight(snapshotId: string | undefined): boolean {
+  if (
+    !snapshotId
+    || committedAction?.snapshotId !== snapshotId
+    || committedAction.action !== 'dice'
+    || committedAction.solutionSet
+    || committedAction.spendTaken
+  ) {
+    return false;
+  }
+  committedAction.spendTaken = true;
+  return true;
+}
+
+/**
+ * The die with its number, fixed over `rect` (the dice button), while the
+ * button itself fades with the other choices. Remove it when the flyer takes off.
+ */
+export function showDieFace(rect: DOMRect, imageSrc: string, text: string): HTMLElement {
+  const holder = document.createElement('div');
+  holder.dataset.morkahjaIconFlyer = 'true';
+  holder.setAttribute('aria-hidden', 'true');
+  Object.assign(holder.style, {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    pointerEvents: 'none',
+    zIndex: '219',
+  });
+  const image = document.createElement('img');
+  image.src = imageSrc;
+  image.alt = '';
+  image.draggable = false;
+  Object.assign(image.style, { width: '100%', height: '100%', objectFit: 'contain', display: 'block' });
+  const number = document.createElement('span');
+  // Font, colour and outline of the roll on the avatar, as on a hovering die.
+  number.className = 'morkahja-result-outcome';
+  number.textContent = text;
+  Object.assign(number.style, {
+    position: 'absolute',
+    inset: '0',
+    display: 'grid',
+    placeItems: 'center',
+    fontSize: '24px',
+    lineHeight: '1',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(12, 8, 6, 0.55) 0%, rgba(12, 8, 6, 0) 70%)',
+  });
+  holder.append(image, number);
+  document.body.append(holder);
+  number.animate(
+    [{ opacity: 0, transform: 'scale(1.4)' }, { opacity: 1, transform: 'scale(1)' }],
+    { duration: 260, easing: 'ease-out', fill: 'both' },
+  );
+  return holder;
+}
+
 /** True once for a solution actually committed in this slot of this encounter. */
 export function takeCommittedSolutionSpend(snapshotId: string | undefined, slot: string | null): boolean {
   if (
