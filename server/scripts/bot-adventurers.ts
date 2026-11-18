@@ -18,6 +18,11 @@
  *   Thalyss  Aevis Rogue     plays 7 rounds, returns to the welcome screen for 5 minutes
  *                            (answering Call for help meanwhile), repeats.
  *
+ * Varrokh and Thalyss leave their own room and start over when it has not moved
+ * for 3 minutes (STUCK_MINUTES) while another player is in it, e.g. one who
+ * joined and walked away without leaving. Alone they only log the stuck state
+ * once, because leaving a solo room just pauses it. The log names the state.
+ *
  * In an encounter every bot plays by one simple rule: use an item if one solves
  * it, otherwise a skill, otherwise roll the dice (system events always roll).
  * Availability comes from the web client's own rule, so they see what a player sees.
@@ -63,6 +68,7 @@ const HEARTBEAT_MS = 60_000;
 const THINK_MS: [number, number] = [4500, 9000];
 const READ_RESULT_MS: [number, number] = [6900, 10000];
 const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
+const STUCK_MS = Number(process.env.STUCK_MINUTES ?? 3) * 60_000;
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
 const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
 const stateDir = process.env.BOT_STATE_DIR ?? path.dirname(fileURLToPath(import.meta.url));
@@ -143,6 +149,10 @@ class Bot {
   /** While helping: the room's last visible state and when it last changed. */
   private helpRoomFingerprint = '';
   private helpProgressAt = 0;
+  /** In its own room: the room's last visible state and when it last changed. */
+  private ownRoomFingerprint = '';
+  private ownProgressAt = 0;
+  private ownCheckedAt = 0;
   /** On-and-off player: rounds played this session, and when its rest ends. */
   private roundsThisSession = 0;
   private restUntil = 0;
@@ -456,7 +466,7 @@ class Bot {
       await this.leaveToWelcomeScreen();
       return;
     }
-    const fingerprint = `${room.roomState}|${room.participants.map((entry) => `${entry.playerId}:${entry.choiceState}:${entry.continuePressed ? 1 : 0}`).join(',')}`;
+    const fingerprint = roomFingerprint(room);
     if (fingerprint !== this.helpRoomFingerprint) {
       this.helpRoomFingerprint = fingerprint;
       this.helpProgressAt = Date.now();
@@ -467,6 +477,40 @@ class Bot {
       return;
     }
     await this.playStep(room);
+  }
+
+  /**
+   * In its own room: when nothing has changed for STUCK_MS, say where it was
+   * stuck, leave, and start over. Returns true when it left.
+   */
+  private async leftStuckRoom(room: Room): Promise<boolean> {
+    const fingerprint = roomFingerprint(room);
+    // A rest on the welcome screen is not being stuck: count from the return.
+    const returning = Date.now() - this.ownCheckedAt > 30_000;
+    this.ownCheckedAt = Date.now();
+    if (fingerprint !== this.ownRoomFingerprint || returning) {
+      this.ownRoomFingerprint = fingerprint;
+      this.ownProgressAt = Date.now();
+      return false;
+    }
+    if (Date.now() - this.ownProgressAt <= STUCK_MS) return false;
+    const me = room.participants.find((entry) => entry.isLocal);
+    const others = room.participants.filter((entry) => !entry.isLocal);
+    const where = `${room.roomState}/${me?.choiceState ?? 'absent'}${me?.continuePressed ? '+continued' : ''}`;
+    if (others.length === 0) {
+      // Leaving a solo room only pauses it, and the bot would come straight
+      // back to it; report the state once and keep trying.
+      this.log(`stuck for ${STUCK_MS / 60_000} min at ${where}, alone (a solo room only pauses, so staying)`);
+      this.ownProgressAt = Number.POSITIVE_INFINITY;
+      return false;
+    }
+    const otherStates = others.map((entry) => entry.choiceState).join(', ');
+    this.log(`stuck for ${STUCK_MS / 60_000} min at ${where} with ${others.length} other player(s) (${otherStates}); leaving and starting over`);
+    this.ownRoomFingerprint = '';
+    this.waitUntil = 0;
+    this.roundsThisSession = 0;
+    await this.leaveToWelcomeScreen();
+    return true;
   }
 
   private async step(): Promise<void> {
@@ -491,6 +535,7 @@ class Bot {
           this.detail('started a new room');
           return;
         }
+        if (await this.leftStuckRoom(room)) return;
         await this.playStep(room);
         return;
       }
@@ -514,6 +559,7 @@ class Bot {
           this.detail(`started an adventure (${DRIFT_ROUNDS} rounds)`);
           return;
         }
+        if (await this.leftStuckRoom(room)) return;
         if (await this.playStep(room)) {
           this.roundsThisSession += 1;
           if (this.roundsThisSession >= DRIFT_ROUNDS) {
@@ -548,6 +594,11 @@ class Bot {
     }
     this.log('stopping');
   }
+}
+
+/** What a player can see change in a room: its state and everyone's choice and Continue. */
+function roomFingerprint(room: Room): string {
+  return `${room.roomState}|${room.participants.map((entry) => `${entry.playerId}:${entry.choiceState}:${entry.continuePressed ? 1 : 0}`).join(',')}`;
 }
 
 const selected = BOTS.filter((config) => ONLY.length === 0 || ONLY.includes(config.name));
