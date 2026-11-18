@@ -3623,7 +3623,7 @@
     "mEncounterSolutiuonTypeB": 6,
     "mEncounterSolutiuonTypeC": 5,
     "mEncounterSolutiuonTypeD": 13,
-    "mEncounterText": "Blue-white light shines at the end of a path through Keldor's fog. The trail beneath it remains narrow, bordered by shapes that resemble trees until the mist shifts across them.\n\nA side opening appears between two trunks. Its ground seems clear, then darkens beneath a shadow whose source is hidden. Beyond it, another opening repeats the same bend. The light ahead stays visible through both, without revealing which way reaches it.\n\nThe fog closes over the side passage. Along the original trail, a few pale patches of ground remain distinct. Far beyond them, the blue-white glow holds its distance while the surrounding shapes change again.",
+    "mEncounterText": "A blue-white glow shines through Keldor's thickening fog, steady and distant among the dark trees.\n\nThe narrow forest path winds between ancient trunks, their shapes fading whenever the mist drifts across them.\n\nSuddenly, another passage appears to the left.\n\nIts pale ground seems clear, but a great shadow slowly spreads across it, though nothing moves overhead.\n\nFarther ahead, a second opening emerges between the trees, curving in precisely the same direction.\n\nThe mysterious light remains visible through both passages, offering no clue which might lead toward it.\n\nThen the fog closes over the first opening, swallowing its edges.\n\nOnly a few pale stones remain visible along the original path.",
     "mEncounterTitle": "Enigmas End",
     "mEncounterType": 2,
     "mEncounterElement": "Void",
