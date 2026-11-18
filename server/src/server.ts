@@ -535,11 +535,12 @@ try {
   const sweepRooms = async (): Promise<void> => {
     try {
       const removed = await sweepAbandonedRooms();
-      const total = removed.closed + removed.withoutLivingAvatar + removed.untouched;
+      const total = removed.closed + removed.withoutLivingAvatar + removed.superseded + removed.untouched;
       if (total > 0) {
         console.log(
           `Removed ${total} abandoned room(s): ${removed.closed} closed, `
-          + `${removed.withoutLivingAvatar} without a living avatar, ${removed.untouched} untouched for 30 days`,
+          + `${removed.withoutLivingAvatar} without a living avatar, ${removed.superseded} superseded by a newer room, `
+          + `${removed.untouched} untouched for 30 days`,
         );
       }
     } catch (error) {

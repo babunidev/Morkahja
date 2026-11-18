@@ -534,13 +534,19 @@ export interface AbandonedRoomSweep {
   closed: number;
   /** Open rooms in which no participant has a living avatar (dead, missing or none). */
   withoutLivingAvatar: number;
+  /**
+   * Solo rooms whose avatar is in a newer open room. Only the newest can be
+   * returned to; older ones pile up when a helper is left alone in a room.
+   */
+  superseded: number;
   /** Open rooms nobody has looked at for ABANDONED_ROOM_DAYS days. */
   untouched: number;
 }
 
 /**
  * Remove rooms nobody can return to (D-048). A paused solo room of a living
- * avatar is kept until it is untouched for ABANDONED_ROOM_DAYS days; an avatar
+ * avatar is kept while it is the avatar's newest room and has been looked at
+ * within ABANDONED_ROOM_DAYS days; an avatar
  * that failed and may still be sacrificed for counts as living.
  * With dryRun the rooms are only counted.
  */
@@ -560,6 +566,15 @@ export async function sweepAbandonedRooms(
             ON a.player_id = participant->>'playerId' AND a.id = participant->>'avatarId'
           WHERE COALESCE(a.data->>'status', 'active') <> 'deceased'
         ) THEN 'withoutLivingAvatar'
+        WHEN jsonb_array_length(r.data->'participants') = 1 AND EXISTS (
+          SELECT 1
+          FROM encounter_rooms n, jsonb_array_elements(n.data->'participants') AS other
+          WHERE n.id <> r.id
+            AND n.data->>'roomState' <> 'closed'
+            AND COALESCE((n.data->>'updatedAt')::bigint, 0) > COALESCE((r.data->>'updatedAt')::bigint, 0)
+            AND other->>'playerId' = r.data->'participants'->0->>'playerId'
+            AND other->>'avatarId' = r.data->'participants'->0->>'avatarId'
+        ) THEN 'superseded'
         WHEN COALESCE((r.data->>'updatedAt')::bigint, 0) < $1 THEN 'untouched'
       END AS reason
     FROM encounter_rooms r`;
@@ -574,7 +589,7 @@ export async function sweepAbandonedRooms(
        SELECT reason, count(*) AS count FROM removed GROUP BY reason`,
       [cutoff],
     );
-  const counts: AbandonedRoomSweep = { closed: 0, withoutLivingAvatar: 0, untouched: 0 };
+  const counts: AbandonedRoomSweep = { closed: 0, withoutLivingAvatar: 0, superseded: 0, untouched: 0 };
   for (const row of result.rows) {
     if (row.reason in counts) counts[row.reason as keyof AbandonedRoomSweep] = Number(row.count);
   }
