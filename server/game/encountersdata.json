@@ -4063,7 +4063,7 @@
     "mEncounterSolutiuonTypeB": 4,
     "mEncounterSolutiuonTypeC": 3,
     "mEncounterSolutiuonTypeD": 25,
-    "mEncounterText": "An artifact glints in the mist, held in a woman's outstretched hand. She steps into clearer view beneath Keldor's trees, wild hair framing a face turned attentively toward the path.\n\nHer clothes are worn and torn, their unfamiliar details half hidden by the folds. She seems untroubled by the dense gloom. The offered object turns between her fingers, revealing another brief sign of power; beside it, the other pieces of her stock shine faintly through the damp air. She names a price and waits. The mist moves across her shoulders, obscuring the way she came. Her hand remains steady, the artifact still open to view.",
+    "mEncounterText": "Something glimmers within Keldor's thick mist.\n\nA woman emerges beneath the shadowed trees, her wild hair framing an attentive face. Her garments are worn and torn, fashioned in a style unfamiliar to these lands.\n\nDespite the oppressive gloom, she appears remarkably comfortable.\n\nSeveral curious artifacts hang among the folds of her clothing, each carrying a faint, peculiar radiance.\n\nWith a knowing smile, she selects one and extends her hand.\n\nThe object turns slowly between her fingers, revealing a brief shimmer of hidden power.\n\nShe names her price in a calm, deliberate voice.\n\nBehind her, the mist thickens, gradually swallowing the path from which she appeared.\n\nThe mysterious merchant remains perfectly still, her open palm offering its strange treasure.",
     "mEncounterTitle": "Shadowmarket Mystic",
     "mEncounterType": 5,
     "mEncounterElement": "Void",
