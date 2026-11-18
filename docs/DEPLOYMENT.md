@@ -173,7 +173,8 @@ Approved by Babuni ("ok release"). `main` at `56df7ccc`: the level-up reward cho
 - **Before:** backend `52952f0e`, frontend `20261118-023728`. The server checkout had no uncommitted encounter edits, so no reset was needed.
 - **Checks before the release:** `npm run release:check` passed on Nobara (client 48, server 55, typecheck, static game data, build). Uploads verified by `sha256sum -c` on the server (client `b39f854d…`, bundle `912aacb7…`, only `refs/heads/main`).
 - **Release:** backup `20261118-215634` (sha256 `927145222e45eb855d1fd46373665c6d7873b51fff9c23c2d8b7f67696ce49f0`). Backend fast-forwarded to `56df7ccc`, health gate and content endpoint passed, frontend release `20261118-215636`. The live script `index-CV1qERzG.js` contains `0.9.0-beta.78`. API and bots online; all three bots signed in again at 21:56:44 UTC.
-- **Not yet checked:** the backup has not been restored into a throwaway container (Babuni downloads backups); a bot's level-up pick in production; the new flow on a real phone.
+- **Backup proven:** Babuni downloaded `20261118-215634`; its sha256 matched, and it restored into a throwaway `postgres:18` container with every row count equal to the server's (players 74, avatars 113, sessions 23, devices 79, inventories 113, purchases 1, player achievements 340; plus 19 encounter rooms). The container was removed.
+- **Not yet checked:** a bot's level-up pick in production; the new flow on a real phone.
 
 ## Production release — 2026-11-18, 02:37 UTC (room cleanup D-048; client unchanged at 0.9.0-beta.77)
 
