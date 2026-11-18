@@ -28,7 +28,6 @@ import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
 import { committedActionFor, committedSolutionSetFor, recordCommittedAction } from '../rewardFlyAnimation.js';
 import LevelUpChoiceBar from './LevelUpChoiceBar.js';
-import { setLevelUpRollHold } from '../levelUpRollHold.js';
 import { LEVEL_UP_ENCOUNTER_ID } from '../visibleEncounterRewards.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 import { gameEncounters, gameExpansions } from '../../../data/gameContent.js';
@@ -274,6 +273,8 @@ export function EncounterImageBlock({
    * the result waits (the bar plays the roll first).
    */
   const [levelUpRollHeld, setLevelUpRollHeld] = useState(false);
+  /** The bar's pick stays a moment over the result fading in, so it never dims. */
+  const [levelUpBarLingers, setLevelUpBarLingers] = useState(false);
   const [selectedAction, setSelectedAction] = useState<EncounterAction>('dice');
   const [selectedSolutionId, setSelectedSolutionId] = useState<number | null>(null);
   const [missingImageSrcs, setMissingImageSrcs] = useState<string[]>([]);
@@ -435,11 +436,6 @@ export function EncounterImageBlock({
   }, [encounter.snapshotId]);
 
   useEffect(() => {
-    setLevelUpRollHold(levelUpRollHeld ? encounter.snapshotId : null);
-    return () => setLevelUpRollHold(null);
-  }, [encounter.snapshotId, levelUpRollHeld]);
-
-  useEffect(() => {
     if (witnessSuppressLocalResolution || levelUpRollHeld) {
       return;
     }
@@ -463,7 +459,7 @@ export function EncounterImageBlock({
   const levelUpChoiceMode = isSystemEventActor
     && encounter.encounterId === LEVEL_UP_ENCOUNTER_ID
     && levelUpChoiceIds.length > 0
-    && (serverResolution === undefined || levelUpRollHeld);
+    && (serverResolution === undefined || levelUpRollHeld || levelUpBarLingers);
   // The pick made before the roll stays as the first reward (ResultBlock).
   const levelUpPickedFirst = committedActionFor(encounter.snapshotId) === 'level-up-choice'
     ? serverResolution?.levelUpChosenId
@@ -862,7 +858,11 @@ export function EncounterImageBlock({
               throw error;
             }
           }}
-          onRollShown={() => setLevelUpRollHeld(false)}
+          onRollShown={() => {
+            setLevelUpRollHeld(false);
+            setLevelUpBarLingers(true);
+            window.setTimeout(() => setLevelUpBarLingers(false), 600);
+          }}
           roll={serverResolution?.selectedRoll}
         />
       ) : null}

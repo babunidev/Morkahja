@@ -42,8 +42,12 @@ import {
   playRewardEmergence,
   playRewardFlights,
   playUsedSolutionsIntoEncounter,
-  showDieFace,
   SINGLE_DIE_FACE_MS,
+  SINGLE_HOVER_READ_MS,
+  SINGLE_HOVER_RISE_MS,
+  flyRollNumbersToAvatar,
+  hoverRollNumbers,
+  riseAndHover,
   takeCommittedSingleDiceFlight,
   USED_SOLUTION_FLIGHT_MS,
   USED_SOLUTION_STAGGER_MS,
@@ -66,6 +70,7 @@ import {
   playSfx,
 } from '../../sfx.js';
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
+import { releaseAvatarRoll } from '../avatarRollHold.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
   rewardQuantityForVisibleEntry,
@@ -1108,6 +1113,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
     await proceedAfterCollecting();
   }
 
+  /** Rise and hover with the roll, then fly into the encounter while the number flies into the avatar. */
+  async function flyAfterHover(rect: DOMRect, imageSrc: string, rollText: string, round: boolean): Promise<void> {
+    const holder = await riseAndHover(rect, imageSrc, rollText, round);
+    const hoverRect = holder.getBoundingClientRect();
+    const numbers = hoverRollNumbers([holder]);
+    void flyRollNumbersToAvatar(numbers).finally(() => releaseAvatarRoll(encounterSnapshotId));
+    await playUsedSolutionsIntoEncounter([{
+      imageSrc,
+      size: Math.round(Math.min(hoverRect.width, hoverRect.height)),
+      sourceRect: hoverRect,
+      onTakeOff: () => holder.remove(),
+    }]).finally(() => holder.remove());
+  }
+
   /**
    * How long the die or the used solution takes to fly into the encounter and
    * vanish after the result appears (0 when nothing flies), as in the rewards' emergence.
@@ -1128,8 +1147,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
     // A set flies one icon after another; wait for the last one too.
     const set = committedSolutionSetFor(encounterSnapshotId);
     const flyingIcons = set ? set.picks.length + (set.diceFill ? 1 : 0) : 1;
+    // A single die or solution first rises and hovers with its roll.
+    const hovers = !set && (singleDieFlew || (resolutionAction !== 'dice' && usedSolutions.length > 0));
     return setRollsPauseMs(encounterSnapshotId)
-      + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0)
+      + (hovers ? SINGLE_HOVER_RISE_MS + SINGLE_HOVER_READ_MS : 0)
       + USED_SOLUTION_FLIGHT_MS
       + Math.max(0, flyingIcons - 1) * USED_SOLUTION_STAGGER_MS;
   }
@@ -1360,9 +1381,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
       });
       if (flights.length > 0) {
         // The rolls are already on the hovering icons. Not cancelled on a
-        // re-render: the flight is taken once per encounter.
+        // re-render: the flight is taken once per encounter. As the set flies
+        // into the encounter its numbers fly into the avatar, and the total
+        // grows there after them (Babuni, 2026-11-18).
+        const numbers = hoverRollNumbers(hovering);
         window.setTimeout(() => {
           void playUsedSolutionsIntoEncounter(flights);
+          void flyRollNumbersToAvatar(numbers).finally(() => releaseAvatarRoll(encounterSnapshotId));
         }, setRollsPauseMs(encounterSnapshotId));
         return;
       }
@@ -1382,15 +1407,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
       if (!rect || rect.width <= 0 || rect.height <= 0 || !imageSrc) {
         return;
       }
-      const face = showDieFace(rect, imageSrc, String(displayRollAsD20(roll)));
-      window.setTimeout(() => {
-        void playUsedSolutionsIntoEncounter([{
-          imageSrc,
-          size: Math.round(Math.min(rect.width, rect.height)),
-          sourceRect: rect,
-          onTakeOff: () => face.remove(),
-        }]).finally(() => face.remove());
-      }, SINGLE_DIE_FACE_MS);
+      // Babuni (2026-11-18): the die rises and hovers with its roll like the
+      // last pick of a set, then flies in while its number flies into the avatar.
+      void flyAfterHover(rect, imageSrc, String(displayRollAsD20(roll)), false);
       return;
     }
 
@@ -1407,28 +1426,24 @@ export const ResultBlock = forwardRef(function ResultBlock(
 
     const slotElement = document.querySelector(`[data-solution-slot="${resolutionAction}"]`);
     const sourceRect = slotElement?.getBoundingClientRect();
-    if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0) {
+    const first = usedSolutions[0];
+    if (!sourceRect || sourceRect.width <= 0 || sourceRect.height <= 0 || !first) {
+      releaseAvatarRoll(encounterSnapshotId);
       return;
     }
 
-    // Only one icon at a time: the original slot icon hides as the flyer takes
-    // over, and is restored afterwards (the solution bar is hidden by then).
+    // Only one icon at a time: the slot's own icon hides while its copy rises,
+    // hovers and flies (the solution bar is hidden by then).
     const slotVisual = slotElement instanceof HTMLElement ? slotElement : null;
-    const hideSlot = (): void => {
-      if (slotVisual) {
-        slotVisual.style.visibility = 'hidden';
-      }
-    };
-    void playUsedSolutionsIntoEncounter(usedSolutions.map((usedSolution, index) => ({
-      imageSrc: solutionImagePath(usedSolution.solution),
-      size: Math.round(Math.min(sourceRect.width, sourceRect.height)),
-      sourceRect,
-      onTakeOff: index === 0 ? hideSlot : undefined,
-    }))).finally(() => {
-      if (slotVisual) {
-        slotVisual.style.visibility = '';
-      }
-    });
+    if (slotVisual) {
+      slotVisual.style.visibility = 'hidden';
+    }
+    void flyAfterHover(sourceRect, solutionImagePath(first.solution), String(displayRollAsD20(roll)), true)
+      .finally(() => {
+        if (slotVisual) {
+          slotVisual.style.visibility = '';
+        }
+      });
   }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
 
   // Rewards grow out of the middle of the encounter into their slots, the
@@ -1552,7 +1567,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return (
       <>
         <div aria-live="polite" style={{ ...levelUpChoiceTitleStyle, opacity: levelUpChoiceShown ? 1 : 0 }}>
-          Choose your reward
+          Make your choice
         </div>
         {levelUpChoices.map((choice, index) => {
           const id = choice.solution.mSolutionID;

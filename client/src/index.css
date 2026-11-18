@@ -280,6 +280,17 @@ button:focus-visible {
   animation: morkahja-party-member-continue-pulse 2.2s ease-in-out infinite;
 }
 
+/* The big roll on the avatar (Babuni, 2026-11-18): grows in, then a very subtle pulse. */
+@keyframes morkahja-big-roll-grow {
+  0% { opacity: 0; transform: scale(0.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes morkahja-big-roll-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.045); filter: brightness(1.12); }
+}
+
 @keyframes morkahja-party-choice-reveal {
   from {
     opacity: 0;

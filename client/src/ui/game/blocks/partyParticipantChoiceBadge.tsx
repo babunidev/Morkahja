@@ -20,7 +20,7 @@ import {
   protectedImageProps,
 } from '../../protectedImage.js';
 import { TOOLTIP_GOLD, TooltipDivider } from '../GameTooltip.js';
-import { useLevelUpRollHold } from '../levelUpRollHold.js';
+import { useAvatarRollHeld } from '../avatarRollHold.js';
 import { assetUrl } from '../../../assetUrl.js';
 
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -80,6 +80,8 @@ const bigRollStyle: CSSProperties = {
   position: 'static',
   fontSize: 'clamp(40px, 11vw, 64px)',
   lineHeight: 1,
+  // Grows in after the roll numbers flew into the avatar, then breathes gently.
+  animation: 'morkahja-big-roll-grow 480ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both, morkahja-big-roll-pulse 2800ms ease-in-out 480ms infinite',
   textShadow: '0 0 14px rgba(255, 204, 102, 0.75), 0 3px 10px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9)',
 };
 
@@ -329,8 +331,8 @@ export function PartyParticipantChoiceBadge({
   roomState?: RoomStateDto;
   systemEventActorPlayerId?: string;
 }) {
-  // The local level-up pick is still rolling (D-049): keep its roll a secret.
-  const levelUpRollHeld = useLevelUpRollHold() !== null && participant.isLocal === true;
+  // The local roll's numbers are still flying in: the total grows after them.
+  const levelUpRollHeld = useAvatarRollHeld() && participant.isLocal === true;
   const showChoice = hasVisibleParticipantChoice(
     participant,
     roomState,
@@ -365,6 +367,11 @@ export function PartyParticipantChoiceBadge({
   }
 
   if (!presence.mounted || !snapshotRef.current) {
+    return null;
+  }
+  // Babuni (2026-11-18): the own avatar shows no choice image, only the roll
+  // once it is known; party members still see what a player chose.
+  if (tooltipInAvatar && snapshotRef.current.rollDisplay === undefined) {
     return null;
   }
 

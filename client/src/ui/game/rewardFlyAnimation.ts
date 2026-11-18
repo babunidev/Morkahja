@@ -1,3 +1,4 @@
+import { holdAvatarRoll } from './avatarRollHold.js';
 import type { SolutionSetSubmission } from '../../api/http.js';
 
 export type RewardFlyTargetKind = 'skillbook' | 'inventory';
@@ -921,6 +922,8 @@ export function recordCommittedAction(
   solutionSet: SolutionSetSubmission | null = null,
 ): void {
   committedAction = { snapshotId, action, spendTaken: false, solutionSet };
+  // The total on the avatar waits for the roll numbers to fly in.
+  holdAvatarRoll(snapshotId);
 }
 
 /** How long the dice button stays after a committed roll before it makes room. */
@@ -1048,4 +1051,101 @@ export function takeCommittedDiceFlight(snapshotId: string | undefined): boolean
   }
   committedAction.spendTaken = true;
   return true;
+}
+
+
+/**
+ * Babuni (2026-11-18): every use first rises and hovers with its roll, as the
+ * last pick of a solution set does, before it flies into the encounter.
+ */
+export const SINGLE_HOVER_RISE_MS = 300;
+export const SINGLE_HOVER_READ_MS = 700;
+/** How far above its slot a hovering solution stands (SolutionBlock's hover place). */
+const SINGLE_HOVER_GAP_PX = 8;
+
+/**
+ * A copy of the used solution or die, with its roll, rising from `rect` to its
+ * hover place. Resolves with the holder once it has hovered for the read time;
+ * remove it when the flyer takes off.
+ */
+export async function riseAndHover(rect: DOMRect, imageSrc: string, rollText: string, round: boolean): Promise<HTMLElement> {
+  const holder = showDieFace(rect, imageSrc, rollText);
+  const image = holder.querySelector('img');
+  if (image && round) {
+    Object.assign(image.style, { objectFit: 'cover', borderRadius: '50%' });
+  }
+  const number = holder.querySelector('span');
+  if (number) {
+    number.style.opacity = '0';
+  }
+  const rise = -(rect.height + SINGLE_HOVER_GAP_PX);
+  holder.animate(
+    [{ transform: 'translateY(0)' }, { transform: `translateY(${rise}px)` }],
+    { duration: SINGLE_HOVER_RISE_MS, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' },
+  );
+  await wait(SINGLE_HOVER_RISE_MS);
+  if (number) {
+    number.style.opacity = '';
+    number.animate(
+      [{ opacity: 0, transform: 'scale(1.4)' }, { opacity: 1, transform: 'scale(1)' }],
+      { duration: 260, easing: 'ease-out', fill: 'both' },
+    );
+  }
+  await wait(SINGLE_HOVER_READ_MS);
+  return holder;
+}
+
+/** A roll number travels from where it showed into the middle of the avatar and shrinks away. */
+export const ROLL_TO_AVATAR_MS = 700;
+
+export async function flyRollNumbersToAvatar(numbers: Array<{ rect: DOMRect; text: string }>): Promise<void> {
+  const avatar = getAvatarPortraitRect();
+  if (!avatar || numbers.length === 0) {
+    return;
+  }
+  const target = rectCenter(avatar);
+  await Promise.all(numbers.map(({ rect, text }, index) => {
+    const from = rectCenter(rect);
+    const number = document.createElement('span');
+    number.dataset.morkahjaIconFlyer = 'true';
+    number.setAttribute('aria-hidden', 'true');
+    number.className = 'morkahja-result-outcome';
+    number.textContent = text;
+    Object.assign(number.style, {
+      position: 'fixed',
+      left: '0px',
+      top: '0px',
+      width: '40px',
+      height: '40px',
+      margin: '-20px 0 0 -20px',
+      display: 'grid',
+      placeItems: 'center',
+      fontSize: '24px',
+      lineHeight: '1',
+      pointerEvents: 'none',
+      zIndex: '220',
+    });
+    document.body.append(number);
+    const animation = number.animate(
+      [
+        { transform: `translate(${from.x}px, ${from.y}px) scale(1)`, opacity: 1 },
+        { offset: 0.75, transform: `translate(${target.x}px, ${target.y}px) scale(0.8)`, opacity: 1 },
+        { transform: `translate(${target.x}px, ${target.y}px) scale(0)`, opacity: 0 },
+      ],
+      { duration: ROLL_TO_AVATAR_MS, delay: index * USED_SOLUTION_STAGGER_MS, easing: 'cubic-bezier(0.45, 0, 0.3, 1)', fill: 'forwards' },
+    );
+    return Promise.race([
+      animation.finished.catch(() => undefined),
+      wait(ROLL_TO_AVATAR_MS + index * USED_SOLUTION_STAGGER_MS + 400),
+    ]).finally(() => number.remove());
+  }));
+}
+
+/** The roll numbers showing on hovering elements (solutions and dice of a set). */
+export function hoverRollNumbers(elements: Element[]): Array<{ rect: DOMRect; text: string }> {
+  return elements.flatMap((element) => {
+    const label = element.querySelector('.morkahja-result-outcome');
+    const text = label?.textContent?.trim();
+    return label && text ? [{ rect: label.getBoundingClientRect(), text }] : [];
+  });
 }

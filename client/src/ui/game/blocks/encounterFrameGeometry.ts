@@ -343,3 +343,48 @@ export function seedFromText(text: string): number {
   }
   return hash >>> 0;
 }
+
+/**
+ * The level-up banner across the picture (Babuni's design, 2026-11-18): a slim
+ * band from frame to frame, pointed where it meets the frame, rising 45° into a
+ * taller plate in the middle (like the region plate on the top edge). `band`
+ * and `plate` are half heights; `straight` is the plate's flat top length.
+ * The line at `offset` px outside the field, as an upper and a lower path that
+ * meet the frame at 45° (never at a right angle).
+ */
+export interface BannerShape {
+  width: number;
+  centerY: number;
+  band: number;
+  plate: number;
+  straight: number;
+}
+
+function bannerUpper(shape: BannerShape, d: number): Point[] {
+  const { width, centerY: c, band: h, plate: H, straight } = shape;
+  const s = straight / 2;
+  const mid = width / 2;
+  const slant = d * (SQRT2 - 1);
+  const rise = H - h;
+  const left: Point[] = [
+    [0, c - d * SQRT2],
+    [h + d - d * SQRT2, c - h - d],
+    [mid - s - rise - slant, c - h - d],
+    [mid - s - slant, c - H - d],
+  ];
+  const right = left.map(([x, y]) => [width - x, y] as Point).reverse();
+  return [...left, ...right];
+}
+
+export function bannerLine(shape: BannerShape, offset: number): { upper: string; lower: string; length: number } {
+  const upper = bannerUpper(shape, offset);
+  const lower = upper.map(([x, y]) => [x, 2 * shape.centerY - y] as Point);
+  return { upper: pathOf(upper, false), lower: pathOf(lower, false), length: lengthOf(upper, false) };
+}
+
+/** The banner's filled field. */
+export function bannerFieldPath(shape: BannerShape): string {
+  const upper = bannerUpper(shape, 0);
+  const lower = upper.map(([x, y]) => [x, 2 * shape.centerY - y] as Point).reverse();
+  return pathOf([...upper, ...lower], true);
+}

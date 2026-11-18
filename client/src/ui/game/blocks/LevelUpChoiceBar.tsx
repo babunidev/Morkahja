@@ -5,7 +5,9 @@ import { gameSolutions } from '../../../data/gameContent.js';
 import { assetUrl } from '../../../assetUrl.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import { protectedImageProps, preventImageContextMenu, PROTECTED_SURFACE_ATTR } from '../../protectedImage.js';
-import { DEFAULT_BUTTON_SOUND, DICE_SOUND, playSfx } from '../../sfx.js';
+import { DEFAULT_BUTTON_SOUND, pickSolutionSound, playSfx, SOLUTION_PLAYBACK_SCALE } from '../../sfx.js';
+import { flyRollNumbersToAvatar, hoverRollNumbers } from '../rewardFlyAnimation.js';
+import { releaseAvatarRoll } from '../avatarRollHold.js';
 import {
   ENCOUNTER_ACTIONS_FADE_DURATION_MS,
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
@@ -13,6 +15,7 @@ import {
 import { TooltipDivider, useGameTooltip, type GameTooltipContent } from '../GameTooltip.js';
 import { LEVEL_UP_ENCOUNTER_ID, rewardQuantityForVisibleEntry } from '../visibleEncounterRewards.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
+import ChoiceBanner from './ChoiceBanner.js';
 
 /**
  * Level-up choice (D-049, Babuni 2026-11-18): the three rewards wait in the
@@ -23,10 +26,10 @@ import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 
 const SLOT_SIZE_PX = 64;
 const CHOICE_COLUMNS = [2, 3, 4] as const;
-/** The pick bounces at least this long, even if the roll is back sooner. */
-const MIN_ROLL_BOUNCE_MS = 1200;
-/** How long the roll shows on the pick before the result takes over. */
-const ROLL_SHOW_MS = 1300;
+/** The solution's use animation (SolutionBlock), here mirrored, plays this long. */
+const USE_ANIMATION_MS = 1730;
+/** How long the roll shows on the pick before its number flies into the avatar (a set's read time). */
+const ROLL_SHOW_MS = 700;
 const MOVE_TO_MIDDLE_MS = 380;
 
 interface SolutionRecord {
@@ -50,20 +53,6 @@ const barStyle: CSSProperties = {
   justifyItems: 'center',
   zIndex: 31,
   overflow: 'visible',
-};
-
-const titleStyle: CSSProperties = {
-  gridColumn: '1 / -1',
-  gridRow: '1',
-  justifySelf: 'center',
-  transform: 'translateY(-62px)',
-  color: '#ffcc66',
-  fontFamily: "'Breathe Fire', Georgia, serif",
-  fontSize: 20,
-  letterSpacing: '0.04em',
-  textShadow: '0 2px 6px rgba(0, 0, 0, 0.85)',
-  pointerEvents: 'none',
-  whiteSpace: 'nowrap',
 };
 
 const buttonStyle: CSSProperties = {
@@ -103,7 +92,7 @@ const tooltipTitleStyle: CSSProperties = { margin: 0, color: '#ffcc66', fontWeig
 const tooltipMetaStyle: CSSProperties = { margin: 0, color: '#ffcc66' };
 const tooltipTextStyle: CSSProperties = { margin: 0, color: '#f7efe0' };
 
-type Phase = 'choose' | 'rolling' | 'showing' | 'done';
+type Phase = 'choose' | 'rolling' | 'showing' | 'flying' | 'done';
 
 export function LevelUpChoiceBar({
   choiceIds,
@@ -137,6 +126,14 @@ export function LevelUpChoiceBar({
   const buttonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const onRollShownRef = useRef(onRollShown);
   onRollShownRef.current = onRollShown;
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    // Set again on every mount: development mounts twice.
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const solutions = gameSolutions() as Record<string, SolutionRecord>;
   const choices = choiceIds.flatMap((id) => {
@@ -185,7 +182,7 @@ export function LevelUpChoiceBar({
     if (phase !== 'rolling' || roll === undefined) {
       return undefined;
     }
-    const wait = Math.max(0, rollingSinceRef.current + MIN_ROLL_BOUNCE_MS - Date.now());
+    const wait = Math.max(0, rollingSinceRef.current + USE_ANIMATION_MS - Date.now());
     const show = window.setTimeout(() => setPhase('showing'), wait);
     return () => window.clearTimeout(show);
   }, [phase, roll]);
@@ -195,8 +192,18 @@ export function LevelUpChoiceBar({
       return undefined;
     }
     const done = window.setTimeout(() => {
-      setPhase('done');
-      onRollShownRef.current();
+      // The roll's number flies down into the avatar, where the total then grows.
+      const pick = chosen === null ? undefined : buttonRefs.current.get(chosen);
+      const numbers = pick ? hoverRollNumbers([pick]) : [];
+      // 'flying' re-runs this effect; the hand-over must not depend on it.
+      setPhase('flying');
+      void flyRollNumbersToAvatar(numbers).finally(() => {
+        releaseAvatarRoll(encounterKey);
+        if (mountedRef.current) {
+          setPhase('done');
+          onRollShownRef.current();
+        }
+      });
     }, ROLL_SHOW_MS);
     return () => window.clearTimeout(done);
   }, [phase]);
@@ -210,7 +217,7 @@ export function LevelUpChoiceBar({
     setChosen(rewardId);
     setPhase('rolling');
     rollingSinceRef.current = Date.now();
-    playSfx(DICE_SOUND, { overlap: true });
+    playSfx(pickSolutionSound(), { scale: SOLUTION_PLAYBACK_SCALE });
     for (let attempt = 0; attempt < 4; attempt += 1) {
       try {
         await onChoose(rewardId);
@@ -250,9 +257,20 @@ export function LevelUpChoiceBar({
     };
   }
 
-  const shown = revealed && !hidden && phase !== 'done';
+  // After 'done' the pick stays until the bar goes, over the result taking its place.
+  const shown = revealed && !hidden;
 
   return (
+    <>
+    {/* Babuni (2026-11-18): a banner across the picture in the region plate's look. */}
+    <ChoiceBanner
+      bottomPx={62}
+      style={{
+        opacity: shown && phase === 'choose' ? 1 : 0,
+        transition: `opacity ${revealed && phase === 'choose' && !hidden ? ENCOUNTER_ACTIONS_FADE_DURATION_MS : 320}ms ease`,
+      }}
+      text="Make your choice"
+    />
     <div
       ref={barRef}
       {...{ [PROTECTED_SURFACE_ATTR]: '' }}
@@ -264,27 +282,25 @@ export function LevelUpChoiceBar({
       }}
     >
       <style>
-        {`@keyframes morkahja-level-up-roll-bounce {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-16px) rotate(-6deg); }
-  50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(-10px) rotate(6deg); }
+        {`@keyframes morkahja-level-up-use-mirrored {
+  0% { transform: rotate(0deg) scale(1); filter: brightness(1); }
+  12% { transform: rotate(16deg) scale(1.05); filter: brightness(1.15); }
+  24% { transform: rotate(-14deg) scale(1.03); }
+  36% { transform: rotate(10deg) scale(1.06); }
+  48% { transform: rotate(-8deg) scale(1.04); }
+  60% { transform: rotate(5deg) scale(1.07); filter: brightness(1.35); }
+  72% { transform: rotate(-3deg) scale(1.02); }
+  84% { transform: rotate(0deg) scale(1.1); filter: brightness(1.55); }
+  100% { transform: rotate(0deg) scale(1); filter: brightness(1); }
 }
 @keyframes morkahja-level-up-roll-pop {
   0% { opacity: 0; transform: scale(1.5); }
   100% { opacity: 1; transform: scale(1); }
 }`}
       </style>
-      <div
-        aria-live="polite"
-        style={{
-          ...titleStyle,
-          opacity: phase === 'choose' ? 1 : 0,
-          transition: 'opacity 320ms ease',
-        }}
-      >
-        Choose your reward
-      </div>
+      <span aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+        {phase === 'choose' ? 'Make your choice' : ''}
+      </span>
       {choices.map((solution, index) => {
         const id = solution.mSolutionID;
         const isChosen = chosen === id;
@@ -324,12 +340,12 @@ export function LevelUpChoiceBar({
               style={{
                 display: 'block',
                 ...(isChosen && phase === 'rolling'
-                  ? { animation: 'morkahja-level-up-roll-bounce 460ms ease-in-out infinite' }
+                  ? { animation: `morkahja-level-up-use-mirrored ${USE_ANIMATION_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1) both` }
                   : {}),
               }}
             >
               <img alt="" aria-hidden="true" {...protectedImageProps} src={`${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`} style={imageStyle} />
-              {isChosen && (phase === 'showing' || phase === 'done') && roll !== undefined ? (
+              {isChosen && phase === 'showing' && roll !== undefined ? (
                 <span aria-hidden="true" className="morkahja-result-outcome" style={rollStyle}>
                   {displayRollAsD20(roll)}
                 </span>
@@ -340,6 +356,7 @@ export function LevelUpChoiceBar({
       })}
       {tips.layer}
     </div>
+    </>
   );
 }
 
