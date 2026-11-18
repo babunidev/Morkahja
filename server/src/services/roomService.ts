@@ -1650,8 +1650,46 @@ async function advanceRoomAfterCommit(
   return advanced;
 }
 
+/**
+ * A room still choosing although every engaged participant is already past
+ * choosing (ready to continue, or resolved). Older releases left solo rooms in
+ * this state, where Continue is refused and nothing moves again (found
+ * 2026-11-18 with the bot adventurers, stuck since 12 and 16 November).
+ */
+export function isStrandedActiveEncounter(room: EncounterRoom): boolean {
+  if (room.roomState !== 'active_encounter') {
+    return false;
+  }
+  const engaged = engagedParticipants(room);
+  return engaged.length > 0 && engaged.every(
+    (participant) =>
+      participant.choiceState === 'ready_to_continue' || participant.choiceState === 'resolved',
+  );
+}
+
+/** Move a stranded room on to waiting_continue, where Continue works again. */
+async function releaseStrandedActiveEncounter(roomId: string): Promise<EncounterRoom | null> {
+  return withDocumentTransaction(async (transaction) => {
+    const current = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!current || !isStrandedActiveEncounter(current)) {
+      return current;
+    }
+    const released: EncounterRoom = {
+      ...current,
+      roomState: 'waiting_continue',
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, released);
+    return released;
+  });
+}
+
 export async function tickRoom(room: EncounterRoom): Promise<EncounterRoom> {
   let working = room;
+
+  if (isStrandedActiveEncounter(working)) {
+    working = (await releaseStrandedActiveEncounter(working.roomId)) ?? working;
+  }
 
   if (working.roomState === 'waiting_continue' && !canAdvanceRoom(working)) {
     return working;

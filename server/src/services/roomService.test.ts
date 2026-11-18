@@ -652,6 +652,49 @@ const advancedAfterTick = await getActiveRoomForPlayer(session.playerId, prepare
 assert.equal(advancedAfterTick?.roomState, 'active_encounter');
 assert.equal(advancedAfterTick?.participants[0]?.choiceState, 'choosing');
 
+// Rooms older releases stranded (2026-11-18, bot adventurers): still choosing
+// although everyone engaged is past choosing. A poll frees them again.
+const strandedRooms: EncounterRoom[] = [
+  {
+    ...advancedAfterTick!,
+    participants: advancedAfterTick!.participants.map((participant) => ({
+      ...participant,
+      choiceState: 'resolved' as const,
+      continuePressed: true,
+      focusState: 'none' as const,
+    })),
+    updatedAt: Date.now(),
+  },
+];
+for (const stranded of strandedRooms) {
+  await saveEncounterRoom(stranded);
+  const freed = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+  assert.equal(freed?.roomState, 'active_encounter');
+  assert.notEqual(
+    freed?.activeEncounterSnapshot.snapshotId,
+    stranded.activeEncounterSnapshot.snapshotId,
+    'a stranded room with Continue pressed moves on to the next encounter',
+  );
+  assert.ok(freed?.participants.every((participant) => participant.choiceState === 'choosing'));
+}
+const soloFreed = (await getActiveRoomForPlayer(session.playerId, prepareAvatarId))!;
+await saveEncounterRoom({
+  ...soloFreed,
+  participants: soloFreed.participants.filter((participant) => participant.playerId === session.playerId),
+  activeEncounterSnapshot: { ...soloFreed.activeEncounterSnapshot, actionReadyAt: Date.now() - 1 },
+  updatedAt: Date.now(),
+});
+const soloPrepared = await submitChoice(session.playerId, prepareAvatarId, 'dice');
+assert.equal(soloPrepared.roomState, 'waiting_continue');
+assert.equal(soloPrepared.participants[0]?.choiceState, 'ready_to_continue');
+await saveEncounterRoom({ ...soloPrepared, roomState: 'active_encounter', updatedAt: Date.now() });
+const preparedFreed = await getActiveRoomForPlayer(session.playerId, prepareAvatarId);
+assert.equal(preparedFreed?.roomState, 'waiting_continue', 'a stranded prepared choice waits for Continue again');
+assert.equal(preparedFreed?.participants[0]?.choiceState, 'ready_to_continue');
+const continuedAfterFree = await submitContinue(session.playerId, prepareAvatarId);
+assert.equal(continuedAfterFree.roomState, 'active_encounter');
+assert.equal(continuedAfterFree.participants[0]?.choiceState, 'choosing');
+
 const disengagedAdvanceRoom: EncounterRoom = {
   ...advancedAfterTick!,
   roomState: 'waiting_continue',
