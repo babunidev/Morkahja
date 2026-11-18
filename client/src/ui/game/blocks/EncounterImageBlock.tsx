@@ -26,7 +26,10 @@ import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { FRAME_OUTSET_PX } from './encounterFrameGeometry.js';
 import EncounterHeader from './EncounterHeader.js';
 import { predictUsedSolutionIds } from '../encounterInventoryPreview.js';
-import { committedSolutionSetFor } from '../rewardFlyAnimation.js';
+import { committedActionFor, committedSolutionSetFor, recordCommittedAction } from '../rewardFlyAnimation.js';
+import LevelUpChoiceBar from './LevelUpChoiceBar.js';
+import { setLevelUpRollHold } from '../levelUpRollHold.js';
+import { LEVEL_UP_ENCOUNTER_ID } from '../visibleEncounterRewards.js';
 import { isCommitMoment, type ActionRevealPhase } from './actionRevealPhase.js';
 import { gameEncounters, gameExpansions } from '../../../data/gameContent.js';
 import { plateLabelFor } from '../regionName.js';
@@ -266,6 +269,11 @@ export function EncounterImageBlock({
   lockedDiceRolls?: number[];
 }) {
   const [revealedRoll, setRevealedRoll] = useState<number | null>(null);
+  /**
+   * Level-up choice (D-049): from the pick until the pick has shown its roll,
+   * the result waits (the bar plays the roll first).
+   */
+  const [levelUpRollHeld, setLevelUpRollHeld] = useState(false);
   const [selectedAction, setSelectedAction] = useState<EncounterAction>('dice');
   const [selectedSolutionId, setSelectedSolutionId] = useState<number | null>(null);
   const [missingImageSrcs, setMissingImageSrcs] = useState<string[]>([]);
@@ -423,7 +431,16 @@ export function EncounterImageBlock({
   }, [encounter.snapshotId, holdResultRollReset]);
 
   useEffect(() => {
-    if (witnessSuppressLocalResolution) {
+    setLevelUpRollHeld(false);
+  }, [encounter.snapshotId]);
+
+  useEffect(() => {
+    setLevelUpRollHold(levelUpRollHeld ? encounter.snapshotId : null);
+    return () => setLevelUpRollHold(null);
+  }, [encounter.snapshotId, levelUpRollHeld]);
+
+  useEffect(() => {
+    if (witnessSuppressLocalResolution || levelUpRollHeld) {
       return;
     }
 
@@ -439,7 +456,18 @@ export function EncounterImageBlock({
     serverResolution?.selectedRoll,
     serverResolution?.rewards,
     witnessSuppressLocalResolution,
+    levelUpRollHeld,
   ]);
+
+  const levelUpChoiceIds = encounter.levelUpChoiceIds ?? [];
+  const levelUpChoiceMode = isSystemEventActor
+    && encounter.encounterId === LEVEL_UP_ENCOUNTER_ID
+    && levelUpChoiceIds.length > 0
+    && (serverResolution === undefined || levelUpRollHeld);
+  // The pick made before the roll stays as the first reward (ResultBlock).
+  const levelUpPickedFirst = committedActionFor(encounter.snapshotId) === 'level-up-choice'
+    ? serverResolution?.levelUpChosenId
+    : undefined;
 
   useEffect(() => {
     if (showWitnessResult) {
@@ -801,7 +829,8 @@ export function EncounterImageBlock({
           }
           rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
           rewardChargeBonus={serverResolution?.rewardChargeBonus}
-          roll={outcomeRoll ?? revealedRoll}
+          roll={levelUpRollHeld ? null : (outcomeRoll ?? revealedRoll)}
+          levelUpPickedFirstId={levelUpPickedFirst}
           usedSolutionIds={usedSolutionIds}
           lostSolutionIds={serverResolution?.lostInventorySolutions ?? []}
           onItemCollected={onItemCollected}
@@ -816,12 +845,34 @@ export function EncounterImageBlock({
           }}
         />
       ) : null}
+      {levelUpChoiceMode ? (
+        <LevelUpChoiceBar
+          avatarLevel={avatarLevel}
+          choiceIds={levelUpChoiceIds}
+          encounterKey={encounter.snapshotId}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
+          onChoose={async (rewardId) => {
+            setLevelUpRollHeld(true);
+            recordCommittedAction(encounter.snapshotId, 'level-up-choice');
+            try {
+              const room = await chooseLevelUpReward(avatarId, rewardId);
+              onRoomSnapshot?.(room);
+            } catch (error) {
+              setLevelUpRollHeld(false);
+              throw error;
+            }
+          }}
+          onRollShown={() => setLevelUpRollHeld(false)}
+          roll={serverResolution?.selectedRoll}
+        />
+      ) : null}
       <SolutionBlock
         panelOpen={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
         diceButtonAsset={diceButtonAsset}
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}
         hidden={
+          levelUpChoiceMode ||
           isWitnessingLabel ||
           showWitnessResult ||
           revealedRoll !== null ||

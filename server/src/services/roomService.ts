@@ -1950,6 +1950,7 @@ async function applyParticipantPrepare(
   playerAction: PlayerEncounterAction,
   solutionId: number | undefined,
   now: number,
+  options: { levelUpChoiceId?: number } = {},
 ): Promise<EncounterRoom> {
   const participant = findParticipant(room, playerId);
   if (!participant || participant.choiceState === 'disengaged') {
@@ -1976,6 +1977,7 @@ async function applyParticipantPrepare(
     participant.avatarId,
     resolutionSnapshot,
     playerAction,
+    options,
   );
 
   let nextParticipants = room.participants.map((entry) =>
@@ -2486,6 +2488,7 @@ export async function submitChoice(
   action: EncounterAction,
   solutionId?: number,
   solutionSet?: ClientSolutionSet,
+  options: { levelUpChoiceId?: number } = {},
 ): Promise<EncounterRoom> {
   const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   if (!roomId) {
@@ -2549,6 +2552,7 @@ export async function submitChoice(
         playerAction,
         solutionId,
         now,
+        options,
       );
     }
 
@@ -2942,6 +2946,18 @@ export async function chooseLevelUpReward(
   const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   if (!roomId) {
     throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+
+  // D-049 (Babuni, 2026-11-18): the choices show before the roll; picking one
+  // is the level-up's action and rolls, like using a solution.
+  const current = await loadEncounterRoom(roomId);
+  const chooser = current ? findParticipant(current, playerId) : undefined;
+  if (current?.roomState === 'system_event' && chooser?.choiceState === 'choosing') {
+    const offered = snapshotForParticipant(current, chooser).levelUpChoiceIds ?? [];
+    if (!offered.includes(rewardId)) {
+      throw new RoomError('Not one of the offered rewards', 400, 'INVALID_LEVEL_UP_CHOICE');
+    }
+    return submitChoice(playerId, avatarId, 'dice', undefined, undefined, { levelUpChoiceId: rewardId });
   }
 
   return withDocumentTransaction(async (transaction) => {

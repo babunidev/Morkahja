@@ -52,6 +52,7 @@ async function levelUpResolutions(playerId: string): Promise<number> {
 async function playerInLevelUpEventWithChoiceMade(
   label: string,
   chooseReward = true,
+  rollFirst = true,
 ): Promise<{ playerId: string; avatarId: string }> {
   const identity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
   const publicKey = JSON.stringify(identity.publicKey.export({ format: 'jwk' }));
@@ -113,6 +114,9 @@ async function playerInLevelUpEventWithChoiceMade(
   assert.equal(levelUpRoom.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
   await readyForAction(levelUpRoom.roomId);
+  if (!rollFirst) {
+    return { playerId: session.playerId, avatarId };
+  }
   const rolled = await submitChoice(session.playerId, avatarId, 'dice');
   if (chooseReward) {
     // D-049: the roll offers three rewards; the player takes one.
@@ -170,6 +174,28 @@ for (const [label, stepAway] of [
   await chooseLevelUpReward(player.playerId, player.avatarId, offered[2]!);
   await submitContinue(player.playerId, player.avatarId);
   await assertResolvedOnceAndMovedOn(player, label);
+  await leaveAllRoomsForPlayer(player.playerId);
+}
+
+// D-049 (2026-11-18): the choices show before the roll; picking one rolls.
+{
+  const player = await playerInLevelUpEventWithChoiceMade('LevelUpPickFirst', false, false);
+  const room = await getActiveRoomForPlayer(player.playerId, player.avatarId);
+  const me = room!.participants.find((p) => p.playerId === player.playerId)!;
+  assert.equal(me.choiceState, 'choosing');
+  const offered = room!.slotEncounterSnapshots[me.slotIndex]!.levelUpChoiceIds ?? [];
+  assert.equal(offered.length, 3, 'the level-up offers three rewards before the roll');
+  await assert.rejects(chooseLevelUpReward(player.playerId, player.avatarId, -1), /offered/);
+  const picked = await chooseLevelUpReward(player.playerId, player.avatarId, offered[1]!);
+  const result = picked.participants.find((p) => p.playerId === player.playerId)!;
+  assert.equal(result.choiceState, 'ready_to_continue', 'picking rolls');
+  const prepared = result.preparedResult!;
+  assert.equal(prepared.levelUpChosenId, offered[1]);
+  assert.ok(prepared.rewards.includes(offered[1]!), 'the pick is among the rewards');
+  const rolledCount = Math.max(0, Math.min(4, Math.floor((prepared.selectedRoll ?? 0) / 5)));
+  assert.equal(prepared.rewards.length, rolledCount + 1, 'one rolled reward per 5, plus the pick');
+  await submitContinue(player.playerId, player.avatarId);
+  await assertResolvedOnceAndMovedOn(player, 'picking before the roll');
   await leaveAllRoomsForPlayer(player.playerId);
 }
 

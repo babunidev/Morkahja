@@ -93,6 +93,8 @@ export function toEncounterSnapshotDto(snapshot: EncounterSnapshot, revealFate: 
     state: snapshot.state,
     resolved: snapshot.resolved,
     loreGemOffer: snapshot.loreGemOffer,
+    // Shown before the roll (D-049): picking one of them is the level-up's action.
+    ...(snapshot.levelUpChoiceIds?.length ? { levelUpChoiceIds: snapshot.levelUpChoiceIds } : {}),
   };
 }
 

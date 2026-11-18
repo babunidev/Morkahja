@@ -381,6 +381,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     onItemCollected,
     levelUpChoiceIds = [],
     onChooseLevelUpReward,
+    levelUpPickedFirstId,
   }: {
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
@@ -412,6 +413,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     /** Level-up (D-049): the three rewards to choose from, while no choice is made. */
     levelUpChoiceIds?: number[];
     onChooseLevelUpReward?: (rewardId: number) => Promise<void>;
+    /**
+     * Level-up picked before the roll (D-049): the pick already stands in the
+     * middle of the bar, so it shows there at once; the rolled rewards grow out around it.
+     */
+    levelUpPickedFirstId?: number;
   },
   ref,
 ) {
@@ -470,7 +476,10 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     return [{ quantity, solution }];
-  });
+  }).sort((left, right) => (
+    Number(right.solution.mSolutionID === levelUpPickedFirstId)
+    - Number(left.solution.mSolutionID === levelUpPickedFirstId)
+  ));
 
   const visible = roll !== null || (readOnlyWitness && (rewards.length > 0 || isLevelUp));
 
@@ -1467,6 +1476,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
       }
 
       const flights = [...rewardButtonRefs.current.entries()].flatMap(([solutionId, button]) => {
+        if (solutionId === levelUpPickedFirstId) {
+          return [];
+        }
         const imageSrc = button.querySelector('img')?.src;
         const targetRect = button.getBoundingClientRect();
         if (!imageSrc || targetRect.width <= 0) {
@@ -1734,7 +1746,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         const showRewards = !rewardsFlyingAway && !rewardDismissInProgress;
         const showLosses = losses.length > 0 && !lossesFlyingAway;
         const rewardShown = (key: string): CSSProperties => ({
-          opacity: rewardsEmerged || emergedRewardKeys.has(key) ? 1 : 0,
+          opacity: rewardsEmerged || emergedRewardKeys.has(key) || key === `r:${levelUpPickedFirstId}` ? 1 : 0,
           // Fades in under its landed flyer, which then fades out over it.
           transition: `opacity ${landingRevealMs(REWARD_EMERGE_MS)}ms ease-out`,
         });

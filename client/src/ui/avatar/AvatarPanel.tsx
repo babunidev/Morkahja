@@ -10,7 +10,11 @@ import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.j
 import { EssenceSlotsRing } from './EssenceSlotsRing.js';
 import { LoreGemAvatarBadge } from '../game/blocks/LoreGemAvatarBadge.js';
 
-import { PartyParticipantChoiceBadge } from '../game/blocks/partyParticipantChoiceBadge.js';
+import {
+  ChoiceDetailSections,
+  PartyParticipantChoiceBadge,
+  participantChoiceDetails,
+} from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
 import { AnchoredGamePopover, GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
@@ -234,13 +238,23 @@ export function AvatarPanel({
   // Report only when the details state changes, not whenever the parent hands
   // over a new callback (inline callbacks are new on every render).
   const avatarTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
-  const avatarTip = avatarTips.bindTooltip(() => (showDetails
-    ? null
-    : {
-      key: `avatar-${avatar.id}`,
-      shellStyle: { width: 'max-content', maxWidth: 200 },
-      body: <GameTooltipCard title={avatar.name} lines={[`Level ${avatar.level}`]} />,
-    }));
+  const avatarTip = avatarTips.bindTooltip(() => {
+    if (showDetails) {
+      return null;
+    }
+    // The used solution and the roll join the avatar's tooltip (Babuni, 2026-11-18).
+    const choice = participantChoiceDetails(roomParticipant, encounter, roomState, systemEventActorPlayerId);
+    return {
+      key: `avatar-${avatar.id}-${choice?.used?.name ?? ''}-${choice?.roll?.display ?? ''}`,
+      shellStyle: choice ? { width: 220, maxWidth: 220 } : { width: 'max-content', maxWidth: 200 },
+      body: (
+        <>
+          <GameTooltipCard title={avatar.name} lines={[`Level ${avatar.level}`]} />
+          {choice ? <ChoiceDetailSections details={choice} /> : null}
+        </>
+      ),
+    };
+  });
   const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
   onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
@@ -376,6 +390,8 @@ export function AvatarPanel({
                 <PartyParticipantChoiceBadge
 
                   encounter={encounter}
+
+                  tooltipInAvatar
 
                   hidden={showDetails}
 

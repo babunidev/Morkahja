@@ -1371,7 +1371,7 @@ export function SolutionBlock({
           // A committed set stays: its solutions show their rolls, then fly in.
           // Not over Lore, Inventory, Skillbook or the map (Babuni, 2026-11-18).
           opacity: panelOpen || (hidden && !setCommitted) ? 0 : 1,
-          pointerEvents: hidden || !actionsReady ? 'none' : 'auto',
+          pointerEvents: panelOpen || hidden || !actionsReady ? 'none' : 'auto',
           transition: fadeTransition,
         }}
       >

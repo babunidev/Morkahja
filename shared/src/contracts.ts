@@ -162,6 +162,8 @@ export interface EncounterSnapshotDto {
   resolved: boolean;
   /** Server-rolled reveal timer for this encounter (room-authoritative). */
   loreGemOffer?: LoreGemOfferDto;
+  /** Level-up (D-049): the three rewards offered; picking one rolls. */
+  levelUpChoiceIds?: number[];
 }
 
 export interface InventoryItemDto {

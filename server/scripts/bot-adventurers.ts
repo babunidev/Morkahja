@@ -355,8 +355,17 @@ class Bot {
       if (this.waitUntil === 0) {
         this.waitUntil = Date.now() + between(THINK_MS);
       } else {
+        const levelUpOffer = room.roomState === 'system_event'
+          ? (room as Room & { activeEncounter?: { levelUpChoiceIds?: number[] } }).activeEncounter?.levelUpChoiceIds ?? []
+          : [];
         const choice = room.roomState === 'active_encounter' ? await this.pickSolution(room) : null;
-        if (choice) {
+        if (levelUpOffer.length > 0) {
+          // Level-up (D-049): picking one of the three offered rewards is the roll.
+          const rewardId = pick(levelUpOffer);
+          await this.api('/room/level-up/choice', { body: { avatarId: this.avatarId, rewardId } });
+          const names = gameSolutions() as Record<string, { mSolutionName?: string }>;
+          this.detail(`chose level-up reward ${names[String(rewardId)]?.mSolutionName ?? `#${rewardId}`} and rolled`);
+        } else if (choice) {
           try {
             await this.api('/room/choice', { body: { avatarId: this.avatarId, action: choice.slot, solutionId: choice.solutionId } });
             this.detail(`used ${choice.kind} ${choice.name} (slot ${choice.slot})`);
