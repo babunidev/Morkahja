@@ -599,6 +599,17 @@ export const ResultBlock = forwardRef(function ResultBlock(
     setLossesRevealed(false);
 
     async function playLossRevealFlights(): Promise<void> {
+      // Babuni (2026-11-18): a loss starts only once the die or the used
+      // solution has flown into the encounter and is gone, so they never overlap.
+      const flightWaitMs = spentFlightDurationMs();
+      if (flightWaitMs > 0) {
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, flightWaitMs);
+        });
+        if (cancelled) {
+          return;
+        }
+      }
       await waitForNextPaint();
 
       if (cancelled) {
@@ -1085,6 +1096,26 @@ export const ResultBlock = forwardRef(function ResultBlock(
     // Let the last item get on its way before the round moves on.
     await Promise.race([flight, new Promise<void>((resolve) => { window.setTimeout(resolve, 900); })]);
     await proceedAfterCollecting();
+  }
+
+  /**
+   * How long the die or the used solution takes to fly into the encounter and
+   * vanish after the result appears (0 when nothing flies), as in the rewards' emergence.
+   */
+  function spentFlightDurationMs(): number {
+    if (readOnlyWitness || !resolutionAction) {
+      return 0;
+    }
+    const singleDieFlew = resolutionAction === 'dice'
+      && !committedSolutionSetFor(encounterSnapshotId)
+      && committedActionFor(encounterSnapshotId) === 'dice';
+    const spentFlew = (resolutionAction !== 'dice' && usedSolutions.length > 0)
+      || committedSolutionSetFor(encounterSnapshotId)?.diceFill === true
+      || singleDieFlew;
+    if (!spentFlew) {
+      return 0;
+    }
+    return setRollsPauseMs(encounterSnapshotId) + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0) + USED_SOLUTION_FLIGHT_MS;
   }
 
   function itemTooltipContent(

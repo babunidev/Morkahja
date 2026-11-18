@@ -704,6 +704,7 @@ export function SolutionBlock({
   diceButtonAsset = DEFAULT_DICE_BUTTON,
   encounterRevealKey,
   hidden = false,
+  panelOpen = false,
   onActionReveal,
   encounter,
   inventory,
@@ -717,6 +718,8 @@ export function SolutionBlock({
   diceButtonAsset?: string;
   encounterRevealKey: string;
   hidden?: boolean;
+  /** Lore, Inventory, Skillbook or the map covers the picture: hide everything, the hovering set too. */
+  panelOpen?: boolean;
   /**
    * Called twice per choice: `phase: 'select'` when the player picks it, then
    * `phase: 'commit'` when the reveal timer fires. The server withholds rolls
@@ -1366,7 +1369,8 @@ export function SolutionBlock({
         style={{
           ...solutionActionsLayerStyle,
           // A committed set stays: its solutions show their rolls, then fly in.
-          opacity: hidden && !setCommitted ? 0 : 1,
+          // Not over Lore, Inventory, Skillbook or the map (Babuni, 2026-11-18).
+          opacity: panelOpen || (hidden && !setCommitted) ? 0 : 1,
           pointerEvents: hidden || !actionsReady ? 'none' : 'auto',
           transition: fadeTransition,
         }}

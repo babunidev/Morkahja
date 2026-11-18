@@ -817,6 +817,7 @@ export function EncounterImageBlock({
         />
       ) : null}
       <SolutionBlock
+        panelOpen={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
         diceButtonAsset={diceButtonAsset}
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}

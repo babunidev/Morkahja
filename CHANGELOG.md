@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-18 — A loss waits for the die; hovering rolls hide under panels (not yet released)
+
+- **Loss after the die (Babuni's report):** when a roll lost something, the lost essence flew into its slot while the rolled die was still flying into the encounter. Losses now start once the die (or the used solution) has flown in and vanished, as the rewards already did. File: `ResultBlock.tsx` (`spentFlightDurationMs`, used before `playLossRevealFlights`).
+- **Hovering rolls under panels (Babuni's report):** in an encounter needing several solutions, the committed set with its rolls stayed visible over Lore, Inventory, Skillbook and the map. The solution bar now hides completely while one of them is open (`panelOpen` in `SolutionBlock.tsx`, set by `EncounterImageBlock.tsx`).
+- **Verification:** client tests (48), the typecheck and the production build passed. Not yet watched in the game: Babuni's own local server was running and did not know the test account, so it was left alone.
+
 ## 2026-11-18 — Level-up reward choice (D-049, not yet released)
 
 - **Change (Babuni's design, D-049):** after the level-up roll the player chooses one of three rewards from the avatar's race and role types, shown in the solution bar under "Choose your reward" with the usual tooltips (hover, or long press on touch). The roll now adds one rolled reward per 5 on the d20 (none below 5, four with a 20, the fourth being a rare type-15 item); the rolled rewards and the pick then emerge together. The bots pick at random. Files: `server/src/services/encounterGenerator.ts` (`levelUpRolledRewardCount`, `levelUpChoiceIdsForAvatar`, the choice in the prepared outcome), `roomService.ts` (`chooseLevelUpReward`, Continue waits for the pick, stepping away keeps it open), `roomController.ts`, `roomRoutes.ts` (`POST /room/level-up/choice`), `types/encounter.ts`, `RoomParticipant.ts`, `shared/src/contracts.ts`, `client/src/api/http.ts`, `ResultBlock.tsx`, `EncounterImageBlock.tsx`, `server/scripts/bot-adventurers.ts`.
