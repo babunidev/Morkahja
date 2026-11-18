@@ -6,6 +6,8 @@
 
 - **Loss after the die (Babuni's report):** when a roll lost something, the lost essence flew into its slot while the rolled die was still flying into the encounter. Losses now start once the die (or the used solution) has flown in and vanished, as the rewards already did. File: `ResultBlock.tsx` (`spentFlightDurationMs`, used before `playLossRevealFlights`).
 - **Hovering rolls under panels (Babuni's report):** in an encounter needing several solutions, the committed set with its rolls stayed visible over Lore, Inventory, Skillbook and the map. The solution bar now hides completely while one of them is open (`panelOpen` in `SolutionBlock.tsx`, set by `EncounterImageBlock.tsx`).
+- **Rewards after the die (Babuni's report):** rewards also started to grow out while the die was still flying (they waited 80% of the flight). Rewards and losses now share one wait: the die's 0.7 s face, the whole 0.9 s flight, and for a solution set 0.12 s for each further icon. The level-up choices appear after the same full flight.
+- **Hover on the level-up choices (Babuni's report):** the three choices lacked the game's usual hover (lift, brighten, gold glow); they now use it like the solutions and rewards.
 - **Verification:** client tests (48), the typecheck and the production build passed. Not yet watched in the game: Babuni's own local server was running and did not know the test account, so it was left alone.
 
 ## 2026-11-18 — Level-up reward choice (D-049, not yet released)

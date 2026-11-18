@@ -46,6 +46,7 @@ import {
   SINGLE_DIE_FACE_MS,
   takeCommittedSingleDiceFlight,
   USED_SOLUTION_FLIGHT_MS,
+  USED_SOLUTION_STAGGER_MS,
   resultLossSequenceDurationMs,
   rewardFlyTargetKind,
   type LossBubbleTargetSpec,
@@ -1115,7 +1116,13 @@ export const ResultBlock = forwardRef(function ResultBlock(
     if (!spentFlew) {
       return 0;
     }
-    return setRollsPauseMs(encounterSnapshotId) + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0) + USED_SOLUTION_FLIGHT_MS;
+    // A set flies one icon after another; wait for the last one too.
+    const set = committedSolutionSetFor(encounterSnapshotId);
+    const flyingIcons = set ? set.picks.length + (set.diceFill ? 1 : 0) : 1;
+    return setRollsPauseMs(encounterSnapshotId)
+      + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0)
+      + USED_SOLUTION_FLIGHT_MS
+      + Math.max(0, flyingIcons - 1) * USED_SOLUTION_STAGGER_MS;
   }
 
   function itemTooltipContent(
@@ -1432,17 +1439,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     }
 
     let cancelled = false;
-    const singleDieFlew = resolutionAction === 'dice'
-      && !committedSolutionSetFor(encounterSnapshotId)
-      && committedActionFor(encounterSnapshotId) === 'dice';
-    const spentFlew = !readOnlyWitness
-      && !levelUpChoiceMadeRef.current
-      && Boolean(resolutionAction)
-      && (
-        (resolutionAction !== 'dice' && usedSolutions.length > 0)
-        || committedSolutionSetFor(encounterSnapshotId)?.diceFill === true
-        || singleDieFlew
-      );
+    // After a level-up choice the die flew long ago: no wait then.
+    const flightWaitMs = levelUpChoiceMadeRef.current ? 0 : spentFlightDurationMs();
 
     async function emerge(): Promise<void> {
       // The frame's bottom line counts down toward the rewards, through the
@@ -1455,11 +1453,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
           durationMs + CONTINUE_REVEAL_TOTAL_MS,
         );
       };
-      if (spentFlew) {
-        const pauseMs = setRollsPauseMs(encounterSnapshotId) + (singleDieFlew ? SINGLE_DIE_FACE_MS : 0);
-        startRewardTimer(pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) + REWARD_EMERGE_MS);
+      if (flightWaitMs > 0) {
+        // Babuni (2026-11-18): rewards grow out only once the die or the used
+        // solution is completely gone, so the two never cross.
+        startRewardTimer(flightWaitMs + REWARD_EMERGE_MS);
         await new Promise<void>((resolve) => {
-          window.setTimeout(resolve, pauseMs + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8));
+          window.setTimeout(resolve, flightWaitMs);
         });
       }
       await waitForNextPaint();
@@ -1512,7 +1511,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       return undefined;
     }
     const dieFlying = resolutionAction === 'dice' && committedActionFor(encounterSnapshotId) === 'dice';
-    const delayMs = dieFlying ? SINGLE_DIE_FACE_MS + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) : 0;
+    const delayMs = dieFlying ? SINGLE_DIE_FACE_MS + USED_SOLUTION_FLIGHT_MS : 0;
     const timer = window.setTimeout(() => setLevelUpChoiceShown(true), delayMs);
     return () => window.clearTimeout(timer);
   }, [encounterSnapshotId, levelUpChoicePending, resolutionAction, resultShown]);
@@ -1569,13 +1568,16 @@ export const ResultBlock = forwardRef(function ResultBlock(
               }}
               type="button"
             >
-              <img
-                alt=""
-                aria-hidden="true"
-                {...protectedImageProps}
-                src={solutionImagePath(choice.solution)}
-                style={rewardImageStyle}
-              />
+              {/* The game's usual hover: lift, brighten and glow (index.css). */}
+              <span className="morkahja-footer-button-visual" style={{ display: 'block' }}>
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  {...protectedImageProps}
+                  src={solutionImagePath(choice.solution)}
+                  style={rewardImageStyle}
+                />
+              </span>
             </button>
           );
         })}
