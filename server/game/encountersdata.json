@@ -4085,7 +4085,7 @@
     "mEncounterSolutiuonTypeB": 0,
     "mEncounterSolutiuonTypeC": 7,
     "mEncounterSolutiuonTypeD": 27,
-    "mEncounterText": "A low hum gathers at the center of a stone door in southern Keldor. Around it, carved faces look outward from a frame crowded with undeciphered script.\n\nRoots from an immense tree clasp the doorway. Its limbs disappear into the same mass of wood that encloses the heavy door, leaving no clear view of the space beyond. Vines cross the stone, but the faces retain their sharply worked features beneath the moss.\n\nAt the center, the magical lock brightens and subsides. The hum follows it, traveling faintly through the root-bound frame. Whatever passage lies inside remains concealed behind the unbroken stone.",
+    "mEncounterText": "A low, resonant hum emerges from an ancient stone doorway, half swallowed by the roots of an enormous tree.\n\nDeep in southern Keldor, the weathered gateway stands entwined with vines and moss. Strange faces watch from its carved frame, surrounded by delicate runes whose meanings have long been forgotten.\n\nThe great tree rises above it, its twisted roots clasping the stone like enormous fingers.\n\nAt the center of the door, a magical lock begins to glow.\n\nThe humming deepens.\n\nFor a fleeting moment, pale light travels through the surrounding inscriptions, illuminating their intricate patterns.\n\nThen the radiance fades.\n\nThe ancient door remains firmly sealed, its hidden passage concealed behind the silent stone.",
     "mEncounterTitle": "Sylvan Rune Gateway",
     "mEncounterType": 2,
     "mEncounterElement": "Nature",
