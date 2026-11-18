@@ -3689,7 +3689,7 @@
     "mEncounterSolutiuonTypeB": 6,
     "mEncounterSolutiuonTypeC": 5,
     "mEncounterSolutiuonTypeD": 13,
-    "mEncounterText": "A dying bough creaks above the narrow trail. Beneath it, a skull rests half buried in Keldor's underbrush, its lower edge hidden by old leaves.\n\nMore bones lie along both sides of the Wraithbone Pathway. Some remain close enough to suggest the fallen warriors they belonged to; others are scattered beneath roots and dead growth. Dense fog hangs over the treetops, admitting only a little light. The bough bends again without breaking. Its shadow moves across an exposed hand, then slips between the fingers. Ahead, the trail narrows among the dead trees, with pale fragments continuing beyond the last clear patch of ground.",
+    "mEncounterText": "A dead branch bends over the narrow trail, its brittle creaking carrying through the forest.\n\nBeneath it, a skull lies half-buried in Keldor's fallen leaves. Farther along, pale ribs and finger bones emerge among the roots. Some remains lie close together, as though the fallen warriors were never carried from the path.\n\nThick fog hangs beneath the treetops, admitting only a faint, grey light.\n\nThe branch creaks again.\n\nIts shadow passes over an exposed skeletal hand, slipping between the motionless fingers.\n\nBeyond, the trail narrows between lifeless trunks. More bones mark its edges, their pale outlines fading one by one into the mist.\n\nFarther ahead, the last visible fragments disappear beneath the tangled roots of the dead forest.",
     "mEncounterTitle": "Wraithbone Pathway",
     "mEncounterType": 2,
     "mEncounterElement": "Void",
