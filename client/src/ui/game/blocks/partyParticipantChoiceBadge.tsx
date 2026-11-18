@@ -80,8 +80,8 @@ const bigRollStyle: CSSProperties = {
   position: 'static',
   fontSize: 'clamp(40px, 11vw, 64px)',
   lineHeight: 1,
-  // Grows in after the roll numbers flew into the avatar, then breathes gently.
-  animation: 'morkahja-big-roll-grow 480ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both, morkahja-big-roll-pulse 2800ms ease-in-out 480ms infinite',
+  // Grows in after the roll numbers flew into the avatar, then stands still.
+  animation: 'morkahja-big-roll-grow 480ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both',
   textShadow: '0 0 14px rgba(255, 204, 102, 0.75), 0 3px 10px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9)',
 };
 
