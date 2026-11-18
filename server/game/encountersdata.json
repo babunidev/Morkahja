@@ -3645,7 +3645,7 @@
     "mEncounterSolutiuonTypeB": 6,
     "mEncounterSolutiuonTypeC": 5,
     "mEncounterSolutiuonTypeD": 13,
-    "mEncounterText": "A pale shape lies across the grey path. It resembles a rib cage until the light shifts; then one curved length seems to continue upward into a dead root.\n\nGnarled trees stand on either side, casting thin, bone-like shadows over the barren ground. Farther along lie other scattered forms, some plainly skeletal, some too closely mingled with the wood to distinguish. No green breaks the view. The air scarcely moves. Grey distance gathers between the trunks without revealing where the path ends. Beside the nearest remains, a branch-shadow lengthens across the ground, joining one pale shape to another until their outlines are difficult to separate.",
+    "mEncounterText": "A pale rib cage lies across the narrow path. Or perhaps it is merely a twisted root.\n\nDeep within Keldor, leafless trees stand over barren earth, their crooked branches casting skeletal shadows across the ground.\n\nThere is no birdsong. No rustling of leaves.\n\nAlong the trail, scattered bones mingle with dead wood, so closely entwined that their shapes become difficult to distinguish.\n\nA shaft of weak sunlight slips between the branches, briefly revealing the hollow curves of ancient remains.\n\nThen the light fades.\n\nBeyond them, the path disappears into a grey mist, where more pale fragments lie scattered beneath the trees.\n\nThe forest offers no sign of where the trail might end.",
     "mEncounterTitle": "Path of Despair",
     "mEncounterType": 2,
     "mEncounterElement": "Void",
