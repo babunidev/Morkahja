@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-18, 00:56 UTC (bot stuck rule; client unchanged at 0.9.0-beta.77)
+
+Approved by Babuni ("Of course, release it"). `main` at `dfcc262f`: the bots' stuck-room rule, on top of the Admin encounter edits 20086–20167 that were on GitHub but not yet in the local checkout (rebased onto them before pushing).
+
+- **Before:** backend `885f2b41`, frontend `20261117-033917`. The live `server/game/encountersdata.json` was dirty (last written 00:36 UTC) and its sha256 (`11be1669…`) equalled `origin/main` exactly, so nothing was live-only. Babuni reset it with `sudo -u morkahja git checkout`. Previous staging files moved to `prev-20261118-0053`.
+- **Checks before the release:** static game data verified; client production build passed and produced the live script unchanged (`index-uoDAD45A.js`). The full test suite was not run (the change is a script outside the server's sources). Uploads verified by `sha256sum -c` on the server.
+- **Release:** backup `20261118-005643` (113 avatars, 23 sessions, 79 devices, 113 inventories, 1 purchase, 340 achievement rows; sha256 `4fd8aacc56ab9e5a5b69d744955475cae91350fa9878a2612dd7e9936902ec67`). Backend fast-forwarded to `dfcc262f`, `npm ci` (259 packages), health gate and content endpoint passed, frontend release `20261118-005645` (same `index-uoDAD45A.js`). Public checks 200. API and bots online.
+- **Not done:** the backup was not restored into a throwaway database; downloading it was not authorised in this session.
+- **After:** three minutes after the start both Varrokh (`active_encounter/ready_to_continue`) and Thalyss (`active_encounter/resolved+continued`) logged that they were stuck alone in their own room. The rule reported it as intended; the rooms themselves still do not move.
+
 ## Production release — 2026-11-17, 03:39 UTC (0.9.0-beta.77, land plate, slot refill, flying die, no quick repeats)
 
 Approved by Babuni ("ship it, commit push and release to the server"). `main` at `885f2b41`: the plate names each encounter's own land (D-044), a spent slot refills from the same kind (D-045), a single die shows its roll and flies in (D-046), an encounter waits for three others before it returns (D-047), the version on the loading screen, and the weather test cycle off by default (dev server only, not in the build). The Admin encounter edits through 20085 (Bucolic Dale) went with it.

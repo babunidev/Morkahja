@@ -127,7 +127,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Merged into `main` (PR #24) and released backend and frontend together on 2026-11-11 (`a40a6c5c`).
 - [x] Bot adventurers online in production (D-012), with `morkahja-deploy bots-status|bots-start|bots-stop`.
 - [x] Decided: the bot adventurers stay unmarked (D-012); they appear in the activity feed like players. Their effect on achievements is not reviewed.
-- [ ] Bots leave their own room after 3 minutes without progress while another player is in it (2026-11-18): Thalyss had been stuck about 20 hours. Done locally, not yet released; after the release, check that Thalyss logs "played 7 rounds" again, or a "stuck" line naming the state.
+- [x] Bots log a stuck room after 3 minutes, and leave it when another player is in it (released 2026-11-18).
+- [ ] Varrokh and Thalyss stuck alone in rooms that stay at `active_encounter` after their choice (found 2026-11-18); cause not yet known.
 
 ## Encounter prose — 2026-11-16
 

@@ -2,11 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-18 — A bot stuck in its own room leaves and starts over (not yet released)
+## 2026-11-18 — A bot stuck in its own room leaves and starts over (released, server only)
 
 - **Problem:** on production Thalyss (the on-and-off bot) had not finished a 7-round session since at least 16 Nov 22:56 server time: no "played 7 rounds" line across two restarts and about 20 hours, and no error line either, so it was waiting in a room that never moved. Babuni remembers playing in its room earlier. A restart with `morkahja-deploy bots-start` on 18 Nov 00:38 UTC did not help (still no session 7 minutes later). The room itself was not inspected; reading production data was not authorised.
 - **Change (Babuni's direction: "make him leave and start over"):** Varrokh and Thalyss now watch their own room. When nothing visible (room state, everyone's choice and Continue) has changed for 3 minutes (`STUCK_MINUTES`) while another player is in it, the bot logs where it was stuck, leaves, and starts a new room; Thalyss also starts a new 7-round session. Alone, it only logs the stuck state once, because leaving a solo room just pauses it and the bot would come straight back. The 3 minutes count again after Thalyss's rest. File: `server/scripts/bot-adventurers.ts` (`leftStuckRoom`, `roomFingerprint`, shared with Sylvaen's help check).
 - **Verification (local backend, Thalyss only, verbose):** with the default 3 minutes, 6 rounds over two sessions and a rest played without the rule firing; with `STUCK_MINUTES=0.05` the solo report fired once per state and play went on. The leave-and-start-over path with another player in the room was **not** exercised; it uses the same leave calls as Sylvaen's "giving up and leaving", which works in production. The script is outside the server typecheck.
+- **Released** 2026-11-18 00:56 UTC from `dfcc262f` (backend and bots; the client is unchanged at 0.9.0-beta.77). **Found right after:** both Varrokh and Thalyss were stuck alone in their own rooms, which stay at `active_encounter` after the bot's choice (Varrokh `ready_to_continue`, Thalyss `resolved` with Continue pressed). So Varrokh was stuck too, and the cause is not a second player. Not yet fixed; the rooms were not inspected.
 
 ## 2026-11-17 — A spent slot refills from the same kind, a single die flies in, no quick repeats; 0.9.0-beta.77
 
