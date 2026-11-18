@@ -3843,7 +3843,7 @@
     "mEncounterSolutiuonTypeB": 40,
     "mEncounterSolutiuonTypeC": 39,
     "mEncounterSolutiuonTypeD": 21,
-    "mEncounterText": "A feathered crown catches a little light beneath Keldor's canopy. Below it, an armored guardian holds her ground while dark tendrils curl toward her slender, Aevis-like face.\n\nHer own magic meets them in a faint shimmer. The darkness recoils a short distance, gathers, and presses forward again. She takes a measured breath, one hand braced against the armor at her side. Its fine workmanship remains visible beneath the wear of her long ordeal.\n\nShe offers a quiet greeting. The words stay warm, though the shimmer weakens as she speaks. A feather trembles above her brow, and she raises her hand to hold the encroaching dark away once more.",
+    "mEncounterText": "A faint shimmer surrounds a solitary guardian beneath Keldor's dark canopy, holding back the black tendrils creeping through the forest.\n\nA delicate crown of feathers rests above her slender, Aevis-like features. Her finely crafted armor bears the marks of a long struggle.\n\nOne dark tendril reaches toward her face.\n\nShe raises her palm, and a gentle radiance drives it away. For an instant, the encroaching shadows dissolve into the surrounding mist.\n\nThen they gather again.\n\nThe guardian lifts her gaze and offers a quiet greeting, her voice surprisingly warm despite her weariness.\n\nA single feather trembles above her brow.\n\nAs the shimmering barrier begins to fade, she steadies her hand against the approaching darkness.",
     "mEncounterTitle": "Skyshard Guardian",
     "mEncounterType": 3,
     "mEncounterElement": "Void",
