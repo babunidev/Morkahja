@@ -2,11 +2,12 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-18 — Rooms stuck after the choice move on again (not yet released)
+## 2026-11-18 — Rooms stuck after the choice move on again (released, server only)
 
 - **Problem:** the backup of 18 Nov 00:56 UTC (restored into a throwaway `postgres:18` container; sha256 and row counts matched the server) shows Varrokh's room at `active_encounter` with Varrokh `ready_to_continue` and a prepared result since 16 Nov 11:54 UTC (beta.75), and Thalyss's room at `active_encounter` with Thalyss `resolved` and Continue pressed since 12 Nov 16:22 UTC. Both were alone, engaged and with nothing open. Running the current room code against that copy, the poll left both rooms as they were and Continue was refused (`INVALID_ROOM_STATE`), so nothing could ever move them again. Which older code path left them so was not found.
 - **Change:** `tickRoom`, which every poll of the active room runs, now moves a room that is still `active_encounter` while every engaged participant is past choosing (`ready_to_continue` or `resolved`) on to `waiting_continue`, inside a row-locked transaction; the usual rules then apply, so a room where everyone has pressed Continue advances at once. File: `server/src/services/roomService.ts` (`isStrandedActiveEncounter`, `releaseStrandedActiveEncounter`).
 - **Verification:** against the copy, Varrokh's room went to `waiting_continue` and his Continue started a new encounter; Thalyss's room went straight to a new encounter. New regression cases in `roomService.test.ts` for both shapes. Server tests (53), client tests (48) and the server typecheck passed. The restored copy was deleted afterwards. Thalyss is also still listed in seven abandoned rooms from 11–12 Nov; those are left alone.
+- **Released** 2026-11-18 01:36 UTC from `50c403d7` (client unchanged at 0.9.0-beta.77). Thalyss finished 7 rounds at 01:38:49 UTC; Varrokh logged no stuck line in the following five minutes.
 
 ## 2026-11-18 — A bot stuck in its own room leaves and starts over (released, server only)
 

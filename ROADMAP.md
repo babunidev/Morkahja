@@ -128,7 +128,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Bot adventurers online in production (D-012), with `morkahja-deploy bots-status|bots-start|bots-stop`.
 - [x] Decided: the bot adventurers stay unmarked (D-012); they appear in the activity feed like players. Their effect on achievements is not reviewed.
 - [x] Bots log a stuck room after 3 minutes, and leave it when another player is in it (released 2026-11-18).
-- [ ] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (2026-11-18): fixed locally, not yet released. After the release, Varrokh and Thalyss should log rounds again; which older code path stranded them is not known.
+- [x] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (released 2026-11-18; Thalyss and Varrokh play again). Which older code path stranded them is not known.
 - [ ] Thalyss is still listed in seven abandoned rooms from 11–12 November; decide whether old open rooms should be closed.
 
 ## Encounter prose — 2026-11-16
