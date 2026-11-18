@@ -3711,7 +3711,7 @@
     "mEncounterSolutiuonTypeB": 14,
     "mEncounterSolutiuonTypeC": 13,
     "mEncounterSolutiuonTypeD": 5,
-    "mEncounterText": "Pale light finds two hollows in a jagged rock, giving the stone a skull-like face. More such shapes line the pass, their dark cavities turned toward the narrow way through Keldor.\n\nA repugnant smell lingers beneath the dense fog. Dead trees rise among the rocks, offering tangled routes toward higher ledges, though several branches hang cracked near their joints. Below, loose soil gathers in sheltered pockets.\n\nThe pass holds hidden treasures, concealed among its heights and cursed ground. A small collapse of earth exposes a deeper recess beneath one rock. Above it, a broken branch turns slowly, scraping the stone with each breath of air.",
+    "mEncounterText": "A dry scraping sounds above the narrow pass, where a broken branch sways against the stone.\n\nJagged rocks rise through Keldor's dense fog, their weathered surfaces resembling enormous skulls. Hollow cavities stare down upon the trail, while dead trees stretch their twisted limbs between the cliffs.\n\nThe air carries a foul, lingering smell of decay.\n\nHigh above, tangled roots cling to narrow ledges, offering precarious passages through the cursed heights. Old tales speak of treasures hidden among these treacherous formations.\n\nSuddenly, a little earth crumbles from beneath one of the skull-shaped rocks.\n\nAs the soil falls away, a narrow recess appears in the stone, revealing a sheltered foothold leading toward the higher cliffs.\n\nOverhead, the broken branch scrapes against the rock once more.",
     "mEncounterTitle": "Skullstone Pass",
     "mEncounterType": 2,
     "mEncounterElement": "Nature",
