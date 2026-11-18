@@ -2,7 +2,7 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-18 — Every use hovers first; roll numbers fly into the avatar; "Make your choice" banner (not yet released)
+## 2026-11-18 — Every use hovers first; roll numbers fly into the avatar; "Make your choice" banner; 0.9.0-beta.78
 
 - **Hover before the flight (Babuni's direction):** a single solution or a single die now rises from its place and hovers with its roll for the time a set's last pick does (0.3 s rise, 0.7 s read), then flies into the encounter. Rewards and losses wait for it. Files: `rewardFlyAnimation.ts` (`riseAndHover`), `ResultBlock.tsx` (`flyAfterHover`, `spentFlightDurationMs`).
 - **Numbers into the avatar (Babuni's direction):** as solutions or dice fly into the encounter, their roll numbers fly down into the middle of the avatar and shrink away (0.7 s); only then does the total grow on the avatar. A set's numbers go together. From the commit until they arrive the own avatar holds its roll back, at most 5 s (`avatarRollHold.ts`, which replaces `levelUpRollHold.ts`; `flyRollNumbersToAvatar`, `hoverRollNumbers`). The own avatar no longer shows the chosen die or solution before the roll; party members still do.
@@ -11,6 +11,7 @@
 - **"Make your choice" banner (Babuni's design):** replaces the "Choose your reward" title. A slim deep-red (`#330000`) band runs across the picture from frame to frame, pointed where it meets the frame, and rises 45° into a plate in the middle like the region plate; three gold lines run around it (thick on the edge, broken, thin further out) and meet the frame at 45°. Files: new `ChoiceBanner.tsx`; `encounterFrameGeometry.ts` (`bannerLine`, `bannerFieldPath`).
 - **Found while testing:** the level-up hand-over to the result never happened in development, because the bar's "still mounted" flag was cleared by React's test mount and its own state change cancelled the hand-over; both fixed before commit.
 - **Verification:** client tests (48), server tests (55), typecheck and build passed. In the local game (own servers on ports 3100/5174, test account ChoiceTester), frame by frame: the plain die hovering with 6, flying, its 6 travelling into the avatar and the big 6 growing; a single solution doing the same with 13; a level-up pick with the mirrored animation, its 20 flying into the avatar and four rolled rewards growing out around it (the server's prepared result matched); the banner up close. Not watched: a solution set's numbers flying into the avatar, phone size, a party member's view.
+- **Version 0.9.0-beta.78** (Babuni approved the release on 2026-11-18). It carries everything since `52952f0e`: the level-up choice (D-049) with its pick-first order, the avatar roll, the hover and number flights, the banner, and the timing fixes for losses and rewards. Patch notes in `PatchNotesOverlay.tsx`.
 
 ## 2026-11-18 — Level-up: pick first, the pick rolls; the roll stands big on the avatar (not yet released)
 

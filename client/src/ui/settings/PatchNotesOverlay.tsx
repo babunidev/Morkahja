@@ -29,6 +29,18 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-78',
+    version: '0.9.0-beta.78',
+    period: '18 Nov 2026',
+    notes: [
+      'A level-up now lets you choose your reward: pick one of three, and your roll decides how many more come with it. A 20 brings something rare.',
+      'Every solution and every die rises and hovers with its roll before it flies into the encounter, and the number flies into your avatar, where your roll now stands big.',
+      'What you used and how the roll came together are in your avatar\'s tooltip.',
+      'Losses and rewards wait until the roll has flown in, and hovering rolls hide behind Lore, Inventory, the Skillbook and the map.',
+      'Rooms that nobody can return to are cleared away.',
+    ],
+  },
+  {
     id: 'beta-77',
     version: '0.9.0-beta.77',
     period: '17 Nov 2026',
