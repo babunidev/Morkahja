@@ -3953,7 +3953,7 @@
     "mEncounterSolutiuonTypeB": 34,
     "mEncounterSolutiuonTypeC": 33,
     "mEncounterSolutiuonTypeD": 39,
-    "mEncounterText": "Twilight colors move across a young Aevis scholar's skin and hair as she watches Keldor's corrupted wildlife. Her head follows a disturbance in the growth, then stills while the forest quiets around it.\n\nShe stands lightly beneath the oppressive canopy, listening until the movement has passed. Only then does she turn. Her explanation is brief: part of her food supply has been lost, and the research is taking longer than her remaining rations allow. Weariness shows in the pause between her words. Another sound comes from the undergrowth. She looks toward it at once, but this time her shoulders lower before she resumes her vigil.",
+    "mEncounterText": "Something stirs beneath Keldor's tangled undergrowth.\n\nA young Aevis scholar leans forward, her curious eyes following the movement until it disappears among the roots.\n\nFaint twilight colors shimmer across her delicate features. She waits patiently, listening to the faint sounds of the forest's corrupted creatures.\n\nOnly when the rustling fades does she turn.\n\nHer greeting is gentle, though weariness lingers in her voice. She explains that her observations have taken longer than expected, and much of her food has been lost along the way.\n\nA quiet growl emerges from the nearby thicket.\n\nThe scholar immediately looks back, her exhaustion momentarily forgotten.\n\nA crooked branch trembles above the dark vegetation.\n\nShe remains perfectly still, watching for another glimpse of the elusive creature.",
     "mEncounterTitle": "Skylore Scholar",
     "mEncounterType": 3,
     "mEncounterElement": "Spirit",
