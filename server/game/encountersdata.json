@@ -3931,7 +3931,7 @@
     "mEncounterSolutiuonTypeB": 34,
     "mEncounterSolutiuonTypeC": 33,
     "mEncounterSolutiuonTypeD": 21,
-    "mEncounterText": "A crude splint scrapes against a root at Keldor's edge. The young Verdani woman draws her injured ankle closer and leans beneath the dead trees, keeping her small, horned head below the surrounding brush.\n\nHer account comes in short pieces: capture by Ogrus, a chance to escape, the flight through the forest. She pauses often to listen behind her. Hunger has left her face drawn, and each adjustment of the splint tightens her mouth.\n\nBeyond the trees, the ground opens toward the forest's fringe. She looks at that clearer space, then down at the ankle. Her hands remain around the rough bindings while the branches creak overhead.",
+    "mEncounterText": "A muffled cry breaks the stillness beneath Keldor's dying trees.\n\nA young Verdani woman sits concealed among the roots, clutching an injured ankle bound with a crude wooden splint. Her small horns barely rise above the undergrowth.\n\nShe speaks in hurried fragments, telling of her capture by the Ogrus and a desperate escape through the forest.\n\nThen she falls silent, listening.\n\nHunger and exhaustion have hollowed her gentle features. Even the smallest movement sends a tremor through her injured leg.\n\nBeyond the trees, the forest begins to thin, revealing a narrow stretch of open ground.\n\nShe gazes toward it for a moment.\n\nThen she looks down at her splint and carefully tightens its loose bindings, wincing beneath the strain.",
     "mEncounterTitle": "Fringebound Escapee",
     "mEncounterType": 3,
     "mEncounterElement": "Void",
