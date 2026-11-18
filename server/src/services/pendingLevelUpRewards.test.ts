@@ -20,6 +20,8 @@ import {
   leaveRoom,
   submitChoice,
   submitContinue,
+  processRoomAway,
+  chooseLevelUpReward,
 } from './roomService.js';
 import { loadEncounterRoom, saveEncounterRoom } from './roomPersistence.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
@@ -197,7 +199,19 @@ await ensureAvatar(session.playerId, avatarId, {
     updatedAt: Date.now(),
   });
 
-  await submitChoice(session.playerId, avatarId, 'dice');
+  const levelUpRolled = await submitChoice(session.playerId, avatarId, 'dice');
+  // D-049: Continue waits for one of the three offered rewards.
+  const offered = levelUpRolled.participants.find((p) => p.playerId === session.playerId)?.preparedResult?.levelUpChoiceIds ?? [];
+  assert.equal(offered.length, 3, 'a level-up offers three rewards');
+  await assert.rejects(submitContinue(session.playerId, avatarId), /level-up reward/);
+  // A refresh (away) keeps the open choice for the player's return.
+  await processRoomAway(session.playerId, avatarId);
+  const afterAway = await getActiveRoomForPlayer(session.playerId, avatarId);
+  assert.equal(afterAway?.roomState, 'system_event', 'stepping away does not take a level-up reward');
+  const stillOffered = afterAway?.participants.find((p) => p.playerId === session.playerId)?.preparedResult;
+  assert.deepEqual(stillOffered?.levelUpChoiceIds, offered);
+  assert.equal(stillOffered?.levelUpChosenId, undefined);
+  await chooseLevelUpReward(session.playerId, avatarId, offered[1]!);
   const afterLevelUpRoll = await submitContinue(session.playerId, avatarId);
   // Current solo system-event Continue commits the reward and advances in one
   // action. There is no second waiting_continue acknowledgement.

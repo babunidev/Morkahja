@@ -13,6 +13,7 @@ import {
   setSlotStateController,
   submitRoomChoiceController,
   submitRoomContinueController,
+  chooseLevelUpRewardController,
   submitRoomFocusController,
   submitRoomSelectionController,
   submitRoomSetDiceController,
@@ -38,6 +39,7 @@ roomRoutes.post('/set-pick', submitRoomSetPickController);
 roomRoutes.post('/set-dice', submitRoomSetDiceController);
 roomRoutes.post('/focus', submitRoomFocusController);
 roomRoutes.post('/continue', submitRoomContinueController);
+roomRoutes.post('/level-up/choice', chooseLevelUpRewardController);
 roomRoutes.post('/lore-gem/activate', activateRoomLoreGemController);
 roomRoutes.post('/help/request', requestHelpController);
 roomRoutes.post('/help/respond', respondHelpController);

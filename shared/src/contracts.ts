@@ -442,6 +442,10 @@ export interface ParticipantResolutionSummaryDto {
   diceFillRolls?: number[];
   /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
   rewardChargeBonus?: { solutionId: number; charges: number };
+  /** Level-up (D-049): the three rewards to choose from, after the roll. */
+  levelUpChoiceIds?: number[];
+  /** Level-up (D-049): the chosen reward, then also in `rewards`. */
+  levelUpChosenId?: number;
 }
 
 export interface RoomSystemEventDto {
@@ -476,6 +480,10 @@ export interface ParticipantPreparedResultDto {
   diceFillRolls?: number[];
   /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
   rewardChargeBonus?: { solutionId: number; charges: number };
+  /** Level-up (D-049): the three rewards to choose from, after the roll. */
+  levelUpChoiceIds?: number[];
+  /** Level-up (D-049): the chosen reward, then also in `rewards`. */
+  levelUpChosenId?: number;
 }
 
 export interface RoomParticipantDto {

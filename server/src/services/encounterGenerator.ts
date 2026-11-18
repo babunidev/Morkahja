@@ -348,14 +348,14 @@ export function replaceLegacyPercentRolls<T extends EncounterSnapshot>(snapshot:
   }
 
   const rolls = generateSnapshotRolls(snapshot.encounterDifficulty);
-  const rewardIds = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
-    ? []
-    : snapshot.rewardIds;
+  const isLevelUp = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID;
+  const rewardIds = isLevelUp ? [] : snapshot.rewardIds;
 
   return {
     ...snapshot,
     ...rolls,
     rewardIds,
+    ...(isLevelUp ? { levelUpChoiceIds: undefined } : {}),
     rollTotals: true,
   };
 }
@@ -407,11 +407,13 @@ export function buildEncounterSnapshot(
 ): EncounterSnapshot {
   const createdAt = Date.now();
   const rolls = generateSnapshotRolls(encounter.mEncounterDifficulty);
-  const rewardIds = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+  const isLevelUp = encounter.mEncounterID === LEVEL_UP_ENCOUNTER_NUMERIC_ID;
+  const rewardIds = isLevelUp
     ? levelUpRewardIdsForSnapshot(avatar, rolls.rollE)
     : randomRewardsForEncounter(encounter);
 
   return {
+    ...(isLevelUp ? { levelUpChoiceIds: levelUpChoiceIdsForAvatar(avatar, rewardIds) } : {}),
     snapshotId: crypto.randomUUID(),
     playerId,
     avatarId,
@@ -436,7 +438,10 @@ export function withPrecomputedSnapshotRewards(
   const hasRewardIds = Array.isArray(snapshot.rewardIds);
   const hasProsperityReward = 'prosperityRewardId' in snapshot;
 
-  if (hasRewardIds && hasProsperityReward) {
+  const needsLevelUpChoices = snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+    && snapshot.levelUpChoiceIds === undefined
+    && avatar !== undefined;
+  if (hasRewardIds && hasProsperityReward && !needsLevelUpChoices) {
     return snapshot;
   }
 
@@ -451,6 +456,9 @@ export function withPrecomputedSnapshotRewards(
 
   return {
     ...snapshot,
+    ...(snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID && snapshot.levelUpChoiceIds === undefined
+      ? { levelUpChoiceIds: levelUpChoiceIdsForAvatar(avatar, rewardIds) }
+      : {}),
     rewardIds: hasRewardIds && snapshot.encounterId !== LEVEL_UP_ENCOUNTER_NUMERIC_ID
       ? snapshot.rewardIds
       : rewardIds,
@@ -694,13 +702,6 @@ function randomSolutionType15Item(): number | null {
   return randomSolutionByPredicate((solution) => solution.mSolutionType === 15);
 }
 
-function levelUpFortuneRewards(avatar: AvatarDocument): number[] {
-  return [
-    ...randomSolutionsByRewardType(raceRewardTypeForAvatar(avatar), 2),
-    ...randomSolutionsByRewardType(roleRewardTypeForAvatar(avatar), 2),
-  ];
-}
-
 function applyLevelUpInventoryChanges(
   inventory: AvatarInventory,
   rewardIds: number[],
@@ -734,41 +735,67 @@ function levelUpRewardIdsForSnapshot(
     return [];
   }
 
-  return levelUpRewards(avatar, interpretRoll(rollE));
+  return levelUpRewards(avatar, rollE);
 }
 
-function levelUpRewards(
-  avatar: AvatarDocument,
-  selectedRollOutcome: RollOutcome | null,
-): number[] {
+/** Level-up choice (D-049): how many rewards the roll adds to the chosen one. One per 5 on the d20, at most 4. */
+export function levelUpRolledRewardCount(roll: number): number {
+  if (!Number.isFinite(roll)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(LEVEL_UP_MAX_ROLLED_REWARDS, Math.floor(roll / 5)));
+}
+
+export const LEVEL_UP_MAX_ROLLED_REWARDS = 4;
+export const LEVEL_UP_CHOICE_COUNT = 3;
+
+/**
+ * Rolled level-up rewards (D-049), alternating race and role:
+ * 1 = race; 2 = race + role; 3 = two race + role; 4 (a 20) = those three
+ * and one rare type-15 item (another role reward if none exists).
+ */
+function levelUpRewards(avatar: AvatarDocument, roll: number): number[] {
   const raceType = raceRewardTypeForAvatar(avatar);
   const roleType = roleRewardTypeForAvatar(avatar);
-
-  switch (selectedRollOutcome) {
-    case 'Misery':
-      return randomSolutionsByRewardType(raceType, 1);
-    case 'Hardship':
-      return [
-        ...randomSolutionsByRewardType(raceType, 1),
-        ...randomSolutionsByRewardType(roleType, 1),
-      ];
-    case 'Disengage':
-      return [
-        ...randomSolutionsByRewardType(raceType, 2),
-        ...randomSolutionsByRewardType(roleType, 1),
-      ];
-    case 'Fortune':
-      return levelUpFortuneRewards(avatar);
-    case 'Prosperity': {
-      const type15Item = randomSolutionType15Item();
-      return [
-        ...levelUpFortuneRewards(avatar),
-        ...(type15Item === null ? [] : [type15Item]),
-      ];
-    }
-    default:
-      return randomSolutionsByRewardType(raceType, 1);
+  const count = levelUpRolledRewardCount(roll);
+  const rewards: number[] = [];
+  if (count >= 1) rewards.push(...randomSolutionsByRewardType(raceType, 1));
+  if (count >= 2) rewards.push(...randomSolutionsByRewardType(roleType, 1));
+  if (count >= 3) rewards.push(...randomSolutionsByRewardType(raceType, 1));
+  if (count >= 4) {
+    const rare = randomSolutionType15Item();
+    rewards.push(...(rare === null ? randomSolutionsByRewardType(roleType, 1) : [rare]));
   }
+  return rewards;
+}
+
+/**
+ * The three level-up rewards the player chooses one of (D-049): different
+ * rewards from the avatar's race and role types, avoiding the rolled ones
+ * while enough others exist.
+ */
+export function levelUpChoiceIdsForAvatar(
+  avatar: AvatarDocument | undefined,
+  rolledRewardIds: readonly number[] = [],
+): number[] {
+  if (!avatar) {
+    return [];
+  }
+  const raceType = raceRewardTypeForAvatar(avatar);
+  const roleType = roleRewardTypeForAvatar(avatar);
+  const candidates = Object.values(getSolutionMap())
+    .filter((solution) => solution.mSolutionRewardType === raceType || solution.mSolutionRewardType === roleType)
+    .map((solution) => solution.mSolutionID);
+  const unique = [...new Set(candidates)];
+  const fresh = unique.filter((id) => !rolledRewardIds.includes(id));
+  const pool = fresh.length >= LEVEL_UP_CHOICE_COUNT ? fresh : unique;
+  const choices: number[] = [];
+  const remaining = [...pool];
+  while (choices.length < LEVEL_UP_CHOICE_COUNT && remaining.length > 0) {
+    const [picked] = remaining.splice(randomInt(0, remaining.length - 1), 1);
+    choices.push(picked!);
+  }
+  return choices;
 }
 
 function isDeathEncounterFailureOutcome(outcome: RollOutcome | null): boolean {
@@ -872,7 +899,7 @@ function normalizeSystemEncounterResolution(
   if (snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
     const rewards = snapshot.rewardIds.length > 0
       ? snapshot.rewardIds
-      : levelUpRewards(avatar, selectedRollOutcome);
+      : levelUpRewards(avatar, resolution.selectedRoll);
 
     return {
       ...resolution,
@@ -1409,6 +1436,7 @@ function computeParticipantOutcome(
   progression: ReturnType<typeof createInitialProgression>,
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
+  options: { levelUpChoiceId?: number } = {},
 ): PrepareParticipantOutcomeResult {
   const snapshot = withPrecomputedSnapshotRewards(
     replaceLegacyPercentRolls(encounterSnapshot),
@@ -1448,6 +1476,7 @@ function computeParticipantOutcome(
     ? 0
     : experienceForSelectedRollOutcome(selectedRollOutcome);
   let nextInventory: AvatarInventory;
+  let levelUpReveal: ReturnType<typeof levelUpChoiceFor> | null = null;
 
   if (snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
     const deathOutcome = inventoryAfterDeathEncounter(
@@ -1459,6 +1488,13 @@ function computeParticipantOutcome(
     nextInventory = deathOutcome.nextInventory;
     resolution = withDeathEncounterRewards(resolution, deathOutcome.rewardIds);
   } else if (snapshot.encounterId === LEVEL_UP_ENCOUNTER_NUMERIC_ID) {
+    // D-049: the commit always holds one chosen reward; until the player
+    // chooses it is the first option, so leaving early still gives one.
+    const levelUpChoice = levelUpChoiceFor(snapshot, options.levelUpChoiceId);
+    if (levelUpChoice.committedId !== undefined) {
+      resolution = { ...resolution, rewards: [...resolution.rewards, levelUpChoice.committedId] };
+    }
+    levelUpReveal = levelUpChoice;
     nextInventory = applyLevelUpInventoryChanges(
       inventory,
       resolution.rewards,
@@ -1565,11 +1601,32 @@ function computeParticipantOutcome(
     updatedAvatar: finalAvatar,
   };
 
+  const preparedResult = preparedResultFromResolve(resolveResult);
+  if (levelUpReveal && levelUpReveal.options.length > 0) {
+    preparedResult.levelUpChoiceIds = levelUpReveal.options;
+    if (levelUpReveal.chosenId === undefined) {
+      // Not chosen yet: the player sees only the rolled rewards.
+      preparedResult.rewards = preparedResult.rewards.slice(0, -1);
+    } else {
+      preparedResult.levelUpChosenId = levelUpReveal.chosenId;
+    }
+  }
+
   return {
     ...resolveResult,
-    preparedResult: preparedResultFromResolve(resolveResult),
+    preparedResult,
     preparedCommit,
   };
+}
+
+/** The level-up choice for a snapshot: its options, the player's valid pick, and what the commit holds. */
+function levelUpChoiceFor(
+  snapshot: EncounterSnapshot,
+  requestedId: number | undefined,
+): { options: number[]; chosenId?: number; committedId?: number } {
+  const options = snapshot.levelUpChoiceIds ?? [];
+  const chosenId = requestedId !== undefined && options.includes(requestedId) ? requestedId : undefined;
+  return { options, chosenId, committedId: chosenId ?? options[0] };
 }
 
 /**
@@ -1581,6 +1638,7 @@ export async function prepareParticipantOutcome(
   avatarId: string,
   encounterSnapshot: EncounterSnapshot,
   action: PlayerEncounterAction,
+  options: { levelUpChoiceId?: number } = {},
 ): Promise<PrepareParticipantOutcomeResult> {
   // The transaction's row-locked reads share a single client.
   const avatar = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
@@ -1607,6 +1665,7 @@ export async function prepareParticipantOutcome(
     progression,
     encounterSnapshot,
     action,
+    options,
   );
 }
 

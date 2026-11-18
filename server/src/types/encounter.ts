@@ -78,6 +78,8 @@ export interface EncounterSnapshot {
   // Rewards are selected at encounter creation, then conditionally granted.
   rewardIds: number[];
   prosperityRewardId: number | null;
+  /** Level-up only (D-049): the three rewards the player chooses one of. Absent on older snapshots. */
+  levelUpChoiceIds?: number[];
 
   resolved: boolean;
   state: EncounterSnapshotState;

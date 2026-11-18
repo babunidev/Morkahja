@@ -555,7 +555,22 @@ export async function sweepAbandonedRooms(
 ): Promise<AbandonedRoomSweep> {
   await ensureSchema();
   const cutoff = (options.now ?? Date.now()) - ABANDONED_ROOM_DAYS * 24 * 60 * 60 * 1000;
+  // One pass: each avatar's newest open room (grouped once, then hash-joined),
+  // so the sweep stays linear in the number of rooms.
   const classified = `
+    WITH members AS (
+      SELECT participant->>'playerId' AS player_id,
+             participant->>'avatarId' AS avatar_id,
+             COALESCE((r.data->>'updatedAt')::bigint, 0) AS updated_at
+      FROM encounter_rooms r,
+           jsonb_array_elements(COALESCE(r.data->'participants', '[]'::jsonb)) AS participant
+      WHERE r.data->>'roomState' <> 'closed'
+    ),
+    newest AS (
+      SELECT player_id, avatar_id, max(updated_at) AS updated_at
+      FROM members
+      GROUP BY player_id, avatar_id
+    )
     SELECT r.id,
       CASE
         WHEN r.data->>'roomState' = 'closed' THEN 'closed'
@@ -566,18 +581,14 @@ export async function sweepAbandonedRooms(
             ON a.player_id = participant->>'playerId' AND a.id = participant->>'avatarId'
           WHERE COALESCE(a.data->>'status', 'active') <> 'deceased'
         ) THEN 'withoutLivingAvatar'
-        WHEN jsonb_array_length(r.data->'participants') = 1 AND EXISTS (
-          SELECT 1
-          FROM encounter_rooms n, jsonb_array_elements(n.data->'participants') AS other
-          WHERE n.id <> r.id
-            AND n.data->>'roomState' <> 'closed'
-            AND COALESCE((n.data->>'updatedAt')::bigint, 0) > COALESCE((r.data->>'updatedAt')::bigint, 0)
-            AND other->>'playerId' = r.data->'participants'->0->>'playerId'
-            AND other->>'avatarId' = r.data->'participants'->0->>'avatarId'
-        ) THEN 'superseded'
+        WHEN jsonb_array_length(r.data->'participants') = 1
+          AND COALESCE((r.data->>'updatedAt')::bigint, 0) < n.updated_at THEN 'superseded'
         WHEN COALESCE((r.data->>'updatedAt')::bigint, 0) < $1 THEN 'untouched'
       END AS reason
-    FROM encounter_rooms r`;
+    FROM encounter_rooms r
+    LEFT JOIN newest n
+      ON n.player_id = r.data->'participants'->0->>'playerId'
+     AND n.avatar_id = r.data->'participants'->0->>'avatarId'`;
   const result = options.dryRun
     ? await pool.query<{ reason: string; count: string }>(
       `SELECT reason, count(*) AS count FROM (${classified}) c WHERE reason IS NOT NULL GROUP BY reason`,

@@ -24,6 +24,7 @@ import {
   submitSetDice,
   submitSetPick,
   submitContinue,
+  chooseLevelUpReward,
   submitSelection,
 } from '../services/roomService.js';
 import { activateRoomLoreGem, LoreGemError } from '../services/loreGemService.js';
@@ -368,6 +369,28 @@ export async function submitRoomContinueController(
     const { playerId } = requireAuth(req);
     const avatarId = requireAvatarId(req);
     const room = await submitContinue(playerId, avatarId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+export async function chooseLevelUpRewardController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const avatarId = requireAvatarId(req);
+    const rewardId = (req.body as Record<string, unknown>).rewardId;
+    if (typeof rewardId !== 'number' || !Number.isInteger(rewardId)) {
+      res.status(400).json({ error: 'INVALID_LEVEL_UP_CHOICE' });
+      return;
+    }
+    const room = await chooseLevelUpReward(playerId, avatarId, rewardId);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
     });

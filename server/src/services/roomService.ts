@@ -1766,6 +1766,11 @@ async function resolveSystemEventLeftByActor(roomId: string, playerId: string): 
   ) {
     return;
   }
+  // Level-up (D-049): stepping away (a refresh, a paused solo room) keeps an
+  // open reward choice waiting for the player's return instead of taking one.
+  if (levelUpChoicePending(actor)) {
+    return;
+  }
   const resolved = await tryResolveSystemEventIfReady(roomId);
   if (
     resolved
@@ -2918,6 +2923,71 @@ async function applyContinuePressInTransaction(
   return working;
 }
 
+/** Level-up (D-049): the result is prepared and offers a choice the player has not made yet. */
+function levelUpChoicePending(participant: RoomParticipant): boolean {
+  const result = participant.preparedResult;
+  return !!result?.levelUpChoiceIds?.length && result.levelUpChosenId === undefined;
+}
+
+/**
+ * Level-up (D-049): the acting player picks one of the three offered rewards.
+ * The prepared result is prepared again with that reward added; the roll and
+ * the rolled rewards stay, because they are fixed in the encounter snapshot.
+ */
+export async function chooseLevelUpReward(
+  playerId: string,
+  avatarId: string,
+  rewardId: number,
+): Promise<EncounterRoom> {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
+    throw new RoomError('No active room', 404, 'NO_ROOM');
+  }
+
+  return withDocumentTransaction(async (transaction) => {
+    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState !== 'system_event') {
+      throw new RoomError('No level-up to choose for', 409, 'INVALID_ROOM_STATE');
+    }
+    requireCurrentSystemEventActor(room, playerId);
+    const participant = findParticipant(room, playerId);
+    if (!participant || participant.choiceState !== 'ready_to_continue' || !participant.selectedAction) {
+      throw new RoomError('Roll first', 409, 'NOT_READY_TO_CHOOSE');
+    }
+    if (!levelUpChoicePending(participant)) {
+      throw new RoomError('The level-up reward is already chosen', 409, 'LEVEL_UP_ALREADY_CHOSEN');
+    }
+    if (!participant.preparedResult!.levelUpChoiceIds!.includes(rewardId)) {
+      throw new RoomError('Not one of the offered rewards', 400, 'INVALID_LEVEL_UP_CHOICE');
+    }
+
+    const prepared = await prepareParticipantOutcome(
+      transaction,
+      playerId,
+      participant.avatarId,
+      snapshotForParticipant(room, participant),
+      participant.selectedAction,
+      { levelUpChoiceId: rewardId },
+    );
+    const updated: EncounterRoom = {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry.playerId === playerId
+          ? {
+              ...entry,
+              preparedResult: withRoomLoreGemOnResolutionSummary(room, entry, prepared.preparedResult),
+              preparedCommit: prepared.preparedCommit,
+              lastInteractionAt: nowMs(),
+            }
+          : entry,
+      ),
+      updatedAt: nowMs(),
+    };
+    await transaction.setEncounterRoom(roomId, updated);
+    return updated;
+  });
+}
+
 export async function submitContinue(playerId: string, avatarId: string): Promise<EncounterRoom> {
   const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
   if (!roomId) {
@@ -2940,6 +3010,9 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
       !actor.preparedResult
     ) {
       throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
+    }
+    if (levelUpChoicePending(actor)) {
+      throw new RoomError('Choose a level-up reward first', 409, 'LEVEL_UP_CHOICE_REQUIRED');
     }
 
     const resolved = await tryResolveSystemEventIfReady(roomId);

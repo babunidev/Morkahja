@@ -8,7 +8,8 @@ import type {
   ParticipantResolutionSummaryDto,
   RoomStateDto,
 } from '../../../api/http.js';
-import { activateRoomLoreGem, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick } from '../../../api/http.js';
+import {
+  activateRoomLoreGem, chooseLevelUpReward, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick } from '../../../api/http.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import InventoryBlock from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
@@ -804,6 +805,15 @@ export function EncounterImageBlock({
           usedSolutionIds={usedSolutionIds}
           lostSolutionIds={serverResolution?.lostInventorySolutions ?? []}
           onItemCollected={onItemCollected}
+          levelUpChoiceIds={
+            isSystemEventActor && serverResolution?.levelUpChosenId === undefined
+              ? serverResolution?.levelUpChoiceIds
+              : undefined
+          }
+          onChooseLevelUpReward={async (rewardId) => {
+            const room = await chooseLevelUpReward(avatarId, rewardId);
+            onRoomSnapshot?.(room);
+          }}
         />
       ) : null}
       <SolutionBlock

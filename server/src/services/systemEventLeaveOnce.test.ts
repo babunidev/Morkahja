@@ -14,6 +14,7 @@ import {
   getActiveRoomForPlayer,
   leaveAllRoomsForPlayer,
   processRoomAway,
+  chooseLevelUpReward,
   submitChoice,
   submitContinue,
 } from './roomService.js';
@@ -48,7 +49,10 @@ async function levelUpResolutions(playerId: string): Promise<number> {
 }
 
 /** A player whose next successful encounter levels them up, left in the level-up event with a choice made. */
-async function playerInLevelUpEventWithChoiceMade(label: string): Promise<{ playerId: string; avatarId: string }> {
+async function playerInLevelUpEventWithChoiceMade(
+  label: string,
+  chooseReward = true,
+): Promise<{ playerId: string; avatarId: string }> {
   const identity = generateKeyPairSync('ec', { namedCurve: 'P-256' });
   const publicKey = JSON.stringify(identity.publicKey.export({ format: 'jwk' }));
   const session = await bootstrapTestSession(identity, publicKey, `${label}-${randomUUID().slice(0, 8)}`);
@@ -109,7 +113,13 @@ async function playerInLevelUpEventWithChoiceMade(label: string): Promise<{ play
   assert.equal(levelUpRoom.systemEvent?.queue[0]?.encounterId, LEVEL_UP_ENCOUNTER_NUMERIC_ID);
 
   await readyForAction(levelUpRoom.roomId);
-  await submitChoice(session.playerId, avatarId, 'dice');
+  const rolled = await submitChoice(session.playerId, avatarId, 'dice');
+  if (chooseReward) {
+    // D-049: the roll offers three rewards; the player takes one.
+    const offered = rolled.participants.find((p) => p.playerId === session.playerId)?.preparedResult?.levelUpChoiceIds ?? [];
+    assert.equal(offered.length, 3);
+    await chooseLevelUpReward(session.playerId, avatarId, offered[0]!);
+  }
   return { playerId: session.playerId, avatarId };
 }
 
@@ -140,6 +150,28 @@ await assertResolvedOnceAndMovedOn(leaver, 'leaving the solo adventure');
 const away = await playerInLevelUpEventWithChoiceMade('LevelUpAway');
 await processRoomAway(away.playerId, away.avatarId);
 await assertResolvedOnceAndMovedOn(away, 'going away (reload or hidden tab)');
+
+// D-049: with the reward still to choose, leaving or going away keeps the
+// choice for the return; it then resolves exactly once.
+for (const [label, stepAway] of [
+  ['LevelUpLeaverChoosing', (player: { playerId: string; avatarId: string }) => leaveAllRoomsForPlayer(player.playerId)],
+  ['LevelUpAwayChoosing', (player: { playerId: string; avatarId: string }) => processRoomAway(player.playerId, player.avatarId)],
+] as const) {
+  const player = await playerInLevelUpEventWithChoiceMade(label, false);
+  await stepAway(player);
+  const pending = await getProgression<{ pendingLevelUpRewards?: boolean }>(player.playerId, player.avatarId);
+  assert.equal(pending?.pendingLevelUpRewards, true, `${label}: nothing is granted before the choice`);
+  assert.equal(await levelUpResolutions(player.playerId), 0, `${label}: not resolved while choosing`);
+  const back = (await getActiveRoomForPlayer(player.playerId, player.avatarId))
+    ?? await createRoom(player.playerId, player.avatarId);
+  assert.equal(back.roomState, 'system_event', `${label}: the choice waits on return`);
+  const offered = back.participants.find((p) => p.playerId === player.playerId)?.preparedResult?.levelUpChoiceIds ?? [];
+  assert.equal(offered.length, 3, `${label}: the same three rewards are offered`);
+  await chooseLevelUpReward(player.playerId, player.avatarId, offered[2]!);
+  await submitContinue(player.playerId, player.avatarId);
+  await assertResolvedOnceAndMovedOn(player, label);
+  await leaveAllRoomsForPlayer(player.playerId);
+}
 
 for (const player of [leaver, away]) {
   await leaveAllRoomsForPlayer(player.playerId);

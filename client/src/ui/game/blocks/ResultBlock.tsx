@@ -67,6 +67,7 @@ import {
 import { waitForNextPaint } from '../../transitions/avatarEnterTransition.js';
 import {
   LEVEL_UP_ENCOUNTER_ID,
+  rewardQuantityForVisibleEntry,
   visibleEncounterRewards,
 } from '../visibleEncounterRewards.js';
 import {
@@ -266,6 +267,24 @@ const rewardImageStyle: CSSProperties = {
 
 const lossRowRevealTransition = `opacity ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${LOSS_ROW_FADE_IN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
+/** Level-up choice (D-049): the three choices take the bar's middle places. */
+const LEVEL_UP_CHOICE_COLUMNS = [2, 3, 4] as const;
+const LEVEL_UP_CHOICE_FADE_MS = 420;
+const levelUpChoiceTitleStyle: CSSProperties = {
+  gridColumn: '1 / -1',
+  gridRow: '1',
+  justifySelf: 'center',
+  transform: 'translateY(-62px)',
+  color: '#ffcc66',
+  fontFamily: "'Breathe Fire', Georgia, serif",
+  fontSize: 20,
+  letterSpacing: '0.04em',
+  textShadow: '0 2px 6px rgba(0, 0, 0, 0.85)',
+  pointerEvents: 'none',
+  whiteSpace: 'nowrap',
+  transition: `opacity ${LEVEL_UP_CHOICE_FADE_MS}ms ease-out`,
+};
+
 /** More than four rewards (some level-ups): the rest float above the bar. */
 const rewardOverflowRowStyle: CSSProperties = {
   ...rewardRowStyle,
@@ -359,6 +378,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     usedSolutionIds = [],
     lostSolutionIds = [],
     onItemCollected,
+    levelUpChoiceIds = [],
+    onChooseLevelUpReward,
   }: {
     continueGlowClass?: string;
     continueWaitingAfterPress?: boolean;
@@ -387,6 +408,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
     lostSolutionIds?: number[];
     /** A reward or loss the player just collected (so the inventory can show it at once). */
     onItemCollected?: (change: CollectedInventoryChange) => void;
+    /** Level-up (D-049): the three rewards to choose from, while no choice is made. */
+    levelUpChoiceIds?: number[];
+    onChooseLevelUpReward?: (rewardId: number) => Promise<void>;
   },
   ref,
 ) {
@@ -450,12 +474,39 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const visible = roll !== null || (readOnlyWitness && (rewards.length > 0 || isLevelUp));
 
   /**
+   * Level-up choice (D-049): after the roll, three rewards wait in the bar and
+   * the player picks one; only then do the rolled rewards and the pick grow
+   * out of the encounter, and nothing can be collected or continued before.
+   */
+  const levelUpChoices = isLevelUp && !readOnlyWitness
+    ? levelUpChoiceIds.flatMap((solutionId) => {
+      const solution = solutionsById()[String(solutionId)];
+      return solution
+        ? [{
+          solution,
+          quantity: rewardQuantityForVisibleEntry({
+            encounterId,
+            avatarLevel,
+            outcome,
+            solutionUses: solution.mSolutionUses ?? 1,
+          }),
+        }]
+        : [];
+    })
+    : [];
+  const levelUpChoicePending = levelUpChoices.length > 0;
+  const [levelUpChoiceShown, setLevelUpChoiceShown] = useState(false);
+  const [levelUpChoiceSending, setLevelUpChoiceSending] = useState<number | null>(null);
+  /** Set once a choice was made here, so the rewards then emerge without waiting for the die again. */
+  const levelUpChoiceMadeRef = useRef(false);
+
+  /**
    * Babuni's direction: when a result holds rewards or losses for the player,
    * there is no Continue arrow. Each item is tapped to collect it (a reward
    * flies into the inventory, a loss rises away), and collecting the last one
    * continues the round. With nothing to collect, the Continue arrow appears.
    */
-  const collectibleKeys = readOnlyWitness
+  const collectibleKeys = readOnlyWitness || levelUpChoicePending
     ? []
     : [
       ...rewards.map((reward) => `r:${reward.solution.mSolutionID}`),
@@ -1336,7 +1387,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   // Rewards grow out of the middle of the encounter into their slots, the
   // reverse of the used solution; after a used solution, just as it vanishes.
   useEffect(() => {
-    if (!resultShown || rewardsEmerged) {
+    if (!resultShown || rewardsEmerged || levelUpChoicePending) {
       return undefined;
     }
 
@@ -1354,6 +1405,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       && !committedSolutionSetFor(encounterSnapshotId)
       && committedActionFor(encounterSnapshotId) === 'dice';
     const spentFlew = !readOnlyWitness
+      && !levelUpChoiceMadeRef.current
       && Boolean(resolutionAction)
       && (
         (resolutionAction !== 'dice' && usedSolutions.length > 0)
@@ -1420,7 +1472,85 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return () => {
       cancelled = true;
     };
-  }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, rewardsEmerged, usedSolutions.length]);
+  }, [encounterSnapshotId, levelUpChoicePending, readOnlyWitness, resolutionAction, resultShown, roll, rewardsEmerged, usedSolutions.length]);
+
+  // The choices appear once the die has flown into the encounter.
+  useEffect(() => {
+    if (!levelUpChoicePending || !resultShown) {
+      setLevelUpChoiceShown(false);
+      return undefined;
+    }
+    const dieFlying = resolutionAction === 'dice' && committedActionFor(encounterSnapshotId) === 'dice';
+    const delayMs = dieFlying ? SINGLE_DIE_FACE_MS + Math.round(USED_SOLUTION_FLIGHT_MS * 0.8) : 0;
+    const timer = window.setTimeout(() => setLevelUpChoiceShown(true), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [encounterSnapshotId, levelUpChoicePending, resolutionAction, resultShown]);
+
+  async function chooseLevelUpReward(rewardId: number): Promise<void> {
+    if (resultTips.consumeLongPressActivation()) {
+      return;
+    }
+    if (!onChooseLevelUpReward || levelUpChoiceSending !== null) {
+      return;
+    }
+    hideItemTooltip();
+    playSfx(DEFAULT_BUTTON_SOUND);
+    setLevelUpChoiceSending(rewardId);
+    try {
+      levelUpChoiceMadeRef.current = true;
+      await onChooseLevelUpReward(rewardId);
+    } catch {
+      levelUpChoiceMadeRef.current = false;
+    } finally {
+      setLevelUpChoiceSending(null);
+    }
+  }
+
+  function renderLevelUpChoices(): ReactNode {
+    return (
+      <>
+        <div aria-live="polite" style={{ ...levelUpChoiceTitleStyle, opacity: levelUpChoiceShown ? 1 : 0 }}>
+          Choose your reward
+        </div>
+        {levelUpChoices.map((choice, index) => {
+          const id = choice.solution.mSolutionID;
+          const fading = levelUpChoiceSending !== null && levelUpChoiceSending !== id;
+          return (
+            <button
+              aria-label={`Choose ${choice.solution.mSolutionName}, quantity ${choice.quantity}`}
+              className="morkahja-footer-button"
+              data-level-up-choice={id}
+              disabled={!levelUpChoiceShown || levelUpChoiceSending !== null}
+              key={`choice-${id}`}
+              {...resultTips.bindTooltip(() => itemTooltipContent(choice, '+'))}
+              onClick={() => { void chooseLevelUpReward(id); }}
+              onContextMenu={preventImageContextMenu}
+              style={{
+                ...rewardItemStyle,
+                cursor: levelUpChoiceShown && levelUpChoiceSending === null ? 'pointer' : 'default',
+                gridColumn: String(LEVEL_UP_CHOICE_COLUMNS[index] ?? index + 2),
+                gridRow: '1',
+                zIndex: 11,
+                opacity: levelUpChoiceShown && !fading ? 1 : 0,
+                transform: levelUpChoiceSending === id ? 'scale(1.12)' : 'scale(1)',
+                transition: `opacity ${LEVEL_UP_CHOICE_FADE_MS}ms ease-out ${levelUpChoiceShown ? index * 120 : 0}ms, transform 240ms ease-out`,
+                pointerEvents: levelUpChoiceShown && levelUpChoiceSending === null ? 'auto' : 'none',
+              }}
+              type="button"
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                {...protectedImageProps}
+                src={solutionImagePath(choice.solution)}
+                style={rewardImageStyle}
+              />
+            </button>
+          );
+        })}
+      </>
+    );
+  }
 
   return (
     <div
@@ -1488,7 +1618,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
   100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
 }`}
       </style>
-      {(!readOnlyWitness || visible) && !collectMode ? (
+      {levelUpChoicePending ? renderLevelUpChoices() : null}
+      {(!readOnlyWitness || visible) && !collectMode && !levelUpChoicePending ? (
         <button
           aria-disabled={!continueInteractive}
           aria-label="Continue"

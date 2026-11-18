@@ -525,6 +525,15 @@ export async function submitRoomContinue(avatarId: string): Promise<EncounterRoo
   return response.room;
 }
 
+/** Level-up (D-049): take one of the three offered rewards. */
+export async function chooseLevelUpReward(avatarId: string, rewardId: number): Promise<EncounterRoomSnapshotDto> {
+  const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/level-up/choice', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, rewardId }),
+  });
+  return response.room;
+}
+
 export async function kickRoomParticipant(
   avatarId: string,
   targetPlayerId: string,

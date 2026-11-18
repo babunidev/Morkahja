@@ -23,6 +23,7 @@ import {
   leaveAllRoomsForPlayer,
   submitChoice,
   submitContinue,
+  chooseLevelUpReward,
 } from './roomService.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
@@ -315,17 +316,25 @@ await persistInventory(session.playerId, avatarId, {
     slotEncounterSnapshots: persisted!.slotEncounterSnapshots.map((snapshot, index) => ({
       ...snapshot,
       encounterId: LEVEL_UP_ENCOUNTER_NUMERIC_ID,
-      rollE: index === slotIndex ? 96 : 50,
-      // Level-up rewards were drawn when the snapshot was created, from its own
-      // random roll. A Prosperity draw can include an essence, which would change
-      // the essence total below at random; keep this test's rewards essence-free.
+      // 12 gives two rolled rewards (race and role, D-049) and never the rare
+      // type-15 item, which is an essence; a 20 or more always adds one.
+      rollE: index === slotIndex ? 12 : 50,
+      // Level-up rewards were drawn when the snapshot was created; keep this
+      // test's rewards essence-free so the essence total below stays exact.
       rewardIds: snapshot.rewardIds?.filter((rewardId) => !isEssenceReward(rewardId)),
       actionReadyAt: Date.now() - 1,
     })) as EncounterRoom['slotEncounterSnapshots'],
     updatedAt: Date.now(),
   });
 
-  await submitChoice(session.playerId, avatarId, 'dice');
+  const levelUpRolled = await submitChoice(session.playerId, avatarId, 'dice');
+  // D-049: Continue waits for one of the three offered rewards.
+  const offered = levelUpRolled.participants.find((p) => p.playerId === session.playerId)?.preparedResult?.levelUpChoiceIds ?? [];
+  assert.equal(offered.length, 3, 'a level-up offers three rewards');
+  await assert.rejects(submitContinue(session.playerId, avatarId), /level-up reward/);
+  // An essence among the choices would change the essence total checked below.
+  const chosen = offered.find((rewardId) => !isEssenceReward(rewardId)) ?? offered[0]!;
+  await chooseLevelUpReward(session.playerId, avatarId, chosen);
   const afterLevelUpContinue = await submitContinue(session.playerId, avatarId);
 
   // Single-action solo advance, as above; the inventory checks confirm the rewards.
@@ -333,6 +342,7 @@ await persistInventory(session.playerId, avatarId, {
   assert.equal(afterLevelUpContinue.systemEvent, undefined);
 
   const inventoryAfterLevelUp = await loadInventory(session.playerId, avatarId);
+  assert.ok(countSolutionCharges(inventoryAfterLevelUp, chosen) > 0, 'the chosen level-up reward is in the inventory');
   assert.equal(countSolutionCharges(inventoryAfterLevelUp, 10001), 0);
   assert.equal(totalEssenceUses(inventoryAfterLevelUp), 6);
   assert.ok(

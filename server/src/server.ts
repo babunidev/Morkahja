@@ -547,7 +547,8 @@ try {
       console.error('Abandoned room sweep failed', error);
     }
   };
-  await sweepRooms();
+  // After the server is listening, so a long sweep never delays start-up.
+  setTimeout(() => void sweepRooms(), 0).unref();
   setInterval(() => void sweepRooms(), 6 * 60 * 60 * 1000).unref();
 
   app.listen(PORT, () => {

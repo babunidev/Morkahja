@@ -102,7 +102,13 @@ type BotState = {
   avatarId?: string;
   avatarCount: number;
 };
-type Participant = { isLocal?: boolean; playerId: string; choiceState: string; continuePressed?: boolean };
+type Participant = {
+  isLocal?: boolean;
+  playerId: string;
+  choiceState: string;
+  continuePressed?: boolean;
+  preparedResult?: { levelUpChoiceIds?: number[]; levelUpChosenId?: number };
+};
 type Room = { roomId: string; roomState: string; participants: Participant[] };
 type Avatar = { id: string; status?: string };
 type InventoryEntry = { solutionId: number; solutionType: number; uses: number };
@@ -365,6 +371,16 @@ class Bot {
         }
         this.waitUntil = Date.now() + between(READ_RESULT_MS);
       }
+      return false;
+    }
+    const levelUpChoices = me.preparedResult?.levelUpChoiceIds ?? [];
+    if (me.choiceState === 'ready_to_continue' && levelUpChoices.length > 0 && me.preparedResult?.levelUpChosenId === undefined) {
+      // Level-up (D-049): take one of the three offered rewards, as a player would.
+      const rewardId = pick(levelUpChoices);
+      await this.api('/room/level-up/choice', { body: { avatarId: this.avatarId, rewardId } });
+      const names = gameSolutions() as Record<string, { mSolutionName?: string }>;
+      this.detail(`chose level-up reward ${names[String(rewardId)]?.mSolutionName ?? `#${rewardId}`}`);
+      this.waitUntil = Date.now() + between(THINK_MS);
       return false;
     }
     if (
