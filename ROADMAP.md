@@ -130,7 +130,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Bots log a stuck room after 3 minutes, and leave it when another player is in it (released 2026-11-18).
 - [x] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (released 2026-11-18; Thalyss and Varrokh play again). Which older code path stranded them is not known.
 - [x] Closed and abandoned rooms are removed (D-048), released 2026-11-18: the first sweep removed 266 rooms.
-- [ ] Level-up reward choice (D-049): implemented locally 2026-11-18, with the faster room sweep; not yet released. Not yet tried: a party member watching another player's level-up choice.
+- [x] Level-up reward choice (D-049): released 2026-11-18 in 0.9.0-beta.78, with the faster room sweep. Not yet tried: a party member watching another player's level-up choice.
 - [ ] Release procedure: build the bundle only after the live encounter file has been reset, so Admin saves made in between are not dropped (happened to 20179 and 20180 on 18 November; restored).
 
 ## Encounter prose — 2026-11-16

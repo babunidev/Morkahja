@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-18, 21:56 UTC (0.9.0-beta.78: level-up choice, avatar roll, hover flights)
+
+Approved by Babuni ("ok release"). `main` at `56df7ccc`: the level-up reward choice (D-049, pick first, the pick rolls), the big roll on the avatar with its details in the avatar tooltip, every use hovering before it flies and its number flying into the avatar, the "Make your choice" banner, and losses and rewards waiting for the roll. Babuni's own documentation commit `0338986c` on GitHub was rebased under the local work first.
+
+- **Before:** backend `52952f0e`, frontend `20261118-023728`. The server checkout had no uncommitted encounter edits, so no reset was needed.
+- **Checks before the release:** `npm run release:check` passed on Nobara (client 48, server 55, typecheck, static game data, build). Uploads verified by `sha256sum -c` on the server (client `b39f854d…`, bundle `912aacb7…`, only `refs/heads/main`).
+- **Release:** backup `20261118-215634` (sha256 `927145222e45eb855d1fd46373665c6d7873b51fff9c23c2d8b7f67696ce49f0`). Backend fast-forwarded to `56df7ccc`, health gate and content endpoint passed, frontend release `20261118-215636`. The live script `index-CV1qERzG.js` contains `0.9.0-beta.78`. API and bots online; all three bots signed in again at 21:56:44 UTC.
+- **Not yet checked:** the backup has not been restored into a throwaway container (Babuni downloads backups); a bot's level-up pick in production; the new flow on a real phone.
+
 ## Production release — 2026-11-18, 02:37 UTC (room cleanup D-048; client unchanged at 0.9.0-beta.77)
 
 Approved by Babuni ("Release it, please"). `main` at `52952f0e`: closed rooms are deleted and abandoned rooms swept (D-048), with the Admin encounter edits through 20193 and encounter 2 (Level up!).
