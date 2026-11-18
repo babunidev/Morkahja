@@ -407,3 +407,12 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **AI implementation:** Claude Code (Claude Opus 5.5). The room remembers its last three random encounters; the draw leaves them out while anything else is available in the chosen land (`ENCOUNTER_REPEAT_GAP = 3`). The 85% chance to stay in the land (D-033) is unchanged. Written follow-ups, Atranor and the level-up are not draws and are exempt. A new room starts with the avatar's last encounter, and the solo checkpoint keeps the list. Babuni's first sentence said "before 4 other encounters"; the implementation follows the later, specific wording (three others, back on the fourth at the earliest). The gap is one number to change.
 
 **Status:** released 2026-11-17 as 0.9.0-beta.77 (`885f2b41`).
+
+## D-048 — Rooms nobody can return to are removed (2026-11-18)
+
+**Babuni's direction:** abandoned rooms are "just leaving trash behind"; when everyone has left, close the room and delete it. Babuni agreed to Claude Code's three suggestions: delete a room when it closes, clean up the leftovers once, and keep a living avatar's paused solo room, but only for 30 days without anyone looking at it.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). Saving a room as `closed` now deletes its row, in and outside transactions (`setEncounterRoom` in `postgresDocumentStore.ts`), so every path that closes a room removes it. `sweepAbandonedRooms` deletes rooms stored as closed by older releases, open rooms in which no participant has a living avatar (dead, missing or none; a failed avatar that may still be sacrificed for counts as living), and open rooms untouched for 30 days (`ABANDONED_ROOM_DAYS`). The server runs it at start and every six hours and logs what it removed. A paused solo room of a living avatar stays within the 30 days, because it holds the adventure the player returns to (so leaving cannot swap a bad encounter for a new one). After 30 days the player starts a fresh encounter. The solo checkpoint already treats a missing room like a closed one.
+
+**Status:** implemented locally 2026-11-18; not yet released.
+

@@ -508,14 +508,77 @@ export async function getEncounterRoom<T>(roomId: string): Promise<T | null> {
   return one(pool.query('SELECT data FROM encounter_rooms WHERE id = $1', [roomId]));
 }
 
+/** A closed room is not kept (D-048): saving it as closed deletes it. */
+function isClosedRoom(data: JsonObject): boolean {
+  return (data as { roomState?: unknown }).roomState === 'closed';
+}
+
 export async function setEncounterRoom<T extends JsonObject>(roomId: string, data: T): Promise<void> {
   await ensureSchema();
+  if (isClosedRoom(data)) {
+    await pool.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+    return;
+  }
   await pool.query(
     `INSERT INTO encounter_rooms (id, data)
      VALUES ($1, $2::jsonb)
      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
     [roomId, JSON.stringify(data)],
   );
+}
+
+export const ABANDONED_ROOM_DAYS = 30;
+
+export interface AbandonedRoomSweep {
+  /** Rooms stored as closed by releases before D-048. */
+  closed: number;
+  /** Open rooms in which no participant has a living avatar (dead, missing or none). */
+  withoutLivingAvatar: number;
+  /** Open rooms nobody has looked at for ABANDONED_ROOM_DAYS days. */
+  untouched: number;
+}
+
+/**
+ * Remove rooms nobody can return to (D-048). A paused solo room of a living
+ * avatar is kept until it is untouched for ABANDONED_ROOM_DAYS days; an avatar
+ * that failed and may still be sacrificed for counts as living.
+ * With dryRun the rooms are only counted.
+ */
+export async function sweepAbandonedRooms(
+  options: { dryRun?: boolean; now?: number } = {},
+): Promise<AbandonedRoomSweep> {
+  await ensureSchema();
+  const cutoff = (options.now ?? Date.now()) - ABANDONED_ROOM_DAYS * 24 * 60 * 60 * 1000;
+  const classified = `
+    SELECT r.id,
+      CASE
+        WHEN r.data->>'roomState' = 'closed' THEN 'closed'
+        WHEN NOT EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(COALESCE(r.data->'participants', '[]'::jsonb)) AS participant
+          JOIN avatars a
+            ON a.player_id = participant->>'playerId' AND a.id = participant->>'avatarId'
+          WHERE COALESCE(a.data->>'status', 'active') <> 'deceased'
+        ) THEN 'withoutLivingAvatar'
+        WHEN COALESCE((r.data->>'updatedAt')::bigint, 0) < $1 THEN 'untouched'
+      END AS reason
+    FROM encounter_rooms r`;
+  const result = options.dryRun
+    ? await pool.query<{ reason: string; count: string }>(
+      `SELECT reason, count(*) AS count FROM (${classified}) c WHERE reason IS NOT NULL GROUP BY reason`,
+      [cutoff],
+    )
+    : await pool.query<{ reason: string; count: string }>(
+      `WITH doomed AS (SELECT id, reason FROM (${classified}) c WHERE reason IS NOT NULL),
+            removed AS (DELETE FROM encounter_rooms r USING doomed d WHERE r.id = d.id RETURNING d.reason)
+       SELECT reason, count(*) AS count FROM removed GROUP BY reason`,
+      [cutoff],
+    );
+  const counts: AbandonedRoomSweep = { closed: 0, withoutLivingAvatar: 0, untouched: 0 };
+  for (const row of result.rows) {
+    if (row.reason in counts) counts[row.reason as keyof AbandonedRoomSweep] = Number(row.count);
+  }
+  return counts;
 }
 
 export async function deleteEncounterRoom(roomId: string): Promise<void> {
@@ -734,6 +797,10 @@ export async function withDocumentTransaction<T>(
         );
       },
       setEncounterRoom: async <R extends JsonObject>(roomId: string, data: R) => {
+        if (isClosedRoom(data)) {
+          await client.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+          return;
+        }
         await client.query(
           `INSERT INTO encounter_rooms (id, data)
            VALUES ($1, $2::jsonb)

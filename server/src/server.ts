@@ -1,7 +1,7 @@
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 
-import { validatePostgresConnection } from './db/postgresDocumentStore.js';
+import { sweepAbandonedRooms, validatePostgresConnection } from './db/postgresDocumentStore.js';
 import { authMiddleware, requireAuth } from './middleware/authMiddleware.js';
 import { getRecentActivityController } from './controllers/activityController.js';
 import {
@@ -530,6 +530,24 @@ try {
   );
 
   registerAchievementHandlers();
+
+  // Rooms nobody can return to are removed at start and every six hours (D-048).
+  const sweepRooms = async (): Promise<void> => {
+    try {
+      const removed = await sweepAbandonedRooms();
+      const total = removed.closed + removed.withoutLivingAvatar + removed.untouched;
+      if (total > 0) {
+        console.log(
+          `Removed ${total} abandoned room(s): ${removed.closed} closed, `
+          + `${removed.withoutLivingAvatar} without a living avatar, ${removed.untouched} untouched for 30 days`,
+        );
+      }
+    } catch (error) {
+      console.error('Abandoned room sweep failed', error);
+    }
+  };
+  await sweepRooms();
+  setInterval(() => void sweepRooms(), 6 * 60 * 60 * 1000).unref();
 
   app.listen(PORT, () => {
     console.log(`Morkahja server running on port ${PORT}`);

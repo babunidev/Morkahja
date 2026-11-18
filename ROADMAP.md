@@ -129,7 +129,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Decided: the bot adventurers stay unmarked (D-012); they appear in the activity feed like players. Their effect on achievements is not reviewed.
 - [x] Bots log a stuck room after 3 minutes, and leave it when another player is in it (released 2026-11-18).
 - [x] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (released 2026-11-18; Thalyss and Varrokh play again). Which older code path stranded them is not known.
-- [ ] Thalyss is still listed in seven abandoned rooms from 11–12 November; decide whether old open rooms should be closed.
+- [ ] Closed and abandoned rooms are removed (D-048): implemented locally 2026-11-18, not yet released. After the release, check the server log for the first sweep's counts.
 
 ## Encounter prose — 2026-11-16
 
