@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-18, 02:37 UTC (room cleanup D-048; client unchanged at 0.9.0-beta.77)
+
+Approved by Babuni ("Release it, please"). `main` at `52952f0e`: closed rooms are deleted and abandoned rooms swept (D-048), with the Admin encounter edits through 20193 and encounter 2 (Level up!).
+
+- **Before:** backend `50c403d7`, frontend `20261118-013629`. The live encounter file differed from `origin/main` in 20179 and 20180 only: both were the older texts of the deployed commit, because Babuni saved them shortly before the 01:36 release, after its bundle was built, and that release's reset put the older text back. GitHub kept the newer texts, so nothing was lost; this release restores them. Babuni reset the file. An Admin save of encounter 2 arrived after the bundle was built, so the bundle was rebuilt to `52952f0e` before releasing. Previous staging files moved to `prev-20261118-0233`.
+- **Checks before the release:** server tests (54) and typecheck, static game data and the client build passed (live script unchanged, `index-uoDAD45A.js`). The sweep was counted first on the restored backup `20261118-013627` (sha256 and row counts matched; that backup is proven; the copy was deleted).
+- **Release:** backup `20261118-023726` (sha256 `39ab0b183e45f663ec9efe38b2f95a16c609e64b5d3bc1982b99963f9888e3fc`). Backend fast-forwarded to `52952f0e`, health gate and content endpoint passed, frontend release `20261118-023728`. API and bots online. The live encounter file equals `main` (sha256 begins `ba77b428`).
+- **After:** the API log shows "Removed 266 abandoned room(s): 220 closed, 0 without a living avatar, 16 superseded by a newer room, 30 untouched for 30 days", matching the count. Thalyss finished 7 rounds at 02:39:33 UTC; no bot logged a stuck room by 02:42.
+- **Lesson:** build the bundle after the encounter-file reset, not before, so Admin saves in between cannot be dropped.
+
 ## Production release — 2026-11-18, 01:36 UTC (stranded rooms move on; client unchanged at 0.9.0-beta.77)
 
 Approved by Babuni ("Yeah, release it, fix it"). `main` at `50c403d7`: rooms stuck at `active_encounter` after everyone chose move on again on the next poll, on top of the Admin encounter edits 20169–20178.

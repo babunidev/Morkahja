@@ -2,12 +2,13 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-18 — Closed and abandoned rooms are removed (D-048, not yet released)
+## 2026-11-18 — Closed and abandoned rooms are removed (D-048, released, server only)
 
 - **Why:** rooms were never deleted. A closed room stayed in the database marked `closed`, and rooms of avatars that died before the death clean-up existed stayed open forever (Thalyss alone was listed in seven from 11–12 Nov).
 - **Change (Babuni's direction, D-048):** saving a room as closed deletes it. `sweepAbandonedRooms` removes rooms stored as closed by older releases, open rooms without a living avatar in them, solo rooms whose avatar is in a newer room (only the newest can be returned to), and rooms nobody has looked at for 30 days; the server runs it at start and every six hours and logs the counts. A living avatar's paused solo room younger than 30 days stays. Files: `server/src/db/postgresDocumentStore.ts`, `server/src/server.ts`; test `server/src/services/roomCleanup.test.ts`.
 - **Counted first** on the restored backup `20261118-013627` (285 rooms; sha256 and row counts matched the server, so that backup is proven too; the copy was deleted): 220 closed, 0 without a living avatar, 16 superseded (Sylvaen 9, Thalyss 7), 30 untouched since June–September; 19 stay.
 - **Verification:** the new test (closed in and outside a transaction; each sweep reason; a 29-day paused room and an older shared room kept; a dry run deletes nothing) and all server tests (54) passed; the typecheck passed. The local backend started and logged "Removed 1 abandoned room(s): 0 closed, 1 without a living avatar, 0 untouched for 30 days".
+- **Released** 2026-11-18 02:37 UTC from `52952f0e` (client unchanged at 0.9.0-beta.77). The first live sweep removed 266 rooms: 220 closed, 0 without a living avatar, 16 superseded, 30 untouched, as counted. The bots played on afterwards.
 
 ## 2026-11-18 — Rooms stuck after the choice move on again (released, server only)
 

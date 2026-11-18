@@ -129,7 +129,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Decided: the bot adventurers stay unmarked (D-012); they appear in the activity feed like players. Their effect on achievements is not reviewed.
 - [x] Bots log a stuck room after 3 minutes, and leave it when another player is in it (released 2026-11-18).
 - [x] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (released 2026-11-18; Thalyss and Varrokh play again). Which older code path stranded them is not known.
-- [ ] Closed and abandoned rooms are removed (D-048): implemented locally 2026-11-18, not yet released. After the release, check the server log for the first sweep's counts.
+- [x] Closed and abandoned rooms are removed (D-048), released 2026-11-18: the first sweep removed 266 rooms.
+- [ ] Release procedure: build the bundle only after the live encounter file has been reset, so Admin saves made in between are not dropped (happened to 20179 and 20180 on 18 November; restored).
 
 ## Encounter prose — 2026-11-16
 

@@ -416,5 +416,5 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Counted before release** on the backup of 18 Nov 01:36 UTC (285 room rows), with the sweep in count-only mode: 220 closed, 0 without a living avatar, 16 superseded (Sylvaen 9, Thalyss 7; no human player), 30 untouched for 30 days (last used June to September). 19 rooms stay.
 
-**Status:** implemented locally 2026-11-18; not yet released.
+**Status:** released 2026-11-18 02:37 UTC (`52952f0e`); the first sweep removed 266 rooms as counted.
 
