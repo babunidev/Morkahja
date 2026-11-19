@@ -1,19 +1,28 @@
-# Morkahja — authorship and collaboration
+# Human–AI collaboration
 
-Follow [the documentation standard](DOCUMENTATION.md) for first-person author voice throughout project documentation, factual changelogs, and naming the AI tool and verified model for each contribution.
+## How I work with AI
 
-The original game, worldbuilding and creative direction are mine. Preserve separate collaborator credits such as Nikita Malko's music work. AI assistance on code, writing and visual exploration must be described as assistance, with accepted/rejected ideas tracked faithfully. Do not publish credentials, user data or raw private conversations. Distinguish existing source evidence, author testimony and independent test results.
+Every project here begins with something I want to see in a game, on a screen or in a story. The ideas, the direction and the decisions are mine, and so are the playtests and the checks on my own devices. AI helps me get there. In my early projects that meant asking ChatGPT for Lua in a conversation, copying the changes into local files and trying them in the game. Today coding agents work directly in the repositories: they research, write code and documentation and run tests, while I decide what to build, try it out and say what works and what doesn't.
 
-## Audit #30 — 27 October 2026
+Two rules hold this record together. Work is credited to whoever did it: the story is told in my voice, but when AI wrote code or a document, the record says so and names the tool and, where it is known, the model. And a plan is not a result: proposed, accepted, built, tested and published stay separate, and an automated test by an AI is not the same as my own check in the game or on my phone.
 
-**User direction:** At the time, I asked for the numbered documentation review to continue with Morkahja.
+## Who did what
 
-**AI contribution:** Review existing packages, the long original dated journal and the preliminary documentation scaffold; synthesize evidence-backed concept, design, architecture and provenance records. Preserve the original historical journal unchanged and separately retain contributor credits, including Nikita Malko for music.
+| Who | Role | Model as recorded |
+| --- | --- | --- |
+| **Babuni** | Creative: ideas, direction, decisions, corrections, playtesting and device checks | — |
+| **Codex** | Coding agent in the repository: research, code, documentation and tests | GPT-6 |
+| **Claude Code** | Coding agent in the repository: research, code, documentation and tests | Claude Opus 5.5 |
+| **Cursor** | Coding agent in the repository: research, code, documentation and tests | Grok 4.7 |
+| **Earlier AI help** | Work that older entries describe only as “AI” | Tool and model not recorded |
 
-**Creative iteration:** The dated journal contains iterations in event-feed presentation, encounter pacing, progression, shared dice interpretation, avatar-death handling and deployment. They are described as recorded implementations, not invented verbatim discussions or automatically approved AI proposals.
+The journal and the changelog name the tool for each piece of AI work. A model that was not recorded stays unrecorded rather than guessed.
 
-**Verification:** Repository text was read and documentation changes committed. No game runtime, tests, release build, current hosting or player records were examined. Do not present the historical alpha deployment as proof of present security or uptime.
+## Where the details are
 
-## 18 November 2026 — Collaboration record review
+- [Development journal](DEVLOG.md): the story of the project in my voice, including what I asked for and what AI did.
+- [Decision record](DECISIONS.md): what was decided, by whom and why.
+- [Changelog](../CHANGELOG.md): what changed and how it was checked.
+- [Documentation standard](DOCUMENTATION.md) and [AGENTS.md](../AGENTS.md): the writing and working rules for everyone who contributes, human or AI.
 
-At my request, Codex (GPT-6) revised this record for first-person voice and checked the attribution against the available repository documentation. Where an earlier AI tool or model is missing from the record, its identity remains unconfirmed.
+The earlier, longer version of this record, as it stood on 18 November 2026, is kept in the [Git history](https://github.com/babunidev/Morkahja/blob/0338986c4a4fb2d69317b9fcfb8005cc93be8585/docs/AI_COLLABORATION.md).

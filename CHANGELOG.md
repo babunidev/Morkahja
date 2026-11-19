@@ -528,6 +528,9 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 
 ## Unreleased — 2026-11-04 — Achievement milestones
 
+### Changed — human–AI collaboration record (2026-11-19)
+- Rewrote `docs/AI_COLLABORATION.md` to the shared text used in all of Babuni's repositories: how Babuni works with AI, who did what (the tools and recorded models named in this project's records) and where the details are. The earlier, longer version stays in the Git history. Claude Code (Claude Opus 5.5).
+
 ### Changed — documentation moved into `docs/` (2026-11-19)
 - Moved `CONCEPT.md` and `ROADMAP.md` into `docs/`. The separate root `DEVLOG.md` (May–June 2026) was merged unchanged into `docs/DEVLOG.md` as its final section, so the project has one development log. `CONTENT_LICENSE.md` stays in the root as a license file. The root keeps only `README.md`, `AGENTS.md`, `LICENSE` and `CHANGELOG.md`; links to the moved files and the documentation rules in `AGENTS.md` were updated. No code changed. Claude Code (Claude Opus 5.5).
 
