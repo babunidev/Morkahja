@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-19, 00:38 UTC (0.9.0-beta.79: waiting room updates, D-050)
+
+Approved by Babuni ("yes release"). `main` at `e0bd2837`: room updates through one waiting request, the inactivity leftovers removed (D-050), bots witnessing quietly and at a player's pace.
+
+- **Before:** backend `56df7ccc`, frontend `20261118-215636`. No uncommitted encounter edits on the server, no new commits on GitHub. Previous staging files moved to `prev-20261119-0150`.
+- **Checks before the release:** `npm run release:check` passed on Nobara (client 48, server 56). Uploads verified by `sha256sum -c` on the server (client `6bc59a4b…`, bundle `b19b75d4…`, only `refs/heads/main`). The site's Nginx location for `/Morkahja/api/` sets no `proxy_read_timeout`, so its 60 s default is above the 25 s wait.
+- **Release:** backup `20261119-003759` (sha256 `229bafcc18b3d41c04207f4e56a2c0a12512cf7fe3ca10360fda9f5e4e5c6e2c`). Backend fast-forwarded to `e0bd2837`, health gate and content endpoint passed, frontend release `20261119-003801`. The live script `index-CKl0A5U4.js` contains `0.9.0-beta.79` and the waiting request. API and bots online; the bots signed in at 00:38:09 UTC and Sylvaen answered Babuni's Call for help at 00:39:11.
+- **Not yet checked:** the backup restore (Babuni downloads backups); a waiting request through the live proxy observed from a browser.
+
 ## Production release — 2026-11-18, 21:56 UTC (0.9.0-beta.78: level-up choice, avatar roll, hover flights)
 
 Approved by Babuni ("ok release"). `main` at `56df7ccc`: the level-up reward choice (D-049, pick first, the pick rolls), the big roll on the avatar with its details in the avatar tooltip, every use hovering before it flies and its number flying into the avatar, the "Make your choice" banner, and losses and rewards waiting for the roll. Babuni's own documentation commit `0338986c` on GitHub was rebased under the local work first.

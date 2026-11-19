@@ -436,4 +436,4 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Open for Babuni:** Lore, Inventory and the Skillbook still pause a party's advance while open (from June), and a player who closes the tab without choosing stays listed until they leave. Both are consistent with this decision, since nobody is flagged, but either can hold the others.
 
-**Status:** implemented locally 2026-11-19; not yet released.
+**Status:** released 2026-11-19 in 0.9.0-beta.79.
