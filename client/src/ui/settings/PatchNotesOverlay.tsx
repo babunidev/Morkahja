@@ -29,6 +29,16 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-79',
+    version: '0.9.0-beta.79',
+    period: '19 Nov 2026',
+    notes: [
+      'Playing together is smoother: choices, Continue and the next encounter now appear the moment they happen.',
+      'The adventurers who answer a Call for help wait quietly while you level up, and keep a quicker pace.',
+      'Nobody in a party is set aside for being slow; anyone can leave a room whenever they like.',
+    ],
+  },
+  {
     id: 'beta-78',
     version: '0.9.0-beta.78',
     period: '18 Nov 2026',
