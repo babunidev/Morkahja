@@ -19,6 +19,10 @@ Every meaningful implementation, bug fix, security change, or **explicitly appro
 5. Concurrent writes to player/avatar JSONB documents require extra care: an atomic `setPlayer`/`setAvatar` top-level JSONB merge does **not** make read–modify–write calculations on nested objects safe. For currency, rewards, counters, sessions, and inventory use appropriate row locking/transactions and concurrency regression tests.
 6. On Nobara/Linux, provide a safe **update → run → test** workflow with project paths and PostgreSQL/Podman prerequisites. The developer's main working tree can have unpublished commits and uncommitted changes. Do not reset, clean, force-pull, or change their main checkout without explicit authorization; prefer separate Git worktrees for review.
 
+## Human–AI collaboration record
+
+`docs/AI_COLLABORATION.md` is the short record of how Babuni works with AI and who did what, with the same text in all of Babuni's repositories. Do not add dated entries, session notes or per-change attribution to it. Record each contribution in `docs/DEVLOG.md` (what Babuni asked for and what the AI did, naming the tool and model) and in `CHANGELOG.md`. Change `docs/AI_COLLABORATION.md` only to add a row to its "Who did what" table when a new AI tool or model starts contributing to this project, or when Babuni revises the shared text.
+
 ## Repository layout
 
 The repository root holds only `README.md`, `AGENTS.md`, `LICENSE` and `CHANGELOG.md` (plus any additional license files). All other documentation lives in `docs/`; put new documents there.
