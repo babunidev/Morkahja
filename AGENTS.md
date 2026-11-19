@@ -12,9 +12,13 @@ Follow [the documentation standard](docs/DOCUMENTATION.md) for first-person auth
 
 Every meaningful implementation, bug fix, security change, or **explicitly approved** design decision must be documented in the same branch/PR when practical. Documentation is part of the work, not an optional later cleanup.
 
-1. Read this file and `docs/DOCUMENTATION.md` first. Preserve the historical root `DEVLOG.md` verbatim; append contemporary, source-backed human-facing entries to `docs/DEVLOG.md`.
-2. Update `CHANGELOG.md` for actual committed behavior, `ROADMAP.md` for progress/deferred tasks, `docs/DECISIONS.md` for confirmed human decisions, and `docs/ARCHITECTURE.md` for meaningful technical boundaries. Update `README.md` when readers need to discover the status or instructions.
+1. Read this file and `docs/DOCUMENTATION.md` first. `docs/DEVLOG.md` is the only development log. Preserve its final section, the original May–June 2026 log (formerly the root `docs/DEVLOG.md`), verbatim; add contemporary, source-backed human-facing entries above it.
+2. Update `CHANGELOG.md` for actual committed behavior, `docs/ROADMAP.md` for progress/deferred tasks, `docs/DECISIONS.md` for confirmed human decisions, and `docs/ARCHITECTURE.md` for meaningful technical boundaries. Update `README.md` when readers need to discover the status or instructions.
 3. For each substantive change, record date, scope, branch/PR or commit, affected subsystem, human direction versus AI implementation, verification commands and environments, known failures, limitations, and merge/deployment status. A passing isolated test does not imply that the complete release gate passed or that production was updated.
 4. Do not convert an observed behavior into a guarantee, assume a discussion approved a feature, or silently mark unmerged work as released. Never publish credentials, recovery keys, player data, or private conversations.
 5. Concurrent writes to player/avatar JSONB documents require extra care: an atomic `setPlayer`/`setAvatar` top-level JSONB merge does **not** make read–modify–write calculations on nested objects safe. For currency, rewards, counters, sessions, and inventory use appropriate row locking/transactions and concurrency regression tests.
 6. On Nobara/Linux, provide a safe **update → run → test** workflow with project paths and PostgreSQL/Podman prerequisites. The developer's main working tree can have unpublished commits and uncommitted changes. Do not reset, clean, force-pull, or change their main checkout without explicit authorization; prefer separate Git worktrees for review.
+
+## Repository layout
+
+The repository root holds only `README.md`, `AGENTS.md`, `LICENSE` and `CHANGELOG.md` (plus any additional license files). All other documentation lives in `docs/`; put new documents there.

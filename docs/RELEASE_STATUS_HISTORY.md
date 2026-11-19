@@ -4,7 +4,7 @@ This file preserves dated status notes formerly placed on the repository's front
 
 ## Historical documentation audit — #30 (27 October 2026)
 
-The project's **primary development record** is the [original dated DEVLOG](DEVLOG.md), which chronicles the browser game from May 16 to June 7, 2026. The supporting documents interpret that journal but do not supersede it. The workspace's current version field is **0.9.0-beta.2.2**; the original journal describes it as a public pre-1.0 beta, not a independently revalidated live service.
+The project's **primary development record** is the original dated log (the final section of the [development journal](DEVLOG.md)), which chronicles the browser game from May 16 to June 7, 2026. The supporting documents interpret that journal but do not supersede it. The workspace's current version field is **0.9.0-beta.2.2**; the original journal describes it as a public pre-1.0 beta, not a independently revalidated live service.
 
 The original record follows the move from structured encounter/solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It traces the encounter loop, SCRIBES event feed, avatar lifecycle, achievement/reward systems, expansion unlocks, friends and social surfaces, plus later deployment and security considerations. These stages are historical **development claims from the journal**, not new tests performed in this audit.
 

@@ -10,7 +10,7 @@
 - **Events and social content:** SCRIBES activity feed, friends, achievement notifications, world updates and donation-related entries.
 - **Illustration and presentation:** encounter illustrations, UI frames, backgrounds, dashboard controls, seasonal loading logos and icons.
 - **Audio:** dashboard and in-game playlists, music controls and effects; preserve music contributor attribution.
-- **Supporting records:** original root-level DEVLOG, source comments, tests, game data, and Git commits.
+- **Supporting records:** original May–June log at the end of `docs/DEVLOG.md`, source comments, tests, game data, and Git commits.
 
 ## Creative provenance
 

@@ -12,17 +12,17 @@ The game and the world archive are distinct projects. The writing and worldbuild
 
 The existing development record follows the project from structured encounter and solution data into a playable React/Vite client, Express services and shared TypeScript contracts. It describes encounters, avatar progression, achievements and rewards, an event feed known as Scribes, and various social and account systems.
 
-These are parts of a developing game, not an assertion that every system has passed a fresh end-to-end or production test. The [concept](CONCEPT.md) sets the creative direction, while [architecture](docs/ARCHITECTURE.md) and [content](docs/CONTENT.md) explain the technical organization.
+These are parts of a developing game, not an assertion that every system has passed a fresh end-to-end or production test. The [concept](docs/CONCEPT.md) sets the creative direction, while [architecture](docs/ARCHITECTURE.md) and [content](docs/CONTENT.md) explain the technical organization.
 
 ## Where to begin
 
 | Interested in… | Read… |
 | --- | --- |
-| The game idea | [Concept](CONCEPT.md) · [Design](docs/DESIGN.md) |
-| Current work and unresolved risks | [Roadmap](ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) |
+| The game idea | [Concept](docs/CONCEPT.md) · [Design](docs/DESIGN.md) |
+| Current work and unresolved risks | [Roadmap](docs/ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) |
 | Code and data boundaries | [Architecture](docs/ARCHITECTURE.md) · [Content](docs/CONTENT.md) |
 | What changed | [Changelog](CHANGELOG.md) · [Encounter prose revision](docs/ENCOUNTER_REVISION.md) |
-| How the project evolved | [Curated journal](docs/DEVLOG.md) · [Original journal](DEVLOG.md) |
+| How the project evolved | [Development journal](docs/DEVLOG.md) |
 | Creative and technical decisions | [Decisions](docs/DECISIONS.md) · [AI collaboration](docs/AI_COLLABORATION.md) |
 | Dated audits, PR checks and gameplay notes | [Historical status notes](docs/RELEASE_STATUS_HISTORY.md) |
 
@@ -38,7 +38,7 @@ Player data, credentials and remote game files are sensitive and must not be cop
 
 ## Development story
 
-The original [development log](DEVLOG.md) follows the game's formation from **May to June 2026** and remains preserved. The [curated journal](docs/DEVLOG.md) records later direction, design changes, AI-assisted work and verified outcomes in a shorter reading form.
+The [development journal](docs/DEVLOG.md) records later direction, design changes, AI-assisted work and verified outcomes in a shorter reading form. Its final section preserves the original log of the game's formation from **May to June 2026**, unchanged.
 
 The human creative owns the game's idea, world and design decisions. AI assistance contributes drafts, code and analysis where recorded; it does not replace creative authorship. Named third-party credits, including music contributions, are retained in the project records.
 

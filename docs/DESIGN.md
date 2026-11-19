@@ -21,4 +21,4 @@ Source presence does not prove successful operation on current mobile devices or
 
 The design story should show dated evolution: first playable checkpoint (May 18), music and event pipeline (May 19–20), expanded encounter-result motion and achievement surfaces (May 21–22), and deployment/social polishing (May 23 onward). Distinguish original assets and author-approved art from AI mockups or source-only components. Preserve screenshots and evidence where permission exists; do not infer an approved final visual identity from the code alone.
 
-See [original chronological journal](../DEVLOG.md), [development-history guide](DEVLOG.md), and [content inventory](CONTENT.md).
+See the [development journal](DEVLOG.md), whose final section is the original chronological log, and the [content inventory](CONTENT.md).

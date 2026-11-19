@@ -501,7 +501,7 @@
 - Preserved the long original `DEVLOG.md` unchanged as primary historical evidence.
 - No application code, secrets or runtime deployment was changed in this pass.
 
-Historical change details are in [DEVLOG.md](DEVLOG.md); do not reinterpret all entries as tested releases.
+Historical change details are in [DEVLOG.md](docs/DEVLOG.md); do not reinterpret all entries as tested releases.
 
 ## 2026-10-27 — Documentation consolidation audit #30
 
@@ -527,6 +527,9 @@ Recorded Babuni.dev’s direction to publish the actual project after review and
 - Static source inspection and documentation changes only. No application code, DNS, server, production database or Stripe settings were changed; no build or deployment test was run.
 
 ## Unreleased — 2026-11-04 — Achievement milestones
+
+### Changed — documentation moved into `docs/` (2026-11-19)
+- Moved `CONCEPT.md` and `ROADMAP.md` into `docs/`. The separate root `DEVLOG.md` (May–June 2026) was merged unchanged into `docs/DEVLOG.md` as its final section, so the project has one development log. `CONTENT_LICENSE.md` stays in the root as a license file. The root keeps only `README.md`, `AGENTS.md`, `LICENSE` and `CHANGELOG.md`; links to the moved files and the documentation rules in `AGENTS.md` were updated. No code changed. Claude Code (Claude Opus 5.5).
 
 - Stopped treating the first nonzero progress point as a Scribes achievement unlock; actual rank increases now trigger client notifications.
 - Separated started achievement chains from earned avatar titles and Hearth Blessing bonuses. Daily payout now has one base gem plus the bonuses from achieved ranks.
