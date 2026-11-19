@@ -131,6 +131,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](CHANGELOG.md) and 
 - [x] Rooms stuck at `active_encounter` after everyone chose move on again on the next poll (released 2026-11-18; Thalyss and Varrokh play again). Which older code path stranded them is not known.
 - [x] Closed and abandoned rooms are removed (D-048), released 2026-11-18: the first sweep removed 266 rooms.
 - [x] Level-up reward choice (D-049): released 2026-11-18 in 0.9.0-beta.78, with the faster room sweep. Not yet tried: a party member watching another player's level-up choice.
+- [x] Room updates arrive at once through a waiting request; inactivity leftovers removed (D-050); bots witness quietly and keep a player's pace. Implemented locally 2026-11-19, not yet released.
+- [ ] Babuni to decide: should open Lore, Inventory or Skillbook keep pausing a party (D-050)?
 - [ ] Release procedure: build the bundle only after the live encounter file has been reset, so Admin saves made in between are not dropped (happened to 20179 and 20180 on 18 November; restored).
 
 ## Encounter prose — 2026-11-16

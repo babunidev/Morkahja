@@ -23,7 +23,6 @@ import { getProgression, pool, setPlayer } from '../db/postgresDocumentStore.js'
 import { queryActivityFeed } from './gameEventService.js';
 import { toEncounterRoomSnapshotDto } from './roomDtoMapper.js';
 import type { EncounterRoom } from '../domain/rooms/EncounterRoom.js';
-import { INACTIVITY_MS, ROOM_INACTIVITY_ENABLED } from '../domain/rooms/roomConstants.js';
 import { LEVEL_UP_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
 import { loadEncounterRoom, saveEncounterRoom, findActiveRoomIdForPlayerAvatar } from './roomPersistence.js';
 
@@ -324,53 +323,6 @@ await saveEncounterRoom({
 const followUpChoice = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
 assert.equal(followUpChoice.roomState, 'waiting_continue');
 
-const ghostChoiceRoom: EncounterRoom = {
-  ...followUpChoice,
-  roomState: 'active_encounter',
-  participants: [
-    {
-      ...followUpChoice.participants[0]!,
-      choiceState: 'choosing',
-      preparedResult: undefined,
-      preparedCommit: undefined,
-      continuePressed: false,
-    },
-    {
-      playerId: 'DisconnectedGhost',
-      avatarId: `${avatarId}-ghost`,
-      slotIndex: 1,
-      joinedAt: Date.now(),
-      choiceState: 'choosing',
-      focusState: 'none',
-      continuePressed: false,
-      lastInteractionAt: Date.now(),
-      disconnectedAt: Date.now() - 1000,
-    },
-  ],
-  activeEncounterSnapshot: {
-    ...followUpChoice.activeEncounterSnapshot,
-    actionReadyAt: Date.now() - 1,
-  },
-  updatedAt: Date.now(),
-};
-await saveEncounterRoom(ghostChoiceRoom);
-const ghostReady = await submitChoice(session.playerId, switchedAvatarRoom.participants[0]!.avatarId, 'dice');
-assert.equal(
-  ghostReady.roomState,
-  'waiting_continue',
-  'solo should enter waiting_continue when only disconnected ghosts remain choosing',
-);
-const ghostAdvanced = await submitContinue(session.playerId, switchedAvatarRoom.participants[0]!.avatarId);
-assert.ok(
-  ghostAdvanced.roomState === 'active_encounter' || ghostAdvanced.roomState === 'system_event',
-  'continue must leave waiting_continue when solo is the only engaged participant',
-);
-assert.notEqual(
-  ghostAdvanced.activeEncounterSnapshot.snapshotId,
-  ghostReady.activeEncounterSnapshot.snapshotId,
-  'host advances to a new encounter or a legitimate system event',
-);
-
 const withIdleJoiner: EncounterRoom = {
   ...followUpChoice,
   roomState: 'waiting_continue',
@@ -411,81 +363,6 @@ assert.ok(
     || advancedWithGhost?.roomState === 'system_event',
   'host should advance to an encounter or system event after idle joiner',
 );
-
-const soloInactivityRoom: EncounterRoom = {
-  ...room,
-  roomId: `inactivity-solo-${Date.now()}`,
-  participants: [{
-    ...room.participants[0],
-    choiceState: 'choosing',
-    focusState: 'none',
-    lastInteractionAt: Date.now() - INACTIVITY_MS - 1000,
-  }],
-  roomState: 'active_encounter',
-  updatedAt: Date.now(),
-};
-await saveEncounterRoom(soloInactivityRoom);
-assert.equal(
-  soloInactivityRoom.participants[0]?.choiceState,
-  'choosing',
-  'idle solo participants stay choosing (inactivity disengage removed)',
-);
-assert.equal(ROOM_INACTIVITY_ENABLED, false);
-
-const multiInactivityRoom: EncounterRoom = {
-  ...room,
-  roomId: `inactivity-multi-${Date.now()}`,
-  participants: [
-    {
-      ...room.participants[0],
-      choiceState: 'choosing',
-      focusState: 'none',
-      lastInteractionAt: Date.now() - INACTIVITY_MS - 1000,
-    },
-    {
-      playerId: 'RoomTesterGhost',
-      avatarId: room.participants[0]!.avatarId,
-      slotIndex: 1,
-      joinedAt: Date.now(),
-      choiceState: 'choosing',
-      focusState: 'none',
-      continuePressed: false,
-      lastInteractionAt: Date.now(),
-    },
-  ],
-  roomState: 'active_encounter',
-  updatedAt: Date.now(),
-};
-await saveEncounterRoom(multiInactivityRoom);
-assert.equal(
-  multiInactivityRoom.participants.every((participant) => participant.choiceState === 'choosing'),
-  true,
-  'idle multiplayer participants stay choosing (inactivity disengage removed)',
-);
-
-const roomForReengage: EncounterRoom = {
-  ...multiInactivityRoom,
-  participants: multiInactivityRoom.participants.map((participant, index) => (
-    index === 0
-      ? {
-          ...participant,
-          choiceState: 'disengaged' as const,
-          disconnectedAt: Date.now(),
-        }
-      : participant
-  )),
-};
-await saveEncounterRoom(roomForReengage);
-
-const reengagedByFocus = await setFocusState(
-  session.playerId,
-  roomForReengage.participants[0]!.avatarId,
-  'lore',
-);
-const reengagedParticipant = reengagedByFocus.participants.find(
-  (participant) => participant.playerId === session.playerId,
-);
-assert.equal(reengagedParticipant?.choiceState, 'choosing');
 
 const activeBeforePostSystem = await getActiveRoomForPlayer(
   session.playerId,
@@ -534,7 +411,6 @@ const postSystemDisengagedRoom: EncounterRoom = {
       slotIndex: 1,
       joinedAt: Date.now(),
       choiceState: 'disengaged',
-      disconnectedAt: Date.now(),
       focusState: 'none',
       continuePressed: false,
       lastInteractionAt: Date.now(),
@@ -724,7 +600,6 @@ const disengagedAdvanceRoom: EncounterRoom = {
       focusState: 'none',
       continuePressed: false,
       lastInteractionAt: Date.now(),
-      disconnectedAt: Date.now(),
     },
   ],
   updatedAt: Date.now(),

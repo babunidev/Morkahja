@@ -536,6 +536,8 @@ export interface PartyEjectionDto {
 export interface RoomActiveResponse {
   room: EncounterRoomSnapshotDto | null;
   partyEjection?: PartyEjectionDto;
+  /** What the room looks like to this player; send it back as `wait` to hear of the next change. */
+  version?: string;
 }
 
 export interface RoomHelpInvitationDto {

@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
+import { roomChangeVersion, waitForRoomChange } from '../db/roomChanges.js';
 import { isSolutionSetSlot } from '../../../shared/src/solutionSet.js';
 import type { EncounterAction, ParticipantFocusStateDto } from '../../../shared/src/contracts.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
@@ -90,6 +92,28 @@ function requireAvatarId(req: Request): string {
   return avatarId;
 }
 
+/** How long a waiting `GET /room/active` holds before answering unchanged. */
+const ROOM_WAIT_MS = 25_000;
+
+async function activeRoomAnswer(playerId: string, avatarId: string): Promise<{
+  body: { room: unknown; partyEjection?: { reason: 'kicked' }; version?: string };
+  roomId?: string;
+  version?: string;
+}> {
+  const room = await getActiveRoomForPlayer(playerId, avatarId);
+  const partyEjection = room
+    ? undefined
+    : (await consumePartyEjection(playerId)) === 'kicked'
+      ? { reason: 'kicked' as const }
+      : undefined;
+  if (!room) {
+    return { body: { room: null, partyEjection } };
+  }
+  const dto = await toEncounterRoomSnapshotDto(room, playerId);
+  const version = createHash('sha1').update(JSON.stringify(dto)).digest('base64url').slice(0, 20);
+  return { body: { room: dto, partyEjection, version }, roomId: room.roomId, version };
+}
+
 export async function getActiveRoomController(
   req: Request,
   res: Response,
@@ -98,16 +122,29 @@ export async function getActiveRoomController(
   try {
     const { playerId } = requireAuth(req);
     const avatarId = requireAvatarId(req);
-    const room = await getActiveRoomForPlayer(playerId, avatarId);
-    const partyEjection = room
-      ? undefined
-      : (await consumePartyEjection(playerId)) === 'kicked'
-        ? { reason: 'kicked' as const }
-        : undefined;
-    res.json({
-      room: room ? await toEncounterRoomSnapshotDto(room, playerId) : null,
-      partyEjection,
-    });
+    // Waiting request (2026-11-19): the client sends the version it already
+    // shows; while the room still looks the same, answer only once it changes
+    // or after ROOM_WAIT_MS, so updates arrive at once without fast polling.
+    const shownVersion = typeof req.query.wait === 'string' ? req.query.wait : undefined;
+    const shownRoomId = typeof req.query.room === 'string' ? req.query.room : undefined;
+    const changeVersion = shownRoomId ? roomChangeVersion(shownRoomId) : 0;
+
+    let answer = await activeRoomAnswer(playerId, avatarId);
+    if (
+      shownVersion !== undefined
+      && answer.version === shownVersion
+      && answer.roomId !== undefined
+      && answer.roomId === shownRoomId
+    ) {
+      const closed = new AbortController();
+      res.on('close', () => closed.abort());
+      await waitForRoomChange(shownRoomId, changeVersion, ROOM_WAIT_MS, closed.signal);
+      if (closed.signal.aborted && !res.writableEnded) {
+        return;
+      }
+      answer = await activeRoomAnswer(playerId, avatarId);
+    }
+    res.json(answer.body);
   } catch (error) {
     handleRoomError(error, res, next);
   }

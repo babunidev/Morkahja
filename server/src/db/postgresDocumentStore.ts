@@ -1,4 +1,5 @@
 import './loadDatabaseConfig.js';
+import { forgetRoom, notifyRoomChanged } from './roomChanges.js';
 
 import pg from 'pg';
 import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
@@ -517,6 +518,7 @@ export async function setEncounterRoom<T extends JsonObject>(roomId: string, dat
   await ensureSchema();
   if (isClosedRoom(data)) {
     await pool.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+    forgetRoom(roomId);
     return;
   }
   await pool.query(
@@ -525,6 +527,7 @@ export async function setEncounterRoom<T extends JsonObject>(roomId: string, dat
      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
     [roomId, JSON.stringify(data)],
   );
+  notifyRoomChanged(roomId);
 }
 
 export const ABANDONED_ROOM_DAYS = 30;
@@ -610,6 +613,7 @@ export async function sweepAbandonedRooms(
 export async function deleteEncounterRoom(roomId: string): Promise<void> {
   await ensureSchema();
   await pool.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+  forgetRoom(roomId);
 }
 
 export async function listOpenRoomIdsByParticipant(playerId: string): Promise<string[]> {
@@ -724,6 +728,8 @@ export async function withDocumentTransaction<T>(
   await ensureSchema();
   const client = await pool.connect();
   const postCommit: Array<() => Promise<void>> = [];
+  // Rooms saved in this transaction; waiting players hear of them after COMMIT.
+  const changedRooms = new Map<string, 'saved' | 'deleted'>();
   let result!: T;
 
   try {
@@ -825,6 +831,7 @@ export async function withDocumentTransaction<T>(
       setEncounterRoom: async <R extends JsonObject>(roomId: string, data: R) => {
         if (isClosedRoom(data)) {
           await client.query('DELETE FROM encounter_rooms WHERE id = $1', [roomId]);
+          changedRooms.set(roomId, 'deleted');
           return;
         }
         await client.query(
@@ -833,6 +840,7 @@ export async function withDocumentTransaction<T>(
            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
           [roomId, JSON.stringify(data)],
         );
+        changedRooms.set(roomId, 'saved');
       },
       setInventory: async <R extends JsonObject>(playerId: string, avatarId: string, data: R) => {
         await client.query(
@@ -859,6 +867,14 @@ export async function withDocumentTransaction<T>(
     throw error;
   } finally {
     client.release();
+  }
+
+  for (const [roomId, change] of changedRooms) {
+    if (change === 'deleted') {
+      forgetRoom(roomId);
+    } else {
+      notifyRoomChanged(roomId);
+    }
   }
 
   for (const callback of postCommit) {

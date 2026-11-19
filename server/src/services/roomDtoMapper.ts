@@ -139,9 +139,7 @@ function buildParticipantDto(
 
 function engagedParticipantsForDto(room: EncounterRoom): RoomParticipant[] {
   return room.participants.filter(
-    (participant) =>
-      participant.choiceState !== 'disengaged' &&
-      participant.disconnectedAt === undefined,
+    (participant) => participant.choiceState !== 'disengaged',
   );
 }
 

@@ -64,9 +64,11 @@ const HEARTBEAT_MS = 60_000;
 // fading in about 3.8 s after a new encounter (280 ms delay + 3000 ms fade +
 // 560 ms), and Continue becomes pressable about 6.2 s after a choice (dice roll
 // 1730 ms + roll reveal 1730 ms + Continue fade-in about 3100 ms). The bot never
-// acts sooner than a player could, and adds a few seconds of "thinking".
-const THINK_MS: [number, number] = [4500, 9000];
-const READ_RESULT_MS: [number, number] = [6900, 10000];
+// acts sooner than a player could, and adds a little "thinking". Tightened on
+// 2026-11-19 (were 4.5–9 s and 6.9–10 s): in a party everyone waits for the
+// slowest Continue, and the bots were that one by up to 8 s per encounter.
+const THINK_MS: [number, number] = [4000, 6500];
+const READ_RESULT_MS: [number, number] = [6300, 7500];
 const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const STUCK_MS = Number(process.env.STUCK_MINUTES ?? 3) * 60_000;
 const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
@@ -397,6 +399,10 @@ class Bot {
       && ['resolved', 'ready_to_continue', 'witnessing'].includes(me.choiceState)
       // In a party the room only reaches waiting_continue once everyone has chosen.
       && ['waiting_continue', 'system_event'].includes(room.roomState)
+      // Someone else's level-up or Atranor: only its actor goes on; a witness
+      // waits for the room to reach waiting_continue (pressing it was refused
+      // with WITNESS_READONLY every 3 s).
+      && !(room.roomState === 'system_event' && me.choiceState === 'witnessing')
     ) {
       await this.api('/room/continue', { body: { avatarId: this.avatarId } });
       this.detail('pressed Continue');

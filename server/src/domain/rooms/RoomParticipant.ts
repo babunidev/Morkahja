@@ -88,7 +88,6 @@ export interface RoomParticipant {
   selectedSolutionId?: number;
   continuePressed: boolean;
   lastInteractionAt: number;
-  disconnectedAt?: number;
   /** Committed summary after room advance (legacy / post-commit). */
   resolutionSummary?: ParticipantResolutionSummary;
   /** Dry-run outcome for UI reveal before group commit. */

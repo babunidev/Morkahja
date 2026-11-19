@@ -426,5 +426,14 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Changed the same night (Babuni's direction):** no roll first. The three choices appear at once in place of the die; the one the player picks moves to the middle of the bar and bounces while it rolls, shows the roll, and stays as the first reward while the rolled ones grow out around it. `POST /room/level-up/choice` now also works before the roll and makes the roll itself; the roll-then-choose path stays for a level-up already rolled. The snapshot DTO carries `levelUpChoiceIds`. Bots pick before the roll too. Together with this, the roll on the avatar changed for every encounter: the solution's image is gone and the number stands big in the middle of the portrait; the used solution and the roll's parts are sections in the avatar's own tooltip (on party members the big number keeps its own tooltip, as their portraits have none).
 
-**Status:** implemented locally 2026-11-18; not yet released.
+**Status:** released 2026-11-18 in 0.9.0-beta.78.
 
+## D-050 — Nobody is marked inactive in a room (2026-11-19)
+
+**Babuni's direction:** there are no features that flag, tag or mark a player as inactive or disconnected in a room. The responsibility lies with the players: anyone can leave a room at any time, start another one or return to their own. Multiplayer should feel smoother while staying light on the server.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). The idle-kick system switched off on 1 June 2026 is removed (`ROOM_INACTIVITY_ENABLED`, `INACTIVITY_MS`, `disconnectedAt`, re-engaging after inactivity); only a fallen avatar is left out of a party. Room updates reach the screen through one waiting request instead of a 3 s (or 0.25 s) poll: `GET /room/active?wait=…` answers when the room changes, or after 25 s.
+
+**Open for Babuni:** Lore, Inventory and the Skillbook still pause a party's advance while open (from June), and a player who closes the tab without choosing stays listed until they leave. Both are consistent with this decision, since nobody is flagged, but either can hold the others.
+
+**Status:** implemented locally 2026-11-19; not yet released.

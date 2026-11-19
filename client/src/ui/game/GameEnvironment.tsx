@@ -457,11 +457,9 @@ export function GameEnvironment({
     return () => window.clearTimeout(timer);
   }, [visible]);
 
-  const witnessPollActive = witnessSystemEventDisplay(room).isWitness;
-
   useEffect(() => {
     let cancelled = false;
-    const pollMs = witnessPollActive ? 250 : ROOM_POLL_MS;
+    const stopWaiting = new AbortController();
 
     async function bootstrapRoom(): Promise<void> {
       if (initialRoom) {
@@ -496,49 +494,81 @@ export function GameEnvironment({
 
     void bootstrapRoom();
 
-    const poll = window.setInterval(() => {
-      void fetchActiveRoomState(avatarRef.current.id).then(async ({ room: nextRoom, partyEjection }) => {
-        if (cancelled) {
-          return;
-        }
+    // Room updates (2026-11-19): one waiting request at a time. The server
+    // answers as soon as the room looks different from the version this screen
+    // shows, so choices, Continue and the next encounter arrive at once. Every
+    // answer is checked the same way the old 3 s poll did.
+    const pause = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+    let shownVersion: string | undefined;
 
-        if (
-          partyEjection?.reason === 'kicked'
-          && !userLeavingRef.current
-          && onKickedFromParty
-        ) {
-          onKickedFromParty();
-          return;
-        }
-
-        if (
-          !nextRoom
-          || continueSubmitInFlightRef.current
-          || deathLeaveHandledRef.current === avatarRef.current.id
-        ) {
-          return;
-        }
-
-        const baseline = roomRef.current;
-        if (!baseline) {
-          applySnapshotOnly(nextRoom);
-        } else if (encounterTransitionInFlightRef.current) {
-          if (nextRoom.activeEncounter.snapshotId === baseline.activeEncounter.snapshotId) {
-            applySnapshotOnly(nextRoom);
+    async function followRoom(): Promise<void> {
+      while (!cancelled) {
+        const shownRoomId = roomRef.current?.roomId;
+        let applied = false;
+        try {
+          const { room: nextRoom, partyEjection, version } = await fetchActiveRoomState(
+            avatarRef.current.id,
+            shownVersion && shownRoomId
+              ? { version: shownVersion, roomId: shownRoomId, signal: stopWaiting.signal }
+              : undefined,
+          );
+          if (cancelled) {
+            return;
           }
-        } else if (encounterSnapshotAdvanced(baseline, nextRoom)) {
-          await runEncounterAdvanceTransition(baseline, nextRoom, roomAdvanceHooks);
-        } else {
-          applySnapshotOnly(nextRoom);
-        }
 
-        void completeAvatarDeathFlow(nextRoom);
-      }).catch(() => undefined);
-    }, pollMs);
+          if (
+            partyEjection?.reason === 'kicked'
+            && !userLeavingRef.current
+            && onKickedFromParty
+          ) {
+            onKickedFromParty();
+            return;
+          }
+
+          if (
+            nextRoom
+            && !continueSubmitInFlightRef.current
+            && deathLeaveHandledRef.current !== avatarRef.current.id
+          ) {
+            const baseline = roomRef.current;
+            if (!baseline) {
+              applySnapshotOnly(nextRoom);
+              applied = true;
+            } else if (encounterTransitionInFlightRef.current) {
+              if (nextRoom.activeEncounter.snapshotId === baseline.activeEncounter.snapshotId) {
+                applySnapshotOnly(nextRoom);
+                applied = true;
+              }
+            } else if (encounterSnapshotAdvanced(baseline, nextRoom)) {
+              await runEncounterAdvanceTransition(baseline, nextRoom, roomAdvanceHooks);
+              applied = true;
+            } else {
+              applySnapshotOnly(nextRoom);
+              applied = true;
+            }
+
+            void completeAvatarDeathFlow(nextRoom);
+          }
+          // Only a version this screen really shows may be waited on; otherwise
+          // ask again shortly, as the old poll did.
+          shownVersion = applied ? version : undefined;
+        } catch {
+          if (cancelled) {
+            return;
+          }
+          shownVersion = undefined;
+          await pause(ROOM_POLL_MS);
+          continue;
+        }
+        await pause(applied ? 120 : 600);
+      }
+    }
+
+    void followRoom();
 
     return () => {
       cancelled = true;
-      window.clearInterval(poll);
+      stopWaiting.abort();
     };
   }, [
     applySnapshotOnly,
@@ -547,7 +577,6 @@ export function GameEnvironment({
     initialRoom,
     onKickedFromParty,
     roomAdvanceHooks,
-    witnessPollActive,
   ]);
 
   useEffect(() => {

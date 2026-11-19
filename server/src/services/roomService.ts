@@ -274,12 +274,9 @@ function activeParticipants(room: EncounterRoom): RoomParticipant[] {
   return room.participants.filter((participant) => participant.choiceState !== 'disengaged');
 }
 
+/** Everyone still playing: only a fallen avatar (disengaged) is left out; nobody is set aside for being slow or away. */
 function engagedParticipants(room: EncounterRoom): RoomParticipant[] {
-  return room.participants.filter(
-    (participant) =>
-      participant.choiceState !== 'disengaged' &&
-      participant.disconnectedAt === undefined,
-  );
+  return activeParticipants(room);
 }
 
 function participantOutcomeSummary(
@@ -519,182 +516,12 @@ function isSoloPartyRoom(room: EncounterRoom): boolean {
   return engagedParticipants(room).length <= 1;
 }
 
-function currentSnapshotIdForParticipant(
-  room: EncounterRoom,
-  participant: RoomParticipant,
-): string {
-  return room.slotEncounterSnapshots[participant.slotIndex]?.snapshotId
-    ?? room.activeEncounterSnapshot.snapshotId;
-}
-
-function participantHasStaleUncommittedOutcome(
-  room: EncounterRoom,
-  participant: RoomParticipant,
-): boolean {
-  if (
-    participant.preparedResult === undefined
-    && participant.preparedCommit === undefined
-  ) {
-    return false;
-  }
-
-  const outcomeSnapshotId = participant.outcomeSnapshotId;
-  if (outcomeSnapshotId === undefined) {
-    return false;
-  }
-
-  return outcomeSnapshotId !== currentSnapshotIdForParticipant(room, participant);
-}
-
-function participantHasCommittedLeaveOutcome(participant: RoomParticipant): boolean {
-  return participant.resolutionSummary !== undefined
-    && participant.preparedResult === undefined
-    && participant.preparedCommit === undefined;
-}
-
-function clearParticipantEncounterOutcome(
-  participant: RoomParticipant,
-  now: number,
-): RoomParticipant {
-  return {
-    ...participant,
-    choiceState: 'choosing',
-    disconnectedAt: undefined,
-    focusState: 'none',
-    lastInteractionAt: now,
-    selectedAction: undefined,
-    selectedSolutionId: undefined,
-    preparedResult: undefined,
-    preparedCommit: undefined,
-    resolutionSummary: undefined,
-    outcomeSnapshotId: undefined,
-    continuePressed: false,
-  };
-}
-
-function reengageFromInactivity(
-  room: EncounterRoom,
-  playerId: string,
-  now: number,
-): EncounterRoom {
-  const participant = findParticipant(room, playerId);
-  if (!participant || participant.choiceState !== 'disengaged') {
-    return room;
-  }
-
-  if (participantHasStaleUncommittedOutcome(room, participant)) {
-    return {
-      ...room,
-      participants: room.participants.map((entry) =>
-        entry.playerId === playerId
-          ? clearParticipantEncounterOutcome(entry, now)
-          : entry,
-      ),
-      updatedAt: now,
-    };
-  }
-
-  if (
-    participantHasCommittedLeaveOutcome(participant)
-    && room.roomState !== 'waiting_continue'
-    && !(room.systemEvent?.lastEvent !== undefined
-      && room.systemEvent.lastEvent.actorPlayerId !== participant.playerId)
-  ) {
-    return {
-      ...room,
-      participants: room.participants.map((entry) =>
-        entry.playerId === playerId
-          ? clearParticipantEncounterOutcome(entry, now)
-          : entry,
-      ),
-      updatedAt: now,
-    };
-  }
-
-  const hasRealPreparedOutcome = participant.preparedResult !== undefined;
-  const wasWitnessToSystemEvent =
-    room.systemEvent?.lastEvent !== undefined &&
-    room.systemEvent.lastEvent.actorPlayerId !== participant.playerId;
-  const hasCommittedSummaryOnSameEncounter =
-    participantHasCommittedLeaveOutcome(participant)
-    && room.roomState === 'waiting_continue';
-  const restoredChoiceState =
-    room.roomState === 'waiting_continue' &&
-    (hasRealPreparedOutcome ||
-      hasCommittedSummaryOnSameEncounter ||
-      participant.resolutionSummary !== undefined ||
-      wasWitnessToSystemEvent)
-      ? (hasRealPreparedOutcome
-        ? ('ready_to_continue' as const)
-        : ('resolved' as const))
-      : ('choosing' as const);
-
-  return {
-    ...room,
-    participants: room.participants.map((entry) =>
-      entry.playerId === playerId
-        ? {
-            ...entry,
-            choiceState: restoredChoiceState,
-            disconnectedAt: undefined,
-            focusState: 'none',
-            lastInteractionAt: now,
-          }
-        : entry,
-    ),
-    updatedAt: now,
-  };
-}
-
-async function reengageParticipantIfNeeded(
-  room: EncounterRoom,
-  playerId: string,
-): Promise<EncounterRoom> {
-  return withDocumentTransaction(async (transaction) => {
-    const current = await loadEncounterRoomFromTransaction(transaction, room.roomId);
-    if (!current || current.roomState === 'closed') {
-      return room;
-    }
-    const updated = reengageFromInactivity(current, playerId, nowMs());
-    if (updated !== current) {
-      await transaction.setEncounterRoom(updated.roomId, updated);
-    }
-    return updated;
-  });
-}
-
 async function notifyAdventureStartedForJoin(room: EncounterRoom): Promise<void> {
   if (room.roomState === 'closed') {
     return;
   }
 
   await recordAdventureStartedEvent(room);
-}
-
-async function reengageReturningParticipantIfNeeded(
-  room: EncounterRoom,
-  playerId: string,
-): Promise<EncounterRoom> {
-  const participant = findParticipant(room, playerId);
-  if (!participant || participant.choiceState !== 'disengaged') {
-    return room;
-  }
-
-  const avatar = await loadAvatar(playerId, participant.avatarId);
-  if (!avatar || readAvatarLifeStatus(avatar) !== 'active') {
-    return room;
-  }
-
-  const hasRestorableOutcome =
-    participant.preparedResult !== undefined ||
-    participant.resolutionSummary !== undefined ||
-    participant.preparedCommit !== undefined;
-
-  if (!hasRestorableOutcome && !isSoloPartyRoom(room)) {
-    return room;
-  }
-
-  return reengageParticipantIfNeeded(room, playerId);
 }
 
 async function mergeExpansionsForPlayerIds(playerIds: string[]): Promise<number[]> {
@@ -1354,12 +1181,10 @@ async function commitParticipantOutcomeOnLeave(
     participant,
     participantSummaryFromResolve(result),
   );
-  const now = nowMs();
 
   return {
     ...participant,
     choiceState: result.avatarDied ? 'disengaged' as const : 'resolved' as const,
-    disconnectedAt: result.avatarDied ? now : participant.disconnectedAt,
     resolutionSummary: summary,
     preparedResult: undefined,
     preparedCommit: undefined,
@@ -1473,7 +1298,6 @@ async function commitPreparedResultsForRoom(
   const activeParticipantCount = activeParticipants(room).length;
   let nextParticipants = [...room.participants];
   const commits = new Map<string, ResolveParticipantInRoomResult>();
-  const now = nowMs();
 
   for (const participant of room.participants) {
     if (participant.choiceState === 'disengaged') {
@@ -1503,7 +1327,6 @@ async function commitPreparedResultsForRoom(
           ? {
               ...entry,
               choiceState: result.avatarDied ? 'disengaged' as const : entry.choiceState,
-              disconnectedAt: result.avatarDied ? now : entry.disconnectedAt,
               resolutionSummary: summary,
               preparedResult: undefined,
               preparedCommit: undefined,
@@ -1852,7 +1675,6 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
             preparedCommit: undefined,
             outcomeSnapshotId: undefined,
             continuePressed: actorDied && isSoloPartyRoom(room) ? true : entry.continuePressed,
-            ...(actorDied && !isSoloPartyRoom(room) ? { disconnectedAt: now } : {}),
           }
         : entry,
     );
@@ -2200,10 +2022,9 @@ export async function createRoom(
       && existing.roomState !== 'closed'
       && findParticipant(existing, playerId)
     ) {
-      const reengaged = await reengageReturningParticipantIfNeeded(existing, playerId);
       await setPresenceInRoom(playerId, existing.roomId);
-      await notifyAdventureStartedForJoin(reengaged);
-      return reconcilePendingLevelUpForRoom(reengaged);
+      await notifyAdventureStartedForJoin(existing);
+      return reconcilePendingLevelUpForRoom(existing);
     }
   }
 
@@ -2271,7 +2092,6 @@ export async function getActiveRoomForPlayer(
     return null;
   }
 
-  room = await reengageReturningParticipantIfNeeded(room, playerId);
   if (!findParticipant(room, playerId)) {
     return null;
   }
@@ -2358,9 +2178,8 @@ export async function joinRoom(
   });
 
   if (result.rejoin) {
-    const reengaged = await reengageReturningParticipantIfNeeded(result.room, playerId);
     await setPresenceInRoom(playerId, roomId);
-    return reconcilePendingLevelUpForRoom(reengaged);
+    return reconcilePendingLevelUpForRoom(result.room);
   }
 
   await setPresenceInRoom(playerId, roomId);
@@ -2520,8 +2339,6 @@ export async function submitChoice(
         diceFill: slots.length < setSize,
       } as PlayerEncounterAction;
     }
-
-    room = reengageFromInactivity(room, playerId, now);
     await transaction.setEncounterRoom(roomId, room);
 
     if (room.roomState === 'system_event') {
@@ -2603,7 +2420,6 @@ export async function submitSetPick(
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
-    room = reengageFromInactivity(room, playerId, now);
     if (room.roomState !== 'active_encounter') {
       throw new RoomError('Room is not accepting choices', 409, 'INVALID_ROOM_STATE');
     }
@@ -2696,7 +2512,6 @@ export async function submitSetDice(
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
-    room = reengageFromInactivity(room, playerId, now);
     if (room.roomState !== 'active_encounter') {
       throw new RoomError('Room is not accepting choices', 409, 'INVALID_ROOM_STATE');
     }
@@ -2782,8 +2597,6 @@ export async function submitSelection(
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
-
-    room = reengageFromInactivity(room, playerId, now);
     await transaction.setEncounterRoom(roomId, room);
 
     if (room.roomState === 'system_event') {
@@ -2852,9 +2665,6 @@ export async function setFocusState(
     if (!room) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
-
-    room = reengageFromInactivity(room, playerId, now);
-
     const next: EncounterRoom = {
       ...room,
       participants: room.participants.map((participant) =>
@@ -3071,9 +2881,6 @@ export async function submitContinue(playerId: string, avatarId: string): Promis
     if (!current) {
       throw new RoomError('Room not found', 404, 'ROOM_NOT_FOUND');
     }
-
-    current = reengageFromInactivity(current, playerId, now);
-
     if (current.roomState !== 'waiting_continue' && current.roomState !== 'advancing') {
       throw new RoomError('Room is not waiting to continue', 409, 'INVALID_ROOM_STATE');
     }
@@ -3647,7 +3454,6 @@ function prepareParticipantForSacrificeResume(participant: RoomParticipant): Roo
     ...participant,
     choiceState: 'resolved',
     continuePressed: true,
-    disconnectedAt: undefined,
     focusState: 'none',
     preparedResult: undefined,
     preparedCommit: undefined,

@@ -422,9 +422,18 @@ const ROOM_POLL_MS = 3000;
 
 export { ROOM_POLL_MS };
 
-export async function fetchActiveRoomState(avatarId: string): Promise<RoomActiveResponse> {
+export async function fetchActiveRoomState(
+  avatarId: string,
+  waitFor?: { version: string; roomId: string; signal?: AbortSignal },
+): Promise<RoomActiveResponse> {
+  // With `waitFor` the server answers once the room no longer matches that
+  // version (or after about 25 s), so changes arrive at once without fast polling.
+  const wait = waitFor
+    ? `&wait=${encodeURIComponent(waitFor.version)}&room=${encodeURIComponent(waitFor.roomId)}`
+    : '';
   return request<RoomActiveResponse>(
-    `/room/active?avatarId=${encodeURIComponent(avatarId)}`,
+    `/room/active?avatarId=${encodeURIComponent(avatarId)}${wait}`,
+    waitFor?.signal ? { signal: waitFor.signal } : undefined,
   );
 }
 
