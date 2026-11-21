@@ -2318,7 +2318,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "Forged in light and inscribed with runes of banishment, this lance's radiant tip pierces through darkness, a beacon of hope.",
     "mSolutionType": 10,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10231": {
     "mSolutionID": 10231,
