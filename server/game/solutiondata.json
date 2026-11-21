@@ -447,7 +447,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis channels the fury of the wind into their strikes, delivering a whirlwind blow that can stagger even the mightiest of foes.",
     "mSolutionType": 9,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10042": {
     "mSolutionID": 10042,
