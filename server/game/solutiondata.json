@@ -326,7 +326,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from finely worked metal and etched with geometric motifs, this elegant key was designed to open prized storage chests carried aboard drifting Skylands.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10031": {
     "mSolutionID": 10031,
