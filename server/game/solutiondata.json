@@ -458,7 +458,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Leveraging their connection with the element of air, Aevis can make even the steepest surfaces feel like gentle slopes, allowing them to climb with unparalleled grace and ease.",
     "mSolutionType": 13,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10043": {
     "mSolutionID": 10043,
