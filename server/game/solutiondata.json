@@ -2137,7 +2137,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An ornate lantern with a ghostly flame that flickers in response to hidden magic, guiding its bearer through treacherous expanse towards concealed enchantments.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10210": {
     "mSolutionID": 10210,
