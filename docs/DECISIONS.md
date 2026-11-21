@@ -437,3 +437,13 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **Open for Babuni:** Lore, Inventory and the Skillbook still pause a party's advance while open (from June), and a player who closes the tab without choosing stays listed until they leave. Both are consistent with this decision, since nobody is flagged, but either can hold the others.
 
 **Status:** released 2026-11-19 in 0.9.0-beta.79.
+
+## D-051 — Frameless circular solution artwork (2026-11-21)
+
+**Babuni's decision:** Rework the game's solution illustrations one by one, keeping the original solution ID, name, description, current appearance, and relevant MorkahjaWorld canon as the starting point. Physical items receive a continuous circular background and must remain entirely within it; skills and abilities instead depict their effect or concept across the circular area. All icons are frameless, with transparency outside the disc, intended to combine with game-rendered frames later. The circle may use the full 512 × 512 canvas. Close-ups and more abstract interpretations are welcome when faithful to the solution.
+
+**Export direction:** 512 × 512 WebP, targeting roughly 0.077 MB when the image quality allows. Check actual dimensions, transparency and file size; don't enforce a byte count at the cost of readability.
+
+**Process and authority:** Preserve original assets until replacements are reviewed, inspect the game solution data and artwork first, and consult the MorkahjaWorld repository when lore is relevant. The [artwork standard](SOLUTION_IMAGE_STANDARD.md) is the durable rule and review checklist. **Status:** visual direction approved; repository documentation committed. The first replacement, 10001 Arcane Intellect, is a draft rather than an approved, committed, tested or deployed game asset.
+
+**AI contribution:** ChatGPT (GPT-6) inspected the game solution metadata and existing image and the MorkahjaWorld Common Arts and Elemental Foundation texts, then documented the standard. No gameplay code or production artwork changed as part of the documentation commit.
