@@ -2371,7 +2371,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A flute, carved from azure crystal and adorned with vine-like engravings, its notes resonate with the clarity of flowing water, captivating the listener with sounds that echo the serene beauty of nature.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10237": {
     "mSolutionID": 10237,
