@@ -2095,7 +2095,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This slender blade is sheathed in shadow, its hilt wrapped in sound-dampening cloth, ensuring that each strike is silent as a whisper.",
     "mSolutionType": 36,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10205": {
     "mSolutionID": 10205,
