@@ -2309,7 +2309,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This charm, humming with a tranquil melody, exudes a calming aura, capable of soothing even the most tormented and ferocious of creatures.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10230": {
     "mSolutionID": 10230,
