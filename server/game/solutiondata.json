@@ -1649,7 +1649,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A translucent blue crystal key, shimmering with an inner frosty luminescence. Intricate runes dance slowly within, and its cold grip feels like history solidified in hand.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10162": {
     "mSolutionID": 10162,
