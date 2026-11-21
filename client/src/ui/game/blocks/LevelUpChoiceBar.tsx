@@ -16,6 +16,7 @@ import { TooltipDivider, useGameTooltip, type GameTooltipContent } from '../Game
 import { LEVEL_UP_ENCOUNTER_ID, rewardQuantityForVisibleEntry } from '../visibleEncounterRewards.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import ChoiceBanner from './ChoiceBanner.js';
+import { SolutionImage } from '../../common/SolutionFrame.js';
 
 /**
  * Level-up choice (D-049, Babuni 2026-11-18): the three rewards wait in the
@@ -344,7 +345,7 @@ export function LevelUpChoiceBar({
                   : {}),
               }}
             >
-              <img alt="" aria-hidden="true" {...protectedImageProps} src={`${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`} style={imageStyle} />
+              <SolutionImage alt="" aria-hidden="true" {...protectedImageProps} src={`${SOLUTION_IMAGE_ROOT}/${solution.mSolutionIconName}.webp`} style={imageStyle} />
               {isChosen && phase === 'showing' && roll !== undefined ? (
                 <span aria-hidden="true" className="morkahja-result-outcome" style={rollStyle}>
                   {displayRollAsD20(roll)}

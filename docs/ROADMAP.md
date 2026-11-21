@@ -157,3 +157,13 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Rework and individually review existing solution imagery, starting with 10001 Arcane Intellect; 247 solution records and 268 illustration files were observed on `main` on 2026-11-21. This does not imply a one-to-one relation between records and files.
 - [ ] Preserve each original until the replacement is approved; validate transparency, circle bounds, WebP dimensions, file size and a thumbnail rendering.
 - [ ] Integrate approved WebPs with the existing solution-icon names, test the game and record separate deployment evidence. The future game-controlled frame overlay is not implemented in this documentation work.
+
+## Solution picture frames — 2026-11-21
+
+- [x] Round frames drawn by the game on top of every solution picture: standard, essence (four elements), rare; older pictures zoomed past their painted rim. Not released.
+- [x] Charges in a hexagon at each picture's bottom right: inventory, skillbook, encounter choices. Not released.
+- [ ] Babuni's review of the three frames and the element symbols.
+- [ ] Babuni's confirmation of which items count as rare.
+- [ ] Remake the remaining solution pictures without a painted frame; add each name to `FRAMELESS_SOLUTION_ICONS`.
+- [x] Frames on pictures in flight (rewards, losses, uses), the hovering used solution, the starfield and the avatar's inflow.
+- [ ] Check in a played encounter and on a phone.

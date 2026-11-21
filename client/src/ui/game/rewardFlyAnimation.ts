@@ -1,3 +1,4 @@
+import { createSolutionPictureElement } from '../common/solutionFrameMarkup.js';
 import { holdAvatarRoll } from './avatarRollHold.js';
 import type { SolutionSetSubmission } from '../../api/http.js';
 
@@ -143,12 +144,11 @@ interface IconFlightMotion {
  * visible flyer would show for those frames at the containing block's top-left
  * corner (left: 0, top: 0, no transform).
  */
-function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTMLImageElement {
-  const flyer = document.createElement('img');
+function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTMLElement {
+  // A solution picture flies with its frame on top; other icons fly as they are.
+  const { root: flyer, image } = createSolutionPictureElement(imageSrc, size);
   flyer.style.visibility = 'hidden';
   flyer.dataset.morkahjaIconFlyer = 'true';
-  flyer.alt = '';
-  flyer.draggable = false;
   flyer.setAttribute('aria-hidden', 'true');
   flyer.style.position = 'fixed';
   flyer.style.left = '0';
@@ -159,19 +159,25 @@ function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTM
   flyer.style.padding = '0';
   flyer.style.border = '0';
   flyer.style.borderRadius = '50%';
-  flyer.style.objectFit = 'cover';
+  if (flyer === image) {
+    image.style.objectFit = 'cover';
+  }
   flyer.style.pointerEvents = 'none';
   flyer.style.zIndex = '220';
   flyer.style.boxShadow = boxShadow;
-  flyer.src = imageSrc;
   document.body.append(flyer);
   return flyer;
+}
+
+/** The picture inside a flyer, whose loading the flight waits for. */
+function flyerImage(flyer: HTMLElement): HTMLImageElement | null {
+  return flyer instanceof HTMLImageElement ? flyer : flyer.querySelector('img');
 }
 
 const DEFAULT_FLIGHT_EASING = 'cubic-bezier(0.18, 0.04, 0.12, 1)';
 
 function runAnimatedFlyer(
-  flyer: HTMLImageElement,
+  flyer: HTMLElement,
   keyframes: Keyframe[],
   durationMs: number,
   timeoutMs: number,
@@ -218,17 +224,18 @@ function runAnimatedFlyer(
 
     const loadTimeout = window.setTimeout(finish, timeoutMs);
 
-    if (flyer.complete && flyer.naturalWidth > 0) {
+    const image = flyerImage(flyer);
+    if (!image || (image.complete && image.naturalWidth > 0)) {
       window.clearTimeout(loadTimeout);
       startFlight();
       return;
     }
 
-    flyer.addEventListener('load', () => {
+    image.addEventListener('load', () => {
       window.clearTimeout(loadTimeout);
       startFlight();
     }, { once: true });
-    flyer.addEventListener('error', () => {
+    image.addEventListener('error', () => {
       window.clearTimeout(loadTimeout);
       finish();
     }, { once: true });
@@ -994,11 +1001,9 @@ export function showDieFace(rect: DOMRect, imageSrc: string, text: string): HTML
     pointerEvents: 'none',
     zIndex: '219',
   });
-  const image = document.createElement('img');
-  image.src = imageSrc;
-  image.alt = '';
-  image.draggable = false;
-  Object.assign(image.style, { width: '100%', height: '100%', objectFit: 'contain', display: 'block' });
+  // A solution picture shows with its frame on top; the die as it is.
+  const { root: image } = createSolutionPictureElement(imageSrc, rect.width);
+  Object.assign(image.style, { position: 'relative', width: '100%', height: '100%', objectFit: 'contain', display: 'block' });
   const number = document.createElement('span');
   // Font, colour and outline of the roll on the avatar, as on a hovering die.
   number.className = 'morkahja-result-outcome';

@@ -29,6 +29,16 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-80',
+    version: '0.9.0-beta.80',
+    period: '21 Nov 2026',
+    notes: [
+      'Every solution now sits in a drawn golden frame: essences carry their god\'s element in the corners, and rare treasures get a richer ring. The frame stays with it wherever it goes, even in flight.',
+      'A small hexagon on each item shows how many charges you hold, in the inventory, the skillbook and on the solutions an encounter offers.',
+      'The first solutions have new pictures, among them Arcane Intellect, Haggling, Open Lock and Search.',
+    ],
+  },
+  {
     id: 'beta-79',
     version: '0.9.0-beta.79',
     period: '19 Nov 2026',

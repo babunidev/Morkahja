@@ -1,3 +1,4 @@
+import { createSolutionPictureElement } from '../common/solutionFrameMarkup.js';
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { gameSolutions } from '../../data/gameContent.js';
 import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
@@ -99,7 +100,7 @@ function stageBounds(): { left: number; top: number; width: number; height: numb
 }
 
 interface Flier {
-  el: HTMLImageElement;
+  el: HTMLElement;
   startX: number;
   startY: number;
   startTime: number;
@@ -137,17 +138,16 @@ export function AvatarSolutionInflow({ avatar }: { avatar: PersistedAvatar }) {
       const startY = stage.top + stage.height * randomBetween(0.08, 0.92);
       const size = randomBetween(FLIER_FULL_SIZE_MIN, FLIER_FULL_SIZE_MAX);
 
-      const el = document.createElement('img');
-      el.src = src;
-      el.alt = '';
-      el.draggable = false;
-      el.setAttribute('aria-hidden', 'true');
+      // The picture with its frame on top, as everywhere else.
+      const { root: el, image } = createSolutionPictureElement(src, size);
+      if (el === image) {
+        image.style.objectFit = 'contain';
+      }
       el.style.position = 'fixed';
       el.style.left = '0';
       el.style.top = '0';
       el.style.width = `${size}px`;
       el.style.height = `${size}px`;
-      el.style.objectFit = 'contain';
       el.style.opacity = '0';
       el.style.pointerEvents = 'none';
       el.style.willChange = 'transform, opacity';

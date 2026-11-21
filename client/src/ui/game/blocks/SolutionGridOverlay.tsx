@@ -25,6 +25,7 @@ import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { SolutionImage } from '../../common/SolutionFrame.js';
 
 const OVERLAY_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -557,9 +558,10 @@ export function SolutionGridOverlay({
                   type="button"
                 >
                   <span className="morkahja-grid-item-button-visual" style={itemVisualStyle}>
-                    <img
+                    <SolutionImage
                       alt=""
                       aria-hidden="true"
+                      charges={item.uses}
                       draggable={false}
                       src={item.imageSrc}
                       style={{

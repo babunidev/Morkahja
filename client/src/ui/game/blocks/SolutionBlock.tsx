@@ -63,6 +63,7 @@ import {
 } from '../rewardFlyAnimation.js';
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import { RESULT_READY_ESTIMATE_MS, actPhaseKey, actionsPhaseKey, endFramePhase, planFramePhase } from '../frameTimer.js';
+import { SolutionImage } from '../../common/SolutionFrame.js';
 
 const DEFAULT_DICE_BUTTON = assetUrl(diceButtonAssetPath(DEFAULT_DICE_ID));
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -342,7 +343,8 @@ const solutionIconShellStyle: CSSProperties = {
   width: SOLUTION_ACTION_SIZE_PX,
   height: SOLUTION_ACTION_SIZE_PX,
   borderRadius: '50%',
-  overflow: 'hidden',
+  // Visible: an essence's frame reaches into the box's corners, a rare one past it.
+  overflow: 'visible',
 };
 
 const primarySolutionGlowStyle: CSSProperties = {
@@ -1561,7 +1563,7 @@ export function SolutionBlock({
                             display: 'block',
                           }}
                         >
-                          <img
+                          <SolutionImage
                             alt=""
                             aria-hidden="true"
                             draggable={false}
@@ -1626,9 +1628,11 @@ export function SolutionBlock({
                       : {}),
                   }}
                 >
-                  <img
+                  <SolutionImage
                     alt=""
                     aria-hidden="true"
+                    // The charges held of this item; none while a refill brings in another.
+                    charges={visibleSlot.available && !refillSolution ? visibleSlot.displayedUses : null}
                     draggable={false}
                     src={slotImageSrc}
                     style={solutionImageStyle}

@@ -16,6 +16,7 @@ import {
   syncEssenceSlots,
 } from '../game/essenceSlots.js';
 import { ejectFooterButton, getFooterButtonRect, playIconFlightToElement } from '../game/rewardFlyAnimation.js';
+import { SolutionImage } from '../common/SolutionFrame.js';
 
 /**
  * The avatar's lives (Babuni's direction, 2026-11-13): five essence slots on
@@ -159,7 +160,7 @@ export function EssenceSlotsRing({
         return (
           <span data-essence-slot={local ? position : undefined} key={position} style={slotStyle(position)}>
             {image ? (
-              <img alt="" aria-hidden="true" {...protectedImageProps} src={image} style={essenceStyle} />
+              <SolutionImage alt="" aria-hidden="true" {...protectedImageProps} src={image} style={essenceStyle} />
             ) : null}
           </span>
         );

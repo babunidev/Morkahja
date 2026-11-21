@@ -1,3 +1,4 @@
+import { SolutionImage } from '../common/SolutionFrame.js';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { gameSolutions } from '../../data/gameContent.js';
 import { useLayoutMode } from '../layout/useLayoutMode.js';
@@ -114,7 +115,7 @@ function createStar(id: number): StarState {
 
 function renderStars(stars: StarState[]) {
   return stars.map((star) => (
-    <img
+    <SolutionImage
       alt=""
       aria-hidden="true"
       draggable={false}

@@ -447,3 +447,15 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **Process and authority:** Preserve original assets until replacements are reviewed, inspect the game solution data and artwork first, and consult the MorkahjaWorld repository when lore is relevant. The [artwork standard](SOLUTION_IMAGE_STANDARD.md) is the durable rule and review checklist. **Status:** visual direction approved; repository documentation committed. The first replacement, 10001 Arcane Intellect, is a draft rather than an approved, committed, tested or deployed game asset.
 
 **AI contribution:** ChatGPT (GPT-6) inspected the game solution metadata and existing image and the MorkahjaWorld Common Arts and Elemental Foundation texts, then documented the standard. No gameplay code or production artwork changed as part of the documentation commit.
+
+## D-052 — A solution's frame is part of the UI, on top of every picture (2026-11-21)
+
+**Babuni's direction:** solution pictures are being remade without a painted frame. The frame belongs to the UI, not to the item graphics: every solution item is two parts, the picture with the solution inside, and the frame that sits on top. Every item gets it, in the language of the encounter frame made round. An essence's frame carries its god's element; valuable items get a richer frame.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `SolutionImage` (React) and `createSolutionPictureElement` (plain DOM, for pictures in flight) draw the picture clipped round and an SVG frame over it, everywhere a solution picture appears. Pictures not yet remade are zoomed 1.3× so their painted rim falls outside the frame; remade ones are listed in `FRAMELESS_SOLUTION_ICONS` and shown whole.
+
+**Charges (same day, Babuni's direction):** each picture shows the charges the player holds in a small hexagon at its bottom right, in the inventory and on the solutions offered in an encounter, so the count needs no tooltip.
+
+**Open for Babuni:** which items count as rare (proposed: the Atranor items, non-essences kept with the essences, icons named legendary or epic).
+
+**Status:** local, not released.

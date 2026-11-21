@@ -82,6 +82,7 @@ import {
 } from '../../transitions/fade.js';
 import { assetUrl } from '../../../assetUrl.js';
 import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
+import { SolutionImage } from '../../common/SolutionFrame.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -1224,7 +1225,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
           className={trackRewardRef ? 'morkahja-footer-button-visual' : undefined}
           style={trackRewardRef ? { display: 'block' } : undefined}
         >
-          <img
+          <SolutionImage
             alt=""
             aria-hidden="true"
             {...protectedImageProps}
@@ -1279,7 +1280,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
         }}
         type="button"
       >
-        <img
+        <SolutionImage
           alt=""
           aria-hidden="true"
           {...protectedImageProps}
@@ -1597,7 +1598,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
             >
               {/* The game's usual hover: lift, brighten and glow (index.css). */}
               <span className="morkahja-footer-button-visual" style={{ display: 'block' }}>
-                <img
+                <SolutionImage
                   alt=""
                   aria-hidden="true"
                   {...protectedImageProps}

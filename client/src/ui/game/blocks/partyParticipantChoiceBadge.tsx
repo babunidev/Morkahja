@@ -22,6 +22,7 @@ import {
 import { TOOLTIP_GOLD, TooltipDivider } from '../GameTooltip.js';
 import { useAvatarRollHeld } from '../avatarRollHold.js';
 import { assetUrl } from '../../../assetUrl.js';
+import { SolutionImage } from '../../common/SolutionFrame.js';
 
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 export const PARTY_BADGE_SIZE_PX = 62;
@@ -269,7 +270,7 @@ function PartyChoiceOverlayBadge({
           className={pulseVisible ? 'morkahja-party-choice-badge--pulse' : undefined}
           style={badgeContentStyle}
         >
-          <img alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
+          <SolutionImage alt="" {...protectedImageProps} src={iconSrc} style={iconStyle} />
           {rollDisplay !== null && rollDisplay !== undefined ? (
             <span
               aria-hidden="true"
