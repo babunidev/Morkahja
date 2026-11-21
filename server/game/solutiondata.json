@@ -2299,7 +2299,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Encrusted with ancient amber and inscribed with matching runes, this ring resonates with any magic lock, potentially unlocking the secrets it guards.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10229": {
     "mSolutionID": 10229,
