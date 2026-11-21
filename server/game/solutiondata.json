@@ -2104,7 +2104,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from the darkest yew and strung with a silken thread, this bow allows for silent, precise shots, perfect for hunting.",
     "mSolutionType": 30,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10206": {
     "mSolutionID": 10206,
