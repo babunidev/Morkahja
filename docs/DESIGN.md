@@ -22,3 +22,7 @@ Source presence does not prove successful operation on current mobile devices or
 The design story should show dated evolution: first playable checkpoint (May 18), music and event pipeline (May 19–20), expanded encounter-result motion and achievement surfaces (May 21–22), and deployment/social polishing (May 23 onward). Distinguish original assets and author-approved art from AI mockups or source-only components. Preserve screenshots and evidence where permission exists; do not infer an approved final visual identity from the code alone.
 
 See the [development journal](DEVLOG.md), whose final section is the original chronological log, and the [content inventory](CONTENT.md).
+
+## Solution imagery — adopted visual direction (2026-11-21)
+
+The [solution artwork standard](SOLUTION_IMAGE_STANDARD.md) records Babuni's decision to rework item and ability icons as 512 × 512 circular, frameless WebP illustrations with alpha outside the circle. Physical items remain entirely within their illustrated background; skills use a full-circle depiction of the ability. Existing in-game assets and frame rendering have **not** been migrated by this documentation change.
