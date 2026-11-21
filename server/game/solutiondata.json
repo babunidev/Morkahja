@@ -2159,7 +2159,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This lantern, with a flame that burns in brilliant blues and greens, reveals hidden inscriptions and magical paths, guiding to lost knowledge and items.",
     "mSolutionType": 2,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10213": {
     "mSolutionID": 10213,
