@@ -480,7 +480,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "By recounting tales of the air or performing their Airdance, Aevis can inspire those around them, boosting morale, creativity, and determination.",
     "mSolutionType": 39,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10045": {
     "mSolutionID": 10045,
