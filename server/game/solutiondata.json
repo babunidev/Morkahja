@@ -491,7 +491,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Summoning the unyielding might of Grimnir ancestors, this blow mimics the crushing weight of rocks falling from the sky.",
     "mSolutionType": 9,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10046": {
     "mSolutionID": 10046,
