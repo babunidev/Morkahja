@@ -118,7 +118,8 @@ const scrollWrapStyle: CSSProperties = {
   zIndex: 1,
   flex: 1,
   minHeight: 0,
-  padding: '0 clamp(14px, 4vw, 28px) clamp(24px, 6vw, 36px)',
+  // Just enough room between the frame and the pictures at the sides (Babuni, 2026-11-21).
+  padding: '0 clamp(5px, 1.2vw, 7px) clamp(24px, 6vw, 36px)',
   boxSizing: 'border-box',
   overflow: 'auto',
   msOverflowStyle: 'none',
@@ -144,16 +145,18 @@ const panelFrameLayerStyle: CSSProperties = {
 const itemGridStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
-  columnGap: 'clamp(8px, 2vw, 14px)',
-  // The buttons' own 4 px above and below make up the rest of the row gap.
-  rowGap: 'max(0px, calc(clamp(8px, 2vw, 14px) - 8px))',
+  // Barely any gap: the pictures take as much width as they can (Babuni, 2026-11-21).
+  columnGap: 'clamp(2px, 0.5vw, 4px)',
+  // The buttons' own 4 px above and below make up the row gap.
+  rowGap: 0,
   justifyItems: 'center',
 };
 
 /**
  * The whole grid cell is the touch target (a little padding above and below
- * too), so a tap slightly beside the picture still hits its item; the
- * picture itself stays at most 72 px wide.
+ * too), so a tap slightly beside the picture still hits its item. The
+ * picture fills its column, so the five columns use the panel's whole width
+ * (Babuni, 2026-11-21: it was capped at 72 px before).
  */
 const itemButtonStyle: CSSProperties = {
   width: '100%',
@@ -164,7 +167,6 @@ const itemButtonStyle: CSSProperties = {
 };
 
 const itemVisualStyle: CSSProperties = {
-  maxWidth: 72,
   margin: '0 auto',
 };
 
