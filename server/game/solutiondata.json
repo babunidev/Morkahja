@@ -359,7 +359,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Channels mystical energies to mend wounds and alleviate ailments, providing gentle restoration and rejuvenation through the touch of basic healing magic.",
     "mSolutionType": 21,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10034": {
     "mSolutionID": 10034,
