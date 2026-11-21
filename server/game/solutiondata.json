@@ -133,7 +133,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A clear, soothing elixir contained in a simple glass vial. It possesses the ability to mend wounds and restore vitality when consumed.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10014": {
     "mSolutionID": 10014,
