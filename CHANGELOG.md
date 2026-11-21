@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-21 — Solution artwork redesign standard (documentation only)
+
+- Added `docs/SOLUTION_IMAGE_STANDARD.md` (D-051): 512 × 512 frameless circular WebP illustrations, transparent outer canvas, fully contained objects for items, and full-circle compositions for abilities. Source and lore checks are required before each replacement.
+- Recorded the planned per-solution review in `docs/ROADMAP.md`, with corresponding design, decision and development notes. **No game icon was replaced, tested or deployed** by this documentation update.
+
 ## 2026-11-19 — Room updates arrive at once; no leftover inactivity code; bots keep a player's pace; 0.9.0-beta.79
 
 - **Room updates (Babuni's direction: "smoother multiplayer, still low performance"):** the game screen no longer asks for its room every 3 s (every 0.25 s while watching someone else's level-up or Atranor). It keeps one waiting request open; the server answers the moment the room looks different to that player, or after 25 s. Every saved room bumps an in-process counter (`server/src/db/roomChanges.ts`), announced after COMMIT and never for a rolled-back save; `GET /room/active` takes `wait=<version>&room=<roomId>` and returns a `version` (a hash of what the player sees). Without `wait` it answers at once as before, so the bots and older clients are unaffected. Files: `roomChanges.ts`, `postgresDocumentStore.ts`, `roomController.ts`, `shared/src/contracts.ts`, `client/src/api/http.ts`, `GameEnvironment.tsx`; new test `roomChanges.test.ts`.
