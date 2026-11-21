@@ -170,3 +170,11 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Remake the remaining solution pictures without a painted frame (the admin tool marks each one on upload).
 - [x] Frames on pictures in flight (rewards, losses, uses), the hovering used solution, the starfield and the avatar's inflow.
 - [ ] Check in a played encounter and on a phone.
+
+## Essences of the avatar's own element — 2026-11-21 (D-053)
+
+- [x] New avatars start with the three essences of their race's element (Rokur fire, Verdani water, Aevis air, Grimnir earth).
+- [x] Essences of other elements are lost first, two per loss; the last one alone; then the avatar's own, one per loss.
+- [x] A total of 25 or higher: 20% chance of one extra essence of the avatar's element.
+- [ ] Play it: a new avatar's essences, a Hardship with mixed essences, and a high roll.
+- [ ] Release.

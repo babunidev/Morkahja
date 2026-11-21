@@ -1,3 +1,4 @@
+import type { EssenceElement } from '@shared/essenceElements.js';
 /**
  * Which frame a solution picture gets (Babuni's direction, 2026-11-21): the
  * remade solution pictures come without a painted frame, and the game draws
@@ -18,7 +19,7 @@
  * per picture).
  */
 export type SolutionFrameTier = 'standard' | 'essence' | 'rare';
-export type SolutionElement = 'fire' | 'water' | 'air' | 'earth';
+export type SolutionElement = EssenceElement;
 
 export interface SolutionFrameLook {
   tier: SolutionFrameTier;
@@ -50,24 +51,12 @@ export interface SolutionFrameRecord {
 }
 
 /**
- * The gods' essences by solution id, grouped by tribunal (MorkahjaWorldBuilding
- * Pantheon/Elemental_Pantheon.md): Ignis Council fire, Abyssal Conclave water,
- * Celestial Convocation air, Terran Assembly earth.
+ * The gods' essences by solution id, grouped by tribunal; the table is shared
+ * with the server, which uses it for starting essences and essence losses.
  */
-export const ESSENCE_ELEMENTS: Readonly<Record<number, SolutionElement>> = {
-  10040: 'fire', // Fyraan
-  10038: 'fire', // Solriel
-  10039: 'fire', // Khaotys
-  10122: 'water', // Nereval
-  10123: 'water', // Sylvanus
-  10244: 'water', // Aerisara
-  10010: 'air', // Aeriel
-  10011: 'air', // Aetheria
-  10026: 'air', // Ordius
-  10037: 'earth', // Stonara
-  10027: 'earth', // Ferrumis
-  10036: 'earth', // Umbrael
-};
+import { ESSENCE_ELEMENTS } from '@shared/essenceElements.js';
+
+export { ESSENCE_ELEMENTS };
 
 const ESSENCE_SOLUTION_TYPE = 15;
 const ESSENCE_INVENTORY_TYPE = 3;

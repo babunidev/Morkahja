@@ -14,6 +14,12 @@ import {
   createInitialProgression,
 } from '../domain/avatar/AvatarProgression.js';
 import { rewardForRoll25 } from '../engine/roll25Reward.js';
+import { ownElementEssenceBonus } from '../engine/ownElementEssenceBonus.js';
+import {
+  RACE_REWARD_TYPE_ELEMENTS,
+  essenceIdsOfElement,
+  type EssenceElement,
+} from '@shared/essenceElements.js';
 import { SolutionRewardType, type EncounterData, type EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
@@ -659,6 +665,21 @@ function raceRewardTypeForAvatar(avatar: AvatarDocument): 40 | 41 | 42 | 43 {
   }
 }
 
+/** The avatar's own element, from its race (Babuni, 2026-11-21). */
+function ownElementForAvatar(avatar: AvatarDocument): EssenceElement | null {
+  return RACE_REWARD_TYPE_ELEMENTS[raceRewardTypeForAvatar(avatar)] ?? null;
+}
+
+/** Essences of the avatar's own element that exist in the game data. */
+function ownEssenceIdsForAvatar(avatar: AvatarDocument): number[] {
+  const element = ownElementForAvatar(avatar);
+  if (!element) {
+    return [];
+  }
+  const solutions = getSolutionMap();
+  return essenceIdsOfElement(element).filter((id) => solutions[String(id)]?.mSolutionType === 15);
+}
+
 function randomSolutionByPredicate(
   predicate: (solution: ReturnType<typeof getSolutionMap>[string]) => boolean,
 ): number | null {
@@ -1117,6 +1138,7 @@ export async function continueEncounter(
           selectedRollOutcome,
           encounterSnapshot.encounterDifficulty,
           encounterSnapshot.encounterRewardAmount,
+          { ownElement: ownElementForAvatar(avatar) },
         );
         nextInventory = inventoryApply.inventory;
         resolution = {
@@ -1511,9 +1533,17 @@ function computeParticipantOutcome(
         .map((solution) => solution.mSolutionID),
       pickIndex: (length) => randomInt(0, length - 1),
     });
+    const ownEssenceBonus = ownElementEssenceBonus({
+      selectedRoll: resolution.selectedRoll,
+      success: resolution.success,
+      ownEssenceIds: ownEssenceIdsForAvatar(avatar),
+      randomInt,
+    });
     resolution = {
       ...resolution,
-      rewards: adjusted.rewardIds,
+      rewards: ownEssenceBonus === null
+        ? adjusted.rewardIds
+        : [...adjusted.rewardIds, ownEssenceBonus],
       ...(adjusted.chargeBonus ? { rewardChargeBonus: adjusted.chargeBonus } : {}),
     };
     const inventoryApply = applyEncounterInventoryChanges(
@@ -1524,7 +1554,10 @@ function computeParticipantOutcome(
       selectedRollOutcome,
       snapshot.encounterDifficulty,
       snapshot.encounterRewardAmount,
-      { chargeBonus: resolution.rewardChargeBonus ?? null },
+      {
+        chargeBonus: resolution.rewardChargeBonus ?? null,
+        ownElement: ownElementForAvatar(avatar),
+      },
     );
     nextInventory = inventoryApply.inventory;
     resolution = {

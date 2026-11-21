@@ -29,6 +29,17 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-82',
+    version: '0.9.0-beta.82',
+    period: '21 Nov 2026',
+    notes: [
+      'A new avatar starts with the three essences of its own element: Rokur fire, Verdani water, Aevis air, Grimnir earth.',
+      'Essences of other elements are lost first, two at a time (the last one alone); then your own, one at a time.',
+      'A roll of 25 or higher has a one-in-five chance to bring an extra essence of your own element.',
+      'Bigger pictures in the Inventory and Skillbook.',
+    ],
+  },
+  {
     id: 'beta-81',
     version: '0.9.0-beta.81',
     period: '21 Nov 2026',

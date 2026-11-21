@@ -459,3 +459,13 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 **Open for Babuni:** which items count as rare (proposed: the Atranor items, non-essences kept with the essences, icons named legendary or epic).
 
 **Status:** released 2026-11-21 in 0.9.0-beta.80.
+
+## D-053 — An avatar's own element: starting essences, faster loss of others, a bonus essence (2026-11-21)
+
+**Babuni's direction:** avatars start with essences of their own gods, of their own element. Essences of other elements are lost faster: a loss always takes two of them. The exception is when only one essence of another element is left: then a loss of one takes just that one, and the next loss takes an essence of the avatar's own element at the normal rate; a loss of two in that case takes the last other one and one of the avatar's own. A finished total of 25 or higher has a 20% chance to grant one extra essence of the avatar's own element. Asked to settle two readings, Babuni chose "25 or higher" (so a 25 brings both the extra item of D-038 and this chance) and "other elements first": essences of other elements are always lost before the avatar's own.
+
+**Elements:** the races' elements come from the world-building archive (`Magic/Magic_Corruption.md` and the race arts): Rokur fire, Verdani water, Aevis air, Grimnir earth. Each element has three gods' essences, by the pantheon's tribunals, the same table the essence frames already used (now `shared/src/essenceElements.ts`).
+
+**AI implementation:** Claude Code (Claude Opus 5.5). Starting inventory (`buildInitialAvatarSeedIds`): the three essences are drawn from the avatar's own element only, so each new avatar gets its three gods. Losses (`consumeEssenceLossesState`, used by Hardship and Misery through `applyFailurePenaltyToInventoryState`): per essence loss, two other-element charges while two or more are left, the last one alone, then one own-element charge; essences without an element in the table count as the avatar's own. Bonus (`server/src/engine/ownElementEssenceBonus.ts`): on a successful normal encounter with a total of 25 or more, one chance in five adds a random essence of the avatar's element to the rewards, after the prosperity essence and a 25's item. Existing avatars keep their inventories; only the loss rule and the bonus apply to them.
+
+**Status:** not released. Server tests pass, including new ones for each rule; not yet played.

@@ -6,6 +6,11 @@ import type {
 } from '../types/avatar.js';
 import type { SolutionData } from '../engine/types.js';
 import { getSolutionMap } from './gameData.js';
+import {
+  RACE_REWARD_TYPE_ELEMENTS,
+  essenceElementOf,
+  type EssenceElement,
+} from '@shared/essenceElements.js';
 import { getInventory, setAvatar, setInventory } from '../db/postgresDocumentStore.js';
 
 export const WARRIOR_IMPROVISED_WEAPON_ID = 10062;
@@ -154,6 +159,11 @@ export function randomSampleSolutionIds(
   return picks;
 }
 
+/** The avatar's own element, from its race's reward type. */
+export function elementForRaceRewardType(raceRewardType: number | undefined): EssenceElement | null {
+  return raceRewardType === undefined ? null : RACE_REWARD_TYPE_ELEMENTS[raceRewardType] ?? null;
+}
+
 export function buildInitialAvatarSeedIds(
   profile: AvatarProfile,
   options: { randomInt?: RandomIntFn } = {},
@@ -181,10 +191,13 @@ export function buildInitialAvatarSeedIds(
     5,
     options,
   );
+  // An avatar starts with the essences of its own race's gods (Babuni, 2026-11-21).
+  const ownElement = elementForRaceRewardType(raceRewardType);
   const essenceIds = randomSampleSolutionIds(
     (solution) =>
       solution.mSolutionType === 15 &&
-      solution.mSolutionInventoryType === 3,
+      solution.mSolutionInventoryType === 3 &&
+      (ownElement === null || essenceElementOf(solution.mSolutionID) === ownElement),
     3,
     options,
   );
@@ -295,6 +308,57 @@ function consumeRandomChargesFromContainerState(
   return { inventory: next, lostSolutionIds };
 }
 
+/**
+ * Essence losses for an avatar with an element (Babuni, 2026-11-21). Essences
+ * of other elements go first, and each loss takes two of them; when only one
+ * is left, a loss takes just that one. Once none are left, each loss takes one
+ * essence of the avatar's own element. Essences with no element count as the
+ * avatar's own.
+ */
+export function consumeEssenceLossesState(
+  inventory: AvatarInventory,
+  losses: number,
+  ownElement: EssenceElement,
+  randomInt: RandomIntFn = defaultRandomInt,
+): { inventory: AvatarInventory; lostSolutionIds: number[] } {
+  let next = normalizeInventory(inventory);
+  const lostSolutionIds: number[] = [];
+  const isForeign = (item: InventoryItem): boolean => {
+    if (!isEssence(item)) {
+      return false;
+    }
+    const element = essenceElementOf(item.solutionId);
+    return element !== null && element !== ownElement;
+  };
+  const isOwn = (item: InventoryItem): boolean => isEssence(item) && !isForeign(item);
+
+  for (let loss = 0; loss < losses; loss += 1) {
+    const foreignCharges = flattenContainerChargeSolutionIds(next, 'essences', isForeign).length;
+    const taken = foreignCharges > 0
+      ? consumeRandomChargesFromContainerState(next, 'essences', Math.min(2, foreignCharges), randomInt, isForeign)
+      : consumeRandomChargesFromContainerState(next, 'essences', 1, randomInt, isOwn);
+
+    if (taken.lostSolutionIds.length === 0) {
+      break;
+    }
+    next = taken.inventory;
+    lostSolutionIds.push(...taken.lostSolutionIds);
+  }
+
+  return { inventory: next, lostSolutionIds };
+}
+
+function consumeEssences(
+  inventory: AvatarInventory,
+  amount: number,
+  randomInt: RandomIntFn,
+  ownElement: EssenceElement | null | undefined,
+): { inventory: AvatarInventory; lostSolutionIds: number[] } {
+  return ownElement
+    ? consumeEssenceLossesState(inventory, amount, ownElement, randomInt)
+    : consumeRandomChargesFromContainerState(inventory, 'essences', amount, randomInt, isEssence);
+}
+
 export interface FailurePenaltyApplyResult {
   inventory: AvatarInventory;
   lostSolutionIds: number[];
@@ -304,7 +368,7 @@ export function applyFailurePenaltyToInventoryState(
   inventory: AvatarInventory,
   outcome: InventoryPenaltyOutcome,
   encounterDifficulty = 1,
-  options: { randomInt?: RandomIntFn } = {},
+  options: { randomInt?: RandomIntFn; ownElement?: EssenceElement | null } = {},
 ): FailurePenaltyApplyResult {
   const randomInt = options.randomInt ?? defaultRandomInt;
   const amount = scaledUses(1, encounterDifficulty);
@@ -314,23 +378,11 @@ export function applyFailurePenaltyToInventoryState(
   }
 
   if (outcome === 'Hardship') {
-    return consumeRandomChargesFromContainerState(
-      inventory,
-      'essences',
-      amount,
-      randomInt,
-      isEssence,
-    );
+    return consumeEssences(inventory, amount, randomInt, options.ownElement);
   }
 
   if (outcome === 'Misery') {
-    const essenceLoss = consumeRandomChargesFromContainerState(
-      inventory,
-      'essences',
-      amount,
-      randomInt,
-      isEssence,
-    );
+    const essenceLoss = consumeEssences(inventory, amount, randomInt, options.ownElement);
     const itemLoss = consumeRandomChargesFromContainerState(
       essenceLoss.inventory,
       'items',
@@ -363,6 +415,8 @@ export function applyEncounterInventoryChanges(
   options: {
     randomInt?: RandomIntFn;
     chargeBonus?: { solutionId: number; charges: number } | null;
+    /** The avatar's own element: other elements' essences are lost first and faster. */
+    ownElement?: EssenceElement | null;
   } = {},
 ): EncounterInventoryApplyResult {
   let next = normalizeInventory(inventory);

@@ -2,6 +2,27 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-21 — Essences of the avatar's own element (D-053), bigger grid pictures; 0.9.0-beta.82
+
+- **Version and patch notes:** 0.9.0-beta.82 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx`.
+
+### Essences of the avatar's own element (D-053)
+
+- **Babuni's direction:** avatars start with essences of their own gods' element; essences of other elements are lost faster (two per loss, the last one alone); a total of 25 or higher has a 20% chance of an extra essence of the avatar's element. Babuni chose "25 or higher" and "other elements first" when asked.
+- **Elements:** new `shared/src/essenceElements.ts` holds the essence-to-element table (moved from `client/src/ui/common/solutionFrameLook.ts`, which now re-exports it) and the races' elements from the world-building archive: Rokur fire, Verdani water, Aevis air, Grimnir earth.
+- **Starting essences (`inventoryService.ts`, `buildInitialAvatarSeedIds`):** the three starting essences come from the avatar's element only, so a new avatar holds its three gods' essences.
+- **Losses (`consumeEssenceLossesState`):** on Hardship and Misery, each essence loss takes two essences of other elements while two or more are left, the last one alone, and only then one of the avatar's own. Both encounter paths in `encounterGenerator.ts` pass the avatar's element (`ownElementForAvatar`). Without an element the old random loss applies.
+- **Bonus (`server/src/engine/ownElementEssenceBonus.ts`):** a successful normal encounter with a total of 25 or more adds, one time in five, a random essence of the avatar's element to the rewards, on top of the prosperity essence and a 25's item (D-038). The client shows it like any reward essence.
+- **Tests:** new `server/src/services/essenceElementRules.test.ts` (starting essences for all four races, the loss order and exception, Hardship/Misery, the bonus thresholds). `systemEventInventory.test.ts` now expects the faster loss: its fire avatar with air essences loses 4 essences, not 2, on a Misery at difficulty 2.
+- **Verification:** all server tests (63) and client tests (49) passed, server and shared typecheck and the client build passed. After a restart of the local backend, a new Rokur and a new Verdani (throwaway test player) started with Fyraan, Solriel, Khaotys and with Nereval, Sylvanus, Aerisara. Losses and the bonus not played; existing avatars keep their essences.
+
+### Bigger pictures in the inventory and skillbook
+
+- **Babuni's direction:** the solution pictures in the Inventory and Skillbook grid should be a little bigger and use the panel's width, with a little space left between the frame and the pictures.
+- **Change (`SolutionGridOverlay.tsx`):** the 72 px cap on each picture is gone, so a picture fills its column; the gap between the five columns went from `clamp(8px, 2vw, 14px)` to `clamp(2px, 0.5vw, 4px)` and the side margin inside the frame from `clamp(14px, 4vw, 28px)` to `clamp(5px, 1.2vw, 7px)` (a first step to 4–8 px gaps and 8–12 px margins was still too small for Babuni: "as big as possible"). The row gap is now only the buttons' own 4 px above and below.
+- **Effect, measured in the local game (headless Chromium):** at a 1280 × 900 window a picture grew from 72 to 88 screen px; at a 390 × 844 phone from 63 to 70. The cells now fill the panel; the round frame stays inset in its cell so an essence's corner pieces fit, and with five columns those corners nearly touch. A larger panel (a tall window) gains more, since nothing caps the size any more.
+- **Verification:** client tests (49) and the production build passed; screenshots of both panels on desktop and phone size with a throwaway local test player. Babuni saw the first step locally ("slightly better already") and approved the release of the second.
+
 ## 2026-11-21 — Remade pictures marked in the game data; reward tooltips wait for arrival; items no longer cut off; panel titles on the plate; 0.9.0-beta.81
 
 - **Version and patch notes:** 0.9.0-beta.81 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx`.

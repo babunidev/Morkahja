@@ -2,7 +2,7 @@
   "name": "@morkahja/shared",
   "author": "Babuni.dev",
   "private": true,
-  "version": "0.9.0-beta.81",
+  "version": "0.9.0-beta.82",
   "type": "module",
   "exports": {
     "./contracts": "./src/contracts.ts",
@@ -11,7 +11,8 @@
     "./recoveryKeyFilename": "./src/recoveryKeyFilename.ts",
     "./achievementUnlockMessage": "./src/achievementUnlockMessage.ts",
     "./deathEncounter": "./src/deathEncounter.ts",
-    "./solutionSet": "./src/solutionSet.ts"
+    "./solutionSet": "./src/solutionSet.ts",
+    "./essenceElements": "./src/essenceElements.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

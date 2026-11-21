@@ -114,7 +114,10 @@ await persistInventory(session.playerId, avatarId, {
 
   assert.equal(actor?.preparedResult?.success, false);
   assert.deepEqual(actor?.preparedResult?.usedInventorySolutions, [10001, 10001]);
-  assert.equal(actor?.preparedResult?.lostInventorySolutions?.length, 4);
+  // Misery at difficulty 2: two essence losses and two item losses. The air
+  // essences are another element than this Rokur's fire, so each essence loss
+  // takes two of them (Babuni, 2026-11-21): 4 essences + 2 items.
+  assert.equal(actor?.preparedResult?.lostInventorySolutions?.length, 6);
 
   const afterContinue = await submitContinue(session.playerId, avatarId);
   assert.equal(afterContinue.roomState, 'active_encounter');
@@ -122,7 +125,7 @@ await persistInventory(session.playerId, avatarId, {
 
   const inventory = await loadInventory(session.playerId, avatarId);
   assert.equal(countSolutionCharges(inventory, 10001), 0);
-  assert.equal(totalEssenceUses(inventory), 3);
+  assert.equal(totalEssenceUses(inventory), 1);
   assert.equal(totalItemUses(inventory), 2);
 }
 
