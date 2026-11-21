@@ -381,7 +381,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A remarkable Aevis polearm featuring a blade forged from celestial metal. It resonates with ethereal energy, allowing it to cleave through the air and disrupt magical energies with unparalleled precision.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10036": {
     "mSolutionID": 10036,
