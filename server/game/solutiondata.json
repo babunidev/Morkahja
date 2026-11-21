@@ -392,7 +392,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Umbrael, the Goddess of Darkness. Umbrael embodies mystery, secrets, and intuition.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10037": {
     "mSolutionID": 10037,
