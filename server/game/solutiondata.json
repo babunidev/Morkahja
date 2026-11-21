@@ -2335,7 +2335,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A small, obsidian anvil, imbued with a core of eternal flame, allowing it to manipulate and forge materials infused with elemental magic.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10233": {
     "mSolutionID": 10233,
