@@ -1662,7 +1662,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A thick, leather-bound tome with frosted silver edges. Its cover showcases an intricate Frostweaver emblem. Inside, ancient runes shimmer, capturing forgotten tales of the Everwinter Valley.",
     "mSolutionType": 2,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10163": {
     "mSolutionID": 10163,
