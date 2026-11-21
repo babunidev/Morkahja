@@ -337,7 +337,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A dense hexagonal relic carved from dark stone, bearing the symbols of ancient builders. Its form reflects the foundations, balance, and enduring craft of the Stonewrought.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10032": {
     "mSolutionID": 10032,
