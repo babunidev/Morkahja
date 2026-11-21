@@ -2238,7 +2238,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This small pouch contains enchanted roots that, when consumed, provide sustenance and healing properties, ideal for mending injuries and revitalizing the weary.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10222": {
     "mSolutionID": 10222,
