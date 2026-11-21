@@ -2128,7 +2128,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This amulet, encrusted with a luminescent crystal, pulses with a warm light, cutting through the gloom to reveal hidden magic items.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10209": {
     "mSolutionID": 10209,
