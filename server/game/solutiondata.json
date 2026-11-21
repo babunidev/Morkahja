@@ -7,7 +7,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "The absorption and mastery of strength, cunning or magic abilities, broadening expertise and enhancing diverse talents and capabilities.",
     "mSolutionType": 1,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10002": {
     "mSolutionID": 10002,
@@ -17,7 +18,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "The art of haggling with whimsical merchants, trading glittering treasure for mystical items and rare artifacts in the bustling markets of Morkahja.",
     "mSolutionType": 3,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10003": {
     "mSolutionID": 10003,
@@ -27,7 +29,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Unveils the secrets of the land, keenly exploring surroundings to uncover hidden riches, discovering lost treasures and forgotten relics in Morkahja's mystical world.",
     "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10004": {
     "mSolutionID": 10004,
@@ -37,7 +40,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Employs skillful fingers and sharp intellect to adeptly manipulate locks, opening doors and chests, unveiling the hidden secrets and treasures within.",
     "mSolutionType": 7,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10005": {
     "mSolutionID": 10005,
@@ -47,7 +51,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A weathered parchment depicting the landscape somewhere in Ethera's Vale, marked with cryptic symbols hinting at hidden treasures and secrets to whomever watches closely.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10006": {
     "mSolutionID": 10006,
@@ -57,7 +62,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A meticulously detailed map revealing the hidden wonders and elusive treasures nestled within the mystical surroundings, beckoning adventurers to embark on enchanting journeys.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10007": {
     "mSolutionID": 10007,
@@ -2367,7 +2373,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A rugged amulet, carved from volcanic stone and set with a core of ever-warm ember, pulsates gently, reigniting the bearer's vitality and inner fire with its comforting warmth.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10238": {
     "mSolutionID": 10238,
@@ -2457,7 +2464,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Contained within a small, earthen jar, this vibrant, red ointment pulses with a warm, healing glow, promising to mend wounds and rejuvenate the weary spirit of any who apply it.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10247": {
     "mSolutionID": 10247,
@@ -2467,6 +2475,7 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A small, simple pouch, bursting with the deep purple hues of berries. Its contents promise the sweetness of nature's bounty.",
     "mSolutionType": 34,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   }
 }
