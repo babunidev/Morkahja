@@ -172,7 +172,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "A meticulously crafted scroll, inscribed with powerful runes. It contains arcane knowledge that can unlock formidable magical abilities.",
     "mSolutionType": 77,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10017": {
     "mSolutionID": 10017,
