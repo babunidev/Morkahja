@@ -227,7 +227,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A heavy and sturdy Grimnir mace, with a head carved from solid rock.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10022": {
     "mSolutionID": 10022,
