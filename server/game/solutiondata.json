@@ -425,7 +425,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Khaotys, the God of Chaos. Khaotys stands for unpredictability, change, and freedom.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10040": {
     "mSolutionID": 10040,
