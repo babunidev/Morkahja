@@ -403,7 +403,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Stonara, the Goddess of Earth. Stonara represents strength, stability, and nurturing.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10038": {
     "mSolutionID": 10038,
