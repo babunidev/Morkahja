@@ -1589,7 +1589,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A sturdy, silver-tinted grappling hook with a long, supple leather rope. Its handle is etched with ancient Frostweaver glyphs, and it radiates a subtle chill.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10157": {
     "mSolutionID": 10157,
