@@ -293,7 +293,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Ferrumis, the God of Metal. Ferrumis embodies resilience, determination, and innovation.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10028": {
     "mSolutionID": 10028,
