@@ -502,7 +502,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Summoning the age-old wisdom of Grimnir forebears, this skill ignites passion and vision as vast as their Skylands.",
     "mSolutionType": 39,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10047": {
     "mSolutionID": 10047,
