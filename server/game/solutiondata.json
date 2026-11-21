@@ -2326,7 +2326,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate, silver compass, its needle spinning not to magnetic north but to guide the bearer through mystical enchantments, pulsing with a soft, otherworldly glow.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10232": {
     "mSolutionID": 10232,
