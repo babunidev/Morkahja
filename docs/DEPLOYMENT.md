@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-21, 23:45 UTC (0.9.0-beta.82: essences of the avatar's own element D-053, bigger grid pictures)
+
+Approved by Babuni ("Commit and release, please."). `main` at `f553de4d`: the grid pictures (`0ffe5814`) and D-053 with the version bump (`f553de4d`), on top of Babuni's Admin save of Ancestors Muse (`f70c1a74`).
+
+- **Before:** backend `94a121e1`, frontend `20261121-155018`. The live `server/game/solutiondata.json` held Admin saves again; compared record by record with `main`, every record was equal (only formatting differed), so nothing was live-only. Babuni reset it with `sudo -u morkahja git -C /home/morkahja/arcanitebrothers checkout -- server/game/solutiondata.json`; no new Admin commit arrived before the bundle was built. Previous staging files moved to `prev-20261121-2344`.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 49, server 63). Uploads verified by `sha256sum -c` on the server (client `57d72f97…`, bundle `31484212…`, only `refs/heads/main`).
+- **Release:** backup `20261121-234506` (sha256 `7829e6fafd3469762f30331d3127eed776f9440a942f3cda4fe39920d752d7c8`; players 75, avatars 115, sessions 24, devices 80, inventories 115, purchases 1, player achievements 347). Backend checked out `f553de4d`, health gate and content endpoint passed, frontend release `20261121-234508`. Public checks passed; the live script `index-DxkvAQk6.js` contains `0.9.0-beta.82`. API and bots online.
+- **Backup:** not yet downloaded and restored.
+- **Not yet checked:** a new avatar's essences, an essence loss and a 25+ roll in the live game.
+
 ## Production release — 2026-11-21, 15:50 UTC (0.9.0-beta.81: remade pictures marked in the data, items not cut off, reward tooltips, panel titles on the plate)
 
 Approved by Babuni ("Commit, push both projects, release everything"). `main` at `94a121e1`: release commit `3d930703` plus Babuni's Admin saves up to Earthshaker Pickaxe. Babuni Admin's editor change went to GitHub as `69a5bfb` (babuni.admin; local tool, nothing to deploy).

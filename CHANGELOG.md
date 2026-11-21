@@ -5,6 +5,7 @@
 ## 2026-11-21 — Essences of the avatar's own element (D-053), bigger grid pictures; 0.9.0-beta.82
 
 - **Version and patch notes:** 0.9.0-beta.82 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx`.
+- **Released** 2026-11-21 at 23:45 UTC as 0.9.0-beta.82 (`main` at `f553de4d`, frontend `20261121-234508`, backup `20261121-234506`); see `docs/DEPLOYMENT.md`.
 
 ### Essences of the avatar's own element (D-053)
 

@@ -177,4 +177,5 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Essences of other elements are lost first, two per loss; the last one alone; then the avatar's own, one per loss.
 - [x] A total of 25 or higher: 20% chance of one extra essence of the avatar's element.
 - [ ] Play it: a new avatar's essences, a Hardship with mixed essences, and a high roll.
-- [ ] Release.
+- [x] Released in 0.9.0-beta.82 (2026-11-21, 23:45 UTC).
+- [ ] Prove backup `20261121-234506` by a restore.
