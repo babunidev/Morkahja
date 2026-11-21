@@ -1673,7 +1673,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A luminescent blue jar, its lid crowned with an antler motif. Within, a radiant gel sparkles like the night sky, emanating a soothing, cold, and enchanted aura.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10164": {
     "mSolutionID": 10164,
