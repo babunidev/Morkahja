@@ -1638,7 +1638,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricately carved, silver-blue hook attached to a woven, shimmering rope. Radiating a faint cold aura, it clings to ice with supernatural grip, enabling ascent on slick surfaces.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10161": {
     "mSolutionID": 10161,
