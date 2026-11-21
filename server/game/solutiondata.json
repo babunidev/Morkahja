@@ -1686,7 +1686,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Forged from shadowy obsidian, this weighty key boasts a handle shaped like a twisted heart, its blade etched with runes that whisper promises of unlocking mysteries.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10165": {
     "mSolutionID": 10165,
