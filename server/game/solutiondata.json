@@ -205,7 +205,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A sleek and elegant Aevis longbow that grants its user the ability to curve their arrows' trajectory.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10020": {
     "mSolutionID": 10020,
