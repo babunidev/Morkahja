@@ -282,7 +282,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Ordius, the God of Order. Ordius stands for balance, discipline, and harmony.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10027": {
     "mSolutionID": 10027,
