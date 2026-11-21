@@ -2169,7 +2169,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This ethereal sword, shimmering with a frosty aura, is designed to counteract fire, its icy touch capable of quelling even the fiercest magic.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10214": {
     "mSolutionID": 10214,
