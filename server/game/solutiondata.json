@@ -436,7 +436,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Fyraan, the God of Fire. Fyraan represents passion, warmth, and transformation.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10041": {
     "mSolutionID": 10041,
