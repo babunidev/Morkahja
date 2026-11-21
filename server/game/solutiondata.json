@@ -2143,7 +2143,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A compass with a spectral needle that points towards magical relics, resonating with the whispers of the fallen.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10211": {
     "mSolutionID": 10211,
