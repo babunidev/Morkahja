@@ -469,7 +469,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis words carry the mesmerizing cadence of the air, making their arguments, negotiations, and tales exceptionally persuasive and enchanting.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10044": {
     "mSolutionID": 10044,
