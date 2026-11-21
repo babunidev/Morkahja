@@ -194,7 +194,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "A formidable dragon's tooth, imbued with ancient power, serving as a symbol of strength and ferocity. It exudes an aura of untamed might.",
     "mSolutionType": 77,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10019": {
     "mSolutionID": 10019,
