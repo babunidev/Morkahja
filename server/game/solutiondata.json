@@ -2273,7 +2273,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This medallion thrums with a warm, invigorating light, a talisman meant to ignite the spirit and rally the resolve of those who bear it into battle.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10226": {
     "mSolutionID": 10226,
