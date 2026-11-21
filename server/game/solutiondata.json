@@ -161,7 +161,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "This elixir, with its vibrant colors and swirling patterns, exudes an aura of potency. It's a brew of great power, promising remarkable effects when consumed.",
     "mSolutionType": 77,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10016": {
     "mSolutionID": 10016,
