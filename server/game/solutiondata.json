@@ -304,7 +304,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Forged with impossible precision, this elegant key responds to subtle movements and currents, opening mechanisms designed by master Windweavers and scholars of hidden knowledge.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10029": {
     "mSolutionID": 10029,
