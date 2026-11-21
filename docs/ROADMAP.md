@@ -150,3 +150,10 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Babuni tested locally; released as 0.9.0-beta.76 (2026-11-17).
 - [x] World map behind the region plate (D-044); placements in `docs/WORLD_MAP.md`.
 - [ ] Babuni's review of the map's placements, especially the drawing choices (Fyrskar, Lovely Meadows, Deepstone Hollow).
+
+## Solution artwork refresh — 2026-11-21 (D-051)
+
+- [x] Confirm new format, per-solution review order and lore-aware design rules in [the solution image standard](SOLUTION_IMAGE_STANDARD.md).
+- [ ] Rework and individually review existing solution imagery, starting with 10001 Arcane Intellect; 247 solution records and 268 illustration files were observed on `main` on 2026-11-21. This does not imply a one-to-one relation between records and files.
+- [ ] Preserve each original until the replacement is approved; validate transparency, circle bounds, WebP dimensions, file size and a thumbnail rendering.
+- [ ] Integrate approved WebPs with the existing solution-icon names, test the game and record separate deployment evidence. The future game-controlled frame overlay is not implemented in this documentation work.
