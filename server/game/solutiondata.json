@@ -1734,7 +1734,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Drawing from the purity of the air, Aevis can channel a soothing wind that mends wounds and rejuvenates the weary.",
     "mSolutionType": 21,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10169": {
     "mSolutionID": 10169,
