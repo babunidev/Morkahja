@@ -271,7 +271,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A magical Verdani staff topped with a crystal orb that channels the power of water.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10026": {
     "mSolutionID": 10026,
