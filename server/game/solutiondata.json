@@ -2153,7 +2153,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This lightweight, yet sturdy, grappling hook is designed for precision, effortlessly securing to even the most precarious holds.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10212": {
     "mSolutionID": 10212,
