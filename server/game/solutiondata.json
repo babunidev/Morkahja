@@ -2245,7 +2245,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This satchel contains ethereal fruits that nourish with both sustenance and magical energy, ideal for replenishing strength and focus.",
     "mSolutionType": 34,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10223": {
     "mSolutionID": 10223,
