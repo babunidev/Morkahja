@@ -73,7 +73,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricately illustrated map, devoid of the name but radiating the allure of the Ethera's Vale, enticing explorers to seek hidden marvels and untouched secrets.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10008": {
     "mSolutionID": 10008,
@@ -83,7 +84,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A weathered parchment displaying the enigmatic terrain of Ethera's Vale, marked with cryptic symbols and clues that hint at concealed riches awaiting intrepid explorers.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10009": {
     "mSolutionID": 10009,
@@ -93,7 +95,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An aged parchment revealing the celestial landscapes of Ethera's Vale, adorned with celestial motifs and inscrutable hints leading to hidden treasures.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10010": {
     "mSolutionID": 10010,
@@ -103,7 +106,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Aeriel, the God of Air. Aeriel represents freedom, intellect, and communication.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10011": {
     "mSolutionID": 10011,
@@ -113,7 +117,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Aetheria, the Goddess of Aether. Aetheria embodies cosmic energy, divine power, and inspiration.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10012": {
     "mSolutionID": 10012,
@@ -123,7 +128,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A sinister obsidian key adorned with ancient runes. Its malevolent aura hints at the power to open gateways to realms unknown.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10013": {
     "mSolutionID": 10013,
@@ -144,7 +150,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This soft and gentle wrap is designed to aid in the healing of wounds. It provides comfort and support during the recovery process.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10015": {
     "mSolutionID": 10015,
@@ -2385,7 +2392,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A compact, rune-etched stone, humming with a gentle but insistent vibration, capable of dissolving magical barriers and unlocking the secrets they guard.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10239": {
     "mSolutionID": 10239,
@@ -2395,7 +2403,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A hearty, nourishing stew, prepared with root vegetables, wild herbs, and tender chunks of game, all sourced from the surrounding lands.",
     "mSolutionType": 34,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10240": {
     "mSolutionID": 10240,
@@ -2405,7 +2414,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A pendant encased in swirling silver, its core a shard of crystallized air. When invoked, it forms a barrier of swirling winds, deflecting harm and freeing the ensnared.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10241": {
     "mSolutionID": 10241,
@@ -2415,7 +2425,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Boots crafted from supple leather and enchanted with a subtle magic that muffles footsteps. Perfect for traversing treacherous terrain and evading the gaze of lurking horrors.",
     "mSolutionType": 36,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10242": {
     "mSolutionID": 10242,
@@ -2425,7 +2436,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from supple leather and enchanted with a subtle magic that cloaks the wearer in shadows, these boots allow for silent movement and nimble evasion.",
     "mSolutionType": 36,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10243": {
     "mSolutionID": 10243,
@@ -2435,7 +2447,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from smooth river stones and etched with swirling patterns reminiscent of flowing water, the emblem glimmers softly with a serene azure hue.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10244": {
     "mSolutionID": 10244,
@@ -2445,7 +2458,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Aerisara, the Goddess of Spirit. Aerisara symbolises life force, consciousness, and connection.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10245": {
     "mSolutionID": 10245,
@@ -2455,7 +2469,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Within a crystal vial suspended by a chain of woven silver, a luminescent azure essence ebbs, its gentle light dancing like morning sunlight on the water's surface.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10246": {
     "mSolutionID": 10246,
