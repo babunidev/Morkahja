@@ -1709,7 +1709,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate silver locket, its surface etched with intricate shadows. Inside, a pulsating, ethereal glow hints at memories and magics hidden deeply.",
     "mSolutionType": 4,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10167": {
     "mSolutionID": 10167,
