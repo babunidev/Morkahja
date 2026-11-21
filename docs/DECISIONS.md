@@ -458,4 +458,4 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Open for Babuni:** which items count as rare (proposed: the Atranor items, non-essences kept with the essences, icons named legendary or epic).
 
-**Status:** local, not released.
+**Status:** released 2026-11-21 in 0.9.0-beta.80.

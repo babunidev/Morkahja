@@ -166,6 +166,15 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-21, 13:52 UTC (0.9.0-beta.80: drawn solution frames, charges on the picture, D-052)
+
+Approved by Babuni ("I think we can commit, push, and update the live game"). `main` at `60f9558b`: a frame drawn by the UI on every solution picture, still and in flight (D-052), the charge hexagon, and Babuni's first remade pictures (already live through the admin tool's uploads).
+
+- **Before:** backend `e0bd2837`, frontend `20261119-003801`. No uncommitted live edits on the server; today's admin saves were pictures in the upload folder. No newer commits on GitHub when releasing. Previous staging files moved to `prev-20261121-1352`.
+- **Checks before the release:** `npm run release:check` on Nobara: static game data, typecheck and client build, client 49 tests; the server tests (56) passed in a separate run. Uploads verified by `sha256sum -c` on the server (client `3662e75f…`, bundle `d452cdbe…`, only `refs/heads/main`).
+- **Release:** backup `20261121-135246` (sha256 `c2bbf30bef6f719fbd71bbcaa46720370637baf8d923fcfe4d6b2a8dc619150a`; players 75, avatars 115, sessions 24, devices 80, inventories 115, purchases 1, player achievements 347). Backend fast-forwarded to `60f9558b`, health gate and content endpoint passed, frontend release `20261121-135249`. Public checks passed; the live script `index-C8LdtDu1.js` contains `0.9.0-beta.80` and the frameless list. The live `skill_lockpick`, `10246_jar` and `tool_map_fae_pastures` match `main`. API and bots online; all three bots signed in again at 13:52:59 UTC.
+- **Not yet done:** proving backup `20261121-135246` by restoring it (Babuni downloads it); frames and charges seen by a player in a live encounter.
+
 ## Production release — 2026-11-19, 00:38 UTC (0.9.0-beta.79: waiting room updates, D-050)
 
 Approved by Babuni ("yes release"). `main` at `e0bd2837`: room updates through one waiting request, the inactivity leftovers removed (D-050), bots witnessing quietly and at a player's pace.
