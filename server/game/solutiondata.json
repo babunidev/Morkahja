@@ -2263,7 +2263,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This cloak, woven from fire-resistant fibers and enchanted for protection, shields its wearer from both magical and physical harm, ideal for those battling in perilous environments.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10225": {
     "mSolutionID": 10225,
