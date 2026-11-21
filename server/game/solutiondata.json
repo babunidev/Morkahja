@@ -1602,7 +1602,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate, silver pendant shaped like a tear, with a glowing sapphire in its core. Ethereal chains drape softly from it, whispering promises of peace and release.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10158": {
     "mSolutionID": 10158,
