@@ -348,7 +348,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A beautifully carved key, meticulously crafted from darkwood. Its intricate design reflects the artistry of the artisans who carved it, making it both functional and aesthetically pleasing.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10033": {
     "mSolutionID": 10033,
