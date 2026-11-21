@@ -2209,7 +2209,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This luminous cloak, woven from starlight threads, offers protection and strength, its celestial energy designed to bolster magic and shield the spirit.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10219": {
     "mSolutionID": 10219,
