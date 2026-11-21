@@ -2200,7 +2200,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Radiating a soft, golden light, this amulet is imbued with restorative energies, designed to rekindle and bolster the spirit of those weighed down by darkness.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10218": {
     "mSolutionID": 10218,
