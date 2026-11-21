@@ -2361,7 +2361,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A finely crafted flute made from dark, petrified wood, adorned with runes that pulse with earthen magic. Playing it invokes soothing melodies that resonate with the essence of the earth.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10236": {
     "mSolutionID": 10236,
