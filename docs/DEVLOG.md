@@ -561,6 +561,8 @@ When I rolled with the mouse still resting on the dice, the reward's tooltip ope
 
 The Inventory and Skillbook titles moved out of their panels onto the plate on the frame's top edge, where the region name stands, and that plate was half hidden behind the panel before. Clicking the title now closes the panel.
 
+**Released** as 0.9.0-beta.81 on 21 November at 15:50 UTC, with my newest pictures in it. I kept uploading during the release, so the server's solution file had to be reset twice before the release would run; nothing was lost, since every save was also on GitHub.
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

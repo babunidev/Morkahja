@@ -163,7 +163,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Round frames drawn by the game on top of every solution picture: standard, essence (four elements), rare; older pictures zoomed past their painted rim. Released in 0.9.0-beta.80 (2026-11-21).
 - [x] Charges in a hexagon at each picture's bottom right: inventory, skillbook, encounter choices. Released in 0.9.0-beta.80.
 - [x] Backup `20261121-135246` proven by a restore (row counts equal).
-- [x] Remade pictures marked frameless in the solution data (`mSolutionIconFrameless`), ticked by the admin tool on upload. Not released.
+- [ ] Prove backup `20261121-155015` by a restore.
+- [x] Remade pictures marked frameless in the solution data (`mSolutionIconFrameless`), ticked by the admin tool on upload. Released in 0.9.0-beta.81.
 - [ ] Babuni's review of the three frames and the element symbols.
 - [ ] Babuni's confirmation of which items count as rare.
 - [ ] Remake the remaining solution pictures without a painted frame (the admin tool marks each one on upload).

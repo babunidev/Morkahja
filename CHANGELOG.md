@@ -5,6 +5,7 @@
 ## 2026-11-21 — Remade pictures marked in the game data; reward tooltips wait for arrival; items no longer cut off; panel titles on the plate; 0.9.0-beta.81
 
 - **Version and patch notes:** 0.9.0-beta.81 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx`.
+- **Released** 2026-11-21 at 15:50 UTC as 0.9.0-beta.81 (`main` at `94a121e1`, frontend `20261121-155018`, backup `20261121-155015`); see `docs/DEPLOYMENT.md`.
 
 - **Inventory and Skillbook titles on the plate (Babuni's direction):** the panel's title no longer stands inside the panel; it is on the plate on the frame's top edge, where the region name opens the world map, reading "Inventory" or "Skillbook". Clicking the plate closes the panel (Babuni's choice). The panel's frame now sits just outside its clipped box (`SolutionGridOverlay.tsx`, `panelFrameLayerStyle`), so the plate is whole instead of half covered, and the encounter's own region plate steps aside while a panel is open (`EncounterImageBlock.tsx`). `DecorativeEdgeFrame` takes `regionButtonLabel` for a plate that does something other than the map ("Close the inventory"); `GameEnvironment` passes `onClosePanels`. Checked on a throwaway preview page with the real panels over a region plate (screenshots, and a click on "Close the skillbook" closed it); typecheck and client tests passed. Not yet tried in the game.
 

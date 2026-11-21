@@ -166,6 +166,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-21, 15:50 UTC (0.9.0-beta.81: remade pictures marked in the data, items not cut off, reward tooltips, panel titles on the plate)
+
+Approved by Babuni ("Commit, push both projects, release everything"). `main` at `94a121e1`: release commit `3d930703` plus Babuni's Admin saves up to Earthshaker Pickaxe. Babuni Admin's editor change went to GitHub as `69a5bfb` (babuni.admin; local tool, nothing to deploy).
+
+- **Before:** backend `60f9558b`, frontend `20261121-135249`. The live `server/game/solutiondata.json` held Admin saves; compared record by record through the public content endpoint, it differed from `main` only by frameless marks `main` also had (encounters and expansions equal), so nothing was live-only. Babuni reset the file with `sudo -u morkahja git -C /home/morkahja/arcanitebrothers checkout -- server/game/solutiondata.json`. Saves kept arriving: Windwhisper Bow and Echoing Compass (16:43–16:45 local) had come in before the first reset and were added by rebuilding the bundle; Earthshaker Pickaxe (16:48) came in after it, so the first `release` refused (nothing changed) and Babuni reset the file a second time with the Admin tool paused. The bundle was rebuilt to `94a121e1` and released at once. Previous staging files moved to `prev-20261121-1541`.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 49, server 56). Uploads verified by `sha256sum -c` on the server (client `f1f319ba…`, bundle `028ad54e…`, only `refs/heads/main`).
+- **Release:** backup `20261121-155015` (sha256 `853037987e4fd086fb141476d240c3ba9000243964bfecb0e37d27ee69d124dc`; players 75, avatars 115, sessions 24, devices 80, inventories 115, purchases 1, player achievements 347). Backend fast-forwarded to `94a121e1`, health gate and content endpoint passed, frontend release `20261121-155018`. The live script `index-DrD2d8S6.js` contains `0.9.0-beta.81`; the live solution data equals `main` with 37 remade pictures marked. API and bots online; the bots were ready at 15:50:26 UTC.
+- **Not yet done:** proving backup `20261121-155015` by a restore; the panel plate and reward tooltip seen in a live encounter.
+- **Lesson:** Admin saves of solution records also dirty the live catalog, and Babuni uploads often; pause the Admin tool from the reset until the release has run, and build the bundle after the reset.
+
 ## Production release — 2026-11-21, 13:52 UTC (0.9.0-beta.80: drawn solution frames, charges on the picture, D-052)
 
 Approved by Babuni ("I think we can commit, push, and update the live game"). `main` at `60f9558b`: a frame drawn by the UI on every solution picture, still and in flight (D-052), the charge hexagon, and Babuni's first remade pictures (already live through the admin tool's uploads).
