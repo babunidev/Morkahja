@@ -29,6 +29,16 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-81',
+    version: '0.9.0-beta.81',
+    period: '21 Nov 2026',
+    notes: [
+      'Many solutions have new pictures, and they show whole inside their frames. Older pictures are no longer cut off at the edges.',
+      'Inventory and Skillbook show their name on the plate at the top of the frame; tap it to close them.',
+      'A reward\'s tooltip waits until the reward has arrived in its place.',
+    ],
+  },
+  {
     id: 'beta-80',
     version: '0.9.0-beta.80',
     period: '21 Nov 2026',

@@ -237,7 +237,7 @@ export function createSolutionPictureElement(src: string, size: number): { root:
     return { root: image, image };
   }
   const look = solutionFrameLookForIcon(iconName);
-  const zoom = solutionPictureZoom(iconName);
+  const zoom = solutionPictureZoom(look);
   const inset = frameRound(size / 2 - solutionArtRadius(size));
 
   const root = document.createElement('div');

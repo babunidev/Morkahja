@@ -24,6 +24,10 @@ const SIZES = [56, 72, 104, 180];
 const SAMPLE_CHARGES = [1, 3, 12, 2, 1, 5, 0, 1, 2, 7];
 /** As the game shows them: every solution picture framed, older ones zoomed past their painted rim. */
 const IN_GAME = [
+  'skill_warmth',
+  'tool_light_torch',
+  'weapon_grimnir_runeblade',
+  'tool_key_mystic',
   'skill_learn',
   'skill_buy',
   'skill_lockpick',
@@ -39,12 +43,12 @@ const IN_GAME = [
 ];
 
 const LOOKS: Array<{ label: string; look: SolutionFrameLook }> = [
-  { label: 'Standard — skills and simple items', look: { tier: 'standard', element: null } },
-  { label: 'Essence — fire (Ignis Council)', look: { tier: 'essence', element: 'fire' } },
-  { label: 'Essence — water (Abyssal Conclave)', look: { tier: 'essence', element: 'water' } },
-  { label: 'Essence — air (Celestial Convocation)', look: { tier: 'essence', element: 'air' } },
-  { label: 'Essence — earth (Terran Assembly)', look: { tier: 'essence', element: 'earth' } },
-  { label: 'Rare — valuable items', look: { tier: 'rare', element: null } },
+  { label: 'Standard — skills and simple items', look: { tier: 'standard', element: null, frameless: true } },
+  { label: 'Essence — fire (Ignis Council)', look: { tier: 'essence', element: 'fire', frameless: true } },
+  { label: 'Essence — water (Abyssal Conclave)', look: { tier: 'essence', element: 'water', frameless: true } },
+  { label: 'Essence — air (Celestial Convocation)', look: { tier: 'essence', element: 'air', frameless: true } },
+  { label: 'Essence — earth (Terran Assembly)', look: { tier: 'essence', element: 'earth', frameless: true } },
+  { label: 'Rare — valuable items', look: { tier: 'rare', element: null, frameless: true } },
 ];
 
 const pageStyle: CSSProperties = {

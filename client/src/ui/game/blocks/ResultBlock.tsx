@@ -1761,11 +1761,18 @@ export const ResultBlock = forwardRef(function ResultBlock(
         // (the lore gem waits on the avatar instead, LoreGemAvatarBadge), filled middle first; anything beyond five floats above.
         const showRewards = !rewardsFlyingAway && !rewardDismissInProgress;
         const showLosses = losses.length > 0 && !lossesFlyingAway;
-        const rewardShown = (key: string): CSSProperties => ({
-          opacity: rewardsEmerged || emergedRewardKeys.has(key) || key === `r:${levelUpPickedFirstId}` ? 1 : 0,
-          // Fades in under its landed flyer, which then fades out over it.
-          transition: `opacity ${landingRevealMs(REWARD_EMERGE_MS)}ms ease-out`,
-        });
+        const rewardShown = (key: string): CSSProperties => {
+          const arrived = rewardsEmerged || emergedRewardKeys.has(key) || key === `r:${levelUpPickedFirstId}`;
+          return {
+            opacity: arrived ? 1 : 0,
+            // Fades in under its landed flyer, which then fades out over it.
+            transition: `opacity ${landingRevealMs(REWARD_EMERGE_MS)}ms ease-out`,
+            // Babuni (2026-11-21): no tooltip and no tap before the reward has
+            // arrived in its place, so a mouse resting where the die was rolled
+            // does not open it while the roll hovers and the reward flies in.
+            ...(arrived ? {} : { pointerEvents: 'none' as const }),
+          };
+        };
         const entries: Array<(placement: CSSProperties) => ReactNode> = [
           ...(showRewards
             ? rewards.map((reward) => (placement: CSSProperties) => renderSolutionIcon(

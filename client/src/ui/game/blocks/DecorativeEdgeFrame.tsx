@@ -70,6 +70,7 @@ export function DecorativeEdgeFrame({
   regionLabel,
   onRegionClick,
   regionPressed = false,
+  regionButtonLabel,
 }: {
   zIndex?: number;
   showTimer?: boolean;
@@ -78,6 +79,8 @@ export function DecorativeEdgeFrame({
   /** Makes the plate a button (it opens the world map). */
   onRegionClick?: () => void;
   regionPressed?: boolean;
+  /** What the plate button does, when it is not the world map (for example "Close the inventory"). */
+  regionButtonLabel?: string;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(frameRef);
@@ -224,8 +227,9 @@ export function DecorativeEdgeFrame({
       />
       {regionLabel && tab && onRegionClick ? (
         <button
-          aria-label={regionPressed ? `Close the world map (${regionLabel})` : `Open the world map (${regionLabel})`}
-          aria-pressed={regionPressed}
+          aria-label={regionButtonLabel
+            ?? (regionPressed ? `Close the world map (${regionLabel})` : `Open the world map (${regionLabel})`)}
+          aria-pressed={regionButtonLabel ? undefined : regionPressed}
           className="morkahja-region-plate-button"
           onClick={onRegionClick}
           style={{
@@ -242,7 +246,7 @@ export function DecorativeEdgeFrame({
             cursor: 'pointer',
             clipPath: `polygon(0 50%, ${tab.half}px 4px, calc(100% - ${tab.half}px) 4px, 100% 50%, calc(100% - ${tab.half}px) calc(100% - 4px), ${tab.half}px calc(100% - 4px))`,
           }}
-          title={regionPressed ? 'Close the map' : 'Open the map'}
+          title={regionButtonLabel ?? (regionPressed ? 'Close the map' : 'Open the map')}
           type="button"
         />
       ) : null}

@@ -217,7 +217,7 @@ export function SolutionImage({
 }: ImgHTMLAttributes<HTMLImageElement> & { src: string; charges?: number | null }) {
   const iconName = solutionIconNameFromSrc(src);
   const look = iconName ? solutionFrameLookForIcon(iconName) : null;
-  const seed = useMemo(() => seedFromText(iconName ?? src), [iconName, src]);
+  const seed = seedFromText(iconName ?? src);
   if (!look || !iconName) {
     return <img alt="" {...imgProps} src={src} style={style} />;
   }
@@ -229,7 +229,7 @@ export function SolutionImage({
       src={src}
       charges={charges}
       style={style}
-      zoom={solutionPictureZoom(iconName)}
+      zoom={solutionPictureZoom(look)}
     />
   );
 }

@@ -4,9 +4,11 @@ import { SolutionGridOverlay } from './SolutionGridOverlay.js';
 export function SkillbookBlock({
   inventory,
   visible,
+  onClose,
 }: {
   inventory: AvatarInventory | undefined;
   visible: boolean;
+  onClose?: () => void;
 }) {
   return (
     <SolutionGridOverlay
@@ -14,10 +16,11 @@ export function SkillbookBlock({
       emptyText="Your skillbook is empty."
       inventory={inventory}
       inventoryType={1}
-      panelTitle="SKILLBOOK"
+      panelTitle="Skillbook"
       scrollDataAttribute="skillbook-scroll"
       sourceContainer="spellbook"
       visible={visible}
+      onClose={onClose}
     />
   );
 }

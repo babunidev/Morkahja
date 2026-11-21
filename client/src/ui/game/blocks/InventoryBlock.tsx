@@ -4,9 +4,11 @@ import { SolutionGridOverlay } from './SolutionGridOverlay.js';
 export function InventoryBlock({
   inventory,
   visible,
+  onClose,
 }: {
   inventory: AvatarInventory | undefined;
   visible: boolean;
+  onClose?: () => void;
 }) {
   return (
     <SolutionGridOverlay
@@ -14,10 +16,11 @@ export function InventoryBlock({
       emptyText="Your inventory is empty."
       inventory={inventory}
       inventoryType={2}
-      panelTitle="INVENTORY"
+      panelTitle="Inventory"
       scrollDataAttribute="inventory-scroll"
       sourceContainer="items"
       visible={visible}
+      onClose={onClose}
     />
   );
 }

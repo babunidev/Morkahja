@@ -33,10 +33,13 @@ export function solutionFrameLookForIcon(iconName: string): SolutionFrameLook {
     const byIcon = new Map<string, SolutionFrameLook>();
     for (const record of Object.values(gameSolutions() as Record<string, SolutionFrameRecord | null>)) {
       if (record?.mSolutionIconName) {
-        byIcon.set(record.mSolutionIconName, solutionFrameLookFor(record));
+        const look = solutionFrameLookFor(record);
+        // Several solutions can share a picture; any one marking it frameless counts.
+        const earlier = byIcon.get(record.mSolutionIconName);
+        byIcon.set(record.mSolutionIconName, earlier ? { ...earlier, frameless: earlier.frameless || look.frameless } : look);
       }
     }
     lookIndex = { version, byIcon };
   }
-  return lookIndex.byIcon.get(iconName) ?? { tier: 'standard', element: null };
+  return lookIndex.byIcon.get(iconName) ?? { tier: 'standard', element: null, frameless: false };
 }

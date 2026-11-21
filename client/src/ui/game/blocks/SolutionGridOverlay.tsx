@@ -21,7 +21,6 @@ import {
 import { SolutionGridTooltipPanel } from './SolutionGridTooltipPanel.js';
 import { GAME_TOOLTIP_DELAY_MS, tooltipCornerMarker } from '../GameTooltip.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
-import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { assetUrl } from '../../../assetUrl.js';
@@ -126,12 +125,20 @@ const scrollWrapStyle: CSSProperties = {
   scrollbarWidth: 'none',
 };
 
-const panelTitleWrapStyle: CSSProperties = {
-  position: 'relative',
-  zIndex: 1,
+/** Space above the first row (the title stood here before it moved to the frame's plate). */
+const panelTopSpaceStyle: CSSProperties = {
   flexShrink: 0,
-  // The title overlaps the top edge of the first row; taps there reach the items.
+  height: 'clamp(18px, 4vw, 26px)',
   pointerEvents: 'none',
+};
+
+/** The panel's frame, above the panel (and above the encounter's own region plate). */
+const panelFrameLayerStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: OVERLAY_Z_INDEX + 1,
+  pointerEvents: 'none',
+  transition: fadeTransition,
 };
 
 const itemGridStyle: CSSProperties = {
@@ -279,6 +286,7 @@ export function SolutionGridOverlay({
   scrollDataAttribute,
   sourceContainer,
   visible,
+  onClose,
 }: {
   ariaLabel: string;
   emptyText: string;
@@ -288,6 +296,8 @@ export function SolutionGridOverlay({
   scrollDataAttribute: string;
   sourceContainer: 'spellbook' | 'items';
   visible: boolean;
+  /** Closes the panel; the title plate on the frame's top edge calls it. */
+  onClose?: () => void;
 }) {
   const overlayRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -476,6 +486,7 @@ export function SolutionGridOverlay({
   }
 
   return (
+    <>
     <aside
       aria-hidden={!visible}
       aria-label={ariaLabel}
@@ -495,12 +506,8 @@ export function SolutionGridOverlay({
         {`[data-${scrollDataAttribute}]::-webkit-scrollbar { display: none; }`}
         {TOOLTIP_FADE_KEYFRAMES}
       </style>
-      <DecorativeEdgeFrame zIndex={27} />
-      <div style={panelTitleWrapStyle}>
-        <h1 className="morkahja-title" style={overlayPanelTitleStyle}>
-          {panelTitle}
-        </h1>
-      </div>
+      {/* Room above the first row, where the title used to stand: the title is on the frame's plate now. */}
+      <div aria-hidden="true" style={panelTopSpaceStyle} />
       <div
         {...{ [`data-${scrollDataAttribute}`]: '' }}
         style={{
@@ -614,5 +621,26 @@ export function SolutionGridOverlay({
         </div>
       ) : null}
     </aside>
+    {/*
+      The panel's frame, with its title on the plate where the region name
+      stands (Babuni, 2026-11-21); clicking it closes the panel. Outside the
+      panel's clipped box, so the plate's upper half is not cut off.
+    */}
+    <div
+      aria-hidden={!visible}
+      style={{
+        ...panelFrameLayerStyle,
+        opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
+      }}
+    >
+      <DecorativeEdgeFrame
+        onRegionClick={onClose}
+        regionButtonLabel={`Close the ${panelTitle.toLowerCase()}`}
+        regionLabel={panelTitle}
+        zIndex={1}
+      />
+    </div>
+    </>
   );
 }

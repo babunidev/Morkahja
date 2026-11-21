@@ -452,7 +452,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Babuni's direction:** solution pictures are being remade without a painted frame. The frame belongs to the UI, not to the item graphics: every solution item is two parts, the picture with the solution inside, and the frame that sits on top. Every item gets it, in the language of the encounter frame made round. An essence's frame carries its god's element; valuable items get a richer frame.
 
-**AI implementation:** Claude Code (Claude Opus 5.5). `SolutionImage` (React) and `createSolutionPictureElement` (plain DOM, for pictures in flight) draw the picture clipped round and an SVG frame over it, everywhere a solution picture appears. Pictures not yet remade are zoomed 1.3× so their painted rim falls outside the frame; remade ones are listed in `FRAMELESS_SOLUTION_ICONS` and shown whole.
+**AI implementation:** Claude Code (Claude Opus 5.5). `SolutionImage` (React) and `createSolutionPictureElement` (plain DOM, for pictures in flight) draw the picture clipped round and an SVG frame over it, everywhere a solution picture appears. Pictures not yet remade are zoomed (1.12× since the same day, after 1.3× cut items off) so most of their painted rim falls under the frame; remade ones are shown whole; since the same day (Babuni: "fix that") the solution record marks them with `mSolutionIconFrameless: true`, which Babuni Admin sets on upload.
 
 **Charges (same day, Babuni's direction):** each picture shows the charges the player holds in a small hexagon at its bottom right, in the inventory and on the solutions offered in an encounter, so the count needs no tooltip.
 

@@ -1033,6 +1033,12 @@ export function GameEnvironment({
               outcomeRoll={outcomeRollForDisplay}
               outcomeResolutionAction={outcomeResolutionAction}
               skillbookOpen={skillbookOpen}
+              onClosePanels={() => {
+                cancelPanelRevealRef.current?.();
+                cancelPanelRevealRef.current = null;
+                setInventoryOpen(false);
+                setSkillbookOpen(false);
+              }}
               title={title}
             />
           </div>

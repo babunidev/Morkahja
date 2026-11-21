@@ -201,6 +201,7 @@ export function EncounterImageBlock({
   serverResolution,
   serverCommittedAction,
   skillbookOpen,
+  onClosePanels,
   title,
   witnessSuppressLocalResolution = false,
   isSystemEventActor = false,
@@ -247,6 +248,8 @@ export function EncounterImageBlock({
   serverResolution?: ParticipantResolutionSummaryDto;
   serverCommittedAction?: EncounterAction;
   skillbookOpen: boolean;
+  /** Closes Inventory and Skillbook (their title plate on the frame). */
+  onClosePanels?: () => void;
   title: string;
   witnessSuppressLocalResolution?: boolean;
   isSystemEventActor?: boolean;
@@ -733,7 +736,8 @@ export function EncounterImageBlock({
         ) : null}
         <DecorativeEdgeFrame
           onRegionClick={() => setMapOpen((open) => !open)}
-          regionLabel={regionLabel}
+          // Inventory and Skillbook show their own title on this plate.
+          regionLabel={inventoryOpen || skillbookOpen ? null : regionLabel}
           regionPressed={mapOpen}
           showTimer
         />
@@ -919,8 +923,8 @@ export function EncounterImageBlock({
         title={title}
         visible={loreOpen}
       />
-      <SkillbookBlock inventory={displayInventory ?? inventory} visible={skillbookOpen} />
-      <InventoryBlock inventory={displayInventory ?? inventory} visible={inventoryOpen} />
+      <SkillbookBlock inventory={displayInventory ?? inventory} onClose={onClosePanels} visible={skillbookOpen} />
+      <InventoryBlock inventory={displayInventory ?? inventory} onClose={onClosePanels} visible={inventoryOpen} />
       </div>
     </section>
   );

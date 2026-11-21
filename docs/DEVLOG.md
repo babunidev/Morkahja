@@ -555,6 +555,12 @@ My new picture for Open Lock (10004) did not appear in the local game. The admin
 
 At first the flying pictures still had no frame in my browser: the code was there, but the local dev server had kept old copies of the files. Claude Code ran a real reward flight in a test browser to prove the frame flies along. **Released** as 0.9.0-beta.80 on 21 November at 13:52 UTC, with all tests passing and the live game checked.
 
+Every remade picture still needed a line of code before it showed whole, and three slipped through on the first day. Now the solution itself says so in the game data, and the admin tool ticks it when I upload a new picture, so a remake is right at once in my local game, on GitHub and live. Claude Code (Claude Opus 5.5) changed the game to read the mark from the data, marked my eight remakes, and added the automatic tick and a checkbox to the solution editor. **Verification:** client tests, typecheck and the game-data check passed; the admin tool's 143 tests passed. Not released yet.
+
+When I rolled with the mouse still resting on the dice, the reward's tooltip opened while the roll was still hovering, because the reward's place was already there, only invisible. Now a reward answers the mouse only once it has arrived in its place. Not yet tried in a played encounter.
+
+The Inventory and Skillbook titles moved out of their panels onto the plate on the frame's top edge, where the region name stands, and that plate was half hidden behind the panel before. Clicking the title now closes the panel.
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
