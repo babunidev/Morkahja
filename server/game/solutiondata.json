@@ -1722,7 +1722,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A silvery, luminescent rope ladder with steps made of sturdy moonwood. Enchanted leaves flutter around it, ensuring safe ascent. Its glow beckons climbers to hidden heights.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10168": {
     "mSolutionID": 10168,
