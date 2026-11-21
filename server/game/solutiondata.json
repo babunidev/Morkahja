@@ -238,7 +238,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A mighty Rokur hammer with a head that ignites in flames when swung.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10023": {
     "mSolutionID": 10023,
