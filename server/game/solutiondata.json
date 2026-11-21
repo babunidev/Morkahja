@@ -2352,7 +2352,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A crystal orb, swirling with colors that represent each element, used to channel and harmonize elemental energies, essential for calming the spirits.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10235": {
     "mSolutionID": 10235,
