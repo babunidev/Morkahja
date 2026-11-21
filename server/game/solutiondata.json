@@ -1613,7 +1613,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A gleaming silver chain necklace imbued with glowing ethereal runes. When worn, it shimmers brilliantly.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10159": {
     "mSolutionID": 10159,
