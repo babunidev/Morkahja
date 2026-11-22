@@ -601,7 +601,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "By summoning healing waters, Verdani envelop the wounded with soothing moisture, accelerating natural healing and relieving pain.",
     "mSolutionType": 21,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10056": {
     "mSolutionID": 10056,
