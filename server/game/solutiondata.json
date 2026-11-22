@@ -1769,7 +1769,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis summons a gust of pure, untainted air that dispels toxins, curses, and corruptions, restoring purity to the affected area.",
     "mSolutionType": 27,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10172": {
     "mSolutionID": 10172,
