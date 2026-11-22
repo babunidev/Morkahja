@@ -1862,7 +1862,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Grimnir infuse wounds with the healing energy of the minerals, the flesh binds and rejuvenates with the resilience of bedrock.",
     "mSolutionType": 21,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10180": {
     "mSolutionID": 10180,
