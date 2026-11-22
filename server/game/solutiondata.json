@@ -1508,7 +1508,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This ancient cup, carved from luminous onyx stone, glows with a warm internal fire. Intricate runic designs etched onto its surface dance under the chalice's ethereal flame.",
     "mSolutionType": 20,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10146": {
     "mSolutionID": 10146,
