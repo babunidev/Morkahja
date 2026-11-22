@@ -1991,7 +1991,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Rokur channel the warmth and nurturing nature of fire, mending wounds and providing comfort to the injured.",
     "mSolutionType": 21,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10189": {
     "mSolutionID": 10189,
