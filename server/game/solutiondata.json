@@ -1746,7 +1746,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Using their affinity with the air, Aevis can masterfully blend ingredients, enhancing flavors to create dishes that taste otherworldly and can even provide minor magical effects.",
     "mSolutionType": 33,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10170": {
     "mSolutionID": 10170,
