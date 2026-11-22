@@ -1593,7 +1593,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A radiant, silver lantern with intricate frost patterns etched into its surface. When lit, it emanates a soft, golden glow, and whispers ancient tales of perseverance and victory.",
     "mSolutionType": 40,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10155": {
     "mSolutionID": 10155,
