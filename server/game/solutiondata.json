@@ -1479,7 +1479,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An enchanting, weathered wooden lyre, its strings glistening under sunlight. Intricate carvings of Verdani symbols decorate its surface, promising the power to mend hearts and restore harmony.",
     "mSolutionType": 20,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10143": {
     "mSolutionID": 10143,
