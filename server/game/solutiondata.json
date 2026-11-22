@@ -2061,7 +2061,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This ancient amulet pulses with a serene glow, etched runes shimmering with potential to calm the wildest arcane storms.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10201": {
     "mSolutionID": 10201,
