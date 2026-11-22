@@ -2050,7 +2050,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Drawing from their deep connection with music and nature, the Verdani can move silently, their steps echoing the faintest notes of a lullaby.",
     "mSolutionType": 35,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10199": {
     "mSolutionID": 10199,
