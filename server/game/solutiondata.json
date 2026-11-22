@@ -568,7 +568,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "The Rokur draws from Solriel's radiant light, illuminating hidden paths, secrets, or treasures, even in the darkest of places.",
     "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10053": {
     "mSolutionID": 10053,
