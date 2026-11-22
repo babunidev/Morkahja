@@ -711,7 +711,8 @@
     "mSolutionRewardType": 39,
     "mSolutionText": "A sneaky and precise Rogue maneuver that involves striking an unsuspecting opponent from behind, dealing significant damage while catching them off guard.",
     "mSolutionType": 35,
-    "mSolutionUses": 4
+    "mSolutionUses": 4,
+    "mSolutionIconFrameless": true
   },
   "10066": {
     "mSolutionID": 10066,
