@@ -535,7 +535,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Channels the fiery essence of the Rokur, enhancing strikes with molten fury, scorching foes with each powerful blow.",
     "mSolutionType": 9,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10050": {
     "mSolutionID": 10050,
