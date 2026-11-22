@@ -590,7 +590,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Verdani channel the spirits of their gods, filling allies with renewed vigor, hope, and a burst of creativity.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10055": {
     "mSolutionID": 10055,
