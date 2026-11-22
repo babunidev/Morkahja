@@ -1489,7 +1489,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A brass horn, etched with symbols of strength and unity. It glows warmly when held, and its resonant call can inspire courage in any heart.",
     "mSolutionType": 20,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10144": {
     "mSolutionID": 10144,
