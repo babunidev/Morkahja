@@ -1603,7 +1603,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A lustrous, intricate tapestry frame entwined with silvery threads, glowing faintly. Each corner bears a gem that pulses with life.",
     "mSolutionType": 22,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10156": {
     "mSolutionID": 10156,
