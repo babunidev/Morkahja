@@ -634,7 +634,8 @@
     "mSolutionRewardType": 37,
     "mSolutionText": "Proficient in the art of Speechcraft, the mage employs enchanted words and mystical charm spells to persuade and influence the thoughts and decisions of others.",
     "mSolutionType": 17,
-    "mSolutionUses": 4
+    "mSolutionUses": 4,
+    "mSolutionIconFrameless": true
   },
   "10059": {
     "mSolutionID": 10059,
