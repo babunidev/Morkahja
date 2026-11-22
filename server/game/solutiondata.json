@@ -1548,7 +1548,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricate compass of sapphire and silver, glowing softly with a spectral blue flame. It pulsates rhythmically, growing stronger when facing hidden treasures.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10150": {
     "mSolutionID": 10150,
