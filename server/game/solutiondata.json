@@ -1567,7 +1567,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A mystic sphere that radiates gentle, cobalt luminescence. Made of ethereal glass, it swirls with captured auroras, promising release for tormented souls, a beacon of redemption in the darkness.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10152": {
     "mSolutionID": 10152,
