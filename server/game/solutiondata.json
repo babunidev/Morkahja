@@ -1873,7 +1873,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Cooking with geothermal warmth and precious Skyland spices, Grimnir dishes invigorate, tasting like the very heart of the earth.",
     "mSolutionType": 33,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10181": {
     "mSolutionID": 10181,
