@@ -2077,7 +2077,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Woven from strands of moonbeam-infused silk, this ethereal net disrupts magical energies, ensnaring and draining creatures unnatural vigor.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10203": {
     "mSolutionID": 10203,
