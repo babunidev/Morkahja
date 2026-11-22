@@ -722,7 +722,8 @@
     "mSolutionRewardType": 39,
     "mSolutionText": "Using the Rogue's finesse and expertise, they skillfully manipulate locks, unlocking doors and containers with precision, often without the need for conventional keys.",
     "mSolutionType": 7,
-    "mSolutionUses": 4
+    "mSolutionUses": 4,
+    "mSolutionIconFrameless": true
   },
   "10067": {
     "mSolutionID": 10067,
