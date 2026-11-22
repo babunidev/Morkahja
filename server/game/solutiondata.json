@@ -2014,7 +2014,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Calls upon the mesmerizing dance of northern lights, igniting creativity and sparking novel ideas in the Rokur and their allies.",
     "mSolutionType": 39,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10191": {
     "mSolutionID": 10191,
