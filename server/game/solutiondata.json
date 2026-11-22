@@ -1967,7 +1967,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "The Rokur uses the fire's heat to melt the lock to open it.",
     "mSolutionType": 7,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10187": {
     "mSolutionID": 10187,
