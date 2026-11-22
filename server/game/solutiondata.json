@@ -1826,7 +1826,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis blend with the ambient breezes, their presence becoming as subtle and intangible as a fleeting gust, making them nearly undetectable to foes.",
     "mSolutionType": 35,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10177": {
     "mSolutionID": 10177,
