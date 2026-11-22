@@ -1575,7 +1575,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "A mystic, hand-sized azure crystal, this key is intricately carved with Frostweaver glyphs. When held, it vibrates gently, resonating with the wisdom of a forgotten age.",
     "mSolutionType": 2,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10153": {
     "mSolutionID": 10153,
