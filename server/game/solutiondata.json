@@ -1814,7 +1814,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Grimnir channel the purity of crystal, negative energies dissipate, returning one to their natural balance.",
     "mSolutionType": 27,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10176": {
     "mSolutionID": 10176,
