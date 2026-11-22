@@ -2319,7 +2319,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate amulet that emits a gentle, warm light, resonating with the harmonies of nature, designed to comfort the heart and guide towards a safer path.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10221": {
     "mSolutionID": 10221,
