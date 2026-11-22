@@ -1518,7 +1518,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "The power to inspire and uplift others, igniting their passion, courage, and creativity with words and actions, fostering motivation and unity among companions.",
     "mSolutionType": 39,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10147": {
     "mSolutionID": 10147,
