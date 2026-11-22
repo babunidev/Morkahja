@@ -1528,7 +1528,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A whimsical item of enigmatic beauty, this key is forged from vibrant everfrost crystal. Iridescent hues dance across its intricate snowflake-cut design, emanating an inviting, warm glow amidst the biting cold.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10148": {
     "mSolutionID": 10148,
