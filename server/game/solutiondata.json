@@ -1980,7 +1980,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Rokur wield the persuasive power of flames, captivating and swaying audiences with a fiery passion and intensity in their words.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10188": {
     "mSolutionID": 10188,
