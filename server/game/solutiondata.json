@@ -1885,7 +1885,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Channeling the silent nature of the earth, the Grimnir become as undetectable as minerals.",
     "mSolutionType": 35,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10182": {
     "mSolutionID": 10182,
