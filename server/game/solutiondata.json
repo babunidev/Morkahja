@@ -1538,7 +1538,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A glimmering talisman, encased in a frostbitten metal frame. An entrancing, blue ice-crystal at its heart pulsates with a soothing, hypnotic glow, whispering promises of peaceful passage.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10149": {
     "mSolutionID": 10149,
