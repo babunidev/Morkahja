@@ -2069,7 +2069,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A sleek spear, its head forged from pure silver, adorned with a vial of sacred essence that neutralizes vile magic.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10202": {
     "mSolutionID": 10202,
