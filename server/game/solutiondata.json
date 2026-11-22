@@ -1463,7 +1463,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Utilizes techniques and knowledge to maintain comfort in cold environments, preventing frostbite and discomfort while ensuring the warmth of body and spirit.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10141": {
     "mSolutionID": 10141,
