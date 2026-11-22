@@ -524,7 +524,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Listening to the silent murmurs of locks, Grimnir hands unlock secrets as if conversing with the mechanism itself.",
     "mSolutionType": 7,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10049": {
     "mSolutionID": 10049,
