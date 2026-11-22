@@ -1839,7 +1839,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis can summon gentle winds to aid those in need, whether by cushioning a fall, guiding lost travelers, or amplifying another's abilities temporarily.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10178": {
     "mSolutionID": 10178,
