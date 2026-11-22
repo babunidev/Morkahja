@@ -2003,7 +2003,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Rokur utilize volcanic heat for cooking, imbuing dishes with a unique blend of smoky flavors and elemental energy.",
     "mSolutionType": 33,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10190": {
     "mSolutionID": 10190,
