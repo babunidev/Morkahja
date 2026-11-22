@@ -1898,7 +1898,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Drawing upon the unity and kinship deeply embedded in Grimnir culture, one calls forth assistance, ensuring no ally stands alone in their time of need.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10183": {
     "mSolutionID": 10183,
