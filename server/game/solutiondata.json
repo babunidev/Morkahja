@@ -2036,7 +2036,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Verdani attune to the surroundings, hearing and sensing the presence of nearby animals, aiding in a stealthy approach.",
     "mSolutionType": 29,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10193": {
     "mSolutionID": 10193,
