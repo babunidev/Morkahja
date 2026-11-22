@@ -557,7 +557,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "The Rokur shouts with the power of flames, intimidating everyone around.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10052": {
     "mSolutionID": 10052,
