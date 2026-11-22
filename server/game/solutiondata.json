@@ -1792,7 +1792,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "By aligning with the air's subtle vibrations, Aevis can unlock or seal doors, chests, and gates without a physical key.",
     "mSolutionType": 7,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10174": {
     "mSolutionID": 10174,
