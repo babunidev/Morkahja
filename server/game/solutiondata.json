@@ -2087,7 +2087,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Encased in a silver filigree, this lantern emits a pulsing light that disorients and weakens foes, shattering their focus and leaving them vulnerable.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10204": {
     "mSolutionID": 10204,
