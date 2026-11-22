@@ -1803,7 +1803,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "With eyes reflecting the glint of gems, Grimnir track prey, ensuring they can't escape the hunter's reach.",
     "mSolutionType": 29,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10175": {
     "mSolutionID": 10175,
