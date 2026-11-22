@@ -1941,7 +1941,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "The Rokur harnesses fire's purifying properties, burning away impurities, toxins, and harmful energies from objects or beings.",
     "mSolutionType": 27,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10185": {
     "mSolutionID": 10185,
