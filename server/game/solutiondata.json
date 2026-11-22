@@ -546,7 +546,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Due to their immense strength, Rokur can perform incredible leaps to reach great heights or cover vast distances.",
     "mSolutionType": 13,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10051": {
     "mSolutionID": 10051,
