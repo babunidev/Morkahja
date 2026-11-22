@@ -1780,7 +1780,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "Aevis can read the memories of the air, revealing hidden paths, objects, or traces of magic otherwise unseen to the naked eye.",
     "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10173": {
     "mSolutionID": 10173,
