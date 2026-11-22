@@ -1917,7 +1917,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Utilizing the fiery nature of the Rokur to chase prey in their tracks, ensuring a swift and precise hunt.",
     "mSolutionType": 29,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10184": {
     "mSolutionID": 10184,
