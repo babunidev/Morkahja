@@ -1498,7 +1498,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A heart-shaped pendant of lustrous moonstone set in ornate silver. A careful etching of a grove decorates its surface.",
     "mSolutionType": 20,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10145": {
     "mSolutionID": 10145,
