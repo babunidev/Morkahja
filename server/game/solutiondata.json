@@ -513,7 +513,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Echoing the depths of Grimnir mines, this instinct magnifies the presence of hidden treasures or ancient passageways.",
     "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10048": {
     "mSolutionID": 10048,
