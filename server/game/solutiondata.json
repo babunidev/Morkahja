@@ -2025,7 +2025,8 @@
     "mSolutionRewardType": 40,
     "mSolutionText": "Calls upon the unity and camaraderie inherent to Rokur culture, bolstering allies with warmth, strength, and protection in their time of need.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10192": {
     "mSolutionID": 10192,
