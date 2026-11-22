@@ -2306,7 +2306,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This pendant, radiating a soft, dawn-like glow, is imbued with uplifting energy, designed to lift spirits and guide lost souls like a beacon of hope and direction.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10220": {
     "mSolutionID": 10220,
