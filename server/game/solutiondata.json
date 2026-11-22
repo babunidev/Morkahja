@@ -1850,7 +1850,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Mimicking the steadfast grip of age-old roots in rocky crevices, Grimnir scale sheer faces with an innate stone-born mastery.",
     "mSolutionType": 13,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10179": {
     "mSolutionID": 10179,
