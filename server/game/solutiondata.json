@@ -2052,7 +2052,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Channeling the spirit of community and their affinity for balance, the Verdani can radiate a soothing aura.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10200": {
     "mSolutionID": 10200,
