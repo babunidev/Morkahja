@@ -1757,7 +1757,8 @@
     "mSolutionRewardType": 42,
     "mSolutionText": "With keen senses honed by the air's embrace, Aevis can track prey across great distances, the winds carrying scents and sounds directly to them.",
     "mSolutionType": 29,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10171": {
     "mSolutionID": 10171,
