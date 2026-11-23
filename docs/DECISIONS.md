@@ -486,3 +486,18 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Status:** committed locally on 2026-11-23, not released. Tests and typecheck pass; not played.
 
+## D-056 — Player choices: equipment, specialization, avatar edit, travel (2026-11-23)
+
+**Babuni's direction:** give an avatar identity and the player more choice and less randomness, with no chance outside the dice and every solution still fitting its encounter. Four choices, worked out in discussion with Claude Code and settled the same day; the full rules are in [PLAYER_CHOICES.md](PLAYER_CHOICES.md).
+
+- **Equipment:** two different items (not skills, essences or Atranor items). Equipping adds one extra charge, always spent first. A use with a total of 12 or higher gives one charge back, 20 or higher two; each use in a set counts by its own roll. Hardship and Misery cannot take equipped charges. No unequip: swapping costs the item that leaves one charge, and one on its last charge disappears. Equipped in the avatar selection, or in the game once the choice in the encounter is made. The regain shows on the item, not among the rewards.
+- **Specialization:** one skill type (fifteen, without Life and Resurrection), +1 to every roll with a skill of that type in any slot. Chosen and changed only in the avatar selection; the first choice is free, a change costs 1 gem.
+- **Edit:** portrait (same race, role and gender), frame and name; race, role and gender are locked. Only what changes is paid: the portrait's or frame's gem value, 50 gems for a name.
+- **Travel:** a region is its expansion. A trip costs a tenth of the expansion's gem price, rounded (Keldor 8, Everwinter 5, Aetherion 3), and the base game 1. It swaps the current encounter, at any time and through chains, with no reward or loss for the one left; never from Atranor or a level-up. Afterwards the usual follow and region roll apply. A host takes the room along; a guest who travels leaves. Locked regions are red on the map and lead to the Expansions menu.
+- **Bots** have neither equipment nor specialization; dead avatars are not in the selection.
+
+Babuni rejected Claude Code's proposals of a chance to save a charge and of using an equipped item in any slot.
+
+**AI contribution:** Claude Code (Claude Opus 5.5) read the current slot, bonus, charge, solution-type, gem, expansion and map data, asked the open questions, worked out the regain thresholds and drafted the fifteen specialization descriptions for Babuni to revise.
+
+**Status:** decided, not implemented.

@@ -188,6 +188,16 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough.
 - [ ] Patch note and version bump, then release when Babuni approves.
 
+## Player choices: equipment, specialization, edit, travel — concept, 2026-11-23 ([PLAYER_CHOICES.md](PLAYER_CHOICES.md))
+
+- [x] Equipment rules written down: two items, +1 charge on equip, 1 charge back on a total of 12+, 2 on 20+, each use judged by its own roll, protected from Hardship and Misery, changeable (the extra charge leaves with the item), a broken item frees the slot.
+- [x] Avatar selection modes written down: Equipment, Edit (paid with the portraits' and frames' gem values) and Specialization (+1 to rolls of one ability type).
+- [x] Open questions settled and recorded as D-056.
+- [ ] Babuni revises the fifteen specialization descriptions.
+- [ ] Implement equipment (server rule, equipment card in the avatar selection and the in-game overlay, inventory picker), test and play.
+- [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
+- [ ] Implement specialization, edit avatar and region travel, test and play.
+
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 
 - [x] Survival from a total of 7; one god's essence at 7, two at 14, three at 20; all three with an Atranor item or a gem sacrifice; one charge each.
