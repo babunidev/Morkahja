@@ -29,6 +29,7 @@ import { assetUrl } from '../../../assetUrl.js';
 import { SolutionImage } from '../../common/SolutionFrame.js';
 import { frameDividerStyle } from '../../common/simpleFrame.js';
 import { inventorySections } from './inventorySections.js';
+import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from './decorativeFrameShared.js';
 import { solutionTypeLabel } from './solutionTypeLabels.js';
 
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -81,7 +82,7 @@ const scrollWrapStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
   // Just enough room between the frame and the pictures at the sides (Babuni, 2026-11-21).
-  padding: '0 clamp(5px, 1.2vw, 7px) clamp(24px, 6vw, 36px)',
+  padding: `0 ${PANEL_SIDE_PADDING} clamp(24px, 6vw, 36px)`,
   boxSizing: 'border-box',
   overflow: 'auto',
   msOverflowStyle: 'none',
@@ -118,9 +119,10 @@ const itemGridStyle: CSSProperties = {
  * The line between the inventory's lists (normal, rare, essences): the
  * tooltip's divider (Babuni, 2026-11-23).
  */
+const SECTION_DIVIDER_SIDE_MARGIN = 2;
 const sectionDividerStyle: CSSProperties = {
-  ...frameDividerStyle({ side: 'top' }),
-  margin: '6px 2px 4px',
+  ...frameDividerStyle({ side: 'top', bleed: panelEdgeDividerBleed(SECTION_DIVIDER_SIDE_MARGIN) }),
+  margin: `6px ${SECTION_DIVIDER_SIDE_MARGIN}px 4px`,
 };
 
 /**

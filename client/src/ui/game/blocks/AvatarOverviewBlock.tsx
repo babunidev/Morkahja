@@ -3,6 +3,7 @@ import { GAME_PANEL_BACKGROUND } from './gamePanelBackground.js';
 
 import { fadeTransition } from '../../transitions/fade.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
+import { PANEL_SIDE_PADDING } from './decorativeFrameShared.js';
 
 /**
  * The avatar overview in the game (Babuni, 2026-11-23): over the encounter
@@ -30,7 +31,7 @@ const scrollStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
   // The Inventory's side room, so the slots are as wide as its pictures.
-  padding: 'clamp(22px, 5vw, 30px) clamp(5px, 1.2vw, 7px) 0',
+  padding: `clamp(22px, 5vw, 30px) ${PANEL_SIDE_PADDING} 0`,
   boxSizing: 'border-box',
   overflowY: 'auto',
   scrollbarWidth: 'none',

@@ -10,6 +10,7 @@ import { EquipmentSection, experienceRequiredForNextLevel } from './AvatarPartyD
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
 import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
+import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from '../game/blocks/decorativeFrameShared.js';
 import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 
 /**
@@ -24,6 +25,10 @@ const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
 export const OVERVIEW_BACK_ASSET = `${UI_ROOT}/im_button_delete.webp`;
 export const OVERVIEW_ENTER_ASSET = `${UI_ROOT}/im_button_yes.webp`;
 
+/** Inside the panel's own side padding. */
+const CONTENT_SIDE_PADDING = 14;
+const DIVIDER_BLEED = panelEdgeDividerBleed(CONTENT_SIDE_PADDING);
+
 const contentStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -31,7 +36,7 @@ const contentStyle: CSSProperties = {
   gap: 6,
   width: '100%',
   boxSizing: 'border-box',
-  padding: '0 14px',
+  padding: `0 ${CONTENT_SIDE_PADDING}px`,
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   textAlign: 'center',
@@ -170,7 +175,7 @@ export function AvatarOverviewContent({
         <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
       </span>
       <p style={xpTextStyle}>XP {current}/{nextLevel}</p>
-      <TooltipDivider />
+      <TooltipDivider bleed={DIVIDER_BLEED} />
       <div style={statsGridStyle}>
         {stats.map(([label, value]) => (
           <span key={label} style={statStyle}>
@@ -179,7 +184,7 @@ export function AvatarOverviewContent({
           </span>
         ))}
       </div>
-      <TooltipDivider />
+      <TooltipDivider bleed={DIVIDER_BLEED} />
       <EquipmentSection
         interactive={Boolean(onEquipSlot)}
         inventory={inventory}
@@ -187,7 +192,7 @@ export function AvatarOverviewContent({
         tooltipBoundsSelector={tooltipBoundsSelector}
       />
       {notice ? <p role="alert" style={noticeStyle}>{notice}</p> : null}
-      <TooltipDivider />
+      <TooltipDivider bleed={DIVIDER_BLEED} />
       {/* Room for the specialization (D-056), not built yet. */}
       <p style={sectionHeadingStyle}>Specialization</p>
       <p style={comingSoonStyle}>Coming soon</p>
@@ -315,7 +320,9 @@ const menuPanelStyle: CSSProperties = {
   boxSizing: 'border-box',
   display: 'grid',
   gridTemplateRows: 'minmax(0, 1fr) auto',
-  padding: 'clamp(26px, 6vw, 34px) clamp(5px, 1.2vw, 7px) clamp(18px, 4vw, 26px)',
+  // The side padding sits inside the scroll box and the footer, so the
+  // dividers can reach the frame on the panel's edge without being clipped.
+  padding: 'clamp(26px, 6vw, 34px) 0 clamp(18px, 4vw, 26px)',
   background: GAME_PANEL_BACKGROUND,
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   transformOrigin: 'center center',
@@ -323,6 +330,7 @@ const menuPanelStyle: CSSProperties = {
 
 const menuScrollStyle: CSSProperties = {
   minHeight: 0,
+  padding: `0 ${PANEL_SIDE_PADDING}`,
   overflowY: 'auto',
   scrollbarWidth: 'none',
 };
@@ -390,7 +398,7 @@ export function AvatarOverviewMenuCard({
       <section aria-label="Avatar overview" ref={panelRef} role="dialog" style={menuPanelStyle}>
         <DecorativeEdgeFrame regionLabel={title} zIndex={2} />
         <div style={{ ...menuScrollStyle, position: 'relative', zIndex: 1 }}>{children}</div>
-        <div style={{ position: 'relative', zIndex: 1 }}>{footer}</div>
+        <div style={{ position: 'relative', zIndex: 1, padding: `0 ${PANEL_SIDE_PADDING}` }}>{footer}</div>
       </section>
     </div>
   );

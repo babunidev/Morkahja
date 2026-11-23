@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: dividers reach the frame
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** the lines between the parts of the avatar screen and of the inventory connect all the way to the frame.
+- **Change:** `frameDividerStyle` and `TooltipDivider` take a CSS length as bleed. New `PANEL_SIDE_PADDING` and `panelEdgeDividerBleed` in `client/src/ui/game/blocks/decorativeFrameShared.ts` give the bleed from the content to the panel's edge, where the frame's inner line lies. The avatar overview (`AvatarOverview.tsx`, the avatar selection's card and the in-game card) and the inventory's list dividers (`SolutionGridOverlay.tsx`) use it. In the avatar selection's card the side padding moved from the panel into its scroll box and footer, since the scroll box clipped the longer lines.
+- **Checked in the local game** (headless Chromium, throwaway local test player): at 1280 × 900 and 390 × 844 every divider's ends land on the frame edge (avatar selection 380/900 and 16/374 px; in-game card and inventory 401/879 and 11/379 px). Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-dividers-reach-frame-*.png`.
+- **Verification:** client tests 51/51 and the client typecheck passed. Tooltip dividers are unchanged.
+
 ## 2026-11-23 — Unreleased: level-up choices show their type
 
 - **Not released.** Committed to local `main` only.

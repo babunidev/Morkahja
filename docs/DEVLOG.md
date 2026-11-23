@@ -617,6 +617,10 @@ My inventory mixed everything in one grid. Now normal items stand on top, rare i
 
 When I level up and choose one of three abilities, the tooltip now also tells me what type each one is, as my inventory and skillbook do. Claude Code (Claude Opus 5.5) added the line. **Verification:** client tests and typecheck passed; not yet seen at a real level-up. **Not released.**
 
+## 2026-11-23 — Lines that reach the frame
+
+The lines between the parts of my avatar screen and of the inventory stopped short of the frame. Now they run all the way to it, with their small triangles meeting the frame's inner line. Claude Code (Claude Opus 5.5) found that the avatar card's scrolling area also cut longer lines off, moved its side spacing inside, and measured the lines' ends against the frame on a desktop and a phone size. **Verification:** client tests and typecheck passed; screenshots taken. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

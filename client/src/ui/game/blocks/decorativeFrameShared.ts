@@ -29,3 +29,15 @@ export const overlayPanelTitleStyle: CSSProperties = {
   textAlign: 'center',
   flexShrink: 0,
 };
+
+/** The side padding between a framed panel's edge and its content (inventory, skillbook, avatar overview). */
+export const PANEL_SIDE_PADDING = 'clamp(5px, 1.2vw, 7px)';
+
+/**
+ * A divider's bleed from content `inset` px inside the panel's side padding to
+ * the frame's inner line, which lies on the panel's edge (Babuni, 2026-11-23:
+ * the lines between the parts reach the frame).
+ */
+export function panelEdgeDividerBleed(inset: number): string {
+  return `calc(${PANEL_SIDE_PADDING} + ${inset}px)`;
+}

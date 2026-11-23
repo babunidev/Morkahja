@@ -88,7 +88,7 @@ const cardLineStyle: CSSProperties = {
  * line, its ends meeting the tooltip frame. `bleed` = the tooltip's side
  * padding minus the frame's depth.
  */
-export function TooltipDivider({ bleed = 6 }: { bleed?: number }) {
+export function TooltipDivider({ bleed = 6 }: { bleed?: number | string }) {
   // Stretches across even inside a centring flex column.
   return <div aria-hidden="true" style={{ ...frameDividerStyle({ side: 'top', bleed }), alignSelf: 'stretch', margin: '4px 0 3px' }} />;
 }

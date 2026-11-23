@@ -246,14 +246,15 @@ function dividerImage(color: string, opacity: number): string {
  * A divider on an element's top or bottom edge, replacing a plain borderTop or
  * borderBottom: the frame's line plus a gapped line, ending in small triangles.
  * `bleed` extends its ends outward (without moving the content) so they meet
- * the frame's inner line instead of stopping short in a right angle.
+ * the frame's inner line instead of stopping short in a right angle: px, or a
+ * CSS length such as `calc(…)`.
  */
 export function frameDividerStyle({
   side = 'top',
   bleed = 0,
   color = SIMPLE_FRAME_COLOR,
   opacity = 0.75,
-}: { side?: 'top' | 'bottom'; bleed?: number; color?: string; opacity?: number } = {}): CSSProperties {
+}: { side?: 'top' | 'bottom'; bleed?: number | string; color?: string; opacity?: number } = {}): CSSProperties {
   const top = side === 'top';
   const h = DIVIDER_HEIGHT;
   const e = DIVIDER_END;
@@ -264,7 +265,7 @@ export function frameDividerStyle({
     borderImageSource: dividerImage(color, opacity),
     borderImageSlice: top ? `${h} ${e} 0 ${e}` : `0 ${e} ${h} ${e}`,
     borderImageWidth: top ? `${h}px ${e}px 0 ${e}px` : `0 ${e}px ${h}px ${e}px`,
-    borderImageOutset: `0 ${bleed}px`,
+    borderImageOutset: `0 ${typeof bleed === 'number' ? `${bleed}px` : bleed}`,
     borderImageRepeat: 'round',
   };
 }
