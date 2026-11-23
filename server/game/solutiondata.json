@@ -1370,7 +1370,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "The skill of persuasive and eloquent speech, capable of swaying hearts and minds with compelling words and convincing arguments.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10130": {
     "mSolutionID": 10130,
