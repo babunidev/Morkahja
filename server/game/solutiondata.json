@@ -1344,7 +1344,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A supple, earth-toned hood, intricately woven from the noise-dampening threads of silken-grass.",
     "mSolutionType": 32,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10127": {
     "mSolutionID": 10127,
