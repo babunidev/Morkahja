@@ -964,7 +964,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A finely crafted blade, etched with powerful Grimnir runes, its edge glowing with a light that can slice through magic.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10089": {
     "mSolutionID": 10089,
