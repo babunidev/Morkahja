@@ -1019,7 +1019,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A mesmerizing gem that radiates with the captured essence of the sun, illuminating the darkness and warming the heart in the mystical world.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10094": {
     "mSolutionID": 10094,
