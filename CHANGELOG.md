@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: encounter solutions as big as in the inventory
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** the solutions shown in an encounter should be the same size as in the inventory, a little bigger, using the space so the pictures read better.
+- **Change (`client/src/ui/game/blocks/SolutionBlock.tsx`):** the fixed 64 px size is gone. Each solution and the dice now fill their column of the five, with the inventory grid's gap `clamp(2px, 0.5vw, 4px)` (was 6 px). The actions layer is a CSS size container, and the size is `calc((100cqi - 4 × gap) / 5)`. A hovering pick's offset and the stack step of further copies (0.72 of a picture, was 46 px) follow the size.
+- **Measured in the local game (headless Chromium, throwaway local test player):** at 1280 × 900 a solution's frame grew from 83 to 88 screen px, the same as the inventory's 88; at 390 × 844 from 64 to 69, the inventory's being 70. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-encounter-solutions-fill-column-*.png`.
+- **Verification:** client tests 49/49 and the client typecheck passed. ESLint on `SolutionBlock.tsx` shows the same problems as before. A pick, a set's hovering stack and the flight to the result were not watched at the new size.
+
 ## 2026-11-23 — Unreleased: Atranor returns with the gods of the avatar's own element (D-055)
 
 - **Not released.** Committed to local `main` only.

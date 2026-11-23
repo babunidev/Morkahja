@@ -100,7 +100,19 @@ const SOLUTION_ENABLE_RATTLE_MS = 520;
 const DICE_ROLL_ANIMATION_MS = 1730;
 const SOLUTION_ROLL_REVEAL_MS = 1730;
 
-const SOLUTION_ACTION_SIZE_PX = 64;
+/**
+ * The gap between the five places, the same as the Inventory and Skillbook
+ * grid (SolutionGridOverlay.tsx).
+ */
+const SOLUTION_ACTION_GAP = 'clamp(2px, 0.5vw, 4px)';
+
+/**
+ * Each solution and the dice fill their column of the five, as the pictures
+ * do in the inventory (Babuni, 2026-11-23: it was a fixed 64 px, a little
+ * smaller than in the inventory). `cqi` is the width of the actions layer,
+ * which is a size container.
+ */
+const SOLUTION_ACTION_SIZE = `calc((100cqi - 4 * ${SOLUTION_ACTION_GAP}) / 5)`;
 
 type SolutionRevealDirection = 'left' | 'right' | 'bottom';
 
@@ -337,12 +349,13 @@ const solutionActionsLayerStyle: CSSProperties = {
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
   alignItems: 'center',
   justifyItems: 'center',
-  columnGap: 6,
+  columnGap: SOLUTION_ACTION_GAP,
+  containerType: 'inline-size',
 };
 
 const solutionIconShellStyle: CSSProperties = {
-  width: SOLUTION_ACTION_SIZE_PX,
-  height: SOLUTION_ACTION_SIZE_PX,
+  width: SOLUTION_ACTION_SIZE,
+  height: SOLUTION_ACTION_SIZE,
   borderRadius: '50%',
   // Visible: an essence's frame reaches into the box's corners, a rare one past it.
   overflow: 'visible',
@@ -353,7 +366,7 @@ const primarySolutionGlowStyle: CSSProperties = {
 };
 
 const diceButtonStyle: CSSProperties = {
-  width: SOLUTION_ACTION_SIZE_PX,
+  width: SOLUTION_ACTION_SIZE,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -361,7 +374,7 @@ const diceButtonStyle: CSSProperties = {
 
 const diceSlotStyle: CSSProperties = {
   position: 'relative',
-  width: SOLUTION_ACTION_SIZE_PX,
+  width: SOLUTION_ACTION_SIZE,
   display: 'grid',
   placeItems: 'center',
 };
@@ -369,7 +382,7 @@ const diceSlotStyle: CSSProperties = {
 const solutionButtonStyle: CSSProperties = {
   display: 'grid',
   placeItems: 'center',
-  width: SOLUTION_ACTION_SIZE_PX,
+  width: SOLUTION_ACTION_SIZE,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -390,9 +403,9 @@ const solutionHoverButtonStyle: CSSProperties = {
   position: 'absolute',
   left: '50%',
   bottom: 'calc(100% + 8px)',
-  width: SOLUTION_ACTION_SIZE_PX,
-  height: SOLUTION_ACTION_SIZE_PX,
-  marginLeft: -SOLUTION_ACTION_SIZE_PX / 2,
+  width: SOLUTION_ACTION_SIZE,
+  height: SOLUTION_ACTION_SIZE,
+  marginLeft: `calc(${SOLUTION_ACTION_SIZE} / -2)`,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -410,8 +423,8 @@ const solutionHoverBobStyle: CSSProperties = {
   animation: `morkahja-solution-hover-bob 1800ms ease-in-out ${SOLUTION_HOVER_RISE_MS}ms infinite`,
 };
 
-/** Further copies of the same slot hover above each other. */
-const SOLUTION_HOVER_STACK_STEP_PX = 46;
+/** Further copies of the same slot hover above each other, about 0.72 of a picture apart (46 px at 64 px). */
+const SOLUTION_HOVER_STACK_STEP = `calc(${SOLUTION_ACTION_SIZE} * 0.72)`;
 
 /** The roll on a hovering solution or die, the same face as the portrait. */
 const solutionHoverRollStyle: CSSProperties = {
@@ -1420,7 +1433,7 @@ export function SolutionBlock({
                     role="img"
                     style={{
                       ...solutionHoverButtonStyle,
-                      bottom: `calc(100% + ${8 + stackIndex * SOLUTION_HOVER_STACK_STEP_PX}px)`,
+                      bottom: `calc(100% + 8px + ${stackIndex} * ${SOLUTION_HOVER_STACK_STEP})`,
                       zIndex: 2 + stackIndex,
                       pointerEvents: 'none',
                       transition: `bottom ${SOLUTION_HOVER_RISE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,
@@ -1511,8 +1524,8 @@ export function SolutionBlock({
                     ? solutionRevealSpinStyle(emptyDirection)
                     : {}),
                   ...(choiceFade ? otherChoicesFadeStyle : {}),
-                  width: SOLUTION_ACTION_SIZE_PX,
-                  height: SOLUTION_ACTION_SIZE_PX,
+                  width: SOLUTION_ACTION_SIZE,
+                  height: SOLUTION_ACTION_SIZE,
                 }}
               />
             );
@@ -1562,7 +1575,7 @@ export function SolutionBlock({
                     role="img"
                     style={{
                       ...solutionHoverButtonStyle,
-                      bottom: `calc(100% + ${8 + stackIndex * SOLUTION_HOVER_STACK_STEP_PX}px)`,
+                      bottom: `calc(100% + 8px + ${stackIndex} * ${SOLUTION_HOVER_STACK_STEP})`,
                       zIndex: 2 + stackIndex,
                       pointerEvents: 'none',
                       transition: `bottom ${SOLUTION_HOVER_RISE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`,

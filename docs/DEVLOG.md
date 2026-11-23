@@ -577,6 +577,10 @@ The game had become a little too easy. A primary solution now adds +5 to the d20
 
 In Atranor the essence I came back with could belong to any god. Now it belongs to my own element: a total of 7 brings me back with one of my three gods, 14 with a second, 20 with all three, and an Atranor item always brings all three. Claude Code (Claude Opus 5.5) pointed out that a 7 used to be a death in Atranor, and I chose to make 7 the line of survival, to let an Atranor item still roll, to give one charge per essence, and to give all three for a gem sacrifice. Since an Atranor item now rolls at least 7, it always brings me back (D-055). **Verification:** server (64) and client (49) tests and typecheck passed locally; not played yet. **Not released.**
 
+## 2026-11-23 — Encounter solutions as big as in the inventory
+
+The solutions an encounter offers were a little smaller than the same pictures in my inventory. Now they fill their place in the row of five, with the inventory's spacing. Claude Code (Claude Opus 5.5) measured both in the local game: a solution's frame grew from 83 to 88 px at a desktop window, as in the inventory, and from 64 to 69 px on a phone, against 70 in the inventory. **Verification:** client tests and typecheck passed; screenshots taken; a pick and a hovering set not yet watched at the new size. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
