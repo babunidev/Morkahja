@@ -1377,7 +1377,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An elegant staff intricately carved from ancient Liani hardwood. Its gnarled surface is entwined with vibrant moss and luminescent fungi, emitting a soft, soothing glow.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10131": {
     "mSolutionID": 10131,
