@@ -11,6 +11,7 @@ setGameContent({
     10: { mSolutionID: 10, mSolutionIconName: 'tool_key', mSolutionInventoryType: 2, mSolutionType: 8 },
     22: { mSolutionID: 22, mSolutionIconName: 'tool_map', mSolutionInventoryType: 2, mSolutionType: 6 },
     10015: { mSolutionID: 10015, mSolutionIconName: 'tool_epic_atranor_potion', mSolutionInventoryType: 3, mSolutionType: 77 },
+    30: { mSolutionID: 30, mSolutionIconName: 'skill_stealth', mSolutionInventoryType: 1, mSolutionType: 35 },
   },
   expansions: {},
   frames: [null, { frameID: 1 }],
@@ -133,4 +134,28 @@ assert.deepEqual(
     13,
   ),
   ['10 + 3'],
+);
+
+// Specialization (D-056): a Stealth skill of a Stealth specialist shows +1 more.
+assert.deepEqual(
+  choiceRollBreakdown(
+    participant({
+      avatar: { id: 'a', name: 'Myriana', level: 1, portrait: '', frame: '', specialization: 35 } as RoomParticipantDto['avatar'],
+      selectedAction: 'A',
+      selectedSolutionId: 30,
+      preparedResult: { success: true, message: '', rewards: [], selectedRoll: 22 },
+    }),
+    encounter({ primarySolutionA: 30 }),
+    22,
+  ),
+  ['16 + 6'],
+);
+// Without it, the same skill shows the slot bonus only.
+assert.deepEqual(
+  choiceRollBreakdown(
+    participant({ selectedAction: 'A', selectedSolutionId: 30, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 21 } }),
+    encounter({ primarySolutionA: 30 }),
+    21,
+  ),
+  ['16 + 5'],
 );

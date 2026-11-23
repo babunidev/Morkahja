@@ -629,6 +629,10 @@ When I tapped an empty slot under my active avatar, the creation opened while th
 
 Tapping my avatars in the main menu was silent, while every other button clicks. Now each tap on an avatar or an empty slot plays the same button sound. In the game my avatar already did. Claude Code (Claude Opus 5.5) added it and checked in the local game that every tap plays the sound once. **Verification:** client tests and typecheck passed; not yet heard with speakers. **Not released.**
 
+## 2026-11-23 — Specialization
+
+The second of my player choices is in. In the avatar overview I choose what my avatar is good at, for example Stealth, and from then on every roll with a Stealth skill gets +1. The first choice is free, and a change costs 1 gem. A list on the left shows the fifteen specializations and the right side shows the description. In the game the overview shows the specialization in one line, and the roll numbers include the +1. I also asked for my concept to follow the changes I made after writing it, since the Play button and the selection modes are gone now. Claude Code (Claude Opus 5.5) built it on the server and the client and rewrote the concept where it no longer matched. It made sure two changes at the same moment cannot both be paid with one gem, and tried everything in the local game on a desktop and a phone size. It found that Warmth has no skills yet. The descriptions are its drafts for me to revise. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

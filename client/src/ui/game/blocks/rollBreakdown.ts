@@ -5,7 +5,8 @@ import {
   formatRollBreakdown,
 } from '@shared/diceInterpreter.js';
 import { solutionSetSize } from '@shared/solutionSet.js';
-import { solutionRarityRollBonus, type SolutionRarityRecord } from '@shared/solutionRarity.js';
+import type { SolutionRarityRecord } from '@shared/solutionRarity.js';
+import { solutionRollBonus } from '@shared/specialization.js';
 import { gameSolutions } from '../../../data/gameContent.js';
 import type { EncounterAction, EncounterSnapshot, RoomParticipantDto } from '../../../api/http.js';
 
@@ -24,10 +25,13 @@ function bonusForSolution(
   encounter: EncounterSnapshot,
   slot: EncounterAction | undefined,
   solutionId: number,
+  specialization: number | null | undefined,
 ): number {
   const primaryId = primaryIdForSlot(encounter, slot);
-  const rarity = solutionRarityRollBonus(
+  // A rare item's +1 and the specialization's +1 for its skills (D-056).
+  const rarity = solutionRollBonus(
     (gameSolutions() as Record<string, SolutionRarityRecord | undefined>)[String(solutionId)],
+    specialization,
   );
   if (primaryId > 0 && solutionId === primaryId) {
     return PRIMARY_SOLUTION_ROLL_BONUS + rarity;
@@ -58,7 +62,12 @@ export function choiceRollBreakdown(
   if (!isSet) {
     const bonus = participant.selectedAction === 'dice' || participant.selectedSolutionId === undefined
       ? DICE_ROLL_BONUS
-      : bonusForSolution(encounter, participant.selectedAction, participant.selectedSolutionId);
+      : bonusForSolution(
+        encounter,
+        participant.selectedAction,
+        participant.selectedSolutionId,
+        participant.avatar.specialization,
+      );
     const line = formatRollBreakdown(total, bonus, difficulty);
     return line ? [line] : [];
   }
@@ -67,7 +76,7 @@ export function choiceRollBreakdown(
   const picks = participant.setPicks ?? [];
   if (picks.length > 0) {
     for (const pick of picks) {
-      const line = formatRollBreakdown(pick.roll, bonusForSolution(encounter, pick.slot, pick.solutionId), difficulty);
+      const line = formatRollBreakdown(pick.roll, bonusForSolution(encounter, pick.slot, pick.solutionId, participant.avatar.specialization), difficulty);
       if (line) {
         lines.push(line);
       }

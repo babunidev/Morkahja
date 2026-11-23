@@ -63,6 +63,8 @@ export interface AvatarDocument {
   inventory?: AvatarInventory;
   profile: AvatarProfile;
   progression: AvatarDocumentProgression;
+  /** The skill type the avatar is good at: +1 to its skills' rolls (D-056). */
+  specialization?: number | null;
   /** Enables character recreation after death-loop failure. */
   editMode?: boolean;
   /** Optional denormalized pointer; authoritative data is in subcollection. */

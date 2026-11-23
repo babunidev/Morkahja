@@ -47,6 +47,7 @@ import { revealSolutionSetPicks } from '../engine/encounterResolver.js';
 import { snapshotToEncounterData, snapshotToRolls } from '../types/encounter.js';
 import { flattenInventorySolutionIds } from './inventoryService.js';
 import { equippedSolutionIds } from '@shared/equipment.js';
+import { readAvatarSpecialization } from '@shared/specialization.js';
 import { getSolutionMap } from './gameData.js';
 import type { SolutionSetPickRecord } from '../domain/rooms/RoomParticipant.js';
 import { applyExperience, type AvatarProgression } from '../domain/avatar/AvatarProgression.js';
@@ -2468,6 +2469,7 @@ export async function submitSetPick(
       snapshotToRolls(snapshot),
       slots,
       equippedSolutionIds(inventory.equipped),
+      readAvatarSpecialization(avatar),
     );
     if (!picks || encounter.mEncounterDifficulty <= 1) {
       throw new RoomError('This solution cannot be added to the set', 409, 'INVALID_SOLUTION_SET');

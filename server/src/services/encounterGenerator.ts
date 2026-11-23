@@ -8,6 +8,7 @@
 import { generateEncounterRollSnapshot } from '../engine/encounterRollGenerator.js';
 import { resolveEncounter as runDeterministicResolver } from '../engine/encounterResolver.js';
 import { equippedSolutionIds } from '@shared/equipment.js';
+import { readAvatarSpecialization } from '@shared/specialization.js';
 import type { EncounterResolution } from '../engine/encounterResolver.js';
 import { interpretRoll, isD20Face, type RollOutcome } from '../engine/diceInterpreter.js';
 import {
@@ -1089,6 +1090,7 @@ export async function continueEncounter(
         toSelectedEncounterAction(actionForResolution),
         encounterSnapshot.rewardIds,
         equippedSolutionIds(inventory.equipped),
+        readAvatarSpecialization(avatar),
       );
       const selectedRollOutcome = interpretRoll(baseResolution.selectedRoll);
       let resolution = normalizeSystemEncounterResolution(

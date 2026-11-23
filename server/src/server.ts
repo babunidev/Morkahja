@@ -1,5 +1,6 @@
 import express from 'express';
 import { equipAvatarItem, EquipmentRequestError } from './services/equipmentService.js';
+import { chooseAvatarSpecialization, SpecializationRequestError } from './services/specializationService.js';
 import { loadAvatarProgression } from './services/avatarProgressionService.js';
 import type { NextFunction, Request, Response } from 'express';
 
@@ -501,6 +502,31 @@ app.post('/avatar/:avatarId/equipment', async (req: Request, res: Response) => {
     res.json({ playerId, avatarId, inventory });
   } catch (error) {
     if (error instanceof EquipmentRequestError) {
+      res.status(error.status).json({ error: error.message, code: error.code });
+      return;
+    }
+
+    throw error;
+  }
+});
+
+app.post('/avatar/:avatarId/specialization', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatarId = Array.isArray(req.params.avatarId)
+    ? req.params.avatarId[0]
+    : req.params.avatarId;
+  const body = req.body as Record<string, unknown>;
+
+  if (!avatarId || typeof body.specialization !== 'number') {
+    res.status(400).json({ error: 'avatarId and specialization are required' });
+    return;
+  }
+
+  try {
+    const result = await chooseAvatarSpecialization(playerId, avatarId, body.specialization);
+    res.json({ playerId, avatarId, ...result });
+  } catch (error) {
+    if (error instanceof SpecializationRequestError) {
       res.status(error.status).json({ error: error.message, code: error.code });
       return;
     }

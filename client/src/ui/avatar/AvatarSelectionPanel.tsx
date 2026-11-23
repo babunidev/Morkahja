@@ -9,7 +9,9 @@ import {
   type ReactNode,
 } from 'react';
 import { useImagesReady } from '../transitions/menuReadiness.js';
+import SpecializationPicker from './SpecializationPicker.js';
 import {
+  chooseAvatarSpecialization,
   createAvatar,
   equipAvatarItem,
   fetchAvatars,
@@ -396,6 +398,9 @@ export function AvatarSelectionPanel({
   const [equipPickSlot, setEquipPickSlot] = useState<number | null>(null);
   const [equipPending, setEquipPending] = useState(false);
   const [equipError, setEquipError] = useState<string | null>(null);
+  const [specializationPickerOpen, setSpecializationPickerOpen] = useState(false);
+  const [specializationPending, setSpecializationPending] = useState(false);
+  const [specializationError, setSpecializationError] = useState<string | null>(null);
   const cardAvatar = overviewOpen
     ? resolvedAvatars.find((avatar) => avatar.id === activeAvatarId) ?? null
     : null;
@@ -405,6 +410,8 @@ export function AvatarSelectionPanel({
     setOverviewClosingInto(null);
     setEquipPickSlot(null);
     setEquipError(null);
+    setSpecializationPickerOpen(false);
+    setSpecializationError(null);
   }
 
   // The swap: each avatar glides from where it stood to its new place.
@@ -453,6 +460,22 @@ export function AvatarSelectionPanel({
       );
     });
   }, [activeIndex]);
+
+  async function chooseSpecialization(avatar: PersistedAvatar, specialization: number): Promise<void> {
+    setSpecializationPending(true);
+    setSpecializationError(null);
+    try {
+      const result = await chooseAvatarSpecialization(avatar.id, specialization);
+      onAvatarsChanged?.(resolvedAvatars.map((entry) => (
+        entry.id === avatar.id ? { ...entry, specialization: result.specialization } : entry
+      )));
+      setSpecializationPickerOpen(false);
+    } catch (error) {
+      setSpecializationError(userFacingApiErrorMessage(error, 'Could not choose the specialization.'));
+    } finally {
+      setSpecializationPending(false);
+    }
+  }
 
   async function equipIntoSlot(avatar: PersistedAvatar, slot: number, solutionId: number): Promise<void> {
     setEquipPickSlot(null);
@@ -741,7 +764,8 @@ export function AvatarSelectionPanel({
           <p style={messageStyle}>{selectionNotice || message}</p>
         ) : null}
       </div>
-      {cardAvatar ? (
+      {/* The picker takes the overview's place; Back brings the overview again. */}
+      {cardAvatar && !specializationPickerOpen ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
           title={cardAvatar.name.trim() || 'Adventurer'}
@@ -766,8 +790,25 @@ export function AvatarSelectionPanel({
               setEquipError(null);
               setEquipPickSlot(slot);
             }}
+            onChooseSpecialization={() => {
+              setSpecializationError(null);
+              setSpecializationPickerOpen(true);
+            }}
           />
         </AvatarOverviewMenuCard>
+      ) : null}
+      {cardAvatar && specializationPickerOpen ? (
+        <SpecializationPicker
+          avatar={cardAvatar}
+          error={specializationError}
+          onBack={() => {
+            setSpecializationPickerOpen(false);
+          }}
+          onConfirm={(specialization) => {
+            void chooseSpecialization(cardAvatar, specialization);
+          }}
+          pending={specializationPending}
+        />
       ) : null}
       {cardAvatar && equipPickSlot !== null ? (
         <div style={pickerShellStyle}>

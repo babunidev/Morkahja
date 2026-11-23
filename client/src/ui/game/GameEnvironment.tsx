@@ -1103,6 +1103,7 @@ export function GameEnvironment({
               isSystemEventActor={room?.systemEvent?.isLocalActor === true}
               imageSrc={imagePath(encounterImageName)}
               inventory={avatar.inventory}
+              specialization={avatar.specialization}
               displayInventory={displayInventory}
               onItemCollected={handleItemCollected}
               inventoryOpen={inventoryOpen}

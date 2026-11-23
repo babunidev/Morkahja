@@ -1,4 +1,5 @@
 import type { AvatarDocument } from '../types/avatar.js';
+import { readAvatarSpecialization } from '@shared/specialization.js';
 import {
   readAvatarLifeStatus,
   sacrificeCostForLevel,
@@ -25,6 +26,8 @@ export interface PersistedAvatarDtoShape {
   displayTitle: string | null;
   status?: AvatarDocument['status'];
   sacrificeGemCost?: number;
+  /** The skill type the avatar is good at (D-056); null when none is chosen. */
+  specialization: number | null;
 }
 
 export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDtoShape | null {
@@ -47,6 +50,7 @@ export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDto
     lastPlayedAt: avatar.lastPlayedAt,
     displayTitle,
     status,
+    specialization: readAvatarSpecialization(avatar),
   };
 
   if (status === 'failed' && avatar.preDeathSnapshot) {

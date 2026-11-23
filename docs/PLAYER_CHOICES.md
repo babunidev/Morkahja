@@ -1,7 +1,7 @@
 # Player choice concept — equipment, specialization, edit, travel (draft)
 
 **Creative:** Babuni
-**Status:** concept settled by Babuni on 2026-11-23 and recorded as [D-056](DECISIONS.md). Equipment is implemented on local `main` (2026-11-23, not released); the other three are not.
+**Status:** concept settled by Babuni on 2026-11-23 and recorded as [D-056](DECISIONS.md). Equipment and specialization are implemented (2026-11-23, not released); edit and travel are not. Changes Babuni made after the concept (D-057, D-058) are worked in below: where they differ from the first draft, the later change counts.
 
 ## Why
 
@@ -23,14 +23,13 @@ Bots take no part: they have no equipment and no specialization.
 
 ## The avatar selection screen
 
-Tapping an avatar in the selection opens its card (D-057): name, level, race and role, experience, the two equipment slots, and the green check that enters the world. Equipment needs no button of its own. The selection gets new buttons under the three avatars for **Edit** and **Specialization**. They are plain buttons with the golden frame and the red background. A dead avatar is not in the selection, so it cannot be equipped, specialized or edited.
+*Rewritten on 2026-11-23 after D-057 and D-058. The first draft had Edit and Specialization buttons under the avatars, each switching the screen into a "Choose your avatar" mode that hid the Play button. Babuni then removed the Play button and made the avatars the main menu, so there are no modes.*
 
-Each button switches the screen into a *choose* mode:
-
-- The Play button disappears.
-- A label **"Choose your avatar"** appears above the three avatars, in the same plate style as the region plate, the Inventory and Skillbook titles, and the level-up's "Choose your reward".
-- Tapping an avatar opens that mode's screen for this avatar (below).
-- Pressing the mode's button again, or the chosen avatar, returns to the normal selection, and the Play button comes back.
+- The active avatar stands big in the middle, the other two below it. A tap on one of those makes it the active one; a tap on the active one opens its **overview** (D-058).
+- The overview holds everything about the avatar: who it is, experience, statistics, the two **equipment** slots and the **specialization**. Equipment and specialization are chosen from there. The green check enters the world.
+- The same overview opens in the game when the avatar is tapped, with Home instead of the green check. There the specialization is shown only.
+- A dead avatar is not in the selection, so it cannot be equipped, specialized or edited.
+- **Open:** where **Edit** opens, now that there are no modes. The overview is the likely place.
 
 ## 1. Equipment
 
@@ -79,12 +78,13 @@ Each step of difficulty above 1 needs one more on the natural roll. An encounter
 - Specialization is for **skills only**. Items have equipment; skills have specialization.
 - With a specialization chosen, every roll made with a **skill** of that type gets **+1**, in any slot: a specialized primary skill rolls d20 + 5 + 1, a specialized secondary skill d20 + 2 + 1. It also counts toward the own essence on 24 or higher (D-054).
 - Every avatar can choose any type. (Role-based lists, for example a Rogue choosing from Stealth, Open Lock and Find, may come later, perhaps once there is a fourth role.)
-- It can only be chosen and changed **in the avatar selection**, never during the game, so it is a longer-term choice than equipment. A change is confirmed with the green check, as in the avatar creation. The **first choice is free; every change costs 1 gem**.
-- **Screen:** in Specialization mode, tapping an avatar opens a list of specializations on the left and the description of the selected one on the right.
+- It can only be chosen and changed **in the main menu**, never during the game, so it is a longer-term choice than equipment. A change is confirmed with the green check, as in the avatar creation. The **first choice is free; every change costs 1 gem**. Choosing the one it already has costs nothing.
+- **Screen (built 2026-11-23):** the overview's Specialization section shows the current one and a button, **Choose** (free) or **Change · 1 gem**. It opens the picker in the overview's place: the fifteen specializations on the left, the selected one's description on the right, with "+1 to every roll with a … skill" and how many such skills the avatar has. Red goes back to the overview, green confirms; the price shows between them, and a refusal (not enough gems) shows there too. In the game the overview shows one line under the level: "Specialization: Stealth · +1 to Stealth skills".
+- **In play:** the +1 is added where a rare item's +1 is, on the server and in the numbers the client shows (the solution tooltips' d20+n and the roll's math on the portrait). It also counts toward the own-element essence on a total of 24 or higher, and toward an equipped item's regain. The dice get nothing.
 
 ### The types and their descriptions
 
-There are fifteen types that have skills. Travel and Rare Find exist only as items. Life (16) and Resurrection (76) are special skill types and are left out of the list.
+There are fifteen types in the list. Travel and Rare Find exist only as items. Life (16) and Resurrection (76) are special skill types and are left out. *Found while building (2026-11-23): the game data has no Warmth (37) skill yet, so Warmth gives nothing for now; the picker says the avatar has none.*
 
 *The descriptions are drafts by Claude Code (Claude Opus 5.5) for Babuni to revise. They describe a way of facing the world; they make no lore claims.*
 
@@ -108,8 +108,8 @@ There are fifteen types that have skills. Travel and Rare Find exist only as ite
 
 ## 3. Edit avatar
 
-- In Edit mode the avatars **stay where they are**; only the Play button gives way to "Choose your avatar".
-- Tapping an avatar opens the avatar edit screen: the avatar creation screen with race, role and gender locked and cut away. What can change is **only the look and the name**:
+- *Where it opens is open (see above): the first draft's Edit mode no longer exists.*
+- The avatar edit screen is the avatar creation screen with race, role and gender locked and cut away. What can change is **only the look and the name**:
   - **Portrait:** tapping the avatar steps through the portraits of the same race, role and gender; a back button steps back.
   - **Frame:** chosen as in the creation.
   - **Name:** a new name costs **50 gems**.
@@ -144,4 +144,4 @@ Today the base game (expansion 0) has encounters placed in many lands: Eldertree
 
 ## Contributions
 
-**Babuni:** the goal (identity and choice over randomness), the no-chance-outside-the-dice principle, every rule above, the avatar-selection modes and their screens, region travel and the locked-region path to the Expansions menu, 2026-11-23. **Claude Code (Claude Opus 5.5):** read the current slot, bonus, charge, solution-type, gem, map and encounter-location data; proposed alternatives in discussion (a chance to save a charge, protection from losses, improvised use in any slot; Babuni kept the protection and rejected the other two); wrote this document, the threshold table, the specialization description drafts and the open questions.
+**Babuni:** the goal (identity and choice over randomness), the no-chance-outside-the-dice principle, every rule above, the avatar-selection modes and their screens, region travel and the locked-region path to the Expansions menu, 2026-11-23. **Claude Code (Claude Opus 5.5):** read the current slot, bonus, charge, solution-type, gem, map and encounter-location data; proposed alternatives in discussion (a chance to save a charge, protection from losses, improvised use in any slot; Babuni kept the protection and rejected the other two); wrote this document, the threshold table, the specialization description drafts and the open questions. On 2026-11-23 it also built specialization and brought this document in line with D-057 and D-058, which Babuni asked for ("the changes that we made after we made the concept should of course update the concept").

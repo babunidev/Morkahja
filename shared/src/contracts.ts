@@ -198,6 +198,8 @@ export interface PersistedAvatarDto {
   sacrificeGemCost?: number;
   /** Encounters this avatar has played, for its overview card. */
   encountersPlayed?: number;
+  /** The skill type the avatar is good at: +1 to its skills' rolls (D-056). Null or absent: none chosen. */
+  specialization?: number | null;
 }
 
 export interface AvatarResponse {

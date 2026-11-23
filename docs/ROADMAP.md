@@ -195,8 +195,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Overview in the menu (red back, green enter, shrinking into the avatar) and in the game (red back, Home), with statistics, equipment slots and room for the specialization.
 - [x] Equipment slots the size of the solutions and the Inventory pictures.
 - [ ] Babuni decides whether the dark red background stays for the Inventory, Skillbook and Lore (a trial, 2026-11-23).
-- [ ] Check returning home from the game, a failed avatar as the active one, and creating an avatar from an empty slot in the new layout.
-- [ ] Specialization in the overview's reserved space (D-056).
+- [ ] Check returning home from the game and a failed avatar as the active one. (Creating an avatar from an empty slot: checked 2026-11-23, the slot now glides into the big place first.)
+- [x] Specialization in the overview's reserved space (D-056, 2026-11-23).
 
 ## Tutorial and first-journey tips — planned, 2026-11-23
 
@@ -209,7 +209,7 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 ## Player choices: equipment, specialization, edit, travel — concept, 2026-11-23 ([PLAYER_CHOICES.md](PLAYER_CHOICES.md))
 
 - [x] Equipment rules written down: two items, +1 charge on equip, 1 charge back on a total of 12+, 2 on 20+, each use judged by its own roll, protected from Hardship and Misery, changeable (the extra charge leaves with the item), a broken item frees the slot.
-- [x] Avatar selection modes written down: Equipment, Edit (paid with the portraits' and frames' gem values) and Specialization (+1 to rolls of one ability type).
+- [x] Avatar selection modes written down: Equipment, Edit (paid with the portraits' and frames' gem values) and Specialization (+1 to rolls of one ability type). *(Replaced by the avatar overview, D-057 and D-058: equipment and specialization open from there.)*
 - [x] Open questions settled and recorded as D-056.
 - [ ] Babuni revises the fifteen specialization descriptions.
 - [x] Implement equipment: server rule and endpoint, equipment card in the avatar selection and the in-game avatar details, inventory picker; tests and a local check on desktop and phone.
@@ -217,7 +217,11 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [ ] Play equipment: a regain at 12 and 20, a break, the preference in a real encounter, equipping in the result window.
 - [ ] A small animation on the equipped item when it regains a charge (not built yet).
 - [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
-- [ ] Implement specialization, edit avatar and region travel, test and play.
+- [x] Implement specialization (2026-11-23): shared rule, server roll bonus and paid change, the overview's section and the picker in the main menu, one line in the game; tests and a local check on desktop and phone.
+- [ ] Play specialization: Babuni checks the picker, the descriptions and a specialized skill in a real encounter; then change, fix and polish.
+- [ ] Decide what to do with Warmth (type 37): it is a specialization in the concept, but the game data has no Warmth skill yet.
+- [ ] Decide where Edit avatar opens, now that the selection has no modes (D-058).
+- [ ] Implement edit avatar and region travel, test and play.
 
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 

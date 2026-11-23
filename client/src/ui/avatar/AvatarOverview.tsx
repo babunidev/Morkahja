@@ -5,6 +5,7 @@ import { assetUrl } from '../../assetUrl.js';
 import { TooltipDivider } from '../game/GameTooltip.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
+import { findSpecialization, specializationChangeCost } from '@shared/specialization.js';
 import AvatarCard from './AvatarCard.js';
 import { EquipmentSection, experienceRequiredForNextLevel } from './AvatarPartyDetailsCard.js';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
@@ -16,8 +17,8 @@ import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 /**
  * The avatar's overview (Babuni, 2026-11-23): everything about the avatar in
  * one big card, the same in the main menu and in the game. Who it is, its
- * experience, a few statistics, the two equipment slots, and room for the
- * specialization to come. Red goes back; green enters the world (menu) or
+ * experience, a few statistics, the two equipment slots and the
+ * specialization. Red goes back; green enters the world (menu) or
  * Home leaves it (game).
  */
 
@@ -115,12 +116,77 @@ const statValueStyle: CSSProperties = {
   fontWeight: 700,
 };
 
-const comingSoonStyle: CSSProperties = {
-  margin: '4px 0 0',
-  minHeight: 48,
-  fontSize: '0.7rem',
-  opacity: 0.6,
+const specializationNameStyle: CSSProperties = {
+  margin: 0,
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  fontSize: 'clamp(0.9rem, 3.4vw, 1.05rem)',
+  letterSpacing: '0.05em',
+  color: '#ffcc66',
 };
+
+const specializationNoteStyle: CSSProperties = {
+  margin: 0,
+  fontSize: '0.7rem',
+  opacity: 0.8,
+};
+
+const specializationButtonStyle: CSSProperties = {
+  marginTop: 2,
+  minHeight: 28,
+  padding: '4px 16px',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
+  border: 0,
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: '0.78rem',
+  cursor: 'pointer',
+};
+
+/**
+ * The avatar's specialization (D-056). In the main menu a button opens the
+ * picker; in the game it is shown only, since it changes only in the menu.
+ */
+function SpecializationSection({ avatar, onChoose }: {
+  avatar: PersistedAvatar;
+  onChoose?: () => void;
+}) {
+  const current = findSpecialization(avatar.specialization);
+  const cost = specializationChangeCost(current?.solutionType);
+  if (!onChoose) {
+    // In the game: one line, so it fits the panel over the encounter picture.
+    return (
+      <p style={specializationNoteStyle}>
+        <span style={{ color: '#ffcc66', fontWeight: 700 }}>Specialization: </span>
+        {current ? `${current.name} · +1 to ${current.name} skills` : 'none yet, choose one in the main menu'}
+      </p>
+    );
+  }
+  return (
+    <>
+      <p style={sectionHeadingStyle}>Specialization</p>
+      {current ? (
+        <>
+          <p style={specializationNameStyle}>{current.name}</p>
+          <p style={specializationNoteStyle}>+1 to every roll with a {current.name} skill</p>
+        </>
+      ) : (
+        <p style={specializationNoteStyle}>None chosen yet. The first choice is free.</p>
+      )}
+      {onChoose ? (
+        <button
+          onClick={() => {
+            playSfx(DEFAULT_BUTTON_SOUND);
+            onChoose();
+          }}
+          style={specializationButtonStyle}
+          type="button"
+        >
+          {current ? `Change · ${cost} gem${cost === 1 ? '' : 's'}` : 'Choose'}
+        </button>
+      ) : null}
+    </>
+  );
+}
 
 const noticeStyle: CSSProperties = {
   margin: 0,
@@ -140,6 +206,7 @@ export function AvatarOverviewContent({
   tooltipBoundsSelector = 'body',
   showPortrait = true,
   onEquipSlot,
+  onChooseSpecialization,
 }: {
   avatar: PersistedAvatar;
   inventory: AvatarInventory | undefined;
@@ -151,6 +218,8 @@ export function AvatarOverviewContent({
   /** The game shows the avatar just below, so it leaves the portrait out. The name is on the frame's plate. */
   showPortrait?: boolean;
   onEquipSlot?: (slot: number) => void;
+  /** Main menu only: opens the specialization picker. */
+  onChooseSpecialization?: () => void;
 }) {
   const nextLevel = experienceRequiredForNextLevel(avatar.level);
   const current = Math.max(0, Math.min(avatar.experience, nextLevel));
@@ -171,6 +240,8 @@ export function AvatarOverviewContent({
       ) : null}
       {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
       <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
+      {/* In the game the specialization is one line up here, where the panel over the picture has room. */}
+      {onChooseSpecialization ? null : <SpecializationSection avatar={avatar} />}
       <span aria-label={`Experience ${current} of ${nextLevel}`} style={xpShellStyle}>
         <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
       </span>
@@ -192,10 +263,12 @@ export function AvatarOverviewContent({
         tooltipBoundsSelector={tooltipBoundsSelector}
       />
       {notice ? <p role="alert" style={noticeStyle}>{notice}</p> : null}
-      <TooltipDivider bleed={DIVIDER_BLEED} />
-      {/* Room for the specialization (D-056), not built yet. */}
-      <p style={sectionHeadingStyle}>Specialization</p>
-      <p style={comingSoonStyle}>Coming soon</p>
+      {onChooseSpecialization ? (
+        <>
+          <TooltipDivider bleed={DIVIDER_BLEED} />
+          <SpecializationSection avatar={avatar} onChoose={onChooseSpecialization} />
+        </>
+      ) : null}
       {choiceDetails}
     </div>
   );

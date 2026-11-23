@@ -1,6 +1,6 @@
 import { randomInt as cryptoRandomInt } from 'node:crypto';
 import { interpretRoll, isRollFavorable } from './diceInterpreter.js';
-import { solutionRarityRollBonus } from '@shared/solutionRarity.js';
+import { solutionRollBonus } from '@shared/specialization.js';
 import {
   ENCOUNTER_SLOTS,
   EncounterData,
@@ -230,6 +230,7 @@ function evaluatePrimaryLane(
   solutionMap: SolutionDataMap,
   roll: number,
   requiredUses: number,
+  specialization: number | null,
 ): SlotEvaluation {
   const { primarySolutionId } = requirement;
 
@@ -248,7 +249,7 @@ function evaluatePrimaryLane(
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
-  const total = roll + solutionRarityRollBonus(lookupSolution(solutionMap, primarySolutionId));
+  const total = roll + solutionRollBonus(lookupSolution(solutionMap, primarySolutionId), specialization);
   return {
     satisfied: isRollFavorable(total),
     inventoryValid: true,
@@ -264,6 +265,7 @@ function evaluateSecondaryLane(
   solutionMap: SolutionDataMap,
   roll: number,
   requiredUses: number,
+  specialization: number | null,
 ): SlotEvaluation {
   const { secondarySolutionType } = requirement;
 
@@ -283,7 +285,7 @@ function evaluateSecondaryLane(
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
-  const total = roll + solutionRarityRollBonus(lookupSolution(solutionMap, usedSolutionIds[0]!));
+  const total = roll + solutionRollBonus(lookupSolution(solutionMap, usedSolutionIds[0]!), specialization);
   return {
     satisfied: isRollFavorable(total),
     inventoryValid: true,
@@ -300,6 +302,7 @@ function evaluateSlot(
   solutionMap: SolutionDataMap,
   rolls: EncounterRollSnapshot,
   requiredUses: number,
+  specialization: number | null,
 ): SlotEvaluation {
   const primaryEvaluation = evaluatePrimaryLane(
     requirement,
@@ -307,6 +310,7 @@ function evaluateSlot(
     solutionMap,
     primaryRollForSlot(rolls, slot),
     requiredUses,
+    specialization,
   );
 
   if (primaryEvaluation.inventoryValid) {
@@ -319,6 +323,7 @@ function evaluateSlot(
     solutionMap,
     secondaryRollForSlot(rolls, slot),
     requiredUses,
+    specialization,
   );
 }
 
@@ -335,12 +340,14 @@ interface SolutionSetEvaluation {
 
 /**
  * The roll of one pick: its slot's stored total, plus +1 when the item used is
- * rare (Babuni, 2026-11-23). The stored totals hold only the slot bonus.
+ * rare and +1 when it is a skill of the avatar's specialization (Babuni,
+ * 2026-11-23). The stored totals hold only the slot bonus.
  */
 function rollForSetPick(
   rolls: EncounterRollSnapshot,
   pick: SolutionSetPickAllocation,
   solutionMap: SolutionDataMap,
+  specialization: number | null,
 ): number {
   const base = pick.lane === 'primary'
     ? primaryRollForSlot(rolls, pick.slot)
@@ -348,7 +355,7 @@ function rollForSetPick(
   const stored = pick.copyIndex === 0
     ? base
     : rolls.extraRolls?.[pick.lane][pick.slot][pick.copyIndex - 1] ?? base;
-  return stored + solutionRarityRollBonus(lookupSolution(solutionMap, pick.solutionId));
+  return stored + solutionRollBonus(lookupSolution(solutionMap, pick.solutionId), specialization);
 }
 
 function evaluateSolutionSet(
@@ -359,6 +366,7 @@ function evaluateSolutionSet(
   rolls: EncounterRollSnapshot,
   selectedAction: Extract<SelectedEncounterAction, { mode: 'slot' }>,
   preferred: readonly number[] = [],
+  specialization: number | null = null,
 ): SolutionSetEvaluation {
   const setSize = solutionSetSize(encounter.mEncounterDifficulty);
   const picks = selectedAction.picks ?? Array.from({ length: setSize }, () => selectedAction.slot);
@@ -394,7 +402,7 @@ function evaluateSolutionSet(
     return invalid;
   }
 
-  const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick, solutionMap));
+  const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick, solutionMap, specialization));
   const diceFaces = diceFill
     ? diceFacesForGaps(setSize - pickRolls.length, rolls.rollE, rolls.diceFillRolls)
     : [];
@@ -426,6 +434,8 @@ export function revealSolutionSetPicks(
   picks: EncounterSlotLetter[],
   /** Equipped items, taken first where a slot accepts several (D-056). */
   preferred: readonly number[] = [],
+  /** The avatar's specialization: +1 for its skills (D-056). */
+  specialization: number | null = null,
 ): Array<{ slot: EncounterSlotLetter; solutionId: EntityId; roll: number }> | null {
   if (picks.length === 0 || picks.length > solutionSetSize(encounter.mEncounterDifficulty)) {
     return null;
@@ -438,7 +448,7 @@ export function revealSolutionSetPicks(
     preferred,
   );
   return allocation
-    ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick, solutionMap) }))
+    ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick, solutionMap, specialization) }))
     : null;
 }
 
@@ -553,6 +563,8 @@ export function resolveEncounter(
   rewardIds?: EntityId[],
   /** Equipped items, taken first where a slot accepts several (D-056). */
   preferred: readonly number[] = [],
+  /** The avatar's specialization: +1 for its skills (D-056). */
+  specialization: number | null = null,
 ): EncounterResolution {
   assertSelectedAction(selectedAction);
 
@@ -605,6 +617,7 @@ export function resolveEncounter(
       solutionMap,
       frozenRolls,
       requiredUses,
+      specialization,
     );
 
     slotResults[slot] = evaluation.satisfied;
@@ -624,6 +637,7 @@ export function resolveEncounter(
     frozenRolls,
     selectedAction,
     preferred,
+    specialization,
   );
 
   const success = setEvaluation.valid && setEvaluation.success;

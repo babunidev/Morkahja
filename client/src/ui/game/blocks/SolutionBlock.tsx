@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { gameSolutions } from '../../../data/gameContent.js';
-import { solutionRarityRollBonus } from '@shared/solutionRarity.js';
+import { solutionRollBonus } from '@shared/specialization.js';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -695,17 +695,21 @@ function solutionForSlot(
   };
 }
 
-/** A rare item's own +1 (`@shared/solutionRarity.ts`); 0 for anything else. */
-function rarityBonusFor(solutionId: number): number {
-  return solutionRarityRollBonus(solutionsById()[String(solutionId)]);
+/**
+ * What a solution adds by itself: a rare item's +1 and, for a skill of the
+ * avatar's specialization, +1 (`@shared/specialization.ts`, D-056).
+ */
+function ownBonusFor(solutionId: number, specialization: number | null | undefined): number {
+  return solutionRollBonus(solutionsById()[String(solutionId)], specialization);
 }
 
 function rollForSolutionSlot(
   encounter: EncounterSnapshot,
   solution: VisibleSolutionSlot,
+  specialization: number | null | undefined,
 ): number | null {
   const stored = storedRollForSolutionSlot(encounter, solution);
-  return stored === null ? null : stored + rarityBonusFor(solution.solutionId);
+  return stored === null ? null : stored + ownBonusFor(solution.solutionId, specialization);
 }
 
 function storedRollForSolutionSlot(
@@ -743,6 +747,7 @@ export function SolutionBlock({
   lockedSetPicks,
   lockedDiceRolls,
   restoreLockedHover = true,
+  specialization = null,
 }: {
   diceButtonAsset?: string;
   encounterRevealKey: string;
@@ -778,6 +783,8 @@ export function SolutionBlock({
    * ended must not hover again on Atranor or a level-up.
    */
   restoreLockedHover?: boolean;
+  /** The local avatar's specialization: +1 for its skills (D-056). */
+  specialization?: number | null;
 }) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const rollRevealTimer = useRef<number | null>(null);
@@ -1062,7 +1069,7 @@ export function SolutionBlock({
   function solutionTooltipFor(solution: VisibleSolutionSlot): GameTooltipContent | null {
     const bonus = (solution.isPrimary
       ? PRIMARY_SOLUTION_ROLL_BONUS
-      : SECONDARY_SOLUTION_ROLL_BONUS) + rarityBonusFor(solution.solutionId);
+      : SECONDARY_SOLUTION_ROLL_BONUS) + ownBonusFor(solution.solutionId, specialization);
 
     return solutionTooltipContent(`solution-${solution.slot}`, {
       name: solution.name,
@@ -1351,7 +1358,7 @@ export function SolutionBlock({
     clearRollRevealTimer();
     hideSolutionTooltip();
 
-    const roll = rollForSolutionSlot(encounter, solution);
+    const roll = rollForSolutionSlot(encounter, solution, specialization);
     playSfx(pickSolutionSound(), { scale: SOLUTION_PLAYBACK_SCALE });
     setActiveSolutionSlot(solution.slot);
     setChoiceFade({ keepSlot: solution.slot, keepDice: false });

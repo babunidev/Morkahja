@@ -190,6 +190,7 @@ export function EncounterImageBlock({
   onRoomSnapshot,
   imageSrc,
   inventory,
+  specialization = null,
   displayInventory,
   onItemCollected,
   inventoryOpen,
@@ -235,6 +236,8 @@ export function EncounterImageBlock({
   onRoomSnapshot?: (room: EncounterRoomSnapshotDto) => void;
   imageSrc: string;
   inventory: AvatarInventory | undefined;
+  /** The local avatar's specialization: +1 for its skills (D-056). */
+  specialization?: number | null;
   /** Inventory shown in the Inventory and Skillbook panels, including items collected this round. */
   displayInventory?: AvatarInventory;
   onItemCollected?: (change: CollectedInventoryChange) => void;
@@ -901,6 +904,7 @@ export function EncounterImageBlock({
           roomState === 'resolving'
         }
         inventory={inventory}
+        specialization={specialization}
         onActionReveal={handleActionReveal}
         setRolls={serverResolution
           ? {

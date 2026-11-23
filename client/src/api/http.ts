@@ -245,6 +245,20 @@ export async function equipAvatarItem(
   return response.inventory;
 }
 
+/** Choose or change the avatar's specialization (D-056): free the first time, then 1 gem. */
+export async function chooseAvatarSpecialization(
+  avatarId: string,
+  specialization: number,
+): Promise<{ specialization: number; spent: number; currencies: { yellow_red_gem?: number } }> {
+  return request(
+    `/avatar/${encodeURIComponent(avatarId)}/specialization`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ specialization }),
+    },
+  );
+}
+
 export async function activateRoomLoreGem(
   avatarId: string,
   encounterKey: string,
