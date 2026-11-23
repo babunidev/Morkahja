@@ -1,0 +1,43 @@
+/** The name of each solution type, shown as "Type: …" in the inventory, skillbook and level-up tooltips. */
+export const SOLUTION_TYPE_LABELS: Record<number, string> = {
+  1: 'Learn Skill',
+  2: 'Learn Item',
+  3: 'Trade Skill',
+  4: 'Trade Item',
+  5: 'Find Skill',
+  6: 'Find Item',
+  7: 'Open Lock Skill',
+  8: 'Unlock Item',
+  9: 'Combat Skill',
+  10: 'Combat Item',
+  13: 'Climb Skill',
+  14: 'Climb Item',
+  15: 'Essence',
+  16: 'Life Skill',
+  17: 'Speechcraft Skill',
+  18: 'Speechcraft Item',
+  20: 'Travel Item',
+  21: 'Heal Skill',
+  22: 'Heal Item',
+  25: 'Help Skill',
+  26: 'Help Item',
+  27: 'Purge Skill',
+  28: 'Purge Item',
+  29: 'Hunting Skill',
+  30: 'Hunting Item',
+  32: 'Rare Item',
+  33: 'Nurture Skill',
+  34: 'Nurture Item',
+  35: 'Stealth Skill',
+  36: 'Stealth Item',
+  37: 'Warmth Skill',
+  38: 'Warmth Item',
+  39: 'Inspiration Skill',
+  40: 'Inspiration Item',
+  76: 'Resurrection Skill',
+  77: 'Resurrection Item',
+};
+
+export function solutionTypeLabel(type: number): string {
+  return SOLUTION_TYPE_LABELS[type] ?? `Type ${type}`;
+}

@@ -613,6 +613,10 @@ The Skillbook button now plays `sfx_skillbookbutton_press.mp3`, which sounds bet
 
 My inventory mixed everything in one grid. Now normal items stand on top, rare items below them and the essences at the bottom, each list divided from the next by the line my tooltips use. Claude Code (Claude Opus 5.5) built it and looked at it in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed; the rare list not yet seen with a rare item. **Not released.**
 
+## 2026-11-23 — The type of a level-up ability
+
+When I level up and choose one of three abilities, the tooltip now also tells me what type each one is, as my inventory and skillbook do. Claude Code (Claude Opus 5.5) added the line. **Verification:** client tests and typecheck passed; not yet seen at a real level-up. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

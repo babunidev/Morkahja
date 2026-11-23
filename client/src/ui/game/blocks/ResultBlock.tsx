@@ -83,6 +83,7 @@ import {
 import { assetUrl } from '../../../assetUrl.js';
 import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
 import { SolutionImage } from '../../common/SolutionFrame.js';
+import { solutionTypeLabel } from './solutionTypeLabels.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
@@ -1160,6 +1161,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
   function itemTooltipContent(
     change: EncounterInventoryChange | VisibleReward,
     sign: '+' | '-' | 'used',
+    options: { showType?: boolean } = {},
   ): GameTooltipContent {
     const quantityLabel = sign === 'used'
       ? `Used (−${change.quantity})`
@@ -1173,6 +1175,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
           <p style={rewardTooltipTitleStyle}>{change.solution.mSolutionName}</p>
           <TooltipDivider />
           <p style={rewardTooltipMetaStyle}>{quantityLabel}</p>
+          {options.showType && change.solution.mSolutionType !== undefined ? (
+            <p style={rewardTooltipMetaStyle}>Type: {solutionTypeLabel(change.solution.mSolutionType)}</p>
+          ) : null}
           {description ? <p style={rewardTooltipTextStyle}>{description}</p> : null}
         </>
       ),
@@ -1581,7 +1586,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
               data-level-up-choice={id}
               disabled={!levelUpChoiceShown || levelUpChoiceSending !== null}
               key={`choice-${id}`}
-              {...resultTips.bindTooltip(() => itemTooltipContent(choice, '+'))}
+              {...resultTips.bindTooltip(() => itemTooltipContent(choice, '+', { showType: true }))}
               onClick={() => { void chooseLevelUpReward(id); }}
               onContextMenu={preventImageContextMenu}
               style={{
