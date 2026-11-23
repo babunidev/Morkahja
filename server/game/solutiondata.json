@@ -2084,7 +2084,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Infuse dishes with magically enhanced water, elevating flavors and imparting unique, rejuvenating properties to the meal.",
     "mSolutionType": 33,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10197": {
     "mSolutionID": 10197,
