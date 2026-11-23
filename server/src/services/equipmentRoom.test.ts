@@ -11,8 +11,9 @@ import { saveEncounterRoom } from './roomPersistence.js';
 import { createRoom, leaveAllRoomsForPlayer, submitChoice, submitContinue } from './roomService.js';
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
 
-// Equipment (D-056) through the room: refused while choosing, allowed once the
-// choice is made, and kept through Continue, which writes the prepared outcome.
+// Equipment (D-056) through the room: an empty slot can be filled at any time,
+// even while choosing; a full one cannot; and a change made after the choice is
+// kept through Continue, which writes the prepared outcome.
 const CHART = 10007; // Explorer's Chart, solution type 6
 const KEY = 10012; // Shadowgate Key, solution type 8
 
@@ -84,10 +85,10 @@ await leaveAllRoomsForPlayer(session.playerId);
 const room = chartEncounterRoom(await createRoom(session.playerId, avatarId));
 await saveEncounterRoom(room);
 
-// Still choosing: refused.
+// A full slot cannot change.
 await assert.rejects(
-  equipAvatarItem(session.playerId, avatarId, 1, KEY),
-  (error: unknown) => error instanceof EquipmentRequestError && error.code === 'CHOICE_OPEN',
+  equipAvatarItem(session.playerId, avatarId, 0, KEY),
+  (error: unknown) => error instanceof EquipmentRequestError && error.code === 'SLOT_OCCUPIED',
 );
 
 // The equipped chart in slot B rolls 14: the charge comes back.
@@ -96,7 +97,7 @@ const actor = after.participants.find((entry) => entry.avatarId === avatarId);
 assert.equal(actor?.preparedResult?.selectedRoll, 14);
 assert.deepEqual(actor?.preparedResult?.equipmentRegain, [{ solutionId: CHART, charges: 1 }]);
 
-// The choice is made: equipping is allowed, and Continue keeps it.
+// After the choice, the empty slot is filled, and Continue keeps it.
 {
   const inventory = await equipAvatarItem(session.playerId, avatarId, 1, KEY);
   assert.deepEqual(inventory.equipped, [CHART, KEY]);

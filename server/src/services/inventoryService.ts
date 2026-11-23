@@ -98,16 +98,17 @@ export class EquipmentError extends Error {
       | 'INVALID_EQUIPMENT_SLOT'
       | 'NOT_EQUIPPABLE'
       | 'NOT_IN_INVENTORY'
-      | 'ALREADY_EQUIPPED',
+      | 'ALREADY_EQUIPPED'
+      | 'SLOT_OCCUPIED',
   ) {
     super(message);
   }
 }
 
 /**
- * Equip an item into a slot (D-056). The item goes in with all its charges plus
- * one for the slot. An item already in the slot leaves and loses one charge;
- * on its last charge it is gone.
+ * Equip an item into an empty slot (D-056). The item goes in with all its
+ * charges plus one for the slot. A slot holding an item stays as it is until
+ * that item breaks (Babuni, 2026-11-23: no swapping).
  */
 export function equipItemInInventoryState(
   inventory: AvatarInventory,
@@ -131,9 +132,8 @@ export function equipItemInInventoryState(
     throw new EquipmentError(`Solution ${solutionId} is already equipped`, 'ALREADY_EQUIPPED');
   }
 
-  const leaving = slots[slot];
-  if (leaving !== null && leaving !== undefined) {
-    next = consumeSolutionFromInventoryState(next, leaving, EQUIPMENT_SLOT_CHARGE);
+  if (slots[slot] !== null && slots[slot] !== undefined) {
+    throw new EquipmentError(`Equipment slot ${slot} holds an item`, 'SLOT_OCCUPIED');
   }
   next = addRewardToInventoryState(next, solutionId, EQUIPMENT_SLOT_CHARGE);
   slots[slot] = solutionId;

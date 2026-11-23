@@ -188,6 +188,22 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough.
 - [ ] Patch note and version bump, then release when Babuni approves.
 
+## Main menu of avatars and the avatar overview — 2026-11-23 (D-058)
+
+- [x] No Play button: the active avatar big, the other two below; a tap swaps; a tap on the active one opens the overview.
+- [x] Overview in the menu (red back, green enter, shrinking into the avatar) and in the game (red back, Home), with statistics, equipment slots and room for the specialization.
+- [x] Equipment slots the size of the solutions and the Inventory pictures.
+- [ ] Check returning home from the game, a failed avatar as the active one, and creating an avatar from an empty slot in the new layout.
+- [ ] Specialization in the overview's reserved space (D-056).
+
+## Tutorial and first-journey tips — planned, 2026-11-23
+
+Babuni: the game is sometimes hard to understand, so a new player should get a few tips here and there at the start of their journey.
+
+- [x] A first in-game help: the "?" next to Equipment in the avatar card (D-057).
+- [ ] Write the tutorial: which moments get a tip (first encounter, solution slots and sets, dice and the roll's math, rewards and losses, essences and Atranor, level-up choice, equipment), and their wording.
+- [ ] Decide how tips show and when they stop (once per player, a way to see them again).
+
 ## Player choices: equipment, specialization, edit, travel — concept, 2026-11-23 ([PLAYER_CHOICES.md](PLAYER_CHOICES.md))
 
 - [x] Equipment rules written down: two items, +1 charge on equip, 1 charge back on a total of 12+, 2 on 20+, each use judged by its own roll, protected from Hardship and Misery, changeable (the extra charge leaves with the item), a broken item frees the slot.
@@ -195,7 +211,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Open questions settled and recorded as D-056.
 - [ ] Babuni revises the fifteen specialization descriptions.
 - [x] Implement equipment: server rule and endpoint, equipment card in the avatar selection and the in-game avatar details, inventory picker; tests and a local check on desktop and phone.
-- [ ] Play equipment: a regain at 12 and 20, a break, a swap, equipping in the result window.
+- [x] One avatar card with the equipment slots, in the game and the avatar selection; only empty slots can be filled, at any time; the equipped item is preferred (D-057).
+- [ ] Play equipment: a regain at 12 and 20, a break, the preference in a real encounter, equipping in the result window.
 - [ ] A small animation on the equipped item when it regains a charge (not built yet).
 - [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
 - [ ] Implement specialization, edit avatar and region travel, test and play.

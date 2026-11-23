@@ -17,9 +17,7 @@ import {
 } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
-import { AnchoredGamePopover, GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
-import { PanelButton } from '../common/PanelButton.js';
-import { overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
+import { AnchoredGamePopover } from '../game/GameTooltip.js';
 import AvatarPartyDetailsCard, {
   type AvatarDetailsSlotSide,
 } from './AvatarPartyDetailsCard.js';
@@ -185,7 +183,7 @@ export function AvatarPanel({
   onDetailsVisibleChange,
 
   onHome,
-  onOpenEquipment,
+  onOpenOverview,
 
   encounter,
 
@@ -212,8 +210,8 @@ export function AvatarPanel({
   onDetailsVisibleChange?: (visible: boolean) => void;
 
   onHome?: () => void;
-  /** The Equipment button in the details card (D-056). */
-  onOpenEquipment?: () => void;
+  /** A tap opens the avatar's overview instead of the small card (D-057). */
+  onOpenOverview?: () => void;
 
   encounter?: EncounterSnapshot;
 
@@ -242,24 +240,9 @@ export function AvatarPanel({
 
   // Report only when the details state changes, not whenever the parent hands
   // over a new callback (inline callbacks are new on every render).
-  const avatarTips = useGameTooltip({ boundsSelector: GAME_SCREEN_SELECTOR });
-  const avatarTip = avatarTips.bindTooltip(() => {
-    if (showDetails) {
-      return null;
-    }
-    // The used solution and the roll join the avatar's tooltip (Babuni, 2026-11-18).
-    const choice = participantChoiceDetails(roomParticipant, encounter, roomState, systemEventActorPlayerId);
-    return {
-      key: `avatar-${avatar.id}-${choice?.used?.name ?? ''}-${choice?.roll?.display ?? ''}`,
-      shellStyle: choice ? { width: 220, maxWidth: 220 } : { width: 'max-content', maxWidth: 200 },
-      body: (
-        <>
-          <GameTooltipCard title={avatar.name} lines={[`Level ${avatar.level}`]} />
-          {choice ? <ChoiceDetailSections details={choice} /> : null}
-        </>
-      ),
-    };
-  });
+  // No hover tooltip: everything is in the card a tap opens (Babuni, 2026-11-23).
+  const equipmentInventory = avatar.inventory ?? { spellbook: [], items: [], essences: [] };
+  const pinnedChoice = participantChoiceDetails(roomParticipant, encounter, roomState, systemEventActorPlayerId);
   const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
   onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
@@ -288,8 +271,6 @@ export function AvatarPanel({
 
       <div data-morkahja-avatar-portrait="" style={portraitWrapStyle}>
 
-        {avatarTips.layer}
-
         {xpGainAmount > 0 ? (
 
           <span aria-hidden="true" style={xpGainBubbleStyle}>+{xpGainAmount} XP</span>
@@ -305,29 +286,21 @@ export function AvatarPanel({
 
           className="morkahja-avatar-slot-button"
 
-          {...avatarTip}
-
           onClick={() => {
-
-            avatarTips.hide();
-
-            if (avatarTips.consumeLongPressActivation()) {
-
-              return;
-
-            }
 
             playSfx(DEFAULT_BUTTON_SOUND);
 
+            if (onOpenOverview) {
+              onOpenOverview();
+              return;
+            }
             setShowDetails((current) => !current);
 
           }}
 
-          onPointerDown={(event) => {
+          onPointerDown={() => {
 
             pulse('avatar');
-
-            avatarTip.onPointerDown?.(event);
 
           }}
 
@@ -424,28 +397,18 @@ export function AvatarPanel({
 
               avatar={avatar}
 
+              choiceDetails={pinnedChoice ? <ChoiceDetailSections details={pinnedChoice} /> : null}
+
+              equipment={equipmentInventory}
+
               inventory={avatar.inventory}
 
               inventorySeed={avatar.id}
 
               slotSide={slotSide}
 
-              footer={onHome || onOpenEquipment ? (
+              footer={onHome ? (
                 <>
-                  {onOpenEquipment ? (
-                    <PanelButton
-                      aria-label="Equipment"
-                      onClick={() => {
-                        playSfx(DEFAULT_BUTTON_SOUND);
-                        setShowDetails(false);
-                        onOpenEquipment();
-                      }}
-                      pressKey="avatar-equipment"
-                      visualStyle={{ ...overlayCloseButtonVisualStyle, minHeight: 30, fontSize: '0.78rem' }}
-                    >
-                      Equipment
-                    </PanelButton>
-                  ) : null}
                   {onHome ? (
 
                 <button

@@ -358,6 +358,7 @@ function evaluateSolutionSet(
   solutionMap: SolutionDataMap,
   rolls: EncounterRollSnapshot,
   selectedAction: Extract<SelectedEncounterAction, { mode: 'slot' }>,
+  preferred: readonly number[] = [],
 ): SolutionSetEvaluation {
   const setSize = solutionSetSize(encounter.mEncounterDifficulty);
   const picks = selectedAction.picks ?? Array.from({ length: setSize }, () => selectedAction.slot);
@@ -387,6 +388,7 @@ function evaluateSolutionSet(
     requirements,
     inventory,
     (solutionId) => lookupSolution(solutionMap, solutionId)?.mSolutionType,
+    preferred,
   );
   if (!allocation) {
     return invalid;
@@ -422,6 +424,8 @@ export function revealSolutionSetPicks(
   solutionMap: SolutionDataMap,
   rolls: EncounterRollSnapshot,
   picks: EncounterSlotLetter[],
+  /** Equipped items, taken first where a slot accepts several (D-056). */
+  preferred: readonly number[] = [],
 ): Array<{ slot: EncounterSlotLetter; solutionId: EntityId; roll: number }> | null {
   if (picks.length === 0 || picks.length > solutionSetSize(encounter.mEncounterDifficulty)) {
     return null;
@@ -431,6 +435,7 @@ export function revealSolutionSetPicks(
     buildSlotRequirements(encounter),
     inventory,
     (solutionId) => lookupSolution(solutionMap, solutionId)?.mSolutionType,
+    preferred,
   );
   return allocation
     ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick, solutionMap) }))
@@ -546,6 +551,8 @@ export function resolveEncounter(
   rolls: EncounterRollSnapshot,
   selectedAction: SelectedEncounterAction,
   rewardIds?: EntityId[],
+  /** Equipped items, taken first where a slot accepts several (D-056). */
+  preferred: readonly number[] = [],
 ): EncounterResolution {
   assertSelectedAction(selectedAction);
 
@@ -616,6 +623,7 @@ export function resolveEncounter(
     solutionMap,
     frozenRolls,
     selectedAction,
+    preferred,
   );
 
   const success = setEvaluation.valid && setEvaluation.success;

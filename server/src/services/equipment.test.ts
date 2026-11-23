@@ -6,6 +6,7 @@ import {
   isEquippableSolution,
   normalizeEquipmentSlots,
 } from '@shared/equipment.js';
+import { allocateSolutionSet, slotFaces } from '@shared/solutionSet.js';
 import { getSolutionMap } from './gameData.js';
 import {
   applyEncounterInventoryChanges,
@@ -71,19 +72,22 @@ assert.equal(isEquippableSolution(solutions[String(ATRANOR_ELIXIR)]), false);
   assert.equal(uses(next, CHART), 3);
 }
 
-// Swapping: the item that leaves loses one charge; the new one gains one.
+// A full slot stays as it is until its item breaks: no swapping.
+expectEquipError(
+  () => equipItemInInventoryState(inventory([[CHART, 3], [KEY, 1]], [CHART, null]), 0, KEY),
+  'SLOT_OCCUPIED',
+);
+// The other, empty slot takes it.
 {
-  const next = equipItemInInventoryState(inventory([[CHART, 3], [KEY, 1]], [CHART, null]), 0, KEY);
-  assert.deepEqual(next.equipped, [KEY, null]);
-  assert.equal(uses(next, CHART), 2);
+  const next = equipItemInInventoryState(inventory([[CHART, 3], [KEY, 1]], [CHART, null]), 1, KEY);
+  assert.deepEqual(next.equipped, [CHART, KEY]);
+  assert.equal(uses(next, CHART), 3);
   assert.equal(uses(next, KEY), 2);
 }
-
-// An item on its last charge disappears when it is swapped out.
+// A slot whose item broke is empty again.
 {
-  const next = equipItemInInventoryState(inventory([[CHART, 1], [KEY, 1]], [CHART, null]), 0, KEY);
-  assert.equal(uses(next, CHART), 0);
-  assert.equal(next.items.some((item) => item.solutionId === CHART), false);
+  const next = equipItemInInventoryState(inventory([[KEY, 1]], [CHART, null]), 0, KEY);
+  assert.deepEqual(next.equipped, [KEY, null]);
 }
 
 // Refusals.
@@ -162,6 +166,22 @@ expectEquipError(
     { randomInt: () => 0 },
   );
   assert.equal(uses(result.inventory, CHART), 2);
+}
+
+// A slot that accepts several items takes the equipped one first, then the lowest id.
+{
+  const typeOf = () => 6;
+  const requirements = {
+    A: { primarySolutionId: 0, secondarySolutionType: 6 },
+    B: { primarySolutionId: 0, secondarySolutionType: 0 },
+    C: { primarySolutionId: 0, secondarySolutionType: 0 },
+    D: { primarySolutionId: 0, secondarySolutionType: 0 },
+  };
+  assert.equal(slotFaces(requirements, [CHART, KEY], typeOf).A?.solutionId, CHART);
+  assert.equal(slotFaces(requirements, [CHART, KEY], typeOf, [KEY]).A?.solutionId, KEY);
+  // The refill after the equipped item is spent also prefers it, then the lowest id.
+  const allocation = allocateSolutionSet(['A', 'A'], requirements, [CHART, KEY], typeOf, [KEY]);
+  assert.deepEqual(allocation?.map((pick) => pick.solutionId), [KEY, CHART]);
 }
 
 console.log('equipment tests passed');

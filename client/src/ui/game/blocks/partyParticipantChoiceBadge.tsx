@@ -391,8 +391,29 @@ export function PartyParticipantChoiceBadge({
 }
 
 export interface ParticipantChoiceDetails {
-  used?: { name: string; text?: string };
+  /** Names of everything used, in order: each item or skill of a set, and the dice. */
+  usedNames?: string[];
   roll?: { display: number; lines: string[] };
+}
+
+/** Every solution the participant used (a set has several), then the dice where it filled in. */
+function usedSolutionNames(participant: RoomParticipantDto): string[] {
+  const result = participant.preparedResult ?? participant.resolutionSummary;
+  const ids = result?.usedInventorySolutions?.length
+    ? result.usedInventorySolutions
+    : participant.setPicks?.length
+      ? participant.setPicks.map((pick) => pick.solutionId)
+      : participant.selectedSolutionId !== undefined
+        ? [participant.selectedSolutionId]
+        : [];
+  const names = ids
+    .map((id) => solutionsById()[String(id)]?.mSolutionName)
+    .filter((name): name is string => typeof name === 'string');
+  const diceFilled = (result?.diceFillRolls?.length ?? 0) > 0 || (participant.setDiceRolls?.length ?? 0) > 0;
+  if (names.length === 0 && participant.selectedAction === 'dice') {
+    return ['Dice'];
+  }
+  return diceFilled ? [...names, 'Dice'] : names;
 }
 
 /** What the participant used and rolled, for the avatar's tooltip; null before anything shows. */
@@ -405,19 +426,14 @@ export function participantChoiceDetails(
   if (!participant || !hasVisibleParticipantChoice(participant, roomState, systemEventActorPlayerId)) {
     return null;
   }
-  const solution = participant.selectedSolutionId !== undefined
-    ? solutionsById()[String(participant.selectedSolutionId)]
-    : undefined;
-  const used = solution
-    ? { name: solution.mSolutionName, text: solution.mSolutionText?.trim() || undefined }
-    : participant.selectedAction === 'dice'
-      ? { name: 'Dice' }
-      : undefined;
+  const usedNames = usedSolutionNames(participant);
   const total = participantChoiceRoll(participant);
   const roll = total !== undefined
     ? { display: displayRollAsD20(total), lines: choiceRollBreakdown(participant, encounter, total) }
     : undefined;
-  return used || roll ? { ...(used ? { used } : {}), ...(roll ? { roll } : {}) } : null;
+  return usedNames.length > 0 || roll
+    ? { ...(usedNames.length > 0 ? { usedNames } : {}), ...(roll ? { roll } : {}) }
+    : null;
 }
 
 const detailHeadingStyle: CSSProperties = {
@@ -437,11 +453,11 @@ const detailTextStyle: CSSProperties = {
 export function ChoiceDetailSections({ details }: { details: ParticipantChoiceDetails }): ReactNode {
   return (
     <>
-      {details.used ? (
+      {details.usedNames ? (
         <>
           <TooltipDivider />
-          <p style={detailHeadingStyle}>{details.used.name}</p>
-          {details.used.text ? <p style={detailTextStyle}>{details.used.text}</p> : null}
+          <p style={detailHeadingStyle}>Used</p>
+          <p style={detailTextStyle}>{details.usedNames.join(', ')}</p>
         </>
       ) : null}
       {details.roll ? (

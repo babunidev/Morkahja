@@ -46,6 +46,7 @@ import type { AvatarDocument, AvatarInventory } from '../types/avatar.js';
 import { revealSolutionSetPicks } from '../engine/encounterResolver.js';
 import { snapshotToEncounterData, snapshotToRolls } from '../types/encounter.js';
 import { flattenInventorySolutionIds } from './inventoryService.js';
+import { equippedSolutionIds } from '@shared/equipment.js';
 import { getSolutionMap } from './gameData.js';
 import type { SolutionSetPickRecord } from '../domain/rooms/RoomParticipant.js';
 import { applyExperience, type AvatarProgression } from '../domain/avatar/AvatarProgression.js';
@@ -2466,6 +2467,7 @@ export async function submitSetPick(
       getSolutionMap(),
       snapshotToRolls(snapshot),
       slots,
+      equippedSolutionIds(inventory.equipped),
     );
     if (!picks || encounter.mEncounterDifficulty <= 1) {
       throw new RoomError('This solution cannot be added to the set', 409, 'INVALID_SOLUTION_SET');
@@ -3657,11 +3659,6 @@ export async function resumeRoomAfterSacrifice(
   return resumed;
 }
 
-/** The participant has not finished choosing in the encounter in front of them. */
-function participantChoiceIsOpen(choiceState: RoomParticipant['choiceState'] | undefined): boolean {
-  return choiceState === 'choosing' || choiceState === 'ready';
-}
-
 function patchPreparedCommitInventory(
   bundle: NonNullable<RoomParticipant['preparedCommit']>,
   transform: (inventory: AvatarInventory) => AvatarInventory,
@@ -3675,15 +3672,14 @@ function patchPreparedCommitInventory(
 }
 
 export type OpenOutcomePatch =
-  | { kind: 'choice_open' }
   | { kind: 'none' }
   | { kind: 'patched'; inventory: AvatarInventory };
 
 /**
- * Equipment (D-056) changes only once the choice in the current encounter is
- * made. A room or a paused solo run that already holds the prepared outcome
- * writes its inventory on Continue, so the change goes into that outcome too;
- * otherwise Continue would undo it.
+ * A room or a paused solo run that already holds the prepared outcome of the
+ * current encounter writes its inventory on Continue. An inventory change made
+ * meanwhile (equipping, D-056) goes into that outcome too, or Continue would
+ * undo it.
  */
 export async function patchOpenOutcomeInventory(
   transaction: DocumentTransaction,
@@ -3698,9 +3694,6 @@ export async function patchOpenOutcomeInventory(
   );
 
   if (room && participant) {
-    if (participantChoiceIsOpen(participant.choiceState)) {
-      return { kind: 'choice_open' };
-    }
     if (!participant.preparedCommit) {
       return { kind: 'none' };
     }
@@ -3720,13 +3713,7 @@ export async function patchOpenOutcomeInventory(
     [playerId, avatarId],
   );
   const checkpoint = checkpointRow.rows[0]?.data;
-  if (!checkpoint) {
-    return { kind: 'none' };
-  }
-  if (participantChoiceIsOpen(checkpoint.participant.choiceState)) {
-    return { kind: 'choice_open' };
-  }
-  if (!checkpoint.participant.preparedCommit) {
+  if (!checkpoint?.participant.preparedCommit) {
     return { kind: 'none' };
   }
   const preparedCommit = patchPreparedCommitInventory(checkpoint.participant.preparedCommit, transform);

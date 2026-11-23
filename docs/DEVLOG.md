@@ -593,9 +593,21 @@ I made a sound for Atranor. Like the level-up sound, it plays when the event beg
 
 Equipment is in the game now. In the avatar selection an Equipment button lets me choose an avatar. It moves aside, and its two slots appear in the middle. A slot opens the inventory, and the item I pick goes in with one extra charge. In the game the same card opens from my avatar's details, and it stays locked until I have made my choice in the encounter. A use with a total of 12 or higher gives the charge back, 20 or higher two, Hardship and Misery can't touch it, and swapping an item out costs it a charge. Claude Code (Claude Opus 5.5) built it from D-056. It found that the room computes the outcome when I choose but only writes it on Continue, so an item equipped in between would have been undone. The change now goes into the waiting outcome too. It wrote tests for the rules and one through a real room, and checked both screens in the local game on desktop and phone. **Verification:** server (66) and client (49) tests and typecheck passed; a regain was not played in a real turn yet. **Not released.**
 
+## 2026-11-23 — One card for my avatar, and equipment that stays
+
+My avatar had a tooltip, a menu and an equipment popup, so I put everything into one card that opens when I tap the avatar. It holds my name, level, race and role, experience, my two equipment slots with a small "?", and after a roll what I used and the roll's math. In the game, Home sits at the bottom of the card. In the avatar selection, the green check that starts the game does, so I see my avatar and fill its slots before I enter. I also changed the rule. An item now only goes into an empty slot, and I can do that whenever I like, also mid-encounter. Once it's equipped it stays until it breaks, and the game uses it first. A tutorial with tips for new players is on the roadmap. Claude Code (Claude Opus 5.5) moved the slots into the card and made the card open toward the middle of the screen like the inventory tooltips. It made the equipped item the first choice in the shared slot rule, so the server and the slot pictures agree. It checked everything in the local game on desktop and phone. **Verification:** server (66) and client (50) tests and typecheck passed. **Not released.**
+
 ## 2026-11-23 — Fewer skill pickup lines
 
 Some of Makaya's ten lines for taking a skill didn't sound good, so I kept only the first, second and fourth. I had deleted the others from the built game's folder; Claude Code (Claude Opus 5.5) noticed that this folder is rebuilt from the source, removed the seven lines there as well and made the game choose among the three. **Verification:** client tests passed; not heard in the game yet. **Not released.**
+
+## 2026-11-23 — My avatars are the main menu
+
+The Play button is gone. My active avatar, the one I played last, stands big in its place, and my other two sit below it like a triangle. Tapping one of them swaps it up into the big slot. Tapping the big one opens its overview, as large as the avatar creation: name, level, race and role, experience, a few statistics, the two equipment slots and space for the specialization that is still to come. The red button goes back, and the green one starts the game: the card shrinks into my avatar and the usual transition into the world follows. In the game, tapping my avatar opens the same overview over the encounter picture, with Home instead of green. The equipment slots are now as big as my solutions and the inventory pictures. Claude Code (Claude Opus 5.5) built the new menu with a gliding swap and the shrinking card. It added the encounters played to the avatar data for the statistics. It checked the menu, the overview and the way into the game on desktop and phone. **Verification:** server (66) and client (50) tests and typecheck passed; coming home from the game to the new menu not checked yet. **Not released.**
+
+## 2026-11-23 — A better Skillbook sound
+
+The Skillbook button now plays `sfx_skillbookbutton_press.mp3`, which sounds better than the old one, and Claude Code (Claude Opus 5.5) deleted the old `skillbook.mp3`. **Verification:** client tests passed; not heard in the game yet. **Not released.**
 
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 

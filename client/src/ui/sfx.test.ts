@@ -99,7 +99,7 @@ assert.equal(pickSolutionSound(() => 0.999), SOLUTION_SOUNDS[7]);
 assert.equal(pickSolutionSound(() => 1), SOLUTION_SOUNDS[7]);
 
 assert.equal(fileName(BACKPACK_SOUND), 'backpack.mp3');
-assert.equal(fileName(SKILLBOOK_SOUND), 'skillbook.mp3');
+assert.equal(fileName(SKILLBOOK_SOUND), 'sfx_skillbookbutton_press.mp3');
 assert.equal(fileName(CALL_FOR_HELP_SOUND), 'callforhelp.mp3');
 
 for (const url of [

@@ -231,6 +231,23 @@ function solutionTypeLabel(type: number): string {
   return SOLUTION_TYPE_LABELS[type] ?? `Type ${type}`;
 }
 
+/** The inventory tooltip's entry for one solution, for tooltips outside the grid. */
+export function solutionGridEntryFor(solutionId: number, uses: number): SolutionGridEntry | null {
+  const solution = solutionsById()[String(solutionId)];
+  if (!solution) {
+    return null;
+  }
+  return {
+    solutionId,
+    solutionType: solution.mSolutionType,
+    name: solution.mSolutionName,
+    text: solution.mSolutionText,
+    typeLabel: solutionTypeLabel(solution.mSolutionType),
+    uses,
+    imageSrc: solutionImagePath(solution.mSolutionIconName),
+  };
+}
+
 function inventoryEntries(
   inventory: AvatarInventory | undefined,
   container: 'spellbook' | 'items',

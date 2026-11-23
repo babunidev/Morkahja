@@ -196,6 +196,8 @@ export interface PersistedAvatarDto {
   status?: AvatarLifeStatus;
   /** Gems required to sacrifice and restore this avatar when status is failed. */
   sacrificeGemCost?: number;
+  /** Encounters this avatar has played, for its overview card. */
+  encountersPlayed?: number;
 }
 
 export interface AvatarResponse {

@@ -15,8 +15,8 @@ export class EquipmentRequestError extends Error {
 }
 
 /**
- * Equip an item into one of the avatar's two slots (D-056). Not while the
- * player is still choosing in the encounter in front of them. When the
+ * Equip an item into an empty slot of the avatar's two (D-056), at any time:
+ * in the avatar selection or in the game, even while choosing. When the
  * encounter's outcome is already prepared, the outcome decides what the
  * inventory will be, so the item is checked against it and the change goes
  * into it as well.
@@ -39,13 +39,6 @@ export async function equipAvatarItem(
 
       const transform = (inventory: AvatarInventory) => equipItemInInventoryState(inventory, slot, solutionId);
       const outcome = await patchOpenOutcomeInventory(transaction, playerId, avatarId, transform);
-      if (outcome.kind === 'choice_open') {
-        throw new EquipmentRequestError(
-          'Equipment can change once the choice in this encounter is made',
-          409,
-          'CHOICE_OPEN',
-        );
-      }
 
       const current = await transaction.getInventory<AvatarInventory>(playerId, avatarId)
         ?? avatar.inventory
@@ -73,7 +66,8 @@ export async function equipAvatarItem(
     });
   } catch (error) {
     if (error instanceof EquipmentError) {
-      throw new EquipmentRequestError(error.message, error.code === 'ALREADY_EQUIPPED' ? 409 : 400, error.code);
+      const conflict = error.code === 'ALREADY_EQUIPPED' || error.code === 'SLOT_OCCUPIED';
+      throw new EquipmentRequestError(error.message, conflict ? 409 : 400, error.code);
     }
     throw error;
   }

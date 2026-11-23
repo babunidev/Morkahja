@@ -1,3 +1,4 @@
+import { equippedSolutionIds } from '@shared/equipment.js';
 import { gameSolutions } from '../../data/gameContent.js';
 import type { AvatarInventory, EncounterAction, InventoryItem } from '../../api/http.js';
 export { interpretRoll, isRollFavorable, type RollOutcome } from '@shared/diceInterpreter';
@@ -149,6 +150,7 @@ export function faceForSlot({
     solutionSetRequirements(encounter),
     flattenSolutionUses(inventoryItems(inventory)),
     catalogSolutionType,
+    equippedSolutionIds(inventory?.equipped),
   )[slot] ?? null;
 }
 
@@ -167,6 +169,7 @@ export function allocateSolutionSetPicks({
     solutionSetRequirements(encounter),
     flattenSolutionUses(inventoryItems(inventory)),
     (solutionId) => solutionsById()[String(solutionId)]?.mSolutionType,
+    equippedSolutionIds(inventory?.equipped),
   );
 }
 

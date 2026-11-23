@@ -53,10 +53,23 @@ export interface SolutionSlotFace {
  * alternative, and an item already claimed is not the face of a second slot.
  * Types come from the catalog, not from the type stored on the inventory row.
  */
+/**
+ * Order for alternatives: an equipped item first (D-056, Babuni 2026-11-23:
+ * the game prefers it), then the lowest id.
+ */
+function preferenceOrder(preferred: readonly number[]): (left: number, right: number) => number {
+  return (left, right) => {
+    const leftRank = preferred.includes(left) ? 0 : 1;
+    const rightRank = preferred.includes(right) ? 0 : 1;
+    return leftRank - rightRank || left - right;
+  };
+}
+
 export function slotFaces(
   requirements: SolutionSetRequirements,
   inventory: readonly number[],
   solutionTypeOf: (solutionId: number) => number | undefined,
+  preferred: readonly number[] = [],
 ): Partial<Record<SolutionSetSlot, SolutionSlotFace>> {
   const uses = new Map<number, number>();
   for (const solutionId of inventory) {
@@ -88,7 +101,7 @@ export function slotFaces(
         && !claimed.has(solutionId)
         && solutionTypeOf(solutionId) === secondarySolutionType
       ))
-      .sort((left, right) => left[0] - right[0])[0];
+      .sort((left, right) => preferenceOrder(preferred)(left[0], right[0]))[0];
     if (!candidate) {
       continue;
     }
@@ -104,7 +117,8 @@ export function slotFaces(
  * inventory cannot cover the picks. Each pick spends the item placed in that
  * slot. Another copy of the same slot spends another charge of that same item.
  * When that item has no charge left, the slot refills from another item of the
- * slot's alternative type (Babuni, 2026-11-17), lowest id first, never one
+ * slot's alternative type (Babuni, 2026-11-17), an equipped item first, then
+ * the lowest id (`preferred`), never one
  * shown in another slot. `inventory` holds one entry per charge.
  *
  * Picks are only ever added at the end, and earlier picks are assigned first,
@@ -115,8 +129,9 @@ export function allocateSolutionSet(
   requirements: SolutionSetRequirements,
   inventory: readonly number[],
   solutionTypeOf: (solutionId: number) => number | undefined,
+  preferred: readonly number[] = [],
 ): SolutionSetPickAllocation[] | null {
-  const faces = slotFaces(requirements, inventory, solutionTypeOf);
+  const faces = slotFaces(requirements, inventory, solutionTypeOf, preferred);
   const remaining = [...inventory];
   const assigned: (Omit<SolutionSetPickAllocation, 'copyIndex'> | null)[] = picks.map(() => null);
 
@@ -149,7 +164,7 @@ export function allocateSolutionSet(
       assigned[index] = { slot, lane: face.lane, solutionId: face.solutionId };
       continue;
     }
-    const refill = refillFor(slot, requirements, faces, remaining, solutionTypeOf);
+    const refill = refillFor(slot, requirements, faces, remaining, solutionTypeOf, preferred);
     if (refill == null || !take(refill)) {
       return null;
     }
@@ -176,6 +191,7 @@ function refillFor(
   faces: Partial<Record<SolutionSetSlot, SolutionSlotFace>>,
   remaining: readonly number[],
   solutionTypeOf: (solutionId: number) => number | undefined,
+  preferred: readonly number[] = [],
 ): number | null {
   const type = requirements[slot].secondarySolutionType;
   if (type <= 0) {
@@ -188,7 +204,7 @@ function refillFor(
   );
   const candidates = [...new Set(remaining)]
     .filter((solutionId) => !otherFaces.has(solutionId) && solutionTypeOf(solutionId) === type)
-    .sort((left, right) => left - right);
+    .sort(preferenceOrder(preferred));
   return candidates[0] ?? null;
 }
 

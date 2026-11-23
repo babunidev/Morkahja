@@ -10,7 +10,8 @@ export const LEVEL_UP_SOUND = assetUrl('/UI/SFX/sfx_levelup.mp3');
 export const ATRANOR_SOUND = assetUrl('/UI/SFX/atranor.mp3');
 export const LORE_SOUND = assetUrl('/UI/SFX/sfx_lorebutton_press.mp3');
 export const BACKPACK_SOUND = assetUrl('/UI/SFX/backpack.mp3');
-export const SKILLBOOK_SOUND = assetUrl('/UI/SFX/skillbook.mp3');
+/** Babuni chose this one over the former `skillbook.mp3` (2026-11-23). */
+export const SKILLBOOK_SOUND = assetUrl('/UI/SFX/sfx_skillbookbutton_press.mp3');
 export const CALL_FOR_HELP_SOUND = assetUrl('/UI/SFX/callforhelp.mp3');
 /** One of eight solution clicks, chosen at random. */
 export const SOLUTION_SOUNDS = [1, 2, 3, 4, 5, 6, 7, 8].map((index) => (

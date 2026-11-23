@@ -2,12 +2,38 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: a better Skillbook button sound
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** the Skillbook button plays `sfx_skillbookbutton_press.mp3`, which sounds better, and the former `skillbook.mp3` is deleted.
+- **Change:** `SKILLBOOK_SOUND` in `client/src/ui/sfx.ts`; `client/public/UI/SFX/skillbook.mp3` removed. The new file was already in `client/public/UI/SFX`, unused. It still plays at nine tenths of the volume like the other footer buttons; it was not leveled to the level-up sound as the other effect files were.
+- **Verification:** client tests passed (`sfx.test.ts` checks the name and that the file is an MP3). Not heard in the game.
+
 ## 2026-11-23 — Unreleased: three skill pickup lines
 
 - **Not released.** Committed to local `main` only.
 - **Babuni's direction:** some of Makaya's lines for taking a skill did not sound good; only `addSkill1`, `addSkill2` and `addSkill4` stay.
 - **Change:** `ADD_SKILL_SOUNDS` in `client/src/ui/sfx.ts` chooses at random among those three; `addSkill3` and `addSkill5`–`addSkill10` are removed from `client/public/UI/SFX`. Babuni had removed them from the build output `client/dist`, which is rebuilt from `client/public`; the three kept files there are identical to the source ones.
 - **Verification:** client tests passed (`sfx.test.ts` checks the three names and that each file exists and is an MP3). Not heard in the game.
+
+## 2026-11-23 — Unreleased: the avatars are the main menu, and an avatar overview (D-058)
+
+- **Not released.** Local `main` only.
+- **Babuni's direction:** no Play button. The active avatar, the one played last, stands big where Play was, and the other two sit under it, left and right. A tap on one of them makes it the active one, and the two swap places. A tap on the active avatar opens its overview, as big as the avatar creation: everything about the avatar, statistics, the two equipment slots and room for the specialization to come. Red goes back, and green starts the game: the card shrinks into the big avatar, then the usual enter transition. The same overview opens in the game when the avatar is tapped. The equipment slots are the same size as the solutions and the Inventory pictures.
+- **Main menu (`Dashboard.tsx`, `AvatarSelectionPanel.tsx`):** the Play button and its handlers are gone; the avatars open as soon as the dashboard shows (with the loading wheel while they are prepared). The active avatar is the one last tapped (kept in the browser, `morkahja:active-avatar`), otherwise the one with the latest `lastPlayedAt`. The other avatars and empty slots stay below it; an empty slot still opens the creation. Swapping glides each avatar from its old place to its new one (420 ms). A failed avatar becomes active like any other; tapping the active one still opens the death overlay.
+- **Overview (new `ui/avatar/AvatarOverview.tsx`):** portrait, title and name, level, race and role, the experience bar, statistics (encounters played, item, skill and essence charges), the equipment slots with the "?", a "Specialization: coming soon" space, and in the game what was used and rolled. In the menu it is a panel the size of the avatar creation, with red back and green enter; green shrinks it into the active avatar (380 ms) before entering. In the game it lies over the encounter picture like the Inventory (new `blocks/AvatarOverviewBlock.tsx`), with the name on the plate (a tap closes it), no portrait, and red back and Home. The small details card no longer opens for the local avatar.
+- **Slot size (`AvatarPartyDetailsCard.tsx`):** each equipment slot is a fifth of its row with the Inventory grid's gap (the formula the encounter's solutions use).
+- **Server:** `GET /avatars` adds `encountersPlayed` (the progression's `encountersCompleted`) to each avatar.
+- **Verification (local, Podman PostgreSQL):** server tests 66/66, client tests 50/50, `npm run typecheck` passed. In the local game (Playwright, new test players, desktop 1280×800 and phone 390×844): the menu without avatars and with three, a swap mid-glide and settled, the overview, equipping from it, the card shrinking on green, entering the game, and the overview in the game. Not checked: returning home from the game to the new menu, a failed avatar as the active one, the creation from an empty slot in the new layout.
+
+## 2026-11-23 — Unreleased: one avatar card opened by a tap; equipment only into empty slots (D-057)
+
+- **Not released.** Local `main` only.
+- **Babuni's direction:** no hover tooltip on the avatar; a tap opens one card with everything, in the game (Home at the bottom) and in the avatar selection (the green check that starts the game). The equipment slots live in that card. An item goes only into an empty slot, at any time; a full slot stays until its item breaks. The game prefers the equipped item.
+- **Rules:** `equipItemInInventoryState` refuses a full slot (`SLOT_OCCUPIED`); the swap, which cost the leaving item a charge, is gone. `POST /avatar/:avatarId/equipment` no longer refuses while choosing (`CHOICE_OPEN` removed); a change made while an outcome waits for Continue still goes into that outcome. Where a slot accepts several items, `slotFaces`, `allocateSolutionSet` and the refill take an equipped item first, then the lowest id; the server's resolver and set reveal and the client's slot pictures pass the equipped ids.
+- **Client:** `AvatarPartyDetailsCard` shows name, level, race and role, experience, the Equipment title with a "?" help and two slots: an empty slot opens the inventory to choose an item, after which the card opens again; a full slot shows the item tooltip on hover or a long press. After a roll it lists the names of everything used and the roll's math (`participantChoiceDetails` now returns `usedNames`). `AvatarPanel` has no hover tooltip and no Equipment button. In the avatar selection a tap on an avatar opens the card (anchored toward the screen's middle like the inventory tooltips; a tap outside closes it), the green check enters the world, and the avatars' hover tooltip is gone (the empty slot's "Create avatar" stays). The Equipment mode, the "Choose your avatar" banner, the selection's Equipment button and `EquipmentCard` are removed; `shownEquipmentSlots` moved to `ui/avatar/equipmentSlots.ts`.
+- **Tests:** `equipment.test.ts` now checks the refusal of a full slot, filling the other slot, a broken slot being free, and the equipped item preferred for a slot face and a refill; `equipmentRoom.test.ts` checks a full slot refused in the room and an equip after the choice kept through Continue.
+- **Verification (local, Podman PostgreSQL):** server tests 66/66, client tests 50/50, `npm run typecheck` passed. In the local game (Playwright, new test players, desktop 1280×800 and phone 390×844): the card from the right and the left avatar, equipping from the selection, the full slot's tooltip (desktop), entering with the green check, the card in the game, equipping the second slot during an encounter, and the server's slots afterwards. Not checked: the long press on a phone, a set with several used items, the preference seen in a real encounter.
 
 ## 2026-11-23 — Unreleased: equipment, two item slots (D-056)
 

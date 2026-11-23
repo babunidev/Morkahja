@@ -99,7 +99,7 @@ export function PartyZone({
   homeVisible,
   onAvatarDetailsVisibleChange,
   onHome,
-  onOpenEquipment,
+  onOpenOverview,
   onKickParticipant,
   onSlotStateChange,
   room = null,
@@ -112,8 +112,8 @@ export function PartyZone({
   homeVisible: boolean;
   onAvatarDetailsVisibleChange: (visible: boolean) => void;
   onHome: () => void;
-  /** Opens the local avatar's equipment card (D-056). */
-  onOpenEquipment?: () => void;
+  /** A tap on the local avatar opens its overview (D-057). */
+  onOpenOverview?: () => void;
   onKickParticipant?: (targetPlayerId: string) => void;
   onSlotStateChange?: (slotIndex: number, slotState: SlotStateDto) => void;
   room?: EncounterRoomSnapshotDto | null;
@@ -182,7 +182,7 @@ export function PartyZone({
                     onAvatarDetailsVisibleChange(visible);
                   }}
                   onHome={onHome}
-                  onOpenEquipment={onOpenEquipment}
+                  onOpenOverview={onOpenOverview}
                   roomParticipant={participant}
                   roomState={roomState}
                   slotSide={slotSide}

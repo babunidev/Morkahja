@@ -500,4 +500,21 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI contribution:** Claude Code (Claude Opus 5.5) read the current slot, bonus, charge, solution-type, gem, expansion and map data, asked the open questions, worked out the regain thresholds and drafted the fifteen specialization descriptions for Babuni to revise.
 
-**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; specialization, edit and travel not implemented.
+**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; its swap rule and the wait for the choice were replaced the same day by D-057. Specialization, edit and travel not implemented.
+
+## D-057 — One avatar card, opened by a tap; equipment only into empty slots (2026-11-23)
+
+**Babuni's direction:** the avatar has no hover tooltip any more. A tap on the avatar opens one card, in the game and in the avatar selection: name, level, race and role, the experience bar and how much experience; a spacer; the two equipment slots under an Equipment title with a "?" that explains equipment; after a roll, the names of everything used and the roll's math. In the game, the Home button is at the bottom of the card; in the avatar selection, the green check that starts the game. The card anchors like the inventory tooltips: from the left avatar by its bottom-left corner, from the middle one by the middle, from the right one by its bottom-right corner. The separate Equipment buttons and the equipment popup are removed. Equipment rule changed: an item can only go into an **empty** slot, at any time, also outside the game where the room's encounter does not matter; a full slot stays until its item breaks. A full slot shows the item's tooltip on hover or a long press, and a tap does nothing. The game prefers the equipped item in the solution slots. A tutorial with tips at the start of a player's journey goes on the roadmap.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). The details card (`AvatarPartyDetailsCard`) holds everything and is shown in an `AnchoredGamePopover` in both places, measured against the whole screen in the selection so it opens toward the middle. A tap outside closes it in the selection. The equipped item is preferred by the shared slot rule (`slotFaces`, `allocateSolutionSet`, `refillFor`), so the server and the slot pictures agree. The server refuses a full slot (`SLOT_OCCUPIED`) and no longer refuses while choosing; a change after the choice still goes into the prepared outcome. This replaces D-056's swap rule and its "once the choice is made" rule.
+
+**Status:** on local `main`, not released. Checked in the local game on desktop and phone.
+
+## D-058 — The avatars are the main menu; an avatar overview (2026-11-23)
+
+**Babuni's direction:** no Play button. The active avatar, the one played last, is big in the middle where Play was; the other two sit under it, left and right, like a triangle. A tap on one of them makes it the active one, with a quick swap. A tap on the active avatar opens its overview, the size of the avatar creation, with everything about the avatar: who it is, experience, statistics (items, encounters played and the like), the two equipment slots without any Equipment button, and space for the specialization later. The red button goes back, as in the avatar creation; the green one enters the game, the card closing smoothly into the big avatar before the transition. The same overview opens in the game. With no avatar, the slots are empty as before. Equipment slots are the same size as the other solutions and the Inventory pictures.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). The active avatar is remembered in the browser, falling back to the last played. In the game the overview lies over the encounter picture like the Inventory, so its slots match the inventory size, and keeps Home with the red back button; it leaves out the portrait and repeats the name only on the plate. Statistics: encounters played (from the progression, added to `GET /avatars`) and the item, skill and essence charges.
+
+**Status:** on local `main`, not released. Checked in the local game on desktop and phone; coming home from the game not checked.
+

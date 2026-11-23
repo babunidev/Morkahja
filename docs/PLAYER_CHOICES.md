@@ -23,7 +23,7 @@ Bots take no part: they have no equipment and no specialization.
 
 ## The avatar selection screen
 
-The avatar selection, which appears after pressing Play, gets new buttons under the three avatars: **Equipment**, **Edit** and **Specialization**. They are plain buttons with the golden frame and the red background. A dead avatar is not in the selection, so it cannot be equipped, specialized or edited.
+Tapping an avatar in the selection opens its card (D-057): name, level, race and role, experience, the two equipment slots, and the green check that enters the world. Equipment needs no button of its own. The selection gets new buttons under the three avatars for **Edit** and **Specialization**. They are plain buttons with the golden frame and the red background. A dead avatar is not in the selection, so it cannot be equipped, specialized or edited.
 
 Each button switches the screen into a *choose* mode:
 
@@ -49,8 +49,9 @@ Each button switches the screen into a *choose* mode:
 | Several uses in one encounter | In a set (difficulty 2–4) each use is judged by **its own** roll. Two uses at 9 and 14: one charge lost, one charge back. |
 | Hardship and Misery | **Cannot take** an equipped item's charges. Equipment is protected from failure losses. |
 | Breaking | An equipped item can still run empty through rolls below 12. It breaks and the slot is free. |
-| Changing | There is no unequip button: I **swap**, by equipping another item into an occupied slot. The item that leaves **loses one charge**, the extra one, whether it was spent or not. With only one charge left, it disappears from the inventory. Equipping it again later gives a new extra charge. |
-| When I can change it | In the avatar selection; and in the game, but only once my choice in the current encounter is made, so I can't switch for the encounter in front of me. |
+| Changing | Only an **empty** slot can be filled. A full slot stays as it is until its item breaks; there is no unequip and no swap (Babuni, 2026-11-23, replacing the first swap rule). |
+| When I can equip | **Any time** a slot is empty: in the avatar selection, or in the game, also while choosing in an encounter. |
+| Preference | Where a solution slot accepts several items, the game takes the **equipped** one first, then the lowest id. |
 | Showing the regain | Not as one of the encounter's rewards. It shows on the equipped item itself. |
 
 "Total" means the roll result as shown, the same number the outcome table reads: d20 + slot bonus (+ a rare item's +1) − difficulty penalty.
@@ -70,8 +71,8 @@ Each step of difficulty above 1 needs one more on the natural roll. An encounter
 
 ### Screens
 
-- **In the avatar selection:** in Equipment mode, tapping an avatar moves it to the side and an equipment card appears in the middle, in the same style as the in-game equipment card. The card shows the two slots. Tapping a slot opens this avatar's inventory; choosing an item puts it in the slot and the inventory closes back to the card.
-- **In the game:** tapping my avatar opens the small overlay that shows experience. It gets an **Equipment** button that opens the same card.
+- **The avatar card** (D-057) holds the two slots, in the avatar selection and in the game. An empty slot opens the avatar's inventory; choosing an item puts it in the slot, the inventory closes and the card opens again. A full slot shows the item's tooltip on hover or a long press, and a tap does nothing.
+- *(First built with an Equipment mode in the selection and an Equipment button in the game; Babuni replaced both with the card the same day.)*
 
 ## 2. Specialization
 

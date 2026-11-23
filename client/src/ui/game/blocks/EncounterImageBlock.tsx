@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import type {
   AvatarInventory,
@@ -12,6 +12,7 @@ import {
   activateRoomLoreGem, chooseLevelUpReward, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick } from '../../../api/http.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import InventoryBlock, { type InventoryPickMode } from './InventoryBlock.js';
+import AvatarOverviewBlock from './AvatarOverviewBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
 import {
@@ -193,6 +194,7 @@ export function EncounterImageBlock({
   onItemCollected,
   inventoryOpen,
   inventoryPick = null,
+  avatarOverview = null,
   localContinuePressed = false,
   loreOpen,
   onContinue,
@@ -239,6 +241,8 @@ export function EncounterImageBlock({
   inventoryOpen: boolean;
   /** The inventory opened to choose an equipment item (D-056). */
   inventoryPick?: InventoryPickMode | null;
+  /** The local avatar's overview over the picture (D-057); null when closed. */
+  avatarOverview?: { title: string; content: ReactNode; footer: ReactNode; onClose: () => void } | null;
   localContinuePressed?: boolean;
   loreOpen: boolean;
   onContinue: (
@@ -305,7 +309,8 @@ export function EncounterImageBlock({
     solutionId?: number;
   } | null>(null);
   const showWitnessLabel = isWitnessingLabel && !showWitnessResult;
-  const encounterOverlaysOpen = loreOpen || inventoryOpen || skillbookOpen;
+  const overviewOpen = avatarOverview !== null;
+  const encounterOverlaysOpen = loreOpen || inventoryOpen || skillbookOpen || overviewOpen;
   const panelsOpen = encounterOverlaysOpen || mapOpen;
   const encounterTitleVisible = (encounterTitleHovered || titleIntro === 'in') && !panelsOpen;
   // The level-up names no land of its own, so the plate keeps the last one.
@@ -727,7 +732,7 @@ export function EncounterImageBlock({
             ...currentImageStyle,
             opacity: currentImageFading ? 0 : 1,
             pointerEvents:
-              inventoryOpen || skillbookOpen || loreOpen ? 'none' : 'auto',
+              inventoryOpen || skillbookOpen || loreOpen || overviewOpen ? 'none' : 'auto',
           }}
         />
       )}
@@ -743,7 +748,7 @@ export function EncounterImageBlock({
         <DecorativeEdgeFrame
           onRegionClick={() => setMapOpen((open) => !open)}
           // Inventory and Skillbook show their own title on this plate.
-          regionLabel={inventoryOpen || skillbookOpen ? null : regionLabel}
+          regionLabel={inventoryOpen || skillbookOpen || overviewOpen ? null : regionLabel}
           regionPressed={mapOpen}
           showTimer
         />
@@ -793,7 +798,7 @@ export function EncounterImageBlock({
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={witnessResultSnapRef.current.avatarLevel}
           encounterId={witnessResultSnapRef.current.encounterId}
-          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || overviewOpen || mapOpen}
           localContinuePressed={localContinuePressed}
           onContinue={() => {
             void handleContinue();
@@ -818,7 +823,7 @@ export function EncounterImageBlock({
           encounterId={encounter.encounterId}
           encounterDifficulty={encounter.encounterDifficulty ?? 1}
           avatarLevel={avatarLevel}
-          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || overviewOpen || mapOpen}
           inventory={inventory}
           localContinuePressed={localContinuePressed}
           onContinue={() => {
@@ -856,7 +861,7 @@ export function EncounterImageBlock({
           avatarLevel={avatarLevel}
           choiceIds={levelUpChoiceIds}
           encounterKey={encounter.snapshotId}
-          hidden={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
+          hidden={loreOpen || inventoryOpen || skillbookOpen || overviewOpen || mapOpen}
           onChoose={async (rewardId) => {
             setLevelUpRollHeld(true);
             recordCommittedAction(encounter.snapshotId, 'level-up-choice');
@@ -877,7 +882,7 @@ export function EncounterImageBlock({
         />
       ) : null}
       <SolutionBlock
-        panelOpen={loreOpen || inventoryOpen || skillbookOpen || mapOpen}
+        panelOpen={loreOpen || inventoryOpen || skillbookOpen || overviewOpen || mapOpen}
         diceButtonAsset={diceButtonAsset}
         encounter={encounter}
         encounterRevealKey={encounter.snapshotId}
@@ -888,6 +893,7 @@ export function EncounterImageBlock({
           revealedRoll !== null ||
           loreOpen ||
           inventoryOpen ||
+          overviewOpen ||
           skillbookOpen ||
           mapOpen ||
           roomState === 'waiting_continue' ||
@@ -936,6 +942,14 @@ export function EncounterImageBlock({
         pick={inventoryPick}
         visible={inventoryOpen}
       />
+      <AvatarOverviewBlock
+        footer={avatarOverview?.footer ?? null}
+        onClose={avatarOverview?.onClose ?? (() => undefined)}
+        title={avatarOverview?.title ?? ''}
+        visible={overviewOpen}
+      >
+        {avatarOverview?.content ?? null}
+      </AvatarOverviewBlock>
       </div>
     </section>
   );

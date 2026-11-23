@@ -6,7 +6,10 @@ import {
   isDiceId,
 } from '@shared/diceCatalog.js';
 import { isEquippableSolution } from '@shared/equipment.js';
-import EquipmentCard, { shownEquipmentSlots } from '../avatar/EquipmentCard.js';
+import { shownEquipmentSlots } from '../avatar/equipmentSlots.js';
+import { AvatarOverviewContent, AvatarOverviewFooter } from '../avatar/AvatarOverview.js';
+import { ChoiceDetailSections, participantChoiceDetails } from './blocks/partyParticipantChoiceBadge.js';
+import { GAME_SCREEN_SELECTOR } from './GameTooltip.js';
 import type { InventoryPickMode } from './blocks/InventoryBlock.js';
 import {
   equipAvatarItem,
@@ -36,7 +39,7 @@ import {
 import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
-import { ATRANOR_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { ATRANOR_SOUND, DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import {
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   FADE_DURATION_MS,
@@ -143,13 +146,14 @@ function progressionToLifetimeExperience(level: number, experience: number): num
   return total;
 }
 
-const equipmentBackdropStyle: CSSProperties = {
-  position: 'absolute',
-  inset: 0,
-  zIndex: 45,
-  display: 'grid',
-  placeItems: 'center',
-  background: 'rgba(0, 0, 0, 0.35)',
+const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
+
+const overviewHomeButtonStyle: CSSProperties = {
+  width: 'clamp(44px, 10vw, 60px)',
+  padding: 0,
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
 };
 
 function applyRoomSnapshot(
@@ -228,10 +232,10 @@ export function GameEnvironment({
   const [continuePending, setContinuePending] = useState(false);
   const [loreOpen, setLoreOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  /** Equipment (D-056): the card over the encounter, and the slot being chosen for. */
-  const [equipmentOpen, setEquipmentOpen] = useState(false);
+  /** Equipment (D-056): the empty slot an item is being chosen for, and reopening the avatar card after. */
   const [equipPickSlot, setEquipPickSlot] = useState<number | null>(null);
-  const [equipPending, setEquipPending] = useState(false);
+  /** The local avatar's overview over the picture (D-057). */
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const [equipError, setEquipError] = useState<string | null>(null);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
   const cancelPanelRevealRef = useRef<(() => void) | null>(null);
@@ -1005,11 +1009,7 @@ export function GameEnvironment({
     applySnapshotOnly(nextRoom);
   }
 
-  // Equipment changes once the choice in this encounter is made (D-056).
-  const equipmentChoiceOpen = localParticipant?.choiceState === 'choosing'
-    || localParticipant?.choiceState === 'ready';
-
-  function openEquipment(): void {
+  function openOverview(): void {
     cancelPanelRevealRef.current?.();
     cancelPanelRevealRef.current = null;
     setLoreOpen(false);
@@ -1017,32 +1017,42 @@ export function GameEnvironment({
     setSkillbookOpen(false);
     setEquipPickSlot(null);
     setEquipError(null);
-    setEquipmentOpen(true);
+    setOverviewOpen((open) => !open);
   }
 
+  function openEquipmentPicker(slot: number): void {
+    setEquipError(null);
+    setOverviewOpen(false);
+    setEquipPickSlot(slot);
+    if (!inventoryOpen) {
+      toggleGamePanel('inventory');
+    }
+  }
+
+  /** Back from the inventory to the overview. */
   function closeEquipmentPicker(): void {
     setEquipPickSlot(null);
     setInventoryOpen(false);
-    setEquipmentOpen(true);
+    setOverviewOpen(true);
   }
 
   async function equipIntoSlot(slot: number, solutionId: number): Promise<void> {
-    setEquipPending(true);
-    setEquipError(null);
     closeEquipmentPicker();
     try {
       const inventory = await equipAvatarItem(avatar.id, slot, solutionId);
       setAvatar((current) => ({ ...current, inventory }));
     } catch (error) {
-      setEquipError(isApiErrorCode(error, 'CHOICE_OPEN')
-        ? 'Make your choice in this encounter first.'
-        : userFacingApiErrorMessage(error, 'Could not equip the item.'));
-    } finally {
-      setEquipPending(false);
+      setEquipError(userFacingApiErrorMessage(error, 'Could not equip the item.'));
     }
   }
 
   const equippedNow = shownEquipmentSlots(displayInventory);
+  const overviewChoice = participantChoiceDetails(
+    localParticipant,
+    encounter,
+    room?.roomState,
+    room?.systemEvent?.actorPlayerId,
+  );
   const inventoryPick: InventoryPickMode | null = equipPickSlot === null
     ? null
     : {
@@ -1076,32 +1086,6 @@ export function GameEnvironment({
               ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
             }}
           >
-            {equipmentOpen ? (
-              <div
-                onClick={(event) => {
-                  if (event.target === event.currentTarget) {
-                    setEquipmentOpen(false);
-                  }
-                }}
-                style={equipmentBackdropStyle}
-              >
-                <EquipmentCard
-                  disabledReason={equipmentChoiceOpen ? 'Make your choice in this encounter first.' : null}
-                  error={equipError}
-                  framed
-                  inventory={displayInventory}
-                  onSlotSelect={(slot) => {
-                    setEquipError(null);
-                    setEquipmentOpen(false);
-                    setEquipPickSlot(slot);
-                    if (!inventoryOpen) {
-                      toggleGamePanel('inventory');
-                    }
-                  }}
-                  pending={equipPending}
-                />
-              </div>
-            ) : null}
             <EncounterImageBlock
               avatarId={avatar.id}
               avatarLevel={displayAvatarLevel}
@@ -1123,6 +1107,41 @@ export function GameEnvironment({
               onItemCollected={handleItemCollected}
               inventoryOpen={inventoryOpen}
               inventoryPick={inventoryPick}
+              avatarOverview={overviewOpen ? {
+                title: displayAvatar.name.trim() || 'Adventurer',
+                onClose: () => setOverviewOpen(false),
+                content: (
+                  <AvatarOverviewContent
+                    avatar={displayAvatar}
+                    choiceDetails={overviewChoice ? <ChoiceDetailSections details={overviewChoice} /> : null}
+                    inventory={displayInventory}
+                    notice={equipError}
+                    onEquipSlot={openEquipmentPicker}
+                    showPortrait={false}
+                    tooltipBoundsSelector={GAME_SCREEN_SELECTOR}
+                  />
+                ),
+                footer: (
+                  <AvatarOverviewFooter
+                    onBack={() => setOverviewOpen(false)}
+                    right={(
+                      <button
+                        aria-label="Return home"
+                        className="morkahja-footer-button"
+                        onClick={() => {
+                          playSfx(DEFAULT_BUTTON_SOUND);
+                          setOverviewOpen(false);
+                          void handleHome();
+                        }}
+                        style={overviewHomeButtonStyle}
+                        type="button"
+                      >
+                        <img alt="" aria-hidden="true" draggable={false} src={HOME_BUTTON_ASSET} style={{ display: 'block', width: '100%' }} />
+                      </button>
+                    )}
+                  />
+                ),
+              } : null}
               localContinuePressed={localHasContinuePressed}
               loreOpen={loreOpen}
               onContinue={handleContinueEncounter}
@@ -1177,7 +1196,7 @@ export function GameEnvironment({
               onHome={() => {
                 void handleHome();
               }}
-              onOpenEquipment={openEquipment}
+              onOpenOverview={openOverview}
               onKickParticipant={(targetPlayerId) => {
                 void handleKickParticipant(targetPlayerId);
               }}
@@ -1196,17 +1215,17 @@ export function GameEnvironment({
             <ActionMenuZone
               onInventoryToggle={() => {
                 setEquipPickSlot(null);
-                setEquipmentOpen(false);
+                setOverviewOpen(false);
                 toggleGamePanel('inventory');
               }}
               onSkillbookToggle={() => {
                 setEquipPickSlot(null);
-                setEquipmentOpen(false);
+                setOverviewOpen(false);
                 toggleGamePanel('skillbook');
               }}
               onLoreToggle={() => {
                 setEquipPickSlot(null);
-                setEquipmentOpen(false);
+                setOverviewOpen(false);
                 toggleGamePanel('lore');
               }}
               helpCalled={helpCalled}

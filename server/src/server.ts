@@ -1,5 +1,6 @@
 import express from 'express';
 import { equipAvatarItem, EquipmentRequestError } from './services/equipmentService.js';
+import { loadAvatarProgression } from './services/avatarProgressionService.js';
 import type { NextFunction, Request, Response } from 'express';
 
 import { sweepAbandonedRooms, validatePostgresConnection } from './db/postgresDocumentStore.js';
@@ -334,7 +335,12 @@ app.get('/avatars', async (req: Request, res: Response) => {
     .filter((avatar) => readAvatarLifeStatus(avatar) !== 'deceased')
     .map(toPersistedAvatarDto)
     .filter((avatar): avatar is NonNullable<ReturnType<typeof toPersistedAvatarDto>> => avatar !== null);
-  res.json({ playerId, avatars });
+  // The overview card's statistics (at most three avatars).
+  const withStats = await Promise.all(avatars.map(async (avatar) => ({
+    ...avatar,
+    encountersPlayed: (await loadAvatarProgression(playerId, avatar.id)).encountersCompleted,
+  })));
+  res.json({ playerId, avatars: withStats });
 });
 
 app.get('/avatar/active', async (req: Request, res: Response) => {

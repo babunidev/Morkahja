@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { menuPreparingClass, useMenuPreparingCheck } from '../transitions/menuReadiness.js';
 import type {
   ActivityFeedJoinRoomActionDto,
@@ -21,13 +21,12 @@ import { fetchAvatars } from '../../api/http.js';
 import PlayerProfileOverlay from './PlayerProfileOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
-import { FADE_DURATION_MS, fadeStyle, waitForFade } from '../transitions/fade.js';
+import { fadeStyle, waitForFade } from '../transitions/fade.js';
 import { useTooltipRevealGroup } from '../hooks/useTooltipReveal.js';
 import { NAV_BUTTON_PRESS_MS, useNavButtonPress } from '../transitions/navButtonPress.js';
 import { assetUrl } from '../../assetUrl.js';
 import { GameTooltipFrame } from '../game/GameTooltip.js';
 
-const PLAY_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_play.webp');
 const PLAY_PREPARE_WHEEL_ASSET = assetUrl('/UI/01_WelcomeScreen/LoadingWheel.webp');
 const NAV_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_nav_b.webp');
 const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
@@ -133,31 +132,13 @@ const dashboardColumnStyle: CSSProperties = {
   width: '100%',
 };
 
-const buttonStyle: CSSProperties = {
-  width: 'min(58vw, 360px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-  pointerEvents: 'auto',
-};
-
-const playWrapStyle: CSSProperties = {
-  position: 'relative',
-  transition: 'opacity 420ms ease, transform 420ms ease',
-};
-
-const playPrepareWheelStyle: CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: '50%',
+const prepareWheelStyle: CSSProperties = {
+  display: 'block',
   width: 'min(18vw, 72px)',
   height: 'min(18vw, 72px)',
-  transform: 'translate(-50%, -50%)',
+  margin: 'clamp(80px, 20vh, 200px) auto 0',
   objectFit: 'contain',
-  pointerEvents: 'none',
-  animation: 'morkahja-loading-wheel-spin 2s linear infinite',
-  filter: 'drop-shadow(0 0 12px rgba(244, 232, 190, 0.42))',
+  animation: 'morkahja-loading-wheel-spin-flat 1.2s linear infinite',
 };
 
 const imageStyle: CSSProperties = {
@@ -273,9 +254,7 @@ export function Dashboard({
   const [clickable, setClickable] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [enteringGame, setEnteringGame] = useState(false);
-  const [avatarCreationOpen, setAvatarCreationOpen] = useState(false);
-  /** Equipment mode in the avatar selection (D-056): the Play button gives way to "Choose your avatar". */
-  const [selectionModeActive, setSelectionModeActive] = useState(false);
+  const [, setAvatarCreationOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [expansionsOpen, setExpansionsOpen] = useState(false);
@@ -387,36 +366,24 @@ export function Dashboard({
     setClickable(true);
   }
 
-  async function handlePlayAsHome(): Promise<void> {
-    if (!clickable || !avatarSlotsVisible || avatarCreationOpen) {
+  // No Play button (Babuni, 2026-11-23): the avatars are the main menu, so
+  // they open as soon as the dashboard shows.
+  const autoOpenPendingRef = useRef(false);
+  useEffect(() => {
+    if (!showChrome || avatarSlotsVisible || playPreparePending || autoOpenPendingRef.current) {
       return;
     }
-
-    playSfx(DEFAULT_BUTTON_SOUND);
-    await closeAvatarSelection();
-  }
-
-  async function handlePlay(): Promise<void> {
-    if (!clickable || avatarSlotsVisible || playPreparePending) {
-      return;
-    }
-
-    setClickable(false);
-    setNavOpen(false);
-    playSfx(DEFAULT_BUTTON_SOUND);
-
-    const ready = await Promise.resolve(onPlay?.() ?? true);
-
-    if (!ready) {
-      setClickable(true);
-      return;
-    }
-
-    onAvatarSlotsVisibleChange?.(true);
-    window.setTimeout(() => {
-      setClickable(true);
-    }, FADE_DURATION_MS);
-  }
+    autoOpenPendingRef.current = true;
+    void Promise.resolve(onPlay?.() ?? true)
+      .then((ready) => {
+        if (ready) {
+          onAvatarSlotsVisibleChange?.(true);
+        }
+      })
+      .finally(() => {
+        autoOpenPendingRef.current = false;
+      });
+  }, [showChrome, avatarSlotsVisible, playPreparePending, onPlay, onAvatarSlotsVisibleChange]);
 
   const centerNavTooltipHandlers = bindNavTooltip(NAV_CENTER_HOVER_ID, clickable);
 
@@ -438,6 +405,10 @@ export function Dashboard({
             72% { transform: translateY(-50%) scale(1.08); filter: brightness(1.22); }
             100% { transform: translateY(-50%) scale(1); filter: brightness(1); }
           }
+          @keyframes morkahja-loading-wheel-spin-flat {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
           @keyframes morkahja-loading-wheel-spin {
             from { transform: translate(-50%, -50%) rotate(0deg); }
             to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -445,72 +416,8 @@ export function Dashboard({
         `}
       </style>
       <div style={dashboardColumnStyle}>
-        {showChrome ? (
-          <div
-            style={{
-              ...playWrapStyle,
-              opacity: navOpen || avatarCreationOpen || selectionModeActive ? 0 : 1,
-              transform: navOpen || avatarCreationOpen || selectionModeActive
-                ? 'translateY(-10px) scale(0.96)'
-                : 'translateY(0) scale(1)',
-              pointerEvents: navOpen || avatarCreationOpen || selectionModeActive ? 'none' : 'auto',
-            }}
-          >
-            <button
-              aria-busy={playPreparePending}
-              aria-label={
-                playPreparePending
-                  ? 'Preparing avatars'
-                  : avatarSlotsVisible
-                    ? 'Close avatar selection'
-                    : 'Play'
-              }
-              className="morkahja-play-button"
-              data-dashboard-play-button=""
-              disabled={!clickable || navOpen || avatarCreationOpen || playPreparePending}
-              onClick={() => {
-                if (avatarSlotsVisible) {
-                  void handlePlayAsHome();
-                  return;
-                }
-
-                void handlePlay();
-              }}
-              onPointerDown={() => {
-                pulseNavButton('Play');
-              }}
-              style={{
-                ...buttonStyle,
-                cursor: clickable && !navOpen ? 'pointer' : 'default',
-              }}
-              type="button"
-            >
-              <span className="morkahja-play-button-visual">
-                <img
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  src={PLAY_BUTTON_ASSET}
-                  style={{
-                    ...imageStyle,
-                    opacity: playPreparePending ? 0.35 : 1,
-                    animation: playPreparePending
-                      ? undefined
-                      : pressAnimation(isNavButtonPressed('Play')),
-                  }}
-                />
-                {playPreparePending ? (
-                  <img
-                    alt=""
-                    aria-hidden="true"
-                    draggable={false}
-                    src={PLAY_PREPARE_WHEEL_ASSET}
-                    style={playPrepareWheelStyle}
-                  />
-                ) : null}
-              </span>
-            </button>
-          </div>
+        {showChrome && playPreparePending && !avatarSlotsVisible ? (
+          <img alt="" aria-hidden="true" draggable={false} src={PLAY_PREPARE_WHEEL_ASSET} style={prepareWheelStyle} />
         ) : null}
         {showChrome || enteringGame ? (
           <AvatarSelectionPanel
@@ -531,7 +438,6 @@ export function Dashboard({
             onHandoffLand={onHandoffLand}
             onAvatarEnter={onAvatarEnter}
             onCreationOpenChange={setAvatarCreationOpen}
-            onModeChange={setSelectionModeActive}
             onEnteringGameChange={setEnteringGame}
             onPrepareGame={(avatar, room) => {
               onAvatarSlotsVisibleChange?.(false);

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -35,7 +36,7 @@ import {
   type AvatarEnterHandoffSnapshot,
 } from '../transitions/avatarEnterTransition.js';
 import { FADE_DURATION_MS, waitForFade } from '../transitions/fade.js';
-import { DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import { useTooltipReveal } from '../hooks/useTooltipReveal.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
@@ -47,13 +48,75 @@ import { GameTooltipFrame } from '../game/GameTooltip.js';
 import { isEquippableSolution } from '@shared/equipment.js';
 import { gameSolutions } from '../../data/gameContent.js';
 import { userFacingApiErrorMessage } from '../../api/httpErrorMessage.js';
-import { PanelButton } from '../common/PanelButton.js';
-import { overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
-import ChoiceBanner from '../game/blocks/ChoiceBanner.js';
 import { SolutionGridOverlay } from '../game/blocks/SolutionGridOverlay.js';
-import EquipmentCard, { shownEquipmentSlots } from './EquipmentCard.js';
+import {
+  AvatarOverviewContent,
+  AvatarOverviewFooter,
+  AvatarOverviewMenuCard,
+  OVERVIEW_CLOSE_MS,
+  OverviewEnterButton,
+} from './AvatarOverview.js';
+import { shownEquipmentSlots } from './equipmentSlots.js';
 
 const CREATE_AVATAR_ASSET = assetUrl('/UI/03_DASHBOARD/CreateAvatar.webp');
+const ACTIVE_AVATAR_STORAGE_KEY = 'morkahja:active-avatar';
+const SWAP_MS = 420;
+
+/** The active avatar stands where the Play button was (Babuni, 2026-11-23). */
+const activeSlotStyle: CSSProperties = {
+  flex: '0 0 auto',
+  width: 'min(54vw, 320px)',
+};
+
+const activeRowStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  width: '100%',
+};
+
+/** The other two, left and right under the active one: a triangle. */
+const othersRowStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: 'min(92vw, 560px)',
+  margin: 'clamp(-40px, -6vw, -20px) auto 0',
+};
+
+function readStoredActiveAvatarId(): string | null {
+  try {
+    return window.localStorage.getItem(ACTIVE_AVATAR_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeActiveAvatarId(id: string): void {
+  try {
+    window.localStorage.setItem(ACTIVE_AVATAR_STORAGE_KEY, id);
+  } catch {
+    // Only a convenience; the last played avatar is the fallback.
+  }
+}
+
+/** The chosen one if it still exists, otherwise the one played last. */
+function pickActiveAvatarId(avatars: PersistedAvatar[], chosen: string | null): string | null {
+  if (chosen && avatars.some((avatar) => avatar.id === chosen)) {
+    return chosen;
+  }
+  const lastPlayed = [...avatars].sort((left, right) => (right.lastPlayedAt ?? 0) - (left.lastPlayedAt ?? 0))[0];
+  return lastPlayed?.id ?? null;
+}
+
+/** The inventory, opened from an empty equipment slot in the avatar card. */
+const pickerShellStyle: CSSProperties = {
+  position: 'fixed',
+  left: '50%',
+  top: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 'min(calc(100vw - 32px), 560px)',
+  height: 'min(72vh, 560px)',
+  zIndex: 60,
+};
 
 const slotPanelTransitionStyle: CSSProperties = {
   transition: 'opacity 420ms ease, transform 420ms ease, max-height 420ms ease, margin 420ms ease',
@@ -75,20 +138,11 @@ function avatarSlotsRevealStyle(visible: boolean): CSSProperties {
     pointerEvents: visible ? 'auto' : 'none',
     visibility: visible ? 'visible' : 'hidden',
     overflow: visible ? 'visible' : 'hidden',
-    // Room for the avatars, the Equipment button and the "Choose your avatar" plate.
-    maxHeight: visible ? 'min(62vh, 470px)' : 0,
+    // The big active avatar and the two below it (Babuni, 2026-11-23).
+    maxHeight: visible ? 'min(82vh, 760px)' : 0,
     marginTop: visible ? 'clamp(8px, 2vh, 20px)' : 0,
   };
 }
-
-const slotsRowStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 'clamp(6px, 1.6vw, 14px)',
-  width: '100%',
-};
 
 const slotArtboardStyle: CSSProperties = {
   position: 'relative',
@@ -115,52 +169,6 @@ const createImageStyle: CSSProperties = {
   height: '100%',
   objectFit: 'contain',
   filter: 'drop-shadow(0 18px 28px rgba(0, 0, 0, 0.48))',
-};
-
-/** "Choose your avatar" (D-056): the region plate's look, above the avatars. */
-const chooseBannerWrapStyle: CSSProperties = {
-  // Where the Play button was, so the avatars stay in place.
-  position: 'absolute',
-  left: 0,
-  right: 0,
-  bottom: '100%',
-  height: 46,
-  pointerEvents: 'none',
-};
-
-const modeButtonsRowStyle: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  gap: 10,
-  marginTop: 'clamp(6px, 1.4vh, 12px)',
-};
-
-const modeButtonVisualStyle: CSSProperties = {
-  ...overlayCloseButtonVisualStyle,
-  minWidth: 112,
-  minHeight: 34,
-  fontSize: '0.86rem',
-  letterSpacing: '0.04em',
-};
-
-const equipmentRowStyle: CSSProperties = {
-  display: 'grid',
-  // The avatar keeps a usable size on a phone; the card stays centred where there is room.
-  gridTemplateColumns: 'minmax(min(26vw, 200px), 1fr) auto minmax(0, 1fr)',
-  alignItems: 'center',
-  gap: 'clamp(6px, 1.6vw, 14px)',
-  width: '100%',
-};
-
-/** The inventory, opened from an equipment slot in the avatar selection. */
-const pickerShellStyle: CSSProperties = {
-  position: 'fixed',
-  left: '50%',
-  top: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 'min(calc(100vw - 32px), 560px)',
-  height: 'min(72vh, 560px)',
-  zIndex: 60,
 };
 
 const messageStyle: CSSProperties = {
@@ -214,7 +222,8 @@ function AvatarSlot({
     artboardRef,
     avatar ? `${avatar.id}:${avatar.portrait}:${avatar.frame}` : 'create',
   );
-  const tooltipEnabled = clickable && !hiddenDuringEnter;
+  // An avatar opens its card on a tap instead of a hover tooltip (Babuni, 2026-11-23).
+  const tooltipEnabled = clickable && !hiddenDuringEnter && avatar === null;
   const { visible: showTooltip, handlers: tooltipHandlers } = useTooltipReveal(tooltipEnabled);
 
   const slotButtonProps = {
@@ -329,7 +338,6 @@ export function AvatarSelectionPanel({
   onFailedAvatarSelect,
   onHandoffLand,
   onPrepareGame,
-  onModeChange,
   visible = false,
 }: {
   avatars?: PersistedAvatar[];
@@ -349,8 +357,6 @@ export function AvatarSelectionPanel({
   onFailedAvatarSelect?: (avatar: PersistedAvatar) => void;
   onHandoffLand?: () => void;
   onPrepareGame: (avatar: PersistedAvatar, room: EncounterRoomSnapshotDto) => void;
-  /** A choose mode (Equipment) is on: the Play button gives way to "Choose your avatar". */
-  onModeChange?: (active: boolean) => void;
   visible?: boolean;
 }) {
   const [clickable, setClickable] = useState(false);
@@ -368,25 +374,73 @@ export function AvatarSelectionPanel({
     [avatars, excludedAvatarIds],
   );
   const slots = Array.from({ length: 3 }, (_, index) => resolvedAvatars[index] ?? null);
-  // Equipment mode (D-056): choose an avatar, then its two slots.
-  const [equipmentMode, setEquipmentMode] = useState(false);
-  const [equipmentAvatarId, setEquipmentAvatarId] = useState<string | null>(null);
+  // The active avatar (Babuni, 2026-11-23): the one played last, or the one
+  // the player tapped; it stands big, the others below it.
+  const [chosenActiveId, setChosenActiveId] = useState<string | null>(() => readStoredActiveAvatarId());
+  const activeAvatarId = pickActiveAvatarId(resolvedAvatars, chosenActiveId);
+  const activeIndex = activeAvatarId ? slots.findIndex((avatar) => avatar?.id === activeAvatarId) : 0;
+  const orderedSlots = [
+    { avatar: slots[activeIndex] ?? null, index: activeIndex },
+    ...slots.map((avatar, index) => ({ avatar, index })).filter((entry) => entry.index !== activeIndex),
+  ];
+  const activeSourceRef = useRef<HTMLElement | null>(null);
+  // The overview card (D-057) of the active avatar; the green check enters the world.
+  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [overviewClosingInto, setOverviewClosingInto] = useState<{ current: HTMLElement | null } | null>(null);
   const [equipPickSlot, setEquipPickSlot] = useState<number | null>(null);
   const [equipPending, setEquipPending] = useState(false);
   const [equipError, setEquipError] = useState<string | null>(null);
-  const equipmentAvatar = resolvedAvatars.find((avatar) => avatar.id === equipmentAvatarId) ?? null;
-  const equipmentAvatarIndex = equipmentAvatar ? slots.indexOf(equipmentAvatar) : -1;
+  const cardAvatar = overviewOpen
+    ? resolvedAvatars.find((avatar) => avatar.id === activeAvatarId) ?? null
+    : null;
 
-  function setEquipmentModeOn(on: boolean): void {
-    setEquipmentMode(on);
-    setEquipmentAvatarId(null);
+  function closeCard(): void {
+    setOverviewOpen(false);
+    setOverviewClosingInto(null);
     setEquipPickSlot(null);
     setEquipError(null);
   }
 
-  useEffect(() => {
-    onModeChange?.(equipmentMode);
-  }, [equipmentMode, onModeChange]);
+  // The swap: each avatar glides from where it stood to its new place.
+  const slotElementsRef = useRef(new Map<string, HTMLElement>());
+  const swapFromRectsRef = useRef<Map<string, DOMRect> | null>(null);
+  function makeActive(avatar: PersistedAvatar): void {
+    const rects = new Map<string, DOMRect>();
+    slotElementsRef.current.forEach((element, id) => rects.set(id, element.getBoundingClientRect()));
+    swapFromRectsRef.current = rects;
+    storeActiveAvatarId(avatar.id);
+    setChosenActiveId(avatar.id);
+  }
+  useLayoutEffect(() => {
+    const from = swapFromRectsRef.current;
+    if (!from) {
+      return;
+    }
+    swapFromRectsRef.current = null;
+    slotElementsRef.current.forEach((element, id) => {
+      const before = from.get(id);
+      if (!before) {
+        return;
+      }
+      const after = element.getBoundingClientRect();
+      if (after.width <= 0) {
+        return;
+      }
+      const dx = before.left + before.width / 2 - (after.left + after.width / 2);
+      const dy = before.top + before.height / 2 - (after.top + after.height / 2);
+      const scale = before.width / after.width;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+        return;
+      }
+      element.animate(
+        [
+          { transform: `translate(${dx}px, ${dy}px) scale(${scale})` },
+          { transform: 'translate(0, 0) scale(1)' },
+        ],
+        { duration: SWAP_MS, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' },
+      );
+    });
+  }, [activeAvatarId]);
 
   async function equipIntoSlot(avatar: PersistedAvatar, slot: number, solutionId: number): Promise<void> {
     setEquipPickSlot(null);
@@ -411,7 +465,7 @@ export function AvatarSelectionPanel({
     setCreatingSlotIndex(null);
     setActiveCreationPreset(null);
     setMessage('');
-    setEquipmentModeOn(false);
+    closeCard();
   }, [visible]);
 
   useEffect(() => {
@@ -479,14 +533,6 @@ export function AvatarSelectionPanel({
       return;
     }
 
-    if (equipmentMode) {
-      if (candidate && candidate.status !== 'failed' && candidate.status !== 'deceased') {
-        setEquipError(null);
-        setEquipmentAvatarId((current) => (current === candidate.id ? null : candidate.id));
-      }
-      return;
-    }
-
     if (!candidate) {
       setCreatingSlotIndex(index);
       setCreationVisible(false);
@@ -495,15 +541,42 @@ export function AvatarSelectionPanel({
       return;
     }
 
+    if (candidate.id !== activeAvatarId) {
+      makeActive(candidate);
+      return;
+    }
+
     if (candidate.status === 'failed' || candidate.status === 'deceased') {
       onFailedAvatarSelect?.(candidate);
       return;
     }
 
-    await enterWorld(candidate, sourceElement);
+    // A tap on another avatar makes it the active one; a tap on the active
+    // one opens its overview, whose green check enters the world.
+    setEquipError(null);
+    setEquipPickSlot(null);
+    if (candidate.id !== activeAvatarId) {
+      makeActive(candidate);
+      return;
+    }
+    activeSourceRef.current = sourceElement;
+    setOverviewOpen(true);
+  }
+
+  function enterFromOverview(candidate: PersistedAvatar): void {
+    const source = activeSourceRef.current;
+    if (!source) {
+      return;
+    }
+    // The card shrinks into the big avatar, then the usual enter transition runs.
+    setOverviewClosingInto({ current: source });
+    window.setTimeout(() => {
+      void enterWorld(candidate, source);
+    }, OVERVIEW_CLOSE_MS);
   }
 
   async function enterWorld(candidate: PersistedAvatar, sourceElement: HTMLElement): Promise<void> {
+    closeCard();
     setClickable(false);
     setEnteringGame(true);
     onEnteringGameChange?.(true);
@@ -572,88 +645,109 @@ export function AvatarSelectionPanel({
     <>
       <div
         aria-label="Avatar selection"
+        data-morkahja-avatar-selection=""
         style={avatarSlotsRevealStyle(visible)}
       >
-        {equipmentMode && !equipmentAvatar ? (
-          <div style={chooseBannerWrapStyle}>
-            <ChoiceBanner bottomPx={23} text="Choose your avatar" />
-          </div>
-        ) : null}
-        {equipmentAvatar ? (
-          <section style={equipmentRowStyle}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <AvatarSlot
-                avatar={equipmentAvatar}
-                clickable={clickable && !equipPending}
-                hiddenDuringEnter={false}
-                index={equipmentAvatarIndex}
-                onSelect={(selectedAvatar, selectedIndex, sourceElement) => {
-                  void handleSelect(selectedAvatar, selectedIndex, sourceElement);
+        <section style={activeRowStyle}>
+          {orderedSlots.slice(0, 1).map((entry, position) => (
+              <div
+                key={entry.avatar?.id ?? `empty-${entry.index}`}
+                ref={(element) => {
+                  if (entry.avatar) {
+                    if (element) {
+                      slotElementsRef.current.set(entry.avatar.id, element);
+                    } else {
+                      slotElementsRef.current.delete(entry.avatar.id);
+                    }
+                  }
                 }}
-              />
-            </div>
-            <EquipmentCard
-              error={equipError}
-              framed
-              inventory={equipmentAvatar.inventory}
-              width="min(58vw, 260px)"
-              onSlotSelect={(slot) => {
-                setEquipError(null);
-                setEquipPickSlot(slot);
-              }}
-              pending={equipPending}
-            />
-            <div aria-hidden="true" />
-          </section>
-        ) : (
-          <section style={slotsRowStyle}>
-            {slots.map((avatar, index) => (
-              <AvatarSlot
-                avatar={avatar}
-                clickable={clickable && creatingSlotIndex === null && (!equipmentMode || avatar !== null)}
-                hiddenDuringEnter={enteringGame}
-                index={index}
-                key={avatar?.id ?? `empty-${index}`}
-                onSelect={(selectedAvatar, selectedIndex, sourceElement) => {
-                  void handleSelect(selectedAvatar, selectedIndex, sourceElement);
-                }}
-              />
+                style={position === 0 ? activeSlotStyle : undefined}
+              >
+                <AvatarSlot
+                  avatar={entry.avatar}
+                  clickable={clickable && creatingSlotIndex === null && !overviewOpen}
+                  hiddenDuringEnter={enteringGame}
+                  index={entry.index}
+                  onSelect={(selectedAvatar, selectedIndex, sourceElement) => {
+                    void handleSelect(selectedAvatar, selectedIndex, sourceElement);
+                  }}
+                  style={position === 0 ? { width: '100%', flex: 'none' } : undefined}
+                />
+              </div>
             ))}
-          </section>
-        )}
-        {!enteringGame && resolvedAvatars.length > 0 ? (
-          <div style={modeButtonsRowStyle}>
-            <PanelButton
-              aria-label={equipmentMode ? 'Close equipment' : 'Equipment'}
-              aria-pressed={equipmentMode}
-              disabled={!clickable || creatingSlotIndex !== null || equipPending}
-              onClick={() => {
-                playSfx(DEFAULT_BUTTON_SOUND);
-                setEquipmentModeOn(!equipmentMode);
-              }}
-              pressKey="avatar-selection-equipment"
-              visualStyle={modeButtonVisualStyle}
-            >
-              Equipment
-            </PanelButton>
-          </div>
-        ) : null}
+        </section>
+        <section style={othersRowStyle}>
+          {orderedSlots.slice(1).map((entry, offset) => ((entry, position) => (
+              <div
+                key={entry.avatar?.id ?? `empty-${entry.index}`}
+                ref={(element) => {
+                  if (entry.avatar) {
+                    if (element) {
+                      slotElementsRef.current.set(entry.avatar.id, element);
+                    } else {
+                      slotElementsRef.current.delete(entry.avatar.id);
+                    }
+                  }
+                }}
+                style={position === 0 ? activeSlotStyle : undefined}
+              >
+                <AvatarSlot
+                  avatar={entry.avatar}
+                  clickable={clickable && creatingSlotIndex === null && !overviewOpen}
+                  hiddenDuringEnter={enteringGame}
+                  index={entry.index}
+                  onSelect={(selectedAvatar, selectedIndex, sourceElement) => {
+                    void handleSelect(selectedAvatar, selectedIndex, sourceElement);
+                  }}
+                  style={position === 0 ? { width: '100%', flex: 'none' } : undefined}
+                />
+              </div>
+            ))(entry, offset + 1))}
+        </section>
         {(selectionNotice || message) && !enteringGame ? (
           <p style={messageStyle}>{selectionNotice || message}</p>
         ) : null}
       </div>
-      {equipmentAvatar && equipPickSlot !== null ? (
+      {cardAvatar ? (
+        <AvatarOverviewMenuCard
+          closingInto={overviewClosingInto}
+          footer={(
+            <AvatarOverviewFooter
+              onBack={closeCard}
+              right={(
+                <OverviewEnterButton
+                  avatarName={formatAvatarDisplayName(cardAvatar)}
+                  disabled={!clickable || equipPending || overviewClosingInto !== null}
+                  onEnter={() => enterFromOverview(cardAvatar)}
+                />
+              )}
+            />
+          )}
+          onBackdrop={overviewClosingInto ? undefined : closeCard}
+        >
+          <AvatarOverviewContent
+            avatar={cardAvatar}
+            inventory={cardAvatar.inventory}
+            notice={equipError}
+            onEquipSlot={equipPending ? undefined : (slot) => {
+              setEquipError(null);
+              setEquipPickSlot(slot);
+            }}
+          />
+        </AvatarOverviewMenuCard>
+      ) : null}
+      {cardAvatar && equipPickSlot !== null ? (
         <div style={pickerShellStyle}>
           <SolutionGridOverlay
             ariaLabel="Inventory"
             emptyText="No item to equip."
-            inventory={equipmentAvatar.inventory}
+            inventory={cardAvatar.inventory}
             inventoryType={2}
             onClose={() => {
               setEquipPickSlot(null);
             }}
             onPick={(solutionId) => {
-              void equipIntoSlot(equipmentAvatar, equipPickSlot, solutionId);
+              void equipIntoSlot(cardAvatar, equipPickSlot, solutionId);
             }}
             panelTitle="Choose an item"
             pickable={(entry) => {
@@ -661,7 +755,7 @@ export function AvatarSelectionPanel({
                 String(entry.solutionId)
               ];
               return isEquippableSolution(solution)
-                && !shownEquipmentSlots(equipmentAvatar.inventory).includes(entry.solutionId);
+                && !shownEquipmentSlots(cardAvatar.inventory).includes(entry.solutionId);
             }}
             scrollDataAttribute="equipment-inventory-scroll"
             sourceContainer="items"

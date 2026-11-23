@@ -31,15 +31,24 @@ const tooltipMetaStyle: CSSProperties = {
   textAlign: 'center',
 };
 
-export function SolutionGridTooltipPanel({ item }: { item: SolutionGridEntry }) {
+/** The lines of an item tooltip, for a tooltip shell that draws its own frame. */
+export function SolutionGridTooltipBody({ item }: { item: SolutionGridEntry }) {
   return (
-    <div role="tooltip" style={tooltipPanelStyle}>
-      <GameTooltipFrame />
+    <>
       <p style={tooltipTitleStyle}>{item.name}</p>
       <TooltipDivider />
       <p style={tooltipTextStyle}>{item.text}</p>
       <p style={tooltipMetaStyle}>Charges: {item.uses}</p>
       <p style={tooltipMetaStyle}>Type: {item.typeLabel}</p>
+    </>
+  );
+}
+
+export function SolutionGridTooltipPanel({ item }: { item: SolutionGridEntry }) {
+  return (
+    <div role="tooltip" style={tooltipPanelStyle}>
+      <GameTooltipFrame />
+      <SolutionGridTooltipBody item={item} />
     </div>
   );
 }
