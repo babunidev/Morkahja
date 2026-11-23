@@ -2073,7 +2073,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Verdani shape water into a key form, allowing them to open or seal doors and chests with water magic.",
     "mSolutionType": 7,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10196": {
     "mSolutionID": 10196,
