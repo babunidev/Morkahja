@@ -1443,7 +1443,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A rugged, ancient key, its bronze handle delicately engraved with a mountainous motif. It exudes a frosty aura, appearing as though it were sculpted from solid ice.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10138": {
     "mSolutionID": 10138,
