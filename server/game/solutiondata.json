@@ -931,7 +931,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A luminous gem pendant, pulsating with celestial energy. Upon activation, it forms an ethereal shield, disrupting all magic.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10086": {
     "mSolutionID": 10086,
