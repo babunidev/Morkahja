@@ -1395,7 +1395,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A slender, silver-lined staff crowned with an iridescent dragonfly wing crystal. Its shimmer reflects the sunlight, pulsing a hypnotic dance.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10133": {
     "mSolutionID": 10133,
