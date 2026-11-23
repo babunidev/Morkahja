@@ -909,7 +909,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This whistle emits an ethereal melody that can resonate with hidden energy ley lines, prompting the ground to shift and reveal hidden paths or treasure chests. ",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10084": {
     "mSolutionID": 10084,
