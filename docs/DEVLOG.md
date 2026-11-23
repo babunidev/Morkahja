@@ -645,6 +645,10 @@ The specialization in my avatar card had explanations stacked above its button, 
 
 The round menu in my main menu closed by itself after I used it a second time. Claude Code (Claude Opus 5.5) found why: since my avatars became the main menu, the game brought them back whenever they were hidden. Opening the round menu hides them, so they came straight back and closed the menu. Now they wait until the menu is closed, and a script pressed through the menu and its panels to show it stays open. In my avatar card the portrait now sits on the left with the name line and experience beside it, so everything moves up. The specialization comes before the equipment, and every button presses and glows like the game's other buttons. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — The Play button is back
+
+When I made my avatars the main menu, the Play button disappeared, and a game needs one. It now sits at the bottom right of my avatar card, where the green check was, a little bigger than the other round buttons. Claude Code (Claude Opus 5.5) swapped it in and checked on a desktop and a phone size that it takes me into the world. **Verification:** client tests and typecheck passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

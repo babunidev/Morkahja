@@ -392,7 +392,7 @@ export function AvatarSelectionPanel({
     ...slots.map((avatar, index) => ({ avatar, index })).filter((entry) => entry.index !== activeIndex),
   ];
   const activeSourceRef = useRef<HTMLElement | null>(null);
-  // The overview card (D-057) of the active avatar; the green check enters the world.
+  // The overview card (D-057) of the active avatar; the Play button enters the world.
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewClosingInto, setOverviewClosingInto] = useState<{ current: HTMLElement | null } | null>(null);
   const [equipPickSlot, setEquipPickSlot] = useState<number | null>(null);
@@ -599,7 +599,7 @@ export function AvatarSelectionPanel({
     }
 
     // A tap on another avatar makes it the active one; a tap on the active
-    // one opens its overview, whose green check enters the world.
+    // one opens its overview, whose Play button enters the world.
     setEquipError(null);
     setEquipPickSlot(null);
     if (candidate.id !== activeAvatarId) {

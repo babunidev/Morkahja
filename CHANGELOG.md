@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the Play button enters the world from the avatar card
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the game needs its Play button somewhere: at the bottom right of the main menu's avatar card, instead of the green check.
+- **Change (`AvatarOverview.tsx`):** `OverviewEnterButton` shows `UI/03_DASHBOARD/im_button_play.webp` (the former main-menu Play button, removed with D-058) at 76–104 px, larger than the round footer buttons, with the panel buttons' hover glow and the press pulse. It still enters the world the same way. The specialization picker keeps its green check, which confirms a choice there.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card with Play at the bottom right, and Play entering the world. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-play-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed.
+
 ## 2026-11-23 — Unreleased: the round menu no longer closes by itself; the avatar card's new head
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

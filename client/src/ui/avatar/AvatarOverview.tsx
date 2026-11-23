@@ -28,6 +28,8 @@ import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
 export const OVERVIEW_BACK_ASSET = `${UI_ROOT}/im_button_delete.webp`;
 export const OVERVIEW_ENTER_ASSET = `${UI_ROOT}/im_button_yes.webp`;
+/** The Play button enters the world from the avatar card (Babuni, 2026-11-23). */
+export const OVERVIEW_PLAY_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_play.webp');
 
 /** No text is smaller than the item and skill tooltips' (Babuni, 2026-11-23). */
 const TOOLTIP_TEXT_SIZE = gameTooltipFrameStyle.fontSize;
@@ -161,7 +163,7 @@ const specializationNoteStyle: CSSProperties = {
   fontSize: TOOLTIP_TEXT_SIZE,
 };
 
-/** Room around the section, so it does not sit squeezed above the green check. */
+/** Room around the section, so it does not sit squeezed. */
 const specializationSectionStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -366,7 +368,7 @@ const footerImageStyle: CSSProperties = {
 };
 
 /**
- * The green check (menu) or Home (game). No back button (Babuni, 2026-11-23):
+ * The Play button (menu) or Home (game). No back button (Babuni, 2026-11-23):
  * a tap outside the card closes it.
  */
 export function AvatarOverviewFooter({
@@ -376,7 +378,7 @@ export function AvatarOverviewFooter({
 }: {
   onBack?: () => void;
   right: ReactNode;
-  /** Without a back button: the main menu puts the green check at the bottom right (Babuni, 2026-11-23). */
+  /** Without a back button: the main menu puts the Play button at the bottom right (Babuni, 2026-11-23). */
   align?: 'center' | 'end';
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
@@ -408,6 +410,13 @@ export function AvatarOverviewFooter({
   );
 }
 
+/** Bigger than the round footer buttons: it is the card's main action. */
+const playButtonStyle: CSSProperties = {
+  ...footerButtonStyle,
+  width: 'clamp(76px, 19vw, 104px)',
+};
+
+/** The card's Play button, at the bottom right; it enters the world. */
 export function OverviewEnterButton({ avatarName, disabled, onEnter }: {
   avatarName: string;
   disabled?: boolean;
@@ -422,15 +431,16 @@ export function OverviewEnterButton({ avatarName, disabled, onEnter }: {
         playSfx(DEFAULT_BUTTON_SOUND);
         onEnter();
       }}
+      className="morkahja-panel-button"
       onPointerDown={() => pulse('overview-enter')}
-      style={footerButtonStyle}
+      style={playButtonStyle}
       type="button"
     >
       <img
         alt=""
         aria-hidden="true"
         draggable={false}
-        src={OVERVIEW_ENTER_ASSET}
+        src={OVERVIEW_PLAY_ASSET}
         style={{ ...footerImageStyle, animation: pressAnimation(isPressed('overview-enter')) }}
       />
     </button>
