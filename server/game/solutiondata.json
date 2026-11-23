@@ -1310,7 +1310,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Nereval, the God of Water. Nereval represents fluidity, adaptation, and healing.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10123": {
     "mSolutionID": 10123,
