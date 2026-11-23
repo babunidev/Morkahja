@@ -35,15 +35,12 @@ assert.equal(REWARD_PLAYBACK_SCALE, 0.9);
 assert.equal(FOOTER_MENU_PLAYBACK_SCALE, 0.9);
 
 assert.deepEqual(ADD_ITEM_SOUNDS.map(fileName), ['addItem1.mp3', 'addItem2.mp3', 'addItem3.mp3']);
-assert.deepEqual(
-  ADD_SKILL_SOUNDS.map(fileName),
-  Array.from({ length: 10 }, (_, index) => `addSkill${index + 1}.mp3`),
-);
+assert.deepEqual(ADD_SKILL_SOUNDS.map(fileName), ['addSkill1.mp3', 'addSkill2.mp3', 'addSkill4.mp3']);
 
 assert.equal(pickPickupSound('item', () => 0), ADD_ITEM_SOUNDS[0]);
 assert.equal(pickPickupSound('item', () => 0.999), ADD_ITEM_SOUNDS[2]);
 assert.equal(pickPickupSound('skill', () => 0), ADD_SKILL_SOUNDS[0]);
-assert.equal(pickPickupSound('skill', () => 0.999), ADD_SKILL_SOUNDS[9]);
+assert.equal(pickPickupSound('skill', () => 0.999), ADD_SKILL_SOUNDS[2]);
 assert.equal(pickPickupSound('item', () => 1), ADD_ITEM_SOUNDS[2]);
 assert.equal(rewardPickupKind(1), 'skill');
 assert.equal(rewardPickupKind(2), 'item');

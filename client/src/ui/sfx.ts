@@ -29,10 +29,11 @@ export const FOOTER_MENU_PLAYBACK_SCALE = 0.9;
 /** Makaya, taking an item, a non-deity essence, or the lore gem. One is chosen at random. */
 export const ADD_ITEM_SOUNDS = [1, 2, 3].map((index) => assetUrl(`/UI/SFX/addItem${index}.mp3`));
 
-/** Makaya, picking up a skill. One of the ten is chosen at random. */
-export const ADD_SKILL_SOUNDS = Array.from({ length: 10 }, (_, index) => (
-  assetUrl(`/UI/SFX/addSkill${index + 1}.mp3`)
-));
+/**
+ * Makaya, picking up a skill. One of the three is chosen at random; Babuni kept
+ * lines 1, 2 and 4 of the ten and removed the others (2026-11-23).
+ */
+export const ADD_SKILL_SOUNDS = [1, 2, 4].map((index) => assetUrl(`/UI/SFX/addSkill${index}.mp3`));
 
 /** Makaya, losing an essence. One of the four is chosen at random. The files keep the supplied spelling. */
 export const LOSE_ESSENCE_SOUNDS = [1, 2, 3, 4].map((index) => assetUrl(`/UI/SFX/looseEssence${index}.mp3`));

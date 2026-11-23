@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: three skill pickup lines
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** some of Makaya's lines for taking a skill did not sound good; only `addSkill1`, `addSkill2` and `addSkill4` stay.
+- **Change:** `ADD_SKILL_SOUNDS` in `client/src/ui/sfx.ts` chooses at random among those three; `addSkill3` and `addSkill5`–`addSkill10` are removed from `client/public/UI/SFX`. Babuni had removed them from the build output `client/dist`, which is rebuilt from `client/public`; the three kept files there are identical to the source ones.
+- **Verification:** client tests passed (`sfx.test.ts` checks the three names and that each file exists and is an MP3). Not heard in the game.
+
 ## 2026-11-23 — Unreleased: equipment, two item slots (D-056)
 
 - **Not released.** Local `main` only.
