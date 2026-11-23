@@ -777,7 +777,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A set of essential equipment for climbing, including sturdy ropes, carabiners, harnesses, and grip-enhancing gloves, ensuring safety and efficiency during ascents.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10072": {
     "mSolutionID": 10072,
