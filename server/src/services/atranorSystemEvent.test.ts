@@ -128,7 +128,12 @@ assert.equal(afterRoll.roomState, 'system_event');
 const actorAfterRoll = afterRoll.participants.find((entry) => entry.avatarId === actorAvatarId);
 assert.equal(actorAfterRoll?.choiceState, 'ready_to_continue');
 assert.equal(actorAfterRoll?.preparedResult?.success, true);
-assert.equal(actorAfterRoll?.preparedResult?.rewards.length, 1);
+// D-055: a total of 20 or more returns with all three gods of the element;
+// the actor is a Rokur, so Solriel, Khaotys and Fyraan, one charge each.
+assert.deepEqual(
+  [...(actorAfterRoll?.preparedResult?.rewards ?? [])].sort(),
+  [10038, 10039, 10040],
+);
 
 const afterContinue = await submitContinue(session.playerId, actorAvatarId);
 assert.equal(afterContinue.roomState, 'waiting_continue');
@@ -141,7 +146,7 @@ const witnessInventoryAfter = await loadInventory(witnessSession.playerId, witne
 assert.equal(
   totalEssenceUses(actorInventoryAfter),
   actorEssenceBefore + 3,
-  'actor should gain 3 essence uses on Atranor Prosperity survival',
+  'actor should gain 3 essence uses: one charge of each fire god',
 );
 assert.equal(
   totalInventoryUses(witnessInventoryAfter),

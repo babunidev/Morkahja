@@ -102,3 +102,18 @@ function getSolutionUses(rewardId: number): number | undefined {
 }
 
 console.log('visibleEncounterRewards.test.ts: all assertions passed');
+
+// Atranor (D-055): the total decides. 7 or more shows the returned essences,
+// one charge each; 6 or less shows none.
+{
+  const atranor = (roll: number) => visibleEncounterRewards({
+    encounterId: 1,
+    rewardIds: [10038, 10039],
+    outcome: null,
+    roll,
+    avatarLevel: 3,
+    getSolutionUses: () => 5,
+  });
+  assert.deepEqual(atranor(7), [{ solutionId: 10038, quantity: 1 }, { solutionId: 10039, quantity: 1 }]);
+  assert.deepEqual(atranor(6), []);
+}

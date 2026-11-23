@@ -471,6 +471,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     prosperityRewardId,
     rewardIds,
     outcome,
+    roll,
     avatarLevel,
     getSolutionUses: (rewardId) => solutionsById()[String(rewardId)]?.mSolutionUses,
     rewardChargeBonus,

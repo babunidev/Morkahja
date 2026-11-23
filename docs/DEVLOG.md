@@ -573,6 +573,10 @@ I wanted an avatar's gods to matter. A new avatar now starts with the three esse
 
 The game had become a little too easy. A primary solution now adds +5 to the d20 instead of +7, and every other solution that fits a slot adds +2 instead of +5. The dice stays as it was. Rare items, the ones with the ornate frame, add +1 to every roll made with them: the Atranor items, the Titanpike, the Frostbane Glaive and the Zephyrstring Lyre. A total of 24 or higher now always brings one extra essence of my avatar's own element, and the extra item a 25 used to give is gone. Claude Code (Claude Opus 5.5) showed me first that a 25 had given an item, not an essence, and asked three questions. I chose a certain essence instead of a chance, "24 or higher" so a rare item's 26 counts too, and the items with the rare frame. It made rarity one shared rule for the frame and the roll, and updated the tests (D-054). **Verification:** server (59) and client (49) tests, typecheck and the client build passed locally with the Podman database; not played yet. Encounters dealt before the change keep their old rolls. **Not released.**
 
+## 2026-11-23 — Atranor and my own gods
+
+In Atranor the essence I came back with could belong to any god. Now it belongs to my own element: a total of 7 brings me back with one of my three gods, 14 with a second, 20 with all three, and an Atranor item always brings all three. Claude Code (Claude Opus 5.5) pointed out that a 7 used to be a death in Atranor, and I chose to make 7 the line of survival, to let an Atranor item still roll, to give one charge per essence, and to give all three for a gem sacrifice. Since an Atranor item now rolls at least 7, it always brings me back (D-055). **Verification:** server (64) and client (49) tests and typecheck passed locally; not played yet. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

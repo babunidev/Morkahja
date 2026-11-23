@@ -19,7 +19,14 @@ import {
   essenceIdsOfElement,
   type EssenceElement,
 } from '@shared/essenceElements.js';
-import { type EncounterData, type EncounterDataMap } from '../engine/types.js';
+import { SolutionType, type EncounterData, type EncounterDataMap } from '../engine/types.js';
+import { atranorEssenceRewardIds } from '../engine/atranorEssenceReward.js';
+import {
+  ATRANOR_ELEMENT_GOD_COUNT,
+  ATRANOR_ESSENCE_CHARGES,
+  atranorEssenceGodCount,
+  isAtranorSurvivalRoll,
+} from '@shared/deathEncounter.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
 import { applyFailedDeathState } from './avatarDeathService.js';
@@ -818,15 +825,20 @@ export function levelUpChoiceIdsForAvatar(
   return choices;
 }
 
-function isDeathEncounterFailureOutcome(outcome: RollOutcome | null): boolean {
-  return outcome === 'Misery' || outcome === 'Hardship';
+/** Atranor ends the life below a total of 7 (D-055). */
+function isDeathEncounterFailureRoll(selectedRoll: number): boolean {
+  return !isAtranorSurvivalRoll(selectedRoll);
 }
 
-/** An Atranor item is spent the way a solution is spent in any other encounter. */
+/**
+ * An Atranor item is spent the way a solution is spent in any other encounter.
+ * A return brings one, two or three of the element's gods' essences by the
+ * total, and all three when an Atranor item was used (D-055).
+ */
 function inventoryAfterDeathEncounter(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
-  selectedRollOutcome: RollOutcome | null,
+  selectedRoll: number,
   usedSolutionIds: number[],
 ): {
   nextInventory: AvatarInventory;
@@ -837,7 +849,15 @@ function inventoryAfterDeathEncounter(
     spent = consumeSolutionFromInventoryState(spent, solutionId, 1);
   }
 
-  const deathOutcome = applyDeathEncounterOutcome(spent, avatar, selectedRollOutcome);
+  const solutions = getSolutionMap();
+  const usedAtranorItem = usedSolutionIds.some(
+    (solutionId) => solutions[String(solutionId)]?.mSolutionType === SolutionType.ResurrectionItem,
+  );
+  const deathOutcome = applyDeathEncounterOutcome(
+    spent,
+    avatar,
+    atranorEssenceGodCount(selectedRoll, usedAtranorItem),
+  );
   return {
     nextInventory: deathOutcome.nextInventory,
     rewardIds: deathOutcome.rewardIds,
@@ -847,33 +867,25 @@ function inventoryAfterDeathEncounter(
 function applyDeathEncounterOutcome(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
-  selectedRollOutcome: RollOutcome | null,
+  godCount: number,
 ): {
   nextInventory: AvatarInventory;
   rewardIds: number[];
 } {
-  if (isDeathEncounterFailureOutcome(selectedRollOutcome)) {
-    return {
-      nextInventory: inventory,
-      rewardIds: [],
-    };
+  const rewardIds = atranorEssenceRewardIds({
+    count: godCount,
+    ownEssenceIds: ownEssenceIdsForAvatar(avatar),
+    anyEssenceIds: Object.values(getSolutionMap())
+      .filter((solution) => solution.mSolutionType === 15 && solution.mSolutionInventoryType === 3)
+      .map((solution) => solution.mSolutionID),
+    pickIndex: (length) => randomInt(0, length - 1),
+  });
+
+  let nextInventory = inventory;
+  for (const rewardId of rewardIds) {
+    nextInventory = addRewardToInventoryState(nextInventory, rewardId, ATRANOR_ESSENCE_CHARGES);
   }
-
-  if (isDeathEncounterSurvivalOutcome(selectedRollOutcome)) {
-    const essenceReward = randomEssenceReward();
-    const essenceUses = deathEncounterEssenceUses(selectedRollOutcome);
-
-    if (!essenceReward || essenceUses <= 0) {
-      return { nextInventory: inventory, rewardIds: [] };
-    }
-
-    return {
-      nextInventory: addRewardToInventoryState(inventory, essenceReward, essenceUses),
-      rewardIds: [essenceReward],
-    };
-  }
-
-  return { nextInventory: inventory, rewardIds: [] };
+  return { nextInventory, rewardIds };
 }
 
 function withDeathEncounterRewards(
@@ -885,29 +897,12 @@ function withDeathEncounterRewards(
     : resolution;
 }
 
-function isDeathEncounterSurvivalOutcome(outcome: RollOutcome | null): boolean {
-  return outcome === 'Disengage' || outcome === 'Fortune' || outcome === 'Prosperity';
-}
-
-function deathEncounterEssenceUses(outcome: RollOutcome | null): number {
-  switch (outcome) {
-    case 'Disengage':
-      return 1;
-    case 'Fortune':
-      return 2;
-    case 'Prosperity':
-      return 3;
-    default:
-      return 0;
-  }
-}
-
-/** Gem sacrifice on Atranor failure — Fortune-tier essence reward on restored inventory. */
+/** Gem sacrifice on Atranor failure: all three of the element's gods' essences (D-055). */
 export function applyFortuneSacrificeReward(
   inventory: AvatarInventory,
   avatar: AvatarDocument,
 ): AvatarInventory {
-  return applyDeathEncounterOutcome(inventory, avatar, 'Fortune').nextInventory;
+  return applyDeathEncounterOutcome(inventory, avatar, ATRANOR_ELEMENT_GOD_COUNT).nextInventory;
 }
 
 function normalizeSystemEncounterResolution(
@@ -931,7 +926,7 @@ function normalizeSystemEncounterResolution(
   }
 
   if (snapshot.encounterId === DEATH_ENCOUNTER_NUMERIC_ID) {
-    const survival = isDeathEncounterSurvivalOutcome(selectedRollOutcome);
+    const survival = isAtranorSurvivalRoll(resolution.selectedRoll);
 
     return {
       ...resolution,
@@ -1117,7 +1112,7 @@ export async function continueEncounter(
         const deathOutcome = inventoryAfterDeathEncounter(
           inventory,
           avatar,
-          selectedRollOutcome,
+          baseResolution.selectedRoll,
           resolution.usedInventorySolutions,
         );
         nextInventory = deathOutcome.nextInventory;
@@ -1223,7 +1218,7 @@ export async function continueEncounter(
       encounterDeathTriggered = deathTriggered;
       encounterAvatarDied =
         eventContext.isDeathEncounterResolution &&
-        isDeathEncounterFailureOutcome(selectedRollOutcome);
+        isDeathEncounterFailureRoll(baseResolution.selectedRoll);
 
       if (encounterAvatarDied) {
         updatedAvatar = applyFailedDeathState(
@@ -1503,7 +1498,7 @@ function computeParticipantOutcome(
     const deathOutcome = inventoryAfterDeathEncounter(
       inventory,
       avatar,
-      selectedRollOutcome,
+      baseResolution.selectedRoll,
       resolution.usedInventorySolutions,
     );
     nextInventory = deathOutcome.nextInventory;
@@ -1583,7 +1578,7 @@ function computeParticipantOutcome(
 
   const avatarDied =
     eventContext.isDeathEncounterResolution &&
-    isDeathEncounterFailureOutcome(selectedRollOutcome);
+    isDeathEncounterFailureRoll(baseResolution.selectedRoll);
 
   let finalAvatar = updatedAvatar;
   if (avatarDied) {

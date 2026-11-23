@@ -2,6 +2,17 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: Atranor returns with the gods of the avatar's own element (D-055)
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** an essence from Atranor comes from the avatar's own element's gods, by the roll: 7 gives one, 14 the second god's as well, 20 the third as well. Using an Atranor item always gives all three. Babuni's answers to Claude Code's questions: 7 becomes the survival line (it was 9, the Fate tier); an Atranor item still rolls to survive; each essence brings one charge; the gem sacrifice after a failed Atranor gives all three.
+- **Shared rule (`shared/src/deathEncounter.ts`):** `isAtranorSurvivalRoll` (total 7 or more) and `atranorEssenceGodCount` (1 at 7, 2 at 14, 3 at 20 or more, 3 with an Atranor item, 0 below 7). The old tier helpers `isDeathEncounterSurvivalOutcome` and `deathEncounterEssenceUses` are removed.
+- **Server (`encounterGenerator.ts`):** both resolution paths decide Atranor survival and death by the total. A return adds that many different essences of the avatar's element, one charge each (new `server/src/engine/atranorEssenceReward.ts`); an avatar without an element gets different essences of any element. An Atranor item (solution type 77) among the used solutions means all three. `applyFortuneSacrificeReward` now grants all three.
+- **Client (`visibleEncounterRewards.ts`, `ResultBlock.tsx`):** Atranor's rewards show by the total, one charge each.
+- **Note:** an Atranor item rolls d20+6 (primary +5, rare +1, D-054), so its lowest total is 7, and with the new line it always survives.
+- **Tests:** new `server/src/engine/atranorEssenceReward.test.ts` (survival line, god counts, the item, distinct picks, no element); `atranorSystemEvent.test.ts` now expects the three fire gods for its Rokur instead of one essence with three charges; a client case for Atranor rewards by total.
+- **Verification (local, Podman PostgreSQL):** server tests 64/64, client tests 49/49, `npm run typecheck` passed. Not played.
+
 ## 2026-11-23 — Unreleased: balance pass, lower roll bonuses, a rare item's +1, an own essence on 24 or higher (D-054)
 
 - **Not released.** Committed to local `main` only; no version bump or in-game patch note yet.

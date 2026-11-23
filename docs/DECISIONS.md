@@ -478,3 +478,11 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **Status:** committed locally on 2026-11-23, not released. Server and client tests, typecheck and build pass; not played.
 
+## D-055 — Atranor returns with the gods of the avatar's own element (2026-11-23)
+
+**Babuni's direction:** an essence gained in Atranor comes from the avatar's own element's gods. A 7 gives one of them, a 14 the second as well, a 20 the third as well. Using an Atranor item always gives all three. Asked by Claude Code, Babuni chose: 7 or more survives (it was 9); an Atranor item still rolls to survive; one charge per essence; the gem sacrifice gives all three.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). One shared rule by the total, used by the server's survival, death and reward paths and by the client's result bar. The essences are different gods, drawn in random order; an avatar without an element gets different essences of any element.
+
+**Status:** committed locally on 2026-11-23, not released. Tests and typecheck pass; not played.
+

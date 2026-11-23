@@ -1,8 +1,8 @@
 import { interpretRoll } from '@shared/diceInterpreter';
 import {
+  ATRANOR_ESSENCE_CHARGES,
   DEATH_ENCOUNTER_ID,
-  deathEncounterEssenceUses,
-  isDeathEncounterSurvivalOutcome,
+  isAtranorSurvivalRoll,
 } from '@shared/deathEncounter';
 
 export const LEVEL_UP_ENCOUNTER_ID = 2;
@@ -18,20 +18,21 @@ export function visibleEncounterRewardIds({
   prosperityRewardId,
   rewardIds,
   outcome,
+  roll,
 }: {
   encounterId: number;
   prosperityRewardId?: number | null;
   rewardIds: number[];
   outcome: ReturnType<typeof interpretRoll>;
+  /** The finished total; Atranor decides by it, not by the tier (D-055). */
+  roll?: number | null;
 }): number[] {
   if (encounterId === LEVEL_UP_ENCOUNTER_ID) {
     return rewardIds;
   }
 
   if (encounterId === DEATH_ENCOUNTER_ID) {
-    return outcome !== null && isDeathEncounterSurvivalOutcome(outcome)
-      ? rewardIds
-      : [];
+    return isAtranorSurvivalRoll(roll) ? rewardIds : [];
   }
 
   if (outcome === null) {
@@ -61,20 +62,20 @@ export function visibleEncounterRewardIds({
 export function rewardQuantityForVisibleEntry({
   encounterId,
   avatarLevel,
-  outcome,
   solutionUses,
 }: {
   encounterId: number;
   avatarLevel: number;
-  outcome: ReturnType<typeof interpretRoll>;
+  /** Kept for callers; Atranor's charges no longer depend on the tier (D-055). */
+  outcome?: ReturnType<typeof interpretRoll>;
   solutionUses: number;
 }): number {
   if (encounterId === LEVEL_UP_ENCOUNTER_ID) {
     return Math.max(1, solutionUses + (avatarLevel + 1));
   }
 
-  if (encounterId === DEATH_ENCOUNTER_ID && outcome) {
-    return deathEncounterEssenceUses(outcome);
+  if (encounterId === DEATH_ENCOUNTER_ID) {
+    return ATRANOR_ESSENCE_CHARGES;
   }
 
   return Math.max(1, solutionUses);
@@ -85,6 +86,7 @@ export function visibleEncounterRewards({
   prosperityRewardId,
   rewardIds,
   outcome,
+  roll,
   avatarLevel,
   getSolutionUses,
   rewardChargeBonus,
@@ -93,6 +95,8 @@ export function visibleEncounterRewards({
   prosperityRewardId?: number | null;
   rewardIds: number[];
   outcome: ReturnType<typeof interpretRoll>;
+  /** The finished total; Atranor decides by it, not by the tier (D-055). */
+  roll?: number | null;
   avatarLevel: number;
   getSolutionUses: (rewardId: number) => number | undefined;
   /** Two extra charges on one reward when a 25 filled an already full row (D-038). */
@@ -105,6 +109,7 @@ export function visibleEncounterRewards({
     prosperityRewardId,
     rewardIds,
     outcome,
+    roll,
   })) {
     const solutionUses = getSolutionUses(rewardId);
 

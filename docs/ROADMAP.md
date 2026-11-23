@@ -188,3 +188,8 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough.
 - [ ] Patch note and version bump, then release when Babuni approves.
 
+## Atranor by the element's gods — 2026-11-23 (D-055)
+
+- [x] Survival from a total of 7; one god's essence at 7, two at 14, three at 20; all three with an Atranor item or a gem sacrifice; one charge each.
+- [ ] Play it: a dice return at 7, 14 and 20, an Atranor item, and a gem sacrifice.
+
