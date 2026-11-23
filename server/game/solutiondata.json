@@ -2061,7 +2061,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Tapping into the water's reflections, Verdani expand their vision, revealing hidden objects or pathways in their vicinity.",
     "mSolutionType": 5,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10195": {
     "mSolutionID": 10195,
