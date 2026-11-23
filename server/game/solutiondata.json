@@ -832,7 +832,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Cultivates the art of nurturing through culinary skills, creating nourishing meals and refreshing drinks that comfort, sustain, and rejuvenate.",
     "mSolutionType": 33,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10077": {
     "mSolutionID": 10077,
