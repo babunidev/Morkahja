@@ -810,7 +810,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricately carved stone etched with ancient runes, holding mystical properties and often used in various magical rituals and practices.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10075": {
     "mSolutionID": 10075,
