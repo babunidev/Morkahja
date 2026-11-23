@@ -861,11 +861,12 @@
     "mSolutionID": 10079,
     "mSolutionIconName": "skill_common_hunt",
     "mSolutionInventoryType": 1,
-    "mSolutionName": "Hunt",
+    "mSolutionName": "Track",
     "mSolutionRewardType": 1,
     "mSolutionText": "Harnesses tracking abilities, stealth, and knowledge of prey to efficiently pursue, capture, or eliminate wildlife and creatures in a challenging, primal pursuit.",
     "mSolutionType": 29,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10080": {
     "mSolutionID": 10080,
