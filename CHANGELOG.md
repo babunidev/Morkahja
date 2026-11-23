@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: the round menu no longer closes by itself; the avatar card's new head
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the round menu in the main menu closed by itself after the second use; check that it works as intended. In the main menu's avatar card the portrait goes to the left at its size, with the title, level, race and role and the experience bar beside it, so everything moves up; specialization first, equipment under it; every button behaves like the game's buttons.
+- **Fix (`Dashboard.tsx`):** since the avatars became the main menu (D-058), an effect opened the avatar selection whenever it was hidden. Opening the round menu hides the avatars, so the effect brought them straight back, and their return closed the menu: depending on timing the menu and the avatars were open together, the menu could not be closed with its own button, or it closed by itself. The effect now waits while the round menu is open, and the menu marks itself open before it hides the avatars. Closing the menu (Home) brings the avatars back as before. Found in the local game with a script that pressed the centre button four times and read the menu's and the avatars' state every 150 ms: before the fix both stayed open after every press; after it each press opened or closed the menu, and the menu stayed open through Settings, Profile, Settings, Achievements and Settings, each opened and closed.
+- **Avatar card (`AvatarOverview.tsx`):** in the main menu a head row: the portrait on the left (same size), the title, the level line, the experience bar and the XP beside it, left-aligned. Then the statistics, the specialization, and the equipment under it. The game's card is unchanged (no portrait; the specialization line under the level).
+- **Button behaviour:** the specialization's Choose/Change button, the fifteen roster buttons and the settings' Tips and tutorial box now use `PanelButton` (press pulse, hover glow, the hand cursor); the "?" buttons (`HelpTip`) get the same pulse and glow.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card before and after a choice, both "?" tooltips, the picker, the settings box on and off, the card with tips off; the in-game card. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-overview-layout-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed.
+
 ## 2026-11-23 — Unreleased: "?" help for specialization, a Tips and tutorial setting, gem prices (D-059)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

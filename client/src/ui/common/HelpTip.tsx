@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 
 import { GameTooltipFrame, gameTooltipFrameStyle } from '../game/GameTooltip.js';
 import { useTipsEnabled } from '../tips.js';
+import { useNavButtonPress } from '../transitions/navButtonPress.js';
 
 /**
  * A small "?" that explains the part of the screen next to it, in the frame
@@ -62,6 +63,7 @@ export default function HelpTip({ label, text, disabled = false }: {
   // After a touch the browser sends mouse events too; a tap must not close it again.
   const lastTouchAtRef = useRef(-Infinity);
   const recentTouch = (): boolean => performance.now() - lastTouchAtRef.current < 900;
+  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
 
   if (!enabled) {
     return null;
@@ -85,16 +87,18 @@ export default function HelpTip({ label, text, disabled = false }: {
             setOpen(false);
           }
         }}
+        className="morkahja-panel-button"
         onPointerDown={(event) => {
+          pulse('help');
           if (event.pointerType === 'touch' || event.pointerType === 'pen') {
             lastTouchAtRef.current = performance.now();
           }
         }}
         ref={buttonRef}
-        style={{ ...buttonStyle, pointerEvents: disabled ? 'none' : 'auto' }}
+        style={{ padding: 0, pointerEvents: disabled ? 'none' : 'auto' }}
         type="button"
       >
-        ?
+        <span className="morkahja-panel-button-visual" style={{ ...buttonStyle, animation: pressAnimation(isPressed('help')) }}>?</span>
       </button>
       {open && buttonRef.current ? createPortal(
         <div role="tooltip" style={{ ...tooltipStyle, ...placement(buttonRef.current) }}>

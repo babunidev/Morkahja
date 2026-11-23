@@ -11,6 +11,7 @@ import { gameSolutions } from '../../data/gameContent.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 import { TooltipDivider, gameTooltipFrameStyle } from '../game/GameTooltip.js';
 import GemCost from '../common/GemCost.js';
+import PanelButton from '../common/PanelButton.js';
 import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
 import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from '../game/blocks/decorativeFrameShared.js';
 import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
@@ -247,18 +248,21 @@ export default function SpecializationPicker({
           <ul aria-label="Specializations" style={listStyle}>
             {SPECIALIZATIONS.map((entry) => (
               <li key={entry.solutionType}>
-                <button
+                <PanelButton
                   aria-pressed={entry.solutionType === selected.solutionType}
                   onClick={() => {
                     playSfx(DEFAULT_BUTTON_SOUND);
                     setSelectedType(entry.solutionType);
                   }}
-                  style={optionStyle(entry.solutionType === selected.solutionType)}
-                  type="button"
+                  pressKey={`specialization-${entry.solutionType}`}
+                  style={{ display: 'block', width: '100%' }}
+                  visualStyle={optionStyle(entry.solutionType === selected.solutionType)}
                 >
-                  {entry.name}
-                  {entry.solutionType === current?.solutionType ? <span style={currentMarkStyle}>current</span> : null}
-                </button>
+                  <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {entry.name}
+                    {entry.solutionType === current?.solutionType ? <span style={currentMarkStyle}>current</span> : null}
+                  </span>
+                </PanelButton>
               </li>
             ))}
           </ul>

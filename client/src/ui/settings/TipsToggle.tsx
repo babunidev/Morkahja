@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 
+import PanelButton from '../common/PanelButton.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { setTipsEnabled, useTipsEnabled } from '../tips.js';
@@ -14,15 +15,9 @@ const rowStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: 16,
-  width: '100%',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
   color: '#f7efe0',
   fontFamily: 'Georgia, serif',
   fontSize: '1rem',
-  textAlign: 'left',
-  cursor: 'pointer',
 };
 
 const boxStyle: CSSProperties = {
@@ -41,18 +36,21 @@ const boxStyle: CSSProperties = {
 export default function TipsToggle() {
   const enabled = useTipsEnabled();
   return (
-    <button
-      aria-checked={enabled}
-      onClick={() => {
-        playSfx(DEFAULT_BUTTON_SOUND);
-        setTipsEnabled(!enabled);
-      }}
-      role="checkbox"
-      style={rowStyle}
-      type="button"
-    >
-      <span>Tips and tutorial</span>
-      <span aria-hidden="true" style={boxStyle}>{enabled ? '✓' : ''}</span>
-    </button>
+    <div style={rowStyle}>
+      <span id="tips-toggle-label">Tips and tutorial</span>
+      <PanelButton
+        aria-checked={enabled}
+        aria-labelledby="tips-toggle-label"
+        onClick={() => {
+          playSfx(DEFAULT_BUTTON_SOUND);
+          setTipsEnabled(!enabled);
+        }}
+        pressKey="settings-tips"
+        role="checkbox"
+        visualStyle={boxStyle}
+      >
+        <span aria-hidden="true">{enabled ? '✓' : ''}</span>
+      </PanelButton>
+    </div>
   );
 }

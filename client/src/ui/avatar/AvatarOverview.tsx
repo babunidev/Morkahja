@@ -4,6 +4,7 @@ import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
 import { assetUrl } from '../../assetUrl.js';
 import { TooltipDivider, gameTooltipFrameStyle } from '../game/GameTooltip.js';
 import HelpTip from '../common/HelpTip.js';
+import PanelButton from '../common/PanelButton.js';
 import GemCost from '../common/GemCost.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
@@ -49,7 +50,30 @@ const contentStyle: CSSProperties = {
 };
 
 const portraitStyle: CSSProperties = {
+  flexShrink: 0,
   width: 'clamp(96px, 30%, 150px)',
+};
+
+/**
+ * The main menu's head (Babuni, 2026-11-23): the portrait on the left at its
+ * size, and the title, name line and experience beside it, so they share the
+ * space up there.
+ */
+const headStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'clamp(12px, 3vw, 20px)',
+  width: '100%',
+};
+
+const headTextStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: 6,
+  flex: 1,
+  minWidth: 0,
+  textAlign: 'left',
 };
 
 const titleStyle: CSSProperties = {
@@ -144,7 +168,7 @@ const specializationSectionStyle: CSSProperties = {
   alignItems: 'center',
   gap: 8,
   width: '100%',
-  padding: '6px 0 14px',
+  padding: '2px 0 4px',
 };
 
 const headingRowStyle: CSSProperties = {
@@ -160,7 +184,6 @@ export const SPECIALIZATION_HELP_TEXT =
   + 'It is chosen and changed in the main menu: the first choice is free, every change costs 1 gem.';
 
 const specializationButtonStyle: CSSProperties = {
-  display: 'inline-flex',
   alignItems: 'center',
   gap: 6,
   minHeight: 34,
@@ -200,16 +223,16 @@ function SpecializationSection({ avatar, onChoose }: {
         {help}
       </div>
       {current ? <p style={specializationNameStyle}>{current.name}</p> : null}
-      <button
+      <PanelButton
         onClick={() => {
           playSfx(DEFAULT_BUTTON_SOUND);
           onChoose();
         }}
-        style={specializationButtonStyle}
-        type="button"
+        pressKey="overview-specialization"
+        visualStyle={specializationButtonStyle}
       >
         {current ? <>Change · <GemCost cost={cost} /></> : 'Choose'}
-      </button>
+      </PanelButton>
     </div>
   );
 }
@@ -257,22 +280,38 @@ export function AvatarOverviewContent({
     ['Essences', charges(inventory?.essences?.filter((item) => item.solutionType === 15))],
   ];
 
+  const experienceBar = (
+    <span aria-label={`Experience ${current} of ${nextLevel}`} style={xpShellStyle}>
+      <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
+    </span>
+  );
+  const experienceText = <p style={xpTextStyle}>XP {current}/{nextLevel}</p>;
+
   return (
     // The game's panel over the picture is short: its rows sit closer together.
     <div style={showPortrait ? contentStyle : { ...contentStyle, gap: 2 }}>
       {showPortrait ? (
-        <div style={portraitStyle}>
-          <AvatarCard avatar={avatar} hideLabels />
+        <div style={headStyle}>
+          <div style={portraitStyle}>
+            <AvatarCard avatar={avatar} hideLabels />
+          </div>
+          <div style={headTextStyle}>
+            {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
+            <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
+            {experienceBar}
+            {experienceText}
+          </div>
         </div>
-      ) : null}
-      {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
-      <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
-      {/* In the game the specialization is one line up here, where the panel over the picture has room. */}
-      {onChooseSpecialization ? null : <SpecializationSection avatar={avatar} />}
-      <span aria-label={`Experience ${current} of ${nextLevel}`} style={xpShellStyle}>
-        <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
-      </span>
-      <p style={xpTextStyle}>XP {current}/{nextLevel}</p>
+      ) : (
+        <>
+          {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
+          <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
+          {/* In the game the specialization is one line up here, where the panel over the picture has room. */}
+          <SpecializationSection avatar={avatar} />
+          {experienceBar}
+          {experienceText}
+        </>
+      )}
       <TooltipDivider bleed={DIVIDER_BLEED} />
       <div style={statsGridStyle}>
         {stats.map(([label, value]) => (
@@ -283,6 +322,13 @@ export function AvatarOverviewContent({
         ))}
       </div>
       <TooltipDivider bleed={DIVIDER_BLEED} />
+      {/* Specialization first, equipment under it (Babuni, 2026-11-23). */}
+      {onChooseSpecialization ? (
+        <>
+          <SpecializationSection avatar={avatar} onChoose={onChooseSpecialization} />
+          <TooltipDivider bleed={DIVIDER_BLEED} />
+        </>
+      ) : null}
       <EquipmentSection
         interactive={Boolean(onEquipSlot)}
         inventory={inventory}
@@ -290,12 +336,6 @@ export function AvatarOverviewContent({
         tooltipBoundsSelector={tooltipBoundsSelector}
       />
       {notice ? <p role="alert" style={noticeStyle}>{notice}</p> : null}
-      {onChooseSpecialization ? (
-        <>
-          <TooltipDivider bleed={DIVIDER_BLEED} />
-          <SpecializationSection avatar={avatar} onChoose={onChooseSpecialization} />
-        </>
-      ) : null}
       {choiceDetails}
     </div>
   );

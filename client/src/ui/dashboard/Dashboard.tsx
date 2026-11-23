@@ -367,10 +367,12 @@ export function Dashboard({
   }
 
   // No Play button (Babuni, 2026-11-23): the avatars are the main menu, so
-  // they open as soon as the dashboard shows.
+  // they open as soon as the dashboard shows, and again when the round menu
+  // closes. Never while it is open: opening it hides the avatars, and bringing
+  // them straight back closed the menu by itself (fixed 2026-11-23).
   const autoOpenPendingRef = useRef(false);
   useEffect(() => {
-    if (!showChrome || avatarSlotsVisible || playPreparePending || autoOpenPendingRef.current) {
+    if (!showChrome || navOpen || avatarSlotsVisible || playPreparePending || autoOpenPendingRef.current) {
       return;
     }
     autoOpenPendingRef.current = true;
@@ -383,7 +385,7 @@ export function Dashboard({
       .finally(() => {
         autoOpenPendingRef.current = false;
       });
-  }, [showChrome, avatarSlotsVisible, playPreparePending, onPlay, onAvatarSlotsVisibleChange]);
+  }, [showChrome, navOpen, avatarSlotsVisible, playPreparePending, onPlay, onAvatarSlotsVisibleChange]);
 
   const centerNavTooltipHandlers = bindNavTooltip(NAV_CENTER_HOVER_ID, clickable);
 
@@ -585,10 +587,9 @@ export function Dashboard({
             onClick={() => {
               playSfx(DEFAULT_BUTTON_SOUND);
               if (avatarSlotsVisible) {
-                void (async () => {
-                  await closeAvatarSelection();
-                  setNavOpen(true);
-                })();
+                // Open first, so the avatars are not brought straight back.
+                setNavOpen(true);
+                void closeAvatarSelection();
                 return;
               }
 
