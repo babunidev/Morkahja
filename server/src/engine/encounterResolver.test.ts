@@ -303,3 +303,67 @@ console.log('encounterResolver.test.ts: all assertions passed');
   assert.equal(onB.success, true);
   assert.deepEqual(onB.usedInventorySolutions, [10162, 10162]);
 }
+
+// A rare item adds +1 to its own roll (Babuni, 2026-11-23), as the primary
+// solution and as an alternative; a normal item in the same set does not.
+{
+  const rareMap: SolutionDataMap = {
+    ...solutionMap,
+    '10015': {
+      mSolutionID: 10015,
+      mSolutionType: 77,
+      mSolutionName: 'Atranor Elixir',
+      mSolutionIconName: 'tool_epic_atranor_potion',
+      mSolutionInventoryType: 3,
+      mSolutionRewardType: 3,
+      mSolutionText: 'Rare test solution',
+      mSolutionUses: 1,
+    },
+    '30': {
+      mSolutionID: 30,
+      mSolutionType: 10,
+      mSolutionName: 'Titanpike',
+      mSolutionIconName: 'weapon_legendary_titanpike',
+      mSolutionInventoryType: 2,
+      mSolutionRewardType: 2,
+      mSolutionText: 'Rare alternative',
+      mSolutionUses: 1,
+    },
+  };
+  const rolls = createEncounterRollSnapshot({ ...favorableRolls, rollPrimaryA: 12, rollSecondaryB: 12 });
+  const rarePrimary = { ...baseEncounter(1), mEncounterSolutiuonA: 10015, mEncounterSolutiuonTypeA: 0 };
+
+  // 12 is Disengage; the rare +1 makes 13, Fortune.
+  const primary = resolveEncounter(rarePrimary, [10015], rareMap, rolls, { mode: 'slot', slot: 'A' });
+  assert.equal(primary.selectedRoll, 13);
+  assert.equal(primary.success, true);
+
+  const normal = resolveEncounter(baseEncounter(1), [10], rareMap, rolls, { mode: 'slot', slot: 'A' });
+  assert.equal(normal.selectedRoll, 12);
+  assert.equal(normal.success, false);
+
+  const alternative = resolveEncounter(
+    { ...baseEncounter(1), mEncounterSolutiuonA: 0, mEncounterSolutiuonTypeA: 0, mEncounterSolutiuonTypeB: 10 },
+    [30],
+    rareMap,
+    rolls,
+    { mode: 'slot', slot: 'B' },
+  );
+  assert.equal(alternative.selectedRoll, 13);
+
+  // A set: the rare pick is 12 + 1, the normal pick 12, (13 + 12) / 2 rounds as the set does.
+  const set = resolveEncounter(
+    { ...baseEncounter(2), mEncounterSolutiuonTypeB: 10 },
+    [10, 10, 30],
+    rareMap,
+    createEncounterRollSnapshot({
+      ...rolls,
+      extraRolls: {
+        primary: { A: [12, 12, 12], B: [12, 12, 12], C: [12, 12, 12], D: [12, 12, 12] },
+        secondary: { A: [12, 12, 12], B: [12, 12, 12], C: [12, 12, 12], D: [12, 12, 12] },
+      },
+    }),
+    { mode: 'slot', slot: 'A', picks: ['A', 'B'] },
+  );
+  assert.deepEqual(set.pickRolls, [12, 13]);
+}

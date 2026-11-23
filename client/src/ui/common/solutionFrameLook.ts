@@ -55,32 +55,22 @@ export interface SolutionFrameRecord {
  * with the server, which uses it for starting essences and essence losses.
  */
 import { ESSENCE_ELEMENTS } from '@shared/essenceElements.js';
+import { ESSENCE_SOLUTION_TYPE, isRareSolution } from '@shared/solutionRarity.js';
 
 export { ESSENCE_ELEMENTS };
 
-const ESSENCE_SOLUTION_TYPE = 15;
-const ESSENCE_INVENTORY_TYPE = 3;
-/** The Atranor items. */
-const EPIC_SOLUTION_TYPE = 77;
-
 /**
- * The frame for a solution record. Rare (a proposal until Babuni confirms it):
- * the Atranor items, anything else kept in the essence inventory that is not an
- * essence (the Frostbane Glaive, the Zephyrstring Lyre), and icons named
- * legendary or epic.
+ * The frame for a solution record. Rare: the shared rule in
+ * `@shared/solutionRarity.ts` (the Atranor items, anything else kept in the
+ * essence inventory that is not an essence, and icons named legendary or epic).
+ * The same rule gives those items +1 on their rolls.
  */
 export function solutionFrameLookFor(record: SolutionFrameRecord): SolutionFrameLook {
   const frameless = record.mSolutionIconFrameless === true;
   if (record.mSolutionType === ESSENCE_SOLUTION_TYPE) {
     return { tier: 'essence', element: ESSENCE_ELEMENTS[record.mSolutionID] ?? null, frameless };
   }
-  const icon = record.mSolutionIconName.toLowerCase();
-  if (
-    record.mSolutionType === EPIC_SOLUTION_TYPE
-    || record.mSolutionInventoryType === ESSENCE_INVENTORY_TYPE
-    || icon.includes('legendary')
-    || icon.includes('_epic_')
-  ) {
+  if (isRareSolution(record)) {
     return { tier: 'rare', element: null, frameless };
   }
   return { tier: 'standard', element: null, frameless };

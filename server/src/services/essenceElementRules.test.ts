@@ -75,14 +75,14 @@ test('Hardship and Misery use the element rule when the avatar has an element', 
   assert.equal(without.lostSolutionIds.length, 1, 'no element: one essence, as before');
 });
 
-test('the own-element essence bonus: 25 or higher, one chance in five, own essences only', () => {
+test('the own-element essence bonus: always on 24 or higher, own essences only', () => {
   const own = [10038, 10039, 10040];
-  const hit = (min: number) => min; // 1 on the chance roll, first essence
-  const miss = (min: number, max: number) => max;
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 25, success: true, ownEssenceIds: own, randomInt: hit }), 10038);
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 27, success: true, ownEssenceIds: own, randomInt: hit }), 10038);
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 24, success: true, ownEssenceIds: own, randomInt: hit }), null);
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 26, success: false, ownEssenceIds: own, randomInt: hit }), null);
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 26, success: true, ownEssenceIds: own, randomInt: miss }), null);
-  assert.equal(ownElementEssenceBonus({ selectedRoll: 26, success: true, ownEssenceIds: [], randomInt: hit }), null);
+  const first = (min: number) => min;
+  const last = (_min: number, max: number) => max;
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 24, success: true, ownEssenceIds: own, randomInt: first }), 10038);
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 25, success: true, ownEssenceIds: own, randomInt: last }), 10040);
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 26, success: true, ownEssenceIds: own, randomInt: first }), 10038);
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 23, success: true, ownEssenceIds: own, randomInt: first }), null);
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 25, success: false, ownEssenceIds: own, randomInt: first }), null);
+  assert.equal(ownElementEssenceBonus({ selectedRoll: 25, success: true, ownEssenceIds: [], randomInt: first }), null);
 });

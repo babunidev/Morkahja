@@ -1,5 +1,6 @@
 import { randomInt as cryptoRandomInt } from 'node:crypto';
 import { interpretRoll, isRollFavorable } from './diceInterpreter.js';
+import { solutionRarityRollBonus } from '@shared/solutionRarity.js';
 import {
   ENCOUNTER_SLOTS,
   EncounterData,
@@ -222,6 +223,7 @@ function secondaryRollForSlot(
 function evaluatePrimaryLane(
   requirement: SlotRequirement,
   inventory: number[],
+  solutionMap: SolutionDataMap,
   roll: number,
   requiredUses: number,
 ): SlotEvaluation {
@@ -242,11 +244,12 @@ function evaluatePrimaryLane(
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
+  const total = roll + solutionRarityRollBonus(lookupSolution(solutionMap, primarySolutionId));
   return {
-    satisfied: isRollFavorable(roll),
+    satisfied: isRollFavorable(total),
     inventoryValid: true,
     lane: 'primary',
-    roll,
+    roll: total,
     usedSolutionIds,
   };
 }
@@ -276,11 +279,12 @@ function evaluateSecondaryLane(
     return { satisfied: false, inventoryValid: false, lane: null, roll: null, usedSolutionIds: [] };
   }
 
+  const total = roll + solutionRarityRollBonus(lookupSolution(solutionMap, usedSolutionIds[0]!));
   return {
-    satisfied: isRollFavorable(roll),
+    satisfied: isRollFavorable(total),
     inventoryValid: true,
     lane: 'secondary',
-    roll,
+    roll: total,
     usedSolutionIds,
   };
 }
@@ -296,6 +300,7 @@ function evaluateSlot(
   const primaryEvaluation = evaluatePrimaryLane(
     requirement,
     inventory,
+    solutionMap,
     primaryRollForSlot(rolls, slot),
     requiredUses,
   );
@@ -324,17 +329,22 @@ interface SolutionSetEvaluation {
   diceFaces: number[];
 }
 
+/**
+ * The roll of one pick: its slot's stored total, plus +1 when the item used is
+ * rare (Babuni, 2026-11-23). The stored totals hold only the slot bonus.
+ */
 function rollForSetPick(
   rolls: EncounterRollSnapshot,
   pick: SolutionSetPickAllocation,
+  solutionMap: SolutionDataMap,
 ): number {
   const base = pick.lane === 'primary'
     ? primaryRollForSlot(rolls, pick.slot)
     : secondaryRollForSlot(rolls, pick.slot);
-  if (pick.copyIndex === 0) {
-    return base;
-  }
-  return rolls.extraRolls?.[pick.lane][pick.slot][pick.copyIndex - 1] ?? base;
+  const stored = pick.copyIndex === 0
+    ? base
+    : rolls.extraRolls?.[pick.lane][pick.slot][pick.copyIndex - 1] ?? base;
+  return stored + solutionRarityRollBonus(lookupSolution(solutionMap, pick.solutionId));
 }
 
 function evaluateSolutionSet(
@@ -378,7 +388,7 @@ function evaluateSolutionSet(
     return invalid;
   }
 
-  const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick));
+  const pickRolls = allocation.map((pick) => rollForSetPick(rolls, pick, solutionMap));
   const diceFaces = diceFill
     ? diceFacesForGaps(setSize - pickRolls.length, rolls.rollE, rolls.diceFillRolls)
     : [];
@@ -419,7 +429,7 @@ export function revealSolutionSetPicks(
     (solutionId) => lookupSolution(solutionMap, solutionId)?.mSolutionType,
   );
   return allocation
-    ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick) }))
+    ? allocation.map((pick) => ({ slot: pick.slot, solutionId: pick.solutionId, roll: rollForSetPick(rolls, pick, solutionMap) }))
     : null;
 }
 

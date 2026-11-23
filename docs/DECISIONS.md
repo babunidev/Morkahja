@@ -298,7 +298,7 @@ Babuni.dev clarified that project artwork was generated with AI and then manuall
 
 **AI implementation:** Cursor (Grok 4.7). The finished total is the one on the result. On 25, and only on a normal encounter, one item of reward type 2 is added, skipping items already in the reward. At five encounter rewards the list is left as it is and one of them is granted with two extra charges. The prosperity essence is unchanged.
 
-**Status:** released as 0.9.0-beta.74, 2026-11-15. The rule is tested. A 25 was not played before release.
+**Status:** released as 0.9.0-beta.74, 2026-11-15. The rule is tested. A 25 was not played before release. Superseded by D-054 (2026-11-23): a 25 no longer adds an item.
 
 ## D-037 — Each die in a set rises after its spin (2026-11-15)
 
@@ -468,4 +468,13 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). Starting inventory (`buildInitialAvatarSeedIds`): the three essences are drawn from the avatar's own element only, so each new avatar gets its three gods. Losses (`consumeEssenceLossesState`, used by Hardship and Misery through `applyFailurePenaltyToInventoryState`): per essence loss, two other-element charges while two or more are left, the last one alone, then one own-element charge; essences without an element in the table count as the avatar's own. Bonus (`server/src/engine/ownElementEssenceBonus.ts`): on a successful normal encounter with a total of 25 or more, one chance in five adds a random essence of the avatar's element to the rewards, after the prosperity essence and a 25's item. Existing avatars keep their inventories; only the loss rule and the bonus apply to them.
 
-**Status:** released 2026-11-21 in 0.9.0-beta.82. Server tests pass, including new ones for each rule; a new Rokur and Verdani got their elements' essences locally; losses and the bonus not yet played.
+**Status:** released 2026-11-21 in 0.9.0-beta.82. Server tests pass, including new ones for each rule; a new Rokur and Verdani got their elements' essences locally; losses and the bonus not yet played. The bonus changed in D-054 (2026-11-23): certain on 24 or higher.
+
+## D-054 — Balance pass: lower roll bonuses, a rare item's +1, an own essence on 24 or higher (2026-11-23)
+
+**Babuni's direction:** the game is a little too easy. The primary slot goes from +7 to +5, and every secondary solution from +5 to +2; the dice stays as it is. Every rare item adds +1 to every roll made with it. A total of 24 or 25 brings one extra essence of the avatar's own element, on top of the encounter's reward, and the reward the 25 gave before is removed. Asked by Claude Code, Babuni chose: the essence comes every time, not by chance; a 26 (possible now with a rare primary item) counts too, so the rule is "24 or higher"; the rare items are the ones with the rare frame.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). The slot bonuses are the shared constants. Rarity is one shared rule (`shared/src/solutionRarity.ts`) used by the frame and the resolver: the Atranor items, the Frostbane Glaive, the Zephyrstring Lyre and the Titanpike, never essences. The +1 is added when a pick's roll is read, so the revealed roll and the final total agree; the stored totals keep only the slot bonus. The own essence is certain on a successful normal encounter at 24 or more. It supersedes the extra item on a 25 (D-038) and the one-in-five chance (D-053).
+
+**Status:** committed locally on 2026-11-23, not released. Server and client tests, typecheck and build pass; not played.
+

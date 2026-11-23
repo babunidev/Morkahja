@@ -31,7 +31,8 @@ export function generateSolutionSetExtraRolls(difficulty: number): SolutionSetEx
 
 /**
  * Fair d20 per lane, then the lane bonus and the difficulty penalty.
- * Primary +7 · Secondary +5 · Dice +0. The stored number is that total, even past 20.
+ * Primary +5 · Secondary +2 · Dice +0. The stored number is that total, even past 20.
+ * A rare item's +1 is added when the roll is used (encounterResolver), not stored here.
  */
 export function generateEncounterRollSnapshot(difficulty: number): EncounterRollSnapshot {
   const primary = () => finalizeRoll(randomInt(1, 20), PRIMARY_SOLUTION_ROLL_BONUS, difficulty);

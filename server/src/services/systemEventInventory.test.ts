@@ -306,7 +306,9 @@ await persistInventory(session.playerId, avatarId, {
 
   const inventoryBeforeLevelUpEvent = await loadInventory(session.playerId, avatarId);
   assert.equal(countSolutionCharges(inventoryBeforeLevelUpEvent, 10001), 0);
-  assert.equal(totalEssenceUses(inventoryBeforeLevelUpEvent), 6);
+  // 5 to start, the Prosperity essence, and the own-element essence a total of
+  // 24 or higher always grants (2026-11-23; it was a one-in-five chance on 25+).
+  assert.equal(totalEssenceUses(inventoryBeforeLevelUpEvent), 7);
 
   const persisted = await loadEncounterRoom(afterNormalContinue.roomId);
   await saveEncounterRoom({
@@ -347,7 +349,7 @@ await persistInventory(session.playerId, avatarId, {
   const inventoryAfterLevelUp = await loadInventory(session.playerId, avatarId);
   assert.ok(countSolutionCharges(inventoryAfterLevelUp, chosen) > 0, 'the chosen level-up reward is in the inventory');
   assert.equal(countSolutionCharges(inventoryAfterLevelUp, 10001), 0);
-  assert.equal(totalEssenceUses(inventoryAfterLevelUp), 6);
+  assert.equal(totalEssenceUses(inventoryAfterLevelUp), 7, "the level-up adds no essence");
   assert.ok(
     inventoryAfterLevelUp.spellbook.length + inventoryAfterLevelUp.items.length >= 1,
     'level-up system event should add rewards on top of committed normal-encounter inventory',

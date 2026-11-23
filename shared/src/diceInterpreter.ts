@@ -10,10 +10,20 @@ export type RollOutcome =
 export const D20_MIN = 1;
 export const D20_MAX = 20;
 
-/** Added to a fair d20 before difficulty is subtracted. The die bonus stays 0 until a later modifier. */
-export const PRIMARY_SOLUTION_ROLL_BONUS = 7;
-export const SECONDARY_SOLUTION_ROLL_BONUS = 5;
+/**
+ * Added to a fair d20 before difficulty is subtracted. The die bonus stays 0 until a later modifier.
+ * Primary +5 and secondary +2 since 2026-11-23 (Babuni's balance pass); they were +7 and +5.
+ * A rare item adds its own +1 on top (`@shared/solutionRarity.ts`).
+ */
+export const PRIMARY_SOLUTION_ROLL_BONUS = 5;
+export const SECONDARY_SOLUTION_ROLL_BONUS = 2;
 export const DICE_ROLL_BONUS = 0;
+
+/**
+ * The highest total any roll has ever stored: a natural 20 with the old +7.
+ * Totals up to this are shown as they are; a number above it is an old 1–100 roll.
+ */
+export const HIGHEST_STORED_ROLL_TOTAL = 27;
 
 /**
  * Difficulty 1 subtracts nothing. Each step above that subtracts one more
@@ -29,7 +39,7 @@ export function difficultyRollPenalty(difficulty: number): number {
 
 /**
  * Fair d20, plus a lane bonus, minus the difficulty penalty.
- * The total is kept: a natural 20 with +7 is 27, and a natural 1 at difficulty 4 is −2.
+ * The total is kept: a natural 20 with +5 is 25, and a natural 1 at difficulty 4 is −2.
  */
 export function finalizeRoll(naturalRoll: number, bonus: number, difficulty: number): number {
   const total = naturalRoll + bonus - difficultyRollPenalty(difficulty);
@@ -130,8 +140,7 @@ export function displayRollOutcome(outcome: RollOutcome): string {
  */
 export function displayRollAsD20(roll: number): number {
   const rounded = Math.round(roll);
-  const highestTotal = D20_MAX + PRIMARY_SOLUTION_ROLL_BONUS;
-  if (rounded > highestTotal) {
+  if (rounded > HIGHEST_STORED_ROLL_TOTAL) {
     return Math.min(D20_MAX, Math.max(D20_MIN, Math.round(rounded / 5)));
   }
   return rounded;

@@ -175,7 +175,16 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 
 - [x] New avatars start with the three essences of their race's element (Rokur fire, Verdani water, Aevis air, Grimnir earth).
 - [x] Essences of other elements are lost first, two per loss; the last one alone; then the avatar's own, one per loss.
-- [x] A total of 25 or higher: 20% chance of one extra essence of the avatar's element.
+- [x] A total of 25 or higher: 20% chance of one extra essence of the avatar's element. Replaced by D-054: always, on 24 or higher.
 - [ ] Play it: a new avatar's essences, a Hardship with mixed essences, and a high roll.
 - [x] Released in 0.9.0-beta.82 (2026-11-21, 23:45 UTC).
 - [ ] Prove backup `20261121-234506` by a restore.
+
+## Balance pass — 2026-11-23 (D-054)
+
+- [x] Primary slot +5 (was +7), secondary +2 (was +5), dice +0.
+- [x] Rare items (rare frame) add +1 to their rolls; shown in the tooltip and the roll breakdown.
+- [x] A total of 24 or higher always brings one essence of the avatar's element; the 25's extra item is gone.
+- [ ] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough.
+- [ ] Patch note and version bump, then release when Babuni approves.
+

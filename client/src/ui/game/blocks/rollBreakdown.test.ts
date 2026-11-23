@@ -1,7 +1,21 @@
 import assert from 'node:assert/strict';
 
 import type { EncounterSnapshot, RoomParticipantDto } from '../../../api/http.js';
+import { setGameContent } from '../../../data/gameContent.js';
 import { choiceRollBreakdown } from './rollBreakdown.js';
+
+setGameContent({
+  version: 'test',
+  encounters: { 20010: { mEncounterID: 20010 } },
+  solutions: {
+    10: { mSolutionID: 10, mSolutionIconName: 'tool_key', mSolutionInventoryType: 2, mSolutionType: 8 },
+    22: { mSolutionID: 22, mSolutionIconName: 'tool_map', mSolutionInventoryType: 2, mSolutionType: 6 },
+    10015: { mSolutionID: 10015, mSolutionIconName: 'tool_epic_atranor_potion', mSolutionInventoryType: 3, mSolutionType: 77 },
+  },
+  expansions: {},
+  frames: [null, { frameID: 1 }],
+  portraits: [null, { avatarID: 1 }],
+} as never);
 
 function encounter(fields: Partial<EncounterSnapshot> = {}): EncounterSnapshot {
   return {
@@ -34,20 +48,20 @@ function participant(fields: Partial<RoomParticipantDto> = {}): RoomParticipantD
 
 assert.deepEqual(
   choiceRollBreakdown(
-    participant({ selectedAction: 'A', selectedSolutionId: 10, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 23 } }),
+    participant({ selectedAction: 'A', selectedSolutionId: 10, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 21 } }),
     encounter(),
-    23,
+    21,
   ),
-  ['16 + 7'],
+  ['16 + 5'],
 );
 
 assert.deepEqual(
   choiceRollBreakdown(
-    participant({ selectedAction: 'A', selectedSolutionId: 10, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 11 } }),
+    participant({ selectedAction: 'A', selectedSolutionId: 10, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 9 } }),
     encounter({ encounterDifficulty: 2 }),
-    11,
+    9,
   ),
-  ['5 + 7 − 1'],
+  ['5 + 5 − 1'],
 );
 
 assert.deepEqual(
@@ -80,7 +94,7 @@ assert.deepEqual(
     encounter({ encounterDifficulty: 3, primarySolutionB: 21 }),
     14,
   ),
-  ['15 + 7 − 2', '7 + 5 − 2', '13 − 2'],
+  ['17 + 5 − 2', '10 + 2 − 2', '13 − 2'],
 );
 
 assert.deepEqual(
@@ -102,3 +116,21 @@ assert.deepEqual(
 );
 
 console.log('rollBreakdown.test.ts passed');
+
+// A rare item adds its own +1 to the slot's bonus.
+assert.deepEqual(
+  choiceRollBreakdown(
+    participant({ selectedAction: 'A', selectedSolutionId: 10015, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 26 } }),
+    encounter({ primarySolutionA: 10015 }),
+    26,
+  ),
+  ['20 + 6'],
+);
+assert.deepEqual(
+  choiceRollBreakdown(
+    participant({ selectedAction: 'B', selectedSolutionId: 10015, preparedResult: { success: true, message: '', rewards: [], selectedRoll: 13 } }),
+    encounter({ primarySolutionB: 21 }),
+    13,
+  ),
+  ['10 + 3'],
+);

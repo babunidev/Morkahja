@@ -2,6 +2,18 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: balance pass, lower roll bonuses, a rare item's +1, an own essence on 24 or higher (D-054)
+
+- **Not released.** Committed to local `main` only; no version bump or in-game patch note yet.
+- **Babuni's direction:** the game is a little too easy. The primary slot goes from +7 to +5, every secondary solution from +5 to +2, and the dice stays at +0. Rare items add +1 to every roll made with them. A total of 24 or 25 always brings one extra essence of the avatar's own element on top of the encounter's rewards, and the 25's own extra reward is removed. Babuni's answers to Claude Code's questions: the essence is certain, not a chance; a 26 (a rare primary item on a natural 20) also earns it, so the rule is "24 or higher"; rare means the items with the rare frame.
+- **Slot bonuses (`shared/src/diceInterpreter.ts`):** `PRIMARY_SOLUTION_ROLL_BONUS` 5, `SECONDARY_SOLUTION_ROLL_BONUS` 2. The highest new total is 25 on a primary slot and 22 on a secondary slot. `displayRollAsD20` now uses a fixed `HIGHEST_STORED_ROLL_TOTAL` of 27, so totals stored with the old +7 still show as they were, and anything above 27 is still read as an old 1–100 roll.
+- **Rare items (new `shared/src/solutionRarity.ts`):** `isRareSolution` is the rule the rare frame already used: the four Atranor items (type 77), the Frostbane Glaive and Zephyrstring Lyre (kept in the essence inventory) and the Titanpike (legendary icon). Essences are not rare. `client/src/ui/common/solutionFrameLook.ts` now uses the shared rule. `server/src/engine/encounterResolver.ts` adds `RARE_SOLUTION_ROLL_BONUS` (+1) to the roll of a pick whose item is rare, as a primary or an alternative, in a set too; the snapshot's stored totals still hold only the slot bonus. The client adds the same +1 to the solution tooltip's notation (a rare primary shows `d20+6`) and to the portrait's roll breakdown (`rollBreakdown.ts`).
+- **Own-element essence (`server/src/engine/ownElementEssenceBonus.ts`):** a successful normal encounter with a total of 24 or higher always adds one random essence of the avatar's element. The one-in-five chance on 25 or higher (D-053) is gone.
+- **The 25's extra item is removed:** `server/src/engine/roll25Reward.ts` and its test are deleted, and `encounterGenerator.ts` no longer adds a normal item on a 25 or two extra charges when the row is full (D-038). The `rewardChargeBonus` field stays in the contracts so stored results still read.
+- **Tests:** dice tests and the client breakdown tests use the new bonuses; new resolver cases for a rare primary, a rare alternative and a rare pick in a set; the essence-bonus test now checks 24, 25 and 26 and no chance roll; `systemEventInventory.test.ts` now expects the essence its forced high roll always earns. That test used to fail at random about one run in five, because of the old 20% chance.
+- **Verification (local, Nobara, PostgreSQL in Podman `morkahja-db`):** server tests 59/59 and client tests 49/49 passed; `npm run typecheck` (shared, server, client build) passed. ESLint on `SolutionBlock.tsx` reports the same 4 errors and 2 warnings as before the change. Not played in a browser.
+- **Known limitations:** an encounter already dealt before the deploy keeps the totals rolled with +7/+5, because the rolls are stored when the encounter is created. The portrait breakdown of such an old result may show other numbers. The Patch notes overlay is not updated yet.
+
 ## 2026-11-21 — Essences of the avatar's own element (D-053), bigger grid pictures; 0.9.0-beta.82
 
 - **Version and patch notes:** 0.9.0-beta.82 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx`.

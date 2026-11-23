@@ -58,6 +58,7 @@ for (let roll = 1; roll <= 20; roll += 1) {
 }
 
 assert.equal(sharedDisplayRollAsD20(26), 26);
+assert.equal(sharedDisplayRollAsD20(27), 27, "a total stored with the old +7 still shows as it is");
 assert.equal(sharedDisplayRollAsD20(27), 27);
 assert.equal(sharedDisplayRollAsD20(-2), -2);
 assert.equal(sharedDisplayRollAsD20(96), 19);
@@ -69,31 +70,32 @@ assert.equal(difficultyRollPenalty(3), 2);
 assert.equal(difficultyRollPenalty(4), 3);
 assert.equal(difficultyRollPenalty(7), 6);
 
-assert.equal(PRIMARY_SOLUTION_ROLL_BONUS, 7);
-assert.equal(SECONDARY_SOLUTION_ROLL_BONUS, 5);
+assert.equal(PRIMARY_SOLUTION_ROLL_BONUS, 5);
+assert.equal(SECONDARY_SOLUTION_ROLL_BONUS, 2);
 assert.equal(DICE_ROLL_BONUS, 0);
-assert.equal(finalizeRoll(1, PRIMARY_SOLUTION_ROLL_BONUS, 1), 8);
-assert.equal(finalizeRoll(20, PRIMARY_SOLUTION_ROLL_BONUS, 1), 27);
-assert.equal(finalizeRoll(19, PRIMARY_SOLUTION_ROLL_BONUS, 1), 26);
-assert.equal(finalizeRoll(20, SECONDARY_SOLUTION_ROLL_BONUS, 1), 25);
-assert.equal(finalizeRoll(1, SECONDARY_SOLUTION_ROLL_BONUS, 1), 6);
+assert.equal(finalizeRoll(1, PRIMARY_SOLUTION_ROLL_BONUS, 1), 6);
+assert.equal(finalizeRoll(20, PRIMARY_SOLUTION_ROLL_BONUS, 1), 25);
+assert.equal(finalizeRoll(19, PRIMARY_SOLUTION_ROLL_BONUS, 1), 24);
+assert.equal(finalizeRoll(20, SECONDARY_SOLUTION_ROLL_BONUS, 1), 22);
+assert.equal(finalizeRoll(1, SECONDARY_SOLUTION_ROLL_BONUS, 1), 3);
 assert.equal(finalizeRoll(1, DICE_ROLL_BONUS, 4), -2);
 assert.equal(finalizeRoll(20, DICE_ROLL_BONUS, 4), 17);
-assert.equal(finalizeRoll(14, PRIMARY_SOLUTION_ROLL_BONUS, 2), 20);
+assert.equal(finalizeRoll(14, PRIMARY_SOLUTION_ROLL_BONUS, 2), 18);
 assert.equal(formatRollNotation(DICE_ROLL_BONUS, 1), 'd20');
 assert.equal(formatRollNotation(DICE_ROLL_BONUS, 2), 'd20-1');
 assert.equal(formatRollNotation(DICE_ROLL_BONUS, 4), 'd20-3');
-assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 1), 'd20+5');
-assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 1), 'd20+7');
-assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 2), 'd20+6');
-assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 7), 'd20-1');
-assert.equal(formatRollBreakdown(27, PRIMARY_SOLUTION_ROLL_BONUS, 1), '20 + 7');
-assert.equal(formatRollBreakdown(23, PRIMARY_SOLUTION_ROLL_BONUS, 1), '16 + 7');
-assert.equal(formatRollBreakdown(11, PRIMARY_SOLUTION_ROLL_BONUS, 2), '5 + 7 − 1');
-assert.equal(formatRollBreakdown(11, SECONDARY_SOLUTION_ROLL_BONUS, 1), '6 + 5');
+assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 1), 'd20+2');
+assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 1), 'd20+5');
+assert.equal(formatRollNotation(PRIMARY_SOLUTION_ROLL_BONUS, 2), 'd20+4');
+assert.equal(formatRollNotation(SECONDARY_SOLUTION_ROLL_BONUS, 7), 'd20-4');
+assert.equal(formatRollBreakdown(25, PRIMARY_SOLUTION_ROLL_BONUS, 1), '20 + 5');
+assert.equal(formatRollBreakdown(21, PRIMARY_SOLUTION_ROLL_BONUS, 1), '16 + 5');
+assert.equal(formatRollBreakdown(9, PRIMARY_SOLUTION_ROLL_BONUS, 2), '5 + 5 − 1');
+assert.equal(formatRollBreakdown(8, SECONDARY_SOLUTION_ROLL_BONUS, 1), '6 + 2');
 assert.equal(formatRollBreakdown(20, DICE_ROLL_BONUS, 1), '20');
 assert.equal(formatRollBreakdown(-2, DICE_ROLL_BONUS, 4), '1 − 3');
-assert.equal(formatRollBreakdown(11, PRIMARY_SOLUTION_ROLL_BONUS, 1), '4 + 7');
+assert.equal(formatRollBreakdown(9, PRIMARY_SOLUTION_ROLL_BONUS, 1), '4 + 5')
+assert.equal(formatRollBreakdown(26, PRIMARY_SOLUTION_ROLL_BONUS + 1, 1), '20 + 6', 'a rare primary item');;
 assert.equal(formatRollBreakdown(96, PRIMARY_SOLUTION_ROLL_BONUS, 1), null);
 
 for (const difficulty of [1, 2, 4, 7]) {

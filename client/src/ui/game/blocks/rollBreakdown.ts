@@ -5,6 +5,8 @@ import {
   formatRollBreakdown,
 } from '@shared/diceInterpreter.js';
 import { solutionSetSize } from '@shared/solutionSet.js';
+import { solutionRarityRollBonus, type SolutionRarityRecord } from '@shared/solutionRarity.js';
+import { gameSolutions } from '../../../data/gameContent.js';
 import type { EncounterAction, EncounterSnapshot, RoomParticipantDto } from '../../../api/http.js';
 
 function primaryIdForSlot(
@@ -24,10 +26,13 @@ function bonusForSolution(
   solutionId: number,
 ): number {
   const primaryId = primaryIdForSlot(encounter, slot);
+  const rarity = solutionRarityRollBonus(
+    (gameSolutions() as Record<string, SolutionRarityRecord | undefined>)[String(solutionId)],
+  );
   if (primaryId > 0 && solutionId === primaryId) {
-    return PRIMARY_SOLUTION_ROLL_BONUS;
+    return PRIMARY_SOLUTION_ROLL_BONUS + rarity;
   }
-  return SECONDARY_SOLUTION_ROLL_BONUS;
+  return SECONDARY_SOLUTION_ROLL_BONUS + rarity;
 }
 
 /**

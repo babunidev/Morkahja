@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { gameSolutions } from '../../../data/gameContent.js';
+import { solutionRarityRollBonus } from '@shared/solutionRarity.js';
 import type {
   AvatarInventory,
   EncounterAction,
@@ -681,7 +682,20 @@ function solutionForSlot(
   };
 }
 
+/** A rare item's own +1 (`@shared/solutionRarity.ts`); 0 for anything else. */
+function rarityBonusFor(solutionId: number): number {
+  return solutionRarityRollBonus(solutionsById()[String(solutionId)]);
+}
+
 function rollForSolutionSlot(
+  encounter: EncounterSnapshot,
+  solution: VisibleSolutionSlot,
+): number | null {
+  const stored = storedRollForSolutionSlot(encounter, solution);
+  return stored === null ? null : stored + rarityBonusFor(solution.solutionId);
+}
+
+function storedRollForSolutionSlot(
   encounter: EncounterSnapshot,
   solution: VisibleSolutionSlot,
 ): number | null {
@@ -1033,9 +1047,9 @@ export function SolutionBlock({
   }
 
   function solutionTooltipFor(solution: VisibleSolutionSlot): GameTooltipContent | null {
-    const bonus = solution.isPrimary
+    const bonus = (solution.isPrimary
       ? PRIMARY_SOLUTION_ROLL_BONUS
-      : SECONDARY_SOLUTION_ROLL_BONUS;
+      : SECONDARY_SOLUTION_ROLL_BONUS) + rarityBonusFor(solution.solutionId);
 
     return solutionTooltipContent(`solution-${solution.slot}`, {
       name: solution.name,

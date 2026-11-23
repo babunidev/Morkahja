@@ -13,14 +13,13 @@ import {
   applyPendingLevelUpRewardsFlag,
   createInitialProgression,
 } from '../domain/avatar/AvatarProgression.js';
-import { rewardForRoll25 } from '../engine/roll25Reward.js';
 import { ownElementEssenceBonus } from '../engine/ownElementEssenceBonus.js';
 import {
   RACE_REWARD_TYPE_ELEMENTS,
   essenceIdsOfElement,
   type EssenceElement,
 } from '@shared/essenceElements.js';
-import { SolutionRewardType, type EncounterData, type EncounterDataMap } from '../engine/types.js';
+import { type EncounterData, type EncounterDataMap } from '../engine/types.js';
 import type { AvatarDocument } from '../types/avatar.js';
 import type { AvatarInventory } from '../types/avatar.js';
 import { applyFailedDeathState } from './avatarDeathService.js';
@@ -1523,29 +1522,15 @@ function computeParticipantOutcome(
       progressionResult.progression.level,
     );
   } else {
-    const adjusted = rewardForRoll25({
-      selectedRoll: resolution.selectedRoll,
-      success: resolution.success,
-      encounterRewards: snapshot.rewardIds,
-      currentRewards: resolution.rewards,
-      normalItemIds: Object.values(getSolutionMap())
-        .filter((solution) => solution.mSolutionRewardType === SolutionRewardType.Items)
-        .map((solution) => solution.mSolutionID),
-      pickIndex: (length) => randomInt(0, length - 1),
-    });
     const ownEssenceBonus = ownElementEssenceBonus({
       selectedRoll: resolution.selectedRoll,
       success: resolution.success,
       ownEssenceIds: ownEssenceIdsForAvatar(avatar),
       randomInt,
     });
-    resolution = {
-      ...resolution,
-      rewards: ownEssenceBonus === null
-        ? adjusted.rewardIds
-        : [...adjusted.rewardIds, ownEssenceBonus],
-      ...(adjusted.chargeBonus ? { rewardChargeBonus: adjusted.chargeBonus } : {}),
-    };
+    if (ownEssenceBonus !== null) {
+      resolution = { ...resolution, rewards: [...resolution.rewards, ownEssenceBonus] };
+    }
     const inventoryApply = applyEncounterInventoryChanges(
       inventory,
       resolution.usedInventorySolutions,
