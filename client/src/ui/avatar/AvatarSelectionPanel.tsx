@@ -74,10 +74,11 @@ const activeRowStyle: CSSProperties = {
   width: '100%',
 };
 
-/** The other two, left and right under the active one: a triangle. */
+/** The other two, left and right under the active one: a triangle, close together. */
 const othersRowStyle: CSSProperties = {
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'center',
+  gap: 'clamp(16px, 5vw, 48px)',
   width: 'min(92vw, 560px)',
   margin: 'clamp(-40px, -6vw, -20px) auto 0',
 };
@@ -378,7 +379,12 @@ export function AvatarSelectionPanel({
   // the player tapped; it stands big, the others below it.
   const [chosenActiveId, setChosenActiveId] = useState<string | null>(() => readStoredActiveAvatarId());
   const activeAvatarId = pickActiveAvatarId(resolvedAvatars, chosenActiveId);
-  const activeIndex = activeAvatarId ? slots.findIndex((avatar) => avatar?.id === activeAvatarId) : 0;
+  // An empty slot tapped for a new avatar moves into the big place while the
+  // creation is open (Babuni, 2026-11-23), so the new avatar appears there.
+  const [emptyActiveIndex, setEmptyActiveIndex] = useState<number | null>(null);
+  const activeIndex = emptyActiveIndex !== null && slots[emptyActiveIndex] === null
+    ? emptyActiveIndex
+    : Math.max(0, activeAvatarId ? slots.findIndex((avatar) => avatar?.id === activeAvatarId) : 0);
   const orderedSlots = [
     { avatar: slots[activeIndex] ?? null, index: activeIndex },
     ...slots.map((avatar, index) => ({ avatar, index })).filter((entry) => entry.index !== activeIndex),
@@ -404,10 +410,16 @@ export function AvatarSelectionPanel({
   // The swap: each avatar glides from where it stood to its new place.
   const slotElementsRef = useRef(new Map<string, HTMLElement>());
   const swapFromRectsRef = useRef<Map<string, DOMRect> | null>(null);
-  function makeActive(avatar: PersistedAvatar): void {
+  /** Remember where every slot stands, so the next layout glides from there. */
+  function recordSlotPlaces(): void {
     const rects = new Map<string, DOMRect>();
-    slotElementsRef.current.forEach((element, id) => rects.set(id, element.getBoundingClientRect()));
+    slotElementsRef.current.forEach((element, key) => rects.set(key, element.getBoundingClientRect()));
     swapFromRectsRef.current = rects;
+  }
+
+  function makeActive(avatar: PersistedAvatar): void {
+    recordSlotPlaces();
+    setEmptyActiveIndex(null);
     storeActiveAvatarId(avatar.id);
     setChosenActiveId(avatar.id);
   }
@@ -440,7 +452,7 @@ export function AvatarSelectionPanel({
         { duration: SWAP_MS, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' },
       );
     });
-  }, [activeAvatarId]);
+  }, [activeIndex]);
 
   async function equipIntoSlot(avatar: PersistedAvatar, slot: number, solutionId: number): Promise<void> {
     setEquipPickSlot(null);
@@ -534,6 +546,16 @@ export function AvatarSelectionPanel({
     }
 
     if (!candidate) {
+      // The empty slot swaps into the big place first, then the creation opens.
+      if (index !== activeIndex) {
+        setClickable(false);
+        recordSlotPlaces();
+        setEmptyActiveIndex(index);
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, SWAP_MS);
+        });
+        setClickable(true);
+      }
       setCreatingSlotIndex(index);
       setCreationVisible(false);
       await waitForNextPaint();
@@ -615,6 +637,11 @@ export function AvatarSelectionPanel({
     await waitForFade();
     setCreatingSlotIndex(null);
     setActiveCreationPreset(null);
+    // Cancelled: the avatar that was active goes back to the big place.
+    if (emptyActiveIndex !== null) {
+      recordSlotPlaces();
+      setEmptyActiveIndex(null);
+    }
     setClickable(true);
   }
 
@@ -626,6 +653,12 @@ export function AvatarSelectionPanel({
     try {
       await createAvatar(avatar);
       const refreshedAvatars = uniqueAvatars(await fetchAvatars());
+      // The new avatar is the active one, in the big place. The empty slot
+      // gives up that place only once the new avatar is in the list, so the
+      // old active avatar does not flash back in between.
+      storeActiveAvatarId(avatar.id);
+      setChosenActiveId(avatar.id);
+      setEmptyActiveIndex(null);
       onAvatarsChanged?.(refreshedAvatars);
       onAchievementCheck?.();
       setCreatingSlotIndex(null);
@@ -653,12 +686,11 @@ export function AvatarSelectionPanel({
               <div
                 key={entry.avatar?.id ?? `empty-${entry.index}`}
                 ref={(element) => {
-                  if (entry.avatar) {
-                    if (element) {
-                      slotElementsRef.current.set(entry.avatar.id, element);
-                    } else {
-                      slotElementsRef.current.delete(entry.avatar.id);
-                    }
+                  const key = entry.avatar?.id ?? `empty-${entry.index}`;
+                  if (element) {
+                    slotElementsRef.current.set(key, element);
+                  } else {
+                    slotElementsRef.current.delete(key);
                   }
                 }}
                 style={position === 0 ? activeSlotStyle : undefined}
@@ -681,12 +713,11 @@ export function AvatarSelectionPanel({
               <div
                 key={entry.avatar?.id ?? `empty-${entry.index}`}
                 ref={(element) => {
-                  if (entry.avatar) {
-                    if (element) {
-                      slotElementsRef.current.set(entry.avatar.id, element);
-                    } else {
-                      slotElementsRef.current.delete(entry.avatar.id);
-                    }
+                  const key = entry.avatar?.id ?? `empty-${entry.index}`;
+                  if (element) {
+                    slotElementsRef.current.set(key, element);
+                  } else {
+                    slotElementsRef.current.delete(key);
                   }
                 }}
                 style={position === 0 ? activeSlotStyle : undefined}

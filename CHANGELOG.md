@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: an empty slot moves into the big place for a new avatar
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** a tapped empty slot moves into the big place while the avatar creation is open, so the new avatar appears there. The two avatars below the big one stand closer together.
+- **Change (`AvatarSelectionPanel.tsx`):** tapping an empty slot below makes it the active slot (`emptyActiveIndex`), glides it into the big place (the 420 ms swap; taps wait until it ends), then opens the creation. Cancel glides the former active avatar back. A created avatar becomes the active one (`morkahja:active-avatar`); the empty slot gives up the big place only once the refreshed avatar list holds it, so the old active avatar does not flash back in between. The swap glide now also tracks empty slots. The lower row is centred with a gap of `clamp(16px, 5vw, 48px)` instead of being pushed to the edges.
+- **History:** most of this was written in an earlier session that a crash interrupted before it was tested or committed. Claude Code (Claude Opus 5.5) then added the waiting for taps and the flicker fix, and tested and committed it.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): one avatar, an empty slot tapped mid-glide and with the creation open, cancel, and a second avatar created, which stays big. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-empty-slot-swap-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed. Server tests 65/66: `roomService.test.ts` failed once at line 571 (a random system event after Continue where the test expects the next encounter), then passed 4 runs in a row on its own. This flaky test was already there and has nothing to do with this change, which touches only the client.
+
 ## 2026-11-23 — Unreleased: dividers reach the frame
 
 - **Not released.** Committed to local `main` only.

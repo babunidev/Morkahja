@@ -621,6 +621,10 @@ When I level up and choose one of three abilities, the tooltip now also tells me
 
 The lines between the parts of my avatar screen and of the inventory stopped short of the frame. Now they run all the way to it, with their small triangles meeting the frame's inner line. Claude Code (Claude Opus 5.5) found that the avatar card's scrolling area also cut longer lines off, moved its side spacing inside, and measured the lines' ends against the frame on a desktop and a phone size. **Verification:** client tests and typecheck passed; screenshots taken. **Not released.**
 
+## 2026-11-23 — A new avatar takes the big place
+
+When I tapped an empty slot under my active avatar, the creation opened while the slot stayed small below. Now the empty slot glides into the big place first, and my new avatar appears there and stays the active one. If I cancel, my old avatar glides back. The two avatars below also stand closer together now. Claude Code (Claude Opus 5.5) had written most of it when a crash test interrupted the session. In the next session it fixed a short flash of the old avatar after creating, stopped a second tap during the glide, and tried it all in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed; one server test is flaky and failed once (unrelated). **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
