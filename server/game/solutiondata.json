@@ -2049,7 +2049,8 @@
     "mSolutionRewardType": 41,
     "mSolutionText": "Channels pure water to cleanse an area or object of impurities, toxins, or malicious energies.",
     "mSolutionType": 27,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10194": {
     "mSolutionID": 10194,
