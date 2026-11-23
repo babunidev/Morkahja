@@ -1362,7 +1362,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A radiant, translucent gem set in a beautifully crafted silver pendant. It illuminates with a soft, ethereal light, shedding clarity amidst deceptive shadows.",
     "mSolutionType": 18,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10129": {
     "mSolutionID": 10129,
