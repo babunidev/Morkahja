@@ -1451,7 +1451,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A beautifully crafted hook made from glacial metal, its handle wound with fur for grip. When thrown, the hook glows, creating ice handholds.",
     "mSolutionType": 14,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10139": {
     "mSolutionID": 10139,
