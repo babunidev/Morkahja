@@ -1387,7 +1387,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from ancient wood and silver, this bow's slender form shimmers with an ethereal sheen. Its arrows, when notched, emit a faint emerald glow.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10132": {
     "mSolutionID": 10132,
