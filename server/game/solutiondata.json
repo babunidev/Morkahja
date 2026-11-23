@@ -755,7 +755,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricately designed key, adorned with enchanting symbols and patterns that hint at its mystical properties. Its delicate appearance belies its powerful abilities.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10070": {
     "mSolutionID": 10070,
