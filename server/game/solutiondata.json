@@ -788,7 +788,8 @@
     "mSolutionRewardType": 1,
     "mSolutionText": "Offers assistance to those in need, embodying compassion and cooperation, whether lending physical aid or moral support in times of challenge.",
     "mSolutionType": 25,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10073": {
     "mSolutionID": 10073,
