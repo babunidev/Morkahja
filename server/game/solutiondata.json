@@ -821,7 +821,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A rustic and flavorful bread crafted by the Verdani, known for its delightful blend of earthy and tangy flavors, a culinary treat in the mystical world.",
     "mSolutionType": 34,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10076": {
     "mSolutionID": 10076,
