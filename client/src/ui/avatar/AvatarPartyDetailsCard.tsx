@@ -1,7 +1,7 @@
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import type { CSSProperties, ReactNode } from 'react';
 import type { AvatarInventoryDto } from '@shared/contracts';
 import { shownEquipmentSlots } from './equipmentSlots.js';
+import HelpTip from '../common/HelpTip.js';
 import { SolutionImage } from '../common/SolutionFrame.js';
 import { solutionGridEntryFor } from '../game/blocks/SolutionGridOverlay.js';
 import { SolutionGridTooltipBody } from '../game/blocks/SolutionGridTooltipPanel.js';
@@ -10,8 +10,6 @@ import { readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
 import {
   GAME_SCREEN_SELECTOR,
-  GameTooltipFrame,
-  gameTooltipFrameStyle,
   TooltipDivider,
   useGameTooltip,
 } from '../game/GameTooltip.js';
@@ -136,48 +134,6 @@ const sectionHeadingStyle: CSSProperties = {
   fontWeight: 700,
 };
 
-const helpButtonStyle: CSSProperties = {
-  display: 'inline-grid',
-  placeItems: 'center',
-  width: 16,
-  height: 16,
-  padding: 0,
-  borderRadius: '50%',
-  border: '1px solid rgba(255, 204, 102, 0.8)',
-  background: 'rgba(51, 0, 0, 0.85)',
-  color: '#ffcc66',
-  fontFamily: 'Georgia, serif',
-  fontSize: '0.62rem',
-  fontWeight: 700,
-  lineHeight: 1,
-  cursor: 'help',
-  pointerEvents: 'auto',
-};
-
-/**
- * The "?" help: above the heading, so the Home button below cannot cover it,
- * in the frame every game tooltip has (Babuni, 2026-11-23).
- */
-const HELP_TOOLTIP_WIDTH_PX = 220;
-
-const helpTooltipStyle: CSSProperties = {
-  ...gameTooltipFrameStyle,
-  // On the page itself, so no panel or scroll area can cut it off.
-  position: 'fixed',
-  zIndex: 1000,
-  width: HELP_TOOLTIP_WIDTH_PX,
-  margin: 0,
-  pointerEvents: 'none',
-};
-
-/** Above the "?" and centred on it, kept inside the window. */
-function helpTooltipPlacement(trigger: HTMLElement): CSSProperties {
-  const rect = trigger.getBoundingClientRect();
-  const half = HELP_TOOLTIP_WIDTH_PX / 2;
-  const centre = Math.min(window.innerWidth - half - 8, Math.max(half + 8, rect.left + rect.width / 2));
-  return { left: centre - half, bottom: window.innerHeight - rect.top + 6 };
-}
-
 /**
  * The same size as a solution in the encounter and a picture in the Inventory
  * (Babuni, 2026-11-23): a fifth of the row, with the Inventory grid's gap.
@@ -285,11 +241,6 @@ export function EquipmentSection({
   /** An empty slot was tapped: choose an item for it. */
   onEquipSlot?: (slot: number) => void;
 }) {
-  const [helpOpen, setHelpOpen] = useState(false);
-  const helpButtonRef = useRef<HTMLButtonElement | null>(null);
-  // After a touch the browser sends mouse events too; a tap must not close it again.
-  const lastTouchAtRef = useRef(-Infinity);
-  const recentTouch = (): boolean => performance.now() - lastTouchAtRef.current < 900;
   const itemTips = useGameTooltip({ boundsSelector: tooltipBoundsSelector });
   const slots = shownEquipmentSlots(inventory);
   return (
@@ -297,40 +248,7 @@ export function EquipmentSection({
       {itemTips.layer}
       <div style={{ ...sectionHeadingRowStyle, position: 'relative' }}>
         <p style={sectionHeadingStyle}>Equipment</p>
-        <button
-          aria-expanded={helpOpen}
-          aria-label="What is equipment?"
-          disabled={!interactive}
-          onBlur={() => setHelpOpen(false)}
-          onClick={() => setHelpOpen(true)}
-          onMouseEnter={() => {
-            if (!recentTouch()) {
-              setHelpOpen(true);
-            }
-          }}
-          onMouseLeave={() => {
-            if (!recentTouch()) {
-              setHelpOpen(false);
-            }
-          }}
-          onPointerDown={(event) => {
-            if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-              lastTouchAtRef.current = performance.now();
-            }
-          }}
-          ref={helpButtonRef}
-          style={{ ...helpButtonStyle, pointerEvents: interactive ? 'auto' : 'none' }}
-          type="button"
-        >
-          ?
-        </button>
-        {helpOpen && helpButtonRef.current ? createPortal(
-          <div role="tooltip" style={{ ...helpTooltipStyle, ...helpTooltipPlacement(helpButtonRef.current) }}>
-            <GameTooltipFrame />
-            {EQUIPMENT_HELP_TEXT}
-          </div>,
-          document.body,
-        ) : null}
+        <HelpTip disabled={!interactive} label="What is equipment?" text={EQUIPMENT_HELP_TEXT} />
       </div>
       <div style={slotsRowStyle}>
         {slots.map((solutionId, slot) => (solutionId !== null ? (

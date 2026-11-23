@@ -2,7 +2,9 @@ import { useLayoutEffect, useRef, type CSSProperties, type ReactNode, type RefOb
 
 import type { AvatarInventory, PersistedAvatar } from '../../api/http.js';
 import { assetUrl } from '../../assetUrl.js';
-import { TooltipDivider } from '../game/GameTooltip.js';
+import { TooltipDivider, gameTooltipFrameStyle } from '../game/GameTooltip.js';
+import HelpTip from '../common/HelpTip.js';
+import GemCost from '../common/GemCost.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { findSpecialization, specializationChangeCost } from '@shared/specialization.js';
@@ -25,6 +27,9 @@ import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
 export const OVERVIEW_BACK_ASSET = `${UI_ROOT}/im_button_delete.webp`;
 export const OVERVIEW_ENTER_ASSET = `${UI_ROOT}/im_button_yes.webp`;
+
+/** No text is smaller than the item and skill tooltips' (Babuni, 2026-11-23). */
+const TOOLTIP_TEXT_SIZE = gameTooltipFrameStyle.fontSize;
 
 /** Inside the panel's own side padding. */
 const CONTENT_SIDE_PADDING = 14;
@@ -57,7 +62,7 @@ const titleStyle: CSSProperties = {
 
 const metaStyle: CSSProperties = {
   margin: 0,
-  fontSize: '0.74rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   opacity: 0.9,
@@ -84,7 +89,7 @@ const xpFillStyle: CSSProperties = {
 const xpTextStyle: CSSProperties = {
   margin: 0,
   color: '#ffcc66',
-  fontSize: '0.72rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
 };
 
 const sectionHeadingStyle: CSSProperties = {
@@ -105,7 +110,7 @@ const statsGridStyle: CSSProperties = {
 const statStyle: CSSProperties = {
   display: 'grid',
   gap: 2,
-  fontSize: '0.66rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
   lineHeight: 1.2,
   opacity: 0.92,
 };
@@ -125,20 +130,46 @@ const specializationNameStyle: CSSProperties = {
 };
 
 const specializationNoteStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
   margin: 0,
-  fontSize: '0.7rem',
-  opacity: 0.8,
+  fontSize: TOOLTIP_TEXT_SIZE,
 };
 
+/** Room around the section, so it does not sit squeezed above the green check. */
+const specializationSectionStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 8,
+  width: '100%',
+  padding: '6px 0 14px',
+};
+
+const headingRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
+};
+
+/** What a specialization does, for the "?" next to its heading. */
+export const SPECIALIZATION_HELP_TEXT =
+  'Your avatar is good at one type of skill. Every roll with a skill of that type gets +1, in any slot. '
+  + 'It is chosen and changed in the main menu: the first choice is free, every change costs 1 gem.';
+
 const specializationButtonStyle: CSSProperties = {
-  marginTop: 2,
-  minHeight: 28,
-  padding: '4px 16px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  minHeight: 34,
+  padding: '5px 18px',
   ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
   border: 0,
   color: '#ffcc66',
   fontFamily: 'Georgia, serif',
-  fontSize: '0.78rem',
+  fontSize: 'clamp(0.82rem, 3.2vw, 0.95rem)',
   cursor: 'pointer',
 };
 
@@ -152,45 +183,40 @@ function SpecializationSection({ avatar, onChoose }: {
 }) {
   const current = findSpecialization(avatar.specialization);
   const cost = specializationChangeCost(current?.solutionType);
+  const help = <HelpTip label="What is a specialization?" text={SPECIALIZATION_HELP_TEXT} />;
   if (!onChoose) {
     // In the game: one line, so it fits the panel over the encounter picture.
     return (
       <p style={specializationNoteStyle}>
-        <span style={{ color: '#ffcc66', fontWeight: 700 }}>Specialization: </span>
-        {current ? `${current.name} · +1 to ${current.name} skills` : 'none yet, choose one in the main menu'}
+        <span><span style={{ color: '#ffcc66', fontWeight: 700 }}>Specialization: </span>{current?.name ?? 'none yet'}</span>
+        {help}
       </p>
     );
   }
   return (
-    <>
-      <p style={sectionHeadingStyle}>Specialization</p>
-      {current ? (
-        <>
-          <p style={specializationNameStyle}>{current.name}</p>
-          <p style={specializationNoteStyle}>+1 to every roll with a {current.name} skill</p>
-        </>
-      ) : (
-        <p style={specializationNoteStyle}>None chosen yet. The first choice is free.</p>
-      )}
-      {onChoose ? (
-        <button
-          onClick={() => {
-            playSfx(DEFAULT_BUTTON_SOUND);
-            onChoose();
-          }}
-          style={specializationButtonStyle}
-          type="button"
-        >
-          {current ? `Change · ${cost} gem${cost === 1 ? '' : 's'}` : 'Choose'}
-        </button>
-      ) : null}
-    </>
+    <div style={specializationSectionStyle}>
+      <div style={headingRowStyle}>
+        <p style={sectionHeadingStyle}>Specialization</p>
+        {help}
+      </div>
+      {current ? <p style={specializationNameStyle}>{current.name}</p> : null}
+      <button
+        onClick={() => {
+          playSfx(DEFAULT_BUTTON_SOUND);
+          onChoose();
+        }}
+        style={specializationButtonStyle}
+        type="button"
+      >
+        {current ? <>Change · <GemCost cost={cost} /></> : 'Choose'}
+      </button>
+    </div>
   );
 }
 
 const noticeStyle: CSSProperties = {
   margin: 0,
-  fontSize: '0.72rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
   color: '#ff9a7a',
 };
 
@@ -232,7 +258,8 @@ export function AvatarOverviewContent({
   ];
 
   return (
-    <div style={contentStyle}>
+    // The game's panel over the picture is short: its rows sit closer together.
+    <div style={showPortrait ? contentStyle : { ...contentStyle, gap: 2 }}>
       {showPortrait ? (
         <div style={portraitStyle}>
           <AvatarCard avatar={avatar} hideLabels />
@@ -305,13 +332,16 @@ const footerImageStyle: CSSProperties = {
 export function AvatarOverviewFooter({
   onBack,
   right,
+  align = 'center',
 }: {
   onBack?: () => void;
   right: ReactNode;
+  /** Without a back button: the main menu puts the green check at the bottom right (Babuni, 2026-11-23). */
+  align?: 'center' | 'end';
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   if (!onBack) {
-    return <div style={{ ...footerStyle, justifyContent: 'center' }}>{right}</div>;
+    return <div style={{ ...footerStyle, justifyContent: align === 'end' ? 'flex-end' : 'center' }}>{right}</div>;
   }
   return (
     <div style={footerStyle}>

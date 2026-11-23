@@ -9,7 +9,8 @@ import {
 } from '@shared/specialization.js';
 import { gameSolutions } from '../../data/gameContent.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
-import { TooltipDivider } from '../game/GameTooltip.js';
+import { TooltipDivider, gameTooltipFrameStyle } from '../game/GameTooltip.js';
+import GemCost from '../common/GemCost.js';
 import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
 import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from '../game/blocks/decorativeFrameShared.js';
 import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
@@ -23,6 +24,9 @@ import { OVERVIEW_BACK_ASSET, OVERVIEW_ENTER_ASSET } from './AvatarOverview.js';
  * green confirms. The first choice is free, every change costs 1 gem. Only in
  * the main menu.
  */
+
+/** No text is smaller than the item and skill tooltips' (Babuni, 2026-11-23). */
+const TOOLTIP_TEXT_SIZE = gameTooltipFrameStyle.fontSize;
 
 const overlayStyle: CSSProperties = {
   position: 'fixed',
@@ -99,7 +103,7 @@ function optionStyle(selected: boolean): CSSProperties {
 const currentMarkStyle: CSSProperties = {
   display: 'block',
   marginTop: 1,
-  fontSize: '0.56rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   opacity: 0.75,
@@ -133,13 +137,13 @@ const descriptionStyle: CSSProperties = {
 const effectStyle: CSSProperties = {
   margin: 0,
   color: '#ffcc66',
-  fontSize: 'clamp(0.72rem, 2.9vw, 0.82rem)',
+  fontSize: 'clamp(0.78rem, 3.2vw, 0.9rem)',
   fontWeight: 700,
 };
 
 const noteStyle: CSSProperties = {
   margin: 0,
-  fontSize: '0.7rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
   opacity: 0.75,
 };
 
@@ -169,16 +173,18 @@ const footerImageStyle: CSSProperties = {
 };
 
 const costStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
   margin: 0,
   color: '#ffcc66',
-  fontSize: 'clamp(0.78rem, 3vw, 0.9rem)',
+  fontSize: 'clamp(0.85rem, 3.4vw, 1rem)',
   textAlign: 'center',
 };
 
 const errorStyle: CSSProperties = {
   ...costStyle,
   color: '#ff9a7a',
-  fontSize: '0.72rem',
+  fontSize: TOOLTIP_TEXT_SIZE,
 };
 
 /** How many of the avatar's skills, with charges, are of this type. */
@@ -190,10 +196,6 @@ function skillsOfType(avatar: PersistedAvatar, solutionType: number): number {
       && solution.mSolutionType === solutionType
       && entry.uses > 0;
   }).length;
-}
-
-export function costLabel(cost: number): string {
-  return cost === 0 ? 'Free' : `${cost} gem${cost === 1 ? '' : 's'}`;
 }
 
 export default function SpecializationPicker({
@@ -277,7 +279,7 @@ export default function SpecializationPicker({
           </button>
           <div>
             {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
-            <p style={costStyle}>{unchanged ? 'Your current specialization' : costLabel(cost)}</p>
+            <p style={costStyle}>{unchanged ? 'Your current specialization' : <GemCost cost={cost} />}</p>
           </div>
           <button
             aria-label={unchanged ? 'Keep this specialization' : `Choose ${selected.name}`}

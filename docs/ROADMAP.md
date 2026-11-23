@@ -204,6 +204,7 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 
 - [x] A first in-game help: the "?" next to Equipment in the avatar card (D-057).
 - [ ] Write the tutorial: which moments get a tip (first encounter, solution slots and sets, dice and the roll's math, rewards and losses, essences and Atranor, level-up choice, equipment), and their wording.
+- [x] A "Tips and tutorial" check mark in the settings turns every "?" help off (D-059, 2026-11-23); new tips should use `HelpTip` or read the same setting.
 - [ ] Decide how tips show and when they stop (once per player, a way to see them again).
 
 ## Player choices: equipment, specialization, edit, travel — concept, 2026-11-23 ([PLAYER_CHOICES.md](PLAYER_CHOICES.md))

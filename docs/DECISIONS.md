@@ -520,3 +520,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on local `main`, not released. Checked in the local game on desktop and phone; coming home from the game not checked.
 
+## D-059 — Tips and tutorial can be turned off; no text smaller than the tooltips (2026-11-23)
+
+**Babuni's direction:** every "?" help in the game (and the tutorial's tips to come) can be turned on and off with one check mark, "Tips and tutorial", in the settings. Explanations belong in the "?" tooltips, not as text on the card: the avatar overview's specialization section shows only its heading with a "?", the chosen name and the button. The help tooltips are as readable as the item and skill tooltips, and no text in these screens is smaller than those tooltips. Prices in gems show as "Cost 1" with the red-yellow gem icon. In the main menu the overview's green check sits at the bottom right.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `client/src/ui/tips.ts` keeps the setting in the browser (`morkahja.tips.enabled`, on unless turned off) and tells open screens when it changes; `HelpTip` (`client/src/ui/common/HelpTip.tsx`) is the one "?" with its tooltip and hides itself when tips are off; `GemCost` draws the price. The overview and the specialization picker use the item tooltip's font size (`gameTooltipFrameStyle`) as their smallest.
+
+**Status:** pushed to GitHub `main`, not released. Checked in the local game on desktop and phone.
+

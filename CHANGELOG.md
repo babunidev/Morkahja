@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: "?" help for specialization, a Tips and tutorial setting, gem prices (D-059)
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** no text above the specialization's button, a "?" instead, like Equipment's; a "Tips and tutorial" check mark in the settings that turns all "?" helps off (more tips are coming); "Cost 1" and the red-yellow gem icon wherever a price in gems shows, also on the Change button; in the menu's avatar card the green check at the bottom right and more room for the specialization; the help tooltips bigger and as readable as the item and skill tooltips, and no text smaller than those.
+- **Client:** new `HelpTip.tsx` (the "?" and its tooltip, up to 300 px wide, in the item tooltip's text size; hidden when tips are off), used by Equipment and Specialization; the help text for Specialization explains the +1 and the price. New `tips.ts` (the setting, kept in the browser) and `settings/TipsToggle.tsx` (a framed check box under the sound sliders). New `GemCost.tsx` ("Cost 1" + `im_gems.webp`, "Free" at 0), used on the Change button and in the picker. The overview's specialization section shows only the heading with its "?", the chosen name and Choose or Change; the "+1 to every roll…" line and the "first choice is free" note are gone. The menu card's green check is at the bottom right (`AvatarOverviewFooter` `align="end"`). The overview's and the picker's small texts (level line, XP, statistics, notices, the skill count, "current") use the item tooltip's size as their minimum. In the game the overview's rows sit closer together, so the larger text still fits the panel over the picture.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): both "?" tooltips, the overview before and after a choice, the picker's "Cost 1" with the gem, the settings check mark turned off and the overview without any "?" after a reload; the in-game overview with the specialization line and its "?". Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-tips-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed.
+- **Note:** `npx tsc -p client` checks nothing, because `client/tsconfig.json` only references other configs; `npm run typecheck` (`tsc -b`) is the check that counts.
+
 ## 2026-11-23 — Unreleased: the specialization picker as a roster
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

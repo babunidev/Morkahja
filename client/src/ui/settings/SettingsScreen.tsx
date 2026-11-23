@@ -17,6 +17,7 @@ import AboutUsOverlay from '../dashboard/AboutUsOverlay.js';
 import AmbianceVolumeSlider from './AmbianceVolumeSlider.js';
 import MusicVolumeSlider from './MusicVolumeSlider.js';
 import SfxVolumeSlider from './SfxVolumeSlider.js';
+import TipsToggle from './TipsToggle.js';
 import PatchNotesOverlay from './PatchNotesOverlay.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { frameDividerStyle, simpleFrameStyle } from '../common/simpleFrame.js';
@@ -407,6 +408,7 @@ export function SettingsScreen({
               <MusicVolumeSlider />
               <AmbianceVolumeSlider />
               <SfxVolumeSlider />
+              <TipsToggle />
               <div style={settingRowStyle}>
                 <span>Recovery key</span>
                 <PanelButton

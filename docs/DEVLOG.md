@@ -637,6 +637,10 @@ The second of my player choices is in. In the avatar overview I choose what my a
 
 The specialization names are short words, yet they stood in a long list while the description was small beside them. Now the description is on top, a line divides it from the choices, and the fifteen sit below as a roster of three in a row with bigger buttons and text. Claude Code (Claude Opus 5.5) rearranged the picker and looked at it on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-23 — Tips I can turn off, and prices with the gem
+
+The specialization in my avatar card had explanations stacked above its button, so I asked for a "?" like the one next to Equipment instead. More of these helps and a tutorial are coming, so the settings now have a "Tips and tutorial" check mark that turns all of them off. Prices show as "Cost 1" with the red-yellow gem, the green check sits at the bottom right of the card, and the specialization has more room. I also set a rule: no text smaller than the item and skill tooltips, and the help tooltips as readable as those. Claude Code (Claude Opus 5.5) made one "?" for the whole game that the setting can hide, made the small texts larger, and checked it all on a desktop and a phone size. In the game the bigger text cut off the equipment slots at first, so it moved the rows closer together. **Verification:** client tests and typecheck passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

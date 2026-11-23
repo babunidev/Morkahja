@@ -771,6 +771,7 @@ export function AvatarSelectionPanel({
           title={cardAvatar.name.trim() || 'Adventurer'}
           footer={(
             <AvatarOverviewFooter
+              align="end"
               right={(
                 <OverviewEnterButton
                   avatarName={formatAvatarDisplayName(cardAvatar)}
