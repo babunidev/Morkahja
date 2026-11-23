@@ -1415,7 +1415,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A large, intricately woven net shimmering with energy, designed to safely capture and contain. It sparkles with conductive threads absorbing power.",
     "mSolutionType": 30,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10135": {
     "mSolutionID": 10135,
