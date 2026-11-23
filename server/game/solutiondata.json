@@ -1336,7 +1336,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate silver locket, adorned with a glowing ruby centerpiece that pulses in time with the heartbeat of concealed treasure.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10126": {
     "mSolutionID": 10126,
