@@ -1319,7 +1319,8 @@
     "mSolutionRewardType": 3,
     "mSolutionText": "The essence of Sylvanus, the God of Growth. Sylvanus symbolises growth, renewal, and vitality.",
     "mSolutionType": 15,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10124": {
     "mSolutionID": 10124,
