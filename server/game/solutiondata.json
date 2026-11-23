@@ -843,7 +843,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A crystal-clear elixir contained within a magical vessel, quenching thirst with revitalizing and purifying properties in the mystical world.",
     "mSolutionType": 34,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10078": {
     "mSolutionID": 10078,
