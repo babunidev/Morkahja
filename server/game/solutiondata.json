@@ -1030,7 +1030,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An enchanting musical instrument crafted from sun-bleached bone.",
     "mSolutionType": 20,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10095": {
     "mSolutionID": 10095,
