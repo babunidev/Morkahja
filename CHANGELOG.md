@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: the specialization picker as a roster
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the names are short and the description was small beside a long list. The description goes on top, a line below it, then the specializations as a roster of three in a row, five rows, with thicker buttons and a bigger font.
+- **Change (`SpecializationPicker.tsx`):** the body is one column: the selected one's name, description (larger, up to 420 px wide), "+1 to every roll with a … skill" and the avatar's skill count, with room for the longest description so the roster does not move; then a divider that reaches the frame; then a 3-column grid of the fifteen, each button 38–46 px tall with centred text at 0.82–0.98 rem, "current" under the current one's name.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the picker before and after a choice, the refused paid change. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-specialization-roster-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed.
+
 ## 2026-11-23 — Unreleased: specialization (D-056)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

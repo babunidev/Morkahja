@@ -633,6 +633,10 @@ Tapping my avatars in the main menu was silent, while every other button clicks.
 
 The second of my player choices is in. In the avatar overview I choose what my avatar is good at, for example Stealth, and from then on every roll with a Stealth skill gets +1. The first choice is free, and a change costs 1 gem. A list on the left shows the fifteen specializations and the right side shows the description. In the game the overview shows the specialization in one line, and the roll numbers include the +1. I also asked for my concept to follow the changes I made after writing it, since the Play button and the selection modes are gone now. Claude Code (Claude Opus 5.5) built it on the server and the client and rewrote the concept where it no longer matched. It made sure two changes at the same moment cannot both be paid with one gem, and tried everything in the local game on a desktop and a phone size. It found that Warmth has no skills yet. The descriptions are its drafts for me to revise. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
 
+## 2026-11-23 — The specializations as a roster
+
+The specialization names are short words, yet they stood in a long list while the description was small beside them. Now the description is on top, a line divides it from the choices, and the fifteen sit below as a roster of three in a row with bigger buttons and text. Claude Code (Claude Opus 5.5) rearranged the picker and looked at it on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

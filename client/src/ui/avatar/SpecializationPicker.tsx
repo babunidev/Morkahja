@@ -11,15 +11,15 @@ import { gameSolutions } from '../../data/gameContent.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 import { TooltipDivider } from '../game/GameTooltip.js';
 import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
-import { PANEL_SIDE_PADDING } from '../game/blocks/decorativeFrameShared.js';
+import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from '../game/blocks/decorativeFrameShared.js';
 import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { OVERVIEW_BACK_ASSET, OVERVIEW_ENTER_ASSET } from './AvatarOverview.js';
 
 /**
- * Choosing a specialization (D-056, Babuni, 2026-11-23): the list on the left,
- * the selected one's description on the right. Red goes back to the overview,
+ * Choosing a specialization (D-056, Babuni, 2026-11-23): the selected one's
+ * description on top, a line, then the fifteen as a roster of three in a row. Red goes back to the overview,
  * green confirms. The first choice is free, every change costs 1 gem. Only in
  * the main menu.
  */
@@ -56,29 +56,32 @@ const bodyStyle: CSSProperties = {
   position: 'relative',
   zIndex: 1,
   minHeight: 0,
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 0.9fr) minmax(0, 1.1fr)',
-  gap: 12,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
   padding: `0 ${PANEL_SIDE_PADDING}`,
-};
-
-const listStyle: CSSProperties = {
-  minHeight: 0,
-  margin: 0,
-  padding: '2px 4px 2px 0',
-  listStyle: 'none',
-  display: 'grid',
-  alignContent: 'start',
-  gap: 3,
   overflowY: 'auto',
   scrollbarWidth: 'none',
+};
+
+/** The line between the description and the roster reaches the frame. */
+const DIVIDER_BLEED = panelEdgeDividerBleed(0);
+
+/** The roster: three in a row, five rows. */
+const listStyle: CSSProperties = {
+  margin: 0,
+  padding: '2px 0',
+  listStyle: 'none',
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gap: 'clamp(6px, 1.6vw, 10px)',
 };
 
 function optionStyle(selected: boolean): CSSProperties {
   return {
     width: '100%',
-    minHeight: 27,
-    padding: '3px 10px',
+    minHeight: 'clamp(38px, 9vw, 46px)',
+    padding: '6px 8px',
     ...simpleFrameStyle({
       background: selected ? 'rgba(126, 29, 18, 0.92)' : 'rgba(51, 0, 0, 0.82)',
       opacity: selected ? 1 : 0.7,
@@ -86,28 +89,29 @@ function optionStyle(selected: boolean): CSSProperties {
     border: 0,
     color: selected ? '#ffe2a3' : '#ffcc66',
     fontFamily: 'Georgia, serif',
-    fontSize: 'clamp(0.74rem, 3vw, 0.84rem)',
-    textAlign: 'left',
+    fontSize: 'clamp(0.82rem, 3.4vw, 0.98rem)',
+    lineHeight: 1.15,
+    textAlign: 'center',
     cursor: 'pointer',
   };
 }
 
 const currentMarkStyle: CSSProperties = {
-  marginLeft: 6,
-  fontSize: '0.6rem',
+  display: 'block',
+  marginTop: 1,
+  fontSize: '0.56rem',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   opacity: 0.75,
 };
 
 const detailStyle: CSSProperties = {
-  minHeight: 0,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: 8,
-  overflowY: 'auto',
-  scrollbarWidth: 'none',
+  gap: 6,
+  // Room for the longest description, so the roster does not jump.
+  minHeight: 'clamp(150px, 34vw, 170px)',
   textAlign: 'center',
 };
 
@@ -121,7 +125,8 @@ const nameStyle: CSSProperties = {
 
 const descriptionStyle: CSSProperties = {
   margin: 0,
-  fontSize: 'clamp(0.74rem, 3vw, 0.86rem)',
+  maxWidth: 420,
+  fontSize: 'clamp(0.82rem, 3.4vw, 0.95rem)',
   lineHeight: 1.45,
 };
 
@@ -224,6 +229,19 @@ export default function SpecializationPicker({
       <section aria-label="Choose a specialization" role="dialog" style={panelStyle}>
         <DecorativeEdgeFrame regionLabel="Specialization" zIndex={2} />
         <div style={bodyStyle}>
+          <div aria-live="polite" style={detailStyle}>
+            <p style={nameStyle}>{selected.name}</p>
+            <TooltipDivider />
+            <p style={descriptionStyle}>{selected.description}</p>
+            <TooltipDivider />
+            <p style={effectStyle}>+1 to every roll with a {selected.name} skill</p>
+            <p style={noteStyle}>
+              {owned === 0
+                ? `${avatar.name.trim() || 'This avatar'} has no ${selected.name} skill yet.`
+                : `${avatar.name.trim() || 'This avatar'} has ${owned} ${selected.name} skill${owned === 1 ? '' : 's'}.`}
+            </p>
+          </div>
+          <TooltipDivider bleed={DIVIDER_BLEED} />
           <ul aria-label="Specializations" style={listStyle}>
             {SPECIALIZATIONS.map((entry) => (
               <li key={entry.solutionType}>
@@ -242,18 +260,6 @@ export default function SpecializationPicker({
               </li>
             ))}
           </ul>
-          <div aria-live="polite" style={detailStyle}>
-            <p style={nameStyle}>{selected.name}</p>
-            <TooltipDivider />
-            <p style={descriptionStyle}>{selected.description}</p>
-            <TooltipDivider />
-            <p style={effectStyle}>+1 to every roll with a {selected.name} skill</p>
-            <p style={noteStyle}>
-              {owned === 0
-                ? `${avatar.name.trim() || 'This avatar'} has no ${selected.name} skill yet.`
-                : `${avatar.name.trim() || 'This avatar'} has ${owned} ${selected.name} skill${owned === 1 ? '' : 's'}.`}
-            </p>
-          </div>
         </div>
         <div style={footerStyle}>
           <button
