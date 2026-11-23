@@ -36,7 +36,7 @@ import {
   type AvatarEnterHandoffSnapshot,
 } from '../transitions/avatarEnterTransition.js';
 import { FADE_DURATION_MS, waitForFade } from '../transitions/fade.js';
-import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import { useTooltipReveal } from '../hooks/useTooltipReveal.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { AVATAR_ENTER_SOURCE_ATTR } from './AvatarPortraitStack.js';
@@ -544,6 +544,8 @@ export function AvatarSelectionPanel({
     if (!clickable) {
       return;
     }
+    // Every tap on an avatar or an empty slot gets the button sound (Babuni, 2026-11-23).
+    playSfx(DEFAULT_BUTTON_SOUND);
 
     if (!candidate) {
       // The empty slot swaps into the big place first, then the creation opens.

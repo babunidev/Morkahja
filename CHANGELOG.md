@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: a button sound when an avatar is tapped in the menu
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** tapping an avatar gives a short button sound as feedback, the sound the other buttons use.
+- **Change:** `handleSelect` in `AvatarSelectionPanel.tsx` plays `DEFAULT_BUTTON_SOUND` (`sfx_button_press.mp3`) on every accepted tap in the main menu's avatar selection: an avatar below (the swap), the active avatar (its overview or the death overlay) and an empty slot (the creation). Taps ignored during a glide or the enter transition stay silent. The in-game avatar already played this sound.
+- **Checked in the local game** (headless Chromium, new local test player, sounds counted in the page): each of those four taps played `sfx_button_press.mp3` once. Not heard with real speakers.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed and its tests were not run again.
+
 ## 2026-11-23 — Unreleased: an empty slot moves into the big place for a new avatar
 
 - **Not released.** Committed to local `main` only.

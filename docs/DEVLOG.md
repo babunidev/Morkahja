@@ -625,6 +625,10 @@ The lines between the parts of my avatar screen and of the inventory stopped sho
 
 When I tapped an empty slot under my active avatar, the creation opened while the slot stayed small below. Now the empty slot glides into the big place first, and my new avatar appears there and stays the active one. If I cancel, my old avatar glides back. The two avatars below also stand closer together now. Claude Code (Claude Opus 5.5) had written most of it when a crash test interrupted the session. In the next session it fixed a short flash of the old avatar after creating, stopped a second tap during the glide, and tried it all in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed; one server test is flaky and failed once (unrelated). **Not released.**
 
+## 2026-11-23 — A sound for tapping my avatars
+
+Tapping my avatars in the main menu was silent, while every other button clicks. Now each tap on an avatar or an empty slot plays the same button sound. In the game my avatar already did. Claude Code (Claude Opus 5.5) added it and checked in the local game that every tap plays the sound once. **Verification:** client tests and typecheck passed; not yet heard with speakers. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
