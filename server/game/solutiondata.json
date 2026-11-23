@@ -997,7 +997,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An intricately carved lantern with panels of stained glass in swirling, mesmerizing patterns.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10092": {
     "mSolutionID": 10092,
