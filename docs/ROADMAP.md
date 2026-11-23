@@ -193,6 +193,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] No Play button: the active avatar big, the other two below; a tap swaps; a tap on the active one opens the overview.
 - [x] Overview in the menu (red back, green enter, shrinking into the avatar) and in the game (red back, Home), with statistics, equipment slots and room for the specialization.
 - [x] Equipment slots the size of the solutions and the Inventory pictures.
+- [ ] Babuni decides whether the dark red background stays for the Inventory, Skillbook and Lore (a trial, 2026-11-23).
 - [ ] Check returning home from the game, a failed avatar as the active one, and creating an avatar from an empty slot in the new layout.
 - [ ] Specialization in the overview's reserved space (D-056).
 

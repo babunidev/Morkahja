@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { GAME_PANEL_BACKGROUND } from './gamePanelBackground.js';
 
-import { assetUrl } from '../../../assetUrl.js';
 import { fadeTransition } from '../../transitions/fade.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 
@@ -10,7 +10,6 @@ import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
  * The title plate closes it, like the Inventory's.
  */
 
-const OVERLAY_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 /** The Inventory and Skillbook panels' layer (SolutionGridOverlay). */
 const OVERLAY_Z_INDEX = 26;
 
@@ -20,11 +19,7 @@ const panelStyle: CSSProperties = {
   zIndex: OVERLAY_Z_INDEX,
   display: 'flex',
   flexDirection: 'column',
-  backgroundColor: 'rgba(10, 7, 5, 0.94)',
-  backgroundImage: `url(${OVERLAY_BACKGROUND})`,
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
+  backgroundColor: GAME_PANEL_BACKGROUND,
   overflow: 'hidden',
   transition: fadeTransition,
 };
@@ -68,9 +63,31 @@ export function AvatarOverviewBlock({
   footer: ReactNode;
   onClose: () => void;
 }) {
+  const asideRef = useRef<HTMLElement | null>(null);
+  // A tap anywhere else closes it (Babuni, 2026-11-23: no back button). The
+  // avatar itself toggles it, so a tap there is left to the avatar.
+  useEffect(() => {
+    if (!visible) {
+      return undefined;
+    }
+    const onPointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (target instanceof Node && asideRef.current?.contains(target)) {
+        return;
+      }
+      if (target instanceof Element && target.closest('[data-morkahja-avatar-portrait]')) {
+        return;
+      }
+      onClose();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [visible, onClose]);
+
   return (
     <>
       <aside
+        ref={asideRef}
         aria-hidden={!visible}
         aria-label="Avatar overview"
         inert={visible ? undefined : true}

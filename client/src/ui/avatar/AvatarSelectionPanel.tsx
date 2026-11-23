@@ -711,9 +711,9 @@ export function AvatarSelectionPanel({
       {cardAvatar ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
+          title={cardAvatar.name.trim() || 'Adventurer'}
           footer={(
             <AvatarOverviewFooter
-              onBack={closeCard}
               right={(
                 <OverviewEnterButton
                   avatarName={formatAvatarDisplayName(cardAvatar)}

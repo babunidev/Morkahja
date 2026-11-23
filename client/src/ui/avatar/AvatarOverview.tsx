@@ -9,6 +9,8 @@ import AvatarCard from './AvatarCard.js';
 import { EquipmentSection, experienceRequiredForNextLevel } from './AvatarPartyDetailsCard.js';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
+import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
+import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 
 /**
  * The avatar's overview (Babuni, 2026-11-23): everything about the avatar in
@@ -45,15 +47,6 @@ const titleStyle: CSSProperties = {
   fontSize: 'clamp(0.9rem, 3.4vw, 1.1rem)',
   letterSpacing: '0.05em',
   color: '#ffcc66',
-};
-
-const nameStyle: CSSProperties = {
-  margin: 0,
-  fontFamily: 'Breathe Fire, Georgia, serif',
-  fontSize: 'clamp(1.3rem, 5vw, 1.7rem)',
-  letterSpacing: '0.04em',
-  color: '#ffcc66',
-  textShadow: '0 2px 10px rgba(0, 0, 0, 0.9)',
 };
 
 const metaStyle: CSSProperties = {
@@ -150,7 +143,7 @@ export function AvatarOverviewContent({
   /** For example why the last equip failed. */
   notice?: string | null;
   tooltipBoundsSelector?: string;
-  /** The game shows the avatar just below and its name on the plate, so it leaves both out. */
+  /** The game shows the avatar just below, so it leaves the portrait out. The name is on the frame's plate. */
   showPortrait?: boolean;
   onEquipSlot?: (slot: number) => void;
 }) {
@@ -172,7 +165,6 @@ export function AvatarOverviewContent({
         </div>
       ) : null}
       {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
-      {showPortrait ? <p style={nameStyle}>{avatar.name.trim() || 'Adventurer'}</p> : null}
       <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
       <span aria-label={`Experience ${current} of ${nextLevel}`} style={xpShellStyle}>
         <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
@@ -228,15 +220,21 @@ const footerImageStyle: CSSProperties = {
   filter: 'drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5))',
 };
 
-/** Red back on the left; on the right the green check (menu) or another action (game: Home). */
+/**
+ * The green check (menu) or Home (game). No back button (Babuni, 2026-11-23):
+ * a tap outside the card closes it.
+ */
 export function AvatarOverviewFooter({
   onBack,
   right,
 }: {
-  onBack: () => void;
+  onBack?: () => void;
   right: ReactNode;
 }) {
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  if (!onBack) {
+    return <div style={{ ...footerStyle, justifyContent: 'center' }}>{right}</div>;
+  }
   return (
     <div style={footerStyle}>
       <button
@@ -306,17 +304,19 @@ const menuOverlayStyle: CSSProperties = {
   pointerEvents: 'auto',
 };
 
-/** The avatar creation's panel size and look. */
+/**
+ * The avatar creation's size, framed like an encounter (Babuni, 2026-11-23):
+ * the encounter's frame with the name on its plate, on the panels' dark red.
+ */
 const menuPanelStyle: CSSProperties = {
+  position: 'relative',
   width: 'min(100%, 520px)',
   maxHeight: 'min(100%, 860px)',
   boxSizing: 'border-box',
   display: 'grid',
   gridTemplateRows: 'minmax(0, 1fr) auto',
-  padding: '18px 2px 16px',
-  border: '1px solid rgba(255, 204, 102, 0.62)',
-  borderRadius: 14,
-  background: 'rgba(12, 7, 5, 0.92)',
+  padding: 'clamp(26px, 6vw, 34px) clamp(5px, 1.2vw, 7px) clamp(18px, 4vw, 26px)',
+  background: GAME_PANEL_BACKGROUND,
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55)',
   transformOrigin: 'center center',
 };
@@ -334,11 +334,14 @@ export const OVERVIEW_CLOSE_MS = 380;
  * element (the big avatar) before the world is entered.
  */
 export function AvatarOverviewMenuCard({
+  title,
   children,
   footer,
   closingInto,
   onBackdrop,
 }: {
+  /** The name on the frame's plate. */
+  title: string;
   children: ReactNode;
   footer: ReactNode;
   closingInto?: RefObject<HTMLElement | null> | null;
@@ -385,8 +388,9 @@ export function AvatarOverviewMenuCard({
       style={menuOverlayStyle}
     >
       <section aria-label="Avatar overview" ref={panelRef} role="dialog" style={menuPanelStyle}>
-        <div style={menuScrollStyle}>{children}</div>
-        {footer}
+        <DecorativeEdgeFrame regionLabel={title} zIndex={2} />
+        <div style={{ ...menuScrollStyle, position: 'relative', zIndex: 1 }}>{children}</div>
+        <div style={{ position: 'relative', zIndex: 1 }}>{footer}</div>
       </section>
     </div>
   );

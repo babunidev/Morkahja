@@ -1123,7 +1123,6 @@ export function GameEnvironment({
                 ),
                 footer: (
                   <AvatarOverviewFooter
-                    onBack={() => setOverviewOpen(false)}
                     right={(
                       <button
                         aria-label="Return home"

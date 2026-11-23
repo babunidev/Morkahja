@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -6,6 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
+import { GAME_PANEL_BACKGROUND } from './gamePanelBackground.js';
 import { gameSolutions } from '../../../data/gameContent.js';
 import type { AvatarInventory, InventoryItem } from '../../../api/http.js';
 import {
@@ -25,8 +27,9 @@ import { fadeTransition } from '../../transitions/fade.js';
 import { useNavButtonPress } from '../../transitions/navButtonPress.js';
 import { assetUrl } from '../../../assetUrl.js';
 import { SolutionImage } from '../../common/SolutionFrame.js';
+import { frameDividerStyle } from '../../common/simpleFrame.js';
+import { inventorySections } from './inventorySections.js';
 
-const OVERLAY_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 
 const GRID_COLUMNS = 5;
@@ -104,11 +107,7 @@ const overlayBlockStyle: CSSProperties = {
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  backgroundColor: 'rgba(10, 7, 5, 0.94)',
-  backgroundImage: `url(${OVERLAY_BACKGROUND})`,
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
+  backgroundColor: GAME_PANEL_BACKGROUND,
   overflow: 'hidden',
   transition: fadeTransition,
 };
@@ -150,6 +149,15 @@ const itemGridStyle: CSSProperties = {
   // The buttons' own 4 px above and below make up the row gap.
   rowGap: 0,
   justifyItems: 'center',
+};
+
+/**
+ * The line between the inventory's lists (normal, rare, essences): the
+ * tooltip's divider (Babuni, 2026-11-23).
+ */
+const sectionDividerStyle: CSSProperties = {
+  ...frameDividerStyle({ side: 'top' }),
+  margin: '6px 2px 4px',
 };
 
 /**
@@ -545,8 +553,14 @@ export function SolutionGridOverlay({
         }}
       >
         {items.length > 0 ? (
+          (sourceContainer === 'items'
+            ? inventorySections(items, (id) => solutionsById()[String(id)])
+            : [items]
+          ).map((section, sectionIndex) => (
+          <Fragment key={sectionIndex}>
+          {sectionIndex > 0 ? <div aria-hidden="true" style={sectionDividerStyle} /> : null}
           <div style={itemGridStyle}>
-            {items.map((item, itemIndex) => {
+            {section.map((item, itemIndex) => {
               const itemKey = String(item.solutionId);
               const columnIndex = itemIndex % GRID_COLUMNS;
               const isSelected = selectedItemId === item.solutionId;
@@ -610,6 +624,8 @@ export function SolutionGridOverlay({
               );
             })}
           </div>
+          </Fragment>
+          ))
         ) : (
           <p style={emptyTextStyle}>{emptyText}</p>
         )}

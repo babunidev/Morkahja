@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { GAME_PANEL_BACKGROUND } from './gamePanelBackground.js';
 import { noteLoreGemPickup } from '../loreGemPickup.js';
 import type { LoreGemOfferDto } from '@shared/contracts';
 
@@ -13,7 +14,6 @@ import { assetUrl } from '../../../assetUrl.js';
 import DecorativeEdgeFrame from './DecorativeEdgeFrame.js';
 import { overlayPanelTitleStyle } from './decorativeFrameShared.js';
 
-const LORE_BACKGROUND = assetUrl('/UI/09_GAME/spellbook_bg.webp');
 const LORE_GEM_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const LORE_GEM_TICK_MS = 200;
 
@@ -37,11 +37,7 @@ const loreBackgroundLayerStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
   zIndex: 0,
-  backgroundColor: 'rgba(10, 7, 5, 0.94)',
-  backgroundImage: `url(${LORE_BACKGROUND})`,
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
+  backgroundColor: GAME_PANEL_BACKGROUND,
   opacity: LORE_BACKGROUND_OPACITY,
   pointerEvents: 'auto',
 };
