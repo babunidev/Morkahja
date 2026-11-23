@@ -975,7 +975,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An enchanted halberd, crafted by the skilled Rokur. The blade radiates frost magic, countering fire and capable of freezing even the most fiery of foes.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10090": {
     "mSolutionID": 10090,
