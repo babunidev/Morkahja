@@ -10,6 +10,8 @@ export interface AvatarInventory {
   spellbook: InventoryItem[];
   items: InventoryItem[];
   essences: InventoryItem[];
+  /** The two equipment slots (D-056): solution ids or null. Absent on older inventories. */
+  equipped?: (number | null)[];
 }
 
 export interface AvatarProfile {

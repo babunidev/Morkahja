@@ -3656,3 +3656,87 @@ export async function resumeRoomAfterSacrifice(
 
   return resumed;
 }
+
+/** The participant has not finished choosing in the encounter in front of them. */
+function participantChoiceIsOpen(choiceState: RoomParticipant['choiceState'] | undefined): boolean {
+  return choiceState === 'choosing' || choiceState === 'ready';
+}
+
+function patchPreparedCommitInventory(
+  bundle: NonNullable<RoomParticipant['preparedCommit']>,
+  transform: (inventory: AvatarInventory) => AvatarInventory,
+): NonNullable<RoomParticipant['preparedCommit']> {
+  const nextInventory = transform(bundle.nextInventory);
+  return {
+    ...bundle,
+    nextInventory,
+    updatedAvatar: { ...bundle.updatedAvatar, inventory: nextInventory },
+  };
+}
+
+export type OpenOutcomePatch =
+  | { kind: 'choice_open' }
+  | { kind: 'none' }
+  | { kind: 'patched'; inventory: AvatarInventory };
+
+/**
+ * Equipment (D-056) changes only once the choice in the current encounter is
+ * made. A room or a paused solo run that already holds the prepared outcome
+ * writes its inventory on Continue, so the change goes into that outcome too;
+ * otherwise Continue would undo it.
+ */
+export async function patchOpenOutcomeInventory(
+  transaction: DocumentTransaction,
+  playerId: string,
+  avatarId: string,
+  transform: (inventory: AvatarInventory) => AvatarInventory,
+): Promise<OpenOutcomePatch> {
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  const room = roomId ? await loadEncounterRoomFromTransaction(transaction, roomId) : null;
+  const participant = room?.participants.find(
+    (entry) => entry.playerId === playerId && entry.avatarId === avatarId,
+  );
+
+  if (room && participant) {
+    if (participantChoiceIsOpen(participant.choiceState)) {
+      return { kind: 'choice_open' };
+    }
+    if (!participant.preparedCommit) {
+      return { kind: 'none' };
+    }
+    const preparedCommit = patchPreparedCommitInventory(participant.preparedCommit, transform);
+    await transaction.setEncounterRoom(room.roomId, {
+      ...room,
+      participants: room.participants.map((entry) =>
+        entry === participant ? { ...entry, preparedCommit } : entry,
+      ),
+      updatedAt: nowMs(),
+    });
+    return { kind: 'patched', inventory: preparedCommit.nextInventory };
+  }
+
+  const checkpointRow = await transaction.query<{ data: SoloRoomCheckpoint }>(
+    'SELECT data FROM solo_room_checkpoints WHERE player_id = $1 AND avatar_id = $2 FOR UPDATE',
+    [playerId, avatarId],
+  );
+  const checkpoint = checkpointRow.rows[0]?.data;
+  if (!checkpoint) {
+    return { kind: 'none' };
+  }
+  if (participantChoiceIsOpen(checkpoint.participant.choiceState)) {
+    return { kind: 'choice_open' };
+  }
+  if (!checkpoint.participant.preparedCommit) {
+    return { kind: 'none' };
+  }
+  const preparedCommit = patchPreparedCommitInventory(checkpoint.participant.preparedCommit, transform);
+  await transaction.query(
+    'UPDATE solo_room_checkpoints SET data = $3::jsonb WHERE player_id = $1 AND avatar_id = $2',
+    [playerId, avatarId, JSON.stringify({
+      ...checkpoint,
+      participant: { ...checkpoint.participant, preparedCommit },
+      updatedAt: nowMs(),
+    })],
+  );
+  return { kind: 'patched', inventory: preparedCommit.nextInventory };
+}

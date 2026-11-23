@@ -1132,12 +1132,16 @@ export async function continueEncounter(
           selectedRollOutcome,
           encounterSnapshot.encounterDifficulty,
           encounterSnapshot.encounterRewardAmount,
-          { ownElement: ownElementForAvatar(avatar) },
+          {
+            ownElement: ownElementForAvatar(avatar),
+            usedSolutionRolls: resolution.usedSolutionRolls,
+          },
         );
         nextInventory = inventoryApply.inventory;
         resolution = {
           ...resolution,
           lostInventorySolutions: inventoryApply.lostInventorySolutions,
+          equipmentRegain: inventoryApply.equipmentRegain,
         };
       }
 
@@ -1316,6 +1320,9 @@ export function preparedResultFromResolve(
     ...(result.resolution.diceFillRolls ? { diceFillRolls: result.resolution.diceFillRolls } : {}),
     ...(result.resolution.rewardChargeBonus
       ? { rewardChargeBonus: result.resolution.rewardChargeBonus }
+      : {}),
+    ...(result.resolution.equipmentRegain && result.resolution.equipmentRegain.length > 0
+      ? { equipmentRegain: result.resolution.equipmentRegain }
       : {}),
   };
 }
@@ -1537,12 +1544,14 @@ function computeParticipantOutcome(
       {
         chargeBonus: resolution.rewardChargeBonus ?? null,
         ownElement: ownElementForAvatar(avatar),
+        usedSolutionRolls: resolution.usedSolutionRolls,
       },
     );
     nextInventory = inventoryApply.inventory;
     resolution = {
       ...resolution,
       lostInventorySolutions: inventoryApply.lostInventorySolutions,
+      equipmentRegain: inventoryApply.equipmentRegain,
     };
   }
 

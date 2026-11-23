@@ -223,7 +223,7 @@ const emptyTextStyle: CSSProperties = {
   textShadow: '0 2px 8px rgba(0, 0, 0, 0.92)',
 };
 
-function solutionImagePath(iconName: string): string {
+export function solutionImagePath(iconName: string): string {
   return `${SOLUTION_IMAGE_ROOT}/${iconName}.webp`;
 }
 
@@ -289,6 +289,8 @@ export function SolutionGridOverlay({
   sourceContainer,
   visible,
   onClose,
+  pickable,
+  onPick,
 }: {
   ariaLabel: string;
   emptyText: string;
@@ -300,6 +302,10 @@ export function SolutionGridOverlay({
   visible: boolean;
   /** Closes the panel; the title plate on the frame's top edge calls it. */
   onClose?: () => void;
+  /** Pick mode (equipment, D-056): only these entries are shown. */
+  pickable?: (entry: SolutionGridEntry) => boolean;
+  /** Pick mode: tapping an item whose tooltip is showing picks it. */
+  onPick?: (solutionId: number) => void;
 }) {
   const overlayRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -317,8 +323,11 @@ export function SolutionGridOverlay({
   );
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const items = useMemo(
-    () => inventoryEntries(inventory, sourceContainer, inventoryType),
-    [inventory, inventoryType, sourceContainer],
+    () => {
+      const entries = inventoryEntries(inventory, sourceContainer, inventoryType);
+      return pickable ? entries.filter(pickable) : entries;
+    },
+    [inventory, inventoryType, sourceContainer, pickable],
   );
   const itemSignature = useMemo(
     () => items.map((item) => `${item.solutionId}:${item.uses}`).join(','),
@@ -481,6 +490,7 @@ export function SolutionGridOverlay({
     if (selectedItemId === item.solutionId && tooltip !== null) {
       setSelectedItemId(null);
       hideItemTooltip();
+      onPick?.(item.solutionId);
       return;
     }
 

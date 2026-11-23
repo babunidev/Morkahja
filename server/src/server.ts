@@ -1,4 +1,5 @@
 import express from 'express';
+import { equipAvatarItem, EquipmentRequestError } from './services/equipmentService.js';
 import type { NextFunction, Request, Response } from 'express';
 
 import { sweepAbandonedRooms, validatePostgresConnection } from './db/postgresDocumentStore.js';
@@ -470,6 +471,31 @@ app.post('/avatar/:avatarId/sacrifice', async (req: Request, res: Response) => {
     }
     if (error instanceof AvatarDeathError) {
       res.status(error.statusCode).json({ error: error.message, code: error.code });
+      return;
+    }
+
+    throw error;
+  }
+});
+
+app.post('/avatar/:avatarId/equipment', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatarId = Array.isArray(req.params.avatarId)
+    ? req.params.avatarId[0]
+    : req.params.avatarId;
+  const body = req.body as Record<string, unknown>;
+
+  if (!avatarId || typeof body.slot !== 'number' || typeof body.solutionId !== 'number') {
+    res.status(400).json({ error: 'avatarId, slot and solutionId are required' });
+    return;
+  }
+
+  try {
+    const inventory = await equipAvatarItem(playerId, avatarId, body.slot, body.solutionId);
+    res.json({ playerId, avatarId, inventory });
+  } catch (error) {
+    if (error instanceof EquipmentRequestError) {
+      res.status(error.status).json({ error: error.message, code: error.code });
       return;
     }
 

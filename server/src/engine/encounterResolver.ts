@@ -79,6 +79,10 @@ export interface EncounterResolution {
   selectedRoll: number;
   slotResults: EncounterSlotResults;
   usedInventorySolutions: number[];
+  /** Each used solution's own roll total, in the order of `usedInventorySolutions` (D-056). */
+  usedSolutionRolls?: number[];
+  /** Charges equipped items got back from this encounter (D-056). */
+  equipmentRegain?: { solutionId: number; charges: number }[];
   /** One entry per charge lost to failure penalties (Misery/Hardship). */
   lostInventorySolutions?: number[];
   failurePenalty: number;
@@ -623,6 +627,7 @@ export function resolveEncounter(
     selectedRoll,
     slotResults,
     usedInventorySolutions: setEvaluation.usedSolutionIds,
+    ...(setEvaluation.valid ? { usedSolutionRolls: setEvaluation.pickRolls } : {}),
     ...(setEvaluation.valid && (setEvaluation.pickRolls.length > 1 || setEvaluation.diceFill)
       ? {
         pickRolls: setEvaluation.pickRolls,

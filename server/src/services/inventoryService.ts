@@ -11,6 +11,14 @@ import {
   essenceElementOf,
   type EssenceElement,
 } from '@shared/essenceElements.js';
+import {
+  EQUIPMENT_SLOT_CHARGE,
+  EQUIPMENT_SLOT_COUNT,
+  equipmentRegainCharges,
+  equippedSolutionIds,
+  isEquippableSolution,
+  normalizeEquipmentSlots,
+} from '@shared/equipment.js';
 import { getInventory, setAvatar, setInventory } from '../db/postgresDocumentStore.js';
 
 export const WARRIOR_IMPROVISED_WEAPON_ID = 10062;
@@ -60,7 +68,76 @@ function normalizeInventory(value: Partial<AvatarInventory> | undefined): Avatar
     spellbook: (value?.spellbook ?? []).map((item) => ({ ...item })),
     items: (value?.items ?? []).map((item) => ({ ...item })),
     essences: (value?.essences ?? []).map((item) => ({ ...item })),
+    ...(value?.equipped !== undefined ? { equipped: normalizeEquipmentSlots(value.equipped) } : {}),
   };
+}
+
+function chargesOf(inventory: AvatarInventory, solutionId: number): number {
+  return [...inventory.items, ...inventory.essences, ...inventory.spellbook]
+    .filter((item) => item.solutionId === solutionId)
+    .reduce((sum, item) => sum + Math.max(0, item.uses), 0);
+}
+
+/** An equipped item with no charge left has broken: its slot is empty again (D-056). */
+export function pruneBrokenEquipment(inventory: AvatarInventory): AvatarInventory {
+  if (inventory.equipped === undefined) {
+    return inventory;
+  }
+  return {
+    ...inventory,
+    equipped: normalizeEquipmentSlots(inventory.equipped).map((id) =>
+      id !== null && chargesOf(inventory, id) > 0 ? id : null,
+    ),
+  };
+}
+
+export class EquipmentError extends Error {
+  constructor(
+    message: string,
+    readonly code:
+      | 'INVALID_EQUIPMENT_SLOT'
+      | 'NOT_EQUIPPABLE'
+      | 'NOT_IN_INVENTORY'
+      | 'ALREADY_EQUIPPED',
+  ) {
+    super(message);
+  }
+}
+
+/**
+ * Equip an item into a slot (D-056). The item goes in with all its charges plus
+ * one for the slot. An item already in the slot leaves and loses one charge;
+ * on its last charge it is gone.
+ */
+export function equipItemInInventoryState(
+  inventory: AvatarInventory,
+  slot: number,
+  solutionId: number,
+): AvatarInventory {
+  if (!Number.isInteger(slot) || slot < 0 || slot >= EQUIPMENT_SLOT_COUNT) {
+    throw new EquipmentError(`Invalid equipment slot: ${slot}`, 'INVALID_EQUIPMENT_SLOT');
+  }
+  const solution = getSolutionMap()[String(solutionId)];
+  if (!isEquippableSolution(solution)) {
+    throw new EquipmentError(`Solution ${solutionId} cannot be equipped`, 'NOT_EQUIPPABLE');
+  }
+
+  let next = pruneBrokenEquipment({ ...normalizeInventory(inventory), equipped: normalizeEquipmentSlots(inventory.equipped) });
+  if (chargesOf(next, solutionId) <= 0) {
+    throw new EquipmentError(`Solution ${solutionId} is not in the inventory`, 'NOT_IN_INVENTORY');
+  }
+  const slots = normalizeEquipmentSlots(next.equipped);
+  if (slots.includes(solutionId)) {
+    throw new EquipmentError(`Solution ${solutionId} is already equipped`, 'ALREADY_EQUIPPED');
+  }
+
+  const leaving = slots[slot];
+  if (leaving !== null && leaving !== undefined) {
+    next = consumeSolutionFromInventoryState(next, leaving, EQUIPMENT_SLOT_CHARGE);
+  }
+  next = addRewardToInventoryState(next, solutionId, EQUIPMENT_SLOT_CHARGE);
+  slots[slot] = solutionId;
+  return { ...next, equipped: slots };
 }
 
 function getSolution(solutionId: number): SolutionData {
@@ -383,11 +460,14 @@ export function applyFailurePenaltyToInventoryState(
 
   if (outcome === 'Misery') {
     const essenceLoss = consumeEssences(inventory, amount, randomInt, options.ownElement);
+    // Equipped items are protected from failure losses (D-056).
+    const equipped = equippedSolutionIds(inventory.equipped);
     const itemLoss = consumeRandomChargesFromContainerState(
       essenceLoss.inventory,
       'items',
       amount,
       randomInt,
+      (item) => !equipped.includes(item.solutionId),
     );
 
     return {
@@ -399,9 +479,46 @@ export function applyFailurePenaltyToInventoryState(
   return { inventory: normalizeInventory(inventory), lostSolutionIds: [] };
 }
 
+export interface EquipmentRegain {
+  solutionId: number;
+  charges: number;
+}
+
 export interface EncounterInventoryApplyResult {
   inventory: AvatarInventory;
   lostInventorySolutions: number[];
+  /** Charges equipped items got back, one entry per use that earned any (D-056). */
+  equipmentRegain: EquipmentRegain[];
+}
+
+/**
+ * Spend one charge per used solution. An equipped item then gets one charge
+ * back for a total of 12 or higher and two for 20 or higher, judged by each
+ * use's own roll (D-056).
+ */
+export function spendUsedSolutionsState(
+  inventory: AvatarInventory,
+  usedSolutionIds: readonly number[],
+  usedSolutionRolls: readonly number[] | undefined,
+): { inventory: AvatarInventory; equipmentRegain: EquipmentRegain[] } {
+  let next = normalizeInventory(inventory);
+  const equipped = equippedSolutionIds(next.equipped);
+  const equipmentRegain: EquipmentRegain[] = [];
+
+  usedSolutionIds.forEach((solutionId, index) => {
+    next = consumeSolutionFromInventoryState(next, solutionId, 1);
+    const roll = usedSolutionRolls?.[index];
+    if (!equipped.includes(solutionId) || roll === undefined) {
+      return;
+    }
+    const charges = equipmentRegainCharges(roll);
+    if (charges > 0) {
+      next = addRewardToInventoryState(next, solutionId, charges);
+      equipmentRegain.push({ solutionId, charges });
+    }
+  });
+
+  return { inventory: next, equipmentRegain };
 }
 
 export function applyEncounterInventoryChanges(
@@ -417,13 +534,13 @@ export function applyEncounterInventoryChanges(
     chargeBonus?: { solutionId: number; charges: number } | null;
     /** The avatar's own element: other elements' essences are lost first and faster. */
     ownElement?: EssenceElement | null;
+    /** Each used solution's own roll total, in the order of `usedSolutionIds`. */
+    usedSolutionRolls?: readonly number[];
   } = {},
 ): EncounterInventoryApplyResult {
-  let next = normalizeInventory(inventory);
-
-  for (const solutionId of usedSolutionIds) {
-    next = consumeSolutionFromInventoryState(next, solutionId, 1);
-  }
+  const spent = spendUsedSolutionsState(inventory, usedSolutionIds, options.usedSolutionRolls);
+  let next = spent.inventory;
+  const { equipmentRegain } = spent;
 
   if (success) {
     let bonus = options.chargeBonus ?? null;
@@ -439,11 +556,11 @@ export function applyEncounterInventoryChanges(
         Math.max(1, (solution.mSolutionUses ?? 1) + extra),
       );
     }
-    return { inventory: next, lostInventorySolutions: [] };
+    return { inventory: pruneBrokenEquipment(next), lostInventorySolutions: [], equipmentRegain };
   }
 
   if (!selectedRollOutcome) {
-    return { inventory: next, lostInventorySolutions: [] };
+    return { inventory: pruneBrokenEquipment(next), lostInventorySolutions: [], equipmentRegain };
   }
 
   const penalty = applyFailurePenaltyToInventoryState(
@@ -454,8 +571,9 @@ export function applyEncounterInventoryChanges(
   );
 
   return {
-    inventory: penalty.inventory,
+    inventory: pruneBrokenEquipment(penalty.inventory),
     lostInventorySolutions: penalty.lostSolutionIds,
+    equipmentRegain,
   };
 }
 

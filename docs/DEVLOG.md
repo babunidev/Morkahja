@@ -589,6 +589,10 @@ Each of my avatars still feels like a random hand of cards, so I started on equi
 
 I made a sound for Atranor. Like the level-up sound, it plays when the event begins, and for everyone in the room, not only for the one who fell. The others in my group now also read whose judgment they are witnessing and who judges: "Witnessing the Ignis Council's judgment of Rokoran…", with the tribunal of the fallen avatar's element (Ignis Council for fire, Abyssal Conclave for water, Celestial Convocation for air, Terran Assembly for earth). Before, it only said "Witnessing Rokoran's fate…", which a level-up still says. Claude Code (Claude Opus 5.5) added the sound and the message. **Verification:** client tests (50) and the client and server typechecks passed locally; not yet heard or seen in a group. **Not released.**
 
+## 2026-11-23 — Equipment, the first of the player choices
+
+Equipment is in the game now. In the avatar selection an Equipment button lets me choose an avatar. It moves aside, and its two slots appear in the middle. A slot opens the inventory, and the item I pick goes in with one extra charge. In the game the same card opens from my avatar's details, and it stays locked until I have made my choice in the encounter. A use with a total of 12 or higher gives the charge back, 20 or higher two, Hardship and Misery can't touch it, and swapping an item out costs it a charge. Claude Code (Claude Opus 5.5) built it from D-056. It found that the room computes the outcome when I choose but only writes it on Continue, so an item equipped in between would have been undone. The change now goes into the waiting outcome too. It wrote tests for the rules and one through a real room, and checked both screens in the local game on desktop and phone. **Verification:** server (66) and client (49) tests and typecheck passed; a regain was not played in a real turn yet. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

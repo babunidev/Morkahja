@@ -176,6 +176,8 @@ export interface AvatarInventoryDto {
   spellbook: InventoryItemDto[];
   items: InventoryItemDto[];
   essences: InventoryItemDto[];
+  /** The two equipment slots (D-056): solution ids or null. */
+  equipped?: (number | null)[];
 }
 
 export interface PersistedAvatarDto {
@@ -444,6 +446,8 @@ export interface ParticipantResolutionSummaryDto {
   diceFillRolls?: number[];
   /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
   rewardChargeBonus?: { solutionId: number; charges: number };
+  /** Charges equipped items got back, one entry per use that earned any (D-056). */
+  equipmentRegain?: { solutionId: number; charges: number }[];
   /** Level-up (D-049): the three rewards to choose from, after the roll. */
   levelUpChoiceIds?: number[];
   /** Level-up (D-049): the chosen reward, then also in `rewards`. */
@@ -482,6 +486,8 @@ export interface ParticipantPreparedResultDto {
   diceFillRolls?: number[];
   /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
   rewardChargeBonus?: { solutionId: number; charges: number };
+  /** Charges equipped items got back, one entry per use that earned any (D-056). */
+  equipmentRegain?: { solutionId: number; charges: number }[];
   /** Level-up (D-049): the three rewards to choose from, after the roll. */
   levelUpChoiceIds?: number[];
   /** Level-up (D-049): the chosen reward, then also in `rewards`. */

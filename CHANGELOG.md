@@ -2,6 +2,19 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: equipment, two item slots (D-056)
+
+- **Not released.** Local `main` only.
+- **Babuni's direction:** two equipment slots for items. Equipping adds one charge that belongs to the slot. A use with a total of 12 or higher gives the charge back, 20 or higher two, judged by each use's own roll. Hardship and Misery cannot take equipped charges. There is no unequip: equipping another item into an occupied slot takes one charge from the item that leaves. Equipping is possible in the avatar selection and, in the game, once the choice in the current encounter is made.
+- **Shared rule (new `shared/src/equipment.ts`):** two slots, thresholds 12 and 20, `isEquippableSolution` (not skills, essences or Atranor items; the Frostbane Glaive and Zephyrstring Lyre in the essence inventory can be equipped), `normalizeEquipmentSlots`.
+- **Storage:** the slots are `inventory.equipped` (two solution ids or `null`), so they travel with every inventory write. Inventories without the field are unchanged.
+- **Server (`inventoryService.ts`):** `equipItemInInventoryState` (swap rule, errors `INVALID_EQUIPMENT_SLOT`, `NOT_EQUIPPABLE`, `NOT_IN_INVENTORY`, `ALREADY_EQUIPPED`); `spendUsedSolutionsState` spends each used charge and adds the regain for an equipped item; Misery's item loss skips equipped items; an equipped item with no charge left frees its slot (`pruneBrokenEquipment`). The resolver now returns each use's own roll (`usedSolutionRolls`), and results carry `equipmentRegain`.
+- **Endpoint:** `POST /avatar/:avatarId/equipment` `{ slot, solutionId }` (new `equipmentService.ts`), in one transaction with row locks. It refuses with `CHOICE_OPEN` while the avatar's room or paused solo run is still choosing. When an outcome is already prepared and waiting for Continue, the change is also written into that prepared outcome (`patchOpenOutcomeInventory` in `roomService.ts`), because Continue writes the prepared inventory.
+- **Client:** new `EquipmentCard`. The avatar selection has an **Equipment** button. In that mode the Play button gives way to a "Choose your avatar" banner, the chosen avatar moves aside and the card shows in the middle. A slot opens the avatar's inventory to choose from. In the game, the avatar details have an **Equipment** button that opens the card over the encounter, and a slot opens the Inventory panel in a pick mode. The card is locked with "Make your choice in this encounter first." while choosing. Picking: tap to see the tooltip and tap again to pick; a click picks on desktop, where hovering shows the tooltip.
+- **Tests:** new `server/src/services/equipment.test.ts` (thresholds, slots, equippable kinds, equip and swap charges, last-charge removal, regain per use including a set, break at zero, Misery protection) and `equipmentRoom.test.ts` (with PostgreSQL: equip outside a room, refused while choosing, regain from a 14, equip after the choice kept through Continue).
+- **Verification (local, Podman PostgreSQL `morkahja-db`):** server tests 66/66, client tests 49/49, `npm run typecheck` (shared, server, client build) passed. In the local game (Playwright, a new test player, desktop 1280×800 and phone 390×844): the selection flow, the picker with only equippable items, equipping (the server reported the item in slot 1 with its extra charge), and the locked in-game card while choosing. Not played: a regain shown during a real turn, equipping in the result window from the game screen (covered by the room test), a swap in the UI.
+- **Not yet:** the regained charge has no animation on the equipped item; bots do not equip (by design).
+
 ## 2026-11-23 — Unreleased: Atranor's sound, and witnesses see the tribunal's judgment
 
 - **Not released.** Committed to local `main` only.

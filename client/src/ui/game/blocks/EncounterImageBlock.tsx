@@ -11,7 +11,7 @@ import type {
 import {
   activateRoomLoreGem, chooseLevelUpReward, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick } from '../../../api/http.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
-import InventoryBlock from './InventoryBlock.js';
+import InventoryBlock, { type InventoryPickMode } from './InventoryBlock.js';
 import LoreBlock from './LoreBlock.js';
 import SkillbookBlock from './SkillbookBlock.js';
 import {
@@ -192,6 +192,7 @@ export function EncounterImageBlock({
   displayInventory,
   onItemCollected,
   inventoryOpen,
+  inventoryPick = null,
   localContinuePressed = false,
   loreOpen,
   onContinue,
@@ -236,6 +237,8 @@ export function EncounterImageBlock({
   displayInventory?: AvatarInventory;
   onItemCollected?: (change: CollectedInventoryChange) => void;
   inventoryOpen: boolean;
+  /** The inventory opened to choose an equipment item (D-056). */
+  inventoryPick?: InventoryPickMode | null;
   localContinuePressed?: boolean;
   loreOpen: boolean;
   onContinue: (
@@ -927,7 +930,12 @@ export function EncounterImageBlock({
         visible={loreOpen}
       />
       <SkillbookBlock inventory={displayInventory ?? inventory} onClose={onClosePanels} visible={skillbookOpen} />
-      <InventoryBlock inventory={displayInventory ?? inventory} onClose={onClosePanels} visible={inventoryOpen} />
+      <InventoryBlock
+        inventory={displayInventory ?? inventory}
+        onClose={onClosePanels}
+        pick={inventoryPick}
+        visible={inventoryOpen}
+      />
       </div>
     </section>
   );

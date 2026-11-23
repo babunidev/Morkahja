@@ -194,7 +194,9 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Avatar selection modes written down: Equipment, Edit (paid with the portraits' and frames' gem values) and Specialization (+1 to rolls of one ability type).
 - [x] Open questions settled and recorded as D-056.
 - [ ] Babuni revises the fifteen specialization descriptions.
-- [ ] Implement equipment (server rule, equipment card in the avatar selection and the in-game overlay, inventory picker), test and play.
+- [x] Implement equipment: server rule and endpoint, equipment card in the avatar selection and the in-game avatar details, inventory picker; tests and a local check on desktop and phone.
+- [ ] Play equipment: a regain at 12 and 20, a break, a swap, equipping in the result window.
+- [ ] A small animation on the equipped item when it regains a charge (not built yet).
 - [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
 - [ ] Implement specialization, edit avatar and region travel, test and play.
 

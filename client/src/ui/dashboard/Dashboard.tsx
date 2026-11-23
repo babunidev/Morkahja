@@ -274,6 +274,8 @@ export function Dashboard({
   const [navOpen, setNavOpen] = useState(false);
   const [enteringGame, setEnteringGame] = useState(false);
   const [avatarCreationOpen, setAvatarCreationOpen] = useState(false);
+  /** Equipment mode in the avatar selection (D-056): the Play button gives way to "Choose your avatar". */
+  const [selectionModeActive, setSelectionModeActive] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [expansionsOpen, setExpansionsOpen] = useState(false);
@@ -447,11 +449,11 @@ export function Dashboard({
           <div
             style={{
               ...playWrapStyle,
-              opacity: navOpen || avatarCreationOpen ? 0 : 1,
-              transform: navOpen || avatarCreationOpen
+              opacity: navOpen || avatarCreationOpen || selectionModeActive ? 0 : 1,
+              transform: navOpen || avatarCreationOpen || selectionModeActive
                 ? 'translateY(-10px) scale(0.96)'
                 : 'translateY(0) scale(1)',
-              pointerEvents: navOpen || avatarCreationOpen ? 'none' : 'auto',
+              pointerEvents: navOpen || avatarCreationOpen || selectionModeActive ? 'none' : 'auto',
             }}
           >
             <button
@@ -529,6 +531,7 @@ export function Dashboard({
             onHandoffLand={onHandoffLand}
             onAvatarEnter={onAvatarEnter}
             onCreationOpenChange={setAvatarCreationOpen}
+            onModeChange={setSelectionModeActive}
             onEnteringGameChange={setEnteringGame}
             onPrepareGame={(avatar, room) => {
               onAvatarSlotsVisibleChange?.(false);

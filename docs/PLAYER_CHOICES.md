@@ -1,7 +1,7 @@
 # Player choice concept — equipment, specialization, edit, travel (draft)
 
 **Creative:** Babuni
-**Status:** concept settled by Babuni on 2026-11-23 and recorded as [D-056](DECISIONS.md). Nothing here is implemented yet.
+**Status:** concept settled by Babuni on 2026-11-23 and recorded as [D-056](DECISIONS.md). Equipment is implemented on local `main` (2026-11-23, not released); the other three are not.
 
 ## Why
 

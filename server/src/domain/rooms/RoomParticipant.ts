@@ -51,6 +51,8 @@ export interface ParticipantResolutionSummary {
   diceFillRolls?: number[];
   /** A total of 25 with a full reward row: two extra charges on one reward (D-038). */
   rewardChargeBonus?: { solutionId: number; charges: number };
+  /** Charges equipped items got back, one entry per use that earned any (D-056). */
+  equipmentRegain?: { solutionId: number; charges: number }[];
   /** Level-up (D-049): the three rewards to choose from, shown after the roll. */
   levelUpChoiceIds?: number[];
   /** Level-up (D-049): the reward the player chose; it is then also in `rewards`. */

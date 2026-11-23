@@ -18,6 +18,8 @@ import {
 import { assetUrl } from '../../assetUrl.js';
 
 import { AnchoredGamePopover, GAME_SCREEN_SELECTOR, GameTooltipCard, useGameTooltip } from '../game/GameTooltip.js';
+import { PanelButton } from '../common/PanelButton.js';
+import { overlayCloseButtonVisualStyle } from '../common/ClosePanelButton.js';
 import AvatarPartyDetailsCard, {
   type AvatarDetailsSlotSide,
 } from './AvatarPartyDetailsCard.js';
@@ -183,6 +185,7 @@ export function AvatarPanel({
   onDetailsVisibleChange,
 
   onHome,
+  onOpenEquipment,
 
   encounter,
 
@@ -209,6 +212,8 @@ export function AvatarPanel({
   onDetailsVisibleChange?: (visible: boolean) => void;
 
   onHome?: () => void;
+  /** The Equipment button in the details card (D-056). */
+  onOpenEquipment?: () => void;
 
   encounter?: EncounterSnapshot;
 
@@ -425,7 +430,23 @@ export function AvatarPanel({
 
               slotSide={slotSide}
 
-              footer={onHome ? (
+              footer={onHome || onOpenEquipment ? (
+                <>
+                  {onOpenEquipment ? (
+                    <PanelButton
+                      aria-label="Equipment"
+                      onClick={() => {
+                        playSfx(DEFAULT_BUTTON_SOUND);
+                        setShowDetails(false);
+                        onOpenEquipment();
+                      }}
+                      pressKey="avatar-equipment"
+                      visualStyle={{ ...overlayCloseButtonVisualStyle, minHeight: 30, fontSize: '0.78rem' }}
+                    >
+                      Equipment
+                    </PanelButton>
+                  ) : null}
+                  {onHome ? (
 
                 <button
 
@@ -505,6 +526,8 @@ export function AvatarPanel({
 
                 </button>
 
+              ) : null}
+                </>
               ) : undefined}
 
             />

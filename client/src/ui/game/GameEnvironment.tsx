@@ -5,7 +5,11 @@ import {
   DEFAULT_DICE_ID,
   isDiceId,
 } from '@shared/diceCatalog.js';
+import { isEquippableSolution } from '@shared/equipment.js';
+import EquipmentCard, { shownEquipmentSlots } from '../avatar/EquipmentCard.js';
+import type { InventoryPickMode } from './blocks/InventoryBlock.js';
 import {
+  equipAvatarItem,
   fetchActiveRoom,
   fetchActiveRoomState,
   fetchPlayer,
@@ -139,6 +143,15 @@ function progressionToLifetimeExperience(level: number, experience: number): num
   return total;
 }
 
+const equipmentBackdropStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 45,
+  display: 'grid',
+  placeItems: 'center',
+  background: 'rgba(0, 0, 0, 0.35)',
+};
+
 function applyRoomSnapshot(
   room: EncounterRoomSnapshotDto,
   setRoom: (room: EncounterRoomSnapshotDto | null) => void,
@@ -215,6 +228,11 @@ export function GameEnvironment({
   const [continuePending, setContinuePending] = useState(false);
   const [loreOpen, setLoreOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  /** Equipment (D-056): the card over the encounter, and the slot being chosen for. */
+  const [equipmentOpen, setEquipmentOpen] = useState(false);
+  const [equipPickSlot, setEquipPickSlot] = useState<number | null>(null);
+  const [equipPending, setEquipPending] = useState(false);
+  const [equipError, setEquipError] = useState<string | null>(null);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
   const cancelPanelRevealRef = useRef<(() => void) | null>(null);
   const [homeVisible, setHomeVisible] = useState(false);
@@ -987,6 +1005,60 @@ export function GameEnvironment({
     applySnapshotOnly(nextRoom);
   }
 
+  // Equipment changes once the choice in this encounter is made (D-056).
+  const equipmentChoiceOpen = localParticipant?.choiceState === 'choosing'
+    || localParticipant?.choiceState === 'ready';
+
+  function openEquipment(): void {
+    cancelPanelRevealRef.current?.();
+    cancelPanelRevealRef.current = null;
+    setLoreOpen(false);
+    setInventoryOpen(false);
+    setSkillbookOpen(false);
+    setEquipPickSlot(null);
+    setEquipError(null);
+    setEquipmentOpen(true);
+  }
+
+  function closeEquipmentPicker(): void {
+    setEquipPickSlot(null);
+    setInventoryOpen(false);
+    setEquipmentOpen(true);
+  }
+
+  async function equipIntoSlot(slot: number, solutionId: number): Promise<void> {
+    setEquipPending(true);
+    setEquipError(null);
+    closeEquipmentPicker();
+    try {
+      const inventory = await equipAvatarItem(avatar.id, slot, solutionId);
+      setAvatar((current) => ({ ...current, inventory }));
+    } catch (error) {
+      setEquipError(isApiErrorCode(error, 'CHOICE_OPEN')
+        ? 'Make your choice in this encounter first.'
+        : userFacingApiErrorMessage(error, 'Could not equip the item.'));
+    } finally {
+      setEquipPending(false);
+    }
+  }
+
+  const equippedNow = shownEquipmentSlots(displayInventory);
+  const inventoryPick: InventoryPickMode | null = equipPickSlot === null
+    ? null
+    : {
+        title: 'Choose an item',
+        emptyText: 'No item to equip.',
+        pickable: (entry) => {
+          const solution = (gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number }>)[
+            String(entry.solutionId)
+          ];
+          return isEquippableSolution(solution) && !equippedNow.includes(entry.solutionId);
+        },
+        onPick: (solutionId) => {
+          void equipIntoSlot(equipPickSlot, solutionId);
+        },
+      };
+
   return (
     <div aria-label="Game Environment" style={fadeStyle(visible)}>
       {helpToastMessage ? (
@@ -1004,6 +1076,32 @@ export function GameEnvironment({
               ...encounterRevealStyle(visible, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS),
             }}
           >
+            {equipmentOpen ? (
+              <div
+                onClick={(event) => {
+                  if (event.target === event.currentTarget) {
+                    setEquipmentOpen(false);
+                  }
+                }}
+                style={equipmentBackdropStyle}
+              >
+                <EquipmentCard
+                  disabledReason={equipmentChoiceOpen ? 'Make your choice in this encounter first.' : null}
+                  error={equipError}
+                  framed
+                  inventory={displayInventory}
+                  onSlotSelect={(slot) => {
+                    setEquipError(null);
+                    setEquipmentOpen(false);
+                    setEquipPickSlot(slot);
+                    if (!inventoryOpen) {
+                      toggleGamePanel('inventory');
+                    }
+                  }}
+                  pending={equipPending}
+                />
+              </div>
+            ) : null}
             <EncounterImageBlock
               avatarId={avatar.id}
               avatarLevel={displayAvatarLevel}
@@ -1024,6 +1122,7 @@ export function GameEnvironment({
               displayInventory={displayInventory}
               onItemCollected={handleItemCollected}
               inventoryOpen={inventoryOpen}
+              inventoryPick={inventoryPick}
               localContinuePressed={localHasContinuePressed}
               loreOpen={loreOpen}
               onContinue={handleContinueEncounter}
@@ -1060,6 +1159,9 @@ export function GameEnvironment({
                 cancelPanelRevealRef.current = null;
                 setInventoryOpen(false);
                 setSkillbookOpen(false);
+                if (equipPickSlot !== null) {
+                  closeEquipmentPicker();
+                }
               }}
               title={title}
             />
@@ -1075,6 +1177,7 @@ export function GameEnvironment({
               onHome={() => {
                 void handleHome();
               }}
+              onOpenEquipment={openEquipment}
               onKickParticipant={(targetPlayerId) => {
                 void handleKickParticipant(targetPlayerId);
               }}
@@ -1092,12 +1195,18 @@ export function GameEnvironment({
           <div style={bottomDelay}>
             <ActionMenuZone
               onInventoryToggle={() => {
+                setEquipPickSlot(null);
+                setEquipmentOpen(false);
                 toggleGamePanel('inventory');
               }}
               onSkillbookToggle={() => {
+                setEquipPickSlot(null);
+                setEquipmentOpen(false);
                 toggleGamePanel('skillbook');
               }}
               onLoreToggle={() => {
+                setEquipPickSlot(null);
+                setEquipmentOpen(false);
                 toggleGamePanel('lore');
               }}
               helpCalled={helpCalled}

@@ -229,6 +229,22 @@ export async function setAvatarDisplayTitle(
   };
 }
 
+/** Equip an item into slot 0 or 1 (D-056); returns the avatar's inventory after the change. */
+export async function equipAvatarItem(
+  avatarId: string,
+  slot: number,
+  solutionId: number,
+): Promise<AvatarInventory> {
+  const response = await request<{ inventory: AvatarInventory }>(
+    `/avatar/${encodeURIComponent(avatarId)}/equipment`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ slot, solutionId }),
+    },
+  );
+  return response.inventory;
+}
+
 export async function activateRoomLoreGem(
   avatarId: string,
   encounterKey: string,

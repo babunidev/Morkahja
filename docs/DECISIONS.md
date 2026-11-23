@@ -500,4 +500,4 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI contribution:** Claude Code (Claude Opus 5.5) read the current slot, bonus, charge, solution-type, gem, expansion and map data, asked the open questions, worked out the regain thresholds and drafted the fifteen specialization descriptions for Babuni to revise.
 
-**Status:** decided, not implemented.
+**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; specialization, edit and travel not implemented.
