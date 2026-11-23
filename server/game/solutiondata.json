@@ -898,7 +898,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This locket is an intricate rose-shaped jewelry piece, housing a secret thorn that, when unveiled, can pierce through magical barriers or shields.",
     "mSolutionType": 28,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10083": {
     "mSolutionID": 10083,
