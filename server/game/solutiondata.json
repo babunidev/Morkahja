@@ -1301,7 +1301,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This resplendent cloak, woven from the silken threads of Frostwind spiders, glistens with an icy sheen, providing perfect camouflage against the snowy backdrop of the mountains.",
     "mSolutionType": 36,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10122": {
     "mSolutionID": 10122,
