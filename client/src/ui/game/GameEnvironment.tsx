@@ -32,7 +32,7 @@ import {
 import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
-import { LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { ATRANOR_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import {
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   FADE_DURATION_MS,
@@ -57,10 +57,10 @@ import {
   shouldApplyServerInventory,
   shouldDeferRewardDismiss,
 } from './roomContinue.js';
-import { witnessSystemEventDisplay } from './witnessSystemEventDisplay.js';
+import { witnessSystemEventDisplay, witnessWaitingLabel } from './witnessSystemEventDisplay.js';
 import { committedSolutionSetFor } from './rewardFlyAnimation.js';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
-import { shouldPlayLevelUpSound } from './levelUpSoundCue.js';
+import { shouldPlayAtranorSound, shouldPlayLevelUpSound } from './levelUpSoundCue.js';
 import {
   encounterSnapshotAdvanced,
   runEncounterAdvanceTransition,
@@ -284,6 +284,20 @@ export function GameEnvironment({
     }, ENCOUNTER_ACTIONS_REVEAL_DELAY_MS);
   }, []);
 
+  const playedAtranorSoundsRef = useRef<Set<string>>(new Set());
+  const playAtranorSoundIfNeeded = useCallback((
+    previousRoom: EncounterRoomSnapshotDto | null,
+    nextRoom: EncounterRoomSnapshotDto,
+  ) => {
+    const key = shouldPlayAtranorSound(previousRoom, nextRoom, playedAtranorSoundsRef.current);
+    if (!key) {
+      return;
+    }
+
+    playedAtranorSoundsRef.current.add(key);
+    playSfx(ATRANOR_SOUND);
+  }, []);
+
   const applySnapshotOnly = useCallback((nextRoom: EncounterRoomSnapshotDto) => {
     applyRoomSnapshot(
       nextRoom,
@@ -303,8 +317,9 @@ export function GameEnvironment({
     }
 
     playLevelUpSoundIfNeeded(previousRoomForSoundRef.current, room);
+    playAtranorSoundIfNeeded(previousRoomForSoundRef.current, room);
     previousRoomForSoundRef.current = room;
-  }, [room, playLevelUpSoundIfNeeded]);
+  }, [room, playLevelUpSoundIfNeeded, playAtranorSoundIfNeeded]);
 
   const roomAdvanceHooks = useMemo(() => ({
     applySnapshotOnly,
@@ -1030,6 +1045,13 @@ export function GameEnvironment({
                   ? formatAvatarDisplayName(systemEventActor.avatar)
                   : undefined
               }
+              witnessLabelText={witnessWaitingLabel(
+                room?.systemEvent?.kind,
+                systemEventActor?.avatar
+                  ? formatAvatarDisplayName(systemEventActor.avatar)
+                  : undefined,
+                systemEventActor?.avatar.race,
+              )}
               outcomeRoll={outcomeRollForDisplay}
               outcomeResolutionAction={outcomeResolutionAction}
               skillbookOpen={skillbookOpen}

@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-23 — Unreleased: Atranor's sound, and witnesses see the tribunal's judgment
+
+- **Not released.** Committed to local `main` only.
+- **Babuni's direction:** Babuni's own sound for Atranor plays when the event begins, like the level-up sound, for every player in the room. The other players are told that they are witnessing the judgment of the fallen avatar's tribunal, with the avatar's name.
+- **Sound:** `client/public/UI/SFX/atranor.mp3` (Babuni's file, 192 kbps MP3), `ATRANOR_SOUND` in `client/src/ui/sfx.ts`. `shouldPlayAtranorSound` in `client/src/ui/game/levelUpSoundCue.ts` fires once per Atranor snapshot, for the judged avatar and the witnesses; `GameEnvironment.tsx` plays it at once when the event appears (the level-up sound keeps its delay).
+- **Witness message:** `witnessWaitingLabel` in `client/src/ui/game/witnessSystemEventDisplay.ts`: in Atranor "Witnessing the Ignis Council's judgment of Rokoran…", by the avatar's race's element; "the gods'" for an unknown race. A level-up keeps "Witnessing Rokoran's fate…". The tribunal names are in `shared/src/essenceElements.ts` (`ELEMENT_TRIBUNALS`, `tribunalForRace`).
+- **Tests:** Atranor cases in `levelUpSoundCue.test.ts` (once, for actor and witness, not on a level-up); new `witnessSystemEventDisplay.test.ts`.
+- **Verification:** client tests 50/50; client and server typechecks passed. Not heard or seen in a group yet.
+
 ## 2026-11-23 — Unreleased: encounter solutions as big as in the inventory
 
 - **Not released.** Committed to local `main` only.

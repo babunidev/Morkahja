@@ -4,6 +4,7 @@ import type { EncounterRoomSnapshotDto } from '../../api/http.js';
 import {
   levelUpEncounterJustBecameVisible,
   levelUpSoundKeyForRoom,
+  shouldPlayAtranorSound,
   shouldPlayLevelUpSound,
 } from './levelUpSoundCue.js';
 
@@ -166,6 +167,37 @@ function room(overrides: Partial<EncounterRoomSnapshotDto>): EncounterRoomSnapsh
     ...next,
     updatedAt: next.updatedAt + 1,
   }, played), null);
+}
+
+{
+  // Atranor: its own sound, once, for the judged avatar and the witnesses alike.
+  const atranorRoom = (isLocalActor: boolean) => room({
+    activeEncounter: levelUpEncounter({ snapshotId: 'snap-atranor', encounterId: 1, encounterTitle: 'Atranor' }),
+    systemEvent: {
+      actorPlayerId: 'actor',
+      encounterId: 1,
+      kind: 'atranor',
+      isLocalActor,
+      isLocalWitness: !isLocalActor,
+    },
+  });
+  const previous = room({
+    roomState: 'active_encounter',
+    systemEvent: undefined,
+    activeEncounter: levelUpEncounter({ snapshotId: 'snap-normal', encounterId: 42 }),
+  });
+
+  for (const isLocalActor of [true, false]) {
+    const played = new Set<string>();
+    const next = atranorRoom(isLocalActor);
+    const key = shouldPlayAtranorSound(previous, next, played);
+    assert.equal(key, 'room-1:snap-atranor:atranor-visible');
+    played.add(key!);
+    assert.equal(shouldPlayAtranorSound(next, { ...next, updatedAt: 2 }, played), null);
+    assert.equal(shouldPlayLevelUpSound(previous, next, new Set()), null, 'no level-up sound in Atranor');
+  }
+
+  assert.equal(shouldPlayAtranorSound(previous, room({}), new Set()), null, 'no Atranor sound on a level-up');
 }
 
 console.log('levelUpSoundCue.test.ts: all assertions passed');

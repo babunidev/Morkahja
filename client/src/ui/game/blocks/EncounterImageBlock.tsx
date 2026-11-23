@@ -210,6 +210,7 @@ export function EncounterImageBlock({
   witnessCanContinue = false,
   actorShowContinue = true,
   systemEventActorName,
+  witnessLabelText,
   outcomeRoll,
   outcomeResolutionAction,
   witnessOutcome,
@@ -258,6 +259,8 @@ export function EncounterImageBlock({
   witnessCanContinue?: boolean;
   actorShowContinue?: boolean;
   systemEventActorName?: string;
+  /** The witness message; Atranor names the judging tribunal. */
+  witnessLabelText?: string;
   outcomeRoll?: number;
   outcomeResolutionAction?: EncounterAction;
   witnessOutcome?: ParticipantResolutionSummaryDto | null;
@@ -771,9 +774,9 @@ export function EncounterImageBlock({
             ...fadeStyle(witnessLabelPresence.visible),
           }}
         >
-          {systemEventActorName
+          {witnessLabelText ?? (systemEventActorName
             ? `Witnessing ${systemEventActorName}'s fate…`
-            : 'Witnessing a shared moment…'}
+            : 'Witnessing a shared moment…')}
         </div>
       ) : null}
       {witnessResultPresence.mounted && witnessResultSnapRef.current ? (

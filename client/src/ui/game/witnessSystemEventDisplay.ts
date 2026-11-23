@@ -3,7 +3,30 @@ import type {
   ParticipantPreparedResultDto,
   RoomParticipantDto,
 } from '../../api/http.js';
+import { tribunalForRace } from '@shared/essenceElements.js';
 import { hasWitnessableOutcome } from './roomContinue.js';
+
+/**
+ * What the other players in the room read while one avatar's system event
+ * plays. Atranor (Babuni, 2026-11-23): they witness the judged avatar's own
+ * tribunal deciding whether to send them back to life.
+ */
+export function witnessWaitingLabel(
+  kind: 'level_up' | 'atranor' | undefined,
+  actorName: string | undefined,
+  actorRace: string | undefined,
+): string {
+  if (!actorName) {
+    return 'Witnessing a shared moment…';
+  }
+  const tribunal = kind === 'atranor' && actorRace ? tribunalForRace(actorRace) : null;
+  if (kind === 'atranor') {
+    return tribunal
+      ? `Witnessing the ${tribunal}'s judgment of ${actorName}…`
+      : `Witnessing the gods' judgment of ${actorName}…`;
+  }
+  return `Witnessing ${actorName}'s fate…`;
+}
 
 export interface WitnessSystemEventDisplay {
   isWitness: boolean;

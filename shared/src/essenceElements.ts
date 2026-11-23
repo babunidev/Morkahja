@@ -32,6 +32,20 @@ export const RACE_ELEMENTS: Readonly<Record<ElementRace, EssenceElement>> = {
   Grimnir: 'earth',
 };
 
+/** Each element's tribunal of the pantheon (Pantheon/Elemental_Pantheon.md). */
+export const ELEMENT_TRIBUNALS: Readonly<Record<EssenceElement, string>> = {
+  fire: 'Ignis Council',
+  water: 'Abyssal Conclave',
+  air: 'Celestial Convocation',
+  earth: 'Terran Assembly',
+};
+
+/** The tribunal that judges an avatar of this race in Atranor, or null for an unknown race. */
+export function tribunalForRace(race: string): string | null {
+  const element = RACE_ELEMENTS[race as ElementRace];
+  return element ? ELEMENT_TRIBUNALS[element] : null;
+}
+
 /** The same by the race's reward type (40 Rokur, 41 Verdani, 42 Aevis, 43 Grimnir). */
 export const RACE_REWARD_TYPE_ELEMENTS: Readonly<Record<number, EssenceElement>> = {
   40: 'fire',

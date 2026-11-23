@@ -6,6 +6,8 @@ export const DEFAULT_BUTTON_SOUND = assetUrl('/UI/SFX/sfx_button_press.mp3');
 export const CONTINUE_SOUND = assetUrl('/UI/SFX/sfx_continuearrow_press.mp3');
 export const DICE_SOUND = assetUrl('/UI/SFX/sfx_dice_press.mp3');
 export const LEVEL_UP_SOUND = assetUrl('/UI/SFX/sfx_levelup.mp3');
+/** Played for everyone in the room when an avatar enters Atranor (Babuni, 2026-11-23). */
+export const ATRANOR_SOUND = assetUrl('/UI/SFX/atranor.mp3');
 export const LORE_SOUND = assetUrl('/UI/SFX/sfx_lorebutton_press.mp3');
 export const BACKPACK_SOUND = assetUrl('/UI/SFX/backpack.mp3');
 export const SKILLBOOK_SOUND = assetUrl('/UI/SFX/skillbook.mp3');
