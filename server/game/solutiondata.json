@@ -1354,7 +1354,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An ethereal longsword, forged from spectral steel. Its blade shimmers in a ghostly hue under moonlight, while intricate glyphs on the hilt promise a powerful defense.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10128": {
     "mSolutionID": 10128,
