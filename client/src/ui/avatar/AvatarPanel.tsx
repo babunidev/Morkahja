@@ -16,14 +16,13 @@ import {
   participantChoiceDetails,
   useTopRollGemShown,
 } from '../game/blocks/partyParticipantChoiceBadge.js';
-import { assetUrl } from '../../assetUrl.js';
+import { WordButton } from '../common/WordButton.js';
 
 import { AnchoredGamePopover } from '../game/GameTooltip.js';
 import AvatarPartyDetailsCard, {
   type AvatarDetailsSlotSide,
 } from './AvatarPartyDetailsCard.js';
 
-const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
 
 
 
@@ -113,35 +112,7 @@ const portraitPressStyle: CSSProperties = {
 
 
 
-const hubActionButtonStyle: CSSProperties = {
 
-  flex: '0 0 auto',
-
-  width: 'clamp(21px, 5.5vw, 37px)',
-
-  padding: 0,
-
-  border: 0,
-
-  background: 'transparent',
-
-  transition: 'opacity 420ms ease',
-
-};
-
-
-
-const homeImageStyle: CSSProperties = {
-
-  display: 'block',
-
-  width: '100%',
-
-  height: 'auto',
-
-  filter: 'drop-shadow(0 12px 20px rgba(0, 0, 0, 0.45))',
-
-};
 
 
 
@@ -413,83 +384,20 @@ export function AvatarPanel({
                 <>
                   {onHome ? (
 
-                <button
-
-                  aria-label="Return home"
-
-                  className="morkahja-footer-button"
-
-                  disabled={!homeVisible}
-
+                <WordButton
+                  ariaLabel="Back to the main menu"
                   onClick={() => {
-
-                    if (!homeVisible) {
-
-                      return;
-
+                    if (homeVisible) {
+                      onHome();
                     }
-
-
-
-                    playSfx(DEFAULT_BUTTON_SOUND);
-
-                    onHome();
-
                   }}
-
-                  onPointerDown={() => {
-
-                    if (!homeVisible) {
-
-                      return;
-
-                    }
-
-
-
-                    pulse('home');
-
-                  }}
-
+                  pressKey="avatar-panel-home"
                   style={{
-
-                    ...hubActionButtonStyle,
-
                     opacity: homeVisible ? 1 : 0,
-
                     pointerEvents: homeVisible ? 'auto' : 'none',
-
                   }}
-
-                  type="button"
-
-                >
-
-                  <span className="morkahja-footer-button-visual">
-
-                    <img
-
-                      alt=""
-
-                      aria-hidden="true"
-
-                      draggable={false}
-
-                      src={HOME_BUTTON_ASSET}
-
-                      style={{
-
-                        ...homeImageStyle,
-
-                        animation: pressAnimation(isPressed('home')),
-
-                      }}
-
-                    />
-
-                  </span>
-
-                </button>
+                  word="Main menu"
+                />
 
               ) : null}
                 </>

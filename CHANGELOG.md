@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the game's Home button is a "Main menu" button
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** change the Home button to a main menu button.
+- **Change:** in the game, the round Home picture (`im_button_home.webp`) on the avatar card (`GameEnvironment.tsx`) and in the avatar details (`AvatarPanel.tsx`) is now a red-and-gold word button **Main menu** (`WordButton`, as Accept and Back in D-061), labelled "Back to the main menu" for screen readers. What it does is unchanged: it leaves the rooms and returns to the main menu. The dashboard keeps its own centre button.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card shows Main menu at the bottom left and no Home picture; pressing it returned to the main menu. Client typecheck and build (`npx tsc -b`) passed. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-main-menu-button-*.png`.
+
 ## 2026-11-24 — Unreleased: soul links pay only when both play 42 encounters a day; a Soul Link QR code (D-062)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

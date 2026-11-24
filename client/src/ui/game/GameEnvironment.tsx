@@ -8,7 +8,7 @@ import {
 import { isEquippableSolution } from '@shared/equipment.js';
 import { shownEquipmentSlots } from '../avatar/equipmentSlots.js';
 import { AVATAR_CARD_PLATE, AvatarOverviewContent, AvatarOverviewFooter, OverviewEquipment } from '../avatar/AvatarOverview.js';
-import PanelButton from '../common/PanelButton.js';
+import { WordButton } from '../common/WordButton.js';
 import { AVATAR_OVERVIEW_PANEL_SELECTOR } from './blocks/AvatarOverviewBlock.js';
 import { ChoiceDetailSections, participantChoiceDetails } from './blocks/partyParticipantChoiceBadge.js';
 import { GAME_SCREEN_SELECTOR } from './GameTooltip.js';
@@ -41,7 +41,7 @@ import {
 import { formatAvatarDisplayName, normalizePersistedAvatar } from '../avatar/avatarDisplayName.js';
 import { ensureSoloLeaderRoom } from './roomSession.js';
 import GameLayout from '../layout/GameLayout.js';
-import { ATRANOR_SOUND, DEFAULT_BUTTON_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
+import { ATRANOR_SOUND, LEVEL_UP_SOUND, playSfx } from '../sfx.js';
 import {
   ENCOUNTER_ACTIONS_REVEAL_DELAY_MS,
   FADE_DURATION_MS,
@@ -148,15 +148,6 @@ function progressionToLifetimeExperience(level: number, experience: number): num
   return total;
 }
 
-const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
-
-const overviewHomeButtonStyle: CSSProperties = {
-  width: 'clamp(44px, 10vw, 60px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
 
 function applyRoomSnapshot(
   room: EncounterRoomSnapshotDto,
@@ -1125,22 +1116,19 @@ export function GameEnvironment({
                     tooltipBoundsSelector={GAME_SCREEN_SELECTOR}
                   />
                 ),
-                // Home at the bottom left, the equipment at the bottom right (Babuni, 2026-11-24).
+                // Main menu at the bottom left (a word button since 2026-11-24), the equipment at the bottom right (Babuni, 2026-11-24).
                 footer: (
                   <AvatarOverviewFooter
                     left={(
-                      <PanelButton
-                        aria-label="Return home"
+                      <WordButton
+                        ariaLabel="Back to the main menu"
                         onClick={() => {
-                          playSfx(DEFAULT_BUTTON_SOUND);
                           setOverviewOpen(false);
                           void handleHome();
                         }}
                         pressKey="overview-home"
-                        visualStyle={overviewHomeButtonStyle}
-                      >
-                        <img alt="" aria-hidden="true" draggable={false} src={HOME_BUTTON_ASSET} style={{ display: 'block', width: '100%' }} />
-                      </PanelButton>
+                        word="Main menu"
+                      />
                     )}
                     right={(
                       <OverviewEquipment
