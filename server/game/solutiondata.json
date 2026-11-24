@@ -1085,7 +1085,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An antique horn that echoes through the surroundings. Its profound notes vibrate the stones.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10100": {
     "mSolutionID": 10100,
