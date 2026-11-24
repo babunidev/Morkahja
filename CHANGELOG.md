@@ -17,6 +17,17 @@
 - **Change (`ambianceCycle.ts`, `AmbianceBed.tsx`):** new `AMBIANCE_START_DELAY_MS` (3000). A bed that starts from silence waits that long before its first piece fades in. On a change of region the old region keeps playing through the wait; then the old one fades out over 2 s while the new one fades in over 1 s, as before. Changing region again during the wait starts the wait over. Encounters in the same region still leave the bed alone.
 - **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks the 3 s) and `npm run typecheck` passed. Not heard in the game.
 
+## 2026-11-24 — Unreleased: tooltip fixes, XP inside its bar, the avatar card grows out of the avatar
+
+- **Not released.** On GitHub `main`; the production server is unchanged. The code went in with commit `93519c29` ("Atranor plays its own ambiance"), which another session committed together with these changes; this entry documents them.
+- **Babuni's direction:** the "?" tooltips use the solution tooltips' text size; in the game the equipped items' tooltips open upward; the statistics sit a little lower so the head has room; the experience number goes inside a thicker experience bar; the avatar card zooms in a little slower when the avatar is tapped.
+- **"?" tooltips (`HelpTip.tsx`):** padding, font size (0.78 rem) and line height (1.25) of the encounter's solution tooltips (`encounterTooltipFrameStyle`).
+- **Equipped items in the game:** their tooltips are measured against the in-game avatar card (`AVATAR_OVERVIEW_PANEL_SELECTOR`, `data-morkahja-avatar-overview`) instead of the whole game screen. Tooltips open toward the middle of their bounds; the card sits in the top half of the screen, so they opened downward, and the slots are now at the card's bottom edge, so they open upward. Checked: the tooltip's bottom at 376 px over a slot starting at 362 px (desktop), 420 over 408 (phone).
+- **Experience (`AvatarOverview.tsx`):** one bar, 18–22 px high, with "XP 0/7" centred inside it in light bold text with a shadow; the separate line under it is gone, in the menu and in the game. The menu's head row has 6–12 px more room below it.
+- **Opening the card in the main menu:** it had no opening animation and appeared at once. It now grows out of the tapped avatar in 560 ms (closing into the avatar stays 380 ms) while the backdrop darkens. The effect cancels its animations when it is cleaned up, because React runs it twice while developing and the second run otherwise measured the card mid-animation and animated from full size to full size. Measured: 341 px wide at 17 ms, 516 px at about 400 ms, 520 px at rest.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the menu card with the XP bar, the "?" tooltip, an item equipped in the game and its tooltip. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-xp-*.png`, `2026-11-24-avatar-card-help-size-*.png`, `2026-11-24-ingame-equipped-tooltip-*.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed.
+
 ## 2026-11-24 — Unreleased: the avatar card in rows; the round menu fades the avatars and closes on a tap elsewhere
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.
