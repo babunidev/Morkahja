@@ -1041,7 +1041,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A flat, round stone, comfortably fitting in the palm of a hand. An intricate rune is engraved on its surface, filled with glowing blue lines, winding in complex, mysterious patterns.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10096": {
     "mSolutionID": 10096,
