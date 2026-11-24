@@ -10,6 +10,7 @@ import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { findSpecialization, specializationChangeCost } from '@shared/specialization.js';
 import AvatarCard from './AvatarCard.js';
+import { distinctHeld } from './avatarStats.js';
 import { EquipmentSection, experienceRequiredForNextLevel } from './AvatarPartyDetailsCard.js';
 import { readAvatarDisplayTitle } from './avatarDisplayName.js';
 import { simpleFrameClipPath, simpleFrameStyle } from '../common/simpleFrame.js';
@@ -352,8 +353,8 @@ export function AvatarOverviewContent({
   const displayTitle = readAvatarDisplayTitle(avatar);
   const stats: Array<[string, number]> = [
     ['Encounters', avatar.encountersPlayed ?? 0],
-    ['Items', charges(inventory?.items)],
-    ['Skills', charges(inventory?.spellbook)],
+    ['Items', distinctHeld(inventory?.items)],
+    ['Skills', distinctHeld(inventory?.spellbook)],
     ['Essences', charges(inventory?.essences?.filter((item) => item.solutionType === 15))],
   ];
 
