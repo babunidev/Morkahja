@@ -1183,7 +1183,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A compact, yet robust crossbow with shimmering steel limbs and a mahogany stock. Its quiver is filled with serrated bolts, designed to penetrate the thickest of hides.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10109": {
     "mSolutionID": 10109,
