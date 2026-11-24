@@ -1261,7 +1261,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A sturdy, circular shield shimmering with ethereal blue energy. Its surface gleams with ancient symbols, promising protection.",
     "mSolutionType": 32,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10117": {
     "mSolutionID": 10117,
