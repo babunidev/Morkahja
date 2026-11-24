@@ -86,6 +86,20 @@ const titleStyle: CSSProperties = {
   color: '#ffcc66',
 };
 
+/** The name, big, above the level (Babuni, 2026-11-24); the plate says "Avatar". */
+const nameStyle: CSSProperties = {
+  margin: 0,
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  fontSize: 'clamp(1.2rem, 4.6vw, 1.55rem)',
+  letterSpacing: '0.04em',
+  lineHeight: 1.1,
+  color: '#ffcc66',
+  overflowWrap: 'anywhere',
+};
+
+/** The frame's plate on the avatar card, in the menu and in the game. */
+export const AVATAR_CARD_PLATE = 'Avatar';
+
 const metaStyle: CSSProperties = {
   margin: 0,
   fontSize: TOOLTIP_TEXT_SIZE,
@@ -163,14 +177,31 @@ const specializationNoteStyle: CSSProperties = {
   fontSize: TOOLTIP_TEXT_SIZE,
 };
 
-/** Room around the section, so it does not sit squeezed. */
+/**
+ * The menu's specialization row (Babuni, 2026-11-24): the heading, the chosen
+ * one and its button on the left, its description on the right.
+ */
 const specializationSectionStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'auto minmax(0, 1fr)',
+  alignItems: 'center',
+  gap: 'clamp(12px, 3vw, 20px)',
+  width: '100%',
+  padding: '2px 0 4px',
+};
+
+const specializationControlsStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   gap: 8,
-  width: '100%',
-  padding: '2px 0 4px',
+};
+
+const specializationDescriptionStyle: CSSProperties = {
+  margin: 0,
+  fontSize: TOOLTIP_TEXT_SIZE,
+  lineHeight: 1.45,
+  textAlign: 'left',
 };
 
 const headingRowStyle: CSSProperties = {
@@ -220,21 +251,26 @@ function SpecializationSection({ avatar, onChoose }: {
   }
   return (
     <div style={specializationSectionStyle}>
-      <div style={headingRowStyle}>
-        <p style={sectionHeadingStyle}>Specialization</p>
-        {help}
+      <div style={specializationControlsStyle}>
+        <div style={headingRowStyle}>
+          <p style={sectionHeadingStyle}>Specialization</p>
+          {help}
+        </div>
+        {current ? <p style={specializationNameStyle}>{current.name}</p> : null}
+        <PanelButton
+          onClick={() => {
+            playSfx(DEFAULT_BUTTON_SOUND);
+            onChoose();
+          }}
+          pressKey="overview-specialization"
+          visualStyle={specializationButtonStyle}
+        >
+          {current ? <>Change · <GemCost cost={cost} /></> : 'Choose'}
+        </PanelButton>
       </div>
-      {current ? <p style={specializationNameStyle}>{current.name}</p> : null}
-      <PanelButton
-        onClick={() => {
-          playSfx(DEFAULT_BUTTON_SOUND);
-          onChoose();
-        }}
-        pressKey="overview-specialization"
-        visualStyle={specializationButtonStyle}
-      >
-        {current ? <>Change · <GemCost cost={cost} /></> : 'Choose'}
-      </PanelButton>
+      <p style={specializationDescriptionStyle}>
+        {current?.description ?? 'Choose the type of skill your avatar is good at.'}
+      </p>
     </div>
   );
 }
@@ -244,6 +280,27 @@ const noticeStyle: CSSProperties = {
   fontSize: TOOLTIP_TEXT_SIZE,
   color: '#ff9a7a',
 };
+
+function avatarName(avatar: PersistedAvatar): string {
+  return avatar.name.trim() || 'Adventurer';
+}
+
+/** The equipment in the card's bottom row, beside Play (menu) or Home (game). */
+export function OverviewEquipment({ inventory, tooltipBoundsSelector = 'body', onEquipSlot }: {
+  inventory: AvatarInventory | undefined;
+  tooltipBoundsSelector?: string;
+  onEquipSlot?: (slot: number) => void;
+}) {
+  return (
+    <EquipmentSection
+      inRow
+      interactive={Boolean(onEquipSlot)}
+      inventory={inventory}
+      onEquipSlot={onEquipSlot}
+      tooltipBoundsSelector={tooltipBoundsSelector}
+    />
+  );
+}
 
 function charges(items: AvatarInventory['items'] | undefined): number {
   return (items ?? []).reduce((sum, item) => sum + Math.max(0, item.uses), 0);
@@ -258,6 +315,7 @@ export function AvatarOverviewContent({
   showPortrait = true,
   onEquipSlot,
   onChooseSpecialization,
+  equipmentInFooter = false,
 }: {
   avatar: PersistedAvatar;
   inventory: AvatarInventory | undefined;
@@ -271,6 +329,8 @@ export function AvatarOverviewContent({
   onEquipSlot?: (slot: number) => void;
   /** Main menu only: opens the specialization picker. */
   onChooseSpecialization?: () => void;
+  /** The equipment sits in the card's bottom row instead (`OverviewEquipment`). */
+  equipmentInFooter?: boolean;
 }) {
   const nextLevel = experienceRequiredForNextLevel(avatar.level);
   const current = Math.max(0, Math.min(avatar.experience, nextLevel));
@@ -299,6 +359,7 @@ export function AvatarOverviewContent({
           </div>
           <div style={headTextStyle}>
             {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
+            <p style={nameStyle}>{avatarName(avatar)}</p>
             <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
             {experienceBar}
             {experienceText}
@@ -307,6 +368,7 @@ export function AvatarOverviewContent({
       ) : (
         <>
           {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}
+          <p style={nameStyle}>{avatarName(avatar)}</p>
           <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
           {/* In the game the specialization is one line up here, where the panel over the picture has room. */}
           <SpecializationSection avatar={avatar} />
@@ -331,12 +393,14 @@ export function AvatarOverviewContent({
           <TooltipDivider bleed={DIVIDER_BLEED} />
         </>
       ) : null}
-      <EquipmentSection
-        interactive={Boolean(onEquipSlot)}
-        inventory={inventory}
-        onEquipSlot={onEquipSlot}
-        tooltipBoundsSelector={tooltipBoundsSelector}
-      />
+      {equipmentInFooter ? null : (
+        <EquipmentSection
+          interactive={Boolean(onEquipSlot)}
+          inventory={inventory}
+          onEquipSlot={onEquipSlot}
+          tooltipBoundsSelector={tooltipBoundsSelector}
+        />
+      )}
       {notice ? <p role="alert" style={noticeStyle}>{notice}</p> : null}
       {choiceDetails}
     </div>
@@ -345,11 +409,14 @@ export function AvatarOverviewContent({
 
 const footerStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-end',
   justifyContent: 'space-between',
+  gap: 12,
   width: '100%',
   boxSizing: 'border-box',
   padding: '6px 14px 0',
+  // The equipment's slots are measured against this row.
+  containerType: 'inline-size',
 };
 
 const footerButtonStyle: CSSProperties = {
@@ -368,44 +435,18 @@ const footerImageStyle: CSSProperties = {
 };
 
 /**
- * The Play button (menu) or Home (game). No back button (Babuni, 2026-11-23):
- * a tap outside the card closes it.
+ * The card's bottom row (Babuni, 2026-11-24): in the menu the equipment on the
+ * left and Play on the right; in the game Home on the left and the equipment
+ * on the right. No back button: a tap outside the card closes it.
  */
-export function AvatarOverviewFooter({
-  onBack,
-  right,
-  align = 'center',
-}: {
-  onBack?: () => void;
-  right: ReactNode;
-  /** Without a back button: the main menu puts the Play button at the bottom right (Babuni, 2026-11-23). */
-  align?: 'center' | 'end';
+export function AvatarOverviewFooter({ left, right }: {
+  left?: ReactNode;
+  right?: ReactNode;
 }) {
-  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
-  if (!onBack) {
-    return <div style={{ ...footerStyle, justifyContent: align === 'end' ? 'flex-end' : 'center' }}>{right}</div>;
-  }
   return (
     <div style={footerStyle}>
-      <button
-        aria-label="Back"
-        onClick={() => {
-          playSfx(DEFAULT_BUTTON_SOUND);
-          onBack();
-        }}
-        onPointerDown={() => pulse('overview-back')}
-        style={footerButtonStyle}
-        type="button"
-      >
-        <img
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          src={OVERVIEW_BACK_ASSET}
-          style={{ ...footerImageStyle, animation: pressAnimation(isPressed('overview-back')) }}
-        />
-      </button>
-      {right}
+      <div>{left}</div>
+      <div>{right}</div>
     </div>
   );
 }

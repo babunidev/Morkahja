@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the avatar card in rows; the round menu fades the avatars and closes on a tap elsewhere
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the plate on top says "Avatar", and the name stands big above the level, with the title. In the main menu: the specialization on the left (heading, the chosen one, its button) with its description on the right; below it the equipment on the left and Play on the right. In the game: Home at the bottom left, with the buttons' hover and press, and the equipment at the bottom right. Opening the round menu fades the avatars out like closing it fades them in, and a tap anywhere else closes the menu, as well as its centre.
+- **Avatar card (`AvatarOverview.tsx`):** `AVATAR_CARD_PLATE` ("Avatar") on the frame's plate in both places; the name in Breathe Fire at 1.2–1.55 rem under the title. The menu's specialization is a two-column row; the right column shows the chosen one's description from `shared/src/specialization.ts`, or a short hint before a choice. `AvatarOverviewFooter` is now a row with `left` and `right` and is the size container for `OverviewEquipment` (`EquipmentSection` with `inRow`), so the slots keep the Inventory's size beside the button. `GameEnvironment.tsx`: Home is a `PanelButton`, and the equipment moved from the in-game card's body to its bottom row.
+- **Round menu (`Dashboard.tsx`, `AvatarSelectionPanel.tsx`):** `visibility` joined the avatar selection's 420 ms transition, so hiding it fades it out instead of making it vanish at once. While the menu is open and none of its panels is, a `pointerdown` outside the menu closes it (with the button sound); a tap inside an open panel such as Settings leaves it open.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the menu card before and after a choice, both "?" tooltips, the picker, the settings box, the in-game card. The round menu: the avatars' opacity read every 90 ms after opening (0.98, 0.53, then hidden at 0); a tap beside the menu closed it and brought the avatars back; the centre still opens and closes it; a tap inside Settings left it open. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-rows-*.png` and `2026-11-24-nav-open-avatars-fading.png`.
+- **Verification:** client tests 51/51 and `npm run typecheck` passed.
+
 ## 2026-11-24 — Unreleased: the Play button enters the world from the avatar card
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

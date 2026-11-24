@@ -234,23 +234,30 @@ export function EquipmentSection({
   interactive,
   tooltipBoundsSelector,
   onEquipSlot,
+  inRow = false,
 }: {
   inventory: AvatarInventoryDto | undefined;
   interactive: boolean;
   tooltipBoundsSelector: string;
   /** An empty slot was tapped: choose an item for it. */
   onEquipSlot?: (slot: number) => void;
+  /**
+   * Beside another button in the card's bottom row (Babuni, 2026-11-24): only
+   * as wide as its two slots. The slots keep the Inventory's size, measured
+   * against the row, which must be the size container.
+   */
+  inRow?: boolean;
 }) {
   const itemTips = useGameTooltip({ boundsSelector: tooltipBoundsSelector });
   const slots = shownEquipmentSlots(inventory);
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'relative', width: inRow ? 'auto' : '100%' }}>
       {itemTips.layer}
       <div style={{ ...sectionHeadingRowStyle, position: 'relative' }}>
         <p style={sectionHeadingStyle}>Equipment</p>
         <HelpTip disabled={!interactive} label="What is equipment?" text={EQUIPMENT_HELP_TEXT} />
       </div>
-      <div style={slotsRowStyle}>
+      <div style={inRow ? { ...slotsRowStyle, width: 'auto', containerType: 'normal' } : slotsRowStyle}>
         {slots.map((solutionId, slot) => (solutionId !== null ? (
           <FilledEquipmentSlot
             bindTooltip={itemTips.bindTooltip}

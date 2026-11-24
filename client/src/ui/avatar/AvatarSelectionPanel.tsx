@@ -52,11 +52,13 @@ import { gameSolutions } from '../../data/gameContent.js';
 import { userFacingApiErrorMessage } from '../../api/httpErrorMessage.js';
 import { SolutionGridOverlay } from '../game/blocks/SolutionGridOverlay.js';
 import {
+  AVATAR_CARD_PLATE,
   AvatarOverviewContent,
   AvatarOverviewFooter,
   AvatarOverviewMenuCard,
   OVERVIEW_CLOSE_MS,
   OverviewEnterButton,
+  OverviewEquipment,
 } from './AvatarOverview.js';
 import { shownEquipmentSlots } from './equipmentSlots.js';
 
@@ -122,7 +124,9 @@ const pickerShellStyle: CSSProperties = {
 };
 
 const slotPanelTransitionStyle: CSSProperties = {
-  transition: 'opacity 420ms ease, transform 420ms ease, max-height 420ms ease, margin 420ms ease',
+  // Visibility is part of it, so hiding fades the avatars out like showing
+  // fades them in, instead of making them vanish at once (Babuni, 2026-11-24).
+  transition: 'opacity 420ms ease, transform 420ms ease, max-height 420ms ease, margin 420ms ease, visibility 420ms',
 };
 
 const embeddedWrapStyle: CSSProperties = {
@@ -768,10 +772,18 @@ export function AvatarSelectionPanel({
       {cardAvatar && !specializationPickerOpen ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
-          title={cardAvatar.name.trim() || 'Adventurer'}
+          title={AVATAR_CARD_PLATE}
           footer={(
             <AvatarOverviewFooter
-              align="end"
+              left={(
+                <OverviewEquipment
+                  inventory={cardAvatar.inventory}
+                  onEquipSlot={equipPending ? undefined : (slot) => {
+                    setEquipError(null);
+                    setEquipPickSlot(slot);
+                  }}
+                />
+              )}
               right={(
                 <OverviewEnterButton
                   avatarName={formatAvatarDisplayName(cardAvatar)}
@@ -785,6 +797,7 @@ export function AvatarSelectionPanel({
         >
           <AvatarOverviewContent
             avatar={cardAvatar}
+            equipmentInFooter
             inventory={cardAvatar.inventory}
             notice={equipError}
             onEquipSlot={equipPending ? undefined : (slot) => {

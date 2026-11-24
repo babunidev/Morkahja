@@ -7,7 +7,8 @@ import {
 } from '@shared/diceCatalog.js';
 import { isEquippableSolution } from '@shared/equipment.js';
 import { shownEquipmentSlots } from '../avatar/equipmentSlots.js';
-import { AvatarOverviewContent, AvatarOverviewFooter } from '../avatar/AvatarOverview.js';
+import { AVATAR_CARD_PLATE, AvatarOverviewContent, AvatarOverviewFooter, OverviewEquipment } from '../avatar/AvatarOverview.js';
+import PanelButton from '../common/PanelButton.js';
 import { ChoiceDetailSections, participantChoiceDetails } from './blocks/partyParticipantChoiceBadge.js';
 import { GAME_SCREEN_SELECTOR } from './GameTooltip.js';
 import type { InventoryPickMode } from './blocks/InventoryBlock.js';
@@ -1109,7 +1110,7 @@ export function GameEnvironment({
               inventoryOpen={inventoryOpen}
               inventoryPick={inventoryPick}
               avatarOverview={overviewOpen ? {
-                title: displayAvatar.name.trim() || 'Adventurer',
+                title: AVATAR_CARD_PLATE,
                 onClose: () => setOverviewOpen(false),
                 content: (
                   <AvatarOverviewContent
@@ -1118,26 +1119,34 @@ export function GameEnvironment({
                     inventory={displayInventory}
                     notice={equipError}
                     onEquipSlot={openEquipmentPicker}
+                    equipmentInFooter
                     showPortrait={false}
                     tooltipBoundsSelector={GAME_SCREEN_SELECTOR}
                   />
                 ),
+                // Home at the bottom left, the equipment at the bottom right (Babuni, 2026-11-24).
                 footer: (
                   <AvatarOverviewFooter
-                    right={(
-                      <button
+                    left={(
+                      <PanelButton
                         aria-label="Return home"
-                        className="morkahja-footer-button"
                         onClick={() => {
                           playSfx(DEFAULT_BUTTON_SOUND);
                           setOverviewOpen(false);
                           void handleHome();
                         }}
-                        style={overviewHomeButtonStyle}
-                        type="button"
+                        pressKey="overview-home"
+                        visualStyle={overviewHomeButtonStyle}
                       >
                         <img alt="" aria-hidden="true" draggable={false} src={HOME_BUTTON_ASSET} style={{ display: 'block', width: '100%' }} />
-                      </button>
+                      </PanelButton>
+                    )}
+                    right={(
+                      <OverviewEquipment
+                        inventory={displayInventory}
+                        onEquipSlot={openEquipmentPicker}
+                        tooltipBoundsSelector={GAME_SCREEN_SELECTOR}
+                      />
                     )}
                   />
                 ),

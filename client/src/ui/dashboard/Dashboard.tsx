@@ -387,6 +387,26 @@ export function Dashboard({
       });
   }, [showChrome, navOpen, avatarSlotsVisible, playPreparePending, onPlay, onAvatarSlotsVisibleChange]);
 
+  // A tap anywhere else closes the round menu too (Babuni, 2026-11-24), unless
+  // one of its panels is open over the screen.
+  const navRef = useRef<HTMLElement | null>(null);
+  const anyPanelOpen = activityOpen || settingsOpen || expansionsOpen || friendsOpen || profileOpen || achievementsOpen;
+  useEffect(() => {
+    if (!navOpen || anyPanelOpen || !showChrome) {
+      return undefined;
+    }
+    const onPointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (target instanceof Node && navRef.current?.contains(target)) {
+        return;
+      }
+      playSfx(DEFAULT_BUTTON_SOUND);
+      setNavOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [navOpen, anyPanelOpen, showChrome]);
+
   const centerNavTooltipHandlers = bindNavTooltip(NAV_CENTER_HOVER_ID, clickable);
 
   return (
@@ -452,6 +472,7 @@ export function Dashboard({
       {showChrome ? (
         <nav
           aria-label="Dashboard navigation"
+          ref={navRef}
           style={navWrapStyle}
         >
           {RADIAL_BUTTONS.map((button) => {

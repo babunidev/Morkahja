@@ -649,6 +649,10 @@ The round menu in my main menu closed by itself after I used it a second time. C
 
 When I made my avatars the main menu, the Play button disappeared, and a game needs one. It now sits at the bottom right of my avatar card, where the green check was, a little bigger than the other round buttons. Claude Code (Claude Opus 5.5) swapped it in and checked on a desktop and a phone size that it takes me into the world. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — My avatar card in rows, and a calmer round menu
+
+My avatar card had room to spare, so I gave it rows. The plate now says "Avatar" and the name stands big above the level. The specialization sits on the left with its description beside it, and below that the equipment and the Play button share the bottom row. In the game, Home sits at the bottom left and behaves like my other buttons, with the equipment on the right. Opening the round menu used to make my avatars vanish at once; now they fade out the way they fade back in, and a tap anywhere else closes the menu. Claude Code (Claude Opus 5.5) rebuilt the card's rows, kept the equipment slots at the Inventory's size, and measured the fade and the closing in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
