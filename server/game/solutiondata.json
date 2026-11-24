@@ -1194,7 +1194,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from storm-forged steel and enchanted yew, this crossbow boasts a formidable power. ",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10110": {
     "mSolutionID": 10110,
