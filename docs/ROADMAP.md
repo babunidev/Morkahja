@@ -197,7 +197,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Overview in the menu (red back, green enter, shrinking into the avatar) and in the game (red back, Home), with statistics, equipment slots and room for the specialization.
 - [x] Equipment slots the size of the solutions and the Inventory pictures.
 - [ ] Babuni decides whether the dark red background stays for the Inventory, Skillbook and Lore (a trial, 2026-11-23).
-- [ ] Check returning home from the game and a failed avatar as the active one. (Creating an avatar from an empty slot: checked 2026-11-23, the slot now glides into the big place first.)
+- [ ] Check a failed avatar as the active one. (Returning from the game with the new **Main menu** button: checked 2026-11-24 with a new avatar, desktop and phone.) (Creating an avatar from an empty slot: checked 2026-11-23, the slot now glides into the big place first.)
 - [x] Specialization in the overview's reserved space (D-056, 2026-11-23).
 
 ## Tutorial and first-journey tips — planned, 2026-11-23
@@ -216,7 +216,7 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [x] Open questions settled and recorded as D-056.
 - [x] Implement equipment: server rule and endpoint, equipment card in the avatar selection and the in-game avatar details, inventory picker; tests and a local check on desktop and phone.
 - [x] One avatar card with the equipment slots, in the game and the avatar selection; only empty slots can be filled, at any time; the equipped item is preferred (D-057).
-- [ ] A small animation on the equipped item when it regains a charge (not built yet).
+- [x] An animation when an equipped item regains a charge (2026-11-24, Babuni's idea): it sets off toward the encounter, turns halfway in a curve and flies back into the Inventory. Checked in the local game by starting the flight directly; not yet seen in a real round with a roll of 12 or more. Not released.
 - [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
 - [x] Implement specialization (2026-11-23): shared rule, server roll bonus and paid change, the overview's section and the picker in the main menu, one line in the game; tests and a local check on desktop and phone.
 - [x] Warmth corrected (2026-11-24): type 25 is Aid and holds the Warmth skill; type 37 is no longer a specialization.

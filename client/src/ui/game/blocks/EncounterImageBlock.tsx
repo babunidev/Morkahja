@@ -947,6 +947,7 @@ export function EncounterImageBlock({
           }
           rewardIds={serverResolution?.rewards ?? encounter.rewardIds}
           rewardChargeBonus={serverResolution?.rewardChargeBonus}
+          equipmentRegain={serverResolution?.equipmentRegain}
           roll={levelUpRollHeld ? null : (outcomeRoll ?? revealedRoll)}
           levelUpPickedFirstId={levelUpPickedFirst}
           usedSolutionIds={usedSolutionIds}

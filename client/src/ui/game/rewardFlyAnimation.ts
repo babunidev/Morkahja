@@ -733,6 +733,8 @@ export function getEncounterArtRect(): DOMRect | null {
 /** A used solution travels into the middle of the encounter picture and shrinks to nothing. */
 export const USED_SOLUTION_FLIGHT_MS = 900;
 const USED_SOLUTION_FLIGHT_TIMEOUT_MS = USED_SOLUTION_FLIGHT_MS + 600;
+/** The way back to the Inventory is longer than the way into the encounter. */
+const RETURN_FLIGHT_EXTRA_MS = 500;
 export const USED_SOLUTION_STAGGER_MS = 120;
 
 export interface UsedSolutionFlightSpec {
@@ -741,9 +743,87 @@ export interface UsedSolutionFlightSpec {
   sourceRect: DOMRect;
   /** Called the moment the flyer covers the slot, to hide the original icon. */
   onTakeOff?: () => void;
+  /**
+   * An equipped item that got its charge back (D-056): it sets off toward the
+   * encounter, turns halfway in a curve and flies back into the Inventory.
+   */
+  returnToInventory?: boolean;
+}
+
+/** Point on a quadratic curve from `a` to `c`, bent toward `b`. */
+function quadraticPoint(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  c: { x: number; y: number },
+  t: number,
+): { x: number; y: number } {
+  const u = 1 - t;
+  return {
+    x: u * u * a.x + 2 * u * t * b.x + t * t * c.x,
+    y: u * u * a.y + 2 * u * t * b.y + t * t * c.y,
+  };
+}
+
+/** Babuni (2026-11-24): halfway to the encounter, a curve, and back into the Inventory. */
+function runReturningSolutionFlight(
+  spec: UsedSolutionFlightSpec,
+  targetRect: DOMRect,
+  inventoryRect: DOMRect,
+): Promise<void> {
+  const source = rectCenter(spec.sourceRect);
+  const target = rectCenter(targetRect);
+  const home = rectCenter(inventoryRect);
+  const half = spec.size / 2;
+  const flyer = createIconFlyer(
+    spec.imageSrc,
+    spec.size,
+    '0 0 18px rgba(140, 230, 160, 0.65), 0 6px 14px rgba(0, 0, 0, 0.45)',
+  );
+  const turn = {
+    x: source.x + (target.x - source.x) * 0.5,
+    y: source.y + (target.y - source.y) * 0.5,
+  };
+  // The curve keeps going a little toward the encounter before it bends home.
+  const bend = {
+    x: turn.x + (target.x - source.x) * 0.3,
+    y: turn.y + (target.y - source.y) * 0.3,
+  };
+  const homeScale = Math.max(0.2, Math.min(1, Math.min(inventoryRect.width, inventoryRect.height) / spec.size));
+  const frame = (point: { x: number; y: number }, scale: number, offset: number, opacity = 1): Keyframe => ({
+    offset,
+    transform: `translate(${point.x - half}px, ${point.y - half}px) scale(${scale})`,
+    opacity,
+  });
+  const keyframes: Keyframe[] = [frame(source, 1, 0), frame(turn, 1.08, 0.38)];
+  const steps = 8;
+  for (let step = 1; step <= steps; step += 1) {
+    const t = step / steps;
+    const scale = 1.08 + (homeScale - 1.08) * t;
+    keyframes.push(frame(quadraticPoint(turn, bend, home, t), scale, 0.38 + 0.57 * t));
+  }
+  keyframes.push(frame(home, homeScale * 0.6, 1, 0));
+
+  return runAnimatedFlyer(
+    flyer,
+    keyframes,
+    USED_SOLUTION_FLIGHT_MS + RETURN_FLIGHT_EXTRA_MS,
+    USED_SOLUTION_FLIGHT_TIMEOUT_MS + RETURN_FLIGHT_EXTRA_MS,
+    () => {
+      flyer.style.transform = `translate(${source.x - half}px, ${source.y - half}px) scale(1)`;
+      flyer.style.opacity = '1';
+      spec.onTakeOff?.();
+    },
+    'ease-in-out',
+  ).then(() => {
+    vibrateFooterButton('inventory');
+  });
 }
 
 function runUsedSolutionFlight(spec: UsedSolutionFlightSpec, targetRect: DOMRect): Promise<void> {
+  const inventoryRect = spec.returnToInventory ? getFooterButtonRect('inventory') : null;
+  if (inventoryRect && inventoryRect.width > 0 && inventoryRect.height > 0) {
+    return runReturningSolutionFlight(spec, targetRect, inventoryRect);
+  }
   const source = rectCenter(spec.sourceRect);
   const target = rectCenter(targetRect);
   const half = spec.size / 2;
@@ -791,7 +871,11 @@ export async function playUsedSolutionsIntoEncounter(flights: UsedSolutionFlight
     waitForNextFrame().then(() => Promise.all(flights.map((flight, index) => (
       wait(index * USED_SOLUTION_STAGGER_MS).then(() => runUsedSolutionFlight(flight, targetRect))
     )))),
-    wait(USED_SOLUTION_FLIGHT_TIMEOUT_MS + flights.length * USED_SOLUTION_STAGGER_MS),
+    wait(
+      USED_SOLUTION_FLIGHT_TIMEOUT_MS
+        + (flights.some((flight) => flight.returnToInventory) ? RETURN_FLIGHT_EXTRA_MS : 0)
+        + flights.length * USED_SOLUTION_STAGGER_MS,
+    ),
   ]);
 }
 

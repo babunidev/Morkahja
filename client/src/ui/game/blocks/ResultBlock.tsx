@@ -42,6 +42,7 @@ import {
   playRewardEmergence,
   playRewardFlights,
   playUsedSolutionsIntoEncounter,
+  type UsedSolutionFlightSpec,
   SINGLE_DIE_FACE_MS,
   SINGLE_HOVER_READ_MS,
   SINGLE_HOVER_RISE_MS,
@@ -382,6 +383,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     resolutionAction = null,
     rewardIds = [],
     rewardChargeBonus = null,
+    equipmentRegain,
     roll,
     usedSolutionIds = [],
     lostSolutionIds = [],
@@ -412,6 +414,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
     resolutionAction?: EncounterAction | null;
     rewardIds?: number[];
     rewardChargeBonus?: { solutionId: number; charges: number } | null;
+    /** Equipped items that got charges back, one entry per use (D-056). */
+    equipmentRegain?: { solutionId: number; charges: number }[];
     roll: number | null;
     usedSolutionIds?: number[];
     lostSolutionIds?: number[];
@@ -1116,8 +1120,35 @@ export const ResultBlock = forwardRef(function ResultBlock(
     await proceedAfterCollecting();
   }
 
+  /**
+   * Hands out the uses that got a charge back, one per entry: an equipped item
+   * used twice in a set curves home only for the use that earned it.
+   */
+  function regainTaker(): (solutionId: number) => boolean {
+    const left = new Map<number, number>();
+    for (const entry of equipmentRegain ?? []) {
+      if (entry.charges > 0) {
+        left.set(entry.solutionId, (left.get(entry.solutionId) ?? 0) + 1);
+      }
+    }
+    return (solutionId) => {
+      const count = left.get(solutionId) ?? 0;
+      if (count <= 0) {
+        return false;
+      }
+      left.set(solutionId, count - 1);
+      return true;
+    };
+  }
+
   /** Rise and hover with the roll, then fly into the encounter while the number flies into the avatar. */
-  async function flyAfterHover(rect: DOMRect, imageSrc: string, rollText: string, round: boolean): Promise<void> {
+  async function flyAfterHover(
+    rect: DOMRect,
+    imageSrc: string,
+    rollText: string,
+    round: boolean,
+    returnToInventory = false,
+  ): Promise<void> {
     const holder = await riseAndHover(rect, imageSrc, rollText, round);
     const hoverRect = holder.getBoundingClientRect();
     const numbers = hoverRollNumbers([holder]);
@@ -1127,6 +1158,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
       size: Math.round(Math.min(hoverRect.width, hoverRect.height)),
       sourceRect: hoverRect,
       onTakeOff: () => holder.remove(),
+      returnToInventory,
     }]).finally(() => holder.remove());
   }
 
@@ -1354,7 +1386,8 @@ export const ResultBlock = forwardRef(function ResultBlock(
       if (!claimed) {
         return;
       }
-      const flights = hovering.flatMap((element) => {
+      const takeRegain = regainTaker();
+      const flights = hovering.flatMap((element): UsedSolutionFlightSpec[] => {
         const rect = element.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) {
           return [];
@@ -1383,8 +1416,9 @@ export const ResultBlock = forwardRef(function ResultBlock(
             size: Math.round(Math.min(rect.width, rect.height)),
             sourceRect: rect,
             onTakeOff: index === 0 ? hide : undefined,
+            returnToInventory: takeRegain(solutionId),
           } : null;
-        }).filter((flight) => flight !== null);
+        }).filter((flight): flight is NonNullable<typeof flight> => flight !== null);
       });
       if (flights.length > 0) {
         // The rolls are already on the hovering icons. Not cancelled on a
@@ -1445,13 +1479,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
     if (slotVisual) {
       slotVisual.style.visibility = 'hidden';
     }
-    void flyAfterHover(sourceRect, solutionImagePath(first.solution), String(displayRollAsD20(roll)), true)
+    const returnsHome = regainTaker()(first.solution.mSolutionID);
+    void flyAfterHover(
+      sourceRect,
+      solutionImagePath(first.solution),
+      String(displayRollAsD20(roll)),
+      true,
+      returnsHome,
+    )
       .finally(() => {
         if (slotVisual) {
           slotVisual.style.visibility = '';
         }
       });
-  }, [encounterSnapshotId, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
+  }, [encounterSnapshotId, equipmentRegain, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
 
   // Rewards grow out of the middle of the encounter into their slots, the
   // reverse of the used solution; after a used solution, just as it vanishes.

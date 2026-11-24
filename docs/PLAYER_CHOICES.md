@@ -42,7 +42,7 @@ Bots take no part: they have no equipment and no specialization.
 | Equipping | The item goes into the slot **with all its charges**, plus **one extra charge** that belongs to the slot. |
 | Using an equipped item, which charge | The extra charge is always spent **first**. |
 | Using an equipped item | It spends a charge as usual. |
-| Total of **12 or higher** | The item gets **1 charge back**: no loss. |
+| Total of **12 or higher** | The item gets **1 charge back**: no loss.  It sets off toward the encounter, turns halfway and flies back into the Inventory (2026-11-24). |
 | Total of **20 or higher** | The item gets **2 charges back**: one more than before. |
 | Total below 12 | The charge is spent. |
 | Several uses in one encounter | In a set (difficulty 2–4) each use is judged by **its own** roll. Two uses at 9 and 14: one charge lost, one charge back. |
