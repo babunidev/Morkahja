@@ -241,3 +241,40 @@ export const EXPANSION_FOCUS: Readonly<Record<number, { regionId: string; at: Po
   1003: { regionId: 'everwinter', at: [512, 160] },
   1004: { regionId: 'aetherion', at: [520, 572] },
 };
+
+/**
+ * Travel (D-056): where a tap on the map leads. A region is its expansion, so
+ * Keldor and Everwinter Valley are their expansions, Aetherion (a city in the
+ * Vale) is its own, and every other land is the base game (Babuni, 2026-11-23).
+ */
+export interface TravelTarget {
+  /** `region:<id>` or `site:<id>`. */
+  key: string;
+  name: string;
+  expansion: number;
+}
+
+const REGION_EXPANSIONS: Readonly<Record<string, number>> = {
+  keldor: 1001,
+  everwinter: 1003,
+};
+
+const SITE_EXPANSIONS: Readonly<Record<string, number>> = {
+  aetherion: 1004,
+};
+
+export function travelTargetFor(key: string): TravelTarget | null {
+  const [kind, id] = key.split(':');
+  if (kind === 'region') {
+    const region = MAP_REGIONS.find((entry) => entry.id === id);
+    return region ? { key, name: region.name, expansion: REGION_EXPANSIONS[region.id] ?? 0 } : null;
+  }
+  if (kind === 'site' && id && id in SITE_EXPANSIONS) {
+    const site = MAP_SITES.find((entry) => entry.id === id);
+    return site ? { key, name: site.name, expansion: SITE_EXPANSIONS[id]! } : null;
+  }
+  return null;
+}
+
+/** The sites that are destinations of their own (Aetherion). */
+export const TRAVEL_SITE_IDS: readonly string[] = Object.keys(SITE_EXPANSIONS);

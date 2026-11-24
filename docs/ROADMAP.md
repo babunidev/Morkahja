@@ -219,7 +219,8 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [x] Implement specialization (2026-11-23): shared rule, server roll bonus and paid change, the overview's section and the picker in the main menu, one line in the game; tests and a local check on desktop and phone.
 - [x] Warmth corrected (2026-11-24): type 25 is Aid and holds the Warmth skill; type 37 is no longer a specialization.
 - [x] Implement edit avatar (2026-11-24): Edit under the portrait in the main menu's card; portrait of the same kind, frame, name; priced and charged on the server.
-- [ ] Implement region travel (concept part 4).
+- [x] Implement region travel (2026-11-24): map highlights and red locked lands, the question, the Expansions menu for a locked land, `POST /room/travel` with host and guest rules.
+- [ ] Babuni confirms the travel timing rule: only before anyone in the room has chosen (as built).
 
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 

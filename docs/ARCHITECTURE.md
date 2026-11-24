@@ -127,3 +127,7 @@ The two equipment slots live in the inventory document as `inventory.equipped`, 
 
 `shared/src/specialization.ts` is the one rule for what a solution adds to its slot's roll by itself: a rare item's +1 and the specialization's +1 for a skill of the avatar's type. The server's resolver and the client's displayed numbers (solution tooltips, the chosen solution's roll, the portrait's roll breakdown) all call `solutionRollBonus`, so they agree. The specialization lives on the avatar document, not in the inventory, so the prepared-outcome bundle does not carry it. Choosing it locks the avatar row and then the player row in one transaction (the lock order of an encounter's Continue) and charges the gem there.
 
+## Travel (2026-11-24, D-056)
+
+`travelToExpansion` (`server/src/services/roomService.ts`) checks and charges in one transaction that locks the room row and then the player row, and for a solo player or a host also swaps the encounter there: `selectEncounterInExpansion` draws from the destination, `resetParticipantsForNewEncounter` clears everyone's choice (nobody has chosen, so no prepared outcome is lost), and the room is reseeded like after Continue. A guest's trip cannot happen in one transaction, since leaving a room and creating one have their own; the gem is charged first and refunded if leaving or creating fails. `shared/src/travel.ts` holds the price rule; the client's map maps lands to expansions in `worldMapData.ts` (`travelTargetFor`).
+

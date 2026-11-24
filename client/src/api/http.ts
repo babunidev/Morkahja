@@ -578,6 +578,17 @@ export async function submitRoomContinue(avatarId: string): Promise<EncounterRoo
   return response.room;
 }
 
+/** Travel (D-056): swap the room's encounter for one of another region's expansion. */
+export async function travelToRegion(
+  avatarId: string,
+  expansionId: number,
+): Promise<{ room: EncounterRoomSnapshotDto; spent: number; currencies: { yellow_red_gem?: number } }> {
+  return request('/room/travel', {
+    method: 'POST',
+    body: JSON.stringify({ avatarId, expansionId }),
+  });
+}
+
 /** Level-up (D-049): take one of the three offered rewards. */
 export async function chooseLevelUpReward(avatarId: string, rewardId: number): Promise<EncounterRoomSnapshotDto> {
   const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/level-up/choice', {

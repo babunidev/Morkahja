@@ -503,6 +503,7 @@ function ExpansionCard({
 
   return (
     <article
+      data-expansion-card={expansion.mExtensioID}
       style={{
         ...cardStyle,
         ...(expansion.mExtensioActive ? null : inactiveCardStyle),
@@ -660,11 +661,17 @@ export function ExpansionsOverlay({
   onContentUnlocked,
   open,
   playerId,
+  focusExpansionId,
+  zIndex,
 }: {
   onClose: () => void;
   onContentUnlocked?: () => void;
   open: boolean;
   playerId: string;
+  /** Opened from a locked region on the map (D-056): that expansion, unfolded and in view. */
+  focusExpansionId?: number;
+  /** Over the game screen, where the menu's own layer would sit below the game. */
+  zIndex?: number;
 }) {
   const [visible, setVisible] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
@@ -713,19 +720,27 @@ export function ExpansionsOverlay({
       return;
     }
 
+    if (focusExpansionId !== undefined) {
+      setExpandedIds(new Set([focusExpansionId]));
+    }
     // Shown once the pictures inside are loaded; the opening button pulses meanwhile.
     const cancelReveal = revealMenuWhenReady(
       'nav:Expansions',
       () => document.querySelector('[data-morkahja-menu="expansions"]'),
       () => {
         setVisible(true);
+        if (focusExpansionId !== undefined) {
+          window.requestAnimationFrame(() => {
+            document.querySelector(`[data-expansion-card="${focusExpansionId}"]`)?.scrollIntoView({ block: 'center' });
+          });
+        }
       },
     );
 
     return () => {
       cancelReveal();
     };
-  }, [open]);
+  }, [open, focusExpansionId]);
 
   useEffect(() => {
     if (!open) {
@@ -831,6 +846,7 @@ export function ExpansionsOverlay({
       {...protectedOverlaySurfaceProps}
       style={{
         ...backdropStyle,
+        ...(zIndex !== undefined ? { zIndex } : null),
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',
       }}

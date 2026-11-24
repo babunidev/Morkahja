@@ -81,3 +81,15 @@ console.log('worldMap.test.ts passed');
   assert.equal(mapFocusFor(1, 0), null);
   assert.deepEqual(mapFocusFor(99999, 1001), EXPANSION_FOCUS[1001], 'unknown encounters fall back to their land');
 }
+
+// Travel (D-056): a region is its expansion; Aetherion is its own; every other land is the base game.
+{
+  const { travelTargetFor } = await import('./worldMapData.js');
+  assert.equal(travelTargetFor('region:keldor')?.expansion, 1001);
+  assert.equal(travelTargetFor('region:everwinter')?.expansion, 1003);
+  assert.equal(travelTargetFor('site:aetherion')?.expansion, 1004);
+  assert.equal(travelTargetFor('region:eldertree')?.expansion, 0);
+  assert.equal(travelTargetFor('region:vale')?.name, "Ethera's Vale");
+  assert.equal(travelTargetFor('site:eldridia'), null, 'other sites are not destinations of their own');
+  assert.equal(travelTargetFor('region:nowhere'), null);
+}

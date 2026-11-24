@@ -69,10 +69,12 @@ import {
   recentAfter,
   resolveNextEncounterForRoom,
   resolveParticipantInRoom,
+  selectEncounterInExpansion,
   selectNextEncounter,
   shouldUseEncounterFollow,
   type ResolveParticipantInRoomResult,
 } from './encounterGenerator.js';
+import { BASE_GAME_EXPANSION, travelCost } from '@shared/travel.js';
 import {
   ensureSlotEncounterSnapshots,
   seedAllSlotEncountersForRoom,
@@ -82,8 +84,9 @@ import {
 import {
   loadAvatar,
 } from './encounterPersistence.js';
-import { getEncounterById, getEncounters } from './gameData.js';
+import { getEncounterById, getEncounters, getExpansionById } from './gameData.js';
 import {
+  readYellowRedGemBalance,
   grantPlayerYellowRedGemsInTransaction,
   getPlayerUnlockedExpansions,
   loadPlayer,
@@ -2027,6 +2030,8 @@ export async function processRoomAway(
 export async function createRoom(
   playerId: string,
   avatarId: string,
+  /** Travel (D-056): the new room opens on an encounter of this expansion. */
+  options: { destinationExpansion?: number } = {},
 ): Promise<EncounterRoom> {
   const avatar = await loadAvatar(playerId, avatarId);
   if (!avatar) {
@@ -2054,7 +2059,10 @@ export async function createRoom(
   const leaderExpansions = await mergeExpansionsForPlayerIds([playerId]);
   // A new room remembers the avatar's last encounter, so it does not open on it again.
   const recentEncounterIds = recentAfter([], avatar.progression?.lastEncounterId);
-  const encounter = selectNextEncounter({
+  const travelled = options.destinationExpansion !== undefined
+    ? selectEncounterInExpansion(options.destinationExpansion, recentEncounterIds)
+    : null;
+  const encounter = travelled ?? selectNextEncounter({
     unlockedExpansions: leaderExpansions,
     previousEncounter: previousEncounterFromAvatar(avatar),
     avoidEncounterIds: recentEncounterIds,
@@ -2096,6 +2104,126 @@ export async function createRoom(
   await setPresenceInRoom(playerId, roomId);
   await notifyAdventureStartedForJoin(room);
   return reconcilePendingLevelUpForRoom(room);
+}
+
+/**
+ * Travel (D-056, Babuni, 2026-11-23): pay gems to go to an expansion the
+ * player has. The room's encounter is swapped for a random one of that
+ * expansion, and the one left gives no reward and no loss. Alone or as the
+ * host, the whole room travels; a guest leaves the room and goes on alone.
+ *
+ * Only while the encounter is open and nobody has chosen in it yet: once a
+ * choice is made its outcome is known, and travelling then would escape it.
+ * Never from Atranor or a level-up, which are events, not places.
+ */
+export async function travelToExpansion(
+  playerId: string,
+  avatarId: string,
+  expansionId: number,
+): Promise<{ room: EncounterRoom; spent: number; currencies: Record<string, unknown> }> {
+  if (!Number.isInteger(expansionId)) {
+    throw new RoomError('Unknown destination', 400, 'UNKNOWN_DESTINATION');
+  }
+  const expansion = expansionId === BASE_GAME_EXPANSION ? null : getExpansionById(expansionId);
+  if (expansionId !== BASE_GAME_EXPANSION && (!expansion || !expansion.mExtensioActive)) {
+    throw new RoomError('Unknown destination', 400, 'UNKNOWN_DESTINATION');
+  }
+  const unlocked = await mergeExpansionsForPlayerIds([playerId]);
+  if (expansionId !== BASE_GAME_EXPANSION && !unlocked.includes(expansionId)) {
+    throw new RoomError('This region is not unlocked', 403, 'REGION_LOCKED');
+  }
+  const cost = travelCost(expansionId, expansion?.mExtensioCost);
+
+  const roomId = await findActiveRoomIdForPlayerAvatar(playerId, avatarId);
+  if (!roomId) {
+    throw new RoomError('Travel starts from the game', 409, 'NOT_IN_GAME');
+  }
+
+  // Check, charge and (alone or as the host) swap the encounter in one
+  // transaction: the room row first, then the player row.
+  const outcome = await withDocumentTransaction(async (transaction) => {
+    const room = await loadEncounterRoomFromTransaction(transaction, roomId);
+    if (!room || room.roomState === 'closed' || !findParticipant(room, playerId)) {
+      throw new RoomError('Travel starts from the game', 409, 'NOT_IN_GAME');
+    }
+    const currentId = room.activeEncounterSnapshot.encounterId;
+    if (
+      room.roomState === 'system_event'
+      || currentId === DEATH_ENCOUNTER_NUMERIC_ID
+      || currentId === LEVEL_UP_ENCOUNTER_NUMERIC_ID
+    ) {
+      throw new RoomError('Atranor and a level-up cannot be left by travelling', 409, 'TRAVEL_DURING_EVENT');
+    }
+    if (room.roomState !== 'active_encounter') {
+      throw new RoomError('Travel before anyone chooses in this encounter', 409, 'TRAVEL_AFTER_CHOICE');
+    }
+    const chosen = engagedParticipants(room).some((participant) => (
+      participant.choiceState !== 'choosing'
+      || participant.selectedAction !== undefined
+      || (participant.setPicks?.length ?? 0) > 0
+      || (participant.setDiceRolls?.length ?? 0) > 0
+    ));
+    if (chosen) {
+      throw new RoomError('Travel before anyone chooses in this encounter', 409, 'TRAVEL_AFTER_CHOICE');
+    }
+
+    const player = await transaction.getPlayer<{ currencies?: Record<string, unknown> }>(playerId);
+    const currencies = player?.currencies ?? {};
+    const gems = readYellowRedGemBalance(currencies as never);
+    if (gems < cost) {
+      throw new RoomError('Not enough gems to travel', 409, 'INSUFFICIENT_GEMS');
+    }
+    const nextCurrencies = { ...currencies, yellow_red_gem: gems - cost };
+    await transaction.setPlayer(playerId, { currencies: nextCurrencies, updatedAt: nowMs() }, { merge: true });
+
+    const isGuest = room.leaderPlayerId !== playerId && room.participants.some((entry) => entry.playerId !== playerId);
+    if (isGuest) {
+      return { kind: 'guest' as const, currencies: nextCurrencies };
+    }
+
+    const recentEncounterIds = recentAfter(room.recentEncounterIds, currentId);
+    const destination = selectEncounterInExpansion(expansionId, recentEncounterIds);
+    if (!destination) {
+      throw new RoomError('No encounter waits there yet', 409, 'NO_ENCOUNTER_THERE');
+    }
+    const preparedEncounter = prepareNextEncounter(destination, room.mergedExpansions);
+    const draft: EncounterRoom = {
+      ...room,
+      recentEncounterIds,
+      helpCalledSnapshotId: undefined,
+      systemEvent: undefined,
+      loreGemActivated: undefined,
+      loreGemActivatedSnapshotId: undefined,
+      advanceStartedAt: undefined,
+      participants: resetParticipantsForNewEncounter(room.participants),
+      roomState: 'active_encounter',
+      updatedAt: nowMs(),
+    };
+    const travelled = await seedAllSlotEncountersForRoom(draft, destination, preparedEncounter);
+    await transaction.setEncounterRoom(roomId, travelled);
+    await syncActiveEncountersInTransaction(transaction, travelled);
+    return { kind: 'room' as const, room: travelled, currencies: nextCurrencies };
+  });
+
+  if (outcome.kind === 'room') {
+    return { room: outcome.room, spent: cost, currencies: outcome.currencies };
+  }
+
+  // A guest leaves the room and goes on alone to the destination.
+  try {
+    await leaveRoomById(playerId, roomId, { mode: 'depart', avatarId });
+    const room = await createRoom(playerId, avatarId, { destinationExpansion: expansionId });
+    return { room, spent: cost, currencies: outcome.currencies };
+  } catch (error) {
+    // The trip did not happen: the gems go back.
+    await withDocumentTransaction(async (transaction) => {
+      const player = await transaction.getPlayer<{ currencies?: Record<string, unknown> }>(playerId);
+      const currencies = player?.currencies ?? {};
+      const gems = readYellowRedGemBalance(currencies as never);
+      await transaction.setPlayer(playerId, { currencies: { ...currencies, yellow_red_gem: gems + cost }, updatedAt: nowMs() }, { merge: true });
+    });
+    throw error;
+  }
 }
 
 export async function getActiveRoomForPlayer(

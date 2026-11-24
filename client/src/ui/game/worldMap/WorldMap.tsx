@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { useElementSize } from '../../common/LineFrame.js';
 import { seededRandom, seedFromText } from '../blocks/encounterFrameGeometry.js';
 import {
+  TRAVEL_SITE_IDS,
+  travelTargetFor,
+  type TravelTarget,
   EXPANSION_FOCUS,
   MAP_HEIGHT,
   MAP_PATHS,
@@ -265,20 +268,48 @@ function MapText({ x, y, size, children, anchor = 'middle', italic = false }: { 
   );
 }
 
-function RegionLand({ region, current }: { region: MapRegion; current: boolean }) {
+/**
+ * Travel (Babuni, 2026-11-23): a land under the pointer lights up, and a land
+ * whose expansion the player does not have is marked in red.
+ */
+function regionFillOpacity(current: boolean, hovered: boolean, locked: boolean): number {
+  if (locked) {
+    return hovered ? 0.46 : 0.34;
+  }
+  if (hovered) {
+    return 0.3;
+  }
+  return current ? 0.16 : 0.05;
+}
+
+function RegionLand({ region, current, hovered, locked }: {
+  region: MapRegion;
+  current: boolean;
+  hovered: boolean;
+  locked: boolean;
+}) {
   const d = polyline(region.outline, true);
   return (
-    <Layered
-      d={d}
-      fill={RED}
-      fillOpacity={current ? 0.16 : 0.05}
-      strokes={BORDER_STROKES[region.border]}
-    />
+    <g data-map-target={`region:${region.id}`}>
+      <Layered
+        d={d}
+        fill={locked ? LOCKED_RED : RED}
+        fillOpacity={regionFillOpacity(current, hovered, locked)}
+        strokes={BORDER_STROKES[region.border]}
+      />
+    </g>
   );
 }
 
+/** A red that reads as "not yours yet" on the gold ground. */
+const LOCKED_RED = '#b3261e';
+
 /** The static drawing: built once, then only the view box moves. */
-function MapDrawing({ currentRegionId }: { currentRegionId: string | null }) {
+function MapDrawing({ currentRegionId, hoveredKey = null, isLocked = () => false }: {
+  currentRegionId: string | null;
+  hoveredKey?: string | null;
+  isLocked?: (key: string) => boolean;
+}) {
   const symbols = useMemo(() => {
     const avoid = MAP_SITES.map((site) => site.at);
     return MAP_REGIONS.flatMap((region) => {
@@ -309,10 +340,39 @@ function MapDrawing({ currentRegionId }: { currentRegionId: string | null }) {
     <g>
       <rect fill={GOLD} height={MAP_HEIGHT} width={MAP_WIDTH} x={0} y={0} />
       <Layered d={polyline(edge, true)} strokes={BORDER_STROKES.realm} />
-      {MAP_REGIONS.map((region) => <RegionLand key={region.id} current={region.id === currentRegionId} region={region} />)}
+      {MAP_REGIONS.map((region) => (
+        <RegionLand
+          key={region.id}
+          current={region.id === currentRegionId}
+          hovered={hoveredKey === `region:${region.id}`}
+          locked={isLocked(`region:${region.id}`)}
+          region={region}
+        />
+      ))}
+      {/* Everything drawn over the lands lets the pointer through to them. */}
+      <g pointerEvents="none">
       {MAP_PATHS.map((path) => <Layered key={path.id} d={polyline(path.points)} strokes={PATH_STROKES[path.kind]} />)}
       {symbols}
       {skylands}
+      </g>
+      {/* Aetherion is a destination of its own inside the Vale. */}
+      {MAP_SITES.filter((site) => TRAVEL_SITE_IDS.includes(site.id)).map((site) => {
+        const key = `site:${site.id}`;
+        const locked = isLocked(key);
+        const hovered = hoveredKey === key;
+        return (
+          <circle
+            key={key}
+            cx={site.at[0]}
+            cy={site.at[1]}
+            data-map-target={key}
+            fill={locked ? LOCKED_RED : RED}
+            fillOpacity={locked ? (hovered ? 0.46 : 0.34) : hovered ? 0.3 : 0.001}
+            r={40}
+          />
+        );
+      })}
+      <g pointerEvents="none">
       {MAP_SITES.map((site) => {
         const side = labelOffsets[site.labelSide ?? 'below'];
         const big = site.kind === 'capital';
@@ -325,8 +385,9 @@ function MapDrawing({ currentRegionId }: { currentRegionId: string | null }) {
           </g>
         );
       })}
+      </g>
       {MAP_REGIONS.map((region) => (
-        <g key={`label-${region.id}`}>
+        <g key={`label-${region.id}`} pointerEvents="none">
           <MapText size={region.id === 'vale' ? 30 : 22} x={region.label[0]} y={region.label[1]}>
             {region.name}
           </MapText>
@@ -423,7 +484,29 @@ export function mapFocusFor(encounterId: number | null, expansion: number | null
  * The map, filling its parent. Opens centred on where the encounter happens;
  * drag to move, wheel or pinch to zoom.
  */
-export function WorldMap({ encounterId, expansion, open }: { encounterId: number | null; expansion: number | null; open: boolean }) {
+export function WorldMap({ encounterId, expansion, open, travel }: {
+  encounterId: number | null;
+  expansion: number | null;
+  open: boolean;
+  /** Travel (D-056): lands light up under the pointer, and a tap picks one. */
+  travel?: {
+    unlockedExpansions: readonly number[];
+    onPick: (target: TravelTarget) => void;
+  };
+}) {
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const pressStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const isLocked = (key: string): boolean => {
+    if (!travel) {
+      return false;
+    }
+    const target = travelTargetFor(key);
+    return target !== null && target.expansion !== 0 && !travel.unlockedExpansions.includes(target.expansion);
+  };
+  function targetAt(clientX: number, clientY: number): string | null {
+    const element = document.elementFromPoint(clientX, clientY);
+    return element?.closest('[data-map-target]')?.getAttribute('data-map-target') ?? null;
+  }
   const containerRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(containerRef);
   const focus = mapFocusFor(encounterId, expansion);
@@ -478,12 +561,23 @@ export function WorldMap({ encounterId, expansion, open }: { encounterId: number
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, localPoint(event));
     event.currentTarget.dataset.dragging = 'true';
+    pressStart.current = pointers.current.size === 1 ? { x: event.clientX, y: event.clientY, moved: false } : null;
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>): void {
     const previous = pointers.current.get(event.pointerId);
     if (!previous) {
+      // Not pressed: the land under the pointer lights up.
+      if (travel && event.pointerType === 'mouse') {
+        const key = targetAt(event.clientX, event.clientY);
+        if (key !== hoveredKey) {
+          setHoveredKey(key);
+        }
+      }
       return;
+    }
+    if (pressStart.current && Math.hypot(event.clientX - pressStart.current.x, event.clientY - pressStart.current.y) > 6) {
+      pressStart.current.moved = true;
     }
     const point = localPoint(event);
     const others = [...pointers.current.entries()].filter(([id]) => id !== event.pointerId).map(([, p]) => p);
@@ -504,6 +598,17 @@ export function WorldMap({ encounterId, expansion, open }: { encounterId: number
   }
 
   function onPointerEnd(event: React.PointerEvent<HTMLDivElement>): void {
+    // A tap, not a drag or a pinch, picks the land under it.
+    const press = pressStart.current;
+    if (event.type === 'pointerup' && travel && press && !press.moved && pointers.current.size === 1) {
+      const key = targetAt(event.clientX, event.clientY);
+      const target = key ? travelTargetFor(key) : null;
+      if (target) {
+        setHoveredKey(key);
+        travel.onPick(target);
+      }
+    }
+    pressStart.current = null;
     pointers.current.delete(event.pointerId);
     if (pointers.current.size === 0) {
       delete event.currentTarget.dataset.dragging;
@@ -523,13 +628,14 @@ export function WorldMap({ encounterId, expansion, open }: { encounterId: number
       onPointerCancel={onPointerEnd}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
+      onPointerLeave={() => setHoveredKey(null)}
       onPointerUp={onPointerEnd}
       role="img"
       style={containerStyle}
     >
       <style>{MARKER_KEYFRAMES}</style>
       <svg preserveAspectRatio="xMidYMid meet" style={svgStyle} viewBox={viewBox}>
-        <MapDrawing currentRegionId={focus?.regionId ?? null} />
+        <MapDrawing currentRegionId={focus?.regionId ?? null} hoveredKey={travel ? hoveredKey : null} isLocked={isLocked} />
         {focus ? <HereMarker at={focus.at} /> : null}
       </svg>
       <Compass />

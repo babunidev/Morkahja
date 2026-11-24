@@ -255,6 +255,31 @@ export function selectNextEncounter(
   return drawFromRegionPool(pool, selectionRegion(context), context.nextInt ?? randomInt, context.avoidEncounterIds);
 }
 
+/**
+ * Travel (D-056): a random encounter of the destination's expansion, not one
+ * played recently while others are left. No follow-up and no region roll:
+ * only this encounter is guaranteed to come from there.
+ */
+export function selectEncounterInExpansion(
+  expansionId: number,
+  avoidEncounterIds: readonly number[] = [],
+  encounters: EncounterDataMap = getEncounters(),
+  nextInt: (min: number, max: number) => number = randomInt,
+): EncounterData | null {
+  const pool = Object.values(encounters).filter(
+    (encounter) =>
+      encounter.mEncounterID >= RANDOM_ENCOUNTER_MIN_ID
+      && !isSystemEncounterId(encounter.mEncounterID)
+      && encounter.mEncounterExpansion === expansionId,
+  );
+  if (pool.length === 0) {
+    return null;
+  }
+  const fresh = pool.filter((encounter) => !avoidEncounterIds.includes(encounter.mEncounterID));
+  const candidates = fresh.length > 0 ? fresh : pool;
+  return candidates[nextInt(0, candidates.length - 1)]!;
+}
+
 export function prepareNextEncounter(
   currentEncounter: EncounterData,
   unlockedExpansions: number[],

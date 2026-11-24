@@ -689,6 +689,10 @@ My avatar card in the game said I had played 0 encounters, though the main menu 
 
 My avatar card in the main menu now has an Edit button under the portrait. It opens the avatar creation without race, role and gender, so I can pick another portrait of the same kind, another frame and a new name. Only what changes costs gems: the portrait's and frame's own gem values, and 50 for a name, and the game asks before it spends them. In the game the card has no Edit button. I also wondered why the Warmth specialization had no skills. The skill called Warmth belongs to type 25, which is aid, so that specialization is now Aid and the empty Warmth type is gone. Claude Code (Claude Opus 5.5) checked the data, built the edit on the server and the client, made sure two changes at once cannot both be paid with the same gems, and tried it all in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
 
+## 2026-11-24 — Travelling on the world map
+
+The last of my player choices is in. On the world map a land lights up under my pointer, and the lands I have not unlocked are red. Tapping a land asks whether I want to travel there and what it costs: 1 gem for the base game, and a tenth of an expansion's price for its lands. Yes swaps my current encounter for one from there. Tapping a red land offers to show me its expansion. As the host I take my party along; as a guest I leave and go on alone. Claude Code (Claude Opus 5.5) built it on the server and the client. It allowed travel only before anyone in the room has chosen, so nobody can travel away from a loss they have already seen, and left that rule for me to confirm. It tried everything in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

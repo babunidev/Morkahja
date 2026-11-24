@@ -9,6 +9,14 @@ export function looksLikeHtml(text: string): boolean {
 
 const ROOM_ERROR_MESSAGES: Record<string, string> = {
   ROOM_FULL: 'This room is already full.',
+  // Travel (D-056)
+  TRAVEL_AFTER_CHOICE: 'Travel before anyone chooses in this encounter.',
+  TRAVEL_DURING_EVENT: 'Atranor and a level-up cannot be left by travelling.',
+  REGION_LOCKED: 'This region is not unlocked yet.',
+  UNKNOWN_DESTINATION: 'There is no way to travel there.',
+  NO_ENCOUNTER_THERE: 'No encounter waits there yet.',
+  NOT_IN_GAME: 'Travel starts from the game.',
+  INSUFFICIENT_GEMS: 'Not enough gems.',
   ALREADY_IN_ROOM: 'You are already in another room.',
   ROOM_NOT_FOUND: 'That room is no longer available.',
   FRIEND_NOT_IN_ROOM: 'Your friend is no longer in a room.',

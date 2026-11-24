@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
 import type { CollectedInventoryChange } from '../collectedInventory.js';
 import type {
@@ -9,7 +10,12 @@ import type {
   RoomStateDto,
 } from '../../../api/http.js';
 import {
-  activateRoomLoreGem, chooseLevelUpReward, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick } from '../../../api/http.js';
+  activateRoomLoreGem, chooseLevelUpReward, fetchPlayer, loadStoredSession, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick, travelToRegion } from '../../../api/http.js';
+import { userFacingApiErrorMessage } from '../../../api/httpErrorMessage.js';
+import { travelCost } from '@shared/travel.js';
+import TravelPrompt from '../worldMap/TravelPrompt.js';
+import type { TravelTarget } from '../worldMap/worldMapData.js';
+import { ExpansionsOverlay } from '../../dashboard/ExpansionsOverlay.js';
 import { isApiErrorCode } from '../../../api/httpErrorMessage.js';
 import InventoryBlock, { type InventoryPickMode } from './InventoryBlock.js';
 import AvatarOverviewBlock from './AvatarOverviewBlock.js';
@@ -153,6 +159,12 @@ const worldMapLayerStyle: CSSProperties = {
   overflow: 'hidden',
   transition: fadeTransition,
 };
+
+/** An expansion's unlock price in gems, from the game data; a trip costs a tenth of it. */
+function travelExpansionPrice(expansionId: number): number | null {
+  const record = (gameExpansions() as Record<string, { mExtensioCost?: number } | undefined>)[String(expansionId)];
+  return record?.mExtensioCost ?? null;
+}
 
 function imageFileName(imageSrc: string): string {
   return decodeURIComponent(imageSrc.split('/').pop() ?? imageSrc);
@@ -300,10 +312,49 @@ export function EncounterImageBlock({
   const [titleIntro, setTitleIntro] = useState<'idle' | 'in' | 'out'>('idle');
   const [mapOpen, setMapOpen] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
+  // Travel (D-056): the region tapped on the map, and the player's expansions.
+  const [travelTarget, setTravelTarget] = useState<TravelTarget | null>(null);
+  const [travelPending, setTravelPending] = useState(false);
+  const [travelError, setTravelError] = useState<string | null>(null);
+  const [unlockedExpansions, setUnlockedExpansions] = useState<number[]>([0]);
+  const [lookAtExpansion, setLookAtExpansion] = useState<number | null>(null);
   const [transitionImageSrc, setTransitionImageSrc] = useState<string | null>(null);
   const [underlayHoldSrc, setUnderlayHoldSrc] = useState<string | null>(null);
   const underlayImageSrc = transitionImageSrc ?? underlayHoldSrc ?? undefined;
   const underlayVisible = underlayImageSrc !== undefined;
+  async function refreshUnlockedExpansions(): Promise<void> {
+    try {
+      const player = await fetchPlayer(null);
+      setUnlockedExpansions(player.unlockedExpansions ?? [0]);
+    } catch {
+      // Keep the last known list; the server checks again on travel.
+    }
+  }
+
+  useEffect(() => {
+    if (mapOpen) {
+      void refreshUnlockedExpansions();
+    } else {
+      setTravelTarget(null);
+      setTravelError(null);
+    }
+  }, [mapOpen]);
+
+  async function travelTo(target: TravelTarget): Promise<void> {
+    setTravelPending(true);
+    setTravelError(null);
+    try {
+      const result = await travelToRegion(avatarId, target.expansion);
+      setTravelTarget(null);
+      setMapOpen(false);
+      onRoomSnapshot?.(result.room);
+    } catch (error) {
+      setTravelError(userFacingApiErrorMessage(error, 'Could not travel there.'));
+    } finally {
+      setTravelPending(false);
+    }
+  }
+
   const lastSyncedSelectionKeyRef = useRef<string | null>(null);
   const selectionSyncInFlightRef = useRef(false);
   const choiceCommitInFlightRef = useRef(false);
@@ -745,8 +796,55 @@ export function EncounterImageBlock({
             aria-hidden={!mapOpen}
             style={{ ...worldMapLayerStyle, opacity: mapOpen ? 1 : 0, pointerEvents: mapOpen ? 'auto' : 'none' }}
           >
-            <WorldMap encounterId={encounter.encounterId} expansion={expansionFor(encounter.encounterId)} open={mapOpen} />
+            <WorldMap
+              encounterId={encounter.encounterId}
+              expansion={expansionFor(encounter.encounterId)}
+              open={mapOpen}
+              travel={{
+                unlockedExpansions,
+                onPick: (target) => {
+                  setTravelError(null);
+                  setTravelTarget(target);
+                },
+              }}
+            />
+            {travelTarget ? (
+              <TravelPrompt
+                cost={travelCost(travelTarget.expansion, travelExpansionPrice(travelTarget.expansion))}
+                error={travelError}
+                locked={travelTarget.expansion !== 0 && !unlockedExpansions.includes(travelTarget.expansion)}
+                onNo={() => {
+                  setTravelTarget(null);
+                  setTravelError(null);
+                }}
+                onYes={() => {
+                  if (travelTarget.expansion !== 0 && !unlockedExpansions.includes(travelTarget.expansion)) {
+                    // A locked region: its expansion, in the Expansions menu; closing it comes back to the map.
+                    setLookAtExpansion(travelTarget.expansion);
+                    setTravelTarget(null);
+                    return;
+                  }
+                  void travelTo(travelTarget);
+                }}
+                pending={travelPending}
+                target={travelTarget}
+              />
+            ) : null}
           </div>
+        ) : null}
+        {/* On the page itself, above the game's buttons and avatar. */}
+        {lookAtExpansion !== null ? createPortal(
+          <ExpansionsOverlay
+            focusExpansionId={lookAtExpansion}
+            onClose={() => {
+              setLookAtExpansion(null);
+              void refreshUnlockedExpansions();
+            }}
+            open
+            playerId={loadStoredSession()?.playerId ?? ''}
+            zIndex={1200}
+          />,
+          document.body,
         ) : null}
         <DecorativeEdgeFrame
           onRegionClick={() => setMapOpen((open) => !open)}

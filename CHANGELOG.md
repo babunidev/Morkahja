@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: travel on the world map (D-056)
+
+- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** build travel from the player-choices concept: a land lights up under the pointer, lands not unlocked are red, a tap asks "Travel to … ? It costs … gems. Are you sure?", a locked land offers to show its expansion, a region is its expansion (the base game costs 1 gem, an expansion a tenth of its price), the encounter is swapped, never during Atranor or a level-up, a host takes the room along and a guest leaves it.
+- **Shared:** new `shared/src/travel.ts` (`travelCost`: Keldor 8, Everwinter 5, Aetherion 3, the base game 1).
+- **Server:** `selectEncounterInExpansion` (`encounterGenerator.ts`); `travelToExpansion` and `POST /room/travel` (`roomService.ts`, `roomController.ts`, `roomRoutes.ts`), refusing `NOT_IN_GAME`, `UNKNOWN_DESTINATION` (also the inactive 1002), `REGION_LOCKED`, `TRAVEL_DURING_EVENT`, `TRAVEL_AFTER_CHOICE` and `INSUFFICIENT_GEMS`; `createRoom` takes a destination for a guest's new room. **Timing as built:** only while nobody in the room has chosen, so an outcome already known cannot be escaped by travelling (Claude Code's choice, for Babuni to confirm; the concept said "any time").
+- **Client:** `WorldMap.tsx` highlights the land under the mouse, fills locked lands in red, and turns a tap (not a drag or pinch) into a pick; `worldMapData.ts` maps lands to expansions (`travelTargetFor`); new `TravelPrompt.tsx`; `EncounterImageBlock.tsx` loads the player's expansions when the map opens, travels, applies the new room and closes the map, or opens `ExpansionsOverlay` over the game (new `focusExpansionId` and `zIndex`, drawn on the page) for a locked land; travel refusals have player-facing texts in `httpErrorMessage.ts`.
+- **Tests:** new `server/src/services/roomTravel.test.ts` (not in the game, locked, unknown and inactive destinations; two trips at once with one gem, exactly one goes through; a new base-game encounter, not the one left; Everwinter for 5 gems; refused after a choice and from Atranor, at no cost; a host travels with the guest; a guest leaves for a room of their own). `worldMap.test.ts` checks which land leads where. Server tests 73/73, client tests 52/52, `npm run typecheck` and `verify:static-data` passed.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the map zoomed out with a land lit up and the locked lands red; Keldor's question and the Expansions menu opened on Keldor over the game, closing back to the map; Eldertree's question, the refusal without gems, then, after giving the test player 3 gems in the local database, the trip: the map closed, the encounter changed (20087 → 20016 and others) and one gem was spent. The first in-game Expansions menu sat under the game's buttons; it is now drawn on the page. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-travel-*.png`.
+
 ## 2026-11-24 — Unreleased: Edit avatar; type 25 is Aid (D-056)
 
 - **Not released.** On GitHub `main`; the production server is unchanged. The code went in with commit `87e05463`, which another session committed together with its own change; `d9b42a5a` holds these records.

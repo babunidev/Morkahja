@@ -118,6 +118,8 @@ There are fourteen types in the list. Travel and Rare Find exist only as items. 
 
 ## 4. Travel to a region
 
+**Built 2026-11-24** on the world map in the game (see "As built" below).
+
 ### On the map
 
 - On the world map, hovering a region **highlights** it.
@@ -132,11 +134,17 @@ There are fourteen types in the list. Travel and Rare Find exist only as items. 
 | Where I can go | A region is its **expansion**, not the lands drawn on the map. Travelling to Everwinter Valley draws a random encounter of expansion 1003. A base-game encounter that happens to be placed in Everwinter on the map does not make it an Everwinter encounter. |
 | After arriving | Only the next encounter is guaranteed to come from there. After that the usual rules apply: a written follow-up first, otherwise the region roll (d20, stay in the same expansion on 1–14, about 70 %, `SAME_EXPANSION_STAY_MAX` in `encounterGenerator.ts`). Staying means staying in the **expansion**, so I keep travelling through all of its encounters, wherever they sit on the map. |
 | Price | **A tenth of the expansion's gem price**, rounded: Keldor 8 (unlock 75), Everwinter Valley 5 (50), Aetherion 3 (25). **The base game costs 1 gem**: every land whose encounters are in expansion 0 (Ethera's Vale, Eldertree Forest, Evergrove, Celesterra…) counts as the same destination. |
-| When | **Any time**, even before I have made my choice in the current encounter, and in the middle of an encounter chain, which it breaks. Travelling swaps the current encounter for one from the destination: I pay gems to swap the encounter, and the one I leave brings no reward and no loss. |
+| When | **Any time**, even before I have made my choice in the current encounter, and in the middle of an encounter chain, which it breaks. Travelling swaps the current encounter for one from the destination: I pay gems to swap the encounter, and the one I leave brings no reward and no loss. *As built (Claude Code, 2026-11-24, for Babuni to confirm):* only while nobody in the room has chosen yet. Once a choice is made its outcome is known, and travelling then would escape a loss; after Continue the next encounter is open to travel again. |
 | Not from system events | Atranor and the level-up are events, not places: travel is not possible while one is open. Atranor always comes when the last essence is gone, and travel cannot skip it. |
 | My own or a solo room | I travel, alone. |
 | A shared room where I am the host | I take everyone with me. Nobody has to agree; the host is the group leader. |
 | A shared room I joined | Travelling means **leaving** that room: I go on alone to the region I chose. The host can take me wherever they travel while I stay. |
+
+### As built (2026-11-24)
+
+- **The map:** a land lights up under the mouse; a tap (not a drag) picks it. Lands whose expansion the player does not have (Keldor, Everwinter Valley) and Aetherion, while locked, are filled in red. Keldor is 1001, Everwinter Valley 1003, Aetherion (the city in the Vale) 1004; every other land is the base game.
+- **The question:** "Travel to Eldertree Forest? It costs 1 [gem]. Are you sure?" with red and green; or, for a locked land, "You have not unlocked The Cursed Forest of Keldor yet. Would you like to take a look?", where green opens the Expansions menu over the game with that expansion unfolded, and closing it returns to the map. A refusal (not enough gems, someone already chose) shows in the question.
+- **The server** (`POST /room/travel`) checks the destination, the player's unlocked expansions and the gems, refuses during Atranor and a level-up and after a choice, and charges and swaps the encounter in one transaction (room row, then player row). The new encounter is drawn from the destination's expansion, avoiding recently played ones; it carries no follow-up, and after it the usual region roll applies. A host's room travels with everyone in it; a guest pays, leaves the room and gets a room of their own there (the gems go back if that fails).
 
 ### Content still to sort out
 

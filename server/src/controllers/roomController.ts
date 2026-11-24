@@ -26,6 +26,7 @@ import {
   submitSetDice,
   submitSetPick,
   submitContinue,
+  travelToExpansion,
   chooseLevelUpReward,
   submitSelection,
 } from '../services/roomService.js';
@@ -408,6 +409,31 @@ export async function submitRoomContinueController(
     const room = await submitContinue(playerId, avatarId);
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
+    });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+/** Travel (D-056): swap the room's encounter for one of another expansion. */
+export async function travelController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const avatarId = requireAvatarId(req);
+    const expansionId = (req.body as Record<string, unknown>).expansionId;
+    if (typeof expansionId !== 'number' || !Number.isInteger(expansionId)) {
+      res.status(400).json({ error: 'INVALID_DESTINATION' });
+      return;
+    }
+    const result = await travelToExpansion(playerId, avatarId, expansionId);
+    res.json({
+      room: await toEncounterRoomSnapshotDto(result.room, playerId),
+      spent: result.spent,
+      currencies: result.currencies,
     });
   } catch (error) {
     handleRoomError(error, res, next);
