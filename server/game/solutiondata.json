@@ -1205,7 +1205,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "Crafted from radiant sunstone, this key glimmers with an inner warmth. Its intricate design incorporates sun motifs, each ray forming a distinct, tooth-like prong, perfect for opening any chest.",
     "mSolutionType": 8,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10111": {
     "mSolutionID": 10111,
