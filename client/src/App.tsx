@@ -64,6 +64,7 @@ import {
 import { formatAvatarDisplayName, normalizePersistedAvatar } from './ui/avatar/avatarDisplayName.js';
 import GameMessageToast from './ui/game/GameMessageToast.js';
 import PurchaseReturnToast from './ui/commerce/PurchaseReturnToast.js';
+import SoulLinkInviteJoin from './ui/dashboard/soulLinkInvite.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
@@ -800,6 +801,7 @@ export default function App() {
             void checkAchievementUnlocks();
           }}
         />
+        <SoulLinkInviteJoin playerId={playerId} ready={isAchievementWatchScreen(screen)} />
         {screen === 'loading' ? (
           <LoadingScreen
             hooks={loadingHooks}

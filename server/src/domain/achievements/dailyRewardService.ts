@@ -1,4 +1,4 @@
-import { getPlayer, setPlayer, withDocumentTransaction } from '../../db/postgresDocumentStore.js';
+import { getPlayer, withDocumentTransaction } from '../../db/postgresDocumentStore.js';
 import { addPlayerYellowRedGems } from '../../services/playerService.js';
 import {
   recordDailyRewardClaimedEvent,
@@ -16,7 +16,7 @@ import {
 } from './encounterSolveAchievements.js';
 import { loadFirestarterState } from './firestarterProgress.js';
 import { SPIRITGUIDE_ACHIEVEMENT_ID } from './spiritguideAchievement.js';
-import { awardSpiritguidePoint } from './spiritguideProgress.js';
+import { deliverSoulLinkGiftsForPlayer } from './soulLinkGift.js';
 import {
   achievementRankFromProgress,
   loadAllAchievementProgressForPlayer,
@@ -144,41 +144,6 @@ export async function resolveDailyRewardRanks(
   };
 }
 
-/**
- * Delivers the one-time "Gift of the Gods" to the player's soul-link target the
- * first time the linker claims a Hearth Blessing after linking. Marks the link as
- * delivered so it can never fire twice.
- */
-async function maybeDeliverSoulLinkGift(
-  playerId: string,
-  player: PlayerDocument | null,
-  timestamp: number,
-): Promise<void> {
-  const soulLink = player?.soulLink;
-
-  if (!soulLink || soulLink.giftDeliveredAt !== undefined) {
-    return;
-  }
-
-  if (typeof soulLink.targetId !== 'string' || soulLink.targetId.trim().length === 0) {
-    return;
-  }
-
-  await awardSpiritguidePoint(soulLink.targetId, timestamp);
-
-  await setPlayer(
-    playerId,
-    {
-      soulLink: {
-        ...soulLink,
-        giftDeliveredAt: timestamp,
-      },
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
-}
-
 async function maybeRecordHearthBlessingReady(
   playerId: string,
   player: PlayerDocument | null,
@@ -256,6 +221,16 @@ export async function recordDailyEncounterPlayed(
     );
     return { player, previousEncountersPlayed, next };
   });
+  if (
+    previousEncountersPlayed < DAILY_REWARD_ENCOUNTERS_REQUIRED
+    && next.encountersPlayed >= DAILY_REWARD_ENCOUNTERS_REQUIRED
+  ) {
+    try {
+      await deliverSoulLinkGiftsForPlayer(playerId, timestamp);
+    } catch (error) {
+      console.error('Soul link gift delivery failed', error);
+    }
+  }
   return maybeRecordHearthBlessingReady(
     playerId,
     player,
@@ -353,7 +328,6 @@ export async function claimDailyReward(playerId: string): Promise<{
 
   if (granted) {
     await recordDailyRewardClaimedEvent(playerId, gemReward, utcDay);
-    await maybeDeliverSoulLinkGift(playerId, player, Date.now());
   }
 
   return {

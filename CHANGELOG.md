@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: soul links pay only when both play 42 encounters a day; a Soul Link QR code (D-062)
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** a soul link counts only when the new player has played 42 encounters, and the soul-linked player also played 42 encounters that same day; it counts once a day. The Soul Link window gets a QR code: someone who starts the game from it is connected to the one who showed it, and the soul link is made as soon as they are logged in.
+- **Gift rule (`server/src/domain/achievements/soulLinkGift.ts`):** the Gift of the Gods (+1 Spiritguide progress for the soul-linked player) no longer comes with the linker's next Hearth Blessing claim. It is paid on the first UTC day on which both players have 42 encounters (`dailyReward.encountersPlayed`), still once per link, and a soul-linked player receives at most one gift a day (`soulLinkGiftDay` on the player document). It is checked when either player reaches 42 encounters (`recordDailyEncounterPlayed`) and right after a link is made. Both player rows are locked in id order in one transaction; the Spiritguide point is written after the commit. Links made before this change and not yet paid follow the new rule.
+- **QR invite:** `SoulLinkOverlay.tsx` shows a QR code (new dependency `qrcode-generator` 2.0.4, MIT, drawn as SVG) of the game address with `?soul=<player id>`. `client/src/ui/dashboard/soulLinkInvite.tsx` stores that parameter when the game opens, removes it from the address bar, and once a logged-in player reaches the main menu or the game it calls `POST /player/soul-link` with `invite: true`. The server then also adds the newcomer to the inviter's friends, so both see each other. A player who already has a soul link keeps it and the invite is dropped. The window's explanation now reads "The Adventurer you link your soul to receives the Gift of the Gods on the first day you both play 42 encounters!"
+- **Tests:** new `soulLinkGift.test.ts`: the rule's cases, and against PostgreSQL two newcomers linked to one main account reaching 42 at the same time (with parallel deliveries) pay exactly one gift that day and the second the next day.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the QR code in the Soul Link window; a second player opening the game with the invite link and creating an account was soul-linked to the first, both had each other as friends, the address bar lost `?soul=`, and the toast "Your soul is linked to … You are friends now." appeared. The QR picture itself was not scanned with a phone. Locally it points at `localhost`, so a phone cannot open it; on the live game it carries the live address. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-soul-link-*.png`.
+
 ## 2026-11-24 — Unreleased: the travel wait says only "You cannot travel right now"
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

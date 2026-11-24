@@ -36,7 +36,7 @@ export async function createSoulLinkController(
         : '';
 
   try {
-    const result = await createSoulLink(playerId, query);
+    const result = await createSoulLink(playerId, query, { invite: body.invite === true });
 
     res.json({
       playerId,

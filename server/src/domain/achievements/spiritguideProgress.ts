@@ -11,7 +11,7 @@ import {
 
 /**
  * Grants a single Spiritguide progress point ("Gift of the Gods") to the soul-link
- * target. Lives in its own module so the daily-reward claim flow can award it without
+ * target. Lives in its own module so the soul-link gift (soulLinkGift.ts) can award it without
  * importing the achievement engine (which would create a cycle).
  */
 export async function awardSpiritguidePoint(

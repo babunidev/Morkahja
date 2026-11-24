@@ -215,6 +215,19 @@ export async function findPlayerByNameOrId<T>(
   return result.rows[0] ?? null;
 }
 
+/** Players whose soul link to `targetId` has not paid its Gift of the Gods yet, oldest first. */
+export async function listPendingSoulLinkerIds(targetId: string): Promise<string[]> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string }>(
+    `SELECT id FROM players
+     WHERE data->'soulLink'->>'targetId' = $1
+       AND NOT (data->'soulLink' ? 'giftDeliveredAt')
+     ORDER BY (data->'soulLink'->>'linkedAt')::bigint ASC NULLS LAST`,
+    [targetId],
+  );
+  return result.rows.map((row) => row.id);
+}
+
 export async function getDevice<T>(deviceId: string): Promise<T | null> {
   await ensureSchema();
   return one(pool.query('SELECT data FROM devices WHERE id = $1', [deviceId]));

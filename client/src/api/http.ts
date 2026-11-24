@@ -349,10 +349,13 @@ export async function fetchSoulLink(): Promise<SoulLinkStatusResponse> {
   return request<SoulLinkStatusResponse>('/player/soul-link');
 }
 
-export async function createSoulLink(query: string): Promise<CreateSoulLinkResponse> {
+export async function createSoulLink(
+  query: string,
+  options: { invite?: boolean } = {},
+): Promise<CreateSoulLinkResponse> {
   return request<CreateSoulLinkResponse>('/player/soul-link', {
     method: 'POST',
-    body: JSON.stringify({ query }),
+    body: JSON.stringify(options.invite ? { query, invite: true } : { query }),
   });
 }
 

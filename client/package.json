@@ -13,6 +13,7 @@
     "dev:phone": "sh scripts/dev-cert.sh && MORKAHJA_DEV_HTTPS=1 vite --host"
   },
   "dependencies": {
+    "qrcode-generator": "2.0.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

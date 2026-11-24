@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import qrcode from 'qrcode-generator';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import type { SoulLinkDto } from '@shared/contracts';
 import { createSoulLink, fetchSoulLink } from '../../api/http.js';
@@ -10,11 +11,49 @@ import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
+import { soulLinkInviteUrl } from './soulLinkInvite.js';
 
 const OVERLAY_FADE_MS = 300;
 
 const SOUL_LINK_EXPLANATION =
-  'The Adventurer you link your soul to will receive the Gift of the Gods when you claim your next Hearth Blessing!';
+  'The Adventurer you link your soul to receives the Gift of the Gods on the first day you both play 42 encounters!';
+
+const SOUL_LINK_INVITE_TEXT =
+  'Show this to a new adventurer. When they start Morkahja with it, their soul is linked to yours.';
+
+/** SVG path of the dark modules, one unit per module, with a 4-module quiet zone. */
+function qrPath(text: string): { path: string; size: number } {
+  const code = qrcode(0, 'M');
+  code.addData(text);
+  code.make();
+  const count = code.getModuleCount();
+  const margin = 4;
+  let path = '';
+  for (let row = 0; row < count; row += 1) {
+    for (let col = 0; col < count; col += 1) {
+      if (code.isDark(row, col)) {
+        path += `M${col + margin} ${row + margin}h1v1h-1z`;
+      }
+    }
+  }
+  return { path, size: count + margin * 2 };
+}
+
+const inviteStyle: CSSProperties = {
+  display: 'grid',
+  gap: 10,
+  justifyItems: 'center',
+  paddingTop: 4,
+};
+
+const qrStyle: CSSProperties = {
+  width: 'min(56vw, 200px)',
+  height: 'auto',
+  aspectRatio: '1',
+  display: 'block',
+  borderRadius: 8,
+  background: '#f7efe0',
+};
 
 function isSelfSoulLinkQuery(query: string, playerId: string, playerName: string): boolean {
   const normalized = query.trim().toLowerCase();
@@ -62,7 +101,7 @@ const backdropStyle: CSSProperties = {
 const panelStyle: CSSProperties = {
   // Padding included, so the panel fits inside a phone screen.
   width: 'min(100%, 456px)',
-  maxHeight: 'min(86vh, 560px)',
+  maxHeight: 'min(90vh, 720px)',
   display: 'grid',
   gridTemplateRows: 'auto minmax(0, 1fr)',
   gap: 14,
@@ -197,6 +236,7 @@ export function SoulLinkOverlay({
   const [pending, setPending] = useState(false);
   const [loadPending, setLoadPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const inviteQr = useMemo(() => (playerId ? qrPath(soulLinkInviteUrl(playerId)) : null), [playerId]);
 
   useEffect(() => {
     if (!open) {
@@ -349,6 +389,20 @@ export function SoulLinkOverlay({
             </>
           )}
           {statusMessage ? <p style={errorMessageStyle}>{statusMessage}</p> : null}
+          {inviteQr ? (
+            <div style={inviteStyle}>
+              <svg
+                aria-label="Soul Link QR code"
+                role="img"
+                shapeRendering="crispEdges"
+                style={qrStyle}
+                viewBox={`0 0 ${inviteQr.size} ${inviteQr.size}`}
+              >
+                <path d={inviteQr.path} fill="#140a06" />
+              </svg>
+              <p style={messageStyle}>{SOUL_LINK_INVITE_TEXT}</p>
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

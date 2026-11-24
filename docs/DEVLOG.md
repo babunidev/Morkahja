@@ -709,6 +709,10 @@ I asked for a look at whether anyone could cheat their way to gems. Claude Code 
 
 When I tapped a land too early, the box explained the whole rule. I wanted only the sentence "You cannot travel right now." The explanation now sits in a small "?" next to it, like my other tips, and disappears with them when Tips and tutorial is off in the settings. Claude Code (Claude Opus 5.5) moved the text into the tip and checked it in the local game on a desktop and a phone size, with tips on and off. **Verification:** client typecheck and build passed. **Not released.**
 
+## 2026-11-24 — Soul links that are earned, and a QR code to share
+
+Fresh free accounts could soul-link to a main account and raise its daily reward. I decided that a link only counts when the new adventurer has played 42 encounters and the one they linked to also played 42 encounters that day, and only once a day. I also wanted a QR code in the Soul Link window: when I show it to someone and they start the game with it, they are connected to me as soon as they are logged in. Claude Code (Claude Opus 5.5) moved the Gift of the Gods to the first day both of us reach 42 encounters, made the friendship go both ways for an invite, added the QR code, and checked it with two new test players in the local game on a desktop and a phone size. **Verification:** new soul-link test against PostgreSQL, server and client typechecks passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

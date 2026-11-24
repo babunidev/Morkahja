@@ -37,9 +37,10 @@ export interface PlayerDocument {
   /** Player ids added as friends (account-wide). */
   friendIds?: string[];
   /**
-   * Permanent, one-time soul link to another adventurer. When this player claims
-   * their next Hearth Blessing, the target receives the "Gift of the Gods"
-   * (+1 Spiritguide progress), recorded via `giftDeliveredAt`.
+   * Permanent, one-time soul link to another adventurer. On the first UTC day on
+   * which this player and the target have both played 42 encounters, the target
+   * receives the "Gift of the Gods" (+1 Spiritguide progress), recorded via
+   * `giftDeliveredAt` (D-062).
    */
   soulLink?: {
     targetId: string;
@@ -47,6 +48,8 @@ export interface PlayerDocument {
     linkedAt: number;
     giftDeliveredAt?: number;
   };
+  /** UTC day on which this player last received a Gift of the Gods; at most one per day. */
+  soulLinkGiftDay?: string;
   /** Fallen avatars preserved for the player profile wall of fame. */
   wallOfFame?: WallOfFameEntry[];
   activeAvatarId?: string;

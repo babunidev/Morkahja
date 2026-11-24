@@ -545,3 +545,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on GitHub `main`, not released. Checked in the local game on desktop and phone.
 
+## D-062 — Soul links pay when both play 42 encounters a day; a QR invite (2026-11-24)
+
+**Babuni's direction:** a soul link only counts when the new player has played 42 encounters, and only when the soul-linked player also played 42 encounters that day; it counts once a day. The Soul Link window shows a QR code; whoever starts the game from it is connected to the one who showed it, and the soul link is made as soon as they are logged in. Also decided the same day: the Inventory, Skillbook and Lore keep the dark red background; the solution frames and the world map placements stay as they are; Urcogor (expansion 1002) does not exist yet and its weather recordings are future work.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `soulLinkGift.ts` pays the one-time Gift of the Gods on the first UTC day both have 42 encounters, at most one gift per soul-linked player per day. `soulLinkInvite.tsx` and the QR code in `SoulLinkOverlay.tsx` link the newcomer after login, and the server makes the friendship mutual for an invite.
+
+**Status:** on GitHub `main`, not released. Server test and local browser check passed; the QR code was not scanned with a real phone.
+

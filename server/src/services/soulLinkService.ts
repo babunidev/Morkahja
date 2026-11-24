@@ -3,6 +3,7 @@ import {
   getPlayer,
   setPlayer,
 } from '../db/postgresDocumentStore.js';
+import { tryDeliverSoulLinkGift } from '../domain/achievements/soulLinkGift.js';
 import type { PlayerDocument } from '../types/player.js';
 import {
   addPlayerFriend,
@@ -62,6 +63,7 @@ export async function getSoulLink(playerId: string): Promise<SoulLinkView | null
 export async function createSoulLink(
   playerId: string,
   query: string,
+  options: { invite?: boolean } = {},
 ): Promise<{ soulLink: SoulLinkView; friend: FriendSummary | null; friendIds: string[] }> {
   const trimmed = query.trim();
 
@@ -126,6 +128,24 @@ export async function createSoulLink(
     } else {
       throw error;
     }
+  }
+
+  // A link made from a QR invite connects both ways: the inviter sees the newcomer too.
+  if (options.invite) {
+    try {
+      await addPlayerFriend(targetId, playerId);
+    } catch (error) {
+      if (!(error instanceof FriendAlreadyAddedError || error instanceof CannotAddSelfError)) {
+        console.error('Soul link invite: could not add the newcomer as a friend', error);
+      }
+    }
+  }
+
+  // Both may already have played 42 encounters today.
+  try {
+    await tryDeliverSoulLinkGift(playerId, linkedAt);
+  } catch (error) {
+    console.error('Soul link gift delivery failed', error);
   }
 
   return {
