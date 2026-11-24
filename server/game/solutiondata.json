@@ -1288,7 +1288,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A gleaming glass vial containing a luminescent blue potion. Its swirling azure depths hint at potent magical properties and promise safety in the perilous wilderness.",
     "mSolutionType": 26,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10120": {
     "mSolutionID": 10120,
