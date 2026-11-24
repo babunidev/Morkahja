@@ -1118,7 +1118,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A hefty crossbow made of sturdy ironwood, with intricate carvings of boar and huntsman along its stock. The quarrel groove glows faintly, ready to launch enchanted, barbed bolts with deadly precision.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10103": {
     "mSolutionID": 10103,
