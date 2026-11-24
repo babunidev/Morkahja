@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import GemCost from '../../common/GemCost.js';
+import HelpTip from '../../common/HelpTip.js';
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
 import { AcceptButton, BackButton } from '../../common/WordButton.js';
 import type { TravelTarget } from './worldMapData.js';
@@ -9,7 +10,8 @@ import type { TravelTarget } from './worldMapData.js';
  * The question after a tap on the map (D-056, Babuni, 2026-11-23): travel
  * there for gems, or, for a region not unlocked yet, take a look at its
  * expansion. Back and Accept answer it. Within three encounters of the last
- * trip it says that travel is not possible yet.
+ * trip it says only that travel is not possible right now; the "?"
+ * tip explains why.
  */
 
 const shadeStyle: CSSProperties = {
@@ -104,9 +106,13 @@ export default function TravelPrompt({ target, locked, cost, waitEncounters = 0,
           </>
         ) : waiting ? (
           <>
-            <p style={nameStyle}>You cannot travel right now</p>
+            {/* Only the sentence; the why is in the "?" when tips are on (Babuni, 2026-11-24). */}
             <p style={lineStyle}>
-              After a journey you play three encounters before the next one. Play {waitEncounters} more {waitEncounters === 1 ? 'encounter' : 'encounters'} first.
+              <span>You cannot travel right now.</span>
+              <HelpTip
+                label="Why can I not travel?"
+                text={`After a journey you play three encounters before the next one. Play ${waitEncounters} more ${waitEncounters === 1 ? 'encounter' : 'encounters'} first.`}
+              />
             </p>
           </>
         ) : (

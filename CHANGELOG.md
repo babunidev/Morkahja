@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the travel wait says only "You cannot travel right now"
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** show "You cannot travel right now" without the explanation; put the explanation in a "?" tip that appears only when Tips and tutorial is on.
+- **Change (`TravelPrompt.tsx`):** the waiting box shows "You cannot travel right now." with a `HelpTip` beside it ("After a journey you play three encounters before the next one. Play N more encounters first.") and only Back. `HelpTip` already hides itself when tips are off.
+- **Verification:** `npx tsc -b` in `client` (typecheck and Vite build) passed. In the local game (Playwright, desktop 1280×800 and phone 390×844): after a trip, a tap on a land showed the sentence; hover or tap on the "?" opened the explanation; with tips turned off the "?" was gone.
+
 ## 2026-11-24 — Unreleased: gem-cheating review; a round no longer undoes avatar changes; a flaky test
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.
