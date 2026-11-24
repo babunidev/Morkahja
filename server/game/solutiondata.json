@@ -1279,7 +1279,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A gracefully curved sword, its hilt wrapped in white leather. The shimmering blue blade resonates with a soft, ethereal glow, promising swift victory.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10119": {
     "mSolutionID": 10119,
