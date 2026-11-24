@@ -1107,7 +1107,8 @@
     "mSolutionRewardType": 43,
     "mSolutionText": "Words resonate like the deep rumblings of rocks, allowing Grimnir to influence and move hearts like shifting tectonic plates.",
     "mSolutionType": 17,
-    "mSolutionUses": 3
+    "mSolutionUses": 3,
+    "mSolutionIconFrameless": true
   },
   "10102": {
     "mSolutionID": 10102,
