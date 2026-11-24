@@ -1150,7 +1150,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A robust, wide-spanning net made from interwoven strands of titanvine. ",
     "mSolutionType": 30,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10106": {
     "mSolutionID": 10106,
