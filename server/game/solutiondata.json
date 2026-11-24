@@ -1252,7 +1252,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": " A captivating, azure gem held in a silver casing, it pulsates gently in the hand. When close to the treasure, it hums harmoniously, guiding the bearer towards the bounty.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10116": {
     "mSolutionID": 10116,
