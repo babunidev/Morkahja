@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync } from 'node:fs';
 
-import { ATRANOR_AMBIANCE_PACK, gameClipPath, placeDropFiles } from './ambianceDrop.js';
+import {
+  ATRANOR_AMBIANCE_PACK,
+  ambianceLandIsContinuous,
+  gameClipPath,
+  LEVEL_UP_AMBIANCE_PACK,
+  placeDropFiles,
+} from './ambianceDrop.js';
 
 const sample = placeDropFiles([
   '0nature12.mp3',
@@ -23,6 +29,13 @@ assert.deepEqual(atranor.unknown, []);
 assert.equal(gameClipPath(atranor.placed[0]!), '/UI/Ambiance/atranor/stageA/1.mp3');
 assert.equal(gameClipPath(atranor.placed[1]!), '/UI/Ambiance/atranor/stageD/4.mp3');
 assert.equal(atranor.placed[1]!.expansion, ATRANOR_AMBIANCE_PACK);
+const levelUp = placeDropFiles(['levelup_c2.mp3']).placed[0]!;
+assert.equal(levelUp.expansion, LEVEL_UP_AMBIANCE_PACK);
+assert.equal(gameClipPath(levelUp), '/UI/Ambiance/levelup/stageC/2.mp3');
+assert.equal(ambianceLandIsContinuous(ATRANOR_AMBIANCE_PACK), true);
+assert.equal(ambianceLandIsContinuous(LEVEL_UP_AMBIANCE_PACK), true);
+assert.equal(ambianceLandIsContinuous(0), false);
+assert.equal(ambianceLandIsContinuous(1), false);
 assert.equal(placeDropFiles(['3stageC12.mp3']).placed[0]?.expansion, 3);
 assert.equal(gameClipPath(placeDropFiles(['3stageC12.mp3']).placed[0]!), '/UI/Ambiance/3/stageC/12.mp3');
 assert.equal(samplePaths.get('1stageB1.mp3'), '/UI/Ambiance/1/stageB/1.mp3');

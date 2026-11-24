@@ -89,7 +89,10 @@ import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 import { gameEncounters, setGameContent } from './data/gameContent.js';
 import { expansionFromEncounterMap } from './ui/music/encounterExpansion.js';
-import { ATRANOR_AMBIANCE_PACK } from './ui/music/ambianceDrop.js';
+import { AMBIANCE_CLIPS } from './ui/music/ambianceCatalog.js';
+import { ATRANOR_AMBIANCE_PACK, LEVEL_UP_AMBIANCE_PACK } from './ui/music/ambianceDrop.js';
+import { expansionHasClips } from './ui/music/ambianceLibrary.js';
+import { LEVEL_UP_ENCOUNTER_ID } from './ui/game/visibleEncounterRewards.js';
 import { ATRANOR_ENCOUNTER_ID } from './ui/game/regionName.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
@@ -114,6 +117,11 @@ function ambianceExpansionFor(encounterId: number | null): number | null {
   /** Atranor plays its own ambiance, and only there (Babuni, 2026-11-24). */
   if (encounterId === ATRANOR_ENCOUNTER_ID) {
     return ATRANOR_AMBIANCE_PACK;
+  }
+
+  /** The level-up's own pieces, once they are in (Babuni, 2026-11-24). */
+  if (encounterId === LEVEL_UP_ENCOUNTER_ID && expansionHasClips(AMBIANCE_CLIPS, LEVEL_UP_AMBIANCE_PACK)) {
+    return LEVEL_UP_AMBIANCE_PACK;
   }
 
   try {

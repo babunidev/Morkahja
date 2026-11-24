@@ -3,10 +3,12 @@ import { assetUrl } from '../../assetUrl.js';
 import { playbackVolume } from '../audioVolume.js';
 import { withWorkingVolume } from '../audioGain.js';
 import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
+import { ambianceLandIsContinuous } from './ambianceDrop.js';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
   AMBIANCE_START_DELAY_MS,
+  continuousStep,
   handoffRunFor,
   landCrossfade,
   openingRun,
@@ -38,8 +40,9 @@ function cycleTestOn(): boolean {
   }
 }
 
-function nextStep(run: AmbianceRun): AmbianceStep {
-  return cycleTestOn() ? testStepAfterPiece(run) : stepAfterPiece(run);
+function nextStep(run: AmbianceRun, land?: number): AmbianceStep {
+  const step = cycleTestOn() ? testStepAfterPiece(run) : stepAfterPiece(run);
+  return land != null && ambianceLandIsContinuous(land) ? continuousStep(step) : step;
 }
 
 function logPiece(land: number, stage: AmbianceStage, file: string): void {
@@ -314,7 +317,7 @@ export function AmbianceBed({
           return;
         }
 
-        const step = nextStep(run);
+        const step = nextStep(run, nextLand);
         if (step.gap === 'crossfade') {
           const nextPool = stagePool(AMBIANCE_CLIPS, nextLand, step.next.stage);
           if (nextPool.length === 0) {

@@ -14,6 +14,31 @@ export interface DropPlacement {
 export const ATRANOR_AMBIANCE_PACK = 999;
 const ATRANOR_FOLDER = 'atranor';
 
+/**
+ * The level-up's own ambiance (Babuni, 2026-11-24: the pieces are coming).
+ * Until it has pieces, the level-up keeps the bed it has today.
+ */
+export const LEVEL_UP_AMBIANCE_PACK = 998;
+const LEVEL_UP_FOLDER = 'levelup';
+
+/**
+ * Atranor and the level-up are one intense moment (Babuni, 2026-11-24): no
+ * breaks, every piece crossfades into the next one.
+ */
+export function ambianceLandIsContinuous(pack: number): boolean {
+  return pack === ATRANOR_AMBIANCE_PACK || pack === LEVEL_UP_AMBIANCE_PACK;
+}
+
+function packFolder(pack: number): string {
+  if (pack === ATRANOR_AMBIANCE_PACK) {
+    return ATRANOR_FOLDER;
+  }
+  if (pack === LEVEL_UP_AMBIANCE_PACK) {
+    return LEVEL_UP_FOLDER;
+  }
+  return String(pack);
+}
+
 const WORD_TO_STAGE: Record<string, AmbianceStage> = {
   nature: 'A',
   wind: 'B',
@@ -39,7 +64,7 @@ function slotKey(expansion: number, stage: AmbianceStage, number: number): strin
  * `1stageC3` keeps expansion 1, stage C, piece 3.
  * `0nature12` is expansion 0, stage A, piece 12.
  * `11nature3` is the doubled-digit typo for expansion 1, stage A.
- * `atranor_b2` is Atranor's own ambiance, stage B, piece 2.
+ * `atranor_b2` is Atranor's own ambiance, stage B, piece 2; `levelup_b2` the level-up's.
  */
 export function parseDropName(fileName: string): ParsedDrop | null {
   const base = fileName.replace(/\.mp3$/i, '');
@@ -54,13 +79,13 @@ export function parseDropName(fileName: string): ParsedDrop | null {
     };
   }
 
-  const atranor = base.match(/^atranor_([abcd])(\d+)$/i);
-  if (atranor) {
+  const special = base.match(/^(atranor|levelup)_([abcd])(\d+)$/i);
+  if (special) {
     return {
       sourceName: fileName,
-      expansion: ATRANOR_AMBIANCE_PACK,
-      stage: atranor[1]!.toUpperCase() as AmbianceStage,
-      preferred: Number(atranor[2]),
+      expansion: special[1]!.toLowerCase() === 'atranor' ? ATRANOR_AMBIANCE_PACK : LEVEL_UP_AMBIANCE_PACK,
+      stage: special[2]!.toUpperCase() as AmbianceStage,
+      preferred: Number(special[3]),
       exact: true,
     };
   }
@@ -152,7 +177,7 @@ export function gameClipPath(placement: DropPlacement): string {
   return [
     '/UI',
     'Ambiance',
-    placement.expansion === ATRANOR_AMBIANCE_PACK ? ATRANOR_FOLDER : String(placement.expansion),
+    packFolder(placement.expansion),
     `stage${placement.stage}`,
     `${placement.number}.mp3`,
   ].join('/');

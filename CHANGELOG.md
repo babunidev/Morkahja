@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: no breaks in Atranor and the level-up
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** Atranor has no breaks; every piece crossfades into the next, so it is one intense moment. The next piece is chosen the same way as everywhere else. The same holds for the level-up, whose ambiance pieces are coming.
+- **Change:** new `continuousStep` (`ambianceCycle.ts`) keeps the step's next stage and count but makes the gap a crossfade with no rest. `AmbianceBed.tsx` applies it in lands where `ambianceLandIsContinuous` (`ambianceDrop.ts`) is true: Atranor and the new `LEVEL_UP_AMBIANCE_PACK` (998, folder `UI/Ambiance/levelup`, drop names `levelup_<stage><n>`). The crossfade is the one stage C → D already used: the old piece falls over its last 2 s while the new one rises over 1 s. `App.tsx` gives the level-up encounter (id 2) its own land only once it has pieces; until then the level-up's ambiance is unchanged.
+- **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks every stage's continuous step, `ambianceDrop.test.ts` the level-up names and folder) and `npm run typecheck` passed. Not heard in the game.
+
 ## 2026-11-24 — Unreleased: Atranor has its own ambiance
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

@@ -665,6 +665,10 @@ I made a set of ambiance pieces for Atranor: calm loops, then three sets that bu
 
 The "?" tooltips now have the same text size as my solution tooltips. In the game, the tooltips of my equipped items opened downward, away from the slots, and now open upward. The experience number sits inside a thicker experience bar, so it reads as one thing, and the statistics moved down a little to give the top more room. When I tap my avatar in the main menu, its card now grows out of the avatar a little slower instead of just appearing. Claude Code (Claude Opus 5.5) made the changes, found that the card had no opening animation at all, and measured the growing and the tooltip positions in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — No breaks in Atranor
+
+Atranor should feel like one intense moment, so its ambiance no longer rests between pieces: each piece crossfades straight into the next, chosen the same way as everywhere else. The level-up will work the same way once I add its sounds. Claude Code (Claude Opus 5.5) made the weather cycle crossfade every step in those two places and prepared a folder for the level-up's pieces, so they only need to be dropped in. **Verification:** client tests and typecheck passed; not yet heard in the game. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

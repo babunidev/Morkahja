@@ -129,6 +129,14 @@ export function stepAfterPiece(run: AmbianceRun, random: () => number = Math.ran
 }
 
 /**
+ * The same step without a break (Babuni, 2026-11-24, for Atranor and the
+ * level-up): the next piece is chosen the same way, but always crossfades in.
+ */
+export function continuousStep(step: AmbianceStep): AmbianceStep {
+  return { ...step, gap: 'crossfade', restMs: 0 };
+}
+
+/**
  * The run a new land starts with when it cuts off a piece that is still
  * playing (Babuni, 2026-11-17). The cut-off piece counts as played, so the
  * cycle goes on to the next step instead of starting over at stage A. If the

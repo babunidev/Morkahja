@@ -4,6 +4,7 @@ import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
   AMBIANCE_START_DELAY_MS,
+  continuousStep,
   landCrossfade,
   handoffRunFor,
   openingRun,
@@ -120,4 +121,15 @@ assert.equal(handoffRunFor({ stage: 'D', piecesLeft: 3 }, () => false, () => 0),
     run = step.next;
   }
   assert.deepEqual(seen, ['A>B:rest', 'B>C:rest', 'C>D:crossfade', 'D>A:fade-out', 'A>B:rest']);
+}
+
+// Atranor and the level-up: the same next piece, never a break (Babuni, 2026-11-24).
+for (const stage of ['A', 'B', 'C', 'D'] as const) {
+  for (const piecesLeft of [1, 3]) {
+    const plain = stepAfterPiece({ stage, piecesLeft }, sequence([0.3, 0.6, 0.9]));
+    const continuous = continuousStep(plain);
+    assert.equal(continuous.gap, 'crossfade');
+    assert.equal(continuous.restMs, 0);
+    assert.deepEqual(continuous.next, plain.next);
+  }
 }
