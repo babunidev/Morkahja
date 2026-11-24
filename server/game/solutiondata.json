@@ -1294,7 +1294,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A deep-green cloak, woven with intricate patterns of silver thread, which shimmers under moonlight. Features a clasp made from a polished, wolf-shaped piece of obsidian.",
     "mSolutionType": 36,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10121": {
     "mSolutionID": 10121,
