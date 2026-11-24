@@ -29,6 +29,56 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-83',
+    version: '0.9.0-beta.83',
+    period: '23–24 Nov 2026',
+    groups: [
+      {
+        title: 'Your choices',
+        notes: [
+          'Equipment: every avatar has two equipment slots. An equipped item gets one extra charge, Hardship and Misery cannot take its charges, and a use with a total of 12 or more gives the charge back (20 or more: two). You see it fly home into your Inventory.',
+          'Specialization: choose one skill type your avatar is best at for +1 on its rolls. The first choice is free; a change costs gems and asks first.',
+          'Edit your avatar from its card in the main menu: name, title, portrait and frame.',
+          'Travel: tap a land on the world map to travel there. After a journey you play three encounters before the next one.',
+        ],
+      },
+      {
+        title: 'A new look',
+        notes: [
+          'Your avatars are the main menu. Tap one to open its avatar card with level, experience, encounters, items, skills and essences; Play enters the world from there.',
+          'The same card opens in the game when you tap your avatar. Its Main menu button takes you back.',
+          'Accept, Back and Main menu are word buttons now.',
+          'The Inventory shows normal items, rare items and essences in three lists, and an encounter\'s solutions fill their column like the Inventory.',
+          'Small "?" tips explain specialization, equipment and travel. Turn them off with Tips and tutorial in the Settings.',
+        ],
+      },
+      {
+        title: 'Rewards and balance',
+        notes: [
+          'The top roll brings a red-yellow gem.',
+          'Rewards: +5 on primary solutions, +2 on secondary ones, +1 on rare items; your own element\'s essence from a total of 24.',
+          'Atranor: the gods of your own element decide your return by your total.',
+          'Soul Link: show your QR code to a new adventurer. When they start Morkahja with it, your souls are linked and you are friends. The Gift of the Gods comes on the first day you both play 42 encounters.',
+        ],
+      },
+      {
+        title: 'Sound',
+        notes: [
+          'Atranor and the level-up have their own ambiance and sound, and every piece crossfades into the next without breaks.',
+          'The ambiance starts a moment after you enter the world and crossfades when you change regions.',
+        ],
+      },
+      {
+        title: 'Fixes',
+        notes: [
+          'Finishing a round no longer undoes a name, portrait, frame or specialization you changed during it.',
+          'The avatar card counts each item and skill once, not its charges.',
+          'Many solutions have new pictures.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-82',
     version: '0.9.0-beta.82',
     period: '21 Nov 2026',
