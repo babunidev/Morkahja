@@ -188,6 +188,7 @@ export async function grantPlayerYellowRedGemsInTransaction(
   playerId: string,
   amount: number,
   loreGemClaimKey?: string,
+  source: 'lore_gem' | 'top_roll' = 'lore_gem',
 ): Promise<{ currencies: NonNullable<PlayerDocument['currencies']>; granted: boolean }> {
   if (amount > 0 && !loreGemClaimKey?.trim()) {
     throw new Error('loreGemClaimKey is required when granting yellow_red_gem');
@@ -214,7 +215,7 @@ export async function grantPlayerYellowRedGemsInTransaction(
   if (granted) {
     transaction.onCommit(() => recordGemsReceivedEvent(playerId, amount, {
       encounterKey: loreGemClaimKey,
-      source: loreGemClaimKey ? 'lore_gem' : 'general',
+      source: loreGemClaimKey ? source : 'general',
     }));
   }
 

@@ -673,6 +673,10 @@ Atranor should feel like one intense moment, so its ambiance no longer rests bet
 
 My avatar card said 17 skills for a new avatar, because it added up the charges. Now it counts each different item and skill once, so a new avatar shows 5 skills. Claude Code (Claude Opus 5.5) changed the count, added a test, and compared the card with the avatar's inventory in the local game. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — A gem for the top roll
+
+The highest roll in the game is now 26: a natural 20 in the primary slot with a rare item or a skill of my specialization. I wanted that moment to pay, so every top roll now earns a red-yellow gem. It appears on the avatar exactly where the lore gem waits, and when both are earned a small 2 sits next to it in the same hexagon the items use for their count. If the bonuses change, the top roll changes with them. Claude Code (Claude Opus 5.5) worked out the highest total from the roll rules, added the grant wherever the server commits a roll (Atranor and the level-up included), and taught the gem badge to count. **Verification:** typecheck, client and server tests passed, including a test of the grant against the local database; a 26 has not yet been rolled in the game. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

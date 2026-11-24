@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: a red-yellow gem for the top roll (D-060)
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** every roll of the highest possible total, 26 today, rewards one red-yellow gem, the way the lore gem is rewarded and in the same place. With the lore gem too, a small 2 in the items' hexagon shows next to the gem. If the highest total changes, this number changes with it.
+- **Shared:** `TOP_ROLL_TOTAL` (26) and `isTopRoll` in `diceInterpreter.ts`.
+- **Server:** new `services/topRollGem.ts` grants the gem with the roll's commit: in a round's commit, when a player leaves with a rolled outcome, and in a system event (Atranor, the level-up). The claim key `top-roll:<snapshot>[:<encounter>]:<player>` uses the same claim record and row lock as the lore gem, so a roll pays once and the lore gem is separate. `grantPlayerYellowRedGemsInTransaction` takes a `source`, and the feed event says `top_roll`.
+- **Client:** `useTopRollGemShown` (`partyParticipantChoiceBadge.tsx`) is true while the avatar shows a top roll (for the own avatar once the roll's numbers have landed) and until the round moves on. `LoreGemAvatarBadge` counts the lore gem and this one, and shows the count in `SolutionChargeBadge`'s hexagon when it is 2. A lore gem picked up while the top-roll gem already shows flies in to join it. Used on the own avatar (`AvatarPanel.tsx`) and on party members (`PartyMemberSlot.tsx`).
+- **Verification:** `npm run typecheck`, client tests 52/52 and server tests 70/70 (local PostgreSQL) passed. The new `topRollGem.test.ts` ties 26 to the bonuses; `topRollGemGrant.test.ts` checks no gem on a 25, one gem when two commits race on a 26, a separate lore gem, and Atranor and a chained level-up counting apart. Not checked in the game: a 26 was not rolled there, so neither the commit wiring nor the badge with its 2 has been seen.
+
 ## 2026-11-24 — Unreleased: no breaks in Atranor and the level-up
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

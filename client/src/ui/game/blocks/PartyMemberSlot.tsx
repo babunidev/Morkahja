@@ -23,6 +23,7 @@ import {
 import {
   PARTY_BADGE_SIZE_PX,
   PartyParticipantChoiceBadge,
+  useTopRollGemShown,
 } from './partyParticipantChoiceBadge.js';
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
 import { AnchoredGamePopover } from '../GameTooltip.js';
@@ -248,6 +249,7 @@ export function PartyMemberSlot({
 }) {
   const [portraitSrc, setPortraitSrc] = useState(participant.avatar.portrait);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const topRollGem = useTopRollGemShown(participant, roomState, systemEventActorPlayerId);
   const disengaged = participant.choiceState === 'disengaged';
   const waitingContinue = roomState === 'waiting_continue' && participant.continuePressed;
   const focusState = participant.focusState;
@@ -317,7 +319,7 @@ export function PartyMemberSlot({
                 portrait={portraitSrc}
               />
               <EssenceSlotsRing avatarId={participant.avatar.id} essences={participant.avatar.inventory?.essences} />
-              <LoreGemAvatarBadge held={participant.loreGemCollected === true} roomState={roomState} />
+              <LoreGemAvatarBadge held={participant.loreGemCollected === true} roomState={roomState} topRoll={topRollGem} />
               <PartyParticipantChoiceBadge
                 encounter={encounter}
                 hidden={detailsOpen}

@@ -14,6 +14,7 @@ import {
   ChoiceDetailSections,
   PartyParticipantChoiceBadge,
   participantChoiceDetails,
+  useTopRollGemShown,
 } from '../game/blocks/partyParticipantChoiceBadge.js';
 import { assetUrl } from '../../assetUrl.js';
 
@@ -243,6 +244,7 @@ export function AvatarPanel({
   // No hover tooltip: everything is in the card a tap opens (Babuni, 2026-11-23).
   const equipmentInventory = avatar.inventory ?? { spellbook: [], items: [], essences: [] };
   const pinnedChoice = participantChoiceDetails(roomParticipant, encounter, roomState, systemEventActorPlayerId);
+  const topRollGem = useTopRollGemShown(roomParticipant, roomState, systemEventActorPlayerId);
   const onDetailsVisibleChangeRef = useRef(onDetailsVisibleChange);
   onDetailsVisibleChangeRef.current = onDetailsVisibleChange;
   useEffect(() => {
@@ -362,7 +364,7 @@ export function AvatarPanel({
                 essences={avatar.inventory?.essences}
                 local
               />
-              <LoreGemAvatarBadge held={roomParticipant?.loreGemCollected === true} roomState={roomState} />
+              <LoreGemAvatarBadge held={roomParticipant?.loreGemCollected === true} roomState={roomState} topRoll={topRollGem} />
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge

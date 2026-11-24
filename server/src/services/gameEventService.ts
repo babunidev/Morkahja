@@ -487,7 +487,7 @@ export async function recordGemsReceivedEvent(
   amount: number,
   options?: {
     encounterKey?: string;
-    source?: 'lore_gem' | 'general';
+    source?: 'lore_gem' | 'top_roll' | 'general';
   },
 ): Promise<void> {
   if (amount <= 0) {

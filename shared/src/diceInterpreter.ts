@@ -26,6 +26,19 @@ export const DICE_ROLL_BONUS = 0;
 export const HIGHEST_STORED_ROLL_TOTAL = 27;
 
 /**
+ * The highest total a roll can reach today (Babuni, 2026-11-24): a natural 20
+ * in the primary slot (+5) with a rare item or a specialized skill (+1), at
+ * difficulty 1. Rolling it rewards one red-yellow gem. When the bonuses
+ * change, this number changes with them (a test checks it).
+ */
+export const TOP_ROLL_TOTAL = 26;
+
+/** True for a total that reaches the top roll. */
+export function isTopRoll(total: number | null | undefined): boolean {
+  return typeof total === 'number' && Number.isFinite(total) && Math.round(total) >= TOP_ROLL_TOTAL;
+}
+
+/**
  * Difficulty 1 subtracts nothing. Each step above that subtracts one more
  * (difficulty 2 subtracts 1, 3 subtracts 2, 4 subtracts 3).
  */

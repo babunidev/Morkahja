@@ -528,3 +528,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** pushed to GitHub `main`, not released. Checked in the local game on desktop and phone.
 
+
+## D-060 — The top roll rewards a red-yellow gem (2026-11-24)
+
+**Babuni's direction:** every roll that reaches the highest possible total earns one red-yellow gem. Today that total is 26; when the bonuses change, the number changes with them. The gem is rewarded like the lore gem and shows in the same place on the avatar. With the lore gem as well, a small 2 in the items' hexagon stands next to the gem.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `TOP_ROLL_TOTAL` (26) and `isTopRoll` in `shared/src/diceInterpreter.ts`; a test ties the number to the d20, the primary bonus and the +1 of a rare item or a specialized skill (the two never meet on one roll, because no skill is rare). The server grants the gem with the roll's commit in all three places a roll is committed (the round, leaving mid-round, and a system event such as Atranor or the level-up), with its own claim key per player and roll, so it never pays twice and stands apart from the lore gem. The client shows it on the avatar's gem badge from the moment the avatar shows the roll; the badge counts both gems and uses the item hexagon (`SolutionChargeBadge`) for the 2.
+
+**Status:** pushed to GitHub `main`, not released.

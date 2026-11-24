@@ -12,7 +12,7 @@ import {
   diceButtonAssetPath,
   DEFAULT_DICE_ID,
 } from '@shared/diceCatalog.js';
-import { displayRollAsD20 } from '@shared/diceInterpreter.js';
+import { displayRollAsD20, isTopRoll } from '@shared/diceInterpreter.js';
 import {
   AnchoredEncounterTooltip,
 } from '../encounterTooltip.js';
@@ -175,6 +175,24 @@ export function hasVisibleParticipantChoice(
 function participantChoiceRoll(participant: RoomParticipantDto): number | undefined {
   return participant.preparedResult?.selectedRoll
     ?? participant.resolutionSummary?.selectedRoll;
+}
+
+/**
+ * The top roll's gem (Babuni, 2026-11-24): shown on the avatar, beside the lore
+ * gem, from the moment the avatar shows a roll of `TOP_ROLL_TOTAL` until the
+ * round moves on. The server grants it with the roll's commit.
+ */
+export function useTopRollGemShown(
+  participant: RoomParticipantDto | undefined,
+  roomState?: RoomStateDto,
+  systemEventActorPlayerId?: string,
+): boolean {
+  const localRollHeld = useAvatarRollHeld() && participant?.isLocal === true;
+  if (!participant || localRollHeld || roomState === 'advancing') {
+    return false;
+  }
+  return hasVisibleParticipantChoice(participant, roomState, systemEventActorPlayerId)
+    && isTopRoll(participantChoiceRoll(participant));
 }
 
 function PartyChoiceOverlayBadge({

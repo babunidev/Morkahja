@@ -118,6 +118,7 @@ import {
   roomLoreGemActivatedForSnapshot,
   withEncounterLoreGemOffer,
 } from './loreGemService.js';
+import { grantTopRollGemInTransaction } from './topRollGem.js';
 import {
   checkpointFromRoom,
   clearSoloCheckpointForAvatar,
@@ -1183,6 +1184,12 @@ async function commitParticipantOutcomeOnLeave(
     participant,
     participantSummaryFromResolve(result),
   );
+  await grantTopRollGemInTransaction(
+    transaction,
+    participant.playerId,
+    summary.selectedRoll,
+    room.activeEncounterSnapshot.snapshotId,
+  );
 
   return {
     ...participant,
@@ -1323,6 +1330,12 @@ async function commitPreparedResultsForRoom(
         room,
         participant,
         participantSummaryFromResolve(result),
+      );
+      await grantTopRollGemInTransaction(
+        transaction,
+        participant.playerId,
+        summary.selectedRoll,
+        room.activeEncounterSnapshot.snapshotId,
       );
       nextParticipants = nextParticipants.map((entry) =>
         entry.playerId === participant.playerId
@@ -1659,6 +1672,13 @@ async function tryResolveSystemEventIfReady(roomId: string): Promise<EncounterRo
       );
 
     const actorSummary = participantSummaryFromResolve(result);
+    await grantTopRollGemInTransaction(
+      transaction,
+      actor.playerId,
+      actorSummary.selectedRoll,
+      resolutionSnapshot.snapshotId,
+      item.encounterId,
+    );
     const now = nowMs();
     const deathEncounterChainedLevelUp =
       item.chainedLevelUp === true

@@ -3,6 +3,7 @@ import { assetUrl } from '../../../assetUrl.js';
 import { protectedImageProps } from '../../protectedImage.js';
 import { playIconFlightToElement } from '../rewardFlyAnimation.js';
 import { takeLoreGemPickup } from '../loreGemPickup.js';
+import { SolutionChargeBadge } from '../../common/SolutionFrame.js';
 
 const LORE_GEM_ASSET = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const BADGE_SIZE_PX = 44;
@@ -28,20 +29,55 @@ const imageStyle: CSSProperties = {
   objectFit: 'contain',
 };
 
+// The item hexagon, at the gem's bottom right, half outside it.
+const countStyle: CSSProperties = {
+  position: 'absolute',
+  right: -8,
+  bottom: -6,
+  width: BADGE_SIZE_PX,
+  height: BADGE_SIZE_PX,
+  pointerEvents: 'none',
+};
+
 type Phase = 'hidden' | 'arriving' | 'shown' | 'sinking';
 
 /**
- * The lore gem a party member collected this encounter, on the top left of
- * their avatar. It arrives from the Lore window (for the player who picked it
- * up; for everyone else it fades in), and when the round continues it sinks
- * into the avatar and disappears.
+ * The gems a party member earned this encounter, on the top left of their
+ * avatar: the lore gem, and the top roll's gem (Babuni, 2026-11-24). The lore
+ * gem arrives from the Lore window (for the player who picked it up; for
+ * everyone else it fades in). With both, the item hexagon shows a 2. When the
+ * round continues they sink into the avatar and disappear.
  */
-export function LoreGemAvatarBadge({ held: collected, roomState }: {
+export function LoreGemAvatarBadge({ held: collected, roomState, topRoll = false }: {
   held: boolean;
   /** Continuing moves the room on (or into a system event such as a level-up): the gem sinks then. */
   roomState?: string;
+  /** The avatar shows a top roll: one more gem (`useTopRollGemShown`). */
+  topRoll?: boolean;
 }) {
-  const held = collected && roomState !== 'advancing' && roomState !== 'system_event';
+  const loreHeld = collected && roomState !== 'advancing' && roomState !== 'system_event';
+  const count = (loreHeld ? 1 : 0) + (topRoll ? 1 : 0);
+  const held = count > 0;
+  // The last count shown, kept while the gems sink.
+  const shownCountRef = useRef(count);
+  if (count > 0) {
+    shownCountRef.current = count;
+  }
+  const previousLoreRef = useRef(loreHeld);
+
+  // A lore gem picked up while the top roll's gem is already shown flies in to join it.
+  useEffect(() => {
+    const wasHeld = previousLoreRef.current;
+    previousLoreRef.current = loreHeld;
+    if (!loreHeld || wasHeld || !topRoll) {
+      return;
+    }
+    const source = takeLoreGemPickup();
+    const target = badgeRef.current;
+    if (source && target) {
+      void playIconFlightToElement(source, target, LORE_GEM_ASSET, BADGE_SIZE_PX);
+    }
+  }, [loreHeld, topRoll]);
   const [phase, setPhase] = useState<Phase>('hidden');
   const [sinkTransform, setSinkTransform] = useState<string | null>(null);
   const badgeRef = useRef<HTMLSpanElement | null>(null);
@@ -121,8 +157,19 @@ export function LoreGemAvatarBadge({ held: collected, roomState }: {
     };
 
   return (
-    <span aria-label="Lore gem collected" data-morkahja-lore-gem-badge="" ref={badgeRef} role="img" style={style}>
+    <span
+      aria-label={shownCountRef.current > 1 ? `${shownCountRef.current} gems earned` : 'Gem earned'}
+      data-morkahja-lore-gem-badge=""
+      ref={badgeRef}
+      role="img"
+      style={style}
+    >
       <img alt="" aria-hidden="true" {...protectedImageProps} src={LORE_GEM_ASSET} style={imageStyle} />
+      {shownCountRef.current > 1 ? (
+        <span style={countStyle}>
+          <SolutionChargeBadge charges={shownCountRef.current} size={BADGE_SIZE_PX} />
+        </span>
+      ) : null}
     </span>
   );
 }
