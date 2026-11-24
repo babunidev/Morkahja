@@ -52,7 +52,12 @@ const qrStyle: CSSProperties = {
   aspectRatio: '1',
   display: 'block',
   borderRadius: 8,
-  background: '#f7efe0',
+  // Morkahja's gold with its dark red (Babuni, 2026-11-24); dark on light,
+  // with high contrast, so phone cameras still read it.
+  background: '#ffcc66',
+  border: '3px solid #330000',
+  boxShadow: '0 0 0 1px rgba(255, 204, 102, 0.62), 0 10px 24px rgba(0, 0, 0, 0.5)',
+  boxSizing: 'border-box',
 };
 
 function isSelfSoulLinkQuery(query: string, playerId: string, playerName: string): boolean {
@@ -398,7 +403,7 @@ export function SoulLinkOverlay({
                 style={qrStyle}
                 viewBox={`0 0 ${inviteQr.size} ${inviteQr.size}`}
               >
-                <path d={inviteQr.path} fill="#140a06" />
+                <path d={inviteQr.path} fill="#4a0505" />
               </svg>
               <p style={messageStyle}>{SOUL_LINK_INVITE_TEXT}</p>
             </div>

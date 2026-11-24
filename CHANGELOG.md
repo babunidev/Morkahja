@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the Soul Link QR code in Morkahja's colours
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** make the QR code in our colours, the yellow and the red.
+- **Change (`SoulLinkOverlay.tsx`):** the code is dark red (`#4a0505`) on the game's gold (`#ffcc66`), in a dark red border with a thin gold line around it. Dark squares on a light background with high contrast, so phone cameras can still read it.
+- **Checked in the local game** (headless Chromium, 390 × 844): the window shows the new colours, and the invite link still linked a new test player. Not scanned with a real phone yet. Client typecheck and build passed. Screenshot: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-soul-link-qr-colors-phone.png`.
+
 ## 2026-11-24 — Unreleased: an equipped item that gets its charge back flies home
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

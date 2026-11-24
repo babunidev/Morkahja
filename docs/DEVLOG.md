@@ -721,6 +721,10 @@ The round Home picture in the game now reads **Main menu**, in the same word but
 
 When an equipped item earns its charge back, it now shows it: the item sets off toward the encounter, turns halfway in a curve and flies back into my Inventory, which shakes as it lands. Claude Code (Claude Opus 5.5) built the curve from the item's existing flight and used the server's existing list of charges won back, so an item used twice returns only for the use that earned it. It checked the flight in the local game, slowed down for the screenshots; a real round with a roll of 12 or more has not been played with it yet. **Verification:** client typecheck and build passed. **Not released.**
 
+## 2026-11-24 — The QR code in my colours
+
+The Soul Link QR code was black on white. I asked for our yellow and red: it is now dark red on gold, in a red frame. Claude Code (Claude Opus 5.5) kept the contrast high so cameras can read it and checked it in the local game at phone size. **Verification:** client typecheck and build passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*
