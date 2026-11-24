@@ -1139,7 +1139,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": " Crafted from the resilient wood of the Eldertree, this elegant longbow showcases an intricate design. Its string, woven from Nagar Boar tendons, is remarkably strong, while the tips are inlaid with shimmering emeralds that capture and intensify the wielder's aim.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10105": {
     "mSolutionID": 10105,
