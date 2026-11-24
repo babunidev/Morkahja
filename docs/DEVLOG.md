@@ -701,6 +701,10 @@ Changing a specialization costs a gem, and one tap on the green check spent it. 
 
 Travel works the way I wanted, but it should not be possible all the time. After a journey my avatar now plays three encounters before it can travel again. If I tap a land too early, the map tells me how many encounters are still left. I also replaced the green check and the red round picture everywhere with normal red-and-gold buttons that say Accept and Back. Claude Code (Claude Opus 5.5) added the wait on the server, so it cannot be skipped, made one Accept and one Back button for the whole game, and checked both in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
 
+## 2026-11-24 — Checking the gems against cheating, and two old bugs
+
+I asked for a look at whether anyone could cheat their way to gems. Claude Code (Claude Opus 5.5) read every place gems are given or spent: the server decides every amount, checks the balance while it holds the player's record, and pays each reward only once. It found no way to cheat, tightened two small things (a mistyped expansion price could have given gems, and the admin key check), and raised one question for me: fresh accounts soul-linked to a main account can raise its daily reward. Then it fixed two bugs from my roadmap. A round saved an old copy of my avatar when I pressed Continue, which could undo a new title or name, and a test failed now and then when its dice happened to level the avatar up. **Verification:** typecheck and server tests passed, with a new test that fails on the old round code. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

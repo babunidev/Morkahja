@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: gem-cheating review; a round no longer undoes avatar changes; a flaky test
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** check the security against cheating, especially getting gems, then the bugs that are reported (the open ones in `docs/ROADMAP.md`).
+- **Gem review (source read, no live test):** grants (lore gem, top roll, daily reward, Stripe) and spends (dice, expansions, travel, specialization, avatar edit, sacrifice, donation) are decided and checked on the server inside one transaction holding the player row lock; claim keys keep each grant to one. No cheat path found. Hardened: `unlockPlayerExpansion` refuses an expansion whose price is not a whole number of 0 or more (admin-data mistake; before, it could add gems or set the balance to NaN); `requireAdminAuth` compares the key in constant time (new `adminAuthMiddleware.test.ts`). Left open as a design question: soul links from fresh accounts can raise a main account's daily reward (see `docs/ROADMAP.md`).
+- **Bug fix (`encounterGenerator.ts`):** the room commit saved the avatar copy taken when the roll was prepared, undoing a title, name, portrait, frame or specialization changed before Continue. `commitPreparedOutcome` now reads the current avatar under its lock and applies only the round's fields (`avatarAfterRound`: level, experience, inventory cache, last played, last encounter, and the failed state after Atranor). Equipment was already safe (`patchOpenOutcomeInventory`). New `roundKeepsAvatarChanges.test.ts` plays a round, changes the avatar in between and checks the change stays; it fails on the old code.
+- **Test fix (`roomService.test.ts`):** the check at line 571 accepted only a new encounter after Continue, while the dice roll can lead to a level-up or Atranor; it now accepts a system event and checks that the room left the played encounter.
+- **Verification:** `npm run typecheck` and server tests 75/75 against local PostgreSQL passed.
+
 ## 2026-11-24 — Unreleased: a wait after each trip; Accept and Back as word buttons (D-061)
 
 - **Not released.** On GitHub `main`; the production server is unchanged.
