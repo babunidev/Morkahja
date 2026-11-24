@@ -685,6 +685,10 @@ I made the level-up's ambiance: four pieces for each stage of the weather. A lev
 
 My avatar card in the game said I had played 0 encounters, though the main menu knew better. Claude Code (Claude Opus 5.5) found that only the menu's avatar list carried the count; the game builds my avatar from the room, which left it out. The room now sends it as well, and a test makes sure it stays that way. **Verification:** server tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — Editing my avatars, and Warmth is Aid
+
+My avatar card in the main menu now has an Edit button under the portrait. It opens the avatar creation without race, role and gender, so I can pick another portrait of the same kind, another frame and a new name. Only what changes costs gems: the portrait's and frame's own gem values, and 50 for a name, and the game asks before it spends them. In the game the card has no Edit button. I also wondered why the Warmth specialization had no skills. The skill called Warmth belongs to type 25, which is aid, so that specialization is now Aid and the empty Warmth type is gone. Claude Code (Claude Opus 5.5) checked the data, built the edit on the server and the client, made sure two changes at once cannot both be paid with the same gems, and tried it all in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

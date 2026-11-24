@@ -79,12 +79,12 @@ Each step of difficulty above 1 needs one more on the natural roll. An encounter
 - With a specialization chosen, every roll made with a **skill** of that type gets **+1**, in any slot: a specialized primary skill rolls d20 + 5 + 1, a specialized secondary skill d20 + 2 + 1. It also counts toward the own essence on 24 or higher (D-054).
 - Every avatar can choose any type. (Role-based lists, for example a Rogue choosing from Stealth, Open Lock and Find, may come later, perhaps once there is a fourth role.)
 - It can only be chosen and changed **in the main menu**, never during the game, so it is a longer-term choice than equipment. A change is confirmed with the green check, as in the avatar creation. The **first choice is free; every change costs 1 gem**. Choosing the one it already has costs nothing.
-- **Screen (built 2026-11-23):** the overview's Specialization section shows its heading with a "?" that explains it, the current one's name and a button, **Choose** (free) or **Change · Cost 1** with the gem icon (D-059). It opens the picker in the overview's place: the selected one's description on top, with "+1 to every roll with a … skill" and how many such skills the avatar has, then a line, then the fifteen as a roster of three in a row (Babuni, 2026-11-23; first built as a list on the left with the description on the right). Red goes back to the overview, green confirms; the price shows between them, and a refusal (not enough gems) shows there too. In the game the overview shows one line under the level: "Specialization: Stealth · +1 to Stealth skills".
+- **Screen (built 2026-11-23):** the overview's Specialization section shows its heading with a "?" that explains it, the current one's name and a button, **Choose** (free) or **Change · Cost 1** with the gem icon (D-059). It opens the picker in the overview's place: the selected one's description on top, with "+1 to every roll with a … skill" and how many such skills the avatar has, then a line, then the fourteen as a roster of three in a row (Babuni, 2026-11-23; first built as a list on the left with the description on the right). Red goes back to the overview, green confirms; the price shows between them, and a refusal (not enough gems) shows there too. In the game the overview shows one line under the level, "Specialization: Stealth" with its "?"; it has no button there, since it changes only in the main menu.
 - **In play:** the +1 is added where a rare item's +1 is, on the server and in the numbers the client shows (the solution tooltips' d20+n and the roll's math on the portrait). It also counts toward the own-element essence on a total of 24 or higher, and toward an equipped item's regain. The dice get nothing.
 
 ### The types and their descriptions
 
-There are fifteen types in the list. Travel and Rare Find exist only as items. Life (16) and Resurrection (76) are special skill types and are left out. *Found while building (2026-11-23): the game data has no Warmth (37) skill yet, so Warmth gives nothing for now; the picker says the avatar has none.*
+There are fourteen types in the list. Travel and Rare Find exist only as items. Life (16) and Resurrection (76) are special skill types and are left out. *Corrected 2026-11-24 (Babuni): type 25 is **Aid**, not Protect. It holds the skill called Warmth together with Helping Hand, Defensive Stance, Zephyr's Embrace and the three Aids. Type 37, first listed as Warmth, is only a name in the code: no skill, item or encounter uses it, so it is no longer a specialization. The type names in the tooltips read "Aid Skill" and "Aid Item" now.*
 
 *The descriptions are drafts by Claude Code (Claude Opus 5.5) for Babuni to revise. They describe a way of facing the world; they make no lore claims.*
 
@@ -98,9 +98,8 @@ There are fifteen types in the list. Travel and Rare Find exist only as items. L
 | Open Lock | 7 | Locks, seals and wards are puzzles to you, and you enjoy puzzles. Doors that stay closed for others open for you. |
 | Climb | 13 | Cliffs, walls and towers are paths to you. You trust your grip and your balance, and the heights hold no fear. |
 | Heal | 21 | You close wounds and ease pain. Where you walk, the hurt get back on their feet. |
-| Protect | 25 | You stand between the helpless and harm. Your skills shield, guard and hold the line. |
+| Aid | 25 | You lend a hand where it is needed. A warm fire, a steady shoulder, a shield raised in time: those around you are never left alone. |
 | Nurture | 33 | You care for the growing and the fragile: creatures, plants and people. Under your hand, what is weak becomes strong. |
-| Warmth | 37 | You bring fire to the cold and comfort to the weary. Frost and despair loosen their grip where you are. |
 | Inspiration | 39 | Your words and deeds kindle courage. Others find their strength again because of you. |
 | Speech | 17 | You win with words. Guards step aside, merchants soften, and enemies hesitate when you speak. |
 | Learn | 1 | Knowledge is your weapon. Old texts, strange runes and new ideas open their secrets to your patient mind. |
@@ -108,13 +107,14 @@ There are fifteen types in the list. Travel and Rare Find exist only as items. L
 
 ## 3. Edit avatar
 
-- *Where it opens is open (see above): the first draft's Edit mode no longer exists.*
+- **Built 2026-11-24.** An **Edit** button under the portrait in the main menu's avatar card opens it (Babuni, 2026-11-24); the game's avatar card has no Edit button.
 - The avatar edit screen is the avatar creation screen with race, role and gender locked and cut away. What can change is **only the look and the name**:
   - **Portrait:** tapping the avatar steps through the portraits of the same race, role and gender; a back button steps back.
   - **Frame:** chosen as in the creation.
   - **Name:** a new name costs **50 gems**.
 - The gem cost is shown at the bottom, with **Cancel** on the left and **Agree** on the right. Agree asks once more ("Do you want to spend … gems?"); Yes applies the change.
-- **Price:** only what actually changes. The portraits and frames already carry a gem value in the game data (`avatarGems`, `frameGem`, not charged anywhere yet). A new frame costs that frame's gems, a new portrait that portrait's gems, a new name 50. Keeping a part costs nothing.
+- **Price:** only what actually changes. The portraits and frames already carry a gem value in the game data (`avatarGems`, `frameGem`). A new frame costs that frame's gems, a new portrait that portrait's gems, a new name 50. Keeping a part costs nothing. A change that costs nothing (a portrait worth 0 gems) applies without the question.
+- **As built:** Frame and Portrait arrows at the top (race, role and gender are gone); a tap on the avatar shows the next portrait of the same kind; undo and redo beside the name work as in the creation. The price shows between Cancel and Agree as "Cost 70" with the gem, or "No changes". The question reads "Do you want to spend 70 [gem]?". The server checks the portrait's race, role and gender itself, prices the change from the game data, and charges it in one locked transaction; a refusal (for example not enough gems) shows above the price.
 
 ## 4. Travel to a region
 

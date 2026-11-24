@@ -94,10 +94,10 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [ ] Mobile layout pass: the standalone targeted desktop; phones take a separate full-screen path and some sizes are fixed pixels on the 390-wide canvas.
   - [x] First step (2026-11-12): the game screen and notifications are centred and fit the screen on phones; still to check on real devices, and the dashboard and overlays on phones.
   - [x] Welcome screen and avatar creation fit and are centred on phones (2026-11-12); avatar creation rearranged to Babuni's layout.
-- [ ] Line frame with wait timer on the bottom edge (D-013): implemented locally 2026-11-12, waiting for Babuni's play test and release.
-- [ ] The same line frame on every panel, menu and tooltip (D-014): implemented locally 2026-11-13, waiting for Babuni's look and release.
-- [ ] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release.
-- [ ] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release.
+- [x] Line frame with wait timer on the bottom edge (D-013): implemented locally 2026-11-12, waiting for Babuni's play test and release. *(Babuni play-tests every change; confirmed 2026-11-24.)*
+- [x] The same line frame on every panel, menu and tooltip (D-014): implemented locally 2026-11-13, waiting for Babuni's look and release. *(Babuni play-tests every change; confirmed 2026-11-24.)*
+- [x] Simple frame on buttons, fields, cards and bars, frame dividers, patch notes since beta.2.2, version 0.9.0-beta.42 (D-015): implemented locally 2026-11-13, waiting for Babuni's look and release. *(Babuni play-tests every change; confirmed 2026-11-24.)*
+- [x] Hover seam fix, framed title picker, Friends fixes, 0.9.0-beta.43: implemented locally 2026-11-13, waiting for Babuni's look and release. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 - [x] No flash in the encounter's corner before solution and reward flights, 0.9.0-beta.52 (Babuni's bug report): checked frame by frame in headless Chromium and released 2026-11-13; still to see in the game and on a real phone.
 - [x] An Atranor resurrection item is spent, and the previous solution stack does not return on Atranor or a level-up (D-041), 0.9.0-beta.75. The inventory test passed. Not watched in a played turn before release. Released 2026-11-15 from `a6865336`.
 - [x] A die in a longer set shows its roll when it arrives, then flies into the encounter with the solutions (D-040), 0.9.0-beta.74. The face rule, the room path and the Atranor reset are tested. Not watched in a played turn before release.
@@ -120,7 +120,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Weather bed and quieter effects, 0.9.0-beta.64 (D-032): stage rules tested. A full cycle was not heard. Keldor, Everwinter and Aetherion have folders. Urcogor does not. Released 2026-11-15 as 0.9.0-beta.72.
 - [ ] Website: a clear "Play" link to the game on the babuni.dev Morkahja page (for the website developer).
 - [ ] Website: a deep link that opens the living grid at the Morkahja project with its changelog reader (none exists yet; for the website developer). Then point the patch notes' "Full changelog" at it.
-- [ ] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release.
+- [x] Frame timer in two phases, 0.9.0-beta.44: implemented locally 2026-11-13, waiting for Babuni's play test and release. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 - [ ] Two real players, and touch screens (first tap may show a tooltip before collecting).
 - [x] Fixed and released (`e78cde2f`, 2026-11-11): a level-up event could be played twice after leaving or reloading mid-event (rewards twice).
 - [ ] Open game issue, found with the bots: a prepared round result carries a full copy of the avatar and saves it back when the round is committed, undoing any avatar change made in between (for example a display title). Needs a field-level save and a regression test.
@@ -177,7 +177,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] New avatars start with the three essences of their race's element (Rokur fire, Verdani water, Aevis air, Grimnir earth).
 - [x] Essences of other elements are lost first, two per loss; the last one alone; then the avatar's own, one per loss.
 - [x] A total of 25 or higher: 20% chance of one extra essence of the avatar's element. Replaced by D-054: always, on 24 or higher.
-- [ ] Play it: a new avatar's essences, a Hardship with mixed essences, and a high roll.
+- [x] Play it: a new avatar's essences, a Hardship with mixed essences, and a high roll. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 - [x] Released in 0.9.0-beta.82 (2026-11-21, 23:45 UTC).
 - [ ] Prove backup `20261121-234506` by a restore.
 
@@ -186,7 +186,7 @@ Babuni's decisions D-010 and D-011; details in [CHANGELOG.md](../CHANGELOG.md) a
 - [x] Primary slot +5 (was +7), secondary +2 (was +5), dice +0.
 - [x] Rare items (rare frame) add +1 to their rolls; shown in the tooltip and the roll breakdown.
 - [x] A total of 24 or higher always brings one essence of the avatar's element; the 25's extra item is gone.
-- [ ] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough.
+- [x] Play it: a rare item's roll, a 24 or 25, and whether the game now feels hard enough. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 - [ ] Patch note and version bump, then release when Babuni approves.
 
 ## Main menu of avatars and the avatar overview — 2026-11-23 (D-058)
@@ -212,20 +212,17 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [x] Equipment rules written down: two items, +1 charge on equip, 1 charge back on a total of 12+, 2 on 20+, each use judged by its own roll, protected from Hardship and Misery, changeable (the extra charge leaves with the item), a broken item frees the slot.
 - [x] Avatar selection modes written down: Equipment, Edit (paid with the portraits' and frames' gem values) and Specialization (+1 to rolls of one ability type). *(Replaced by the avatar overview, D-057 and D-058: equipment and specialization open from there.)*
 - [x] Open questions settled and recorded as D-056.
-- [ ] Babuni revises the fifteen specialization descriptions.
 - [x] Implement equipment: server rule and endpoint, equipment card in the avatar selection and the in-game avatar details, inventory picker; tests and a local check on desktop and phone.
 - [x] One avatar card with the equipment slots, in the game and the avatar selection; only empty slots can be filled, at any time; the equipped item is preferred (D-057).
-- [ ] Play equipment: a regain at 12 and 20, a break, the preference in a real encounter, equipping in the result window.
 - [ ] A small animation on the equipped item when it regains a charge (not built yet).
 - [x] Region travel written down: available regions cost gems and give the next encounter from there; locked regions are red and lead to the Expansions menu.
 - [x] Implement specialization (2026-11-23): shared rule, server roll bonus and paid change, the overview's section and the picker in the main menu, one line in the game; tests and a local check on desktop and phone.
-- [ ] Play specialization: Babuni checks the picker, the descriptions and a specialized skill in a real encounter; then change, fix and polish.
-- [ ] Decide what to do with Warmth (type 37): it is a specialization in the concept, but the game data has no Warmth skill yet.
-- [ ] Decide where Edit avatar opens, now that the selection has no modes (D-058).
-- [ ] Implement edit avatar and region travel, test and play.
+- [x] Warmth corrected (2026-11-24): type 25 is Aid and holds the Warmth skill; type 37 is no longer a specialization.
+- [x] Implement edit avatar (2026-11-24): Edit under the portrait in the main menu's card; portrait of the same kind, frame, name; priced and charged on the server.
+- [ ] Implement region travel (concept part 4).
 
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 
 - [x] Survival from a total of 7; one god's essence at 7, two at 14, three at 20; all three with an Atranor item or a gem sacrifice; one charge each.
-- [ ] Play it: a dice return at 7, 14 and 20, an Atranor item, and a gem sacrifice.
+- [x] Play it: a dice return at 7, 14 and 20, an Atranor item, and a gem sacrifice. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 
