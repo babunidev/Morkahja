@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the ambiance waits three seconds
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the ambiance starts 3 seconds after entering the game, and when an encounter from another region loads, the two regions crossfade 3 seconds after the change.
+- **Change (`ambianceCycle.ts`, `AmbianceBed.tsx`):** new `AMBIANCE_START_DELAY_MS` (3000). A bed that starts from silence waits that long before its first piece fades in. On a change of region the old region keeps playing through the wait; then the old one fades out over 2 s while the new one fades in over 1 s, as before. Changing region again during the wait starts the wait over. Encounters in the same region still leave the bed alone.
+- **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks the 3 s) and `npm run typecheck` passed. Not heard in the game.
+
 ## 2026-11-24 — Unreleased: the avatar card in rows; the round menu fades the avatars and closes on a tap elsewhere
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

@@ -653,6 +653,10 @@ When I made my avatars the main menu, the Play button disappeared, and a game ne
 
 My avatar card had room to spare, so I gave it rows. The plate now says "Avatar" and the name stands big above the level. The specialization sits on the left with its description beside it, and below that the equipment and the Play button share the bottom row. In the game, Home sits at the bottom left and behaves like my other buttons, with the equipment on the right. Opening the round menu used to make my avatars vanish at once; now they fade out the way they fade back in, and a tap anywhere else closes the menu. Claude Code (Claude Opus 5.5) rebuilt the card's rows, kept the equipment slots at the Inventory's size, and measured the fade and the closing in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Not released.**
 
+## 2026-11-24 — The ambiance takes a breath
+
+The ambiance came in the moment I entered the game, and a new region's sound replaced the old one as soon as its encounter loaded. Now the bed waits three seconds: after I enter the game it starts then, and when I travel to another region the old region keeps playing for three seconds before the two crossfade. Claude Code (Claude Opus 5.5) added the wait to the ambiance bed and its test. **Verification:** client tests and typecheck passed; not yet heard in the game. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

@@ -6,6 +6,7 @@ import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
+  AMBIANCE_START_DELAY_MS,
   handoffRunFor,
   landCrossfade,
   openingRun,
@@ -379,11 +380,19 @@ export function AmbianceBed({
             voice.audio.volume = 0;
           }
         }
+        await waitMs(AMBIANCE_START_DELAY_MS, alive);
+        if (!alive()) {
+          return;
+        }
         await runBed(land, bedVoices);
         return;
       }
 
       const handoff = landCrossfade();
+      await waitMs(handoff.startDelayMs, alive);
+      if (!alive()) {
+        return;
+      }
       let incoming = bedVoices.find((voice) => voice.audio.paused);
       if (!incoming) {
         incoming = spareVoice();

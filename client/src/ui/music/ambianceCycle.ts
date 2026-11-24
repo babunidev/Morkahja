@@ -23,11 +23,20 @@ export const AMBIANCE_FADE_IN_MS = PIECE_FADE_IN_MS;
 export const AMBIANCE_FADE_OUT_MS = PIECE_FADE_OUT_MS;
 
 /**
- * A new land starts rising at the same moment the old land starts falling,
- * so the two overlap. A land that begins in silence still fades in.
+ * The bed waits three seconds before it starts: after entering the game, and
+ * after an encounter from another region loads (Babuni, 2026-11-24). The old
+ * region keeps playing through the wait.
  */
-export function landCrossfade(): { fadeOutMs: number; fadeInMs: number; fadeInDelayMs: number } {
+export const AMBIANCE_START_DELAY_MS = 3000;
+
+/**
+ * Three seconds after the new region's encounter loads, the new land starts
+ * rising at the same moment the old land starts falling, so the two overlap.
+ * A land that begins in silence still fades in.
+ */
+export function landCrossfade(): { startDelayMs: number; fadeOutMs: number; fadeInMs: number; fadeInDelayMs: number } {
   return {
+    startDelayMs: AMBIANCE_START_DELAY_MS,
     fadeOutMs: AMBIANCE_FADE_OUT_MS,
     fadeInMs: AMBIANCE_FADE_IN_MS,
     fadeInDelayMs: 0,

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   AMBIANCE_FADE_IN_MS,
   AMBIANCE_FADE_OUT_MS,
+  AMBIANCE_START_DELAY_MS,
   landCrossfade,
   handoffRunFor,
   openingRun,
@@ -17,6 +18,8 @@ assert.equal(AMBIANCE_FADE_OUT_MS, 2000);
 const handoff = landCrossfade();
 assert.equal(handoff.fadeInMs, AMBIANCE_FADE_IN_MS);
 assert.equal(handoff.fadeOutMs, AMBIANCE_FADE_OUT_MS);
+assert.equal(AMBIANCE_START_DELAY_MS, 3000);
+assert.equal(handoff.startDelayMs, AMBIANCE_START_DELAY_MS);
 assert.equal(handoff.fadeInDelayMs, 0);
 assert.ok(handoff.fadeInDelayMs < handoff.fadeOutMs);
 
