@@ -1052,7 +1052,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A delicate, translucent orb mounted on a finely carved wooden base. Embedded within the orb are iridescent fairy wings, creating a mesmerizing, ever-shifting kaleidoscope of colors that points to hidden treasures.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10097": {
     "mSolutionID": 10097,
