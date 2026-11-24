@@ -1128,7 +1128,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "An imposing weapon, it features a lengthy ash wood haft capped with a razor-sharp blade, shaped to mirror the ferocity of a charging boar.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10104": {
     "mSolutionID": 10104,
