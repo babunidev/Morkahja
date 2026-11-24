@@ -1242,7 +1242,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A rugged, azure cloak imbued with magic. It radiates a comfortable warmth, protecting its wearer from the biting cold, and glows faintly in the darkness.",
     "mSolutionType": 32,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10115": {
     "mSolutionID": 10115,
