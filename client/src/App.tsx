@@ -89,6 +89,8 @@ import { useProtectedImages } from './ui/protectedImage.js';
 import { FADE_DURATION_MS } from './ui/transitions/fade.js';
 import { gameEncounters, setGameContent } from './data/gameContent.js';
 import { expansionFromEncounterMap } from './ui/music/encounterExpansion.js';
+import { ATRANOR_AMBIANCE_PACK } from './ui/music/ambianceDrop.js';
+import { ATRANOR_ENCOUNTER_ID } from './ui/game/regionName.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
@@ -107,6 +109,11 @@ function isAchievementWatchScreen(screen: AppScreen): boolean {
 function ambianceExpansionFor(encounterId: number | null): number | null {
   if (encounterId == null) {
     return null;
+  }
+
+  /** Atranor plays its own ambiance, and only there (Babuni, 2026-11-24). */
+  if (encounterId === ATRANOR_ENCOUNTER_ID) {
+    return ATRANOR_AMBIANCE_PACK;
   }
 
   try {

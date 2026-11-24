@@ -66,6 +66,8 @@ const headStyle: CSSProperties = {
   alignItems: 'center',
   gap: 'clamp(12px, 3vw, 20px)',
   width: '100%',
+  // The statistics sit a little lower, so the head has room (Babuni, 2026-11-24).
+  marginBottom: 'clamp(6px, 2vw, 12px)',
 };
 
 const headTextStyle: CSSProperties = {
@@ -108,10 +110,15 @@ const metaStyle: CSSProperties = {
   opacity: 0.9,
 };
 
+/**
+ * The experience bar with its number inside (Babuni, 2026-11-24): one thing,
+ * thicker, instead of a bar and a line of text under it.
+ */
 const xpShellStyle: CSSProperties = {
+  position: 'relative',
   display: 'block',
   width: 'min(100%, 320px)',
-  height: 12,
+  height: 'clamp(18px, 4.4vw, 22px)',
   boxSizing: 'border-box',
   padding: 2,
   ...simpleFrameStyle({ background: 'rgba(20, 8, 4, 0.72)', opacity: 0.95, scale: 0.4 }),
@@ -127,9 +134,17 @@ const xpFillStyle: CSSProperties = {
 };
 
 const xpTextStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  display: 'grid',
+  placeItems: 'center',
   margin: 0,
-  color: '#ffcc66',
+  color: '#fff3d6',
   fontSize: TOOLTIP_TEXT_SIZE,
+  fontWeight: 700,
+  lineHeight: 1,
+  textShadow: '0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8)',
+  pointerEvents: 'none',
 };
 
 const sectionHeadingStyle: CSSProperties = {
@@ -345,9 +360,9 @@ export function AvatarOverviewContent({
   const experienceBar = (
     <span aria-label={`Experience ${current} of ${nextLevel}`} style={xpShellStyle}>
       <span style={{ ...xpFillStyle, width: `${nextLevel > 0 ? (current / nextLevel) * 100 : 0}%` }} />
+      <span aria-hidden="true" style={xpTextStyle}>XP {current}/{nextLevel}</span>
     </span>
   );
-  const experienceText = <p style={xpTextStyle}>XP {current}/{nextLevel}</p>;
 
   return (
     // The game's panel over the picture is short: its rows sit closer together.
@@ -362,7 +377,6 @@ export function AvatarOverviewContent({
             <p style={nameStyle}>{avatarName(avatar)}</p>
             <p style={metaStyle}>Level {avatar.level} · {avatar.race} {avatar.role}</p>
             {experienceBar}
-            {experienceText}
           </div>
         </div>
       ) : (
@@ -373,7 +387,6 @@ export function AvatarOverviewContent({
           {/* In the game the specialization is one line up here, where the panel over the picture has room. */}
           <SpecializationSection avatar={avatar} />
           {experienceBar}
-          {experienceText}
         </>
       )}
       <TooltipDivider bleed={DIVIDER_BLEED} />
@@ -530,6 +543,8 @@ const menuScrollStyle: CSSProperties = {
 };
 
 export const OVERVIEW_CLOSE_MS = 380;
+/** Slower than the close, so the card is seen growing (Babuni, 2026-11-24). */
+export const OVERVIEW_OPEN_MS = 560;
 
 /**
  * The overview in the main menu. `closingInto` shrinks the card into that
@@ -540,6 +555,7 @@ export function AvatarOverviewMenuCard({
   children,
   footer,
   closingInto,
+  openingFrom,
   onBackdrop,
 }: {
   /** The name on the frame's plate. */
@@ -547,10 +563,46 @@ export function AvatarOverviewMenuCard({
   children: ReactNode;
   footer: ReactNode;
   closingInto?: RefObject<HTMLElement | null> | null;
+  /** The tapped avatar: the card grows out of it when it opens. */
+  openingFrom?: RefObject<HTMLElement | null> | null;
   onBackdrop?: () => void;
 }) {
   const panelRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  // Opening (Babuni, 2026-11-24): the card grows out of the avatar, a little
+  // slower than it shrinks back into it, and the backdrop darkens meanwhile.
+  // Only when the card first appears.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const source = openingFrom?.current;
+    if (!panel || !source) {
+      return;
+    }
+    const to = panel.getBoundingClientRect();
+    const from = source.getBoundingClientRect();
+    const scale = Math.max(0.05, Math.min(from.width / to.width, from.height / to.height));
+    const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    const grow = panel.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, opacity: 0 },
+        { transform: `translate(${dx * 0.85}px, ${dy * 0.85}px) scale(${0.15 + scale * 0.85})`, opacity: 1, offset: 0.15 },
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      ],
+      { duration: OVERVIEW_OPEN_MS, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
+    );
+    const darken = overlayRef.current?.animate(
+      [{ backgroundColor: 'rgba(8, 4, 2, 0)' }, { backgroundColor: 'rgba(8, 4, 2, 0.72)' }],
+      { duration: OVERVIEW_OPEN_MS, easing: 'ease' },
+    );
+    // React may run this twice while developing; the second run must measure
+    // the card at rest, not mid-animation.
+    return () => {
+      grow.cancel();
+      darken?.cancel();
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const panel = panelRef.current;

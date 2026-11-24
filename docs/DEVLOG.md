@@ -657,6 +657,10 @@ My avatar card had room to spare, so I gave it rows. The plate now says "Avatar"
 
 The ambiance came in the moment I entered the game, and a new region's sound replaced the old one as soon as its encounter loaded. Now the bed waits three seconds: after I enter the game it starts then, and when I travel to another region the old region keeps playing for three seconds before the two crossfade. Claude Code (Claude Opus 5.5) added the wait to the ambiance bed and its test. **Verification:** client tests and typecheck passed; not yet heard in the game. **Not released.**
 
+## 2026-11-24 — Atranor's own ambiance
+
+I made a set of ambiance pieces for Atranor: calm loops, then three sets that build towards a storm. When my avatar arrives in Atranor, the weather now crossfades into one of those pieces at the stage it had reached, and they play nowhere else; leaving Atranor brings the region's own sound back. Claude Code (Claude Opus 5.5) filed the pieces as a land of their own, leveled them with the rest of the ambiance, and pointed Atranor's encounter at them. I named the B, C and D pieces; the four unnamed loops became stage A. **Verification:** client tests and typecheck passed; not yet heard in the game. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

@@ -772,6 +772,7 @@ export function AvatarSelectionPanel({
       {cardAvatar && !specializationPickerOpen ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
+          openingFrom={activeSourceRef}
           title={AVATAR_CARD_PLATE}
           footer={(
             <AvatarOverviewFooter

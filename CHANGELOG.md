@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: Atranor has its own ambiance
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** a set of ambiance pieces for Atranor. On arriving in Atranor the bed crossfades, by the stage it is in, to one of these pieces, and they play only in Atranor.
+- **Files:** Babuni's sixteen 30-second pieces were copied (the Downloads folder left unchanged) into the ambiance drop folder as `atranor_a1`–`a4` (the four "Seamless ambient loop" files, taken as stage A), `atranor_b1`–`b4`, `atranor_c1`–`c4` and `atranor_d1`–`d4`. `copy-ambiance.ts` leveled them to −38 LUFS into `client/public/UI/Ambiance/atranor/stageA`–`stageD`, four pieces each; the 213 existing clips came out unchanged.
+- **Change:** `ambianceDrop.ts` reads `atranor_<stage><n>` names and files them under `ATRANOR_AMBIANCE_PACK` (999, a land outside the expansion numbers) in the `atranor` folder. `App.tsx` gives Atranor's encounter (id 1) that land, so arriving in Atranor is a change of land: 3 s later the bed crossfades into an Atranor piece of the stage the cycle goes on with, and leaving Atranor crossfades back to the region's own bed the same way. No other encounter plays these pieces.
+- **Verification:** client tests 51/51 (`ambianceDrop.test.ts` and `ambianceLayout.test.ts` check the names, folders and 229 clips) and `npm run typecheck` passed. Not heard in the game.
+
 ## 2026-11-24 — Unreleased: the ambiance waits three seconds
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

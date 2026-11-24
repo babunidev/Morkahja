@@ -11,6 +11,9 @@ import { PANEL_SIDE_PADDING } from './decorativeFrameShared.js';
  * The title plate closes it, like the Inventory's.
  */
 
+/** The in-game avatar card itself, for tooltips measured against it. */
+export const AVATAR_OVERVIEW_PANEL_SELECTOR = 'aside[data-morkahja-avatar-overview]';
+
 /** The Inventory and Skillbook panels' layer (SolutionGridOverlay). */
 const OVERLAY_Z_INDEX = 26;
 
@@ -91,6 +94,7 @@ export function AvatarOverviewBlock({
         ref={asideRef}
         aria-hidden={!visible}
         aria-label="Avatar overview"
+        data-morkahja-avatar-overview=""
         inert={visible ? undefined : true}
         style={{
           ...panelStyle,

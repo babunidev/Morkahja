@@ -9,6 +9,7 @@ import { isEquippableSolution } from '@shared/equipment.js';
 import { shownEquipmentSlots } from '../avatar/equipmentSlots.js';
 import { AVATAR_CARD_PLATE, AvatarOverviewContent, AvatarOverviewFooter, OverviewEquipment } from '../avatar/AvatarOverview.js';
 import PanelButton from '../common/PanelButton.js';
+import { AVATAR_OVERVIEW_PANEL_SELECTOR } from './blocks/AvatarOverviewBlock.js';
 import { ChoiceDetailSections, participantChoiceDetails } from './blocks/partyParticipantChoiceBadge.js';
 import { GAME_SCREEN_SELECTOR } from './GameTooltip.js';
 import type { InventoryPickMode } from './blocks/InventoryBlock.js';
@@ -1145,7 +1146,9 @@ export function GameEnvironment({
                       <OverviewEquipment
                         inventory={displayInventory}
                         onEquipSlot={openEquipmentPicker}
-                        tooltipBoundsSelector={GAME_SCREEN_SELECTOR}
+                        // Measured against the card, whose bottom row this is, so
+                        // an item's tooltip opens upward (Babuni, 2026-11-24).
+                        tooltipBoundsSelector={AVATAR_OVERVIEW_PANEL_SELECTOR}
                       />
                     )}
                   />

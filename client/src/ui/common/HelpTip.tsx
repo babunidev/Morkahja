@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 
 import { GameTooltipFrame, gameTooltipFrameStyle } from '../game/GameTooltip.js';
+import { encounterTooltipFrameStyle } from '../game/encounterTooltip.js';
 import { useTipsEnabled } from '../tips.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 
@@ -34,11 +35,14 @@ const TOOLTIP_MAX_WIDTH_PX = 300;
 
 const tooltipStyle: CSSProperties = {
   ...gameTooltipFrameStyle,
+  // The encounter's solution tooltips' text (Babuni, 2026-11-24).
+  padding: encounterTooltipFrameStyle.padding,
+  fontSize: encounterTooltipFrameStyle.fontSize,
+  lineHeight: encounterTooltipFrameStyle.lineHeight,
   // On the page itself, so no panel or scroll area can cut it off.
   position: 'fixed',
   zIndex: 1000,
   margin: 0,
-  lineHeight: 1.4,
   pointerEvents: 'none',
 };
 

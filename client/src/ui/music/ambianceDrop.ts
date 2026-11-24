@@ -7,6 +7,13 @@ export interface DropPlacement {
   number: number;
 }
 
+/**
+ * Atranor has an ambiance of its own (Babuni, 2026-11-24), played only there.
+ * It is filed as a land outside the expansion numbers, in UI/Ambiance/atranor.
+ */
+export const ATRANOR_AMBIANCE_PACK = 999;
+const ATRANOR_FOLDER = 'atranor';
+
 const WORD_TO_STAGE: Record<string, AmbianceStage> = {
   nature: 'A',
   wind: 'B',
@@ -32,6 +39,7 @@ function slotKey(expansion: number, stage: AmbianceStage, number: number): strin
  * `1stageC3` keeps expansion 1, stage C, piece 3.
  * `0nature12` is expansion 0, stage A, piece 12.
  * `11nature3` is the doubled-digit typo for expansion 1, stage A.
+ * `atranor_b2` is Atranor's own ambiance, stage B, piece 2.
  */
 export function parseDropName(fileName: string): ParsedDrop | null {
   const base = fileName.replace(/\.mp3$/i, '');
@@ -43,6 +51,17 @@ export function parseDropName(fileName: string): ParsedDrop | null {
       stage: 'A',
       preferred: Number(doubledNature[1]),
       exact: false,
+    };
+  }
+
+  const atranor = base.match(/^atranor_([abcd])(\d+)$/i);
+  if (atranor) {
+    return {
+      sourceName: fileName,
+      expansion: ATRANOR_AMBIANCE_PACK,
+      stage: atranor[1]!.toUpperCase() as AmbianceStage,
+      preferred: Number(atranor[2]),
+      exact: true,
     };
   }
 
@@ -133,7 +152,7 @@ export function gameClipPath(placement: DropPlacement): string {
   return [
     '/UI',
     'Ambiance',
-    String(placement.expansion),
+    placement.expansion === ATRANOR_AMBIANCE_PACK ? ATRANOR_FOLDER : String(placement.expansion),
     `stage${placement.stage}`,
     `${placement.number}.mp3`,
   ].join('/');
