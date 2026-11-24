@@ -52,9 +52,23 @@ const contentStyle: CSSProperties = {
   textAlign: 'center',
 };
 
-const portraitStyle: CSSProperties = {
+/** The portrait, and in the main menu the Edit button under it (Babuni, 2026-11-24). */
+const portraitColumnStyle: CSSProperties = {
   flexShrink: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 8,
   width: 'clamp(96px, 30%, 150px)',
+};
+
+const editButtonStyle: CSSProperties = {
+  minHeight: 30,
+  padding: '4px 20px',
+  ...simpleFrameStyle({ background: 'rgba(51, 0, 0, 0.82)', opacity: 0.94 }),
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.82rem, 3.2vw, 0.95rem)',
 };
 
 /**
@@ -332,6 +346,7 @@ export function AvatarOverviewContent({
   onEquipSlot,
   onChooseSpecialization,
   equipmentInFooter = false,
+  onEdit,
 }: {
   avatar: PersistedAvatar;
   inventory: AvatarInventory | undefined;
@@ -347,6 +362,8 @@ export function AvatarOverviewContent({
   onChooseSpecialization?: () => void;
   /** The equipment sits in the card's bottom row instead (`OverviewEquipment`). */
   equipmentInFooter?: boolean;
+  /** Main menu only: an Edit button under the portrait opens the avatar edit. */
+  onEdit?: () => void;
 }) {
   const nextLevel = experienceRequiredForNextLevel(avatar.level);
   const current = Math.max(0, Math.min(avatar.experience, nextLevel));
@@ -370,8 +387,22 @@ export function AvatarOverviewContent({
     <div style={showPortrait ? contentStyle : { ...contentStyle, gap: 2 }}>
       {showPortrait ? (
         <div style={headStyle}>
-          <div style={portraitStyle}>
-            <AvatarCard avatar={avatar} hideLabels />
+          <div style={portraitColumnStyle}>
+            <div style={{ width: '100%' }}>
+              <AvatarCard avatar={avatar} hideLabels />
+            </div>
+            {onEdit ? (
+              <PanelButton
+                onClick={() => {
+                  playSfx(DEFAULT_BUTTON_SOUND);
+                  onEdit();
+                }}
+                pressKey="overview-edit"
+                visualStyle={editButtonStyle}
+              >
+                Edit
+              </PanelButton>
+            ) : null}
           </div>
           <div style={headTextStyle}>
             {displayTitle ? <p style={titleStyle}>{displayTitle}</p> : null}

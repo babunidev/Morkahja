@@ -20,13 +20,18 @@ const iconStyle: CSSProperties = {
 };
 
 /** "Cost 1" and the gem (Babuni, 2026-11-23); "Free" when it costs nothing. */
-export default function GemCost({ cost }: { cost: number }) {
+export default function GemCost({ cost, withLabel = true }: {
+  cost: number;
+  /** "Cost 70" (the default) or just "70", for a sentence such as "spend 70 [gem]?". */
+  withLabel?: boolean;
+}) {
   if (cost <= 0) {
     return <span>Free</span>;
   }
+  const amount = withLabel ? `Cost ${cost}` : String(cost);
   return (
-    <span aria-label={`Cost ${cost} gem${cost === 1 ? '' : 's'}`} style={wrapStyle}>
-      <span aria-hidden="true">Cost {cost}</span>
+    <span aria-label={`${amount} gem${cost === 1 ? '' : 's'}`} style={wrapStyle}>
+      <span aria-hidden="true">{amount}</span>
       <img alt="" aria-hidden="true" draggable={false} src={GEM_ICON_ASSET} style={iconStyle} />
     </span>
   );

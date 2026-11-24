@@ -245,6 +245,20 @@ export async function equipAvatarItem(
   return response.inventory;
 }
 
+/** Edit the avatar's portrait, frame and name (D-056); the server prices it. */
+export async function editAvatarLook(
+  avatarId: string,
+  change: { portraitId: number; frameId: number; name: string },
+): Promise<{ avatar: PersistedAvatar | null; spent: number; currencies: { yellow_red_gem?: number } }> {
+  return request(
+    `/avatar/${encodeURIComponent(avatarId)}/edit`,
+    {
+      method: 'POST',
+      body: JSON.stringify(change),
+    },
+  );
+}
+
 /** Choose or change the avatar's specialization (D-056): free the first time, then 1 gem. */
 export async function chooseAvatarSpecialization(
   avatarId: string,

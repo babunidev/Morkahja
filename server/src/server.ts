@@ -1,6 +1,7 @@
 import express from 'express';
 import { equipAvatarItem, EquipmentRequestError } from './services/equipmentService.js';
 import { chooseAvatarSpecialization, SpecializationRequestError } from './services/specializationService.js';
+import { AvatarEditRequestError, editAvatarLook } from './services/avatarEditService.js';
 import { loadAvatarProgression } from './services/avatarProgressionService.js';
 import type { NextFunction, Request, Response } from 'express';
 
@@ -502,6 +503,35 @@ app.post('/avatar/:avatarId/equipment', async (req: Request, res: Response) => {
     res.json({ playerId, avatarId, inventory });
   } catch (error) {
     if (error instanceof EquipmentRequestError) {
+      res.status(error.status).json({ error: error.message, code: error.code });
+      return;
+    }
+
+    throw error;
+  }
+});
+
+app.post('/avatar/:avatarId/edit', async (req: Request, res: Response) => {
+  const { playerId } = requireAuth(req);
+  const avatarId = Array.isArray(req.params.avatarId)
+    ? req.params.avatarId[0]
+    : req.params.avatarId;
+  const body = req.body as Record<string, unknown>;
+
+  if (!avatarId || typeof body.portraitId !== 'number' || typeof body.frameId !== 'number' || typeof body.name !== 'string') {
+    res.status(400).json({ error: 'avatarId, portraitId, frameId and name are required' });
+    return;
+  }
+
+  try {
+    const result = await editAvatarLook(playerId, avatarId, {
+      portraitId: body.portraitId,
+      frameId: body.frameId,
+      name: body.name,
+    });
+    res.json({ playerId, avatarId, avatar: toPersistedAvatarDto(result.avatar), spent: result.spent, currencies: result.currencies });
+  } catch (error) {
+    if (error instanceof AvatarEditRequestError) {
       res.status(error.status).json({ error: error.message, code: error.code });
       return;
     }

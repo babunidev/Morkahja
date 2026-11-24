@@ -5,6 +5,7 @@ import {
   SKILL_INVENTORY_TYPE,
   SPECIALIZATIONS,
   findSpecialization,
+  specializationSkillPhrase,
   specializationChangeCost,
 } from '@shared/specialization.js';
 import { gameSolutions } from '../../data/gameContent.js';
@@ -237,7 +238,7 @@ export default function SpecializationPicker({
             <TooltipDivider />
             <p style={descriptionStyle}>{selected.description}</p>
             <TooltipDivider />
-            <p style={effectStyle}>+1 to every roll with a {selected.name} skill</p>
+            <p style={effectStyle}>+1 to every roll with {specializationSkillPhrase(selected.name)}</p>
             <p style={noteStyle}>
               {owned === 0
                 ? `${avatar.name.trim() || 'This avatar'} has no ${selected.name} skill yet.`

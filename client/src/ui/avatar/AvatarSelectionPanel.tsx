@@ -13,6 +13,7 @@ import SpecializationPicker from './SpecializationPicker.js';
 import {
   chooseAvatarSpecialization,
   createAvatar,
+  editAvatarLook,
   equipAvatarItem,
   fetchAvatars,
   type EncounterRoomSnapshotDto,
@@ -403,6 +404,10 @@ export function AvatarSelectionPanel({
   const [equipPending, setEquipPending] = useState(false);
   const [equipError, setEquipError] = useState<string | null>(null);
   const [specializationPickerOpen, setSpecializationPickerOpen] = useState(false);
+  // Edit avatar (D-056): the creation screen in edit mode, in the overview's place.
+  const [editOpen, setEditOpen] = useState(false);
+  const [editPending, setEditPending] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [specializationPending, setSpecializationPending] = useState(false);
   const [specializationError, setSpecializationError] = useState<string | null>(null);
   const cardAvatar = overviewOpen
@@ -416,6 +421,8 @@ export function AvatarSelectionPanel({
     setEquipError(null);
     setSpecializationPickerOpen(false);
     setSpecializationError(null);
+    setEditOpen(false);
+    setEditError(null);
   }
 
   // The swap: each avatar glides from where it stood to its new place.
@@ -478,6 +485,28 @@ export function AvatarSelectionPanel({
       setSpecializationError(userFacingApiErrorMessage(error, 'Could not choose the specialization.'));
     } finally {
       setSpecializationPending(false);
+    }
+  }
+
+  async function saveAvatarEdit(
+    avatar: PersistedAvatar,
+    change: { portraitId: number; frameId: number; name: string },
+  ): Promise<void> {
+    setEditPending(true);
+    setEditError(null);
+    try {
+      const result = await editAvatarLook(avatar.id, change);
+      const edited = result.avatar;
+      onAvatarsChanged?.(resolvedAvatars.map((entry) => (
+        entry.id === avatar.id && edited
+          ? { ...entry, name: edited.name, portrait: edited.portrait, frame: edited.frame }
+          : entry
+      )));
+      setEditOpen(false);
+    } catch (error) {
+      setEditError(userFacingApiErrorMessage(error, 'Could not save the changes.'));
+    } finally {
+      setEditPending(false);
     }
   }
 
@@ -769,7 +798,7 @@ export function AvatarSelectionPanel({
         ) : null}
       </div>
       {/* The picker takes the overview's place; Back brings the overview again. */}
-      {cardAvatar && !specializationPickerOpen ? (
+      {cardAvatar && !specializationPickerOpen && !editOpen ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
           openingFrom={activeSourceRef}
@@ -808,6 +837,10 @@ export function AvatarSelectionPanel({
             onChooseSpecialization={() => {
               setSpecializationError(null);
               setSpecializationPickerOpen(true);
+            }}
+            onEdit={() => {
+              setEditError(null);
+              setEditOpen(true);
             }}
           />
         </AvatarOverviewMenuCard>
@@ -851,6 +884,23 @@ export function AvatarSelectionPanel({
             visible
           />
         </div>
+      ) : null}
+      {cardAvatar && editOpen ? (
+        <AvatarCreation
+          editAvatar={cardAvatar}
+          editError={editError}
+          editPending={editPending}
+          onCancel={() => {
+            setEditOpen(false);
+            setEditError(null);
+          }}
+          onConfirm={() => undefined}
+          onConfirmEdit={(change) => {
+            void saveAvatarEdit(cardAvatar, change);
+          }}
+          slotIndex={0}
+          visible
+        />
       ) : null}
       {creatingSlotIndex !== null ? (
         <AvatarCreation

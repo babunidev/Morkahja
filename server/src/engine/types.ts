@@ -232,7 +232,7 @@ export const SolutionType = {
   // Heal (aid)
   HealSkill: 21,
   HealItem: 22,
-  // Protect (aid)
+  // Aid (Babuni, 2026-11-24): the Warmth skill, Helping Hand and the Aids
   HelpSkill: 25,
   HelpItem: 26,
   // Purge (combat)
@@ -249,7 +249,7 @@ export const SolutionType = {
   // Stealth (combat)
   StealthSkill: 35,
   StealthItem: 36,
-  // Warmth (aid)
+  // Warmth (aid): no skill, item or encounter uses it; the Warmth skill is aid (25)
   WarmthSkill: 37,
   WarmthItem: 38,
   // Inspire (aid)

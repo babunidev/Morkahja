@@ -23,6 +23,7 @@ import { getPlayer } from '../db/postgresDocumentStore.js';
 import { loadAvatar } from './encounterPersistence.js';
 import { toPersistedAvatarDto } from './avatarPresentation.js';
 import { readPlayerDiceState } from './diceService.js';
+import { loadAvatarProgression } from './avatarProgressionService.js';
 import type { PlayerDocument } from '../types/player.js';
 
 const FALLBACK_PORTRAIT = 'm_portrait_rokur_warrior';
@@ -188,19 +189,22 @@ async function participantToDto(
   localPlayerId: string,
   roomId: string,
 ): Promise<RoomParticipantDto> {
-  const [playerName, avatarDoc, diceState] = await Promise.all([
+  const [playerName, avatarDoc, diceState, progression] = await Promise.all([
     readPlayerName(participant.playerId),
     loadAvatar(participant.playerId, participant.avatarId),
     readPlayerDiceState(participant.playerId),
+    loadAvatarProgression(participant.playerId, participant.avatarId),
   ]);
   const dto = avatarDoc ? toPersistedAvatarDto(avatarDoc) : null;
 
   if (dto) {
+    // The in-game avatar card's statistics (as `GET /avatars` gives the menu's card):
+    // without it the game showed 0 encounters.
     return buildParticipantDto(
       participant,
       localPlayerId,
       playerName,
-      dto,
+      { ...dto, encountersPlayed: progression.encountersCompleted },
       diceState.selectedDiceId,
     );
   }

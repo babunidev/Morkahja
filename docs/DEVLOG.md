@@ -681,6 +681,10 @@ The highest roll in the game is now 26: a natural 20 in the primary slot with a 
 
 I made the level-up's ambiance: four pieces for each stage of the weather. A level-up now crossfades into them and, like Atranor, plays them one into the next without a break, then hands back to the region. Claude Code (Claude Opus 5.5) leveled them with the rest of the ambiance and filed them where the level-up was already waiting for them. **Verification:** client tests and typecheck passed; not yet heard in the game. **Not released.**
 
+## 2026-11-24 — My encounters count in the game too
+
+My avatar card in the game said I had played 0 encounters, though the main menu knew better. Claude Code (Claude Opus 5.5) found that only the menu's avatar list carried the count; the game builds my avatar from the room, which left it out. The room now sends it as well, and a test makes sure it stays that way. **Verification:** server tests and typecheck passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

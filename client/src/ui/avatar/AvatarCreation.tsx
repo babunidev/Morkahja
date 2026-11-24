@@ -31,6 +31,16 @@ import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { GameTooltipFrame } from '../game/GameTooltip.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 import { amendStep, canRedo, canUndo, recordStep, redoStep, startHistory, undoStep } from './creationHistory.js';
+import {
+  AVATAR_NAME_MAX_LENGTH,
+  avatarEditCost,
+  frameIdFromFile,
+  normalizeAvatarName,
+  PORTRAIT_RACE_IDS,
+  PORTRAIT_ROLE_IDS,
+  portraitIdFromFile,
+} from '@shared/avatarEdit.js';
+import GemCost from '../common/GemCost.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -336,6 +346,60 @@ const genderRowStyle: CSSProperties = {
 };
 
 /** Cancel and Accept sit in the bottom corners, beside the avatar. */
+/** Edit mode: the price between Cancel and Agree. */
+const editCostStyle: CSSProperties = {
+  gridColumn: 2,
+  gridRow: 1,
+  alignSelf: 'end',
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 4,
+  marginBottom: 'clamp(14px, 3vw, 22px)',
+  position: 'relative',
+  zIndex: 1,
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.9rem, 3.4vw, 1.05rem)',
+  textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
+};
+
+const editErrorStyle: CSSProperties = {
+  margin: 0,
+  maxWidth: 220,
+  color: '#ff9a7a',
+  fontSize: 'clamp(0.68rem, 2.8vw, 0.82rem)',
+  textAlign: 'center',
+};
+
+/** "Do you want to spend … gems?" over the edit screen. */
+const confirmShadeStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 5,
+  display: 'grid',
+  placeItems: 'center',
+  background: 'rgba(8, 4, 2, 0.72)',
+};
+
+const confirmBoxStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 14,
+  width: 'min(86%, 340px)',
+  padding: '22px 18px 16px',
+  ...simpleFrameStyle({ background: 'rgba(34, 6, 3, 0.97)', opacity: 0.94 }),
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.95rem, 3.6vw, 1.1rem)',
+  textAlign: 'center',
+};
+
+const confirmButtonsStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%',
+};
+
 const workbenchActionButtonStyle: CSSProperties = {
   gridRow: 1,
   alignSelf: 'end',
@@ -644,10 +708,23 @@ export function AvatarCreation({
   presetAvatar,
   slotIndex,
   visible,
+  editAvatar = null,
+  onConfirmEdit,
+  editError = null,
+  editPending = false,
 }: {
   onCancel: () => void;
   onConfirm: (avatar: PersistedAvatar) => void;
   presetAvatar?: PersistedAvatar | null;
+  /**
+   * Edit mode (D-056, Babuni, 2026-11-24): this avatar's portrait (same race,
+   * role and gender), frame and name change; race, role and gender are cut away.
+   */
+  editAvatar?: PersistedAvatar | null;
+  onConfirmEdit?: (change: { portraitId: number; frameId: number; name: string }, cost: number) => void;
+  /** Why the server refused the edit, for example too few gems. */
+  editError?: string | null;
+  editPending?: boolean;
   slotIndex: number;
   visible: boolean;
 }) {
@@ -663,29 +740,31 @@ export function AvatarCreation({
     ),
     [],
   );
+  const editing = editAvatar !== null;
+  const startAvatar = editAvatar ?? presetAvatar;
   const initialPortraitIndex = useMemo(
     () => {
-      const presetPortraitId = Number(presetAvatar?.portrait.match(/avatar_(\d+)\.webp$/)?.[1]);
+      const presetPortraitId = Number(startAvatar?.portrait.match(/avatar_(\d+)\.webp$/)?.[1]);
       const presetIndex = portraits.findIndex((candidate) => candidate.avatarID === presetPortraitId);
 
       return presetIndex >= 0 ? presetIndex : randomIndex(portraits.length);
     },
-    [portraits, presetAvatar],
+    [portraits, startAvatar],
   );
   const initialFrameIndex = useMemo(
     () => {
-      const presetFrameId = Number(presetAvatar?.frame.match(/frame_(\d+)\.webp$/)?.[1]);
+      const presetFrameId = Number(startAvatar?.frame.match(/frame_(\d+)\.webp$/)?.[1]);
       const presetIndex = frames.findIndex((candidate) => candidate.frameID === presetFrameId);
 
       return presetIndex >= 0 ? presetIndex : randomIndex(frames.length);
     },
-    [frames, presetAvatar],
+    [frames, startAvatar],
   );
   // Every combination chosen, for undo and redo (creationHistory.ts).
   const [history, setHistory] = useState(() => startHistory<Combination>({
     portraitIndex: initialPortraitIndex,
     frameIndex: initialFrameIndex,
-    avatarName: presetAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar',
+    avatarName: startAvatar?.name ?? portraits[initialPortraitIndex]?.avatarName ?? 'Avatar',
   }));
   const current = history.entries[history.index]!;
   const { portraitIndex, frameIndex, avatarName } = current;
@@ -755,7 +834,72 @@ export function AvatarCreation({
   const gender = genderFromPortrait(portrait);
 
   function selectPortraitIndex(nextIndex: number, nextFrameIndex = frameIndex): void {
-    commit({ portraitIndex: nextIndex, frameIndex: nextFrameIndex, avatarName: portraits[nextIndex].avatarName });
+    // Editing keeps the avatar's name; creating takes the portrait's own.
+    const nextName = editing ? avatarName : portraits[nextIndex].avatarName;
+    commit({ portraitIndex: nextIndex, frameIndex: nextFrameIndex, avatarName: nextName });
+  }
+
+  // Edit mode: the portraits of the avatar's race, role and gender, in order.
+  const originalPortraitId = portraitIdFromFile(editAvatar?.portrait);
+  const originalFrameId = frameIdFromFile(editAvatar?.frame);
+  const originalPortrait = portraits.find((candidate) => candidate.avatarID === originalPortraitId);
+  const lookPortraits = useMemo(() => {
+    if (!editAvatar) {
+      return [];
+    }
+    return portraits
+      .filter((candidate) => (originalPortrait
+        ? candidate.avatarRace === originalPortrait.avatarRace
+          && candidate.avatarRole === originalPortrait.avatarRole
+          && candidate.avatarGenderID === originalPortrait.avatarGenderID
+        : candidate.avatarRace === PORTRAIT_RACE_IDS[editAvatar.race]
+          && candidate.avatarRole === PORTRAIT_ROLE_IDS[editAvatar.role]))
+      .sort((left, right) => left.avatarID - right.avatarID);
+  }, [editAvatar, originalPortrait, portraits]);
+
+  function stepPortrait(direction: 1 | -1): void {
+    if (lookPortraits.length === 0) {
+      return;
+    }
+    const at = lookPortraits.findIndex((candidate) => candidate.avatarID === portrait.avatarID);
+    const next = lookPortraits[wrapIndex((at < 0 ? 0 : at) + direction, lookPortraits.length)]!;
+    selectPortraitIndex(portraits.findIndex((candidate) => candidate.avatarID === next.avatarID));
+  }
+
+  const editName = normalizeAvatarName(avatarName);
+  const editChanged = editing && (
+    portrait.avatarID !== originalPortraitId
+    || frame.frameID !== originalFrameId
+    || editName !== (editAvatar?.name.trim() ?? '')
+  );
+  const editCost = editing
+    ? avatarEditCost({
+      portraitGems: portrait.avatarID !== originalPortraitId ? portrait.avatarGems : null,
+      frameGems: frame.frameID !== originalFrameId ? frame.frameGem : null,
+      nameChanged: editName !== (editAvatar?.name.trim() ?? ''),
+    })
+    : 0;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function applyEdit(): void {
+    setConfirmOpen(false);
+    onConfirmEdit?.({ portraitId: portrait.avatarID, frameId: frame.frameID, name: editName }, editCost);
+  }
+
+  function agreeToEdit(): void {
+    if (!editChanged) {
+      onCancel();
+      return;
+    }
+    if (!editName) {
+      return;
+    }
+    // Spending gems is asked once more (Babuni's concept); a free change applies at once.
+    if (editCost > 0) {
+      setConfirmOpen(true);
+      return;
+    }
+    applyEdit();
   }
 
   function matchingPortraits(nextRace: AvatarRace, nextRole: AvatarRole, nextGender: AvatarGender): PortraitRecord[] {
@@ -871,7 +1015,7 @@ export function AvatarCreation({
       >
         <LineFrame background={panelStyle.background} />
         <header style={headerStyle}>
-          <h2 id="avatar-creation-title" style={titleStyle}>CREATE AVATAR</h2>
+          <h2 id="avatar-creation-title" style={titleStyle}>{editing ? 'EDIT AVATAR' : 'CREATE AVATAR'}</h2>
         </header>
         <div data-avatar-creation-scroll="" style={panelBodyStyle}>
           <style>
@@ -907,6 +1051,8 @@ export function AvatarCreation({
 }`}
           </style>
         <div aria-label="Avatar settings" style={settingsBlockStyle}>
+          {editing ? null : (
+          <>
           <div aria-label="Choose race" style={raceRowStyle}>
             {RACES.map((raceOption) => (
               <CreationImageButton
@@ -946,6 +1092,8 @@ export function AvatarCreation({
               />
             ))}
           </div>
+          </>
+          )}
 
           <div style={frameAndSexRowStyle}>
             <div aria-label="Choose frame" style={frameControlsColumnStyle}>
@@ -977,6 +1125,33 @@ export function AvatarCreation({
                 />
               </div>
             </div>
+            {editing ? (
+              <div aria-label="Choose portrait" style={frameControlsColumnStyle}>
+                <span style={frameLabelStyle}>Portrait</span>
+                <div style={frameControlsStyle}>
+                  <CreationImageButton
+                    ariaLabel="Previous portrait"
+                    imageSrc={`${UI_ROOT}/im_button_arrowb_left.webp`}
+                    isPressed={isPressed}
+                    onClick={() => stepPortrait(-1)}
+                    pressAnimation={pressAnimation}
+                    pressKey="avatar-portrait-prev"
+                    pulse={pulse}
+                    style={arrowButtonStyle}
+                  />
+                  <CreationImageButton
+                    ariaLabel="Next portrait"
+                    imageSrc={`${UI_ROOT}/im_button_arrowb_right.webp`}
+                    isPressed={isPressed}
+                    onClick={() => stepPortrait(1)}
+                    pressAnimation={pressAnimation}
+                    pressKey="avatar-portrait-next"
+                    pulse={pulse}
+                    style={arrowButtonStyle}
+                  />
+                </div>
+              </div>
+            ) : (
             <div aria-label="Choose gender" style={genderRowStyle}>
               <CreationImageButton
                 ariaLabel="Choose Male"
@@ -1005,6 +1180,7 @@ export function AvatarCreation({
                 style={genderButtonStyle}
               />
             </div>
+            )}
           </div>
         </div>
 
@@ -1023,6 +1199,7 @@ export function AvatarCreation({
                   const name = event.target.value;
                   setHistory((existing) => amendStep(existing, { ...existing.entries[existing.index]!, avatarName: name }));
                 }}
+                maxLength={editing ? AVATAR_NAME_MAX_LENGTH : undefined}
                 style={nameInputStyle}
                 type="text"
                 value={avatarName}
@@ -1035,9 +1212,9 @@ export function AvatarCreation({
             </div>
             <div style={{ position: 'relative', display: 'grid' }}>
               <CreationImageButton
-                ariaLabel="Randomize portrait"
+                ariaLabel={editing ? 'Next portrait' : 'Randomize portrait'}
                 isPressed={isPressed}
-                onClick={chooseRandomDifferentPortrait}
+                onClick={editing ? () => stepPortrait(1) : chooseRandomDifferentPortrait}
                 pressAnimation={pressAnimation}
                 pressKey="avatar-randomize"
                 pulse={pulse}
@@ -1048,12 +1225,12 @@ export function AvatarCreation({
                 <img alt="" aria-hidden="true" draggable={false} src={`${FRAME_ASSET_ROOT}/frame_${frame.frameID}.webp`} style={previewFrameStyle} />
               </CreationImageButton>
               <span aria-hidden="true" className="morkahja-avatar-randomize-hint">
-                Randomize
+                {editing ? 'Next portrait' : 'Randomize'}
               </span>
             </div>
           </div>
           <CreationImageButton
-            ariaLabel="Cancel avatar creation"
+            ariaLabel={editing ? 'Cancel avatar edit' : 'Cancel avatar creation'}
             imageSrc={`${UI_ROOT}/im_button_delete.webp`}
             isPressed={isPressed}
             onClick={onCancel}
@@ -1063,17 +1240,52 @@ export function AvatarCreation({
             style={{ ...confirmSideButtonStyle, ...workbenchActionButtonStyle, gridColumn: 1, justifySelf: 'start' }}
           />
           <CreationImageButton
-            ariaLabel="Accept avatar creation"
+            ariaLabel={editing ? 'Accept avatar edit' : 'Accept avatar creation'}
             imageSrc={`${UI_ROOT}/im_button_yes.webp`}
             isPressed={isPressed}
-            onClick={confirmAvatar}
+            onClick={editing ? agreeToEdit : confirmAvatar}
             pressAnimation={pressAnimation}
             pressKey="avatar-ok"
             pulse={pulse}
-            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, justifySelf: 'end' }}
+            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, justifySelf: 'end', opacity: editPending ? 0.6 : 1 }}
           />
+          {editing ? (
+            <div aria-live="polite" style={editCostStyle}>
+              {editError ? <p role="alert" style={editErrorStyle}>{editError}</p> : null}
+              {editChanged ? <GemCost cost={editCost} /> : <span>No changes</span>}
+            </div>
+          ) : null}
         </div>
         </div>
+        {confirmOpen ? (
+          <div role="presentation" style={confirmShadeStyle}>
+            <div aria-label="Spend gems" role="alertdialog" style={confirmBoxStyle}>
+              <span>Do you want to spend <GemCost cost={editCost} withLabel={false} />?</span>
+              <div style={confirmButtonsStyle}>
+                <CreationImageButton
+                  ariaLabel="No, keep the gems"
+                  imageSrc={`${UI_ROOT}/im_button_delete.webp`}
+                  isPressed={isPressed}
+                  onClick={() => setConfirmOpen(false)}
+                  pressAnimation={pressAnimation}
+                  pressKey="avatar-edit-no"
+                  pulse={pulse}
+                  style={confirmSideButtonStyle}
+                />
+                <CreationImageButton
+                  ariaLabel="Yes, spend the gems"
+                  imageSrc={`${UI_ROOT}/im_button_yes.webp`}
+                  isPressed={isPressed}
+                  onClick={applyEdit}
+                  pressAnimation={pressAnimation}
+                  pressKey="avatar-edit-yes"
+                  pulse={pulse}
+                  style={acceptButtonStyle}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
       {optionTooltip ? (
         <div

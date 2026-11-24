@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the in-game avatar card counts encounters again
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's report:** in the game the avatar card's statistics showed 0 encounters, while the main menu's card showed the right number.
+- **Cause:** only `GET /avatars` (the menu) added `encountersPlayed` from the avatar's progression. The game takes its avatar from the room snapshot (`participantToDto` in `roomDtoMapper.ts`), which never carried it, so the card fell back to 0.
+- **Fix:** the room snapshot loads each participant's progression with the avatar and sets `encountersPlayed`, so the count shows in the game and rises with each snapshot. A party member's details get it too.
+- **Verification:** new `roomAvatarStats.test.ts` (an avatar with 7 completed encounters shows 7 in the room snapshot; without the fix it reads `undefined`), server tests 72/72 against local PostgreSQL and `npm run typecheck` passed. Not looked at in the game.
+
 ## 2026-11-24 — Unreleased: the level-up has its own ambiance
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.
