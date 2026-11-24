@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
-import { ATRANOR_AMBIANCE_PACK } from './ambianceDrop.js';
+import { ATRANOR_AMBIANCE_PACK, LEVEL_UP_AMBIANCE_PACK } from './ambianceDrop.js';
 import { ambiancePackForExpansion, expansionHasClips } from './ambianceLibrary.js';
 
 const ambianceDir = path.resolve(
@@ -37,7 +37,9 @@ const expected: Record<string, number> = {
 
 for (const stage of ['A', 'B', 'C', 'D']) {
   assert.equal(countFiles('atranor', `stage${stage}`), 4, `atranor ${stage}`);
+  assert.equal(countFiles('levelup', `stage${stage}`), 4, `levelup ${stage}`);
 }
+assert.equal(expansionHasClips(AMBIANCE_CLIPS, LEVEL_UP_AMBIANCE_PACK), true);
 assert.equal(ambiancePackForExpansion(ATRANOR_AMBIANCE_PACK), ATRANOR_AMBIANCE_PACK);
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, ATRANOR_AMBIANCE_PACK), true);
 
@@ -45,9 +47,9 @@ for (const [key, count] of Object.entries(expected)) {
   assert.equal(countFiles(key[0]!, `stage${key[1]}`), count, key);
 }
 
-assert.equal(AMBIANCE_CLIPS.length, 229);
+assert.equal(AMBIANCE_CLIPS.length, 245);
 const expansions = new Set(AMBIANCE_CLIPS.map((clip) => clip.expansion));
-assert.deepEqual([...expansions].sort((a, b) => a - b), [0, 1, 3, 4, ATRANOR_AMBIANCE_PACK]);
+assert.deepEqual([...expansions].sort((a, b) => a - b), [0, 1, 3, 4, LEVEL_UP_AMBIANCE_PACK, ATRANOR_AMBIANCE_PACK]);
 
 assert.equal(ambiancePackForExpansion(0), 0);
 assert.equal(ambiancePackForExpansion(1), 1);

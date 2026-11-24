@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: the level-up has its own ambiance
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the level-up's ambiance pieces are in; they play in the level-up, without breaks, like Atranor's.
+- **Files:** Babuni's sixteen pieces (`levelup_a1`–`d4`, four per stage; A and D 30 s, B and C 25 s) were copied (the Downloads folder left unchanged) into the ambiance drop folder, and `copy-ambiance.ts` leveled them to −38 LUFS into `client/public/UI/Ambiance/levelup/stageA`–`stageD`. The 229 existing clips came out unchanged.
+- **Behaviour:** with pieces in its land, the level-up encounter (id 2) now gets `LEVEL_UP_AMBIANCE_PACK` (prepared earlier today): 3 s after it loads the bed crossfades into a level-up piece of the stage the cycle goes on with, every piece crossfades into the next, and returning to the region crossfades back.
+- **Verification:** client tests 52/52 (`ambianceLayout.test.ts` and `ambianceDrop.test.ts` count 245 clips and four level-up pieces per stage) and `npm run typecheck` passed. Not heard in the game.
+
 ## 2026-11-24 — Unreleased: a red-yellow gem for the top roll (D-060)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

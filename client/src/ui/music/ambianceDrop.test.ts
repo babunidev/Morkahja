@@ -74,8 +74,9 @@ if (existsSync(dropFolder)) {
   assert.equal(counts.get('4D'), 12);
   for (const stage of ['A', 'B', 'C', 'D']) {
     assert.equal(counts.get(`999${stage}`), 4);
+    assert.equal(counts.get(`998${stage}`), 4);
   }
-  assert.equal(counts.size, 20);
+  assert.equal(counts.size, 24);
   const bySource = new Map(placed.map((placement) => [placement.sourceName, placement.number]));
   assert.equal(bySource.get('11nature1.mp3'), 12);
   assert.equal(bySource.get('11nature3.mp3'), 14);
