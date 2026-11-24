@@ -1063,7 +1063,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "A luminescent quill, dipped into Ethera's Vale glowing waters, inscribes the key to a secret door when it dances across a specific stone tablet.",
     "mSolutionType": 6,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10098": {
     "mSolutionID": 10098,
