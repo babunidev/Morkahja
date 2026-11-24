@@ -164,7 +164,18 @@ Before this tool, every root step needed Babuni's `sudo` password, so releases s
 
 Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also starts apps new to the file (the bots on their first release); a rollback removes `morkahja-bots` first, in case the previous commit does not define it. Since 2026-11-11 the backend update fetches the bundle into a side ref and fast-forwards `main`, because Git refuses to fetch straight into a checked-out branch.
 
-**Uploading a release:** build the client (`npm run build --prefix client`), pack `client/dist` as `client.tar.gz`, create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
+**Uploading a release:** build the client (`npm run build --prefix client`), pack the contents of `client/dist` as `client.tar.gz` with `index.html` at the archive root (`tar -czf client.tar.gz -C client/dist .`; an archive with a `dist/` folder is refused), create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
+
+## Production release — 2026-11-24, 11:09 UTC (0.9.0-beta.83: player choices — equipment, specialization, Edit avatar, travel; soul links D-062; Main menu button; charge-back flight)
+
+Approved by Babuni ("Then I want you to release"). `main` at `ed675740`: everything since beta.82 (D-054 to D-062 and the changes recorded in `CHANGELOG.md` between them), plus Babuni's Admin saves up to Grimnir Boltcaster (`46a051ab`).
+
+- **Before:** backend `f553de4d`, frontend `20261121-234508`. The live `server/game/solutiondata.json` held Admin saves again; compared record by record with `main` (247 records each), none differed, so nothing was live-only. Babuni reset it with `sudo -u morkahja git -C /home/morkahja/arcanitebrothers checkout -- server/game/solutiondata.json`; `morkahja-deploy status` then showed no uncommitted files, and no new Admin commit arrived before the bundle was built. Previous staging files moved to `prev-20261124-110810`.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 52, server 76). Uploads verified by `sha256sum -c` on the server (bundle `c4f4b694…`, only `refs/heads/main`).
+- **First attempt refused:** I packed `client/dist` as a folder, and the script stopped with "client.tar.gz has no index.html" before changing anything. Repacked with the files at the archive root , checksums rewritten and verified again.
+- **Release:** backup `20261124-110945` (sha256 `20047fcd1e49e1d8bb31d29c329455ecc8c2ea42d7e93dc332e23f47ae855421`; players 76, avatars 117, sessions 25, devices 81, inventories 117, purchases 1, player achievements 354). Backend checked out `ed675740`, `npm ci`, health gate and content endpoint passed, frontend release `20261124-110948`. Public checks passed; the live script `index-S-h-3EEK.js` contains `0.9.0-beta.83`. API and bots online.
+- **Backup:** not yet downloaded and restored.
+- **Not yet checked live:** a real phone scanning the Soul Link QR code, a soul-link gift on a day both play 42 encounters, and a charge-back flight in a real round.
 
 ## Production release — 2026-11-21, 23:45 UTC (0.9.0-beta.82: essences of the avatar's own element D-053, bigger grid pictures)
 

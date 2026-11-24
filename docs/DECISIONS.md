@@ -476,7 +476,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). The slot bonuses are the shared constants. Rarity is one shared rule (`shared/src/solutionRarity.ts`) used by the frame and the resolver: the Atranor items, the Frostbane Glaive, the Zephyrstring Lyre and the Titanpike, never essences. The +1 is added when a pick's roll is read, so the revealed roll and the final total agree; the stored totals keep only the slot bonus. The own essence is certain on a successful normal encounter at 24 or more. It supersedes the extra item on a 25 (D-038) and the one-in-five chance (D-053).
 
-**Status:** committed locally on 2026-11-23, not released. Server and client tests, typecheck and build pass; not played.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Server and client tests, typecheck and build pass; not played.
 
 ## D-055 — Atranor returns with the gods of the avatar's own element (2026-11-23)
 
@@ -484,7 +484,7 @@ Codex (GPT-6; exact model variant not recorded) drafted and reviewed the 140 rem
 
 **AI implementation:** Claude Code (Claude Opus 5.5). One shared rule by the total, used by the server's survival, death and reward paths and by the client's result bar. The essences are different gods, drawn in random order; an avatar without an element gets different essences of any element.
 
-**Status:** committed locally on 2026-11-23, not released. Tests and typecheck pass; not played.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Tests and typecheck pass; not played.
 
 ## D-056 — Player choices: equipment, specialization, avatar edit, travel (2026-11-23)
 
@@ -500,7 +500,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI contribution:** Claude Code (Claude Opus 5.5) read the current slot, bonus, charge, solution-type, gem, expansion and map data, asked the open questions, worked out the regain thresholds and drafted the fifteen specialization descriptions for Babuni to revise.
 
-**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; its swap rule and the wait for the choice were replaced the same day by D-057. The selection modes were replaced by the avatar overview (D-057, D-058). Specialization implemented the same day in that overview (pushed to GitHub `main`, not released). On 2026-11-24 Babuni corrected the list: type 25 is Aid (it holds the Warmth skill), and type 37, which no skill uses, is no longer a specialization. Edit avatar implemented on 2026-11-24, opened by an Edit button under the portrait in the main menu's card (on GitHub `main`, not released). Travel implemented on 2026-11-24 on the world map (on GitHub `main`, not released); Claude Code limited it to before anyone in the room has chosen, so an outcome already known cannot be escaped. Babuni confirmed travel the same day and added a wait of three encounters after each trip.
+**Status:** decided. Equipment implemented on 2026-11-23, released 2026-11-24 in 0.9.0-beta.83; its swap rule and the wait for the choice were replaced the same day by D-057. The selection modes were replaced by the avatar overview (D-057, D-058). Specialization implemented the same day in that overview (released 2026-11-24 in 0.9.0-beta.83). On 2026-11-24 Babuni corrected the list: type 25 is Aid (it holds the Warmth skill), and type 37, which no skill uses, is no longer a specialization. Edit avatar implemented on 2026-11-24, opened by an Edit button under the portrait in the main menu's card (released 2026-11-24 in 0.9.0-beta.83). Travel implemented on 2026-11-24 on the world map (released 2026-11-24 in 0.9.0-beta.83); Claude Code limited it to before anyone in the room has chosen, so an outcome already known cannot be escaped. Babuni confirmed travel the same day and added a wait of three encounters after each trip.
 
 ## D-057 — One avatar card, opened by a tap; equipment only into empty slots (2026-11-23)
 
@@ -508,7 +508,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). The details card (`AvatarPartyDetailsCard`) holds everything and is shown in an `AnchoredGamePopover` in both places, measured against the whole screen in the selection so it opens toward the middle. A tap outside closes it in the selection. The equipped item is preferred by the shared slot rule (`slotFaces`, `allocateSolutionSet`, `refillFor`), so the server and the slot pictures agree. The server refuses a full slot (`SLOT_OCCUPIED`) and no longer refuses while choosing; a change after the choice still goes into the prepared outcome. This replaces D-056's swap rule and its "once the choice is made" rule.
 
-**Status:** on local `main`, not released. Checked in the local game on desktop and phone.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Checked in the local game on desktop and phone.
 
 ## D-058 — The avatars are the main menu; an avatar overview (2026-11-23)
 
@@ -518,7 +518,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). The active avatar is remembered in the browser, falling back to the last played. In the game the overview lies over the encounter picture like the Inventory, so its slots match the inventory size, and keeps Home with the red back button; it leaves out the portrait and repeats the name only on the plate. Statistics: encounters played (from the progression, added to `GET /avatars`) and the item, skill and essence charges.
 
-**Status:** on local `main`, not released. Checked in the local game on desktop and phone; coming home from the game not checked.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Checked in the local game on desktop and phone; coming home from the game not checked.
 
 ## D-059 — Tips and tutorial can be turned off; no text smaller than the tooltips (2026-11-23)
 
@@ -526,7 +526,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). `client/src/ui/tips.ts` keeps the setting in the browser (`morkahja.tips.enabled`, on unless turned off) and tells open screens when it changes; `HelpTip` (`client/src/ui/common/HelpTip.tsx`) is the one "?" with its tooltip and hides itself when tips are off; `GemCost` draws the price. The overview and the specialization picker use the item tooltip's font size (`gameTooltipFrameStyle`) as their smallest.
 
-**Status:** pushed to GitHub `main`, not released. Checked in the local game on desktop and phone.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Checked in the local game on desktop and phone.
 
 
 ## D-060 — The top roll rewards a red-yellow gem (2026-11-24)
@@ -535,7 +535,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). `TOP_ROLL_TOTAL` (26) and `isTopRoll` in `shared/src/diceInterpreter.ts`; a test ties the number to the d20, the primary bonus and the +1 of a rare item or a specialized skill (the two never meet on one roll, because no skill is rare). The server grants the gem with the roll's commit in all three places a roll is committed (the round, leaving mid-round, and a system event such as Atranor or the level-up), with its own claim key per player and roll, so it never pays twice and stands apart from the lore gem. The client shows it on the avatar's gem badge from the moment the avatar shows the roll; the badge counts both gems and uses the item hexagon (`SolutionChargeBadge`) for the 2.
 
-**Status:** pushed to GitHub `main`, not released.
+**Status:** released 2026-11-24 in 0.9.0-beta.83.
 
 ## D-061 — Accept and Back are word buttons (2026-11-24)
 
@@ -543,7 +543,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). `client/src/ui/common/WordButton.tsx` (`AcceptButton`, `BackButton`, built on `PanelButton`, so they press and glow like the other buttons) replaces `im_button_yes.webp` and `im_button_delete.webp` in the avatar creation and edit (and its gem question), the specialization picker (and its gem question) and the travel question. The pictures stay in `client/public` but are no longer used.
 
-**Status:** on GitHub `main`, not released. Checked in the local game on desktop and phone.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Checked in the local game on desktop and phone.
 
 ## D-062 — Soul links pay when both play 42 encounters a day; a QR invite (2026-11-24)
 
@@ -551,5 +551,5 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5). `soulLinkGift.ts` pays the one-time Gift of the Gods on the first UTC day both have 42 encounters, at most one gift per soul-linked player per day. `soulLinkInvite.tsx` and the QR code in `SoulLinkOverlay.tsx` link the newcomer after login, and the server makes the friendship mutual for an invite.
 
-**Status:** on GitHub `main`, not released. Server test and local browser check passed; the QR code was not scanned with a real phone.
+**Status:** released 2026-11-24 in 0.9.0-beta.83. Server test and local browser check passed; the QR code was not scanned with a real phone.
 

@@ -2,72 +2,77 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-24 — Unreleased: the Soul Link QR code in Morkahja's colours
+## 2026-11-24 — Released: 0.9.0-beta.83
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC, approved by Babuni: `main` at `ed675740`, frontend `20261124-110948`, backup `20261124-110945`. It carries every entry below down to the beta.82 release: the player choices (equipment, specialization, Edit avatar, travel with its wait), Accept and Back as word buttons, the round fix that kept undoing avatar changes, the soul-link rule and QR invite (D-062), the Main menu button and the charge-back flight. Live script contains `0.9.0-beta.83`; see `docs/DEPLOYMENT.md`.
+- **Release notes for the docs:** `docs/DEPLOYMENT.md` now says to pack the contents of `client/dist` with `index.html` at the archive root; a first upload with a `dist/` folder was refused by the script before anything changed.
+
+## 2026-11-24 — the Soul Link QR code in Morkahja's colours
+
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** make the QR code in our colours, the yellow and the red.
 - **Change (`SoulLinkOverlay.tsx`):** the code is dark red (`#4a0505`) on the game's gold (`#ffcc66`), in a dark red border with a thin gold line around it. Dark squares on a light background with high contrast, so phone cameras can still read it.
 - **Checked in the local game** (headless Chromium, 390 × 844): the window shows the new colours, and the invite link still linked a new test player. Not scanned with a real phone yet. Client typecheck and build passed. Screenshot: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-soul-link-qr-colors-phone.png`.
 
-## 2026-11-24 — Unreleased: an equipped item that gets its charge back flies home
+## 2026-11-24 — an equipped item that gets its charge back flies home
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** when an equipped item is used and gets its charge back, it flies toward the encounter, but only halfway; then it takes a curve and flies back into the inventory.
 - **Change:** `playUsedSolutionsIntoEncounter` (`rewardFlyAnimation.ts`) takes `returnToInventory` per flight. Such a flight rises halfway toward the encounter picture, keeps going a little, bends in a curve (eight points of a quadratic curve) down into the Inventory button, shrinking to its size, with a green glow, and the Inventory button shakes as it lands; it is 500 ms longer than a normal flight. `ResultBlock.tsx` marks a flight for return when the server's `equipmentRegain` (already in each outcome since D-056) lists that item: one entry per use, so an item used twice in a set returns only for the use that earned it. Single solutions and solution sets both do it; dice and other solutions fly into the encounter as before.
 - **Checked in the local game** (headless Chromium, 1280 × 800): the flight started directly in the game page from a solution slot, slowed down ten times for the screenshots, rose toward the encounter, turned and landed in the backpack. A real round with an equipped item and a roll of 12 or more was not played in the browser (the roll is random). Client typecheck and build (`npx tsc -b`) passed. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-charge-back-flight-slow-desktop-6.png` to `-11.png` (the earlier `charge-back-flight-*` frames missed the flyer because they were taken too slowly).
 
-## 2026-11-24 — Unreleased: the game's Home button is a "Main menu" button
+## 2026-11-24 — the game's Home button is a "Main menu" button
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** change the Home button to a main menu button.
 - **Change:** in the game, the round Home picture (`im_button_home.webp`) on the avatar card (`GameEnvironment.tsx`) and in the avatar details (`AvatarPanel.tsx`) is now a red-and-gold word button **Main menu** (`WordButton`, as Accept and Back in D-061), labelled "Back to the main menu" for screen readers. What it does is unchanged: it leaves the rooms and returns to the main menu. The dashboard keeps its own centre button.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card shows Main menu at the bottom left and no Home picture; pressing it returned to the main menu. Client typecheck and build (`npx tsc -b`) passed. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-main-menu-button-*.png`.
 
-## 2026-11-24 — Unreleased: soul links pay only when both play 42 encounters a day; a Soul Link QR code (D-062)
+## 2026-11-24 — soul links pay only when both play 42 encounters a day; a Soul Link QR code (D-062)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** a soul link counts only when the new player has played 42 encounters, and the soul-linked player also played 42 encounters that same day; it counts once a day. The Soul Link window gets a QR code: someone who starts the game from it is connected to the one who showed it, and the soul link is made as soon as they are logged in.
 - **Gift rule (`server/src/domain/achievements/soulLinkGift.ts`):** the Gift of the Gods (+1 Spiritguide progress for the soul-linked player) no longer comes with the linker's next Hearth Blessing claim. It is paid on the first UTC day on which both players have 42 encounters (`dailyReward.encountersPlayed`), still once per link, and a soul-linked player receives at most one gift a day (`soulLinkGiftDay` on the player document). It is checked when either player reaches 42 encounters (`recordDailyEncounterPlayed`) and right after a link is made. Both player rows are locked in id order in one transaction; the Spiritguide point is written after the commit. Links made before this change and not yet paid follow the new rule.
 - **QR invite:** `SoulLinkOverlay.tsx` shows a QR code (new dependency `qrcode-generator` 2.0.4, MIT, drawn as SVG) of the game address with `?soul=<player id>`. `client/src/ui/dashboard/soulLinkInvite.tsx` stores that parameter when the game opens, removes it from the address bar, and once a logged-in player reaches the main menu or the game it calls `POST /player/soul-link` with `invite: true`. The server then also adds the newcomer to the inviter's friends, so both see each other. A player who already has a soul link keeps it and the invite is dropped. The window's explanation now reads "The Adventurer you link your soul to receives the Gift of the Gods on the first day you both play 42 encounters!"
 - **Tests:** server tests 76/76 against local PostgreSQL passed, including the new `soulLinkGift.test.ts`: the rule's cases, and against PostgreSQL two newcomers linked to one main account reaching 42 at the same time (with parallel deliveries) pay exactly one gift that day and the second the next day.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the QR code in the Soul Link window; a second player opening the game with the invite link and creating an account was soul-linked to the first, both had each other as friends, the address bar lost `?soul=`, and the toast "Your soul is linked to … You are friends now." appeared. The QR picture itself was not scanned with a phone. Locally it points at `localhost`, so a phone cannot open it; on the live game it carries the live address. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-soul-link-*.png`.
 
-## 2026-11-24 — Unreleased: the travel wait says only "You cannot travel right now"
+## 2026-11-24 — the travel wait says only "You cannot travel right now"
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** show "You cannot travel right now" without the explanation; put the explanation in a "?" tip that appears only when Tips and tutorial is on.
 - **Change (`TravelPrompt.tsx`):** the waiting box shows "You cannot travel right now." with a `HelpTip` beside it ("After a journey you play three encounters before the next one. Play N more encounters first.") and only Back. `HelpTip` already hides itself when tips are off.
 - **Verification:** `npx tsc -b` in `client` (typecheck and Vite build) passed. In the local game (Playwright, desktop 1280×800 and phone 390×844): after a trip, a tap on a land showed the sentence; hover or tap on the "?" opened the explanation; with tips turned off the "?" was gone.
 
-## 2026-11-24 — Unreleased: gem-cheating review; a round no longer undoes avatar changes; a flaky test
+## 2026-11-24 — gem-cheating review; a round no longer undoes avatar changes; a flaky test
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** check the security against cheating, especially getting gems, then the bugs that are reported (the open ones in `docs/ROADMAP.md`).
 - **Gem review (source read, no live test):** grants (lore gem, top roll, daily reward, Stripe) and spends (dice, expansions, travel, specialization, avatar edit, sacrifice, donation) are decided and checked on the server inside one transaction holding the player row lock; claim keys keep each grant to one. No cheat path found. Hardened: `unlockPlayerExpansion` refuses an expansion whose price is not a whole number of 0 or more (admin-data mistake; before, it could add gems or set the balance to NaN); `requireAdminAuth` compares the key in constant time (new `adminAuthMiddleware.test.ts`). Left open as a design question: soul links from fresh accounts can raise a main account's daily reward (see `docs/ROADMAP.md`).
 - **Bug fix (`encounterGenerator.ts`):** the room commit saved the avatar copy taken when the roll was prepared, undoing a title, name, portrait, frame or specialization changed before Continue. `commitPreparedOutcome` now reads the current avatar under its lock and applies only the round's fields (`avatarAfterRound`: level, experience, inventory cache, last played, last encounter, and the failed state after Atranor). Equipment was already safe (`patchOpenOutcomeInventory`). New `roundKeepsAvatarChanges.test.ts` plays a round, changes the avatar in between and checks the change stays; it fails on the old code.
 - **Test fix (`roomService.test.ts`):** the check at line 571 accepted only a new encounter after Continue, while the dice roll can lead to a level-up or Atranor; it now accepts a system event and checks that the room left the played encounter.
 - **Verification:** `npm run typecheck` and server tests 75/75 against local PostgreSQL passed.
 
-## 2026-11-24 — Unreleased: a wait after each trip; Accept and Back as word buttons (D-061)
+## 2026-11-24 — a wait after each trip; Accept and Back as word buttons (D-061)
 
-- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** travel works as built (price, destinations, blocked during Atranor and level-ups), and after a trip the avatar has to play three encounters before the next one, so travel opens every fourth encounter; tapping a land meanwhile says that travel is not possible right now instead of asking. And everywhere in the game the green check becomes a red-and-gold **Accept** button and the red round picture a matching **Back** button.
 - **Travel wait:** `shared/src/travel.ts` (`TRAVEL_COOLDOWN_ENCOUNTERS` = 3, `encountersUntilTravel`). `travelToExpansion` reads the avatar's `encountersCompleted` (Atranor and level-ups do not raise it) in its transaction (room, progression, then player), refuses `TRAVEL_COOLDOWN`, and on a trip stores `travelAllowedAt[avatarId]` = completed + 3 on the player document together with the gems. New `GET /room/travel` (`travelStatus`) gives the encounters left; the map loads it when it opens. `TravelPrompt.tsx` then shows "You cannot travel right now. After a journey you play three encounters before the next one. Play 3 more encounters first." with only Back; a locked land can still be looked at.
 - **Buttons:** new `client/src/ui/common/WordButton.tsx` (`AcceptButton`, `BackButton` on `PanelButton`); used in `AvatarCreation.tsx` (creation and edit, and the gem question), `SpecializationPicker.tsx` (and its gem question) and `TravelPrompt.tsx`. No game screen shows `im_button_yes.webp` or `im_button_delete.webp` any more (checked in the page).
 - **Tests:** `roomTravel.test.ts` checks the wait: 3 encounters right after a trip, refused, 1 left after two, free after three, refusals cost nothing. Server tests 74/74, client tests 52/52, `npm run typecheck` and `verify:static-data` passed.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): a trip, then a tap on Eldertree Forest showing the wait with only Back; the creation, the specialization picker and its gem question, and the edit's gem question with the word buttons. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-travel-wait-*.png` and `2026-11-24-buttons-*.png`.
 
-## 2026-11-24 — Unreleased: changing the specialization asks before spending gems
+## 2026-11-24 — changing the specialization asks before spending gems
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** ask the player whether they want to spend the gems when they change their specialization.
 - **Change (`SpecializationPicker.tsx`):** when the chosen specialization costs gems, the green check opens "Do you want to spend 1 [gem] to become Combat?" over the picker, in the avatar edit's box with its no and yes buttons (`UI/02_AvatarCreation/im_button_delete.webp` and `im_button_yes.webp`). No closes the question and keeps the picker open; yes sends the change as before. The free first choice and keeping the current one ask nothing.
 - **Checked in the local game** (headless Chromium, a new local test player, 1280 × 800): the free first choice (Stealth) went through without a question; the change to Combat asked; No left the picker open with Stealth kept; Yes sent the change, which the server refused with "Not enough gems." because the new test player had none. Screenshot: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-specialization-spend-question-desktop-2.png`.
 - **Verification:** `npm run typecheck` passed.
 
-## 2026-11-24 — Unreleased: travel on the world map (D-056)
+## 2026-11-24 — travel on the world map (D-056)
 
-- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** build travel from the player-choices concept: a land lights up under the pointer, lands not unlocked are red, a tap asks "Travel to … ? It costs … gems. Are you sure?", a locked land offers to show its expansion, a region is its expansion (the base game costs 1 gem, an expansion a tenth of its price), the encounter is swapped, never during Atranor or a level-up, a host takes the room along and a guest leaves it.
 - **Shared:** new `shared/src/travel.ts` (`travelCost`: Keldor 8, Everwinter 5, Aetherion 3, the base game 1).
 - **Server:** `selectEncounterInExpansion` (`encounterGenerator.ts`); `travelToExpansion` and `POST /room/travel` (`roomService.ts`, `roomController.ts`, `roomRoutes.ts`), refusing `NOT_IN_GAME`, `UNKNOWN_DESTINATION` (also the inactive 1002), `REGION_LOCKED`, `TRAVEL_DURING_EVENT`, `TRAVEL_AFTER_CHOICE` and `INSUFFICIENT_GEMS`; `createRoom` takes a destination for a guest's new room. **Timing as built:** only while nobody in the room has chosen, so an outcome already known cannot be escaped by travelling (Claude Code's choice, for Babuni to confirm; the concept said "any time").
@@ -75,80 +80,80 @@
 - **Tests:** new `server/src/services/roomTravel.test.ts` (not in the game, locked, unknown and inactive destinations; two trips at once with one gem, exactly one goes through; a new base-game encounter, not the one left; Everwinter for 5 gems; refused after a choice and from Atranor, at no cost; a host travels with the guest; a guest leaves for a room of their own). `worldMap.test.ts` checks which land leads where. Server tests 73/73, client tests 52/52, `npm run typecheck` and `verify:static-data` passed.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the map zoomed out with a land lit up and the locked lands red; Keldor's question and the Expansions menu opened on Keldor over the game, closing back to the map; Eldertree's question, the refusal without gems, then, after giving the test player 3 gems in the local database, the trip: the map closed, the encounter changed (20087 → 20016 and others) and one gem was spent. The first in-game Expansions menu sat under the game's buttons; it is now drawn on the page. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-travel-*.png`.
 
-## 2026-11-24 — Unreleased: Edit avatar; type 25 is Aid (D-056)
+## 2026-11-24 — Edit avatar; type 25 is Aid (D-056)
 
-- **Not released.** On GitHub `main`; the production server is unchanged. The code went in with commit `87e05463`, which another session committed together with its own change; `d9b42a5a` holds these records.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`). The code went in with commit `87e05463`, which another session committed together with its own change; `d9b42a5a` holds these records.
 - **Babuni's direction:** an **Edit** button under the portrait in the main menu's avatar card, with the buttons' hover and press, opens the edit mode from the concept; not in the game, where the avatar card keeps no Edit and no specialization button. And: the skill called Warmth is type 25, which is aid; correct the specialization list if so.
 - **Aid correction:** the data has the skill "Warmth" (10140) in type 25 with Helping Hand, Defensive Stance, Zephyr's Embrace, Grimnirs Aid, Ember Aid and Harmonious Aid; type 37 ("Warmth") is only a name in the code, used by no skill, item or encounter. `shared/src/specialization.ts`: type 25 is now **Aid** (new draft description), Warmth (37) is removed, so there are fourteen; `specializationSkillPhrase` writes "an Aid skill". `solutionTypeLabels.ts`: "Aid Skill" and "Aid Item" for 25 and 26 (were "Help").
 - **Edit avatar:** new `shared/src/avatarEdit.ts` (`avatarEditCost`: the new portrait's `avatarGems`, the new frame's `frameGem`, 50 for a new name; file-name parsing, name normalisation, at most 32 characters). New `POST /avatar/:avatarId/edit` (`server/src/services/avatarEditService.ts`): the new portrait must keep the current one's race, role and gender (or, for an avatar whose portrait is not in the data, its race and role); unknown portraits and frames, an empty name, failed avatars and too few gems are refused; the server prices the change and charges it with the avatar and then the player row locked in one transaction; no change costs nothing. Client: `AvatarCreation.tsx` has an edit mode ("EDIT AVATAR"; race, role and gender cut away; Frame and Portrait arrows; a tap on the avatar shows the next portrait of the same kind; the name kept across portraits; "Cost 70" with the gem or "No changes" between Cancel and Agree; Agree asks "Do you want to spend 70 [gem]?" when it costs gems; a refusal shows above the price). `AvatarOverview.tsx` shows the Edit `PanelButton` under the portrait when the menu passes `onEdit`; `AvatarSelectionPanel.tsx` opens the edit in the card's place and updates the avatar after saving. `GemCost` can leave out the word "Cost".
 - **Tests:** new `server/src/services/avatarEditService.test.ts` (refusals that change nothing, a free unchanged save, a free portrait, portrait plus frame for 63 gems, a rename refused without enough gems, and two renames sent at once with gems for one: exactly one goes through). Server tests 72/72, client tests 52/52, `npm run typecheck` and `verify:static-data` passed.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the Edit button, the edit screen, the next portrait and frame priced (70 and 62 gems), the question, the refusal without gems, then, after giving the test player 200 gems in the local database, a rename on top (120 and 112) saved with the balance down to 80 and 88; the in-game card without Edit or Change. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-avatar-edit-*.png` (the desktop question still shows the earlier wording "spend Cost 70"; the phone one shows the fixed "spend 62").
 
-## 2026-11-24 — Unreleased: the in-game avatar card counts encounters again
+## 2026-11-24 — the in-game avatar card counts encounters again
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's report:** in the game the avatar card's statistics showed 0 encounters, while the main menu's card showed the right number.
 - **Cause:** only `GET /avatars` (the menu) added `encountersPlayed` from the avatar's progression. The game takes its avatar from the room snapshot (`participantToDto` in `roomDtoMapper.ts`), which never carried it, so the card fell back to 0.
 - **Fix:** the room snapshot loads each participant's progression with the avatar and sets `encountersPlayed`, so the count shows in the game and rises with each snapshot. A party member's details get it too.
 - **Verification:** new `roomAvatarStats.test.ts` (an avatar with 7 completed encounters shows 7 in the room snapshot; without the fix it reads `undefined`), server tests 72/72 against local PostgreSQL and `npm run typecheck` passed. Not looked at in the game.
 
-## 2026-11-24 — Unreleased: the level-up has its own ambiance
+## 2026-11-24 — the level-up has its own ambiance
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the level-up's ambiance pieces are in; they play in the level-up, without breaks, like Atranor's.
 - **Files:** Babuni's sixteen pieces (`levelup_a1`–`d4`, four per stage; A and D 30 s, B and C 25 s) were copied (the Downloads folder left unchanged) into the ambiance drop folder, and `copy-ambiance.ts` leveled them to −38 LUFS into `client/public/UI/Ambiance/levelup/stageA`–`stageD`. The 229 existing clips came out unchanged.
 - **Behaviour:** with pieces in its land, the level-up encounter (id 2) now gets `LEVEL_UP_AMBIANCE_PACK` (prepared earlier today): 3 s after it loads the bed crossfades into a level-up piece of the stage the cycle goes on with, every piece crossfades into the next, and returning to the region crossfades back.
 - **Verification:** client tests 52/52 (`ambianceLayout.test.ts` and `ambianceDrop.test.ts` count 245 clips and four level-up pieces per stage) and `npm run typecheck` passed. Not heard in the game.
 
-## 2026-11-24 — Unreleased: a red-yellow gem for the top roll (D-060)
+## 2026-11-24 — a red-yellow gem for the top roll (D-060)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** every roll of the highest possible total, 26 today, rewards one red-yellow gem, the way the lore gem is rewarded and in the same place. With the lore gem too, a small 2 in the items' hexagon shows next to the gem. If the highest total changes, this number changes with it.
 - **Shared:** `TOP_ROLL_TOTAL` (26) and `isTopRoll` in `diceInterpreter.ts`.
 - **Server:** new `services/topRollGem.ts` grants the gem with the roll's commit: in a round's commit, when a player leaves with a rolled outcome, and in a system event (Atranor, the level-up). The claim key `top-roll:<snapshot>[:<encounter>]:<player>` uses the same claim record and row lock as the lore gem, so a roll pays once and the lore gem is separate. `grantPlayerYellowRedGemsInTransaction` takes a `source`, and the feed event says `top_roll`.
 - **Client:** `useTopRollGemShown` (`partyParticipantChoiceBadge.tsx`) is true while the avatar shows a top roll (for the own avatar once the roll's numbers have landed) and until the round moves on. `LoreGemAvatarBadge` counts the lore gem and this one, and shows the count in `SolutionChargeBadge`'s hexagon when it is 2. A lore gem picked up while the top-roll gem already shows flies in to join it. Used on the own avatar (`AvatarPanel.tsx`) and on party members (`PartyMemberSlot.tsx`).
 - **Verification:** `npm run typecheck`, client tests 52/52 and server tests 70/70 (local PostgreSQL) passed. The new `topRollGem.test.ts` ties 26 to the bonuses; `topRollGemGrant.test.ts` checks no gem on a 25, one gem when two commits race on a 26, a separate lore gem, and Atranor and a chained level-up counting apart. Not checked in the game: a 26 was not rolled there, so neither the commit wiring nor the badge with its 2 has been seen.
 
-## 2026-11-24 — Unreleased: no breaks in Atranor and the level-up
+## 2026-11-24 — no breaks in Atranor and the level-up
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** Atranor has no breaks; every piece crossfades into the next, so it is one intense moment. The next piece is chosen the same way as everywhere else. The same holds for the level-up, whose ambiance pieces are coming.
 - **Change:** new `continuousStep` (`ambianceCycle.ts`) keeps the step's next stage and count but makes the gap a crossfade with no rest. `AmbianceBed.tsx` applies it in lands where `ambianceLandIsContinuous` (`ambianceDrop.ts`) is true: Atranor and the new `LEVEL_UP_AMBIANCE_PACK` (998, folder `UI/Ambiance/levelup`, drop names `levelup_<stage><n>`). The crossfade is the one stage C → D already used: the old piece falls over its last 2 s while the new one rises over 1 s. `App.tsx` gives the level-up encounter (id 2) its own land only once it has pieces; until then the level-up's ambiance is unchanged.
 - **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks every stage's continuous step, `ambianceDrop.test.ts` the level-up names and folder) and `npm run typecheck` passed. Not heard in the game.
 
-## 2026-11-24 — Unreleased: Atranor has its own ambiance
+## 2026-11-24 — Atranor has its own ambiance
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** a set of ambiance pieces for Atranor. On arriving in Atranor the bed crossfades, by the stage it is in, to one of these pieces, and they play only in Atranor.
 - **Files:** Babuni's sixteen 30-second pieces were copied (the Downloads folder left unchanged) into the ambiance drop folder as `atranor_a1`–`a4` (the four "Seamless ambient loop" files, taken as stage A), `atranor_b1`–`b4`, `atranor_c1`–`c4` and `atranor_d1`–`d4`. `copy-ambiance.ts` leveled them to −38 LUFS into `client/public/UI/Ambiance/atranor/stageA`–`stageD`, four pieces each; the 213 existing clips came out unchanged.
 - **Change:** `ambianceDrop.ts` reads `atranor_<stage><n>` names and files them under `ATRANOR_AMBIANCE_PACK` (999, a land outside the expansion numbers) in the `atranor` folder. `App.tsx` gives Atranor's encounter (id 1) that land, so arriving in Atranor is a change of land: 3 s later the bed crossfades into an Atranor piece of the stage the cycle goes on with, and leaving Atranor crossfades back to the region's own bed the same way. No other encounter plays these pieces.
 - **Verification:** client tests 51/51 (`ambianceDrop.test.ts` and `ambianceLayout.test.ts` check the names, folders and 229 clips) and `npm run typecheck` passed. Not heard in the game.
 
-## 2026-11-24 — Unreleased: the ambiance waits three seconds
+## 2026-11-24 — the ambiance waits three seconds
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the ambiance starts 3 seconds after entering the game, and when an encounter from another region loads, the two regions crossfade 3 seconds after the change.
 - **Change (`ambianceCycle.ts`, `AmbianceBed.tsx`):** new `AMBIANCE_START_DELAY_MS` (3000). A bed that starts from silence waits that long before its first piece fades in. On a change of region the old region keeps playing through the wait; then the old one fades out over 2 s while the new one fades in over 1 s, as before. Changing region again during the wait starts the wait over. Encounters in the same region still leave the bed alone.
 - **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks the 3 s) and `npm run typecheck` passed. Not heard in the game.
 
-## 2026-11-24 — Unreleased: the avatar card counts items and skills, not charges
+## 2026-11-24 — the avatar card counts items and skills, not charges
 
-- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the avatar card's statistics count each item and each skill the avatar holds once, not their charges added up.
 - **Change:** new `client/src/ui/avatar/avatarStats.ts` (`distinctHeld`: different solution ids with charges left); `AvatarOverview.tsx` uses it for Items and Skills. Essences are still counted by charge, as before (each charge is one essence).
 - **Tests:** new `avatarStats.test.ts`. Client tests 52/52 and `npm run typecheck` passed.
 - **Checked in the local game** (headless Chromium, a new local test player): the card shows 5 items and 5 skills; the avatar's inventory in the local database holds 5 items with 5 charges and 5 skills with 17 charges (the card showed 17 skills before). Screenshot: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-stats-distinct.png`.
 
-## 2026-11-24 — Unreleased: a slightly bigger name on the avatar card
+## 2026-11-24 — a slightly bigger name on the avatar card
 
-- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the name a tiny bit bigger; with that the avatar card is done for now.
 - **Change (`AvatarOverview.tsx`):** the name's size went from `clamp(1.2rem, 4.6vw, 1.55rem)` to `clamp(1.32rem, 5vw, 1.72rem)`, in the main menu and in the game.
 - **Checked in the local game** (1280 × 800 and 390 × 844): `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-name-*.png`. Client tests 51/51 and `npm run typecheck` passed.
 
-## 2026-11-24 — Unreleased: tooltip fixes, XP inside its bar, the avatar card grows out of the avatar
+## 2026-11-24 — tooltip fixes, XP inside its bar, the avatar card grows out of the avatar
 
-- **Not released.** On GitHub `main`; the production server is unchanged. The code went in with commit `93519c29` ("Atranor plays its own ambiance"), which another session committed together with these changes; this entry documents them.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`). The code went in with commit `93519c29` ("Atranor plays its own ambiance"), which another session committed together with these changes; this entry documents them.
 - **Babuni's direction:** the "?" tooltips use the solution tooltips' text size; in the game the equipped items' tooltips open upward; the statistics sit a little lower so the head has room; the experience number goes inside a thicker experience bar; the avatar card zooms in a little slower when the avatar is tapped.
 - **"?" tooltips (`HelpTip.tsx`):** padding, font size (0.78 rem) and line height (1.25) of the encounter's solution tooltips (`encounterTooltipFrameStyle`).
 - **Equipped items in the game:** their tooltips are measured against the in-game avatar card (`AVATAR_OVERVIEW_PANEL_SELECTOR`, `data-morkahja-avatar-overview`) instead of the whole game screen. Tooltips open toward the middle of their bounds; the card sits in the top half of the screen, so they opened downward, and the slots are now at the card's bottom edge, so they open upward. Checked: the tooltip's bottom at 376 px over a slot starting at 362 px (desktop), 420 over 408 (phone).
@@ -157,26 +162,26 @@
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the menu card with the XP bar, the "?" tooltip, an item equipped in the game and its tooltip. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-xp-*.png`, `2026-11-24-avatar-card-help-size-*.png`, `2026-11-24-ingame-equipped-tooltip-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed.
 
-## 2026-11-24 — Unreleased: the avatar card in rows; the round menu fades the avatars and closes on a tap elsewhere
+## 2026-11-24 — the avatar card in rows; the round menu fades the avatars and closes on a tap elsewhere
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the plate on top says "Avatar", and the name stands big above the level, with the title. In the main menu: the specialization on the left (heading, the chosen one, its button) with its description on the right; below it the equipment on the left and Play on the right. In the game: Home at the bottom left, with the buttons' hover and press, and the equipment at the bottom right. Opening the round menu fades the avatars out like closing it fades them in, and a tap anywhere else closes the menu, as well as its centre.
 - **Avatar card (`AvatarOverview.tsx`):** `AVATAR_CARD_PLATE` ("Avatar") on the frame's plate in both places; the name in Breathe Fire at 1.2–1.55 rem under the title. The menu's specialization is a two-column row; the right column shows the chosen one's description from `shared/src/specialization.ts`, or a short hint before a choice. `AvatarOverviewFooter` is now a row with `left` and `right` and is the size container for `OverviewEquipment` (`EquipmentSection` with `inRow`), so the slots keep the Inventory's size beside the button. `GameEnvironment.tsx`: Home is a `PanelButton`, and the equipment moved from the in-game card's body to its bottom row.
 - **Round menu (`Dashboard.tsx`, `AvatarSelectionPanel.tsx`):** `visibility` joined the avatar selection's 420 ms transition, so hiding it fades it out instead of making it vanish at once. While the menu is open and none of its panels is, a `pointerdown` outside the menu closes it (with the button sound); a tap inside an open panel such as Settings leaves it open.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the menu card before and after a choice, both "?" tooltips, the picker, the settings box, the in-game card. The round menu: the avatars' opacity read every 90 ms after opening (0.98, 0.53, then hidden at 0); a tap beside the menu closed it and brought the avatars back; the centre still opens and closes it; a tap inside Settings left it open. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-rows-*.png` and `2026-11-24-nav-open-avatars-fading.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed.
 
-## 2026-11-24 — Unreleased: the Play button enters the world from the avatar card
+## 2026-11-24 — the Play button enters the world from the avatar card
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the game needs its Play button somewhere: at the bottom right of the main menu's avatar card, instead of the green check.
 - **Change (`AvatarOverview.tsx`):** `OverviewEnterButton` shows `UI/03_DASHBOARD/im_button_play.webp` (the former main-menu Play button, removed with D-058) at 76–104 px, larger than the round footer buttons, with the panel buttons' hover glow and the press pulse. It still enters the world the same way. The specialization picker keeps its green check, which confirms a choice there.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card with Play at the bottom right, and Play entering the world. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-play-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed.
 
-## 2026-11-23 — Unreleased: the round menu no longer closes by itself; the avatar card's new head
+## 2026-11-23 — the round menu no longer closes by itself; the avatar card's new head
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the round menu in the main menu closed by itself after the second use; check that it works as intended. In the main menu's avatar card the portrait goes to the left at its size, with the title, level, race and role and the experience bar beside it, so everything moves up; specialization first, equipment under it; every button behaves like the game's buttons.
 - **Fix (`Dashboard.tsx`):** since the avatars became the main menu (D-058), an effect opened the avatar selection whenever it was hidden. Opening the round menu hides the avatars, so the effect brought them straight back, and their return closed the menu: depending on timing the menu and the avatars were open together, the menu could not be closed with its own button, or it closed by itself. The effect now waits while the round menu is open, and the menu marks itself open before it hides the avatars. Closing the menu (Home) brings the avatars back as before. Found in the local game with a script that pressed the centre button four times and read the menu's and the avatars' state every 150 ms: before the fix both stayed open after every press; after it each press opened or closed the menu, and the menu stayed open through Settings, Profile, Settings, Achievements and Settings, each opened and closed.
 - **Avatar card (`AvatarOverview.tsx`):** in the main menu a head row: the portrait on the left (same size), the title, the level line, the experience bar and the XP beside it, left-aligned. Then the statistics, the specialization, and the equipment under it. The game's card is unchanged (no portrait; the specialization line under the level).
@@ -184,26 +189,26 @@
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the card before and after a choice, both "?" tooltips, the picker, the settings box on and off, the card with tips off; the in-game card. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-overview-layout-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed.
 
-## 2026-11-23 — Unreleased: "?" help for specialization, a Tips and tutorial setting, gem prices (D-059)
+## 2026-11-23 — "?" help for specialization, a Tips and tutorial setting, gem prices (D-059)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** no text above the specialization's button, a "?" instead, like Equipment's; a "Tips and tutorial" check mark in the settings that turns all "?" helps off (more tips are coming); "Cost 1" and the red-yellow gem icon wherever a price in gems shows, also on the Change button; in the menu's avatar card the green check at the bottom right and more room for the specialization; the help tooltips bigger and as readable as the item and skill tooltips, and no text smaller than those.
 - **Client:** new `HelpTip.tsx` (the "?" and its tooltip, up to 300 px wide, in the item tooltip's text size; hidden when tips are off), used by Equipment and Specialization; the help text for Specialization explains the +1 and the price. New `tips.ts` (the setting, kept in the browser) and `settings/TipsToggle.tsx` (a framed check box under the sound sliders). New `GemCost.tsx` ("Cost 1" + `im_gems.webp`, "Free" at 0), used on the Change button and in the picker. The overview's specialization section shows only the heading with its "?", the chosen name and Choose or Change; the "+1 to every roll…" line and the "first choice is free" note are gone. The menu card's green check is at the bottom right (`AvatarOverviewFooter` `align="end"`). The overview's and the picker's small texts (level line, XP, statistics, notices, the skill count, "current") use the item tooltip's size as their minimum. In the game the overview's rows sit closer together, so the larger text still fits the panel over the picture.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): both "?" tooltips, the overview before and after a choice, the picker's "Cost 1" with the gem, the settings check mark turned off and the overview without any "?" after a reload; the in-game overview with the specialization line and its "?". Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-tips-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed.
 - **Note:** `npx tsc -p client` checks nothing, because `client/tsconfig.json` only references other configs; `npm run typecheck` (`tsc -b`) is the check that counts.
 
-## 2026-11-23 — Unreleased: the specialization picker as a roster
+## 2026-11-23 — the specialization picker as a roster
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the names are short and the description was small beside a long list. The description goes on top, a line below it, then the specializations as a roster of three in a row, five rows, with thicker buttons and a bigger font.
 - **Change (`SpecializationPicker.tsx`):** the body is one column: the selected one's name, description (larger, up to 420 px wide), "+1 to every roll with a … skill" and the avatar's skill count, with room for the longest description so the roster does not move; then a divider that reaches the frame; then a 3-column grid of the fifteen, each button 38–46 px tall with centred text at 0.82–0.98 rem, "current" under the current one's name.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): the picker before and after a choice, the refused paid change. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-specialization-roster-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed.
 
-## 2026-11-23 — Unreleased: specialization (D-056)
+## 2026-11-23 — specialization (D-056)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** build the specialization from the player-choices concept, and bring the concept up to date with the changes made after it (no Play button, no selection modes, the avatar overview). The rules are Babuni's (D-056): one skill type per avatar, +1 to every roll with a skill of that type in any slot, chosen and changed only in the main menu, the first choice free, every change 1 gem.
 - **Shared (`shared/src/specialization.ts`, new):** the fifteen specializations with Claude Code's draft descriptions, `solutionRollBonus` (a rare item's +1 plus the specialization's +1 for a skill, inventory type 1, of that type), `specializationChangeCost`, `readAvatarSpecialization`.
 - **Server:** the avatar document stores `specialization`; `GET /avatars` and room participants carry it. `encounterResolver.ts` adds the bonus wherever it added the rare bonus: single solutions, each pick of a set and the revealed set picks (`roomService.ts`). New `POST /avatar/:avatarId/specialization` (`specializationService.ts`): locks the avatar and then the player row in one transaction, refuses unknown types, failed avatars and too few gems (`INSUFFICIENT_GEMS`), and charges nothing for the first choice or for choosing the current one again.
@@ -214,63 +219,63 @@
 - **Verification:** server tests 68/68, client tests 51/51, `npm run typecheck` and `verify:static-data` passed.
 - **Limitations:** a paid change has not been made with real gems in the game (the test players had none; the server test covers it). The fifteen descriptions are drafts for Babuni. Warmth (37) has no skill in the game data, so it gives nothing yet. The API does not stop a change while a set's picks are already revealed in an open encounter; the client offers the change only in the main menu.
 
-## 2026-11-23 — Unreleased: a button sound when an avatar is tapped in the menu
+## 2026-11-23 — a button sound when an avatar is tapped in the menu
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** tapping an avatar gives a short button sound as feedback, the sound the other buttons use.
 - **Change:** `handleSelect` in `AvatarSelectionPanel.tsx` plays `DEFAULT_BUTTON_SOUND` (`sfx_button_press.mp3`) on every accepted tap in the main menu's avatar selection: an avatar below (the swap), the active avatar (its overview or the death overlay) and an empty slot (the creation). Taps ignored during a glide or the enter transition stay silent. The in-game avatar already played this sound.
 - **Checked in the local game** (headless Chromium, new local test player, sounds counted in the page): each of those four taps played `sfx_button_press.mp3` once. Not heard with real speakers.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed. The server was not changed and its tests were not run again.
 
-## 2026-11-23 — Unreleased: an empty slot moves into the big place for a new avatar
+## 2026-11-23 — an empty slot moves into the big place for a new avatar
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** a tapped empty slot moves into the big place while the avatar creation is open, so the new avatar appears there. The two avatars below the big one stand closer together.
 - **Change (`AvatarSelectionPanel.tsx`):** tapping an empty slot below makes it the active slot (`emptyActiveIndex`), glides it into the big place (the 420 ms swap; taps wait until it ends), then opens the creation. Cancel glides the former active avatar back. A created avatar becomes the active one (`morkahja:active-avatar`); the empty slot gives up the big place only once the refreshed avatar list holds it, so the old active avatar does not flash back in between. The swap glide now also tracks empty slots. The lower row is centred with a gap of `clamp(16px, 5vw, 48px)` instead of being pushed to the edges.
 - **History:** most of this was written in an earlier session that a crash interrupted before it was tested or committed. Claude Code (Claude Opus 5.5) then added the waiting for taps and the flicker fix, and tested and committed it.
 - **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): one avatar, an empty slot tapped mid-glide and with the creation open, cancel, and a second avatar created, which stays big. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-empty-slot-swap-*.png`.
 - **Verification:** client tests 51/51 and `npm run typecheck` passed. Server tests 65/66: `roomService.test.ts` failed once at line 571 (a random system event after Continue where the test expects the next encounter), then passed 4 runs in a row on its own. This flaky test was already there and has nothing to do with this change, which touches only the client.
 
-## 2026-11-23 — Unreleased: dividers reach the frame
+## 2026-11-23 — dividers reach the frame
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the lines between the parts of the avatar screen and of the inventory connect all the way to the frame.
 - **Change:** `frameDividerStyle` and `TooltipDivider` take a CSS length as bleed. New `PANEL_SIDE_PADDING` and `panelEdgeDividerBleed` in `client/src/ui/game/blocks/decorativeFrameShared.ts` give the bleed from the content to the panel's edge, where the frame's inner line lies. The avatar overview (`AvatarOverview.tsx`, the avatar selection's card and the in-game card) and the inventory's list dividers (`SolutionGridOverlay.tsx`) use it. In the avatar selection's card the side padding moved from the panel into its scroll box and footer, since the scroll box clipped the longer lines.
 - **Checked in the local game** (headless Chromium, throwaway local test player): at 1280 × 900 and 390 × 844 every divider's ends land on the frame edge (avatar selection 380/900 and 16/374 px; in-game card and inventory 401/879 and 11/379 px). Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-dividers-reach-frame-*.png`.
 - **Verification:** client tests 51/51 and the client typecheck passed. Tooltip dividers are unchanged.
 
-## 2026-11-23 — Unreleased: level-up choices show their type
+## 2026-11-23 — level-up choices show their type
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the tooltip of each ability offered at a level-up shows what type of ability it is.
 - **Change:** the level-up choice tooltip in `ResultBlock.tsx` adds "Type: …" under the quantity, with the same names as the inventory and skillbook tooltips (for example "Combat Skill"). The type names moved from `SolutionGridOverlay.tsx` to the new `client/src/ui/game/blocks/solutionTypeLabels.ts`, shared by both. Other reward and loss tooltips are unchanged.
 - **Verification:** client tests 51/51 and the client typecheck passed. Not seen at a real level-up.
 
-## 2026-11-23 — Unreleased: the inventory in three lists
+## 2026-11-23 — the inventory in three lists
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the inventory sorts its items into separate lists: normal items on top, rare items below them, the essences at the bottom, divided by the line the tooltips use.
 - **Change:** new `client/src/ui/game/blocks/inventorySections.ts` splits the entries by the shared rarity rule (`isRareSolution`, D-054) and essence type 15; each list keeps the former order (by solution type, then name), and an empty list is left out, so no line stands alone. `SolutionGridOverlay.tsx` draws each list as its own grid of five, with `frameDividerStyle` between them. Only the inventory; the skillbook is unchanged.
 - **Tests:** new `inventorySections.test.ts`. Client tests 51/51, client typecheck passed.
 - **Checked in the local game** (headless Chromium, throwaway local test player with normal items and essences, no rare item): `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-inventory-sections-desktop.png` and `-phone.png`. The rare list was not seen with a real rare item.
 
-## 2026-11-23 — Unreleased: a better Skillbook button sound
+## 2026-11-23 — a better Skillbook button sound
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the Skillbook button plays `sfx_skillbookbutton_press.mp3`, which sounds better, and the former `skillbook.mp3` is deleted.
 - **Change:** `SKILLBOOK_SOUND` in `client/src/ui/sfx.ts`; `client/public/UI/SFX/skillbook.mp3` removed. The new file was already in `client/public/UI/SFX`, unused. It still plays at nine tenths of the volume like the other footer buttons; it was not leveled to the level-up sound as the other effect files were.
 - **Verification:** client tests passed (`sfx.test.ts` checks the name and that the file is an MP3). Not heard in the game.
 
-## 2026-11-23 — Unreleased: three skill pickup lines
+## 2026-11-23 — three skill pickup lines
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** some of Makaya's lines for taking a skill did not sound good; only `addSkill1`, `addSkill2` and `addSkill4` stay.
 - **Change:** `ADD_SKILL_SOUNDS` in `client/src/ui/sfx.ts` chooses at random among those three; `addSkill3` and `addSkill5`–`addSkill10` are removed from `client/public/UI/SFX`. Babuni had removed them from the build output `client/dist`, which is rebuilt from `client/public`; the three kept files there are identical to the source ones.
 - **Verification:** client tests passed (`sfx.test.ts` checks the three names and that each file exists and is an MP3). Not heard in the game.
 
-## 2026-11-23 — Unreleased: the avatars are the main menu, and an avatar overview (D-058)
+## 2026-11-23 — the avatars are the main menu, and an avatar overview (D-058)
 
-- **Not released.** Local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** no Play button. The active avatar, the one played last, stands big where Play was, and the other two sit under it, left and right. A tap on one of them makes it the active one, and the two swap places. A tap on the active avatar opens its overview, as big as the avatar creation: everything about the avatar, statistics, the two equipment slots and room for the specialization to come. Red goes back, and green starts the game: the card shrinks into the big avatar, then the usual enter transition. The same overview opens in the game when the avatar is tapped. The equipment slots are the same size as the solutions and the Inventory pictures.
 - **Main menu (`Dashboard.tsx`, `AvatarSelectionPanel.tsx`):** the Play button and its handlers are gone; the avatars open as soon as the dashboard shows (with the loading wheel while they are prepared). The active avatar is the one last tapped (kept in the browser, `morkahja:active-avatar`), otherwise the one with the latest `lastPlayedAt`. The other avatars and empty slots stay below it; an empty slot still opens the creation. Swapping glides each avatar from its old place to its new one (420 ms). A failed avatar becomes active like any other; tapping the active one still opens the death overlay.
 - **Overview (new `ui/avatar/AvatarOverview.tsx`):** portrait, title and name, level, race and role, the experience bar, statistics (encounters played, item, skill and essence charges), the equipment slots with the "?", a "Specialization: coming soon" space, and in the game what was used and rolled. In the menu it is a panel the size of the avatar creation with the green check; green shrinks it into the active avatar (380 ms) before entering. In the game it lies over the encounter picture like the Inventory (new `blocks/AvatarOverviewBlock.tsx`), with the name on the plate (a tap closes it), no portrait, and Home. The small details card no longer opens for the local avatar.
@@ -279,18 +284,18 @@
 - **Server:** `GET /avatars` adds `encountersPlayed` (the progression's `encountersCompleted`) to each avatar.
 - **Verification (local, Podman PostgreSQL):** server tests 66/66, client tests 50/50, `npm run typecheck` passed. In the local game (Playwright, new test players, desktop 1280×800 and phone 390×844): the menu without avatars and with three, a swap mid-glide and settled, the overview, equipping from it, the card shrinking on green, entering the game, and the overview in the game. Not checked: returning home from the game to the new menu, a failed avatar as the active one, the creation from an empty slot in the new layout.
 
-## 2026-11-23 — Unreleased: one avatar card opened by a tap; equipment only into empty slots (D-057)
+## 2026-11-23 — one avatar card opened by a tap; equipment only into empty slots (D-057)
 
-- **Not released.** Local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** no hover tooltip on the avatar; a tap opens one card with everything, in the game (Home at the bottom) and in the avatar selection (the green check that starts the game). The equipment slots live in that card. An item goes only into an empty slot, at any time; a full slot stays until its item breaks. The game prefers the equipped item.
 - **Rules:** `equipItemInInventoryState` refuses a full slot (`SLOT_OCCUPIED`); the swap, which cost the leaving item a charge, is gone. `POST /avatar/:avatarId/equipment` no longer refuses while choosing (`CHOICE_OPEN` removed); a change made while an outcome waits for Continue still goes into that outcome. Where a slot accepts several items, `slotFaces`, `allocateSolutionSet` and the refill take an equipped item first, then the lowest id; the server's resolver and set reveal and the client's slot pictures pass the equipped ids.
 - **Client:** `AvatarPartyDetailsCard` shows name, level, race and role, experience, the Equipment title with a "?" help and two slots: an empty slot opens the inventory to choose an item, after which the card opens again; a full slot shows the item tooltip on hover or a long press. After a roll it lists the names of everything used and the roll's math (`participantChoiceDetails` now returns `usedNames`). `AvatarPanel` has no hover tooltip and no Equipment button. In the avatar selection a tap on an avatar opens the card (anchored toward the screen's middle like the inventory tooltips; a tap outside closes it), the green check enters the world, and the avatars' hover tooltip is gone (the empty slot's "Create avatar" stays). The Equipment mode, the "Choose your avatar" banner, the selection's Equipment button and `EquipmentCard` are removed; `shownEquipmentSlots` moved to `ui/avatar/equipmentSlots.ts`.
 - **Tests:** `equipment.test.ts` now checks the refusal of a full slot, filling the other slot, a broken slot being free, and the equipped item preferred for a slot face and a refill; `equipmentRoom.test.ts` checks a full slot refused in the room and an equip after the choice kept through Continue.
 - **Verification (local, Podman PostgreSQL):** server tests 66/66, client tests 50/50, `npm run typecheck` passed. In the local game (Playwright, new test players, desktop 1280×800 and phone 390×844): the card from the right and the left avatar, equipping from the selection, the full slot's tooltip (desktop), entering with the green check, the card in the game, equipping the second slot during an encounter, and the server's slots afterwards. Not checked: the long press on a phone, a set with several used items, the preference seen in a real encounter.
 
-## 2026-11-23 — Unreleased: equipment, two item slots (D-056)
+## 2026-11-23 — equipment, two item slots (D-056)
 
-- **Not released.** Local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** two equipment slots for items. Equipping adds one charge that belongs to the slot. A use with a total of 12 or higher gives the charge back, 20 or higher two, judged by each use's own roll. Hardship and Misery cannot take equipped charges. There is no unequip: equipping another item into an occupied slot takes one charge from the item that leaves. Equipping is possible in the avatar selection and, in the game, once the choice in the current encounter is made.
 - **Shared rule (new `shared/src/equipment.ts`):** two slots, thresholds 12 and 20, `isEquippableSolution` (not skills, essences or Atranor items; the Frostbane Glaive and Zephyrstring Lyre in the essence inventory can be equipped), `normalizeEquipmentSlots`.
 - **Storage:** the slots are `inventory.equipped` (two solution ids or `null`), so they travel with every inventory write. Inventories without the field are unchanged.
@@ -301,26 +306,26 @@
 - **Verification (local, Podman PostgreSQL `morkahja-db`):** server tests 66/66, client tests 49/49, `npm run typecheck` (shared, server, client build) passed. In the local game (Playwright, a new test player, desktop 1280×800 and phone 390×844): the selection flow, the picker with only equippable items, equipping (the server reported the item in slot 1 with its extra charge), and the locked in-game card while choosing. Not played: a regain shown during a real turn, equipping in the result window from the game screen (covered by the room test), a swap in the UI.
 - **Not yet:** the regained charge has no animation on the equipped item; bots do not equip (by design).
 
-## 2026-11-23 — Unreleased: Atranor's sound, and witnesses see the tribunal's judgment
+## 2026-11-23 — Atranor's sound, and witnesses see the tribunal's judgment
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** Babuni's own sound for Atranor plays when the event begins, like the level-up sound, for every player in the room. The other players are told that they are witnessing the judgment of the fallen avatar's tribunal, with the avatar's name.
 - **Sound:** `client/public/UI/SFX/atranor.mp3` (Babuni's file, 192 kbps MP3), `ATRANOR_SOUND` in `client/src/ui/sfx.ts`. `shouldPlayAtranorSound` in `client/src/ui/game/levelUpSoundCue.ts` fires once per Atranor snapshot, for the judged avatar and the witnesses; `GameEnvironment.tsx` plays it at once when the event appears (the level-up sound keeps its delay).
 - **Witness message:** `witnessWaitingLabel` in `client/src/ui/game/witnessSystemEventDisplay.ts`: in Atranor "Witnessing the Ignis Council's judgment of Rokoran…", by the avatar's race's element; "the gods'" for an unknown race. A level-up keeps "Witnessing Rokoran's fate…". The tribunal names are in `shared/src/essenceElements.ts` (`ELEMENT_TRIBUNALS`, `tribunalForRace`).
 - **Tests:** Atranor cases in `levelUpSoundCue.test.ts` (once, for actor and witness, not on a level-up); new `witnessSystemEventDisplay.test.ts`.
 - **Verification:** client tests 50/50; client and server typechecks passed. Not heard or seen in a group yet.
 
-## 2026-11-23 — Unreleased: encounter solutions as big as in the inventory
+## 2026-11-23 — encounter solutions as big as in the inventory
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the solutions shown in an encounter should be the same size as in the inventory, a little bigger, using the space so the pictures read better.
 - **Change (`client/src/ui/game/blocks/SolutionBlock.tsx`):** the fixed 64 px size is gone. Each solution and the dice now fill their column of the five, with the inventory grid's gap `clamp(2px, 0.5vw, 4px)` (was 6 px). The actions layer is a CSS size container, and the size is `calc((100cqi - 4 × gap) / 5)`. A hovering pick's offset and the stack step of further copies (0.72 of a picture, was 46 px) follow the size.
 - **Measured in the local game (headless Chromium, throwaway local test player):** at 1280 × 900 a solution's frame grew from 83 to 88 screen px, the same as the inventory's 88; at 390 × 844 from 64 to 69, the inventory's being 70. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-23-encounter-solutions-fill-column-*.png`.
 - **Verification:** client tests 49/49 and the client typecheck passed. ESLint on `SolutionBlock.tsx` shows the same problems as before. A pick, a set's hovering stack and the flight to the result were not watched at the new size.
 
-## 2026-11-23 — Unreleased: Atranor returns with the gods of the avatar's own element (D-055)
+## 2026-11-23 — Atranor returns with the gods of the avatar's own element (D-055)
 
-- **Not released.** Committed to local `main` only.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** an essence from Atranor comes from the avatar's own element's gods, by the roll: 7 gives one, 14 the second god's as well, 20 the third as well. Using an Atranor item always gives all three. Babuni's answers to Claude Code's questions: 7 becomes the survival line (it was 9, the Fate tier); an Atranor item still rolls to survive; each essence brings one charge; the gem sacrifice after a failed Atranor gives all three.
 - **Shared rule (`shared/src/deathEncounter.ts`):** `isAtranorSurvivalRoll` (total 7 or more) and `atranorEssenceGodCount` (1 at 7, 2 at 14, 3 at 20 or more, 3 with an Atranor item, 0 below 7). The old tier helpers `isDeathEncounterSurvivalOutcome` and `deathEncounterEssenceUses` are removed.
 - **Server (`encounterGenerator.ts`):** both resolution paths decide Atranor survival and death by the total. A return adds that many different essences of the avatar's element, one charge each (new `server/src/engine/atranorEssenceReward.ts`); an avatar without an element gets different essences of any element. An Atranor item (solution type 77) among the used solutions means all three. `applyFortuneSacrificeReward` now grants all three.
@@ -329,9 +334,9 @@
 - **Tests:** new `server/src/engine/atranorEssenceReward.test.ts` (survival line, god counts, the item, distinct picks, no element); `atranorSystemEvent.test.ts` now expects the three fire gods for its Rokur instead of one essence with three charges; a client case for Atranor rewards by total.
 - **Verification (local, Podman PostgreSQL):** server tests 64/64, client tests 49/49, `npm run typecheck` passed. Not played.
 
-## 2026-11-23 — Unreleased: balance pass, lower roll bonuses, a rare item's +1, an own essence on 24 or higher (D-054)
+## 2026-11-23 — balance pass, lower roll bonuses, a rare item's +1, an own essence on 24 or higher (D-054)
 
-- **Not released.** Committed to local `main` only; no version bump or in-game patch note yet.
+- **Released** 2026-11-24 at 11:09 UTC in 0.9.0-beta.83 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the game is a little too easy. The primary slot goes from +7 to +5, every secondary solution from +5 to +2, and the dice stays at +0. Rare items add +1 to every roll made with them. A total of 24 or 25 always brings one extra essence of the avatar's own element on top of the encounter's rewards, and the 25's own extra reward is removed. Babuni's answers to Claude Code's questions: the essence is certain, not a chance; a 26 (a rare primary item on a natural 20) also earns it, so the rule is "24 or higher"; rare means the items with the rare frame.
 - **Slot bonuses (`shared/src/diceInterpreter.ts`):** `PRIMARY_SOLUTION_ROLL_BONUS` 5, `SECONDARY_SOLUTION_ROLL_BONUS` 2. The highest new total is 25 on a primary slot and 22 on a secondary slot. `displayRollAsD20` now uses a fixed `HIGHEST_STORED_ROLL_TOTAL` of 27, so totals stored with the old +7 still show as they were, and anything above 27 is still read as an old 1–100 roll.
 - **Rare items (new `shared/src/solutionRarity.ts`):** `isRareSolution` is the rule the rare frame already used: the four Atranor items (type 77), the Frostbane Glaive and Zephyrstring Lyre (kept in the essence inventory) and the Titanpike (legendary icon). Essences are not rare. `client/src/ui/common/solutionFrameLook.ts` now uses the shared rule. `server/src/engine/encounterResolver.ts` adds `RARE_SOLUTION_ROLL_BONUS` (+1) to the roll of a pick whose item is rare, as a primary or an alternative, in a set too; the snapshot's stored totals still hold only the slot bonus. The client adds the same +1 to the solution tooltip's notation (a rare primary shows `d20+6`) and to the portrait's roll breakdown (`rollBreakdown.ts`).
