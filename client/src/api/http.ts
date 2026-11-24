@@ -589,6 +589,11 @@ export async function travelToRegion(
   });
 }
 
+/** Travel (D-056): encounters left to play before the avatar may travel again. */
+export async function fetchTravelStatus(avatarId: string): Promise<{ encountersUntilTravel: number }> {
+  return request(`/room/travel?avatarId=${encodeURIComponent(avatarId)}`);
+}
+
 /** Level-up (D-049): take one of the three offered rewards. */
 export async function chooseLevelUpReward(avatarId: string, rewardId: number): Promise<EncounterRoomSnapshotDto> {
   const response = await request<{ room: EncounterRoomSnapshotDto }>('/room/level-up/choice', {

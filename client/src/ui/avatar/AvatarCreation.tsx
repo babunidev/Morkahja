@@ -41,6 +41,7 @@ import {
   portraitIdFromFile,
 } from '@shared/avatarEdit.js';
 import GemCost from '../common/GemCost.js';
+import { AcceptButton, BackButton } from '../common/WordButton.js';
 
 const AVATAR_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Avatare');
 const FRAME_ASSET_ROOT = assetUrl('/UI/02_AvatarCreation/Frames');
@@ -149,9 +150,6 @@ const titleStyle: CSSProperties = {
   letterSpacing: '0.06em',
 };
 
-const acceptButtonStyle: CSSProperties = {
-  width: 'clamp(52px, 11vw, 76px)',
-};
 
 /**
  * Babuni's layout (2026-11-12): all settings in one block on top (races, roles,
@@ -329,10 +327,6 @@ const raceOptionButtonStyle: CSSProperties = {
   borderRadius: 10,
 };
 
-const confirmSideButtonStyle: CSSProperties = {
-  width: 'clamp(56px, 13vw, 88px)',
-  borderRadius: 10,
-};
 
 const genderButtonStyle: CSSProperties = {
   width: 'clamp(52px, 14vw, 72px)',
@@ -1229,25 +1223,18 @@ export function AvatarCreation({
               </span>
             </div>
           </div>
-          <CreationImageButton
+          <BackButton
             ariaLabel={editing ? 'Cancel avatar edit' : 'Cancel avatar creation'}
-            imageSrc={`${UI_ROOT}/im_button_delete.webp`}
-            isPressed={isPressed}
             onClick={onCancel}
-            pressAnimation={pressAnimation}
             pressKey="avatar-cancel"
-            pulse={pulse}
-            style={{ ...confirmSideButtonStyle, ...workbenchActionButtonStyle, gridColumn: 1, justifySelf: 'start' }}
+            style={{ ...workbenchActionButtonStyle, gridColumn: 1, justifySelf: 'start' }}
           />
-          <CreationImageButton
+          <AcceptButton
             ariaLabel={editing ? 'Accept avatar edit' : 'Accept avatar creation'}
-            imageSrc={`${UI_ROOT}/im_button_yes.webp`}
-            isPressed={isPressed}
+            disabled={editPending}
             onClick={editing ? agreeToEdit : confirmAvatar}
-            pressAnimation={pressAnimation}
             pressKey="avatar-ok"
-            pulse={pulse}
-            style={{ ...acceptButtonStyle, ...workbenchActionButtonStyle, gridColumn: 3, justifySelf: 'end', opacity: editPending ? 0.6 : 1 }}
+            style={{ ...workbenchActionButtonStyle, gridColumn: 3, justifySelf: 'end' }}
           />
           {editing ? (
             <div aria-live="polite" style={editCostStyle}>
@@ -1262,26 +1249,8 @@ export function AvatarCreation({
             <div aria-label="Spend gems" role="alertdialog" style={confirmBoxStyle}>
               <span>Do you want to spend <GemCost cost={editCost} withLabel={false} />?</span>
               <div style={confirmButtonsStyle}>
-                <CreationImageButton
-                  ariaLabel="No, keep the gems"
-                  imageSrc={`${UI_ROOT}/im_button_delete.webp`}
-                  isPressed={isPressed}
-                  onClick={() => setConfirmOpen(false)}
-                  pressAnimation={pressAnimation}
-                  pressKey="avatar-edit-no"
-                  pulse={pulse}
-                  style={confirmSideButtonStyle}
-                />
-                <CreationImageButton
-                  ariaLabel="Yes, spend the gems"
-                  imageSrc={`${UI_ROOT}/im_button_yes.webp`}
-                  isPressed={isPressed}
-                  onClick={applyEdit}
-                  pressAnimation={pressAnimation}
-                  pressKey="avatar-edit-yes"
-                  pulse={pulse}
-                  style={acceptButtonStyle}
-                />
+                <BackButton ariaLabel="No, keep the gems" onClick={() => setConfirmOpen(false)} pressKey="avatar-edit-no" />
+                <AcceptButton ariaLabel="Yes, spend the gems" onClick={applyEdit} pressKey="avatar-edit-yes" />
               </div>
             </div>
           </div>

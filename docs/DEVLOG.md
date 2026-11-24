@@ -697,6 +697,10 @@ The last of my player choices is in. On the world map a land lights up under my 
 
 Changing a specialization costs a gem, and one tap on the green check spent it. Now the game asks first, "Do you want to spend 1 gem to become Combat?", with the same box and buttons as when I edit an avatar. The free first choice still goes straight through. Claude Code (Claude Opus 5.5) added the question and clicked through it in the local game. **Verification:** typecheck passed; checked in a local browser. **Not released.**
 
+## 2026-11-24 — A rest between journeys, and buttons with words
+
+Travel works the way I wanted, but it should not be possible all the time. After a journey my avatar now plays three encounters before it can travel again. If I tap a land too early, the map tells me how many encounters are still left. I also replaced the green check and the red round picture everywhere with normal red-and-gold buttons that say Accept and Back. Claude Code (Claude Opus 5.5) added the wait on the server, so it cannot be skipped, made one Accept and one Back button for the whole game, and checked both in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

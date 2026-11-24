@@ -26,9 +26,6 @@ import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
  * Home leaves it (game).
  */
 
-const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
-export const OVERVIEW_BACK_ASSET = `${UI_ROOT}/im_button_delete.webp`;
-export const OVERVIEW_ENTER_ASSET = `${UI_ROOT}/im_button_yes.webp`;
 /** The Play button enters the world from the avatar card (Babuni, 2026-11-23). */
 export const OVERVIEW_PLAY_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_play.webp');
 

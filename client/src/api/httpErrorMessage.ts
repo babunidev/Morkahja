@@ -10,6 +10,7 @@ export function looksLikeHtml(text: string): boolean {
 const ROOM_ERROR_MESSAGES: Record<string, string> = {
   ROOM_FULL: 'This room is already full.',
   // Travel (D-056)
+  TRAVEL_COOLDOWN: 'You cannot travel again yet.',
   TRAVEL_AFTER_CHOICE: 'Travel before anyone chooses in this encounter.',
   TRAVEL_DURING_EVENT: 'Atranor and a level-up cannot be left by travelling.',
   REGION_LOCKED: 'This region is not unlocked yet.',

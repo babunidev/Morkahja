@@ -74,7 +74,13 @@ import {
   shouldUseEncounterFollow,
   type ResolveParticipantInRoomResult,
 } from './encounterGenerator.js';
-import { BASE_GAME_EXPANSION, travelCost } from '@shared/travel.js';
+import { loadAvatarProgression } from './avatarProgressionService.js';
+import {
+  BASE_GAME_EXPANSION,
+  encountersUntilTravel,
+  TRAVEL_COOLDOWN_ENCOUNTERS,
+  travelCost,
+} from '@shared/travel.js';
 import {
   ensureSlotEncounterSnapshots,
   seedAllSlotEncountersForRoom,
@@ -2154,6 +2160,16 @@ export async function travelToExpansion(
     ) {
       throw new RoomError('Atranor and a level-up cannot be left by travelling', 409, 'TRAVEL_DURING_EVENT');
     }
+    // Three encounters after a trip before the next one (Babuni, 2026-11-24).
+    const progression = await transaction.getProgression<{ encountersCompleted?: number }>(playerId, avatarId);
+    const encountersCompleted = progression?.encountersCompleted ?? 0;
+    const player = await transaction.getPlayer<{
+      currencies?: Record<string, unknown>;
+      travelAllowedAt?: Record<string, number>;
+    }>(playerId);
+    if (encountersUntilTravel(encountersCompleted, player?.travelAllowedAt?.[avatarId]) > 0) {
+      throw new RoomError('You cannot travel again yet', 409, 'TRAVEL_COOLDOWN');
+    }
     if (room.roomState !== 'active_encounter') {
       throw new RoomError('Travel before anyone chooses in this encounter', 409, 'TRAVEL_AFTER_CHOICE');
     }
@@ -2167,14 +2183,17 @@ export async function travelToExpansion(
       throw new RoomError('Travel before anyone chooses in this encounter', 409, 'TRAVEL_AFTER_CHOICE');
     }
 
-    const player = await transaction.getPlayer<{ currencies?: Record<string, unknown> }>(playerId);
     const currencies = player?.currencies ?? {};
     const gems = readYellowRedGemBalance(currencies as never);
     if (gems < cost) {
       throw new RoomError('Not enough gems to travel', 409, 'INSUFFICIENT_GEMS');
     }
     const nextCurrencies = { ...currencies, yellow_red_gem: gems - cost };
-    await transaction.setPlayer(playerId, { currencies: nextCurrencies, updatedAt: nowMs() }, { merge: true });
+    const travelAllowedAt = {
+      ...(player?.travelAllowedAt ?? {}),
+      [avatarId]: encountersCompleted + TRAVEL_COOLDOWN_ENCOUNTERS,
+    };
+    await transaction.setPlayer(playerId, { currencies: nextCurrencies, travelAllowedAt, updatedAt: nowMs() }, { merge: true });
 
     const isGuest = room.leaderPlayerId !== playerId && room.participants.some((entry) => entry.playerId !== playerId);
     if (isGuest) {
@@ -2224,6 +2243,16 @@ export async function travelToExpansion(
     });
     throw error;
   }
+}
+
+/** How many encounters the avatar still has to play before it may travel (D-056). */
+export async function travelStatus(playerId: string, avatarId: string): Promise<{ encountersUntilTravel: number }> {
+  const [progression, player] = await Promise.all([
+    loadAvatarProgression(playerId, avatarId),
+    loadPlayer(playerId),
+  ]);
+  const allowedAt = (player as { travelAllowedAt?: Record<string, number> } | null)?.travelAllowedAt?.[avatarId];
+  return { encountersUntilTravel: encountersUntilTravel(progression.encountersCompleted, allowedAt) };
 }
 
 export async function getActiveRoomForPlayer(

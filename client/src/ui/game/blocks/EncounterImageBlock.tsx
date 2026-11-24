@@ -10,9 +10,9 @@ import type {
   RoomStateDto,
 } from '../../../api/http.js';
 import {
-  activateRoomLoreGem, chooseLevelUpReward, fetchPlayer, loadStoredSession, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick, travelToRegion } from '../../../api/http.js';
+  activateRoomLoreGem, chooseLevelUpReward, fetchPlayer, fetchTravelStatus, loadStoredSession, submitRoomChoice, submitRoomSelection, submitRoomSetDice, submitRoomSetPick, travelToRegion } from '../../../api/http.js';
 import { userFacingApiErrorMessage } from '../../../api/httpErrorMessage.js';
-import { travelCost } from '@shared/travel.js';
+import { TRAVEL_COOLDOWN_ENCOUNTERS, travelCost } from '@shared/travel.js';
 import TravelPrompt from '../worldMap/TravelPrompt.js';
 import type { TravelTarget } from '../worldMap/worldMapData.js';
 import { ExpansionsOverlay } from '../../dashboard/ExpansionsOverlay.js';
@@ -318,6 +318,7 @@ export function EncounterImageBlock({
   const [travelError, setTravelError] = useState<string | null>(null);
   const [unlockedExpansions, setUnlockedExpansions] = useState<number[]>([0]);
   const [lookAtExpansion, setLookAtExpansion] = useState<number | null>(null);
+  const [travelWait, setTravelWait] = useState(0);
   const [transitionImageSrc, setTransitionImageSrc] = useState<string | null>(null);
   const [underlayHoldSrc, setUnderlayHoldSrc] = useState<string | null>(null);
   const underlayImageSrc = transitionImageSrc ?? underlayHoldSrc ?? undefined;
@@ -334,6 +335,9 @@ export function EncounterImageBlock({
   useEffect(() => {
     if (mapOpen) {
       void refreshUnlockedExpansions();
+      void fetchTravelStatus(avatarId)
+        .then((status) => setTravelWait(status.encountersUntilTravel))
+        .catch(() => undefined);
     } else {
       setTravelTarget(null);
       setTravelError(null);
@@ -345,6 +349,7 @@ export function EncounterImageBlock({
     setTravelError(null);
     try {
       const result = await travelToRegion(avatarId, target.expansion);
+      setTravelWait(TRAVEL_COOLDOWN_ENCOUNTERS);
       setTravelTarget(null);
       setMapOpen(false);
       onRoomSnapshot?.(result.room);
@@ -813,6 +818,7 @@ export function EncounterImageBlock({
                 cost={travelCost(travelTarget.expansion, travelExpansionPrice(travelTarget.expansion))}
                 error={travelError}
                 locked={travelTarget.expansion !== 0 && !unlockedExpansions.includes(travelTarget.expansion)}
+                waitEncounters={travelWait}
                 onNo={() => {
                   setTravelTarget(null);
                   setTravelError(null);

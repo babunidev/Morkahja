@@ -220,7 +220,7 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [x] Warmth corrected (2026-11-24): type 25 is Aid and holds the Warmth skill; type 37 is no longer a specialization.
 - [x] Implement edit avatar (2026-11-24): Edit under the portrait in the main menu's card; portrait of the same kind, frame, name; priced and charged on the server.
 - [x] Implement region travel (2026-11-24): map highlights and red locked lands, the question, the Expansions menu for a locked land, `POST /room/travel` with host and guest rules.
-- [ ] Babuni confirms the travel timing rule: only before anyone in the room has chosen (as built).
+- [x] Babuni confirmed travel (price, destinations, blocked during Atranor and level-ups) and added a wait: three encounters after a trip (2026-11-24, built).
 
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 

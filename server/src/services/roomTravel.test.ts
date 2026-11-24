@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
 
 import { bootstrapTestSession } from '../tests/sessionAuthTestHelpers.js';
-import { getPlayer, setPlayer } from '../db/postgresDocumentStore.js';
+import { getPlayer, setPlayer, setProgression } from '../db/postgresDocumentStore.js';
+import { loadAvatarProgression } from './avatarProgressionService.js';
 import { readYellowRedGemBalance, savePlayerAvatar } from './playerService.js';
 import { saveEncounterRoom } from './roomPersistence.js';
 import {
@@ -12,6 +13,7 @@ import {
   leaveAllRoomsForPlayer,
   RoomError,
   submitChoice,
+  travelStatus,
   travelToExpansion,
 } from './roomService.js';
 import { DEATH_ENCOUNTER_NUMERIC_ID } from '../domain/rooms/RoomSystemEvent.js';
@@ -32,6 +34,11 @@ async function newAvatar(playerId: string, id: string): Promise<void> {
 }
 async function gems(playerId: string): Promise<number> {
   return readYellowRedGemBalance((await getPlayer<{ currencies?: Record<string, number> }>(playerId))?.currencies);
+}
+/** Play n encounters, as far as the travel wait is concerned. */
+async function playEncounters(playerId: string, avatarId: string, n: number): Promise<void> {
+  const progression = await loadAvatarProgression(playerId, avatarId);
+  await setProgression(playerId, avatarId, { ...progression, encountersCompleted: progression.encountersCompleted + n } as never);
 }
 async function refusal(promise: Promise<unknown>): Promise<string> {
   try {
@@ -65,21 +72,33 @@ const both = await Promise.allSettled([
   travelToExpansion(host.playerId, hostAvatar, 0),
 ]);
 assert.equal(both.filter((entry) => entry.status === 'fulfilled').length, 1, 'one trip for one gem');
-assert.equal(((both.find((entry) => entry.status === 'rejected') as PromiseRejectedResult).reason as RoomError).code, 'INSUFFICIENT_GEMS');
+// The second is refused for the wait after a trip (or the gems, whichever it meets first).
+assert.ok(['TRAVEL_COOLDOWN', 'INSUFFICIENT_GEMS'].includes(((both.find((entry) => entry.status === 'rejected') as PromiseRejectedResult).reason as RoomError).code ?? ''));
 assert.equal(await gems(host.playerId), 0);
 room = (await getActiveRoomForPlayer(host.playerId, hostAvatar))!;
 assert.notEqual(room.activeEncounterSnapshot.encounterId, before, 'a new encounter, not the one left');
 assert.equal(room.activeEncounterSnapshot.encounterExpansion, 0);
 assert.ok(room.participants.every((participant) => participant.choiceState === 'choosing'));
 
-// Everwinter, once unlocked: 5 gems, an Everwinter encounter.
+// Three encounters must be played before the next trip (Babuni, 2026-11-24).
 await setPlayer(host.playerId, { currencies: { yellow_red_gem: 7 }, unlockedExpansions: [0, 1003] }, { merge: true });
+assert.equal((await travelStatus(host.playerId, hostAvatar)).encountersUntilTravel, 3);
+assert.equal(await refusal(travelToExpansion(host.playerId, hostAvatar, 1003)), 'TRAVEL_COOLDOWN');
+await playEncounters(host.playerId, hostAvatar, 2);
+assert.equal((await travelStatus(host.playerId, hostAvatar)).encountersUntilTravel, 1);
+assert.equal(await refusal(travelToExpansion(host.playerId, hostAvatar, 1003)), 'TRAVEL_COOLDOWN');
+await playEncounters(host.playerId, hostAvatar, 1);
+assert.equal((await travelStatus(host.playerId, hostAvatar)).encountersUntilTravel, 0);
+assert.equal(await gems(host.playerId), 7, 'refused trips cost nothing');
+
+// Everwinter, once unlocked: 5 gems, an Everwinter encounter.
 const everwinter = await travelToExpansion(host.playerId, hostAvatar, 1003);
 assert.equal(everwinter.spent, 5);
 assert.equal(await gems(host.playerId), 2);
 assert.equal(everwinter.room.activeEncounterSnapshot.encounterExpansion, 1003);
 
 // After a choice the outcome is known: no travel.
+await playEncounters(host.playerId, hostAvatar, 3);
 room = (await getActiveRoomForPlayer(host.playerId, hostAvatar))!;
 await saveEncounterRoom({
   ...room,

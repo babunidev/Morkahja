@@ -568,8 +568,20 @@ const preparedFreed = await getActiveRoomForPlayer(session.playerId, prepareAvat
 assert.equal(preparedFreed?.roomState, 'waiting_continue', 'a stranded prepared choice waits for Continue again');
 assert.equal(preparedFreed?.participants[0]?.choiceState, 'ready_to_continue');
 const continuedAfterFree = await submitContinue(session.playerId, prepareAvatarId);
-assert.equal(continuedAfterFree.roomState, 'active_encounter');
-assert.equal(continuedAfterFree.participants[0]?.choiceState, 'choosing');
+// The dice roll can level the avatar up or send it to Atranor: then the room
+// opens that system event instead (roadmap: flaky test, fixed 2026-11-24).
+assert.ok(
+  continuedAfterFree.roomState === 'active_encounter' || continuedAfterFree.roomState === 'system_event',
+  `a freed prepared choice moves on after Continue (got ${continuedAfterFree.roomState})`,
+);
+assert.notEqual(
+  continuedAfterFree.activeEncounterSnapshot.snapshotId,
+  soloPrepared.activeEncounterSnapshot.snapshotId,
+  'Continue left the encounter that was played',
+);
+if (continuedAfterFree.roomState === 'active_encounter') {
+  assert.equal(continuedAfterFree.participants[0]?.choiceState, 'choosing');
+}
 
 const disengagedAdvanceRoom: EncounterRoom = {
   ...advancedAfterTick!,

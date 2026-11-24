@@ -1,19 +1,16 @@
 import type { CSSProperties } from 'react';
 
-import { assetUrl } from '../../../assetUrl.js';
 import GemCost from '../../common/GemCost.js';
 import { simpleFrameStyle } from '../../common/simpleFrame.js';
-import { useNavButtonPress } from '../../transitions/navButtonPress.js';
-import { DEFAULT_BUTTON_SOUND, playSfx } from '../../sfx.js';
+import { AcceptButton, BackButton } from '../../common/WordButton.js';
 import type { TravelTarget } from './worldMapData.js';
 
 /**
  * The question after a tap on the map (D-056, Babuni, 2026-11-23): travel
  * there for gems, or, for a region not unlocked yet, take a look at its
- * expansion. Red says no, green says yes.
+ * expansion. Back and Accept answer it. Within three encounters of the last
+ * trip it says that travel is not possible yet.
  */
-
-const UI_ROOT = assetUrl('/UI/02_AvatarCreation');
 
 const shadeStyle: CSSProperties = {
   position: 'absolute',
@@ -69,31 +66,20 @@ const buttonsStyle: CSSProperties = {
   marginTop: 4,
 };
 
-const buttonStyle: CSSProperties = {
-  width: 'clamp(50px, 12vw, 64px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
 
-const imageStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5))',
-};
 
-export default function TravelPrompt({ target, locked, cost, pending, error, onNo, onYes }: {
+export default function TravelPrompt({ target, locked, cost, waitEncounters = 0, pending, error, onNo, onYes }: {
   target: TravelTarget;
   locked: boolean;
   cost: number;
+  /** Encounters still to play after the last trip; above 0 the trip is not offered (Babuni, 2026-11-24). */
+  waitEncounters?: number;
   pending: boolean;
   error: string | null;
   onNo: () => void;
   onYes: () => void;
 }) {
-  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const waiting = waitEncounters > 0 && !locked;
   return (
     <div
       onClick={(event) => {
@@ -105,12 +91,23 @@ export default function TravelPrompt({ target, locked, cost, pending, error, onN
       role="presentation"
       style={shadeStyle}
     >
-      <div aria-label={locked ? `${target.name} is not unlocked` : `Travel to ${target.name}`} role="alertdialog" style={boxStyle}>
+      <div
+        aria-label={locked ? `${target.name} is not unlocked` : waiting ? 'You cannot travel right now' : `Travel to ${target.name}`}
+        role="alertdialog"
+        style={boxStyle}
+      >
         {locked ? (
           <>
             <p style={lineStyle}>You have not unlocked</p>
             <p style={nameStyle}>{target.name}</p>
             <p style={lineStyle}>yet. Would you like to take a look?</p>
+          </>
+        ) : waiting ? (
+          <>
+            <p style={nameStyle}>You cannot travel right now</p>
+            <p style={lineStyle}>
+              After a journey you play three encounters before the next one. Play {waitEncounters} more {waitEncounters === 1 ? 'encounter' : 'encounters'} first.
+            </p>
           </>
         ) : (
           <>
@@ -120,35 +117,16 @@ export default function TravelPrompt({ target, locked, cost, pending, error, onN
           </>
         )}
         {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
-        <div style={buttonsStyle}>
-          <button
-            aria-label="No"
-            className="morkahja-panel-button"
-            disabled={pending}
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onNo();
-            }}
-            onPointerDown={() => pulse('travel-no')}
-            style={buttonStyle}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_delete.webp`} style={{ ...imageStyle, animation: pressAnimation(isPressed('travel-no')) }} />
-          </button>
-          <button
-            aria-label={locked ? 'Yes, show the expansion' : 'Yes, travel'}
-            className="morkahja-panel-button"
-            disabled={pending}
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onYes();
-            }}
-            onPointerDown={() => pulse('travel-yes')}
-            style={{ ...buttonStyle, opacity: pending ? 0.6 : 1 }}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={`${UI_ROOT}/im_button_yes.webp`} style={{ ...imageStyle, animation: pressAnimation(isPressed('travel-yes')) }} />
-          </button>
+        <div style={{ ...buttonsStyle, justifyContent: waiting ? 'center' : 'space-between' }}>
+          <BackButton ariaLabel={waiting ? 'Back' : 'No'} disabled={pending} onClick={onNo} pressKey="travel-no" />
+          {waiting ? null : (
+            <AcceptButton
+              ariaLabel={locked ? 'Yes, show the expansion' : 'Yes, travel'}
+              disabled={pending}
+              onClick={onYes}
+              pressKey="travel-yes"
+            />
+          )}
         </div>
       </div>
     </div>

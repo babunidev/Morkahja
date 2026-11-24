@@ -500,7 +500,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI contribution:** Claude Code (Claude Opus 5.5) read the current slot, bonus, charge, solution-type, gem, expansion and map data, asked the open questions, worked out the regain thresholds and drafted the fifteen specialization descriptions for Babuni to revise.
 
-**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; its swap rule and the wait for the choice were replaced the same day by D-057. The selection modes were replaced by the avatar overview (D-057, D-058). Specialization implemented the same day in that overview (pushed to GitHub `main`, not released). On 2026-11-24 Babuni corrected the list: type 25 is Aid (it holds the Warmth skill), and type 37, which no skill uses, is no longer a specialization. Edit avatar implemented on 2026-11-24, opened by an Edit button under the portrait in the main menu's card (on GitHub `main`, not released). Travel implemented on 2026-11-24 on the world map (on GitHub `main`, not released); Claude Code limited it to before anyone in the room has chosen, so an outcome already known cannot be escaped, for Babuni to confirm.
+**Status:** decided. Equipment implemented on local `main` on 2026-11-23, not released; its swap rule and the wait for the choice were replaced the same day by D-057. The selection modes were replaced by the avatar overview (D-057, D-058). Specialization implemented the same day in that overview (pushed to GitHub `main`, not released). On 2026-11-24 Babuni corrected the list: type 25 is Aid (it holds the Warmth skill), and type 37, which no skill uses, is no longer a specialization. Edit avatar implemented on 2026-11-24, opened by an Edit button under the portrait in the main menu's card (on GitHub `main`, not released). Travel implemented on 2026-11-24 on the world map (on GitHub `main`, not released); Claude Code limited it to before anyone in the room has chosen, so an outcome already known cannot be escaped. Babuni confirmed travel the same day and added a wait of three encounters after each trip.
 
 ## D-057 — One avatar card, opened by a tap; equipment only into empty slots (2026-11-23)
 
@@ -536,3 +536,12 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 **AI implementation:** Claude Code (Claude Opus 5.5). `TOP_ROLL_TOTAL` (26) and `isTopRoll` in `shared/src/diceInterpreter.ts`; a test ties the number to the d20, the primary bonus and the +1 of a rare item or a specialized skill (the two never meet on one roll, because no skill is rare). The server grants the gem with the roll's commit in all three places a roll is committed (the round, leaving mid-round, and a system event such as Atranor or the level-up), with its own claim key per player and roll, so it never pays twice and stands apart from the lore gem. The client shows it on the avatar's gem badge from the moment the avatar shows the roll; the badge counts both gems and uses the item hexagon (`SolutionChargeBadge`) for the 2.
 
 **Status:** pushed to GitHub `main`, not released.
+
+## D-061 — Accept and Back are word buttons (2026-11-24)
+
+**Babuni's direction:** everywhere in the game the green check becomes a normal red-and-gold button with the word **Accept**, and the red round picture a matching button with the word **Back**.
+
+**AI implementation:** Claude Code (Claude Opus 5.5). `client/src/ui/common/WordButton.tsx` (`AcceptButton`, `BackButton`, built on `PanelButton`, so they press and glow like the other buttons) replaces `im_button_yes.webp` and `im_button_delete.webp` in the avatar creation and edit (and its gem question), the specialization picker (and its gem question) and the travel question. The pictures stay in `client/public` but are no longer used.
+
+**Status:** on GitHub `main`, not released. Checked in the local game on desktop and phone.
+

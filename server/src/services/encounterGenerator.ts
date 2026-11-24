@@ -1721,6 +1721,30 @@ export async function prepareParticipantOutcome(
   );
 }
 
+/**
+ * What a round changes on the avatar: level, experience, the inventory cache,
+ * when it last played, its last encounter and, when it fell in Atranor, its
+ * failed state. Everything else stays as it is now, because the prepared copy
+ * was taken when the roll was made: a title, name, portrait, frame or
+ * specialization changed since then would otherwise be undone (roadmap bug,
+ * fixed 2026-11-24).
+ */
+export function avatarAfterRound(live: AvatarDocument, prepared: AvatarDocument): AvatarDocument {
+  return {
+    ...live,
+    level: prepared.level,
+    experience: prepared.experience,
+    inventory: prepared.inventory,
+    lastPlayedAt: prepared.lastPlayedAt,
+    progression: {
+      ...live.progression,
+      lastEncounterId: prepared.progression?.lastEncounterId,
+    },
+    ...(prepared.status !== undefined ? { status: prepared.status } : {}),
+    ...(prepared.preDeathSnapshot !== undefined ? { preDeathSnapshot: prepared.preDeathSnapshot } : {}),
+  };
+}
+
 /** Persist a prepared room outcome and record continuation events. */
 export async function commitPreparedOutcome(
   transaction: DocumentTransaction,
@@ -1728,6 +1752,8 @@ export async function commitPreparedOutcome(
   avatarId: string,
   bundle: PreparedCommitBundle,
 ): Promise<ResolveParticipantInRoomResult> {
+  const live = await transaction.getAvatar<AvatarDocument>(playerId, avatarId);
+  const committedAvatar = live ? avatarAfterRound(live, bundle.updatedAvatar) : bundle.updatedAvatar;
   await transaction.setProgression(
     playerId,
     avatarId,
@@ -1738,17 +1764,17 @@ export async function commitPreparedOutcome(
     }),
   );
   await transaction.setInventory(playerId, avatarId, bundle.nextInventory);
-  await transaction.setAvatar(playerId, avatarId, bundle.updatedAvatar, { merge: true });
+  await transaction.setAvatar(playerId, avatarId, committedAvatar, { merge: true });
 
   await recordEncounterContinuedEvents(
     playerId,
-    bundle.updatedAvatar,
+    committedAvatar,
     bundle.resolution,
     bundle.eventContext,
   );
 
   return {
-    avatar: bundle.updatedAvatar,
+    avatar: committedAvatar,
     resolution: bundle.resolution,
     selectedRollOutcome: bundle.selectedRollOutcome,
     deathTriggered: bundle.deathTriggered,

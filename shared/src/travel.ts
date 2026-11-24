@@ -16,3 +16,15 @@ export function travelCost(expansionId: number, expansionGemPrice: number | null
   }
   return Math.max(1, Math.round(Math.max(0, expansionGemPrice ?? 0) / 10));
 }
+
+/**
+ * After a trip the avatar plays three encounters before it can travel again,
+ * so travel opens every fourth encounter (Babuni, 2026-11-24). Atranor and
+ * level-ups do not count.
+ */
+export const TRAVEL_COOLDOWN_ENCOUNTERS = 3;
+
+/** How many more encounters until the avatar may travel; 0 when it may. */
+export function encountersUntilTravel(encountersCompleted: number, travelAllowedAt: number | null | undefined): number {
+  return Math.max(0, (travelAllowedAt ?? 0) - encountersCompleted);
+}

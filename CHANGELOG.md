@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: a wait after each trip; Accept and Back as word buttons (D-061)
+
+- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** travel works as built (price, destinations, blocked during Atranor and level-ups), and after a trip the avatar has to play three encounters before the next one, so travel opens every fourth encounter; tapping a land meanwhile says that travel is not possible right now instead of asking. And everywhere in the game the green check becomes a red-and-gold **Accept** button and the red round picture a matching **Back** button.
+- **Travel wait:** `shared/src/travel.ts` (`TRAVEL_COOLDOWN_ENCOUNTERS` = 3, `encountersUntilTravel`). `travelToExpansion` reads the avatar's `encountersCompleted` (Atranor and level-ups do not raise it) in its transaction (room, progression, then player), refuses `TRAVEL_COOLDOWN`, and on a trip stores `travelAllowedAt[avatarId]` = completed + 3 on the player document together with the gems. New `GET /room/travel` (`travelStatus`) gives the encounters left; the map loads it when it opens. `TravelPrompt.tsx` then shows "You cannot travel right now. After a journey you play three encounters before the next one. Play 3 more encounters first." with only Back; a locked land can still be looked at.
+- **Buttons:** new `client/src/ui/common/WordButton.tsx` (`AcceptButton`, `BackButton` on `PanelButton`); used in `AvatarCreation.tsx` (creation and edit, and the gem question), `SpecializationPicker.tsx` (and its gem question) and `TravelPrompt.tsx`. No game screen shows `im_button_yes.webp` or `im_button_delete.webp` any more (checked in the page).
+- **Tests:** `roomTravel.test.ts` checks the wait: 3 encounters right after a trip, refused, 1 left after two, free after three, refusals cost nothing. Server tests 74/74, client tests 52/52, `npm run typecheck` and `verify:static-data` passed.
+- **Checked in the local game** (headless Chromium, new local test players, 1280 × 800 and 390 × 844): a trip, then a tap on Eldertree Forest showing the wait with only Back; the creation, the specialization picker and its gem question, and the edit's gem question with the word buttons. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-travel-wait-*.png` and `2026-11-24-buttons-*.png`.
+
 ## 2026-11-24 — Unreleased: changing the specialization asks before spending gems
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

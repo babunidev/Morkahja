@@ -298,6 +298,11 @@ export async function unlockPlayerExpansion(
   if (!expansion.mExtensioActive) {
     throw new ExpansionInactiveError();
   }
+  // A price that is not a whole number of 0 or more (a data mistake) would
+  // add gems or set the balance to NaN: such an expansion cannot be bought.
+  if (!Number.isInteger(expansion.mExtensioCost) || expansion.mExtensioCost < 0) {
+    throw new ExpansionInactiveError();
+  }
 
   const { currencies, nextUnlockedExpansions } = await withDocumentTransaction(async (transaction) => {
     const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);

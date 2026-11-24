@@ -27,6 +27,7 @@ import {
   submitSetPick,
   submitContinue,
   travelToExpansion,
+  travelStatus,
   chooseLevelUpReward,
   submitSelection,
 } from '../services/roomService.js';
@@ -410,6 +411,21 @@ export async function submitRoomContinueController(
     res.json({
       room: await toEncounterRoomSnapshotDto(room, playerId),
     });
+  } catch (error) {
+    handleRoomError(error, res, next);
+  }
+}
+
+/** Travel (D-056): how many encounters until the avatar may travel again. */
+export async function travelStatusController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { playerId } = requireAuth(req);
+    const avatarId = requireAvatarId(req);
+    res.json(await travelStatus(playerId, avatarId));
   } catch (error) {
     handleRoomError(error, res, next);
   }

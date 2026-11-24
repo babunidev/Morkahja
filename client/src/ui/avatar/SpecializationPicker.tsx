@@ -12,18 +12,14 @@ import { gameSolutions } from '../../data/gameContent.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 import { TooltipDivider, gameTooltipFrameStyle } from '../game/GameTooltip.js';
 import GemCost from '../common/GemCost.js';
+import { AcceptButton, BackButton } from '../common/WordButton.js';
 import PanelButton from '../common/PanelButton.js';
 import DecorativeEdgeFrame from '../game/blocks/DecorativeEdgeFrame.js';
 import { PANEL_SIDE_PADDING, panelEdgeDividerBleed } from '../game/blocks/decorativeFrameShared.js';
 import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
-import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
-import { OVERVIEW_BACK_ASSET, OVERVIEW_ENTER_ASSET } from './AvatarOverview.js';
-import { assetUrl } from '../../assetUrl.js';
 
 /** The avatar edit's no and yes buttons, for the same question (Babuni, 2026-11-24). */
-const CONFIRM_NO_ASSET = assetUrl('/UI/02_AvatarCreation/im_button_delete.webp');
-const CONFIRM_YES_ASSET = assetUrl('/UI/02_AvatarCreation/im_button_yes.webp');
 
 /**
  * Choosing a specialization (D-056, Babuni, 2026-11-23): the selected one's
@@ -164,20 +160,7 @@ const footerStyle: CSSProperties = {
   padding: `6px calc(${PANEL_SIDE_PADDING} + 14px) 0`,
 };
 
-const footerButtonStyle: CSSProperties = {
-  width: 'clamp(52px, 11vw, 72px)',
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  cursor: 'pointer',
-};
 
-const footerImageStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-  height: 'auto',
-  filter: 'drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5))',
-};
 
 const costStyle: CSSProperties = {
   display: 'flex',
@@ -253,7 +236,6 @@ export default function SpecializationPicker({
   const unchanged = current?.solutionType === selected.solutionType;
   const cost = unchanged ? 0 : specializationChangeCost(current?.solutionType);
   const owned = skillsOfType(avatar, selected.solutionType);
-  const { pulse, isPressed, pressAnimation } = useNavButtonPress();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
@@ -304,28 +286,15 @@ export default function SpecializationPicker({
           </ul>
         </div>
         <div style={footerStyle}>
-          <button
-            aria-label="Back"
-            disabled={pending}
-            onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
-              onBack();
-            }}
-            onPointerDown={() => pulse('specialization-back')}
-            style={footerButtonStyle}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={OVERVIEW_BACK_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-back')) }} />
-          </button>
+          <BackButton disabled={pending} onClick={onBack} pressKey="specialization-back" />
           <div>
             {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
             <p style={costStyle}>{unchanged ? 'Your current specialization' : <GemCost cost={cost} />}</p>
           </div>
-          <button
-            aria-label={unchanged ? 'Keep this specialization' : `Choose ${selected.name}`}
+          <AcceptButton
+            ariaLabel={unchanged ? 'Keep this specialization' : `Choose ${selected.name}`}
             disabled={pending}
             onClick={() => {
-              playSfx(DEFAULT_BUTTON_SOUND);
               if (unchanged) {
                 onBack();
                 return;
@@ -337,45 +306,24 @@ export default function SpecializationPicker({
               }
               onConfirm(selected.solutionType);
             }}
-            onPointerDown={() => pulse('specialization-confirm')}
-            style={{ ...footerButtonStyle, opacity: pending ? 0.6 : 1 }}
-            type="button"
-          >
-            <img alt="" aria-hidden="true" draggable={false} src={OVERVIEW_ENTER_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-confirm')) }} />
-          </button>
+            pressKey="specialization-confirm"
+          />
         </div>
         {confirmOpen ? (
           <div role="presentation" style={confirmShadeStyle}>
             <div aria-label="Spend gems" role="alertdialog" style={confirmBoxStyle}>
               <span>Do you want to spend <GemCost cost={cost} withLabel={false} /> to become {selected.name}?</span>
               <div style={confirmButtonsStyle}>
-                <button
-                  aria-label="No, keep the gems"
+                <BackButton ariaLabel="No, keep the gems" disabled={pending} onClick={() => setConfirmOpen(false)} pressKey="specialization-no" />
+                <AcceptButton
+                  ariaLabel="Yes, spend the gems"
                   disabled={pending}
                   onClick={() => {
-                    playSfx(DEFAULT_BUTTON_SOUND);
-                    setConfirmOpen(false);
-                  }}
-                  onPointerDown={() => pulse('specialization-no')}
-                  style={footerButtonStyle}
-                  type="button"
-                >
-                  <img alt="" aria-hidden="true" draggable={false} src={CONFIRM_NO_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-no')) }} />
-                </button>
-                <button
-                  aria-label="Yes, spend the gems"
-                  disabled={pending}
-                  onClick={() => {
-                    playSfx(DEFAULT_BUTTON_SOUND);
                     setConfirmOpen(false);
                     onConfirm(selected.solutionType);
                   }}
-                  onPointerDown={() => pulse('specialization-yes')}
-                  style={{ ...footerButtonStyle, opacity: pending ? 0.6 : 1 }}
-                  type="button"
-                >
-                  <img alt="" aria-hidden="true" draggable={false} src={CONFIRM_YES_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-yes')) }} />
-                </button>
+                  pressKey="specialization-yes"
+                />
               </div>
             </div>
           </div>
