@@ -693,6 +693,10 @@ My avatar card in the main menu now has an Edit button under the portrait. It op
 
 The last of my player choices is in. On the world map a land lights up under my pointer, and the lands I have not unlocked are red. Tapping a land asks whether I want to travel there and what it costs: 1 gem for the base game, and a tenth of an expansion's price for its lands. Yes swaps my current encounter for one from there. Tapping a red land offers to show me its expansion. As the host I take my party along; as a guest I leave and go on alone. Claude Code (Claude Opus 5.5) built it on the server and the client. It allowed travel only before anyone in the room has chosen, so nobody can travel away from a loss they have already seen, and left that rule for me to confirm. It tried everything in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Not released.**
 
+## 2026-11-24 — A question before the gems go
+
+Changing a specialization costs a gem, and one tap on the green check spent it. Now the game asks first, "Do you want to spend 1 gem to become Combat?", with the same box and buttons as when I edit an avatar. The free first choice still goes straight through. Claude Code (Claude Opus 5.5) added the question and clicked through it in the local game. **Verification:** typecheck passed; checked in a local browser. **Not released.**
+
 ## 2026-05-16 to 2026-06-09 — Original web-app development log
 
 *This numbered log was the separate root `DEVLOG.md` until 2026-11-19. It was merged here, unchanged, so that the project keeps one development log; only its headings moved one level down.*

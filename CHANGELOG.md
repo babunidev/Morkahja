@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-24 — Unreleased: changing the specialization asks before spending gems
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** ask the player whether they want to spend the gems when they change their specialization.
+- **Change (`SpecializationPicker.tsx`):** when the chosen specialization costs gems, the green check opens "Do you want to spend 1 [gem] to become Combat?" over the picker, in the avatar edit's box with its no and yes buttons (`UI/02_AvatarCreation/im_button_delete.webp` and `im_button_yes.webp`). No closes the question and keeps the picker open; yes sends the change as before. The free first choice and keeping the current one ask nothing.
+- **Checked in the local game** (headless Chromium, a new local test player, 1280 × 800): the free first choice (Stealth) went through without a question; the change to Combat asked; No left the picker open with Stealth kept; Yes sent the change, which the server refused with "Not enough gems." because the new test player had none. Screenshot: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24/2026-11-24-specialization-spend-question-desktop-2.png`.
+- **Verification:** `npm run typecheck` passed.
+
 ## 2026-11-24 — Unreleased: travel on the world map (D-056)
 
 - **Not released.** On GitHub `main`; the production server is unchanged.

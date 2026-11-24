@@ -19,6 +19,11 @@ import { GAME_PANEL_BACKGROUND } from '../game/blocks/gamePanelBackground.js';
 import { useNavButtonPress } from '../transitions/navButtonPress.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { OVERVIEW_BACK_ASSET, OVERVIEW_ENTER_ASSET } from './AvatarOverview.js';
+import { assetUrl } from '../../assetUrl.js';
+
+/** The avatar edit's no and yes buttons, for the same question (Babuni, 2026-11-24). */
+const CONFIRM_NO_ASSET = assetUrl('/UI/02_AvatarCreation/im_button_delete.webp');
+const CONFIRM_YES_ASSET = assetUrl('/UI/02_AvatarCreation/im_button_yes.webp');
 
 /**
  * Choosing a specialization (D-056, Babuni, 2026-11-23): the selected one's
@@ -189,6 +194,35 @@ const errorStyle: CSSProperties = {
   fontSize: TOOLTIP_TEXT_SIZE,
 };
 
+/** "Do you want to spend … ?" over the picker, as in the avatar edit (Babuni, 2026-11-24). */
+const confirmShadeStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 5,
+  display: 'grid',
+  placeItems: 'center',
+  background: 'rgba(8, 4, 2, 0.72)',
+};
+
+const confirmBoxStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 14,
+  width: 'min(86%, 340px)',
+  padding: '22px 18px 16px',
+  ...simpleFrameStyle({ background: 'rgba(34, 6, 3, 0.97)', opacity: 0.94 }),
+  color: '#f7efe0',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.95rem, 3.6vw, 1.1rem)',
+  textAlign: 'center',
+};
+
+const confirmButtonsStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%',
+};
+
 /** How many of the avatar's skills, with charges, are of this type. */
 function skillsOfType(avatar: PersistedAvatar, solutionType: number): number {
   const solutions = gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>;
@@ -220,6 +254,7 @@ export default function SpecializationPicker({
   const cost = unchanged ? 0 : specializationChangeCost(current?.solutionType);
   const owned = skillsOfType(avatar, selected.solutionType);
   const { pulse, isPressed, pressAnimation } = useNavButtonPress();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
     <div
@@ -295,6 +330,11 @@ export default function SpecializationPicker({
                 onBack();
                 return;
               }
+              // A change that costs gems asks first; the free first choice does not.
+              if (cost > 0) {
+                setConfirmOpen(true);
+                return;
+              }
               onConfirm(selected.solutionType);
             }}
             onPointerDown={() => pulse('specialization-confirm')}
@@ -304,6 +344,42 @@ export default function SpecializationPicker({
             <img alt="" aria-hidden="true" draggable={false} src={OVERVIEW_ENTER_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-confirm')) }} />
           </button>
         </div>
+        {confirmOpen ? (
+          <div role="presentation" style={confirmShadeStyle}>
+            <div aria-label="Spend gems" role="alertdialog" style={confirmBoxStyle}>
+              <span>Do you want to spend <GemCost cost={cost} withLabel={false} /> to become {selected.name}?</span>
+              <div style={confirmButtonsStyle}>
+                <button
+                  aria-label="No, keep the gems"
+                  disabled={pending}
+                  onClick={() => {
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    setConfirmOpen(false);
+                  }}
+                  onPointerDown={() => pulse('specialization-no')}
+                  style={footerButtonStyle}
+                  type="button"
+                >
+                  <img alt="" aria-hidden="true" draggable={false} src={CONFIRM_NO_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-no')) }} />
+                </button>
+                <button
+                  aria-label="Yes, spend the gems"
+                  disabled={pending}
+                  onClick={() => {
+                    playSfx(DEFAULT_BUTTON_SOUND);
+                    setConfirmOpen(false);
+                    onConfirm(selected.solutionType);
+                  }}
+                  onPointerDown={() => pulse('specialization-yes')}
+                  style={{ ...footerButtonStyle, opacity: pending ? 0.6 : 1 }}
+                  type="button"
+                >
+                  <img alt="" aria-hidden="true" draggable={false} src={CONFIRM_YES_ASSET} style={{ ...footerImageStyle, animation: pressAnimation(isPressed('specialization-yes')) }} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );
