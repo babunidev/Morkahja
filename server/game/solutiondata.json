@@ -1161,7 +1161,8 @@
     "mSolutionRewardType": 2,
     "mSolutionText": "This masterfully crafted weapon bears the robustness of heavy oak and the intricacy of finely woven silver wire. Its runes pulsate with protective enchantments.",
     "mSolutionType": 10,
-    "mSolutionUses": 1
+    "mSolutionUses": 1,
+    "mSolutionIconFrameless": true
   },
   "10107": {
     "mSolutionID": 10107,
