@@ -17,6 +17,13 @@
 - **Change (`ambianceCycle.ts`, `AmbianceBed.tsx`):** new `AMBIANCE_START_DELAY_MS` (3000). A bed that starts from silence waits that long before its first piece fades in. On a change of region the old region keeps playing through the wait; then the old one fades out over 2 s while the new one fades in over 1 s, as before. Changing region again during the wait starts the wait over. Encounters in the same region still leave the bed alone.
 - **Verification:** client tests 51/51 (`ambianceCycle.test.ts` checks the 3 s) and `npm run typecheck` passed. Not heard in the game.
 
+## 2026-11-24 — Unreleased: a slightly bigger name on the avatar card
+
+- **Not released.** On GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** the name a tiny bit bigger; with that the avatar card is done for now.
+- **Change (`AvatarOverview.tsx`):** the name's size went from `clamp(1.2rem, 4.6vw, 1.55rem)` to `clamp(1.32rem, 5vw, 1.72rem)`, in the main menu and in the game.
+- **Checked in the local game** (1280 × 800 and 390 × 844): `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-24-avatar-card-name-*.png`. Client tests 51/51 and `npm run typecheck` passed.
+
 ## 2026-11-24 — Unreleased: tooltip fixes, XP inside its bar, the avatar card grows out of the avatar
 
 - **Not released.** On GitHub `main`; the production server is unchanged. The code went in with commit `93519c29` ("Atranor plays its own ambiance"), which another session committed together with these changes; this entry documents them.

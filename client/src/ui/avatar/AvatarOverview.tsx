@@ -92,7 +92,7 @@ const titleStyle: CSSProperties = {
 const nameStyle: CSSProperties = {
   margin: 0,
   fontFamily: 'Breathe Fire, Georgia, serif',
-  fontSize: 'clamp(1.2rem, 4.6vw, 1.55rem)',
+  fontSize: 'clamp(1.32rem, 5vw, 1.72rem)',
   letterSpacing: '0.04em',
   lineHeight: 1.1,
   color: '#ffcc66',
