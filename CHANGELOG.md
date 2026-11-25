@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Fourth-role direction (documentation only)
+
+- Recorded Babuni's approved direction for Bard as the fourth playable role, Mage's Aid emphasis, and the Warrior/Combat, Rogue/Trick, Mage/Aid, Bard/Social affinities. Artisan remains a possible future role; Guardian was not selected. ChatGPT (GPT-6.2) researched the game and lore and synchronized the planning documents. No gameplay, game data, canon or release changes.
+
 ## 2026-11-25 — Encounter studio coordination (documentation only)
 
 - Recorded approved Ambush terminology; synchronized completion plan and added shared production ledger with existing-content review, family briefs, provisional reservations and separate draft/approval/commit/verification/artwork tracking. No game data, gameplay, expansion or deployment changes.
