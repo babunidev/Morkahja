@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — Base-game encounter target confirmed
+
+My base game now has an approved production target of 120 geographic encounters, with 27 per principal family and six each for Learn and Trade. ChatGPT (GPT-6.2) synchronized the decision, completion plan, ledger and roadmap, retaining the 49-existing/71-new working allocation and all existing reservations. The two universal events remain outside the target. Documentation only; subtype balance, individual reclassifications and rarity details remain open. No runtime tests or deployment.
+
+
 ## 2026-11-25 — Hidden Market map correction
 
 With the entrance location approved, my Hidden Market now has a separate western Vale map pin rather than the Aetherion city pin. ChatGPT (GPT-6.2) updated the source CSV, synchronized the single generated map record manually using the documented coordinate conversion, and recorded the decision. A source check confirmed both coordinates agree, the point is inside the Vale more than 12 map units from its boundary, only encounter 20012 changed in each map file, and its encounter record remains Trade in expansion 0. The generator was not run and the game was not built, tested in-browser or deployed. World archive and encounter prose remain unchanged.

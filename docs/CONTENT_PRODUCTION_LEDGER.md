@@ -2,7 +2,7 @@
 
 **Creative:** Babuni · **Coordinator:** 00 Management · **Baseline:** 2026-11-25, [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92). See [completion plan](CONTENT_COMPLETION_PLAN.md).
 
-Reservations are not game records or creative approval. Existing records are committed legacy content; studio revisions are unapproved. New tasks are queued, not drafted. The provisional 120 target includes 118 random and two scripted records, excludes system events 1 and 2. Re-read main and check IDs worldwide before each commit. Use original IDs for revisions, reuse suitable solutions first, record allocated solution IDs beside tasks before committing. Do not overwrite concurrent work, allocate another family's IDs, or create placeholder JSON. Management alone reassigns unused reservations.
+Reservations are not game records or creative approval. Existing records are committed legacy content; studio revisions are unapproved. New tasks are queued, not drafted. The approved 120 target includes 118 random and two scripted records, excludes system events 1 and 2. Re-read main and check IDs worldwide before each commit. Use original IDs for revisions, reuse suitable solutions first, record allocated solution IDs beside tasks before committing. Do not overwrite concurrent work, allocate another family's IDs, or create placeholder JSON. Management alone reassigns unused reservations.
 
 ## ID reservations
 
@@ -97,7 +97,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 
 ## New tasks
 
-71 active reservations at the provisional 120 target. ID 20265 remains held by Management as an unused reserve, not an active task; other families and solution reservations are unchanged.
+71 active reservations at the approved 120 target. ID 20265 remains held by Management as an unused reserve, not an active task; other families and solution reservations are unchanged.
 
 Provisional sequencing; four random D2 slots and rare designations remain unset until approval. Dashes indicate not started. Record existing revisions with original IDs in this table when authorized. Verification means actual source/static checks after commit.
 

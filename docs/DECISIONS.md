@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Base-game encounter target
+
+For Ethera's Vale, my approved target is 120 geographic encounters: 27 Combat, 27 Trick, 27 Aid, 27 Social, 6 Learn and 6 Trade. The two scripted sanctuary encounters count toward this total; Atranor and Level Up remain additional universal events. At the current proposed classification baseline of 49 existing encounters, 71 new encounters are required. The family quotas are approved, not every individual reclassification or subtype split. The [completion plan](CONTENT_COMPLETION_PLAN.md) and [production ledger](CONTENT_PRODUCTION_LEDGER.md) now use this target. ChatGPT (GPT-6.2) recorded the decision; no gameplay or data changes.
+
+
 ## 2026-11-25 — Hidden Market location
 
 My approved entrance location for Hidden Market (20012) is western Ethera's Vale, southeast of Lovely Meadows near the western trade road. ChatGPT (GPT-6.2) corrected the CSV and matching generated map entry to [405, 552], with the Vale label. Expansion 0, encounter narrative, solutions and all five Aetherion expansion encounters remain unchanged. The pin does not define the underground layout. Source-level coordinate and boundary checks passed; runtime tests and deployment were not performed.

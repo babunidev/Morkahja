@@ -8,7 +8,8 @@
 - [x] Record approved Ambush name and establish the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) with provisional family tasks and ID reservations.
 - [x] Confirm Hidden Market as base-game Trade outside Aetherion; protect expansion 1004.
 - [x] Approve and correct Hidden Market map placement in CSV and generated map entry.
-- [ ] Confirm total, Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
+- [x] Confirm 120 geographic encounters and family quotas.
+- [ ] Confirm Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
 ## Fourth playable role — approved direction, not implemented (2026-11-25)
