@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Bard and four-role direction
+
+For my four principal encounter families, the playable roles should have clear, recognizable identities: **Warrior — Combat; Rogue — Trick; Mage — Aid; Bard — Social.** The Mage's magic should lean toward helping, healing and sustaining others rather than being defined primarily by offensive spellcasting. The Bard is my chosen fourth playable role, with a natural affinity for speech, encouragement, music and storytelling.
+
+These affinities describe emphasis, not exclusive encounter access or a new restriction on specialization. Exact abilities, reward pools, mechanical bonuses and specialization restrictions remain to be designed and approved. Performance remains a proposed Social solution category; choosing Bard does not separately approve that category.
+
+The Artisan is an appealing possible later role, not a committed fifth role or part of the current implementation scope. Guardian was considered but is not my choice for the fourth playable role: the familiar identities of Warrior, Rogue, Mage and Bard are clearer. The [existing Guardian philosophy](https://github.com/babunidev/MorkahjaWorld/blob/main/Magic/Elemental_Foundation.md#role-philosophies) remains valid world lore, not a playable-class requirement. The [elemental music tradition](https://github.com/babunidev/MorkahjaWorld/blob/main/Traditions/Elemental_Music.md) provides a foundation for the Bard without requiring a change to canon.
+
+**AI contribution:** ChatGPT (GPT-6.2) reviewed both repositories, compared the existing role solution pools and lore, and proposed alternatives; my creative choice is Bard, with Mage oriented toward Aid. **Status:** design direction approved; documentation only. The current game still has three roles. No implementation, balance testing or deployment.
+
 ## 2026-11-25 — Encounter studio taxonomy clarification
 
 For the combined Hunting and Stealth category, my approved name is **Ambush**. It includes tracking, hunting, concealment, surprise and evasion. Help becomes Aid; Travel and Rare Find retire as solution categories, not map travel or item rarity. Performance remains unapproved. The [completion plan](CONTENT_COMPLETION_PLAN.md) and [production ledger](CONTENT_PRODUCTION_LEDGER.md) distinguish creative direction from provisional quotas and unimplemented migrations. No legacy IDs or gameplay changed.
