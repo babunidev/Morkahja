@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — Encounter studio coordination and reservations
+
+For the six creative chats working on my base game, a shared ledger separates review, reservations, drafts, approval, commits, verification and artwork. ChatGPT (GPT-6.2) read both repositories' standards, reviewed Vale map and lore, parsed 203 encounters and 247 solutions at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92), checked primary and follow references, and documented the 48-record review and 72 provisional reservations. No missing primary or follow references worldwide or overlapping reservations in the pinned catalogs were found. Aetherion is geographically inside the Vale but five city records belong to expansion 1004; Hidden Market's base-game scope remains open. My approved Ambush name is recorded; other proposed choices remain pending. Documentation only on main; no runtime/static-data commands, artwork checks, gameplay or deployment performed.
+
+
 ## 2026-11-25 — Base game content completion plan
 
 For my new base game, Ethera's Vale becomes the sole geographic focus, with other lands held for later. ChatGPT (GPT-6.2) compared the encounter catalog and map labels, reviewed the Vale solution slots and drafted the [content completion plan](CONTENT_COMPLETION_PLAN.md). The source snapshot contains 48 Vale encounters (46 random, two scripted), and the proposed 120-record geographic target requires 72 new encounters after proposed reclassification. The total, merged category name, third Social type and rarity mechanics are proposals. Verification was a source-data count and slot review at the linked snapshot, not a runtime test. Documentation only; no gameplay or deployment changes.

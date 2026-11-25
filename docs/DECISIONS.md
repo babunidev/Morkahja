@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Encounter studio taxonomy clarification
+
+For the combined Hunting and Stealth category, my approved name is **Ambush**. It includes tracking, hunting, concealment, surprise and evasion. Help becomes Aid; Travel and Rare Find retire as solution categories, not map travel or item rarity. Performance remains unapproved. The [completion plan](CONTENT_COMPLETION_PLAN.md) and [production ledger](CONTENT_PRODUCTION_LEDGER.md) distinguish creative direction from provisional quotas and unimplemented migrations. No legacy IDs or gameplay changed.
+
+
 The current project organizes playable client, authoritative server services and shared contracts into one workspace. Browser screens include a credited About Us area with Babuni.dev as author and separate musical contributor credit for Nikita Malko. These are source-observed choices, not a recovered list of acceptance discussions.
 
 Consult the original log at the end of the [development journal](DEVLOG.md) for dated implementation notes. Never reconstruct missing author approvals from a feature's presence alone. AI contributions remain credited separately.

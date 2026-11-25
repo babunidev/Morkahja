@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Encounter studio coordination (documentation only)
+
+- Recorded approved Ambush terminology; synchronized completion plan and added shared production ledger with existing-content review, family briefs, provisional reservations and separate draft/approval/commit/verification/artwork tracking. No game data, gameplay, expansion or deployment changes.
+
+
 ## 2026-11-25 — Base game content planning (documentation only)
 
 - Added the Ethera's Vale [content completion plan](docs/CONTENT_COMPLETION_PLAN.md), source audit, proposed quotas, correction ledger and local work checklist; linked the roadmap and recorded creative direction and AI contribution. No gameplay or release changes.

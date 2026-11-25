@@ -1,7 +1,7 @@
 # Base game content completion plan — Ethera's Vale
 
 **Creative:** Babuni  
-**Status:** Creative direction recorded 2026-11-25; implementation pending. Numerical target, proposed names and individual reclassifications are working proposals, not final approvals.
+**Status:** Creative direction recorded 2026-11-25; implementation pending. Ambush is approved; numerical target, Performance and individual reclassifications remain proposals. See the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md).
 
 ## Scope and design direction
 
@@ -11,18 +11,18 @@ For the new base game, my focus is Ethera's Vale alone. Other lands and their en
 
 | Family | Solution categories | Existing IDs / work |
 | --- | --- | --- |
-| Combat | Combat, Purge, Ambush (working name for combined Hunt + Stealth) | 9/10, 27/28, merge 29/30 and 35/36 |
+| Combat | Combat, Purge, Ambush (approved merger of Hunting + Stealth) | 9/10, 27/28, merge 29/30 and 35/36 |
 | Trick | Find, Open Lock, Climb | 5/6, 7/8, 13/14 |
 | Aid | Heal, Aid, Nurture | 21/22, 25/26, 33/34 |
 | Social | Speechcraft, Inspiration, Performance (proposed third category) | 17/18, 39/40, new pair only after approval |
 | Learn | Learn | 1/2 |
 | Trade | Trade | 3/4 |
 
-Ambush is a provisional name; Stalk is an alternative. Performance means music, dance, storytelling and other expressive acts, distinct from persuasion (Speechcraft) and encouragement (Inspiration). It is not implemented. Keep existing Learn and Trade IDs 4 and 5, retain encounter ID 3 for Aid (formerly Help), and propose ID 6 for Social. No travel or rare-find solution category remains in the target taxonomy; map travel remains a separate mechanic. Rarity is orthogonal to family, solution type and difficulty. The existing RareItem type 32 is not the same as an encounter rarity field. Do not remove item rarity or its roll bonus. Existing legacy IDs must be migrated safely, not reused blindly.
+Ambush is the approved name for the merged Hunting and Stealth category; do not reopen it. Performance means music, dance, storytelling and other expressive acts, distinct from persuasion (Speechcraft) and encouragement (Inspiration). It is not implemented. Keep existing Learn and Trade IDs 4 and 5, retain encounter ID 3 for Aid (formerly Help), and propose ID 6 for Social. No travel or rare-find solution category remains in the target taxonomy; map travel remains a separate mechanic. Rarity is orthogonal to family, solution type and difficulty. The existing RareItem type 32 is not the same as an encounter rarity field. Do not remove item rarity or its roll bonus. Existing legacy IDs must be migrated safely, not reused blindly.
 
 ## Audit and target
 
-Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41491d45d4da0bcfd5c8c0473c9f26d1d23). Counts derived from the complete encounter JSON joined to world-map labels; map placement can be interpretive, not immutable canon. The Hidden Market (20012) has Aetherion label but vale polygon and no explicit location in prose; isolate provisionally pending decision.
+Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41491d45d4da0bcfd5c8c0473c9f26d1d23). Counts derived from the complete encounter JSON joined to world-map labels; map placement can be interpretive, not immutable canon. The Hidden Market (20012) has Aetherion label but vale polygon and no explicit location in prose; hold provisionally pending decision. Canon places Aetherion inside the Vale, but five other Aetherion-labelled encounters are gated by expansion 1004. Keep those expansion records intact; the decision concerns base-game eligibility, not geography.
 
 48 geographic Vale encounters (46 random, 2 scripted); 80 other geographic encounters currently assigned expansion 0; 2 system records. The proposal uses 120 geographic encounters, including scripted encounters, because 27 per main family plus 6 Learn and 6 Trade gives an exact 90/5/5 split without deleting content. This is a planning target, not a user-approved total.
 
@@ -64,26 +64,26 @@ The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 0; Social 
 | 20091–20096 | Combat weapons in slots with Hunt item fallback 30 | Review primary/secondary coherence; mixed lanes may be intentional |
 | 20032, 20098, 20119 | OpenLock primary item with no same-slot fallback | Review deliberate key requirement; not automatically an error |
 | 20188 Mystic Hearth's Seal | Combat/Purge | Keep; preserve follow 19444 |
-| 20051, 20108, 20110 | Hunt or Stealth subtypes | Migrate to approved combined subtype |
+| 20051, 20108, 20110 | Hunt or Stealth subtypes | Plan migration to Ambush |
 
 Review all 48 records, including narrative intent, primary item and secondary skill/item pairs, element, difficulty, reward and map position. Cross-family alternatives may remain where they genuinely fit. Do not rewrite a scene solely to match a stale generated subtype. The base audit found no existing Climb encounter; use the three new Trick slots for Climb provisionally, or rebalance repetitive Find encounters after review.
 
 ## Local work checklist
 
-- [ ] Confirm proposed total 120, combined Hunt/Stealth name, third Social category, and rarity rules.
+- [ ] Confirm proposed total 120, Performance, Aetherion/Hidden Market scope, subtype balance and rarity; Ambush is approved.
 - [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 80 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
 - [ ] Implement approved solution taxonomy across shared/client/server, specialization selection and persisted numeric specialization values. Audit type 20 (travel), 32 (rare item), 29/30 and 35/36, 37/38 (legacy warmth) and all current references. Keep stable solution IDs, inventory charges, equipment, rarity and rewards; plan compatibility for old snapshots and future expansion records. Do not modify unrelated future-expansion stories.
 - [ ] Update subtype inference script so it cannot reintroduce retired categories or overwrite reviewed manual assignments.
 - [ ] Review the existing 48 encounters using the ledger below and resolve flagged cases before locking counts.
-- [ ] Create 13 Combat encounters: distribute across Combat, Purge and combined Hunt/Stealth; favor missing Purge and nonviolent evasion.
+- [ ] Create 13 Combat encounters: distribute across Combat, Purge and Ambush; favor missing Purge and nonviolent evasion.
 - [ ] Create 3 Trick encounters, provisionally Climb.
 - [ ] Create 22 Aid encounters: distribute across Heal, Aid and Nurture.
 - [ ] Create 24 Social encounters: distribute across Speechcraft, Inspiration and approved third category.
 - [ ] Create 4 Learn encounters.
 - [ ] Create 6 Trade encounters.
-- [ ] For each new encounter: unique ID, Vale location, canon-grounded prose, image WebP, element, family/subtype, valid primary/secondary solutions, reward and difficulty. Preserve one primary item maximum unless design is explicitly revised.
+- [ ] For each new encounter: unique ID, Vale location, canon-grounded prose, element, family/subtype, valid primary/secondary solutions, reward and difficulty. Preserve one primary item maximum unless design is explicitly revised. Track image WebP separately; text approval is not artwork completion.
 - [ ] Verify all families, subtypes, rarity and difficulty quotas; confirm 120 geographic encounters plus 2 universal events, 118 random candidates and both sanctuary links.
 - [ ] Run `npm run verify:static-data`, `npm run test:encounter`, relevant specialization/achievement/region-selection tests and typecheck; check desktop and mobile, save compatibility, locked content and actual encounter draws. Record evidence and release separately.
 
@@ -177,4 +177,21 @@ No content work on these lands in this phase. The IDs below are currently expans
 
 ## Evidence and attribution
 
-Sources: [encounter data](../server/game/encountersdata.json), [solution data](../server/game/solutiondata.json), [engine types](../server/src/engine/types.ts), [map assignments](../client/src/ui/game/worldMap/encounterLocations.ts), [map CSV](data/encounter_locations.csv), [selection logic](../server/src/services/encounterGenerator.ts), [specializations](../shared/src/specialization.ts), [achievement mapping](../server/src/domain/achievements/encounterSolveAchievements.ts). ChatGPT (GPT-6.2) joined the source data, audited all 48 Vale slot records, computed quotas, and drafted the plan from my creative direction. Classification and naming proposals remain subject to review. Documentation only: no gameplay or production changes, no runtime tests performed.
+Sources: [encounter data](../server/game/encountersdata.json), [solution data](../server/game/solutiondata.json), [engine types](../server/src/engine/types.ts), [map assignments](../client/src/ui/game/worldMap/encounterLocations.ts), [map CSV](data/encounter_locations.csv), [selection logic](../server/src/services/encounterGenerator.ts), [specializations](../shared/src/specialization.ts), [achievement mapping](../server/src/domain/achievements/encounterSolveAchievements.ts). ChatGPT (GPT-6.2) joined the source data, audited all 48 Vale slot records, computed quotas, and drafted the plan from my creative direction. Individual classifications and Performance remain subject to review; Ambush is approved. Documentation only: no gameplay or production changes, no runtime tests performed.
+
+## Studio coordination — 2026-11-25
+
+The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unchecked list above for task allocation and status tracking; the original audit remains reference. Rechecked at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92): 203 worldwide encounters, 247 solutions, 48 current Vale-label records and six Aetherion-label records within the Vale polygon. Hidden Market is expansion 0; five city records belong to expansion 1004. Retain the 48 baseline, 72 new reservations and 120 target provisionally until scope and total are confirmed.
+
+| Family | Target | Proposed subtype targets | Existing proposed mix | New work / revision |
+| --- | ---: | --- | --- | --- |
+| Combat | 27 | 9 Combat / 9 Purge / 9 Ambush | 8 / 1 / 5 | 1 / 8 / 4 |
+| Trick | 27 | 9 Find / 9 Open Lock / 9 Climb (pending revision approval) | 21 / 3 / 0 | 3 Climb; equal split also requires six Find-to-Open-Lock and six Find-to-Climb revisions |
+| Aid | 27 | 9 Heal / 9 Aid / 9 Nurture | 1 / 2 / 2 | 8 / 7 / 7 |
+| Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance (pending) | 1 / 0 / 2 pending | 8 / 9 / 7 pending |
+| Learn | 6 | 6 Learn | 2 | 4 |
+| Trade | 6 | 6 Trade | 0 | 6 |
+
+No Trick revisions approved: 21 Find / 3 Open Lock / 3 Climb is the preservation baseline, not desired balance. Do not approve revisions by arithmetic. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
+
+Open decisions, in order: (1) whether Hidden Market joins base-game Trade while Aetherion expansion 1004 stays protected; (2) confirm 120 total; (3) approve or reject Performance; (4) approve subtype rebalancing, especially Trick; (5) define rare content frequency separately from future implementation. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.

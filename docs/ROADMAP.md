@@ -5,7 +5,8 @@
 ## Base game content completion — planned 2026-11-25
 
 - [x] Source audit and [content completion plan](CONTENT_COMPLETION_PLAN.md) for Ethera's Vale.
-- [ ] Confirm proposed quotas and names, isolate other lands, migrate taxonomy safely, review existing content and complete the new encounters.
+- [x] Record approved Ambush name and establish the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) with provisional family tasks and ID reservations.
+- [ ] Resolve scope, total, Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
 ## Existing source
