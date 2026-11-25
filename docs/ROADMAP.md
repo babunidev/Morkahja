@@ -6,7 +6,8 @@
 
 - [x] Source audit and [content completion plan](CONTENT_COMPLETION_PLAN.md) for Ethera's Vale.
 - [x] Record approved Ambush name and establish the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) with provisional family tasks and ID reservations.
-- [ ] Resolve scope, total, Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
+- [x] Confirm Hidden Market as base-game Trade outside Aetherion; protect expansion 1004.
+- [ ] Approve and correct Hidden Market map placement; confirm total, Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
 ## Fourth playable role — approved direction, not implemented (2026-11-25)

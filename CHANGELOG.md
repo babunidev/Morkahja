@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Hidden Market scope correction (documentation only)
+
+- Recorded approved base-game Trade eligibility for encounter 20012 outside Aetherion; adjusted planning counts and active Trade reservations, preserved expansion 1004 and documented a proposed map correction. No game data, map files or deployment changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-25 — Development screenshots in the journal (documentation only)
 
 - `docs/DEVLOG.md`: 45 entries from 12 to 24 November 2026 now show the development screenshots taken that day, 124 in all. The images are web-sized WebP copies served from the babuni.dev server's media folder (`https://www.babuni.dev/screenshots/morkahja-rpg/…`), not stored in Git; on babuni.dev the journal shows them as small thumbnails that open large. Screenshots with QR codes or a local network address were left out. No code changed. Claude Code (Claude Opus 5.5).

@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Hidden Market base-game scope
+
+The Hidden Market (20012) belongs to my base game, outside Aetherion. Its existing city map placement is a mistake; the five expansion 1004 encounters remain separate. The story describes an underground market reached through a tunnel, without placing it inside the city. ChatGPT (GPT-6.2) proposed a western Vale pin near the west trade road ([405, 552] map units), but the exact entrance and coordinates have not been approved. The [completion plan](CONTENT_COMPLETION_PLAN.md) and [production ledger](CONTENT_PRODUCTION_LEDGER.md) now count 49 existing base-game encounters and 71 new tasks at the provisional target of 120. No map, game data or lore files changed.
+
+
 ## 2026-11-25 — Bard and four-role direction
 
 For my four principal encounter families, the playable roles should have clear, recognizable identities: **Warrior — Combat; Rogue — Trick; Mage — Aid; Bard — Social.** The Mage's magic should lean toward helping, healing and sustaining others rather than being defined primarily by offensive spellcasting. The Bard is my chosen fourth playable role, with a natural affinity for speech, encouragement, music and storytelling.

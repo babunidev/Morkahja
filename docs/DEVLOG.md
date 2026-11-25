@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — Hidden Market scope correction
+
+The earlier map-based audit mistook my Hidden Market for a city encounter. It belongs outside Aetherion in the base game. ChatGPT (GPT-6.2) reread encounter 20012, compared the existing map pin with the Vale boundary and trade routes, and updated the plan and ledger: 49 existing, 71 new at the provisional 120 target; five new Trade tasks, one unused reserved ID retained. A western Vale pin near the trade road is proposed, not approved. Documentation only; no narrative, canon, game data, map files, runtime tests or deployment changes.
+
+
 ## 2026-11-25 — A fourth role: Bard
 
 With the four main encounter families taking shape, my three existing roles leave room for another recognizable adventurer. ChatGPT (GPT-6.2) researched the role philosophies, common arts, healing traditions and elemental music in MorkahjaWorld, and reviewed the game’s current role-specific solutions, starter inventory, avatar creation and specialization design. Guardian was its preferred proposal, but my choice is Bard. Combat suits the Warrior, Trick the Rogue, Aid the Mage and Social the Bard. The Mage's magic should lean more toward helping and restoration. Artisan remains an interesting possibility for later; Guardian remains a lore philosophy rather than the selected fourth class. The [decision](DECISIONS.md#2026-11-25--bard-and-four-role-direction) records this distinction.

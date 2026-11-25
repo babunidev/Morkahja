@@ -26,9 +26,9 @@ Ambush is the approved name for the merged Hunting and Stealth category; do not 
 
 ## Audit and target
 
-Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41491d45d4da0bcfd5c8c0473c9f26d1d23). Counts derived from the complete encounter JSON joined to world-map labels; map placement can be interpretive, not immutable canon. The Hidden Market (20012) has Aetherion label but vale polygon and no explicit location in prose; hold provisionally pending decision. Canon places Aetherion inside the Vale, but five other Aetherion-labelled encounters are gated by expansion 1004. Keep those expansion records intact; the decision concerns base-game eligibility, not geography.
+Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41491d45d4da0bcfd5c8c0473c9f26d1d23). Counts derived from the complete encounter JSON joined to world-map labels; map placement can be interpretive, not immutable canon. The Hidden Market (20012) is approved base-game Trade, outside Aetherion. Its city label/pin was a mistaken interpretive placement, not canon; the narrative describes an underground market reached through a tunnel. Its exact entrance remains unplaced. Five other Aetherion-labelled records belong to expansion 1004 and remain protected. Proposed map correction: western Vale near the west trade road, at map units [405, 552] (CSV approximately 195.8, 231.1); location proposal only, pending approval.
 
-48 geographic Vale encounters (46 random, 2 scripted); 80 other geographic encounters currently assigned expansion 0; 2 system records. The proposal uses 120 geographic encounters, including scripted encounters, because 27 per main family plus 6 Learn and 6 Trade gives an exact 90/5/5 split without deleting content. This is a planning target, not a user-approved total.
+49 geographic base-game encounters (47 random, 2 scripted); 79 other geographic encounters currently assigned expansion 0; 2 system records. The proposal uses 120 geographic encounters, including scripted encounters, because 27 per main family plus 6 Learn and 6 Trade gives an exact 90/5/5 split without deleting content. This is a planning target, not a user-approved total.
 
 | Family | Existing after proposed classification | Existing random | Target total | New needed |
 | --- | ---: | ---: | ---: | ---: |
@@ -37,14 +37,14 @@ Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41
 | Aid | 5 | 3 | 27 | 22 |
 | Social | 3 | 3 | 27 | 24 |
 | Learn | 2 | 2 | 6 | 4 |
-| Trade | 0 | 0 | 6 | 6 |
-| Total | 48 | 46 | 120 | 72 |
+| Trade | 1 | 1 | 6 | 5 |
+| Total | 49 | 47 | 120 | 71 |
 
-The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 0; Social does not exist. Proposed classification preserves all 48. The finished random pool would be 118 (Aid 25 random + 2 scripted, other main families 27 random each, Learn/Trade 6 each); the catalog would also have 2 system events. If equal random rather than geographic family counts is preferred, revise the quota separately. No selection weighting is proposed.
+The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 1; Social does not exist. Proposed classification preserves all 49. The finished random pool would be 118 (Aid 25 random + 2 scripted, other main families 27 random each, Learn/Trade 6 each); the catalog would also have 2 system events. If equal random rather than geographic family counts is preferred, revise the quota separately. No selection weighting is proposed.
 
 ### Difficulty and rarity
 
-- [ ] Keep difficulty 1 on 114 of 120 geographic records and difficulty 2 on 6 (5%). Existing difficulty 1: 46; difficulty 2: 2 (19001 and 19444, both scripted).
+- [ ] Keep difficulty 1 on 114 of 120 geographic records and difficulty 2 on 6 (5%). Existing difficulty 1: 47; difficulty 2: 2 (19001 and 19444, both scripted).
 - [ ] Retain both sanctuaries at difficulty 2 provisionally and select four additional difficulty-2 random encounters, preferably one in each major family. All other new encounters difficulty 1. No difficulty 3+ in geographic base game.
 - [ ] Define what a rare encounter means: reward quality, narrative rarity, or lower draw probability. Current generator draws uniformly within eligible region pool; no explicit encounter rarity field found. Do not mistake reward type 3 or difficulty 2 for a rarity mechanism.
 - [ ] Provisional content target: at least one rare encounter per family (six minimum), included in family counts. Rare Treasurechest (20032) and Hearthguard Sanctuary (19444) currently use reward category 3 and are candidates, not proof of rarity. Keep rare encounters possible at either difficulty. Approve rarity frequency and implementation separately.
@@ -70,23 +70,23 @@ The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 0; Social 
 | 20188 Mystic Hearth's Seal | Combat/Purge | Keep; preserve follow 19444 |
 | 20051, 20108, 20110 | Hunt or Stealth subtypes | Plan migration to Ambush |
 
-Review all 48 records, including narrative intent, primary item and secondary skill/item pairs, element, difficulty, reward and map position. Cross-family alternatives may remain where they genuinely fit. Do not rewrite a scene solely to match a stale generated subtype. The base audit found no existing Climb encounter; use the three new Trick slots for Climb provisionally, or rebalance repetitive Find encounters after review.
+Review all 49 records, including narrative intent, primary item and secondary skill/item pairs, element, difficulty, reward and map position. Cross-family alternatives may remain where they genuinely fit. Do not rewrite a scene solely to match a stale generated subtype. The base audit found no existing Climb encounter; use the three new Trick slots for Climb provisionally, or rebalance repetitive Find encounters after review.
 
 ## Local work checklist
 
-- [ ] Confirm proposed total 120, Performance, Aetherion/Hidden Market scope, subtype balance and rarity; Ambush is approved.
-- [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 80 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
+- [ ] Confirm proposed total 120, Performance, subtype balance and rarity; Ambush and Hidden Market base-game scope are approved. Confirm proposed Hidden Market pin separately.
+- [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
 - [ ] Implement approved solution taxonomy across shared/client/server, specialization selection and persisted numeric specialization values. Audit type 20 (travel), 32 (rare item), 29/30 and 35/36, 37/38 (legacy warmth) and all current references. Keep stable solution IDs, inventory charges, equipment, rarity and rewards; plan compatibility for old snapshots and future expansion records. Do not modify unrelated future-expansion stories.
 - [ ] Update subtype inference script so it cannot reintroduce retired categories or overwrite reviewed manual assignments.
-- [ ] Review the existing 48 encounters using the ledger below and resolve flagged cases before locking counts.
+- [ ] Review the existing 49 encounters using the ledger below and resolve flagged cases before locking counts.
 - [ ] Create 13 Combat encounters: distribute across Combat, Purge and Ambush; favor missing Purge and nonviolent evasion.
 - [ ] Create 3 Trick encounters, provisionally Climb.
 - [ ] Create 22 Aid encounters: distribute across Heal, Aid and Nurture.
 - [ ] Create 24 Social encounters: distribute across Speechcraft, Inspiration and approved third category.
 - [ ] Create 4 Learn encounters.
-- [ ] Create 6 Trade encounters.
+- [ ] Create 5 Trade encounters; review existing Hidden Market (20012).
 - [ ] For each new encounter: unique ID, Vale location, canon-grounded prose, element, family/subtype, valid primary/secondary solutions, reward and difficulty. Preserve one primary item maximum unless design is explicitly revised. Track image WebP separately; text approval is not artwork completion.
 - [ ] Verify all families, subtypes, rarity and difficulty quotas; confirm 120 geographic encounters plus 2 universal events, 118 random candidates and both sanctuary links.
 - [ ] Run `npm run verify:static-data`, `npm run test:encounter`, relevant specialization/achievement/region-selection tests and typecheck; check desktop and mobile, save compatibility, locked content and actual encounter draws. Record evidence and release separately.
@@ -158,6 +158,8 @@ Review all 48 records, including narrative intent, primary item and secondary sk
 
 ### Trade
 
+- [ ] 20012 — Hidden Market (Trade; difficulty 1; approved base-game scope; proposed map correction pending)
+
 
 
 ## Isolated content inventory (reference only)
@@ -170,7 +172,6 @@ No content work on these lands in this phase. The IDs below are currently expans
 | Frostwind Mountains | 9 | 20008, 20061, 20100, 20102, 20103, 20104, 20109, 20120, 20121 |
 | Everwinter Valley | 1 | 20009 |
 | Evergrove | 11 | 20010, 20016, 20021, 20024, 20029, 20033, 20053, 20064, 20125, 20127, 20191 |
-| Aetherion | 1 | 20012 |
 | Emberfrost | 7 | 20013, 20017, 20019, 20020, 20030, 20059, 20126 |
 | Celesterra | 7 | 20014, 20023, 20028, 20054, 20058, 20065, 20076 |
 | Fyrskar Mountains | 7 | 20015, 20018, 20056, 20097, 20099, 20106, 20128 |
@@ -185,7 +186,7 @@ Sources: [encounter data](../server/game/encountersdata.json), [solution data](.
 
 ## Studio coordination — 2026-11-25
 
-The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unchecked list above for task allocation and status tracking; the original audit remains reference. Rechecked at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92): 203 worldwide encounters, 247 solutions, 48 current Vale-label records and six Aetherion-label records within the Vale polygon. Hidden Market is expansion 0; five city records belong to expansion 1004. Retain the 48 baseline, 72 new reservations and 120 target provisionally until scope and total are confirmed.
+The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unchecked list above for task allocation and status tracking; the original audit remains reference. Rechecked at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92): 203 worldwide encounters, 247 solutions, 48 current Vale-label records and six Aetherion-label records within the Vale polygon. Hidden Market is expansion 0; five city records belong to expansion 1004. Scope is now approved: include Hidden Market in the base game, outside the city. The current baseline is 49 existing records and 71 new tasks at the provisional 120 target. The map still has the erroneous city pin until a new location is approved and implemented.
 
 | Family | Target | Proposed subtype targets | Existing proposed mix | New work / revision |
 | --- | ---: | --- | --- | --- |
@@ -194,8 +195,8 @@ The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unch
 | Aid | 27 | 9 Heal / 9 Aid / 9 Nurture | 1 / 2 / 2 | 8 / 7 / 7 |
 | Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance (pending) | 1 / 0 / 2 pending | 8 / 9 / 7 pending |
 | Learn | 6 | 6 Learn | 2 | 4 |
-| Trade | 6 | 6 Trade | 0 | 6 |
+| Trade | 6 | 6 Trade | 1 | 5 |
 
 No Trick revisions approved: 21 Find / 3 Open Lock / 3 Climb is the preservation baseline, not desired balance. Do not approve revisions by arithmetic. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
 
-Open decisions, in order: (1) whether Hidden Market joins base-game Trade while Aetherion expansion 1004 stays protected; (2) confirm 120 total; (3) approve or reject Performance; (4) approve subtype rebalancing, especially Trick; (5) define rare content frequency separately from future implementation. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
+Open decisions, in order: (1) approve the proposed Hidden Market map pin; (2) confirm 120 total; (3) approve or reject Performance; (4) approve subtype rebalancing, especially Trick; (5) define rare content frequency separately from future implementation. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
