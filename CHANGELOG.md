@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Hidden Market map placement
+
+- Corrected encounter 20012 from the Aetherion city pin to western Ethera's Vale near the western trade road; synchronized CSV and generated map entry. Encounter data and expansion 1004 records unchanged. Source checks only; not deployed. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-25 — Hidden Market scope correction (documentation only)
 
 - Recorded approved base-game Trade eligibility for encounter 20012 outside Aetherion; adjusted planning counts and active Trade reservations, preserved expansion 1004 and documented a proposed map correction. No game data, map files or deployment changes. ChatGPT (GPT-6.2).

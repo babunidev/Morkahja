@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — Hidden Market map correction
+
+With the entrance location approved, my Hidden Market now has a separate western Vale map pin rather than the Aetherion city pin. ChatGPT (GPT-6.2) updated the source CSV, synchronized the single generated map record manually using the documented coordinate conversion, and recorded the decision. A source check confirmed both coordinates agree, the point is inside the Vale more than 12 map units from its boundary, only encounter 20012 changed in each map file, and its encounter record remains Trade in expansion 0. The generator was not run and the game was not built, tested in-browser or deployed. World archive and encounter prose remain unchanged.
+
+
 ## 2026-11-25 — Hidden Market scope correction
 
 The earlier map-based audit mistook my Hidden Market for a city encounter. It belongs outside Aetherion in the base game. ChatGPT (GPT-6.2) reread encounter 20012, compared the existing map pin with the Vale boundary and trade routes, and updated the plan and ledger: 49 existing, 71 new at the provisional 120 target; five new Trade tasks, one unused reserved ID retained. A western Vale pin near the trade road is proposed, not approved. Documentation only; no narrative, canon, game data, map files, runtime tests or deployment changes.

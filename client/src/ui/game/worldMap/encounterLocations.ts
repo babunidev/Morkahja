@@ -38,7 +38,7 @@ export const ENCOUNTER_LOCATIONS: Readonly<Record<number, EncounterLocation | nu
   20009: { regionId: 'everwinter', label: "Everwinter Valley", at: [608, 194] },
   20010: { regionId: 'evergrove', label: "Evergrove", at: [779, 998] },
   20011: { regionId: 'vale', label: "Ethera's Vale", at: [426, 566] },
-  20012: { regionId: 'vale', label: "Aetherion", at: [520, 572] },
+  20012: { regionId: 'vale', label: "Ethera's Vale", at: [405, 552] },
   20013: { regionId: 'emberfrost', label: "Emberfrost", at: [901, 199] },
   20014: { regionId: 'southwest-mountains', label: "Celesterra", at: [166, 954] },
   20015: { regionId: 'fyrskar', label: "Fyrskar Mountains", at: [197, 205] },

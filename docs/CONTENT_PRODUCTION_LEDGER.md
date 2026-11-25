@@ -26,13 +26,13 @@ Reservations are not game records or creative approval. Existing records are com
 | 03 Aid | Distinguish healing injury, practical aid/protection and nurturing food/rest/growth. Preserve both sanctuaries. |
 | 04 Social | Draft Speechcraft and Inspiration; hold Performance tasks and two legacy candidates pending approval. No invented engine type. |
 | 05 Learn | Distinct observation/study/discovery, not generic treasure; preserve cube and elemental-current mysteries. |
-| 06 Trade | Roads, caravans, exchanges; no player trading or new mechanics. Review existing Hidden Market (20012), approved base-game Trade; five new tasks. Map correction proposal pending; expansion 1004 protected. |
+| 06 Trade | Roads, caravans, exchanges; no player trading or new mechanics. Review existing Hidden Market (20012), approved base-game Trade; five new tasks. Map correction approved and committed; expansion 1004 protected. |
 
 One task at a time: consult both repositories, review earliest unfinished task, record concept, place, element and solution IDs, draft, obtain approval, recheck main, commit authorized text/metadata, verify. Existing review tasks precede new tasks unless blocked or redirected by Management. Artwork independent; no gameplay implementation.
 
 ## Existing review ledger
 
-All rows have legacy prose and artwork references in source; artwork quality/file availability unverified. All remain open for studio creative review. Classifications below are proposals where they differ from current data. A map placement is not proof of precise canon. The 49 rows contain 47 D1 and two D2, 47 random and two scripted. The additional existing Trade record 20012 is included by approved scope correction; its map pin remains pending. Worldwide primary and follow references resolve; no Vale row exceeds one primary item.
+All rows have legacy prose and artwork references in source; artwork quality/file availability unverified. All remain open for studio creative review. Classifications below are proposals where they differ from current data. A map placement is not proof of precise canon. The 49 rows contain 47 D1 and two D2, 47 random and two scripted. The additional existing Trade record 20012 is included by approved scope correction; its map pin is approved and corrected. Worldwide primary and follow references resolve; no Vale row exceeds one primary item.
 
 | ID | Title | Proposed family/subtype | Primary ID / fallback type by slot | D / follow / reward type×amount | Review recommendation |
 | --- | --- | --- | --- | --- | --- |
@@ -85,14 +85,14 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20011 | Magic Source | Learn / Learn | B:—/2; C:—/1 | 1 / — / 1×2 | Magical fount; learning not guaranteed awakening; location interpretive. |
 | 20074 | Mysterious Cube | Learn / Learn | B:—/2; C:—/1 | 1 / — / 1×2 | Cube origin/purpose and exact location unresolved in lore. |
 
-| 20012 | Hidden Market | Trade / Trade | B:—/4; C:—/3 | 1 / — / 2×1 | Approved base-game eligibility; no primary item, existing Trade lanes fit. Preserve underground market narrative; proposed western Vale map pin pending. |
+| 20012 | Hidden Market | Trade / Trade | B:—/4; C:—/3 | 1 / — / 2×1 | Approved base-game eligibility; no primary item, existing Trade lanes fit. Preserve underground market narrative; western Vale map pin approved and committed. |
 
 ### Cross-record findings
 
 - Nine Nagar/Goldhorn scenes dominate Combat; vary situations, not creature names. Twenty-one Find candidates, three locked chests and no Climb dominate Trick. Preserve A, H, K, J, O, M, A clues without inventing their meaning.
 - Primary/fallback same-lane type differences (not automatically errors): 20068:B 10080(6)/20; 20084:B 10094(20)/6; 20091:B 10102(10)/30; 20092:B 10103(10)/30; 20093:B 10104(10)/30; 20094:B 10107(10)/30; 20095:B 10108(10)/30; 20096:B 10109(10)/30; 20107:B 10119(26)/30; 20185:B 10235(40)/18. Primary IDs and fallback types are distinct; review intention before edits.
 - Six Climb skills and six Climb items, seven Purge skills and fourteen Purge items, one Trade skill and two Trade items exist worldwide. Reuse after reading complete records. Hunting/Stealth solutions require semantic review (Melodic Persuasion 10056 is HuntingSkill; Backstab 10065 is StealthSkill). No global migration here.
-- Aetherion is canonically within the Vale. Six city-label records lie in the vale map polygon: 20012 Hidden Market is expansion 0, exact entrance unplaced; 20062 and 20181–20184 belong to expansion 1004, all D2. Include 20012 in the base-game baseline by approved correction; the other five remain protected expansion 1004 records. The current 20012 pin duplicates the city center [520, 572]. Proposed replacement [405, 552] lies inside the Vale polygon near its west trade road, away from the city; exact entrance is not established canon. Do not change CSV/generated map before pin approval. Geography and expansion gating differ.
+- Aetherion is canonically within the Vale. The earlier audit found six city-label records in the vale polygon: 20012 was mislabelled, while 20062 and 20181–20184 belong to expansion 1004, all D2. Include 20012 in the base-game baseline; the five city records remain protected. The approved pin [405, 552] replaces [520, 572] in both CSV and generated map entry, with the Ethera's Vale label. The precise underground layout remains unspecified. Geography and expansion gating differ.
 - Lore: [Vale](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Etheras_Vale.md), [Vale landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Vale_Landmarks.md), [Aetherion](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Aetherion.md), [city landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Aetherion_Landmarks.md), [Nagar](https://github.com/babunidev/MorkahjaWorld/blob/main/Creatures/Nagar.md), [wolves](https://github.com/babunidev/MorkahjaWorld/blob/main/Creatures/Wolves_and_Liani.md), [Nereval](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Nerevals_Sanctuary.md), [Hearthguard](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Hearthguard_Sanctuary.md), [relics](https://github.com/babunidev/MorkahjaWorld/blob/main/Objects/Relics_and_Enigmas.md).
 
 ## New tasks
