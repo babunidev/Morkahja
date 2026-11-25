@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Development screenshots in the journal (documentation only)
+
+- `docs/DEVLOG.md`: 45 entries from 12 to 24 November 2026 now show the development screenshots taken that day, 124 in all. The images are web-sized WebP copies served from the babuni.dev server's media folder (`https://www.babuni.dev/screenshots/morkahja-rpg/…`), not stored in Git; on babuni.dev the journal shows them as small thumbnails that open large. Screenshots with QR codes or a local network address were left out. No code changed. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-25 — Fourth-role direction (documentation only)
 
 - Recorded Babuni's approved direction for Bard as the fourth playable role, Mage's Aid emphasis, and the Warrior/Combat, Rogue/Trick, Mage/Aid, Bard/Social affinities. Artisan remains a possible future role; Guardian was not selected. ChatGPT (GPT-6.2) researched the game and lore and synchronized the planning documents. No gameplay, game data, canon or release changes.

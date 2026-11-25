@@ -262,6 +262,8 @@ On my phone the game leaned to the left and the notifications at the top were of
 
 Item descriptions in the Inventory and Skillbook sometimes slid under the frame or off the picture. What I wanted, as I described it: open toward the middle of the picture from wherever the item sits, hold on to the item by one corner, and mark that corner in gold so the two read as connected. AI implemented the placement as a small tested rule bounded by the picture itself, and found along the way that on desktop the tooltip had been positioned in the stage's unscaled pixels while measured in screen pixels. **Verification:** measured in the browser on desktop and two phone sizes; client tests and build passed. **Not deployed yet.**
 
+![An item tooltip in the new style, opening toward the middle of the picture](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-12/screenshot-20261112-210047.webp)
+
 ### One tooltip style for the whole game screen — 2026-11-12
 
 The new inventory tooltips worked so well that I wanted the same everywhere in the game: on the solutions, with the dice centred, on rewards and losses, on the Continue arrow, on the menu buttons with a word about what each does, and a small name-and-level preview on my avatar, all appearing after a short delay. AI built one shared tooltip for all of them. Testing it with simulated long presses turned up an older bug: on a touch screen, releasing a long press still pressed the button, so reading a solution's tooltip could use the solution. That is fixed too. **Verification:** checked with touch long presses in the browser and with tests and a build; the desktop hover delay is for my own test. **Not deployed yet.** When I tried it, the solution tooltips, even the dice's, had scroll bars. A leftover height limit made the frame scrollable, and the gold marker poking out of the frame was enough to trigger them. The tooltips now simply grow with their text.
@@ -282,18 +284,26 @@ Avatar creation on my phone was cramped and off-centre, with small race buttons.
 
 On my phone the new avatar creation was close, but the frame still clipped past the edges. AI now sizes the preview by the frame, not the portrait inside it. I also wanted the selected race, role and sex easier to see. Each now has a thin gold ring, a ring with random gaps around it, and the glow. In the game, when I play alone, my avatar now takes the whole space between the solutions and the bottom buttons, instead of a slot sized for three party members. **Verification:** measured and screenshotted at two phone sizes and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
 
+![Avatar creation on a desktop browser, with a glow on the hovered choice](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/creation-hover-glow-desktop.webp) ![Avatar creation on a phone, the preview sized by its frame](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/line-frame-avatar-creation-phone.webp)
+
 
 ### One frame for everything — 2026-11-13
 
 The new encounter frame looked so much better than the rounded gold borders everywhere else that I wanted it on every panel and tooltip: the menus, avatar creation, the tooltips, all with the same lines, the gapped line, the thin line, the little gap, the outer line and the corner triangles, just a little thinner. AI made one shared frame and put it on all of them, in a panel size and a smaller tooltip size, and moved the tooltips' gold corner marker onto the cut corner. **Verification:** screenshots of the menus, avatar creation and tooltips at phone size and on desktop in a headless browser; tests and build passed. **Not deployed yet.**
 
+![The menu buttons with tooltips in the new line frame, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/line-frame-nav-tooltips-desktop.webp) ![A menu tooltip in the line frame on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/line-frame-menu-tooltip-phone.webp) ![A solution tooltip in the line frame on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/line-frame-solution-tooltip-phone.webp) ![Settings in the line frame on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/line-frame-settings-phone.webp)
+
 ### Frames all the way down — 2026-11-13
 
 The panels had their new frames, but everything inside still had the old rounded gold lines. I asked for the buttons, fields, friend entries and cards to get a simpler version of the frame: just the line and one gapped line around it, cut corners and the small triangles. Dividers should join the frame with little triangles instead of stopping in a right angle, and the achievement bars should get cut ends too. I had also seen the Friends list run past the right edge on my phone. It was the same width mistake as on the welcome screen, and it is now fixed for every panel. The patch notes had stopped in June, so they now cover everything since, with a link to the full changelog. And I decided on a version rule: every development step counts one up in the beta number, which brings us from 0.9.0-beta.2.2 (read as 22) to 0.9.0-beta.42. AI drew the simple frame as one image per colour, so each element only needed a style change. **Verification:** screenshots of the menus and avatar creation on phone and desktop sizes; tests and build passed. **Not deployed yet.**
 
+![The Friends panel with the simpler frame on its fields and buttons, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/simple-frame-friends-desktop.webp) ![The profile with the simpler inner frames on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/simple-frame-profile-phone.webp) ![Expansions with the simpler inner frames on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/simple-frame-expansions-phone.webp) ![A friends list that fits the phone screen](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/friends-list-fits-phone.webp)
+
 ### Polishing the frames — 2026-11-13
 
 Trying the new frames, I saw lines flicker across the buttons whenever they grew on hover, like little scroll bars. The cause was in how the browser pieced the frame image together, so AI now draws the frame from plain background layers, and the glow moved outside so the cut corners don't clip it. In avatar creation the hover glow was cut off at the sides; it has room now. The friend entries still poked out of the Friends panel, and their buttons didn't react on hover like the rest; both are fixed. The title choice on the profile opened a plain browser list, so it is now a framed list in the game's colours. The patch notes link to the changelog on my website instead of GitHub. One thing for the website: its Morkahja page shows the game's address but no clear "Play" link. **Verification:** screenshots before and after in a headless browser at phone and desktop sizes; tests and build passed. **Not deployed yet.**
+
+![Before: thin lines flickering across a growing button, zoomed in](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/hover-seams-before-zoom.webp) ![After: the same button without the lines, zoomed in](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/hover-seams-fixed-zoom.webp) ![The title dropdown in the profile, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/title-dropdown-desktop.webp)
 
 ### One countdown per wait — 2026-11-13
 
@@ -303,21 +313,31 @@ Watching the frame timer, I saw it start over for every little animation: once f
 
 The reward tooltips had a small divider between the item's name and its text, and I liked it enough to want it everywhere: on the solutions, the losses and the inventory. AI made it one shared piece and put it in every game tooltip with a title and text, and gave the dice tooltip enough room inside its frame along the way. **Verification:** screenshots of the tooltips at phone and desktop sizes in a headless browser; tests and build passed. **Not deployed yet.**
 
+![An inventory tooltip with a divider under its title, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/tooltip-divider-inventory-desktop.webp) ![Tooltips with dividers on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/tooltip-dividers-phone.webp)
+
 ### Stepping back through avatars — 2026-11-13
 
 Avatar creation used to let me go back to an earlier avatar, and I wanted that back, now with redo as well. Every pick and every randomize is saved in a list, and two small round arrow buttons beside the name step back and forward through it. If I step back and change something, the change slots in at that point and everything I did afterwards stays reachable. **Verification:** stepped through randomizing, undoing, changing and redoing in a headless browser at phone size; tests and build passed. **Not deployed yet.**
+
+![Avatar creation on a phone with the round undo and redo buttons beside the name](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/avatar-creation-undo-redo-phone.webp)
 
 ### Avatar details with a frame — 2026-11-13
 
 One element still had no frame: the details card that opens when I tap an avatar. It now opens like the tooltips, in the same frame, popping out above my avatar with the marker in the middle, and for the side slots anchored by a corner the way the item tooltips are. **Verification:** checked for my own avatar at phone and desktop sizes in a headless browser; the side slots still need my own look with a party; tests and build passed. **Not deployed yet.**
 
+![The avatar details card popping out above the avatar, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/avatar-details-popover-desktop.webp) ![The avatar details card on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/avatar-details-popover-phone.webp)
+
 ### Lives on the avatar — 2026-11-13
 
 I wanted my lives where I can see them: five essence slots on the bottom edge of my avatar's portrait, one at the bottom and two on each side, instead of a row hidden in the details. They now behave like a small belt. A lost essence leaves from its slot and the slot stays empty. At the next encounter, essences from my inventory fly in to fill the gaps, and a new essence I collect goes straight into a free slot, or into the inventory once all five are full. **Verification:** in a headless browser at phone size the slots showed on the avatar, and a lost essence emptied its slot; the refill and collecting into a slot are covered by tests but still need a look in play. **Not deployed yet.**
 
+![Five essence slots along the bottom edge of the avatar portrait, phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/essence-slots-on-avatar-phone.webp)
+
 ### Making room on the avatar — 2026-11-13
 
 With the essence slots along the bottom of my avatar, the badge showing what I used and what I rolled sat in their way. It moved to the top-right corner of the portrait. **Verification:** screenshot after a roll at phone size; tests and build passed. **Not deployed yet.**
+
+![The used-and-rolled badge in the top-right corner of the portrait after a roll, phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/choice-badge-top-right-phone.webp)
 
 ## 2026-11-13 — Giving the repository clear permissions
 
@@ -343,13 +363,19 @@ Just before a spent solution flew into the encounter, or a reward flew out of it
 
 Some encounters ask for two items, and I expect some will ask for more. Until now one tap spent two copies of the same item with a single roll, so I never really chose. I wanted the solutions I pick to rise and hover above their slots until the set is complete, then fly into the encounter together; if I'm short, the dice finishes the set. Each solution should roll on its own and the rolls should make one outcome. AI asked me four questions, and I chose: average the rolls; let the dice stand in for each missing solution; let me tap the same slot again for another copy; and let me put a hovering solution back by tapping it. AI built it with the rules shared between the server and the game screen, and tried it in a browser on an encounter set to need three. **Verification:** full release check with new tests and a local play-through on desktop and phone sizes. I asked for it to go live the same evening so I could test it with my high-level accounts; released as 0.9.0-beta.53.
 
+![An encounter asking for two solutions, ready to choose](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/solution-sets-1-ready.webp) ![One chosen solution hovering above its slot](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/solution-sets-2-one-hovering.webp) ![Two copies chosen, both hovering](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/solution-sets-3-two-copies.webp) ![The result after both solutions flew in](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/solution-sets-6-result.webp)
+
 ### Everything fades, nothing pops — 2026-11-13
 
 I like how the game behaves now, but a few things still pop. When I choose a solution, the others disappear all at once after its animation; I want them to fade while it plays. Menus and the Lore stutter the first time I open them, because their pictures arrive while they are already showing. I asked for them to load first, with the button I pressed pulsing until they are ready, and for a new avatar to fade into the avatar menu once it is in place. On my phone the inventory tooltips glitched when I didn't hit the middle of an item. AI found the cause: after each touch the browser also sends mouse and focus events, so a tooltip opened, closed and opened again; and the panel title covered the top of the first row. While at it, the About Us texts turned out to be shown twice and Claude joined the tools. We first updated the operating costs with my current numbers, then I decided nobody needs that list: instead the card now says plainly that I pay for everything myself, that Morkahja earns nothing yet, and that donations and, even more, purchases in the game buy me time to work on it. and the changelog button now opens my website's grid right on Morkahja's changelog (D-020). **Verification:** full release check and a frame-by-frame local browser check on desktop and phone sizes; released as 0.9.0-beta.54 the same evening, not yet seen on my phone.
 
+![The other solutions fading while the chosen one plays](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/fades-1-others-fading.webp) ![An inventory tooltip fading in on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/fades-2-phone-inventory-tooltip.webp)
+
 ### Rules that fit the game — 2026-11-13
 
 I asked AI to read the Terms of Service and the Privacy Policy against the game we are actually making. Several things had drifted: Stripe payments were not mentioned, the terms said there was no way to restore a journey while the welcome screen offered exactly that, friends could be added one-sidedly without the texts saying so, and an old company name stood where my own should be. I decided that the key is simply the key, so the welcome button now says "Use Your Key"; that friends stay a one-sided link for playing together, now stated openly; that Morkahja is for adults, and children play only with their parents, with an on/off setting if mature content ever arrives; and that the documentation and development logs on my website show how the game is made. I did not want an extra step before payment, so the refund wording is gentler instead. AI rewrote both texts in a warmer voice and checked the facts in the code and on the server (D-021). **Verification:** release check and both texts read in the browser; not legal advice; released as 0.9.0-beta.54 the same evening.
+
+![The revised Terms of Service in the game](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/terms-of-service.webp) ![The revised Privacy Policy in the game](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/privacy-policy.webp)
 
 ### The rules where people look for them — 2026-11-13
 
@@ -357,13 +383,19 @@ The Terms of Service and the Privacy Policy could only be read on the welcome sc
 
 AI then gave me an overview of every Scribe: when it is written, who sees it and what it says. Some lines still spoke of "the team" and "us", the key reminder used older words, and my own achievements were told back to me in the third person. I asked for the same tone as the new texts, and now the Scribes speak for one person, tell you about your own moments as "you", and use the same words for the key as the rest of the game (D-022).
 
+![About Us with the Terms of Service and Privacy Policy buttons next to Donation, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/about-us-legal-buttons.webp) ![The same About Us buttons on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/about-us-legal-buttons-phone.webp)
+
 ### The gem that had nowhere to go — 2026-11-13
 
 I picked up a lore gem in an encounter that then gave me five rewards. The gem wanted the sixth place in the reward row, there was none, and it got stuck halfway into the picture. I decided the gem does not belong in that row at all: when I take it in the Lore window, it flies to the top left of my avatar and waits; when I continue, it sinks into the avatar and disappears. AI built it on the avatar itself, with no change to how the server grants the gem, and played my exact case locally (D-023). **Verification:** release check and a local play-through with a gem and five rewards; released as 0.9.0-beta.55 the same night.
 
+![An encounter result with five rewards and a lore gem](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/lore-gem-3-result-five-rewards.webp) ![The lore gem sinking (animation frame)](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/lore-gem-6-sinking.webp) ![The next encounter after the gem was collected](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/lore-gem-7-next-encounter.webp)
+
 ### Seeing every roll — 2026-11-13
 
 With several solutions hovering, I only saw the final roll on my avatar, and twice it looked as if one of my chosen items was swapped for another as they flew in. AI found that one hovering icon stood for all copies of a slot and showed only the first copy's picture, so an alternative item of the same type looked like a replacement, and that the icons were matched against the inventory again after the commit. Now every copy hovers on its own, stacked upward as I first imagined, shows the item it really is, and shows its own roll before they fly in together; the dice shows its roll when it finishes the set (D-024). **Verification:** release check, a new server test, and two local play-throughs; released as 0.9.0-beta.55 the same night.
+
+![Three chosen solutions hovering](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/set-rolls-1-three-hovering.webp) ![Each roll shown on its own](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/set-rolls-3-result.webp) ![The first of a set arriving on the avatar](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/set-reveal-1-first-arrived.webp) ![The result after the whole set arrived](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-13/set-reveal-5-result.webp)
 
 ### One solution at a time — 2026-11-14
 
@@ -510,6 +542,8 @@ The storms came too rarely: a calm run moved on to wind only one time in five. I
 
 The mouse pointer was still the system arrow. Claude Code drew a Morkahja one: a gold arrow outlined in the dark red, with a small ruby, and over anything clickable the same arrow with a gold spark. It is an AI-drawn placeholder until I decide on final art. **Verification:** the build rewrote the cursor paths for `/Morkahja/`; in the local game the page uses the arrow and the dice button the clickable cursor. **Released** as 0.9.0-beta.76 on 17 November.
 
+![The red region plate with the land's name on the top edge of the encounter, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/region-plate.webp) ![The region plate on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/region-plate-phone.webp) ![Close-up of the plate reading Ethera's Vale](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/region-plate-phone-closeup-2.webp)
+
 ### A map of Morkahja — 2026-11-17
 
 I wanted to see the whole world, drawn the way the game is drawn: gold, red lines, angles and triangles, no curves. My notes put the Vale in the middle, Everwinter at the top, Keldor and the tundra to the west, Celesterra to the south-west, Emberfrost, Karrhu and Evergrove down the east, and the desert and Sunstone Oasis in the south. Claude Code (Claude Opus 5.5) checked them against the world-building archive, which agreed and added more (Eldridia with the Pantheon Temple to its south, Hearthguard in the north of the Vale, the Rokur's Fyrskar range in the north), and corrected my spellings. Clicking the land's name on the frame now unrolls the map over the picture, opened where I am; I can drag it around and zoom. [Every placement and its source](WORLD_MAP.md) is recorded so I can move things. **Verification:** tests (48) and the build passed; in the local game the map opened on the Vale at desktop and phone size, moved when dragged, zoomed with the wheel, and closed again with the encounter's controls back. Released as 0.9.0-beta.76 on 17 November.
@@ -521,6 +555,8 @@ Before releasing, I asked for slower endings: every piece now fades out over two
 All of it went to the live game as 0.9.0-beta.76, together with my admin rewrites through Fearfeaster Gobbl. Claude Code (Claude Opus 5.5) checked that the server's copy of the encounters matched main before the release, took the backup and proved it in a throwaway database. **Verification:** the live script carries 0.9.0-beta.76, the cursors load, health and content answer; the map and weather were not yet played live.
 
 The plate on the frame now names the land where the story happens, not just the expansion: a base-game story in the swamp says Swamp of Karrhu. In time every land should become its own expansion, and the base game already visits several of them. Claude Code (Claude Opus 5.5) took the names from my placement list. **Verification:** tests passed; a base-game Grimnir elder shows Fyrskar Mountains in the local game. **Released** as 0.9.0-beta.77 on 17 November.
+
+![The whole world map of Morkahja in gold and red lines](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/world-map-whole.webp) ![The world map opened over the encounter](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/world-map-open.webp) ![Close-up of the marker on the map](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/world-map-marker.webp) ![The world map on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/world-map-phone.webp) ![The map cursor design](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/map-cursor-design.webp) ![The help cursor design](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-17/help-cursor-design.webp)
 
 ### Refilling a slot — 2026-11-17
 
@@ -542,6 +578,8 @@ To find the cause I downloaded the backup myself, and Claude Code restored it in
 
 Thalyss turned out to be listed in seven old rooms, and I asked why the game keeps such rooms at all. Claude Code (Claude Opus 5.5) explained that a solo room pauses on purpose, so I come back to the same encounter, but that closed rooms were never deleted and rooms of avatars who died long ago stayed open. Now a room that closes is deleted, the server clears closed rooms, rooms without a living avatar and rooms nobody has looked at for 30 days, at start and every six hours. My paused adventure stays for those 30 days. Counting on a backup first showed 220 closed rooms and 30 from the summer, but it also showed the cleanup would have missed the very rooms I asked about: Sylvaen and Thalyss each sat in old rooms of other players, left alone after the caller went. Only the newest room of an avatar can be returned to, so the older ones go too. **Verification:** a new test for every case and all server tests (54) passed; the local server logged one room removed. **Released** on 18 November at 02:37 UTC; the live server removed 266 rooms, exactly the counted number, and the bots kept playing. Two of my encounter texts, 20179 and 20180, had briefly gone back to their older wording on the server after the previous release, because I saved them while it was being prepared; GitHub had kept them and this release put them back.
 
+![A party with two bot players, the day after the fix](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-19/party-with-two-bots-waiting-room-updates.webp)
+
 ### Choosing a reward when levelling up — 2026-11-18
 
 I wanted a level-up to give the player a small decision, like in a roguelike: roll, then pick one of three rewards, hovering or long-pressing them to compare. The die now decides how many rewards come on top, one for every five on the d20, so a 20 brings four plus my pick and anything below 5 only my pick. I chose that the three come from my race and role rewards, that the rolled ones keep alternating race and role, and that a 20 adds a rare one. Claude Code (Claude Opus 5.5) built it on the server, in the game and for the bots, who now pick on their own. Trying it in the local game, it found that reloading the page during the choice took the first reward for me; now the choice waits until I come back. It also found that the room cleanup released earlier tonight would get slow with many rooms and held up the server's start; that is fixed too. **Verification:** all server (55) and client (48) tests passed; screenshots of the choice, its tooltip and the rewards afterwards, on desktop and phone. **Released** in 0.9.0-beta.78 (18 November, 21:56 UTC).
@@ -553,6 +591,8 @@ Watching it, I wanted the choice to come first: no die at all, just the three re
 I wanted the motions to feel the same everywhere. Now every solution and every single die first rises and hovers with its number, the way the last one of a set always did, and when it flies into the encounter its number flies down into my avatar, where the total then grows and stands still (I first had it breathe a little, then took that out). The level-up pick plays the familiar solution animation, mirrored. And the choice has its banner: "Make your choice" on a dark red band across the picture, drawn like the land's plate, its lines meeting the frame at an angle. Claude Code (Claude Opus 5.5) built it and watched each sequence frame by frame in the local game. **Verification:** all tests passed; the die, a solution and a level-up with a 20 played as described; a set was not watched. **Released** as 0.9.0-beta.78 on 18 November at 21:56 UTC, together with the level-up choice.
 
 I still had the feeling that a bot sometimes got stuck, and that a party took too long to move on after everyone had chosen. I also suspected leftovers from an old attempt to mark slow players as inactive: in Morkahja a player who has had enough simply leaves the room, so nothing should flag anyone. Claude Code (Claude Opus 5.5) read the production bot log and the room code. The bots that answered my Call for help during my level-up kept pressing Continue and being refused, so they looked stuck; they now wait quietly. The old inactivity system, switched off since June, is removed entirely. And the game no longer asks for the room every few seconds: it waits for the server to say something changed, so choices and the next encounter appear at once, with fewer requests than before. The bots also play a little closer to a player's pace. **Verification:** all tests passed; a local party with two bots ran nine encounters without a stall. **Released** as 0.9.0-beta.79 on 19 November at 00:38 UTC. Still my decision: whether Lore, Inventory and the Skillbook should keep pausing a party.
+
+![A level-up with three rewards to choose from, before the roll](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/level-up-choices-before-roll.webp) ![Comparing a reward in its tooltip](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/level-up-choice-tooltip.webp) ![The pick showing the roll](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/level-up-pick-shows-roll.webp) ![The extra rewards around the pick](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/level-up-rewards-around-pick.webp) ![The Make your choice banner](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/make-your-choice-banner.webp) ![The level-up choice on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-18/level-up-choice-phone.webp)
 
 ## 2026-11-21 — A new language for solution images
 
@@ -580,6 +620,8 @@ The Inventory and Skillbook titles moved out of their panels onto the plate on t
 
 After the release I wanted the pictures in the Inventory and Skillbook a little bigger, using the panel's whole width with only a little space left to the frame. Claude Code (Claude Opus 5.5) removed the 72 px limit on each picture and narrowed the gaps between them and the margin to the frame. The first step was still too timid for me, so the gaps are now just a few pixels: in a desktop window a picture grew from 72 to 88 pixels, on a phone from 63 to 70, and more in a tall window. **Verification:** client tests and build passed; screenshots of both panels on desktop and phone size in the local game. **Released** in 0.9.0-beta.82.
 
+![Every solution picture in the frame the game draws](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-21/solution-frames-every-picture.webp) ![Charges shown as hexagons on the frame](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-21/solution-charge-hexagons.webp) ![A framed solution in flight](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-21/solution-frame-in-flight.webp)
+
 ### Essences of my own element — 2026-11-21
 
 I wanted an avatar's gods to matter. A new avatar now starts with the three essences of its own element: a Rokur with fire, a Verdani with water, an Aevis with air and a Grimnir with earth, as the world-building archive has them. Essences of other elements slip away faster: they always go first, two at a time, unless only one is left, which then goes alone; after that the avatar loses its own essences one at a time, as before. And a roll of 25 or higher has a one-in-five chance to bring an extra essence of my own element. Claude Code (Claude Opus 5.5) asked me two questions first, and I chose "25 or higher" and "other elements first". It put the element table in the shared code, so the frames and the rules use the same one, and wrote a test for each rule (D-053). **Verification:** all server (63) and client (49) tests, typecheck and build passed; in the local game a new Rokur started with the three fire essences and a new Verdani with the three water ones. Losses and the bonus not played yet; avatars that already exist keep the essences they have. **Released** as 0.9.0-beta.82 on 21 November at 23:45 UTC, together with the bigger grid pictures.
@@ -596,6 +638,8 @@ In Atranor the essence I came back with could belong to any god. Now it belongs 
 
 The solutions an encounter offers were a little smaller than the same pictures in my inventory. Now they fill their place in the row of five, with the inventory's spacing. Claude Code (Claude Opus 5.5) measured both in the local game: a solution's frame grew from 83 to 88 px at a desktop window, as in the inventory, and from 64 to 69 px on a phone, against 70 in the inventory. **Verification:** client tests and typecheck passed; screenshots taken; a pick and a hovering set not yet watched at the new size. **Released** in 0.9.0-beta.83 on 24 November.
 
+![Encounter solutions filling their row, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/encounter-solutions-fill-column-desktop-encounter.webp) ![The inventory at the same size, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/encounter-solutions-fill-column-desktop-inventory.webp)
+
 ## 2026-11-23 — Player choices: a first concept
 
 Each of my avatars still feels like a random hand of cards, so I started on equipment: two items I choose and keep. Equipping gives the item one extra charge; using it with a roll of 12 or higher gives the charge back, and 20 or higher gives two. An item that runs empty breaks and frees its slot, and swapping an item out costs it one charge, so an item on its last charge disappears. Claude Code (Claude Opus 5.5) suggested a chance to save charges and using the item in any slot. I turned both down: no chance should exist outside the dice, and an item has to fit its encounter. Equipped items can't be lost to Hardship or Misery, and in a set each use counts by its own roll. Two more choices joined the same concept: editing an avatar's portrait, frame and name for gems, and a specialization in one type of skill that adds +1 to its rolls, as some compensation for the harder balance. All three open from new buttons in the avatar selection. The fourth choice is travel: on the world map I can pay gems to go to a region I have, and a region I don't have, marked in red, leads to its expansion. A region means its expansion, not where an encounter sits on the map; the host takes the whole room along, and a guest who travels leaves the room. A trip costs a tenth of the expansion's gem price, and 1 gem for the base game. Travel can swap the current encounter at any time, but never Atranor or a level-up, since those are events, not places. Claude Code asked the open questions as we went and wrote the rules into [PLAYER_CHOICES.md](PLAYER_CHOICES.md) and D-056, with drafts of the fifteen specialization descriptions for me to revise. **Documentation only**, nothing implemented.
@@ -608,9 +652,13 @@ I made a sound for Atranor. Like the level-up sound, it plays when the event beg
 
 Equipment is in the game now. In the avatar selection an Equipment button lets me choose an avatar. It moves aside, and its two slots appear in the middle. A slot opens the inventory, and the item I pick goes in with one extra charge. In the game the same card opens from my avatar's details, and it stays locked until I have made my choice in the encounter. A use with a total of 12 or higher gives the charge back, 20 or higher two, Hardship and Misery can't touch it, and swapping an item out costs it a charge. Claude Code (Claude Opus 5.5) built it from D-056. It found that the room computes the outcome when I choose but only writes it on Continue, so an item equipped in between would have been undone. The change now goes into the waiting outcome too. It wrote tests for the rules and one through a real room, and checked both screens in the local game on desktop and phone. **Verification:** server (66) and client (49) tests and typecheck passed; a regain was not played in a real turn yet. **Released** in 0.9.0-beta.83 on 24 November.
 
+![Choosing an avatar for equipment](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/equipment-choose-avatar-desktop.webp) ![Two empty equipment slots](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/equipment-card-empty-desktop.webp) ![Picking an item for a slot, with its tooltip](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/equipment-picker-tooltip-desktop.webp) ![An item equipped](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/equipment-card-equipped-desktop.webp) ![Equipment on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/equipment-selection-phone.webp)
+
 ## 2026-11-23 — One card for my avatar, and equipment that stays
 
 My avatar had a tooltip, a menu and an equipment popup, so I put everything into one card that opens when I tap the avatar. It holds my name, level, race and role, experience, my two equipment slots with a small "?", and after a roll what I used and the roll's math. In the game, Home sits at the bottom of the card. In the avatar selection, the green check that starts the game does, so I see my avatar and fill its slots before I enter. I also changed the rule. An item now only goes into an empty slot, and I can do that whenever I like, also mid-encounter. Once it's equipped it stays until it breaks, and the game uses it first. A tutorial with tips for new players is on the roadmap. Claude Code (Claude Opus 5.5) moved the slots into the card and made the card open toward the middle of the screen like the inventory tooltips. It made the equipped item the first choice in the shared slot rule, so the server and the slot pictures agree. It checked everything in the local game on desktop and phone. **Verification:** server (66) and client (50) tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The one avatar card in the game, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/avatar-card-ingame-desktop.webp) ![The avatar card after a roll](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/avatar-card-after-roll-desktop.webp) ![The avatar card in the selection, with an item tooltip](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/avatar-card-selection-item-tooltip-desktop.webp) ![The pinned help in the avatar card](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/avatar-card-pinned-help-desktop.webp)
 
 ## 2026-11-23 — Fewer skill pickup lines
 
@@ -620,6 +668,8 @@ Some of Makaya's ten lines for taking a skill didn't sound good, so I kept only 
 
 The Play button is gone. My active avatar, the one I played last, stands big in its place, and my other two sit below it like a triangle. Tapping one of them swaps it up into the big slot. Tapping the big one opens its overview, as large as the avatar creation: name, level, race and role, experience, a few statistics, the two equipment slots and space for the specialization that is still to come. The red button goes back, and the green one starts the game: the card shrinks into my avatar and the usual transition into the world follows. In the game, tapping my avatar opens the same overview over the encounter picture, with Home instead of green. The equipment slots are now as big as my solutions and the inventory pictures. After a first look I asked for the menu card to be framed like an encounter, for no back button since a tap beside the card closes it, and for the dark red background in all in-game panels, the Inventory, Skillbook and Lore too, to see how it looks. Claude Code (Claude Opus 5.5) built the new menu with a gliding swap and the shrinking card. It added the encounters played to the avatar data for the statistics. It checked the menu, the overview and the way into the game on desktop and phone. **Verification:** server (66) and client (50) tests and typecheck passed; coming home from the game to the new menu not checked yet. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The main menu: the active avatar big, the other two below like a triangle](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/menu-three-avatars-desktop.webp) ![Two avatars swapping places](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/menu-swap-mid-desktop.webp) ![The overview of the big avatar](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/menu-overview-desktop.webp) ![The avatar menu on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/menu-three-avatars-phone.webp)
+
 ## 2026-11-23 — A better Skillbook sound
 
 The Skillbook button now plays `sfx_skillbookbutton_press.mp3`, which sounds better than the old one, and Claude Code (Claude Opus 5.5) deleted the old `skillbook.mp3`. **Verification:** client tests passed; not heard in the game yet. **Released** in 0.9.0-beta.83 on 24 November.
@@ -627,6 +677,8 @@ The Skillbook button now plays `sfx_skillbookbutton_press.mp3`, which sounds bet
 ## 2026-11-23 — The inventory in three lists
 
 My inventory mixed everything in one grid. Now normal items stand on top, rare items below them and the essences at the bottom, each list divided from the next by the line my tooltips use. Claude Code (Claude Opus 5.5) built it and looked at it in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed; the rare list not yet seen with a rare item. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The inventory in three lists: normal items, rare items and essences, desktop](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/inventory-sections-desktop.webp) ![The three lists on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/inventory-sections-phone.webp)
 
 ## 2026-11-23 — The type of a level-up ability
 
@@ -636,9 +688,13 @@ When I level up and choose one of three abilities, the tooltip now also tells me
 
 The lines between the parts of my avatar screen and of the inventory stopped short of the frame. Now they run all the way to it, with their small triangles meeting the frame's inner line. Claude Code (Claude Opus 5.5) found that the avatar card's scrolling area also cut longer lines off, moved its side spacing inside, and measured the lines' ends against the frame on a desktop and a phone size. **Verification:** client tests and typecheck passed; screenshots taken. **Released** in 0.9.0-beta.83 on 24 November.
 
+![Dividers reaching the frame in the avatar screen](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/dividers-reach-frame-desk-ingame.webp) ![Dividers reaching the frame in the inventory](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/dividers-reach-frame-desk-inv.webp)
+
 ## 2026-11-23 — A new avatar takes the big place
 
 When I tapped an empty slot under my active avatar, the creation opened while the slot stayed small below. Now the empty slot glides into the big place first, and my new avatar appears there and stays the active one. If I cancel, my old avatar glides back. The two avatars below also stand closer together now. Claude Code (Claude Opus 5.5) had written most of it when a crash test interrupted the session. In the next session it fixed a short flash of the old avatar after creating, stopped a second tap during the glide, and tried it all in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed; one server test is flaky and failed once (unrelated). **Released** in 0.9.0-beta.83 on 24 November.
+
+![An empty slot gliding into the big place](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/empty-slot-swap-desktop-mid-glide.webp) ![Avatar creation open in the big place](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/empty-slot-swap-desktop-creation-open.webp) ![The new avatar staying in the big place](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/empty-slot-swap-desktop-created.webp)
 
 ## 2026-11-23 — A sound for tapping my avatars
 
@@ -648,25 +704,37 @@ Tapping my avatars in the main menu was silent, while every other button clicks.
 
 The second of my player choices is in. In the avatar overview I choose what my avatar is good at, for example Stealth, and from then on every roll with a Stealth skill gets +1. The first choice is free, and a change costs 1 gem. A list on the left shows the fifteen specializations and the right side shows the description. In the game the overview shows the specialization in one line, and the roll numbers include the +1. I also asked for my concept to follow the changes I made after writing it, since the Play button and the selection modes are gone now. Claude Code (Claude Opus 5.5) built it on the server and the client and rewrote the concept where it no longer matched. It made sure two changes at the same moment cannot both be paid with one gem, and tried everything in the local game on a desktop and a phone size. It found that Warmth has no skills yet. The descriptions are its drafts for me to revise. **Verification:** server and client tests, typecheck and the data check passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![Choosing a specialization](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/specialization-desktop-picker.webp) ![The chosen specialization in the avatar overview](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/specialization-desktop-overview-chosen.webp) ![A specialization bonus in a game tooltip](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/specialization-ingame-tooltip.webp)
+
 ## 2026-11-23 — The specializations as a roster
 
 The specialization names are short words, yet they stood in a long list while the description was small beside them. Now the description is on top, a line divides it from the choices, and the fifteen sit below as a roster of three in a row with bigger buttons and text. Claude Code (Claude Opus 5.5) rearranged the picker and looked at it on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The fifteen specializations as a roster under their description](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/specialization-roster-desktop-picker.webp) ![Stealth selected in the roster](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/specialization-roster-desktop-picker-stealth.webp)
 
 ## 2026-11-23 — Tips I can turn off, and prices with the gem
 
 The specialization in my avatar card had explanations stacked above its button, so I asked for a "?" like the one next to Equipment instead. More of these helps and a tutorial are coming, so the settings now have a "Tips and tutorial" check mark that turns all of them off. Prices show as "Cost 1" with the red-yellow gem, the green check sits at the bottom right of the card, and the specialization has more room. I also set a rule: no text smaller than the item and skill tooltips, and the help tooltips as readable as those. Claude Code (Claude Opus 5.5) made one "?" for the whole game that the setting can hide, made the small texts larger, and checked it all on a desktop and a phone size. In the game the bigger text cut off the equipment slots at first, so it moved the rows closer together. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The specialization help behind a small question mark](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/tips-desktop-specialization-help.webp) ![The change price with the gem](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/tips-desktop-picker-cost.webp) ![Tips and tutorial switched on in the settings](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/tips-desktop-settings-on.webp)
+
 ## 2026-11-23 — A round menu that stays open, and my avatar's portrait on the left
 
 The round menu in my main menu closed by itself after I used it a second time. Claude Code (Claude Opus 5.5) found why: since my avatars became the main menu, the game brought them back whenever they were hidden. Opening the round menu hides them, so they came straight back and closed the menu. Now they wait until the menu is closed, and a script pressed through the menu and its panels to show it stays open. In my avatar card the portrait now sits on the left with the name line and experience beside it, so everything moves up. The specialization comes before the equipment, and every button presses and glows like the game's other buttons. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The avatar overview with the portrait on the left](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/overview-layout-desktop-overview-chosen.webp) ![The same overview in the game](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-23/overview-layout-ingame-overview.webp)
 
 ## 2026-11-24 — The Play button is back
 
 When I made my avatars the main menu, the Play button disappeared, and a game needs one. It now sits at the bottom right of my avatar card, where the green check was, a little bigger than the other round buttons. Claude Code (Claude Opus 5.5) swapped it in and checked on a desktop and a phone size that it takes me into the world. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The Play button at the bottom right of the avatar card](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-play-desktop.webp) ![The game after pressing Play](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-play-desktop-entered.webp) ![The Play button on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-play-phone.webp)
+
 ## 2026-11-24 — My avatar card in rows, and a calmer round menu
 
 My avatar card had room to spare, so I gave it rows. The plate now says "Avatar" and the name stands big above the level. The specialization sits on the left with its description beside it, and below that the equipment and the Play button share the bottom row. In the game, Home sits at the bottom left and behaves like my other buttons, with the equipment on the right. Opening the round menu used to make my avatars vanish at once; now they fade out the way they fade back in, and a tap anywhere else closes the menu. Claude Code (Claude Opus 5.5) rebuilt the card's rows, kept the equipment slots at the Inventory's size, and measured the fade and the closing in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The avatar card in rows, the name big above the level](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-rows-desktop-overview-chosen.webp) ![The specialization row with its help](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-rows-desktop-specialization-help.webp) ![The card in rows in the game](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-rows-ingame-overview.webp) ![The card in rows on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-rows-phone-overview-chosen.webp) ![The avatars fading while the round menu opens](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/nav-open-avatars-fading.webp)
 
 ## 2026-11-24 — The ambiance takes a breath
 
@@ -680,6 +748,8 @@ I made a set of ambiance pieces for Atranor: calm loops, then three sets that bu
 
 The "?" tooltips now have the same text size as my solution tooltips. In the game, the tooltips of my equipped items opened downward, away from the slots, and now open upward. The experience number sits inside a thicker experience bar, so it reads as one thing, and the statistics moved down a little to give the top more room. When I tap my avatar in the main menu, its card now grows out of the avatar a little slower instead of just appearing. Claude Code (Claude Opus 5.5) made the changes, found that the card had no opening animation at all, and measured the growing and the tooltip positions in the local game on a desktop and a phone size. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![A help tooltip at the same text size as the solution tooltips](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-help-size-desktop.webp) ![An equipped item's tooltip opening upward](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/ingame-equipped-tooltip-desktop.webp) ![The experience number inside the thicker bar](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-xp-desktop.webp)
+
 ## 2026-11-24 — No breaks in Atranor
 
 Atranor should feel like one intense moment, so its ambiance no longer rests between pieces: each piece crossfades straight into the next, chosen the same way as everywhere else. The level-up will work the same way once I add its sounds. Claude Code (Claude Opus 5.5) made the weather cycle crossfade every step in those two places and prepared a folder for the level-up's pieces, so they only need to be dropped in. **Verification:** client tests and typecheck passed; not yet heard in the game. **Released** in 0.9.0-beta.83 on 24 November.
@@ -687,6 +757,8 @@ Atranor should feel like one intense moment, so its ambiance no longer rests bet
 ## 2026-11-24 — Counting what my avatar holds
 
 My avatar card said 17 skills for a new avatar, because it added up the charges. Now it counts each different item and skill once, so a new avatar shows 5 skills. Claude Code (Claude Opus 5.5) changed the count, added a test, and compared the card with the avatar's inventory in the local game. **Verification:** client tests and typecheck passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The avatar card counting each item and skill once](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-card-stats-distinct.webp)
 
 ## 2026-11-24 — A gem for the top roll
 
@@ -704,17 +776,25 @@ My avatar card in the game said I had played 0 encounters, though the main menu 
 
 My avatar card in the main menu now has an Edit button under the portrait. It opens the avatar creation without race, role and gender, so I can pick another portrait of the same kind, another frame and a new name. Only what changes costs gems: the portrait's and frame's own gem values, and 50 for a name, and the game asks before it spends them. In the game the card has no Edit button. I also wondered why the Warmth specialization had no skills. The skill called Warmth belongs to type 25, which is aid, so that specialization is now Aid and the empty Warmth type is gone. Claude Code (Claude Opus 5.5) checked the data, built the edit on the server and the client, made sure two changes at once cannot both be paid with the same gems, and tried it all in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The Edit button under the portrait](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-edit-desktop-card-edit-button.webp) ![Editing portrait, frame and name](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-edit-desktop-screen.webp) ![Confirming the change](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-edit-desktop-confirm.webp) ![The edited avatar saved](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-edit-desktop-saved.webp) ![Editing an avatar on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/avatar-edit-phone-screen.webp)
+
 ## 2026-11-24 — Travelling on the world map
 
 The last of my player choices is in. On the world map a land lights up under my pointer, and the lands I have not unlocked are red. Tapping a land asks whether I want to travel there and what it costs: 1 gem for the base game, and a tenth of an expansion's price for its lands. Yes swaps my current encounter for one from there. Tapping a red land offers to show me its expansion. As the host I take my party along; as a guest I leave and go on alone. Claude Code (Claude Opus 5.5) built it on the server and the client. It allowed travel only before anyone in the room has chosen, so nobody can travel away from a loss they have already seen, and left that rule for me to confirm. It tried everything in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![A land lighting up under the pointer on the world map](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-desktop-map-hover.webp) ![The question whether to travel and what it costs](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-desktop-prompt.webp) ![A land that is not unlocked yet](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-desktop-locked-prompt.webp) ![Expansions opened from the locked land](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-desktop-expansions-focused.webp) ![Arrived in the new land](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-desktop-arrived.webp)
 
 ## 2026-11-24 — A question before the gems go
 
 Changing a specialization costs a gem, and one tap on the green check spent it. Now the game asks first, "Do you want to spend 1 gem to become Combat?", with the same box and buttons as when I edit an avatar. The free first choice still goes straight through. Claude Code (Claude Opus 5.5) added the question and clicked through it in the local game. **Verification:** typecheck passed; checked in a local browser. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The question before a gem is spent on a specialization](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/specialization-spend-question-desktop.webp)
+
 ## 2026-11-24 — A rest between journeys, and buttons with words
 
 Travel works the way I wanted, but it should not be possible all the time. After a journey my avatar now plays three encounters before it can travel again. If I tap a land too early, the map tells me how many encounters are still left. I also replaced the green check and the red round picture everywhere with normal red-and-gold buttons that say Accept and Back. Claude Code (Claude Opus 5.5) added the wait on the server, so it cannot be skipped, made one Accept and one Back button for the whole game, and checked both in the local game on a desktop and a phone size. **Verification:** server and client tests, typecheck and the data check passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The map saying how many encounters are still needed](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-wait-desktop-cannot-travel.webp) ![The travel question in the rest-between-journeys build](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-wait-desktop-prompt.webp) ![Back and Accept as word buttons](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/buttons-desktop-edit-confirm.webp)
 
 ## 2026-11-24 — Checking the gems against cheating, and two old bugs
 
@@ -724,21 +804,31 @@ I asked for a look at whether anyone could cheat their way to gems. Claude Code 
 
 When I tapped a land too early, the box explained the whole rule. I wanted only the sentence "You cannot travel right now." The explanation now sits in a small "?" next to it, like my other tips, and disappears with them when Tips and tutorial is off in the settings. Claude Code (Claude Opus 5.5) moved the text into the tip and checked it in the local game on a desktop and a phone size, with tips on and off. **Verification:** client typecheck and build passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![Only the sentence, with a small question mark](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-cannot-desktop-tips-on.webp) ![The explanation in the opened tip](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/travel-cannot-desktop-tip-open.webp)
+
 ## 2026-11-24 — Soul links that are earned, and a QR code to share
 
 Fresh free accounts could soul-link to a main account and raise its daily reward. I decided that a link only counts when the new adventurer has played 42 encounters and the one they linked to also played 42 encounters that day, and only once a day. I also wanted a QR code in the Soul Link window: when I show it to someone and they start the game with it, they are connected to me as soon as they are logged in. Claude Code (Claude Opus 5.5) moved the Gift of the Gods to the first day both of us reach 42 encounters, made the friendship go both ways for an invite, added the QR code, and checked it with two new test players in the local game on a desktop and a phone size. **Verification:** new soul-link test against PostgreSQL, server and client typechecks passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The message after joining through a soul link](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/soul-link-invite-joined-desktop.webp)
 
 ## 2026-11-24 — A "Main menu" button instead of Home
 
 The round Home picture in the game now reads **Main menu**, in the same word buttons as Accept and Back, because that is where it takes me. Claude Code (Claude Opus 5.5) made the change and checked it in the local game on a desktop and a phone size. **Verification:** client typecheck and build passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![The Main menu word button in the game](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/main-menu-button-desktop.webp) ![The Main menu button on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/main-menu-button-phone.webp)
+
 ## 2026-11-24 — An item that comes back
 
 When an equipped item earns its charge back, it now shows it: the item sets off toward the encounter, turns halfway in a curve and flies back into my Inventory, which shakes as it lands. Claude Code (Claude Opus 5.5) built the curve from the item's existing flight and used the server's existing list of charges won back, so an item used twice returns only for the use that earned it. It checked the flight in the local game, slowed down for the screenshots; a real round with a roll of 12 or more has not been played with it yet. **Verification:** client typecheck and build passed. **Released** in 0.9.0-beta.83 on 24 November.
 
+![An equipped item setting off toward the encounter](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/charge-back-flight-desktop.webp) ![A later frame of the same flight, slowed down](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/charge-back-flight-slow-desktop-3.webp) ![Another frame of the slowed-down flight](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/charge-back-flight-slow-desktop-6.webp)
+
 ## 2026-11-24 — The QR code in my colours
 
 The Soul Link QR code was black on white. I asked for our yellow and red: it is now dark red on gold, in a red frame. Claude Code (Claude Opus 5.5) kept the contrast high so cameras can read it and checked it in the local game at phone size. **Verification:** client typecheck and build passed. **Released** in 0.9.0-beta.83 on 24 November.
+
+![The soul link message in the game's colours on a phone](https://www.babuni.dev/screenshots/morkahja-rpg/2026-11-24/soul-link-invite-joined-colors-phone.webp)
 
 ## 2026-11-24 — Out as 0.9.0-beta.83
 
