@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## Base game content completion — planned 2026-11-25
+
+- [x] Source audit and [content completion plan](CONTENT_COMPLETION_PLAN.md) for Ethera's Vale.
+- [ ] Confirm proposed quotas and names, isolate other lands, migrate taxonomy safely, review existing content and complete the new encounters.
+- [ ] Verify and release separately; documentation only at this stage.
+
 ## Existing source
 
 Node workspaces include client, server and shared; scripts include encounter tests, lifecycle tests, a release check and typechecking. The current root package declares a 0.9.0 beta version.

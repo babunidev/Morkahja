@@ -6,6 +6,10 @@ The current project organizes playable client, authoritative server services and
 
 Consult the original log at the end of the [development journal](DEVLOG.md) for dated implementation notes. Never reconstruct missing author approvals from a feature's presence alone. AI contributions remain credited separately.
 
+## 2026-11-25 — Ethera's Vale base-game content direction
+
+For the base game, my focus is Ethera's Vale, with other lands isolated for later. Combat, Trick, Aid and Social are the four main families, with Learn and Trade each at roughly 5%. Hunt and Stealth merge; Travel and Rare Find cease to be solution categories. Aid covers Heal, Aid and Nurture; Social covers Speechcraft and Inspiration, with a third category still open. About 5% of geographic encounters are difficulty 2, the remainder difficulty 1; every family has rare encounters. The [content completion plan](CONTENT_COMPLETION_PLAN.md) distinguishes these directions from ChatGPT (GPT-6.2) proposals for exact totals, naming, rarity and individual reclassification. No implementation or release is claimed.
+
 ## D-002 — Server-authoritative death and encounter state (historical evidence)
 
 The **May 22, 2026** original journal records removal of a client-side Atranor fatal-roll shortcut and movement of Misery/Hardship outcomes through the server's `POST /encounter/continue` path. Shared dice interpretation was also introduced. This demonstrates an implemented architectural change; the surviving entry does not by itself record the full human–AI discussion or acceptance chain. Current behavior remains untested in this audit.

@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — Base game content completion plan
+
+For my new base game, Ethera's Vale becomes the sole geographic focus, with other lands held for later. ChatGPT (GPT-6.2) compared the encounter catalog and map labels, reviewed the Vale solution slots and drafted the [content completion plan](CONTENT_COMPLETION_PLAN.md). The source snapshot contains 48 Vale encounters (46 random, two scripted), and the proposed 120-record geographic target requires 72 new encounters after proposed reclassification. The total, merged category name, third Social type and rarity mechanics are proposals. Verification was a source-data count and slot review at the linked snapshot, not a runtime test. Documentation only; no gameplay or deployment changes.
+
 ## Retrospective source organization — 2026-10-26
 
 The existing [DEVLOG](DEVLOG.md) is a substantial chronological record and remains the primary historical source. Morkahja's current repository contains the browser game, server services, shared contracts and artwork/content infrastructure. This new guide exists to prevent later portfolio summaries from losing the original sequence of decisions and tests. The original world, game-design direction and creative critique belong to Babuni.dev. AI-assisted coding or drafting should be tied to specific evidence and commits rather than assigned creative ownership.

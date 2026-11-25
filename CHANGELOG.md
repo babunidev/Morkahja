@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Base game content planning (documentation only)
+
+- Added the Ethera's Vale [content completion plan](docs/CONTENT_COMPLETION_PLAN.md), source audit, proposed quotas, correction ledger and local work checklist; linked the roadmap and recorded creative direction and AI contribution. No gameplay or release changes.
+
 ## 2026-11-24 — Released: 0.9.0-beta.83
 
 - **Released** 2026-11-24 at 11:09 UTC, approved by Babuni: `main` at `ed675740`, frontend `20261124-110948`, backup `20261124-110945`. It carries every entry below down to the beta.82 release: the player choices (equipment, specialization, Edit avatar, travel with its wait), Accept and Back as word buttons, the round fix that kept undoing avatar changes, the soul-link rule and QR invite (D-062), the Main menu button and the charge-back flight. Live script contains `0.9.0-beta.83`; see `docs/DEPLOYMENT.md`.
