@@ -9,6 +9,15 @@
 - [ ] Resolve scope, total, Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
+## Fourth playable role — approved direction, not implemented (2026-11-25)
+
+- [x] Record [Bard as the fourth role and Mage's Aid emphasis](DECISIONS.md#2026-11-25--bard-and-four-role-direction); Warrior favors Combat, Rogue Trick, Mage Aid and Bard Social.
+- [ ] Define and approve the role-specific skill sets and reward pools, keeping race identity separate and reviewing existing Mage skills without removing owned solutions.
+- [ ] Scope compatible implementation across avatar creation, shared/server role contracts, portrait IDs and assets, ambient audio, initial inventory, level-up rewards, persisted avatars and tests. Exact specialization restrictions and balance changes remain unapproved.
+- [ ] Verify all four races and roles, old saves and reward paths before any release. No runtime changes in the documentation phase.
+
+Artisan is a possible later addition, not a committed fifth role. Guardian remains a lore philosophy; it is not the selected fourth role.
+
 ## Existing source
 
 Node workspaces include client, server and shared; scripts include encounter tests, lifecycle tests, a release check and typechecking. The current root package declares a 0.9.0 beta version.
