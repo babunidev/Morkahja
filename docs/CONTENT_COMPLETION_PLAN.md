@@ -7,6 +7,10 @@
 
 For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. Approximately 5% of geographic encounters should be difficulty 2 and all others difficulty 1. Every family should have rare encounters. Atranor and Level Up remain universal system events, outside these quotas.
 
+## Role direction
+
+The [approved four-role direction](DECISIONS.md#2026-11-25--bard-and-four-role-direction) aligns Warrior with Combat, Rogue with Trick, Mage with Aid and the future Bard with Social. These are thematic strengths, not exclusive solution access or encounter selection rules. Mage abilities should lean toward assistance and restoration; Bard abilities will be designed separately. Learn and Trade remain independent families available across roles. Artisan is a possible later role, not part of this content phase. Performance, exact role abilities, reward changes and specialization restrictions still require separate approval. The quotas, existing encounter IDs and reservations are unchanged.
+
 ## Proposed taxonomy
 
 | Family | Solution categories | Existing IDs / work |
