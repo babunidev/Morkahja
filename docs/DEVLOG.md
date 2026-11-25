@@ -2,6 +2,12 @@
 
 **Creative:** Babuni
 
+## 2026-11-25 — A fourth role: Bard
+
+With the four main encounter families taking shape, my three existing roles leave room for another recognizable adventurer. ChatGPT (GPT-6.2) researched the role philosophies, common arts, healing traditions and elemental music in MorkahjaWorld, and reviewed the game’s current role-specific solutions, starter inventory, avatar creation and specialization design. Guardian was its preferred proposal, but my choice is Bard. Combat suits the Warrior, Trick the Rogue, Aid the Mage and Social the Bard. The Mage's magic should lean more toward helping and restoration. Artisan remains an interesting possibility for later; Guardian remains a lore philosophy rather than the selected fourth class. The [decision](DECISIONS.md#2026-11-25--bard-and-four-role-direction) records this distinction.
+
+**Verification and scope:** source review and documentation only; no code, game data, assets, role reward pools or world lore changed. No gameplay tests, balance simulation or deployment performed.
+
 ## 2026-11-25 — Encounter studio coordination and reservations
 
 For the six creative chats working on my base game, a shared ledger separates review, reservations, drafts, approval, commits, verification and artwork. ChatGPT (GPT-6.2) read both repositories' standards, reviewed Vale map and lore, parsed 203 encounters and 247 solutions at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92), checked primary and follow references, and documented the 48-record review and 72 provisional reservations. No missing primary or follow references worldwide or overlapping reservations in the pinned catalogs were found. Aetherion is geographically inside the Vale but five city records belong to expansion 1004; Hidden Market's base-game scope remains open. My approved Ambush name is recorded; other proposed choices remain pending. Documentation only on main; no runtime/static-data commands, artwork checks, gameplay or deployment performed.
