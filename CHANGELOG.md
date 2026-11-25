@@ -2,6 +2,10 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-25 — Deploy tool cleans up after itself
+
+- `morkahja-deploy` gains a `prune` phase that also runs after every successful release and frontend release. It keeps the live frontend and the previous one, the `node_modules` copy needed for a rollback and the newest five backups, and removes older releases, `node_modules.pre-*` and `.failed-*` copies, release bundles in `/var/tmp`, older staging dumps and `prev-*` upload folders. Before, every release left a full release, a copy of `node_modules` and a bundle behind (about 15 GB). Documented in `docs/DEPLOYMENT.md`. The tool lives on the server; Babuni installs the new version with `sudo`. Tested locally against a copy of the server's folder layout. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-25 — Hidden Market map placement
 
 - Corrected encounter 20012 from the Aetherion city pin to western Ethera's Vale near the western trade road; synchronized CSV and generated map entry. Encounter data and expansion 1004 records unchanged. Source checks only; not deployed. ChatGPT (GPT-6.2).
