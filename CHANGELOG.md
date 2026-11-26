@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: earned homelands are open to play
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's report:** with Homecoming earned, travel to the homeland did not work; the encounters already there should be playable now.
+- **Cause:** the three homelands were still inactive ("coming soon"), and since D-063 an inactive expansion stays closed even to an account that owns it.
+- **Change:** 1007 Evergrove, 1009 Celesterra and 1010 Fyrskar are active (`server/game/expansiondata.json`). Whoever earned one through Homecoming, or owns a bundle, draws its encounters by chance and can travel there (a tenth of its gem price: 8 gems for Evergrove and Celesterra, 5 for Fyrskar). Everyone else sees "You have not unlocked …" and the Homecoming card; gems still cannot buy a homeland. Existing encounters: Evergrove 3, Celesterra 8, Fyrskar 7. No regional ambiance recordings exist for them yet, so their weather bed fades out there. The other seven regions stay coming soon.
+- **Verification:** `regionalExpansions.test.ts` updated (the homelands open, an earned Evergrove adds its encounters to the draw and to travel, the other regions stay closed); `npm run release:check` passed (client 52/52, server 78/78). In the local game a new Verdani test account with Evergrove earned travelled there for 8 gems and arrived at 20053 Exhausted Verdani with the Evergrove plate (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homeland-travel-*.png`). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: Homecoming shows the way to 100; first title Rootseeker
 
 - **Not released.** Pushed to GitHub `main`.

@@ -56,14 +56,18 @@ assert.equal(getExpansionById(1002)?.mExtensioActive, false, 'Urcogor Ravage sta
 const GEMS: Record<number, number> = {
   1005: 50, 1006: 50, 1007: 75, 1008: 50, 1009: 75, 1010: 50, 1011: 25, 1012: 50, 1013: 75, 1014: 50,
 };
+// The three homelands are open to whoever earned them (Babuni, 2026-11-26); the rest are coming soon.
+const HOMELANDS = new Set([1007, 1009, 1010]);
 for (let id = 1005; id <= 1014; id += 1) {
   const expansion = getExpansionById(id);
-  assert.equal(expansion?.mExtensioActive, false, `${id} is inactive`);
+  const homeland = HOMELANDS.has(id);
+  assert.equal(expansion?.mExtensioActive, homeland, `${id} is ${homeland ? 'open' : 'inactive'}`);
+  assert.equal((expansion?.mExtensioHomelandOf?.length ?? 0) > 0, homeland);
   assert.notEqual(expansion?.mExtensioListed, false, `${id} is listed in the Expansions menu`);
   assert.equal(expansion?.mExtensioCost, GEMS[id], `${id} costs ${GEMS[id]} gems`);
   assert.equal(expansion?.mExtensioPriceEurCents, undefined, `${id} has no money price yet`);
   assert.ok(expansion?.mExtensioHeaderImage && expansion.mExtensioText, `${id} has a banner and a text`);
-  assert.equal(isExpansionOpen(id), false);
+  assert.equal(isExpansionOpen(id), homeland);
 }
 const counts = new Map<number, number>();
 for (const record of encounters) {
@@ -94,8 +98,13 @@ assert.equal(randomIn(1001) + randomIn(1003) + randomIn(1004), 41 + 20 + 5);
 assert.ok(owner.every((record) => !assignedIds.has(record.mEncounterID)));
 
 // An account that somehow lists a future region still gets nothing from it.
-const forged = randomPool([0, 1005, 1006, 1007, 1014]);
+const forged = randomPool([0, 1005, 1006, 1014]);
 assert.equal(forged.length, base.length, 'a closed region is closed even to an account that lists it');
+
+// An earned homeland gives its encounters, by chance and by travel.
+const verdani = randomPool([0, 1007]);
+assert.equal(verdani.length, base.length + randomIn(1007), 'Evergrove plays once earned');
+assert.ok(selectEncounterInExpansion(1007, [], getEncounters(), () => 0));
 
 // Travel to Celesterra can give the Grimnir Vault once the land opens.
 const celesterra = Array.from({ length: 8 }, (_, index) => selectEncounterInExpansion(1009, [], getEncounters(), () => index)?.mEncounterID);

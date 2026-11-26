@@ -80,7 +80,7 @@
       "mExtensioUnlockButton": "expansion_frostwind"
     },
     "1007": {
-      "mExtensioActive": false,
+      "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_evergrove",
       "mExtensioCost": 75,
       "mExtensioHeaderImage": "expansion_evergrove",
@@ -105,7 +105,7 @@
       "mExtensioUnlockButton": "expansion_emberfrost"
     },
     "1009": {
-      "mExtensioActive": false,
+      "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_celesterra",
       "mExtensioCost": 75,
       "mExtensioHeaderImage": "expansion_celesterra",
@@ -120,7 +120,7 @@
       "mExtensioUnlockButton": "expansion_celesterra"
     },
     "1010": {
-      "mExtensioActive": false,
+      "mExtensioActive": true,
       "mExtensioCollectionImage": "expansion_fyrskar",
       "mExtensioCost": 50,
       "mExtensioHeaderImage": "expansion_fyrskar",

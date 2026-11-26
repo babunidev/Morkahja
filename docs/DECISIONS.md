@@ -636,5 +636,5 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5): the `homecoming` chain and its titles (Rootseeker — renamed from Homecoming the same day at Babuni's request, since a rank title is worn by the avatar — Hearthfriend, Child of Morkahja; the panel's bar shows the best avatar's encounters toward 100 from the first encounter), the homeland list in the catalog (`mExtensioHomelandOf`), the check after each encounter and at start-up, the refused gem unlock, and the shop and panel texts. Its own choices: the unused monthly-reward glyph as icon; each rank adds 1 gem to the Hearth Blessing like the other chains;  the homelands keep their gem price only for the travel cost.
 
-**Status:** on GitHub `main`, not released. Server test against PostgreSQL and the release check passed.
+**Status:** on GitHub `main`, not released. Server test against PostgreSQL and the release check passed. The same day, at Babuni's request, the three homelands were switched on so that an earned homeland can be played and travelled to right away; the other seven regions stay coming soon.
 
