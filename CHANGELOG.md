@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: before the world, choose a specialization and equip two items
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** after creating an avatar, tapping it to enter the game first asks for a specialization, then for two items to equip; the item question comes back whenever an equipment slot is empty, for example after an item broke. Simple, a small picker is enough.
+- **Main menu (`AvatarSelectionPanel.tsx`):** tapping the active avatar opens the specialization picker first if it has none; after choosing (or Back), the inventory opens as "Equip an item · slot 1", then "· slot 2", for each empty slot an item in the inventory can fill; then the avatar card with Play. Closing a picker skips that step. An avatar with a specialization and both slots filled opens its card directly, as before.
+- **In the game (`GameEnvironment.tsx`):** when an equipped item breaks, the next encounter opens the inventory as "An item broke · equip another" for that slot, if another item can fill it; picking one equips it and closes the inventory without opening the avatar card.
+- **Helper:** `nextEmptyEquipSlot` (`client/src/ui/avatar/equipmentSlots.ts`) with `equipmentSlots.test.ts`.
+- **Verification:** `npm run release:check` passed (client 53/53, server 78/78). In the local game a new Verdani test avatar got the specialization picker first, then the two item questions, then its card with both items and Play (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-prompt-*.png`). The in-game question after a broken item was not seen in the browser (an item has to run out in play). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — No backups on the server
 
 - **Babuni's direction:** no more backups on the server; download them to the computer instead.

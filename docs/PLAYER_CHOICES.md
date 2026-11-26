@@ -147,6 +147,10 @@ There are fourteen types in the list. Travel and Rare Find exist only as items. 
 - **The question:** "Travel to Eldertree Forest? It costs 1 [gem]. Are you sure?" with red and green; or, for a locked land, "You have not unlocked The Cursed Forest of Keldor yet. Would you like to take a look?", where green opens the Expansions menu over the game with that expansion unfolded, and closing it returns to the map. A refusal (not enough gems, someone already chose) shows in the question.
 - **The server** (`POST /room/travel`) checks the destination, the player's unlocked expansions and the gems, refuses during Atranor and a level-up and after a choice, and charges and swaps the encounter in one transaction (room row, then player row). The new encounter is drawn from the destination's expansion, avoiding recently played ones; it carries no follow-up, and after it the usual region roll applies. A host's room travels with everyone in it; a guest pays, leaves the room and gets a room of their own there (the gems go back if that fails).
 
+### Ready before the world (2026-11-26)
+
+Babuni: tapping the active avatar first asks for a specialization if it has none, then for an item for each empty equipment slot (when the inventory has one that fits), then shows the card with Play. Each question can be closed to skip it. In the game, when an equipped item breaks, the next encounter asks for another item for that slot.
+
 ### Content sorted out (2026-11-26)
 
 Every region is now its own expansion (D-063, D-064): the base game is Ethera's Vale; Keldor, Everwinter Valley and Aetherion stay as they were; Eldertree Forest, Frostwind Mountains, Emberfrost, Shattered Peaks, the Desert of Ohgar, the Swamp of Karrhu and the Rocky Tundra are coming soon with gem prices; the races' homelands Evergrove, Celesterra and the Fyrskar Mountains are free, opened by playing 100 encounters with one avatar of their people (D-065). Travel always draws a random encounter from the destination's own pool.

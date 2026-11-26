@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Ready before the first step
+
+A new avatar should not walk into the world without a specialization and without its two items. Now a tap on it asks first: choose what you are good at, then equip an item for each slot, then the card with Play. When an item breaks in the game, the next encounter asks for a new one. Claude Code (Claude Opus 5.5) built both questions on the pickers the game already has and walked a new avatar through them in the local game. **Verification:** release check (client 53, server 78); the broken-item question not seen in play yet. **Not released.**
+
 ## 2026-11-26 — Out as 0.9.0-beta.84
 
 I said it could go out as it is. Claude Code (Claude Opus 5.5) wrote the patch notes, bumped the version, checked that the server held no unsaved Admin edits, and released: backup first, then the code and the game files. The live game is 0.9.0-beta.84, with the lands as their own expansions, Homecoming, the climbs and the eight letters. Existing avatars with a hundred encounters earn their homeland on this first start. **Not yet seen live:** a homeland earned in play, the homeland message, a real phone.
