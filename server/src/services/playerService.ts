@@ -298,9 +298,11 @@ export async function unlockPlayerExpansion(
   if (!expansion.mExtensioActive) {
     throw new ExpansionInactiveError();
   }
-  // A price that is not a whole number of 0 or more (a data mistake) would
-  // add gems or set the balance to NaN: such an expansion cannot be bought.
-  if (!Number.isInteger(expansion.mExtensioCost) || expansion.mExtensioCost < 0) {
+  // A price that is missing or not a whole number of 0 or more (a data
+  // mistake, or a future region without a price) would add gems or set the
+  // balance to NaN: such an expansion cannot be bought.
+  const price = expansion.mExtensioCost;
+  if (typeof price !== 'number' || !Number.isInteger(price) || price < 0) {
     throw new ExpansionInactiveError();
   }
 
@@ -316,7 +318,7 @@ export async function unlockPlayerExpansion(
       throw new ExpansionAlreadyUnlockedError();
     }
 
-    const cost = expansion.mExtensioCost;
+    const cost = price;
     const currentCurrencies = player.currencies ?? {};
     const currentGems = typeof currentCurrencies.yellow_red_gem === 'number'
       ? currentCurrencies.yellow_red_gem
@@ -348,7 +350,7 @@ export async function unlockPlayerExpansion(
     currencies,
     unlockedExpansions: nextUnlockedExpansions,
     expansionId,
-    spent: expansion.mExtensioCost,
+    spent: price,
   };
 }
 

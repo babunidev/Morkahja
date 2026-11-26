@@ -240,12 +240,25 @@ export const EXPANSION_FOCUS: Readonly<Record<number, { regionId: string; at: Po
   1001: { regionId: 'keldor', at: [204, 452] },
   1003: { regionId: 'everwinter', at: [512, 160] },
   1004: { regionId: 'aetherion', at: [520, 572] },
+  // Regional expansions (D-063): the middle of their encounters' places.
+  1005: { regionId: 'eldertree', at: [512, 798] },
+  1006: { regionId: 'frostwind', at: [503, 337] },
+  1007: { regionId: 'evergrove', at: [810, 967] },
+  1008: { regionId: 'emberfrost', at: [835, 247] },
+  1009: { regionId: 'southwest-mountains', at: [230, 856] },
+  1010: { regionId: 'fyrskar', at: [174, 258] },
+  1011: { regionId: 'shattered-peaks', at: [268, 117] },
+  1012: { regionId: 'ohgar', at: [492, 999] },
+  1013: { regionId: 'karrhu', at: [834, 572] },
+  1014: { regionId: 'rocky-tundra', at: [191, 655] },
 };
 
 /**
  * Travel (D-056): where a tap on the map leads. A region is its expansion, so
- * Keldor and Everwinter Valley are their expansions, Aetherion (a city in the
- * Vale) is its own, and every other land is the base game (Babuni, 2026-11-23).
+ * Keldor and Everwinter Valley are their expansions and Aetherion (a city in
+ * the Vale) is its own. Since D-063 (2026-11-26) the base game is Ethera's Vale
+ * alone: every other land is a regional expansion, closed while its catalog
+ * entry is inactive, so it never leads into the base game's encounters.
  */
 export interface TravelTarget {
   /** `region:<id>` or `site:<id>`. */
@@ -254,9 +267,19 @@ export interface TravelTarget {
   expansion: number;
 }
 
-const REGION_EXPANSIONS: Readonly<Record<string, number>> = {
+export const REGION_EXPANSIONS: Readonly<Record<string, number>> = {
   keldor: 1001,
   everwinter: 1003,
+  eldertree: 1005,
+  frostwind: 1006,
+  evergrove: 1007,
+  emberfrost: 1008,
+  'southwest-mountains': 1009,
+  fyrskar: 1010,
+  'shattered-peaks': 1011,
+  ohgar: 1012,
+  karrhu: 1013,
+  'rocky-tundra': 1014,
 };
 
 const SITE_EXPANSIONS: Readonly<Record<string, number>> = {

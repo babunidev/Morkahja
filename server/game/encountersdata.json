@@ -309,7 +309,7 @@
   },
   "20006": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20006,
     "mEncounterImageName": "aevis_chest",
@@ -331,7 +331,7 @@
   },
   "20007": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20007,
     "mEncounterImageName": "aevis_lockbox",
@@ -353,7 +353,7 @@
   },
   "20008": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20008,
     "mEncounterImageName": "grimnir_trunk",
@@ -397,7 +397,7 @@
   },
   "20010": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20010,
     "mEncounterImageName": "verdani_casket",
@@ -463,7 +463,7 @@
   },
   "20013": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20013,
     "mEncounterImageName": "help_heal_cauterized_rokur",
@@ -485,7 +485,7 @@
   },
   "20014": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20014,
     "mEncounterImageName": "help_heal_downed_aevis",
@@ -507,7 +507,7 @@
   },
   "20015": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20015,
     "mEncounterImageName": "weakened_grimnir",
@@ -529,7 +529,7 @@
   },
   "20016": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20016,
     "mEncounterImageName": "ailing_verdani",
@@ -551,7 +551,7 @@
   },
   "20017": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20017,
     "mEncounterImageName": "flameveil_emberheart",
@@ -573,7 +573,7 @@
   },
   "20018": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20018,
     "mEncounterImageName": "help_heal_wounded_grimnir",
@@ -595,7 +595,7 @@
   },
   "20019": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20019,
     "mEncounterImageName": "ashen_revenant_witch",
@@ -617,7 +617,7 @@
   },
   "20020": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20020,
     "mEncounterImageName": "ashen_revenant_seer",
@@ -639,7 +639,7 @@
   },
   "20021": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20021,
     "mEncounterImageName": "blightwraith_huntress",
@@ -661,7 +661,7 @@
   },
   "20022": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1011,
     "mEncounterFollow": 0,
     "mEncounterID": 20022,
     "mEncounterImageName": "fight_corrupted_crumble_magician",
@@ -683,7 +683,7 @@
   },
   "20023": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20023,
     "mEncounterImageName": "fight_corrupted_tempest_wildheart",
@@ -705,7 +705,7 @@
   },
   "20024": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20024,
     "mEncounterImageName": "fight_corrupted_blightwraiths_rootrot",
@@ -727,7 +727,7 @@
   },
   "20025": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1011,
     "mEncounterFollow": 0,
     "mEncounterID": 20025,
     "mEncounterImageName": "fight_corrupted_crumble_berserk",
@@ -749,7 +749,7 @@
   },
   "20026": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1011,
     "mEncounterFollow": 0,
     "mEncounterID": 20026,
     "mEncounterImageName": "fight_corrupted_crumble_barbarian",
@@ -771,7 +771,7 @@
   },
   "20027": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20027,
     "mEncounterImageName": "fight_corrupted_tempest_stormcaller",
@@ -793,7 +793,7 @@
   },
   "20028": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20028,
     "mEncounterImageName": "fight_corrupted_tempest_seductress",
@@ -815,7 +815,7 @@
   },
   "20029": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20029,
     "mEncounterImageName": "blightwraith_occultist",
@@ -837,7 +837,7 @@
   },
   "20030": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20030,
     "mEncounterImageName": "ashen_revenant_warlock",
@@ -859,7 +859,7 @@
   },
   "20031": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20031,
     "mEncounterImageName": "pantheon_temple",
@@ -903,7 +903,7 @@
   },
   "20033": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20033,
     "mEncounterImageName": "wild_bloodfang",
@@ -947,7 +947,7 @@
   },
   "20035": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1012,
     "mEncounterFollow": 0,
     "mEncounterID": 20035,
     "mEncounterImageName": "fight_animal_desert_scorpio",
@@ -969,7 +969,7 @@
   },
   "20036": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20036,
     "mEncounterImageName": "liani_shadowwolf",
@@ -991,7 +991,7 @@
   },
   "20037": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20037,
     "mEncounterImageName": "flytrap_grotto",
@@ -1013,7 +1013,7 @@
   },
   "20038": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20038,
     "mEncounterImageName": "inferno_duck",
@@ -1035,7 +1035,7 @@
   },
   "20039": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20039,
     "mEncounterImageName": "eldertree_grove",
@@ -1057,7 +1057,7 @@
   },
   "20040": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20040,
     "mEncounterImageName": "shadowed_hollow",
@@ -1079,7 +1079,7 @@
   },
   "20041": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20041,
     "mEncounterImageName": "sunlit_dell",
@@ -1101,7 +1101,7 @@
   },
   "20042": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20042,
     "mEncounterImageName": "enchanted_hollow",
@@ -1123,7 +1123,7 @@
   },
   "20043": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20043,
     "mEncounterImageName": "trick_climb_forest_sylvansanct",
@@ -1167,7 +1167,7 @@
   },
   "20045": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20045,
     "mEncounterImageName": "tranquil_glade",
@@ -1189,7 +1189,7 @@
   },
   "20046": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20046,
     "mEncounterImageName": "feral_hollow",
@@ -1211,7 +1211,7 @@
   },
   "20047": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20047,
     "mEncounterImageName": "moonlit_oasis",
@@ -1233,7 +1233,7 @@
   },
   "20048": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20048,
     "mEncounterImageName": "grimnir_steps",
@@ -1255,7 +1255,7 @@
   },
   "20049": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20049,
     "mEncounterImageName": "firefly_brook",
@@ -1343,7 +1343,7 @@
   },
   "20053": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20053,
     "mEncounterImageName": "help_heal_exhausted_verdani",
@@ -1365,7 +1365,7 @@
   },
   "20054": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20054,
     "mEncounterImageName": "drained_aevis",
@@ -1387,7 +1387,7 @@
   },
   "20055": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1011,
     "mEncounterFollow": 0,
     "mEncounterID": 20055,
     "mEncounterImageName": "help_heal_wounded_grimnir",
@@ -1409,7 +1409,7 @@
   },
   "20056": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20056,
     "mEncounterImageName": "venerable_grimnir",
@@ -1431,7 +1431,7 @@
   },
   "20057": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20057,
     "mEncounterImageName": "help_bread_verdani_child",
@@ -1453,7 +1453,7 @@
   },
   "20058": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20058,
     "mEncounterImageName": "aevis_lady",
@@ -1475,7 +1475,7 @@
   },
   "20059": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20059,
     "mEncounterImageName": "rokur_blacksmith",
@@ -1497,7 +1497,7 @@
   },
   "20060": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20060,
     "mEncounterImageName": "verdani_treasury",
@@ -1519,7 +1519,7 @@
   },
   "20061": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20061,
     "mEncounterImageName": "trade_hidden_frostwindjunk",
@@ -1563,7 +1563,7 @@
   },
   "20063": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1012,
     "mEncounterFollow": 0,
     "mEncounterID": 20063,
     "mEncounterImageName": "ancient_inscription",
@@ -1585,7 +1585,7 @@
   },
   "20064": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20064,
     "mEncounterImageName": "altar_of_umbrael",
@@ -1607,7 +1607,7 @@
   },
   "20065": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20065,
     "mEncounterImageName": "zeelai_feline",
@@ -1629,7 +1629,7 @@
   },
   "20066": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1012,
     "mEncounterFollow": 0,
     "mEncounterID": 20066,
     "mEncounterImageName": "thirsty_grimnir",
@@ -1651,7 +1651,7 @@
   },
   "20067": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20067,
     "mEncounterImageName": "ferocious_silvermane",
@@ -1783,7 +1783,7 @@
   },
   "20073": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20073,
     "mEncounterImageName": "celestial_cairn",
@@ -1849,7 +1849,7 @@
   },
   "20076": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1009,
     "mEncounterFollow": 0,
     "mEncounterID": 20076,
     "mEncounterImageName": "aevis_merchant",
@@ -1871,7 +1871,7 @@
   },
   "20077": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20077,
     "mEncounterImageName": "quicksilver_quagmire",
@@ -1981,7 +1981,7 @@
   },
   "20082": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20082,
     "mEncounterImageName": "alluring_fens",
@@ -2311,7 +2311,7 @@
   },
   "20097": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20097,
     "mEncounterImageName": "yowler",
@@ -2355,7 +2355,7 @@
   },
   "20099": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20099,
     "mEncounterImageName": "cliffs_of_sarga",
@@ -2377,7 +2377,7 @@
   },
   "20100": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20100,
     "mEncounterImageName": "mountain_pass",
@@ -2399,7 +2399,7 @@
   },
   "20101": {
     "mEncounterDifficulty": 2,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1012,
     "mEncounterFollow": 0,
     "mEncounterID": 20101,
     "mEncounterImageName": "rocks_of_ohgar",
@@ -2421,7 +2421,7 @@
   },
   "20102": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20102,
     "mEncounterImageName": "frostwind_slopes",
@@ -2443,7 +2443,7 @@
   },
   "20103": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20103,
     "mEncounterImageName": "strange_boulder",
@@ -2465,7 +2465,7 @@
   },
   "20104": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20104,
     "mEncounterImageName": "sudden_rockslide",
@@ -2487,7 +2487,7 @@
   },
   "20105": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1011,
     "mEncounterFollow": 0,
     "mEncounterID": 20105,
     "mEncounterImageName": "the_giant",
@@ -2509,7 +2509,7 @@
   },
   "20106": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20106,
     "mEncounterImageName": "sarga_lioness",
@@ -2575,7 +2575,7 @@
   },
   "20109": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20109,
     "mEncounterImageName": "embersnout",
@@ -2685,7 +2685,7 @@
   },
   "20114": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20114,
     "mEncounterImageName": "liani_guardian",
@@ -2707,7 +2707,7 @@
   },
   "20115": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20115,
     "mEncounterImageName": "20115_lianipred",
@@ -2729,7 +2729,7 @@
   },
   "20116": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1013,
     "mEncounterFollow": 0,
     "mEncounterID": 20116,
     "mEncounterImageName": "aradia_s_perch",
@@ -2751,7 +2751,7 @@
   },
   "20117": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20117,
     "mEncounterImageName": "thunderfly_matriarch",
@@ -2817,7 +2817,7 @@
   },
   "20120": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20120,
     "mEncounterImageName": "bronze_vault",
@@ -2839,7 +2839,7 @@
   },
   "20121": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1006,
     "mEncounterFollow": 0,
     "mEncounterID": 20121,
     "mEncounterImageName": "20121_strider",
@@ -2861,7 +2861,7 @@
   },
   "20122": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1014,
     "mEncounterFollow": 0,
     "mEncounterID": 20122,
     "mEncounterImageName": "20122_tundra",
@@ -2927,7 +2927,7 @@
   },
   "20125": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20125,
     "mEncounterImageName": "raided_verdani_village",
@@ -2949,7 +2949,7 @@
   },
   "20126": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1008,
     "mEncounterFollow": 0,
     "mEncounterID": 20126,
     "mEncounterImageName": "disheartened_rokur",
@@ -2971,7 +2971,7 @@
   },
   "20127": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1005,
     "mEncounterFollow": 0,
     "mEncounterID": 20127,
     "mEncounterImageName": "eternal_twilight_grove",
@@ -2993,7 +2993,7 @@
   },
   "20128": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1010,
     "mEncounterFollow": 0,
     "mEncounterID": 20128,
     "mEncounterImageName": "grimnir_rebels",
@@ -4357,7 +4357,7 @@
   },
   "20191": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1007,
     "mEncounterFollow": 0,
     "mEncounterID": 20191,
     "mEncounterImageName": "slumbering_ogru",

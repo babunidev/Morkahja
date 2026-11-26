@@ -70,9 +70,11 @@ const buttonsStyle: CSSProperties = {
 
 
 
-export default function TravelPrompt({ target, locked, cost, waitEncounters = 0, pending, error, onNo, onYes }: {
+export default function TravelPrompt({ target, locked, closed = false, cost, waitEncounters = 0, pending, error, onNo, onYes }: {
   target: TravelTarget;
   locked: boolean;
+  /** A land whose expansion is not open yet (D-063): nothing to travel to or buy, only Back. */
+  closed?: boolean;
   cost: number;
   /** Encounters still to play after the last trip; above 0 the trip is not offered (Babuni, 2026-11-24). */
   waitEncounters?: number;
@@ -81,7 +83,8 @@ export default function TravelPrompt({ target, locked, cost, waitEncounters = 0,
   onNo: () => void;
   onYes: () => void;
 }) {
-  const waiting = waitEncounters > 0 && !locked;
+  const waiting = !closed && waitEncounters > 0 && !locked;
+  const onlyBack = waiting || closed;
   return (
     <div
       onClick={(event) => {
@@ -94,11 +97,16 @@ export default function TravelPrompt({ target, locked, cost, waitEncounters = 0,
       style={shadeStyle}
     >
       <div
-        aria-label={locked ? `${target.name} is not unlocked` : waiting ? 'You cannot travel right now' : `Travel to ${target.name}`}
+        aria-label={closed ? `${target.name} is not open yet` : locked ? `${target.name} is not unlocked` : waiting ? 'You cannot travel right now' : `Travel to ${target.name}`}
         role="alertdialog"
         style={boxStyle}
       >
-        {locked ? (
+        {closed ? (
+          <>
+            <p style={nameStyle}>{target.name}</p>
+            <p style={lineStyle}>is not open to travellers yet.</p>
+          </>
+        ) : locked ? (
           <>
             <p style={lineStyle}>You have not unlocked</p>
             <p style={nameStyle}>{target.name}</p>
@@ -123,9 +131,9 @@ export default function TravelPrompt({ target, locked, cost, waitEncounters = 0,
           </>
         )}
         {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
-        <div style={{ ...buttonsStyle, justifyContent: waiting ? 'center' : 'space-between' }}>
-          <BackButton ariaLabel={waiting ? 'Back' : 'No'} disabled={pending} onClick={onNo} pressKey="travel-no" />
-          {waiting ? null : (
+        <div style={{ ...buttonsStyle, justifyContent: onlyBack ? 'center' : 'space-between' }}>
+          <BackButton ariaLabel={onlyBack ? 'Back' : 'No'} disabled={pending} onClick={onNo} pressKey="travel-no" />
+          {onlyBack ? null : (
             <AcceptButton
               ariaLabel={locked ? 'Yes, show the expansion' : 'Yes, travel'}
               disabled={pending}

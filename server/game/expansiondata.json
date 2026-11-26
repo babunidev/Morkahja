@@ -56,6 +56,66 @@
       "mExtensioSummaryText": "Unlock access to the City!",
       "mExtensioText": "Aetherion, the beating heart of Morkahja, emerges from the midst of lush, rolling landscapes of Ethera's Vale like a jewel of harmony and diversity. Envisioned as a grand confluence of the world's elemental forces, this city thrives under the banner of unity, drawing together the myriad races of Morkahja into a vibrant tapestry of coexistence. Here, the air vibrates with the pure, celestial energy of Aether, infusing the city with a sense of wonder and boundless potential. The city's architecture is a breathtaking spectacle, showcasing the ingenuity and aesthetic of its diverse inhabitants. Towering spires reach for the skies, their surfaces shimmering with enchantments that reflect the elements—flames dance, breezes whisper, waters ripple, and stones resonate with the deep, enduring strength of the earth. Aetherion's streets are alive with the buzz of activity, a place where magic and technology intertwine seamlessly, creating an environment that is both awe-inspiring and welcoming.",
       "mExtensioUnlockButton": "expansion_aetherion"
+    },
+    "1005": {
+      "mExtensioActive": false,
+      "mExtensioID": 1005,
+      "mExtensioListed": false,
+      "mExtensioName": "Eldertree Forest"
+    },
+    "1006": {
+      "mExtensioActive": false,
+      "mExtensioID": 1006,
+      "mExtensioListed": false,
+      "mExtensioName": "Frostwind Mountains"
+    },
+    "1007": {
+      "mExtensioActive": false,
+      "mExtensioID": 1007,
+      "mExtensioListed": false,
+      "mExtensioName": "Evergrove"
+    },
+    "1008": {
+      "mExtensioActive": false,
+      "mExtensioID": 1008,
+      "mExtensioListed": false,
+      "mExtensioName": "Emberfrost"
+    },
+    "1009": {
+      "mExtensioActive": false,
+      "mExtensioID": 1009,
+      "mExtensioListed": false,
+      "mExtensioName": "Celesterra"
+    },
+    "1010": {
+      "mExtensioActive": false,
+      "mExtensioID": 1010,
+      "mExtensioListed": false,
+      "mExtensioName": "Fyrskar Mountains"
+    },
+    "1011": {
+      "mExtensioActive": false,
+      "mExtensioID": 1011,
+      "mExtensioListed": false,
+      "mExtensioName": "Shattered Peaks"
+    },
+    "1012": {
+      "mExtensioActive": false,
+      "mExtensioID": 1012,
+      "mExtensioListed": false,
+      "mExtensioName": "Desert of Ohgar"
+    },
+    "1013": {
+      "mExtensioActive": false,
+      "mExtensioID": 1013,
+      "mExtensioListed": false,
+      "mExtensioName": "Swamp of Karrhu"
+    },
+    "1014": {
+      "mExtensioActive": false,
+      "mExtensioID": 1014,
+      "mExtensioListed": false,
+      "mExtensioName": "Rocky Tundra"
     }
   }
 }

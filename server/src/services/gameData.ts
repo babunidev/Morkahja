@@ -38,15 +38,26 @@ export interface PortraitsDataFile {
 
 export interface ExpansionData {
   mExtensioActive: boolean;
-  mExtensioCollectionImage: string;
-  mExtensioCost: number;
-  mExtensioHeaderImage: string;
   mExtensioID: number;
   mExtensioName: string;
-  mExtensioReward: number;
-  mExtensioSummaryText: string;
-  mExtensioText: string;
-  mExtensioUnlockButton: string;
+  /**
+   * false: a future region kept out of the Expansions menu until Babuni
+   * approves showing it (D-063). Missing means listed, as before.
+   */
+  mExtensioListed?: boolean;
+  /*
+   * Shop fields. A future region has none yet: prices, rewards and art are
+   * Babuni's decision, and an expansion without a whole-number gem price
+   * cannot be unlocked even if it were switched on.
+   */
+  mExtensioCollectionImage?: string;
+  mExtensioCost?: number;
+  mExtensioPriceEurCents?: number;
+  mExtensioHeaderImage?: string;
+  mExtensioReward?: number;
+  mExtensioSummaryText?: string;
+  mExtensioText?: string;
+  mExtensioUnlockButton?: string;
 }
 
 interface ExpansionDataFile {

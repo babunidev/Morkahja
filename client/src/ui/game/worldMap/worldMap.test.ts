@@ -82,13 +82,37 @@ console.log('worldMap.test.ts passed');
   assert.deepEqual(mapFocusFor(99999, 1001), EXPANSION_FOCUS[1001], 'unknown encounters fall back to their land');
 }
 
-// Travel (D-056): a region is its expansion; Aetherion is its own; every other land is the base game.
+// Travel (D-056, D-063): a region is its expansion; Aetherion is its own; only the Vale is the base game.
 {
-  const { travelTargetFor } = await import('./worldMapData.js');
+  const { travelTargetFor, REGION_EXPANSIONS } = await import('./worldMapData.js');
   assert.equal(travelTargetFor('region:keldor')?.expansion, 1001);
   assert.equal(travelTargetFor('region:everwinter')?.expansion, 1003);
   assert.equal(travelTargetFor('site:aetherion')?.expansion, 1004);
-  assert.equal(travelTargetFor('region:eldertree')?.expansion, 0);
+  assert.equal(travelTargetFor('region:eldertree')?.expansion, 1005);
+  assert.equal(travelTargetFor('region:vale')?.expansion, 0);
+  for (const region of MAP_REGIONS) {
+    assert.ok(region.id === 'vale' || region.id in REGION_EXPANSIONS, `${region.id} is an expansion, not the base game`);
+  }
+  for (const [regionId, expansion] of Object.entries(REGION_EXPANSIONS)) {
+    const focus = EXPANSION_FOCUS[expansion];
+    assert.equal(focus?.regionId, regionId, `expansion ${expansion} opens the map on ${regionId}`);
+    assert.ok(pointInPolygon(focus!.at, region(regionId).outline), `expansion ${expansion}'s map point lies in ${regionId}`);
+  }
+
+  // Every encounter of a regional expansion is placed in that land, and no
+  // base-game encounter outside the Vale is left (20009 is held, D-063).
+  const { readFileSync } = await import('node:fs');
+  const { ENCOUNTER_LOCATIONS } = await import('./encounterLocations.js');
+  const encounters = JSON.parse(readFileSync(new URL('../../../../../server/game/encountersdata.json', import.meta.url), 'utf8')) as Record<string, { mEncounterID: number; mEncounterExpansion: number }>;
+  for (const record of Object.values(encounters)) {
+    const place = ENCOUNTER_LOCATIONS[record.mEncounterID];
+    if (record.mEncounterExpansion >= 1005) {
+      assert.equal(REGION_EXPANSIONS[place?.regionId ?? ''], record.mEncounterExpansion, `encounter ${record.mEncounterID} is placed in its expansion's land`);
+    }
+    if (record.mEncounterExpansion === 0 && place && place.regionId !== 'vale') {
+      assert.equal(record.mEncounterID, 20009, `base-game encounter ${record.mEncounterID} lies outside the Vale`);
+    }
+  }
   assert.equal(travelTargetFor('region:vale')?.name, "Ethera's Vale");
   assert.equal(travelTargetFor('site:eldridia'), null, 'other sites are not destinations of their own');
   assert.equal(travelTargetFor('region:nowhere'), null);

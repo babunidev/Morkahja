@@ -166,6 +166,15 @@ function travelExpansionPrice(expansionId: number): number | null {
   return record?.mExtensioCost ?? null;
 }
 
+/** A regional expansion whose catalog entry is inactive is not open to travel yet (D-063). */
+function travelExpansionClosed(expansionId: number): boolean {
+  if (expansionId === 0) {
+    return false;
+  }
+  const record = (gameExpansions() as Record<string, { mExtensioActive?: boolean } | undefined>)[String(expansionId)];
+  return record?.mExtensioActive !== true;
+}
+
 function imageFileName(imageSrc: string): string {
   return decodeURIComponent(imageSrc.split('/').pop() ?? imageSrc);
 }
@@ -815,6 +824,7 @@ export function EncounterImageBlock({
             />
             {travelTarget ? (
               <TravelPrompt
+                closed={travelExpansionClosed(travelTarget.expansion)}
                 cost={travelCost(travelTarget.expansion, travelExpansionPrice(travelTarget.expansion))}
                 error={travelError}
                 locked={travelTarget.expansion !== 0 && !unlockedExpansions.includes(travelTarget.expansion)}
@@ -824,6 +834,10 @@ export function EncounterImageBlock({
                   setTravelError(null);
                 }}
                 onYes={() => {
+                  if (travelExpansionClosed(travelTarget.expansion)) {
+                    setTravelTarget(null);
+                    return;
+                  }
                   if (travelTarget.expansion !== 0 && !unlockedExpansions.includes(travelTarget.expansion)) {
                     // A locked region: its expansion, in the Expansions menu; closing it comes back to the map.
                     setLookAtExpansion(travelTarget.expansion);

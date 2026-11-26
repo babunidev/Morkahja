@@ -5,6 +5,9 @@
  * Fails on: invalid JSON, wrong structure, keys that do not match record ids,
  * encounter references to missing solutions/encounters/expansions, missing
  * encounter or solution images, and reintroduced client copies of the data.
+ * Regional expansions (D-063): an active expansion needs a whole-number gem
+ * price, and a written follow never leads out of its own land into another
+ * expansion (it would skip the unlock and the active check).
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -77,6 +80,19 @@ if (errors.length === 0) {
   // Expansion 0 is the base game, which has no expansion record.
   const expansionIds = new Set([0, ...Object.values(expansionFile.expansions).map((entry) => entry.mExtensioID)]);
   const encounterImages = listImages('encounterimages');
+  const encounterById = new Map(Object.values(encounters).map((entry) => [entry.mEncounterID, entry]));
+
+  for (const [key, entry] of Object.entries(expansionFile.expansions)) {
+    if (String(entry.mExtensioID) !== key) {
+      errors.push(`expansion ${key}: mExtensioID is ${entry.mExtensioID}`);
+    }
+    if (typeof entry.mExtensioName !== 'string' || !entry.mExtensioName.trim()) {
+      errors.push(`expansion ${key}: no name`);
+    }
+    if (entry.mExtensioActive === true && !(Number.isInteger(entry.mExtensioCost) && entry.mExtensioCost >= 0)) {
+      errors.push(`expansion ${key}: active without a whole-number gem price`);
+    }
+  }
   const solutionImages = listImages('solutionimages');
 
   for (const [key, entry] of Object.entries(solutions)) {
@@ -100,6 +116,11 @@ if (errors.length === 0) {
     }
     if (entry.mEncounterFollow && !encounterIds.has(entry.mEncounterFollow)) {
       errors.push(`encounter ${key}: follow-up encounter ${entry.mEncounterFollow} not found`);
+    }
+    const followExpansion = encounterById.get(entry.mEncounterFollow)?.mEncounterExpansion;
+    if (entry.mEncounterFollow && followExpansion !== undefined && followExpansion !== 0
+      && followExpansion !== entry.mEncounterExpansion) {
+      errors.push(`encounter ${key}: follow-up ${entry.mEncounterFollow} leads into expansion ${followExpansion}`);
     }
     if (!expansionIds.has(entry.mEncounterExpansion)) {
       errors.push(`encounter ${key}: expansion ${entry.mEncounterExpansion} not found`);

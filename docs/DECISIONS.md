@@ -612,3 +612,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** released 2026-11-24 in 0.9.0-beta.83. Server test and local browser check passed; the QR code was not scanned with a real phone.
 
+## D-063 — The base game is Ethera's Vale; ten regional expansions, closed (2026-11-26)
+
+**Babuni's direction:** the [regional migration brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and the [manifest](CONTENT_EXPANSION_ASSIGNMENTS.md), prepared with ChatGPT (GPT-6.2): the base game is Ethera's Vale plus Atranor and Level up; the 79 out-of-Vale encounters go to named regional expansions, none accessible before approval, existing entitlements protected; Eternal Twilight Grove belongs to Eldertree Forest; 20009 is not silently given to Everwinter; no prices, rewards, art or activation.
+
+**AI implementation:** Claude Code (Claude Opus 5.5), with these choices of its own, open to Babuni's correction: IDs 1005–1014 as proposed (free at the check); catalog entries without any shop fields and with `mExtensioListed: false`, so the Expansions menu does not show them; an expansion must be active as well as unlocked for its encounters to be drawn; 20009 held in expansion 0 by a list in `encounterAvailability.ts` rather than given a land; the grove's point at [490, 854]; every map land except the Vale mapped to its expansion, so travel to the ten lands is closed until they open. Details and the Evergrove recommendations: [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md).
+
+**Status:** on GitHub `main`, not released. Release check and local browser check passed.
+

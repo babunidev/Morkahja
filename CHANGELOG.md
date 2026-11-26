@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: the base game is Ethera's Vale; ten regional expansions, closed (D-063)
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged. No region is active, priced or listed.
+- **Babuni's direction:** the [regional migration brief](docs/DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and the [79-encounter manifest](docs/CONTENT_EXPANSION_ASSIGNMENTS.md): the base game is Ethera's Vale with Atranor and Level up; every out-of-Vale encounter moves to a named regional expansion, closed until approved; 20127 Eternal Twilight Grove moves to Eldertree Forest; 20009 is not given to Everwinter without review.
+- **Data:** 78 encounters carry their region's ID (1005 Eldertree 22, 1006 Frostwind 9, 1007 Evergrove 10, 1008 Emberfrost 7, 1009 Celesterra 7, 1010 Fyrskar 7, 1011 Shattered Peaks 5, 1012 Ohgar 4, 1013 Karrhu 6, 1014 Rocky Tundra 1). Ten inactive catalog entries with only ID, name, `mExtensioActive: false` and `mExtensioListed: false`; no price, reward, text or art was invented. 20009 Grimnir Vault stays in expansion 0 but is held out of every draw. `docs/data/encounter_locations.csv` and `encounterLocations.ts` follow; 20127 got a point inside Eldertree Forest ([490, 854]).
+- **Closing the regions:** a draw needs the expansion to be unlocked **and** active (`encounterAvailability.ts`), so even an account listing a future region gets nothing from it; held encounters are never drawn, by chance or by travel. An expansion without a whole-number gem price cannot be unlocked. On the map every land but the Vale is its expansion; a closed one says "… is not open to travellers yet." with only Back (before, those lands counted as the base game and could be travelled to). The Expansions menu hides unlisted entries. The static-data check now fails on an active expansion without a price and on a written follow into another expansion.
+- **World archive** (MorkahjaWorld `3962553`, `8f5b8ca`): the grove's page names Eldertree Forest; Eldertree Forest lists the grove. **Babuni Admin** (`11b6eb7`): "Add expansion" started on ID 1010, switched on, and would have overwritten Fyrskar; it now starts switched off on the next free ID.
+- **Reports:** [implementation report with the Evergrove review](docs/REPORT_REGIONAL_EXPANSIONS_2026-11-26.md) and [Climb Round 1 drafts](docs/CLIMB_CONVERSIONS_ROUND_1.md) (drafts only, no data change). Claude Code (Claude Opus 5.5).
+- **Verification:** `npm run release:check` passed in full (static data, typecheck and build, client 52/52, server 77/77 with the new `regionalExpansions.test.ts`); babuni.admin 146/146. Local game in headless Chromium (desktop and phone): closed lands, Keldor's offer and the Expansions menu as above. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-regions-*.png`.
+
 ## 2026-11-26 — Regional migration and Climb developer briefs (documentation only)
 
 - Recorded approved Eternal Twilight Grove destination in Eldertree Forest, corrected planned regional counts, and added regional migration and Find-to-Climb developer briefs. No game data, map, lore archive or activation changes. ChatGPT (GPT-6.2).

@@ -2,7 +2,7 @@
 
 **Creative:** Babuni  
 **Date:** 2026-11-26  
-**Status:** Approved direction; implementation pending. No release approval.
+**Status:** Approved direction; implemented 2026-11-26 on `main` (D-063, [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md)); 20009 held; not released. No release approval.
 
 ## Objective and boundaries
 

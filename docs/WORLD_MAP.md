@@ -35,7 +35,7 @@ The in-game world map (`client/src/ui/game/worldMap/`) opens from the region pla
 
 Roads leave Aetherion toward every land and streams converge on it, after the Vale's "trade routes" and "converging elemental streams". Not on the map: Atranor (a divine realm, not a place in the world), the Eternal Twilight Grove and other sites with no region in the archive.
 
-**Expansion markers:** 0 → Ethera's Vale, 1001 → Keldor, 1003 → Everwinter Valley, 1004 → Aetherion. Urcogor Ravage (1002) is a world event, not a place, and has no marker.
+**Expansion markers:** 0 → Ethera's Vale, 1001 → Keldor, 1003 → Everwinter Valley, 1004 → Aetherion. Since D-063 (2026-11-26) the other ten lands are regional expansions 1005–1014 (`REGION_EXPANSIONS` in `worldMapData.ts`); while inactive, travel there is closed. Urcogor Ravage (1002) is a world event, not a place, and has no marker.
 
 ## Per-encounter markers (2026-11-17)
 

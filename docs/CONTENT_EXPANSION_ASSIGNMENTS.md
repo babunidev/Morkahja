@@ -2,7 +2,7 @@
 
 **Creative:** Babuni
 
-My base-game scope remains Ethera's Vale. The 79 currently expansion-0 out-of-Vale encounters are assigned below to named regional destinations for future migration planning. This is a **proposal**, not a change to game data, expansion access, canon or availability. The existing map label is the working geographic source, not proof of canon; every interpretive placement requires review before migration. No new expansion is activated or priced.
+My base-game scope remains Ethera's Vale. The 79 currently expansion-0 out-of-Vale encounters are assigned below to named regional destinations for future migration planning. This was written as a **proposal**; on 2026-11-26 the IDs below were applied to the game data except 20009, which is held (D-063, [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md)). The new expansions are inactive, unpriced and unlisted. The existing map label is the working geographic source, not proof of canon; every interpretive placement requires review before migration. No new expansion is activated or priced.
 
 Source: [pinned main c16640cd](https://github.com/babunidev/Morkahja/commit/c16640cdcc1fe7aa82fa487100b1b1823f7e04d5), complete encounter catalog joined to generated map labels and placement CSV. Existing expansion IDs 1001 Keldor, 1002 Urcogor Ravage (world event, inactive), 1003 Everwinter Valley and 1004 Aetherion are preserved. IDs 1005–1014 are proposed unused IDs in the pinned expansion and encounter catalogs only, not approved reservations or shop definitions.
 

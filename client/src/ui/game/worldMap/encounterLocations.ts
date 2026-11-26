@@ -153,7 +153,7 @@ export const ENCOUNTER_LOCATIONS: Readonly<Record<number, EncounterLocation | nu
   20124: { regionId: 'everwinter', label: "Everwinter Valley", at: [545, 216] },
   20125: { regionId: 'evergrove', label: "Evergrove", at: [858, 982] },
   20126: { regionId: 'emberfrost', label: "Emberfrost", at: [812, 261] },
-  20127: { regionId: 'evergrove', label: "Evergrove", at: [891, 911] },
+  20127: { regionId: 'eldertree', label: "Eldertree Forest", at: [490, 854] },
   20128: { regionId: 'fyrskar', label: "Fyrskar Mountains", at: [108, 240] },
   20129: { regionId: 'everwinter', label: "Everwinter Valley", at: [467, 130] },
   20130: { regionId: 'everwinter', label: "Everwinter Valley", at: [475, 230] },

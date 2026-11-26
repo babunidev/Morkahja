@@ -29,6 +29,8 @@ interface ExpansionRecord {
   mExtensioPriceEurCents?: number;
   mExtensioHeaderImage: string;
   mExtensioID: number;
+  /** false: a future region, not shown here until Babuni approves it (D-063). */
+  mExtensioListed?: boolean;
   mExtensioName: string;
   mExtensioReward: number;
   mExtensioSummaryText: string;
@@ -104,7 +106,7 @@ function pickRandomEncounterPreviews(
 function loadExpansionList(): ExpansionRecord[] {
   const records = gameExpansions() as Record<string, ExpansionRecord>;
 
-  return Object.values(records).sort((left, right) => {
+  return Object.values(records).filter((record) => record.mExtensioListed !== false).sort((left, right) => {
     if (left.mExtensioActive !== right.mExtensioActive) {
       return left.mExtensioActive ? -1 : 1;
     }

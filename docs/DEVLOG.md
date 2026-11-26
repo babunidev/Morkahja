@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — The Vale stands alone, and the other lands wait
+
+The base game is now my Ethera's Vale. Every encounter set in another land belongs to that land's own expansion, and those ten expansions stay closed until I decide to open them. Claude Code (Claude Opus 5.5) worked through ChatGPT's two briefs. It checked the 79 encounters against the manifest, moved 78 of them and held back the Grimnir Vault, whose text puts it near Everwinter rather than in it. It added the ten regions to the catalog without prices or art, and closed every path into them: chance, travel, unlocking and written follows. A tap on Eldertree Forest now says the land is not open to travellers yet. The Eternal Twilight Grove moved to Eldertree Forest, in the game and in the world archive. While checking my Admin tool, it found that a new expansion would have started on Fyrskar's ID, switched on, and fixed that. It also reviewed the ten Evergrove encounters against their lore and pictures. Two of them, the Ogru and the Bloodfang, are Vale creatures by my own archive. It drafted the first three Climb conversions for my approval. **Verification:** the full release check passed (client 52, server 77), the Admin suite 146, and the closed lands were seen in the local game on desktop and phone. **Not released.**
+
 ## 2026-11-26 — Regional migration and Climb handoff
 
 My Eternal Twilight Grove has an approved Eldertree destination in the planning manifest. ChatGPT (GPT-6.2) reread the grove and Evergrove lore, reviewed the ten remaining Evergrove narratives and six Climb candidates with primary references, and wrote two developer briefs. The first covers regional migration and real catalog entries for Eldertree Forest, Frostwind Mountains and Evergrove; the second covers staged Climb revision and reassessment. The grove's prose is unchanged. The manifest retains 79 unique IDs, 22 planned for Eldertree and ten for Evergrove. No encounter/solution JSON, map, canon archive, runtime tests or deployment changed.

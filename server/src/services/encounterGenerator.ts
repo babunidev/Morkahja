@@ -48,6 +48,7 @@ import {
   toSelectedEncounterAction,
 } from '../types/encounterSnapshot.js';
 import { getEncounterById, getEncounters, getSolutionMap } from './gameData.js';
+import { HELD_ENCOUNTER_IDS, isExpansionOpen } from './encounterAvailability.js';
 import {
   claimActiveEncounterInTransaction,
   loadActiveEncounter,
@@ -153,10 +154,14 @@ function isEncounterAllowed(
   encounter: EncounterData,
   unlockedExpansions: number[],
 ): boolean {
+  if (HELD_ENCOUNTER_IDS.has(encounter.mEncounterID)) {
+    return false;
+  }
   if (encounter.mEncounterExpansion === 0) {
     return true;
   }
-  return unlockedExpansions.includes(encounter.mEncounterExpansion);
+  return unlockedExpansions.includes(encounter.mEncounterExpansion)
+    && isExpansionOpen(encounter.mEncounterExpansion);
 }
 
 function isSystemEncounterId(encounterId: number): boolean {
@@ -270,6 +275,7 @@ export function selectEncounterInExpansion(
     (encounter) =>
       encounter.mEncounterID >= RANDOM_ENCOUNTER_MIN_ID
       && !isSystemEncounterId(encounter.mEncounterID)
+      && !HELD_ENCOUNTER_IDS.has(encounter.mEncounterID)
       && encounter.mEncounterExpansion === expansionId,
   );
   if (pool.length === 0) {
