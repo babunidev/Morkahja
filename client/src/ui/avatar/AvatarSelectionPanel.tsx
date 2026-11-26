@@ -11,6 +11,7 @@ import {
 import { useImagesReady } from '../transitions/menuReadiness.js';
 import SpecializationPicker from './SpecializationPicker.js';
 import StartEquipmentPanel from './StartEquipmentPanel.js';
+import { SOLUTION_PANEL_WIDTH } from '../common/solutionSize.js';
 import {
   chooseAvatarSpecialization,
   createAvatar,
@@ -121,8 +122,10 @@ const pickerShellStyle: CSSProperties = {
   left: '50%',
   top: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 'min(calc(100vw - 32px), 560px)',
-  height: 'min(72vh, 560px)',
+  // As wide as the in-game Inventory, so its pictures have the same size
+  // (Babuni, 2026-11-26); square like it, but never taller than the window.
+  width: SOLUTION_PANEL_WIDTH,
+  height: `min(${SOLUTION_PANEL_WIDTH}, 86vh)`,
   zIndex: 60,
 };
 

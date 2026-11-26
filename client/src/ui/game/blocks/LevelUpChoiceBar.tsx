@@ -17,6 +17,7 @@ import { LEVEL_UP_ENCOUNTER_ID, rewardQuantityForVisibleEntry } from '../visible
 import { BOTTOM_EDGE_ANCHOR_STYLE } from './decorativeFrameShared.js';
 import ChoiceBanner from './ChoiceBanner.js';
 import { SolutionImage } from '../../common/SolutionFrame.js';
+import { SOLUTION_SIZE } from '../../common/solutionSize.js';
 
 /**
  * Level-up choice (D-049, Babuni 2026-11-18): the three rewards wait in the
@@ -25,7 +26,8 @@ import { SolutionImage } from '../../common/SolutionFrame.js';
  * first reward while the rolled ones grow out of the encounter around it.
  */
 
-const SLOT_SIZE_PX = 64;
+// The size of a solution in the Inventory (Babuni, 2026-11-26; it was 64 px).
+const SLOT_SIZE = SOLUTION_SIZE;
 const CHOICE_COLUMNS = [2, 3, 4] as const;
 /** The solution's use animation (SolutionBlock), here mirrored, plays this long. */
 const USE_ANIMATION_MS = 1730;
@@ -46,7 +48,7 @@ const SOLUTION_IMAGE_ROOT = assetUrl('/game/solutionimages');
 const barStyle: CSSProperties = {
   ...BOTTOM_EDGE_ANCHOR_STYLE,
   width: '96%',
-  minHeight: SLOT_SIZE_PX,
+  minHeight: SLOT_SIZE,
   display: 'grid',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
   columnGap: 6,
@@ -59,8 +61,8 @@ const barStyle: CSSProperties = {
 const buttonStyle: CSSProperties = {
   gridRow: '1',
   display: 'block',
-  width: SLOT_SIZE_PX,
-  height: SLOT_SIZE_PX,
+  width: SLOT_SIZE,
+  height: SLOT_SIZE,
   padding: 0,
   border: 0,
   background: 'transparent',
@@ -69,8 +71,8 @@ const buttonStyle: CSSProperties = {
 
 const imageStyle: CSSProperties = {
   display: 'block',
-  width: SLOT_SIZE_PX,
-  height: SLOT_SIZE_PX,
+  width: SLOT_SIZE,
+  height: SLOT_SIZE,
   borderRadius: '50%',
   objectFit: 'cover',
   boxShadow: '0 0 14px rgba(255, 204, 102, 0.38), 0 6px 12px rgba(0, 0, 0, 0.46)',

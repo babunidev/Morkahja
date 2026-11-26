@@ -3,6 +3,7 @@ import type { AvatarInventoryDto } from '@shared/contracts';
 import { shownEquipmentSlots } from './equipmentSlots.js';
 import { FreeSlotSlotTag } from './FreeSlotTag.js';
 import HelpTip from '../common/HelpTip.js';
+import { SOLUTION_GAP, SOLUTION_SIZE } from '../common/solutionSize.js';
 import { SolutionImage } from '../common/SolutionFrame.js';
 import { solutionGridEntryFor } from '../game/blocks/SolutionGridOverlay.js';
 import { SolutionGridTooltipBody } from '../game/blocks/SolutionGridTooltipPanel.js';
@@ -136,12 +137,13 @@ const sectionHeadingStyle: CSSProperties = {
 };
 
 /**
- * The same size as a solution in the encounter and a picture in the Inventory
- * (Babuni, 2026-11-23): a fifth of the row, with the Inventory grid's gap.
- * The row is a size container.
+ * The same size as a picture in the in-game Inventory wherever the slots
+ * show: the avatar card in the game and the menu, the starting-equipment frame
+ * (Babuni, 2026-11-23, and 2026-11-26: a fifth of the row was smaller in a
+ * narrow frame and larger on the menu card).
  */
-const SLOT_GAP = 'clamp(2px, 0.5vw, 4px)';
-const SLOT_SIZE = `calc((100cqi - 4 * ${SLOT_GAP}) / 5)`;
+const SLOT_GAP = SOLUTION_GAP;
+const SLOT_SIZE = SOLUTION_SIZE;
 
 const slotsRowStyle: CSSProperties = {
   display: 'flex',

@@ -84,6 +84,7 @@ import {
 import { assetUrl } from '../../../assetUrl.js';
 import { essenceSlotElement, landEssenceInSlot, reserveEssenceSlot, takeFromEssenceSlots } from '../essenceSlots.js';
 import { SolutionImage } from '../../common/SolutionFrame.js';
+import { SOLUTION_SIZE } from '../../common/solutionSize.js';
 import { solutionTypeLabel } from './solutionTypeLabels.js';
 
 const CONTINUE_BUTTON = assetUrl('/UI/09_GAME/im_button_continue.webp');
@@ -113,7 +114,8 @@ interface VisibleReward {
  * SolutionBlock), which is hidden while a result shows: rewards take the A-D
  * slots and Continue takes the middle. No background bar.
  */
-const RESULT_SLOT_SIZE_PX = 64;
+// The size of a solution in the Inventory (Babuni, 2026-11-26; it was 64 px).
+const RESULT_SLOT_SIZE = SOLUTION_SIZE;
 /** Babuni's order: middle, left, right, far left, far right. */
 const RESULT_SLOT_ORDER = [3, 2, 4, 1, 5] as const;
 /** When the Continue arrow holds the middle (nothing to collect, or watching). */
@@ -125,7 +127,7 @@ const READY_RATTLE_STAGGER_MS = 80;
 const resultBlockStyle: CSSProperties = {
   ...BOTTOM_EDGE_ANCHOR_STYLE,
   width: '96%',
-  minHeight: RESULT_SLOT_SIZE_PX,
+  minHeight: RESULT_SLOT_SIZE,
   display: 'grid',
   gridTemplateRows: 'auto',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
@@ -265,8 +267,8 @@ const solutionIconImageBaseStyle: CSSProperties = {
 
 const rewardImageStyle: CSSProperties = {
   ...solutionIconImageBaseStyle,
-  width: RESULT_SLOT_SIZE_PX,
-  height: RESULT_SLOT_SIZE_PX,
+  width: RESULT_SLOT_SIZE,
+  height: RESULT_SLOT_SIZE,
   boxShadow: '0 0 14px rgba(255, 204, 102, 0.38), 0 6px 12px rgba(0, 0, 0, 0.46)',
   animation: 'morkahja-reward-shake 3.2s ease-in-out infinite',
   transformOrigin: '50% 50%',
@@ -303,8 +305,9 @@ const rewardOverflowRowStyle: CSSProperties = {
 
 const lossItemImageStyle: CSSProperties = {
   ...solutionIconImageBaseStyle,
-  width: 52,
-  height: 52,
+  // A lost item as large as any solution (Babuni, 2026-11-26; it was 52 px, an essence 60).
+  width: RESULT_SLOT_SIZE,
+  height: RESULT_SLOT_SIZE,
   border: '1px solid rgba(255, 96, 72, 0.9)',
   boxShadow:
     '0 0 14px rgba(255, 56, 40, 0.72), 0 0 26px rgba(180, 18, 8, 0.5), 0 5px 10px rgba(0, 0, 0, 0.46)',
@@ -312,8 +315,6 @@ const lossItemImageStyle: CSSProperties = {
 
 const lossEssenceImageStyle: CSSProperties = {
   ...lossItemImageStyle,
-  width: 60,
-  height: 60,
 };
 
 

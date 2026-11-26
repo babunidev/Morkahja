@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: one size for every solution picture
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** every solution, on phone and desktop, the same size as in the Inventory, and the equipment slots the same size as well.
+- **Before (measured in the local game, 1280×800 / 390×844):** in-game Inventory and encounter row 78 / 70 px; the menu's item picker 106 / 68; equipment slots 57 / 58 in the starting-equipment frame, 92 / 62 on the menu's avatar card, 72 / 64 on the in-game card; level-up choices and result rewards 64 design px, lost items 52 (an essence 60).
+- **Change:** `client/src/ui/common/solutionSize.ts` derives one size from the in-game Inventory (the encounter art's width, five pictures, the grid's gap and side padding) and sets it as a CSS variable on the document (real pixels, following the stage's scale) and on the game stage (design pixels; `PortraitStage.tsx`). Equipment slots (`AvatarPartyDetailsCard.tsx`), the level-up choices (`LevelUpChoiceBar.tsx`), result rewards and losses (`ResultBlock.tsx`) use it; the menu's item picker (`AvatarSelectionPanel.tsx`) is as wide as the in-game Inventory, so its grid gives the same size. The encounter row keeps its own fit to its layer (69 px on a 390 phone). The small essence circles around the avatar portrait are not solution slots and stay as they were.
+- **Verification:** `npm run release:check` passed (client 53/53, server 78/78); `tsc -b` clean. Measured again in the local game with new test avatars: every solution picture and equipment slot 78 px at 1280×800, 70 at 390×844 (encounter row 69), 105 at 1920×1080. Screenshots `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-sizes-before-*.png` and `…-sizes-after-*.png`. Level-up choices and result rewards were not seen on screen. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: starting equipment in a small frame, and a quiet "Free slot" tag
 
 - **Not released.** Pushed to GitHub `main`.

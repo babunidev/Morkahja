@@ -95,6 +95,7 @@ import { ATRANOR_AMBIANCE_PACK, LEVEL_UP_AMBIANCE_PACK } from './ui/music/ambian
 import { expansionHasClips } from './ui/music/ambianceLibrary.js';
 import { LEVEL_UP_ENCOUNTER_ID } from './ui/game/visibleEncounterRewards.js';
 import { ATRANOR_ENCOUNTER_ID } from './ui/game/regionName.js';
+import { useDocumentSolutionSize } from './ui/common/solutionSize.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
@@ -177,6 +178,8 @@ async function loadAvatarForBootstrap(
 }
 
 export default function App() {
+  // One solution size in the menu and the game (Babuni, 2026-11-26).
+  useDocumentSolutionSize();
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [activeAvatar, setActiveAvatar] = useState<PersistedAvatar | null>(null);
   const [activeEncounter, setActiveEncounter] = useState<EncounterSnapshot | null>(null);

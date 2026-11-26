@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — One size for every solution
+
+I kept seeing solutions a little smaller here and larger there: in the starting-equipment frame, on the avatar card, in the menu's item list. Now there is one size, the one a picture has in the Inventory in the game, and everything else follows it, on phone and on desktop: equipment slots, the menu's item list, level-up choices, rewards and losses after an encounter. Claude Code (Claude Opus 5.5) measured every place in the local game first, made the Inventory's size a shared value, and measured again on three screen sizes. **Verification:** release check (client 53, server 78); all equal at 78 px (desktop), 70 (phone), 105 (large screen). Level-up and result not seen on screen. **Not released.**
+
 ## 2026-11-26 — Showing the slots instead of a list
 
 The first version of "ready before the first step" worked, but a new player only saw an inventory list open and had no idea why. Now the slots come first: a small frame says **Choose your starting equipment**, explains in two sentences what equipment does, keeps the "?" beside it, and lets you tap a free slot to pick an item. Continue leads to the card with Play.

@@ -11,6 +11,7 @@ import {
   PORTRAIT_STAGE_DESIGN_WIDTH,
   portraitStageFitScale,
 } from './portraitStageSize.js';
+import { solutionSizeVars } from '../common/solutionSize.js';
 
 const stageShellStyle: CSSProperties = {
   position: 'fixed',
@@ -75,7 +76,7 @@ export function PortraitStage({ children }: { children: ReactNode }) {
         ref={shellRef}
         style={stageShellMobileStyle}
       >
-        <div style={stageMobileStyle}>{children}</div>
+        <div style={{ ...stageMobileStyle, ...solutionSizeVars(mode, 1) }}>{children}</div>
       </main>
     );
   }
@@ -98,6 +99,8 @@ export function PortraitStage({ children }: { children: ReactNode }) {
           overflow: 'visible',
           pointerEvents: 'auto',
           color: '#f7efe0',
+          // A solution's size in the stage's own pixels (solutionSize.ts).
+          ...solutionSizeVars(mode, 1),
         }}
       >
         {children}
