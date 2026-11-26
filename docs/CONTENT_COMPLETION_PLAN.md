@@ -5,7 +5,7 @@
 
 ## Scope and design direction
 
-For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. Approximately 5% of geographic encounters should be difficulty 2 and all others difficulty 1. Every family should have rare encounters. Atranor and Level Up remain universal system events, outside these quotas.
+For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. Approximately 5% of geographic encounters should be difficulty 2 and all others difficulty 1. Exactly six geographic encounters are designated rare for content planning, one per family (5% of the catalog). Atranor and Level Up remain universal system events, outside these quotas.
 
 ## Role direction
 
@@ -46,8 +46,9 @@ The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 1; Social 
 
 - [ ] Keep difficulty 1 on 114 of 120 geographic records and difficulty 2 on 6 (5%). Existing difficulty 1: 47; difficulty 2: 2 (19001 and 19444, both scripted).
 - [ ] Retain both sanctuaries at difficulty 2 provisionally and select four additional difficulty-2 random encounters, preferably one in each major family. All other new encounters difficulty 1. No difficulty 3+ in geographic base game.
-- [ ] Define what a rare encounter means: reward quality, narrative rarity, or lower draw probability. Current generator draws uniformly within eligible region pool; no explicit encounter rarity field found. Do not mistake reward type 3 or difficulty 2 for a rarity mechanism.
-- [ ] Provisional content target: at least one rare encounter per family (six minimum), included in family counts. Rare Treasurechest (20032) and Hearthguard Sanctuary (19444) currently use reward category 3 and are candidates, not proof of rarity. Keep rare encounters possible at either difficulty. Approve rarity frequency and implementation separately.
+- [ ] Define rare encounter selection mechanics separately from content production. The approved quota is not a draw probability. The audited generator draws uniformly within eligible region pool; no explicit encounter rarity field was found. Do not mistake reward type 3 or difficulty 2 for a rarity mechanism.
+- [x] Approved content target: exactly six rare encounters, one per family, included in the 120 geographic encounters. Rarity is independent of difficulty, element and reward quality.
+- [ ] Select and approve one rare encounter per family individually. Rare Treasurechest (20032) and Hearthguard Sanctuary (19444) are existing review candidates, not confirmed designations. Scripted encounters must be tracked separately from random encounters; no selection behavior is implied.
 
 ## Existing encounter corrections
 
@@ -77,7 +78,8 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 - [x] Confirm 120 geographic encounters and family quotas; Ambush and Hidden Market scope and pin are approved.
 - [x] Approve Performance as the third Social solution category.
 - [x] Approve nine encounters per principal-family subtype.
-- [ ] Confirm rarity.
+- [x] Confirm six rare encounters, one per family.
+- [ ] Approve individual rare designations; defer draw probability and implementation to game design.
 - [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
@@ -200,6 +202,6 @@ The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unch
 | Learn | 6 | 6 Learn | 2 | 4 |
 | Trade | 6 | 6 Trade | 1 | 5 |
 
-Equal subtype quotas are approved. The Trick working baseline is 21 Find / 3 Open Lock / 0 Climb; three new Climb drafts and twelve proposed revisions are required. Individual revisions are not yet approved; select by narrative and lore fit, not arithmetic alone. Preserve IDs and engraved clues. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
+Equal subtype quotas are approved. The Trick working baseline is 21 Find / 3 Open Lock / 0 Climb; three new Climb drafts and twelve proposed revisions are required. Individual revisions are not yet approved; select by narrative and lore fit, not arithmetic alone. Preserve IDs and engraved clues. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family has exactly one rare content slot: 26 ordinary plus one rare per principal family, five ordinary plus one rare per foundational family. The six designations are included in the 120 total and do not imply a draw-rate or reward mechanic.
 
-Open management decision: define rare content frequency separately from future implementation. Equal subtype quotas are approved; individual revisions still require review. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
+The initial management content targets are approved, including six rare encounters (one per family). Individual rare designations, difficulty allocations, creative revisions and future selection mechanics remain pending. Equal subtype quotas are approved; individual revisions still require review. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.

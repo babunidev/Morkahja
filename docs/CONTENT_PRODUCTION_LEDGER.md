@@ -19,6 +19,18 @@ Reservations are not game records or creative approval. Existing records are com
 
 ## Production briefs
 
+Approved rare content quota (2026-11-26): exactly one rare encounter per family, within the approved family totals. Rarity is independent of difficulty, element and reward quality; no draw probability or engine field is approved. Record and review each designation before data changes. The six slots below are planning allocations, not encounter IDs.
+
+| Family | Ordinary target | Rare target | Designated ID |
+| --- | ---: | ---: | --- |
+| Combat | 26 | 1 | Pending |
+| Trick | 26 | 1 | Pending |
+| Aid | 26 | 1 | Pending |
+| Social | 26 | 1 | Pending |
+| Learn | 5 | 1 | Pending |
+| Trade | 5 | 1 | Pending |
+| Total | 114 | 6 | None approved |
+
 Approved production targets: nine encounters per subtype in each of Combat, Trick, Aid and Social. Learn and Trade remain six each. The existing classification mix is a working audit, not approval of individual revisions. Trick must review twelve Find candidates for six Open Lock and six Climb revisions, retaining all IDs and engraved clues; the three new Trick reservations remain Climb.
 
 | Chat | Priorities |
@@ -101,7 +113,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 
 71 active reservations at the approved 120 target. ID 20265 remains held by Management as an unused reserve, not an active task; other families and solution reservations are unchanged.
 
-Provisional sequencing; four random D2 slots and rare designations remain unset until approval. Dashes indicate not started. Record existing revisions with original IDs in this table when authorized. Verification means actual source/static checks after commit.
+Provisional sequencing; four additional random D2 slots and the six approved rare content slots await individual encounter designations. These designations are independent. Dashes indicate not started. Record existing revisions with original IDs in this table when authorized. Verification means actual source/static checks after commit.
 
 | Reserved ID | Family | Subtype task | Concept / reserved solution IDs | Drafted | Approved | Committed | Verified | Artwork |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Rare encounter content quota (documentation only)
+
+- Recorded approval of six rare geographic encounters, one per family, and added a designation tracker. No individual rarity assignments, engine changes or draw probabilities implemented. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-26 — Encounter subtype quotas (documentation only)
 
 - Recorded approval of nine geographic encounters per principal-family subtype, and documented Trick's twelve required revision candidates. No individual reclassifications or data changes. ChatGPT (GPT-6.2).

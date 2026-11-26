@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Rare encounter content quota
+
+For my base game, exactly six of the 120 geographic encounters are rare, one per family. Each principal family therefore has 26 ordinary and one rare encounter; Learn and Trade each have five ordinary and one rare. Rarity is independent of difficulty, element and reward quality. This is a content quota, not a 5% encounter draw probability. Individual rare designations and selection mechanics remain unapproved. ChatGPT (GPT-6.2) synchronized the completion plan, production ledger and roadmap; no new rarity field, encounter data, rewards or gameplay changes.
+
+
 ## 2026-11-26 — Equal encounter subtype targets
 
 For my four principal encounter families, the approved production target is nine geographic encounters per subtype: Combat/Purge/Ambush, Find/Open Lock/Climb, Heal/Aid/Nurture, and Speechcraft/Inspiration/Performance. Learn and Trade remain six each. The Trick working baseline requires three new Climb encounters and twelve existing Find candidates to be reviewed for six Open Lock and six Climb revisions. Individual selections, narratives, solutions and reclassifications require separate approval; existing IDs and engraved clues are preserved. The 120 geographic total and 71 active reservations are unchanged. ChatGPT (GPT-6.2) synchronized the plan, ledger and roadmap; no game data or gameplay changes.
