@@ -106,6 +106,19 @@ const verdani = randomPool([0, 1007]);
 assert.equal(verdani.length, base.length + randomIn(1007), 'Evergrove plays once earned');
 assert.ok(selectEncounterInExpansion(1007, [], getEncounters(), () => 0));
 
+// Travel (Babuni, 2026-11-26): a random encounter from the destination's own
+// pool, every one of them possible, never one from elsewhere.
+for (const destination of [0, 1001, 1003, 1004, 1007, 1009, 1010]) {
+  const pool = encounters.filter((record) => record.mEncounterExpansion === destination && record.mEncounterID >= 20001);
+  const picked = new Set(pool.map((_, index) => selectEncounterInExpansion(destination, [], getEncounters(), () => index)?.mEncounterID));
+  assert.equal(picked.size, pool.length, `travel to ${destination} can give each of its ${pool.length} encounters`);
+  assert.ok([...picked].every((id) => byId.get(id!)?.mEncounterExpansion === destination), `travel to ${destination} stays in its pool`);
+  if (pool.length > 1) {
+    const recent = selectEncounterInExpansion(destination, [pool[0]!.mEncounterID], getEncounters(), () => 0)?.mEncounterID;
+    assert.notEqual(recent, pool[0]!.mEncounterID, `travel to ${destination} skips a recent encounter`);
+  }
+}
+
 // Travel to Celesterra can give the Grimnir Vault once the land opens.
 const celesterra = Array.from({ length: 8 }, (_, index) => selectEncounterInExpansion(1009, [], getEncounters(), () => index)?.mEncounterID);
 assert.ok(celesterra.includes(20009));

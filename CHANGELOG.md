@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Travel's random pick tested for every land
+
+- **Babuni's direction:** whenever I travel, the encounter must be a random one from the pool of the land I travel to.
+- **Finding:** already so: `selectEncounterInExpansion` draws at random from the destination expansion's encounters (ids from 20001, held ones excluded), skipping recently played ones while others are left. No code changed.
+- **Test:** `regionalExpansions.test.ts` now checks, for the Vale, Keldor, Everwinter, Aetherion and the three homelands, that a trip can give each encounter of the pool, never one from elsewhere, and skips a recent one. Server suite passes. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: earned homelands are open to play
 
 - **Not released.** Pushed to GitHub `main`.
