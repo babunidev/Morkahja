@@ -30,6 +30,12 @@ export interface PlayerDocument {
   lastInteractionAt?: number;
   /** Account-wide expansion ids unlocked for all avatars. */
   unlockedExpansions: number[];
+  /**
+   * Bought an all-expansions bundle (Babuni, 2026-11-26): owns every
+   * expansion in the catalog, including ones added later. Each server start
+   * adds new catalog entries to `unlockedExpansions` (syncAllExpansionOwners).
+   */
+  allExpansions?: boolean;
   /** Cosmetic dice skins unlocked for this account. */
   unlockedDiceIds?: string[];
   /** Active dice skin used in encounters. */

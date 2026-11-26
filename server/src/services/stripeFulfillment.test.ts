@@ -3,7 +3,10 @@ import { randomUUID } from 'node:crypto';
 
 import { getCatalogEntry } from '../domain/commerce/catalog.js';
 import { getPlayer, pool, setPlayer } from '../db/postgresDocumentStore.js';
-import { fulfillStripePurchase } from '../db/commerceStore.js';
+import { fulfillStripePurchase, listBuyersOfSkus } from '../db/commerceStore.js';
+import { ALL_EXPANSIONS_SKUS } from '../domain/commerce/catalog.js';
+import { getExpansions } from './gameData.js';
+import { syncAllExpansionOwners } from './playerService.js';
 import type { PlayerDocument } from '../types/player.js';
 
 const entry = getCatalogEntry('bundle_complete');
@@ -59,10 +62,32 @@ const concurrentlyFulfilled = await Promise.all([
 ]);
 assert.deepEqual(concurrentlyFulfilled.sort(), [false, true]);
 
+// The bundle owns every expansion in the catalog, active or not yet (Babuni, 2026-11-26).
 const player = await getPlayer<PlayerDocument>(playerId);
-for (const expansion of [1001, 1003, 1004]) {
-  assert.ok(player?.unlockedExpansions.includes(expansion));
+for (const expansion of getExpansions().map((item) => item.mExtensioID)) {
+  assert.ok(player?.unlockedExpansions.includes(expansion), `the bundle owns ${expansion}`);
 }
+assert.equal(player?.allExpansions, true);
+
+// An expansion added later reaches bundle buyers at the next start, also a
+// buyer from before the mark existed (found in the purchase records).
+const earlyBuyer = `stripe-early-${randomUUID()}`;
+await setPlayer(earlyBuyer, { playerId: earlyBuyer, playerName: 'Early', unlockedExpansions: [0, 1001, 1003, 1004] });
+await pool.query(
+  'INSERT INTO purchases (id, event_id, player_id, sku, amount_total, currency, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+  [`cs_test_${randomUUID()}`, `evt_${randomUUID()}`, earlyBuyer, 'bundle_expansions_all', 799, 'eur', Date.now()],
+);
+await setPlayer(playerId, { unlockedExpansions: [0, 1001] }, { merge: true });
+const buyers = await listBuyersOfSkus(ALL_EXPANSIONS_SKUS);
+assert.ok(buyers.includes(earlyBuyer));
+assert.ok(await syncAllExpansionOwners(buyers) >= 2);
+for (const id of [playerId, earlyBuyer]) {
+  const owner = await getPlayer<PlayerDocument>(id);
+  assert.equal(owner?.unlockedExpansions.length, getExpansions().length + 1, `${id} owns the base game and every expansion`);
+  assert.equal(owner?.allExpansions, true);
+}
+await pool.query('DELETE FROM purchases WHERE player_id = $1', [earlyBuyer]);
+await pool.query('DELETE FROM players WHERE id = $1', [earlyBuyer]);
 for (const die of ['b','c','d','e','f']) {
   assert.ok(player?.unlockedDiceIds?.includes(die));
 }

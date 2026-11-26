@@ -1,5 +1,5 @@
 import { DICE_IDS, type DiceId } from '@shared/diceCatalog.js';
-import { grantPlayerExpansion } from '../../services/playerService.js';
+import { grantAllExpansions, grantPlayerExpansion } from '../../services/playerService.js';
 import { grantPlayerDice } from '../../services/diceService.js';
 import type { PriceKey } from '../../config/stripeConfig.js';
 import type { DocumentTransaction } from '../../db/postgresDocumentStore.js';
@@ -19,7 +19,8 @@ export interface CommerceCatalogEntry {
 
 const PAID_DICE_IDS: DiceId[] = DICE_IDS.filter((id) => id !== 'a');
 
-const ACTIVE_EXPANSION_IDS = [1001, 1003, 1004] as const;
+/** SKUs that sell every expansion, now and later (Babuni, 2026-11-26). */
+export const ALL_EXPANSIONS_SKUS = ['bundle_expansions_all', 'bundle_complete'] as const;
 
 async function grantExpansions(playerId: string, ids: readonly number[], transaction?: DocumentTransaction): Promise<void> {
   for (const id of ids) {
@@ -71,7 +72,9 @@ const ENTRIES: CommerceCatalogEntry[] = [
     sku: 'bundle_expansions_all',
     priceKey: 'bundle_expansions_all',
     label: 'All Expansions Bundle',
-    grant: (playerId, transaction) => grantExpansions(playerId, ACTIVE_EXPANSION_IDS, transaction),
+    grant: async (playerId, transaction) => {
+      await grantAllExpansions(playerId, transaction);
+    },
   },
   {
     sku: 'bundle_dice_all',
@@ -84,7 +87,7 @@ const ENTRIES: CommerceCatalogEntry[] = [
     priceKey: 'bundle_complete',
     label: 'Complete Collection Bundle',
     grant: async (playerId, transaction) => {
-      await grantExpansions(playerId, ACTIVE_EXPANSION_IDS, transaction);
+      await grantAllExpansions(playerId, transaction);
       await grantDice(playerId, PAID_DICE_IDS, transaction);
     },
   },

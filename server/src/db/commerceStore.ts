@@ -79,3 +79,13 @@ export async function fulfillStripePurchase(
     return true;
   });
 }
+
+/** Accounts that bought one of these SKUs (for the all-expansions bundles). */
+export async function listBuyersOfSkus(skus: readonly string[]): Promise<string[]> {
+  await ensureCommerceSchema();
+  const result = await pool.query<{ player_id: string }>(
+    'SELECT DISTINCT player_id FROM purchases WHERE sku = ANY($1)',
+    [[...skus]],
+  );
+  return result.rows.map((row) => row.player_id);
+}

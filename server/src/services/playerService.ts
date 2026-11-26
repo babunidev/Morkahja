@@ -13,11 +13,12 @@ import {
   deleteProgression,
   getPlayer,
   listAvatars,
+  pool,
   setPlayer,
   withDocumentTransaction,
   type DocumentTransaction,
 } from '../db/postgresDocumentStore.js';
-import { getExpansionById } from './gameData.js';
+import { getExpansionById, getExpansions } from './gameData.js';
 import { readAvatarDisplayTitle } from '../domain/achievements/achievementTitles.js';
 import {
   recordAvatarCreatedEvent,
@@ -404,6 +405,58 @@ export async function grantPlayerExpansion(
     return { unlockedExpansions: nextUnlocked, expansionId, alreadyUnlocked: false };
   };
   return transaction ? applyGrant(transaction) : withDocumentTransaction(applyGrant);
+}
+
+/**
+ * An all-expansions bundle (Babuni, 2026-11-26): the account owns every
+ * expansion in the catalog, active or not yet, and is marked so that later
+ * expansions are added too. Idempotent; writes only when something changes.
+ * Owning an inactive expansion opens nothing: its encounters stay closed
+ * until it is switched on (D-063).
+ */
+export async function grantAllExpansions(
+  playerId: string,
+  transaction?: DocumentTransaction,
+): Promise<number[]> {
+  const applyGrant = async (currentTransaction: DocumentTransaction) => {
+    const player = await currentTransaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    if (!player) {
+      throw new Error(`Player not found: ${playerId}`);
+    }
+    const current = normalizeUnlockedExpansions(player.unlockedExpansions);
+    const next = uniqueSorted([
+      ...(current.length > 0 ? current : DEFAULT_UNLOCKED_EXPANSIONS),
+      ...getExpansions().map((entry) => entry.mExtensioID),
+    ]);
+    if (player.allExpansions !== true || next.length !== current.length) {
+      await currentTransaction.setPlayer(
+        playerId,
+        { unlockedExpansions: next, allExpansions: true, updatedAt: Date.now() },
+        { merge: true },
+      );
+    }
+    return next;
+  };
+  return transaction ? applyGrant(transaction) : withDocumentTransaction(applyGrant);
+}
+
+/**
+ * At start-up: everyone who bought an all-expansions bundle (marked, or found
+ * in the purchase records from before the mark existed) owns every expansion
+ * now in the catalog. Returns how many accounts were checked.
+ */
+export async function syncAllExpansionOwners(bundleBuyerIds: readonly string[]): Promise<number> {
+  const marked = await pool.query<{ id: string }>(
+    `SELECT id FROM players WHERE data->>'allExpansions' = 'true'`,
+  );
+  const ids = new Set([...marked.rows.map((row) => row.id), ...bundleBuyerIds]);
+  for (const id of ids) {
+    const exists = await getPlayer<Partial<PlayerDocument>>(id);
+    if (exists) {
+      await grantAllExpansions(id);
+    }
+  }
+  return ids.size;
 }
 
 export async function migrateAvatarUnlockedExpansionsToPlayer(

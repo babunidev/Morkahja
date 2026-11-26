@@ -72,7 +72,10 @@ import {
   AvatarLimitReachedError,
   savePlayerAvatar,
   selectPlayerAvatar,
+  syncAllExpansionOwners,
 } from './services/playerService.js';
+import { listBuyersOfSkus } from './db/commerceStore.js';
+import { ALL_EXPANSIONS_SKUS } from './domain/commerce/catalog.js';
 import { loadAllowedClientOrigins } from './config/corsOrigins.js';
 import { resolveTrustProxySetting } from './config/trustProxy.js';
 import { logAndFormatRequestError } from './http/errorResponse.js';
@@ -618,6 +621,16 @@ try {
   );
 
   registerAchievementHandlers();
+
+  // All-expansions bundle owners also own expansions added since (Babuni, 2026-11-26).
+  try {
+    const checked = await syncAllExpansionOwners(await listBuyersOfSkus(ALL_EXPANSIONS_SKUS));
+    if (checked > 0) {
+      console.log(`All-expansions bundle: ${checked} account(s) own every expansion`);
+    }
+  } catch (error) {
+    console.error('All-expansions bundle sync failed', error);
+  }
 
   // Rooms nobody can return to are removed at start and every six hours (D-048).
   const sweepRooms = async (): Promise<void> => {
