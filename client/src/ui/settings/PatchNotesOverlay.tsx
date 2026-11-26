@@ -29,6 +29,37 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-86',
+    version: '0.9.0-beta.86',
+    period: '26 Nov 2026',
+    groups: [
+      {
+        title: 'More lives',
+        notes: [
+          'A new avatar starts with six essence charges: two of each of its three gods.',
+          'Atranor now returns two charges of each god, whether by the roll, the Atranor item or a gem sacrifice.',
+        ],
+      },
+      {
+        title: 'Soul Link',
+        notes: [
+          'Share your Soul Link with the new Share button under the QR code. On a phone it opens the share menu, on a computer it copies the link.',
+          'Everyone who comes through your Soul Link receives Aetherion as a welcome gift on the first day you both play 42 encounters.',
+          'The Soul Link window shows today\'s progress toward the gift and lists every soul linked to you.',
+          'Opening an invite now tells you who invited you.',
+        ],
+      },
+      {
+        title: 'Expansions and achievements',
+        notes: [
+          'A newly opened expansion now shows its card: the lock breaks, and you can read about the land and see its first encounters before you proceed.',
+          'Alpha Player is visible from the start. Its "?" explains how to earn it, and the card shows how many Legendborn places are left.',
+          'Every soul linked to you that receives its gift moves your Alpha Player progress forward by 5.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-85',
     version: '0.9.0-beta.85',
     period: '26 Nov 2026',
