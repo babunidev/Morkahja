@@ -71,6 +71,10 @@ const CATEGORY_FALLBACK_SUBTYPE = {
 /** Manual overrides where keyword scoring is unreliable. */
 const SUBTYPE_OVERRIDES = {
   2: 'Learn',
+  // Find-to-Climb Round 1, reviewed by Babuni (2026-11-26).
+  20004: 'Climb',
+  20005: 'Climb',
+  20068: 'Climb',
 };
 
 const ELEMENT_OVERRIDES = {
@@ -88,6 +92,10 @@ const ELEMENT_OVERRIDES = {
   20031: 'Core',
   20032: 'Nature',
   20181: 'Spirit',
+  // Find-to-Climb Round 1 keeps its reviewed elements (2026-11-26).
+  20004: 'Arcana',
+  20005: 'Earth',
+  20068: 'Void',
 };
 
 const ELEMENT_KEYWORDS = {
