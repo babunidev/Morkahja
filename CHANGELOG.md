@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Regional migration and Climb developer briefs (documentation only)
+
+- Recorded approved Eternal Twilight Grove destination in Eldertree Forest, corrected planned regional counts, and added regional migration and Find-to-Climb developer briefs. No game data, map, lore archive or activation changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-26 — Staged encounter production and expansion planning (documentation only)
 
 - Added three-round production schedule, six Find-to-Climb review candidates and a 79-record regional expansion assignment manifest. No individual reclassification, expansion activation or encounter data changes. ChatGPT (GPT-6.2).

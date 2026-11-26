@@ -13,7 +13,8 @@
 - [x] Approve nine encounters per principal-family subtype.
 - [x] Approve six rare geographic encounters, one per family, as a content quota.
 - [x] Prepare [staged production rounds and Climb candidate review](CONTENT_PRODUCTION_ROUNDS.md) and [79-record regional assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md).
-- [ ] Approve individual regional assignments and coordinate safe expansion migration separately.
+- [x] Record approved Grove relocation and first three expansion catalog entries; prepare [regional migration brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and [Climb conversion brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md).
+- [ ] Implement regional isolation safely, review Evergrove and uncertain destinations before activation, and reassess six Climb candidates after developer review.
 - [ ] Approve individual rare designations and difficulty allocations; define rare selection mechanics separately. Isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 

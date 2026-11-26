@@ -169,14 +169,14 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 
 ## Isolated content inventory (reference only)
 
-No content work on these lands in this phase. The IDs below are currently expansion 0, not all worldwide encounters in those lands.
+No new encounter production on these lands in this phase. The IDs below are currently expansion 0, not all worldwide encounters in those lands. The planned destinations reflect the approved 20127 relocation; the current map is not yet changed.
 
 | Region | Count | IDs |
 | --- | ---: | --- |
-| Eldertree Forest | 21 | 20006, 20007, 20027, 20031, 20036, 20039, 20040, 20041, 20042, 20043, 20045, 20046, 20047, 20048, 20049, 20060, 20067, 20073, 20114, 20115, 20117 |
+| Eldertree Forest | 22 | 20006, 20007, 20027, 20031, 20036, 20039, 20040, 20041, 20042, 20043, 20045, 20046, 20047, 20048, 20049, 20060, 20067, 20073, 20114, 20115, 20117, 20127 |
 | Frostwind Mountains | 9 | 20008, 20061, 20100, 20102, 20103, 20104, 20109, 20120, 20121 |
 | Everwinter Valley | 1 | 20009 |
-| Evergrove | 11 | 20010, 20016, 20021, 20024, 20029, 20033, 20053, 20064, 20125, 20127, 20191 |
+| Evergrove | 10 | 20010, 20016, 20021, 20024, 20029, 20033, 20053, 20064, 20125, 20191 |
 | Emberfrost | 7 | 20013, 20017, 20019, 20020, 20030, 20059, 20126 |
 | Celesterra | 7 | 20014, 20023, 20028, 20054, 20058, 20065, 20076 |
 | Fyrskar Mountains | 7 | 20015, 20018, 20056, 20097, 20099, 20106, 20128 |
@@ -191,7 +191,7 @@ Sources: [encounter data](../server/game/encountersdata.json), [solution data](.
 
 ## Staged production and expansion handoff
 
-Develop all six chats in rounds, not one complete family at a time. See [staged production](CONTENT_PRODUCTION_ROUNDS.md) for minimum coverage milestones of three, six and nine per principal subtype, exact round ID allocation and six proposed Find-to-Climb candidates. See [regional expansion assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md) for all 79 out-of-Vale IDs, named future destinations and engineering dependencies. These are working recommendations; individual revisions and exact expansion migrations remain pending.
+Develop all six chats in rounds, not one complete family at a time. See [staged production](CONTENT_PRODUCTION_ROUNDS.md) for minimum coverage milestones of three, six and nine per principal subtype, exact round ID allocation and six proposed Find-to-Climb candidates. See [regional expansion assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md) for all 79 out-of-Vale IDs, named future destinations and engineering dependencies. The Grove relocation and first three expansion catalog entries are approved directions. See [regional developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and [Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md). Individual conversion texts, remaining uncertain locations, implementation and activation remain pending.
 
 ## Studio coordination — 2026-11-25
 

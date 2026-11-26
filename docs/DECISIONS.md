@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Eternal Twilight Grove and initial regional expansions
+
+The Eternal Twilight Grove (20127) belongs in my Eldertree Forest rather than Evergrove. Its existing woodland narrative requires no regional rewrite. Eldertree Forest, Frostwind Mountains and Evergrove are my first three new regional expansion catalog entries; Evergrove's content needs a desert-oasis biome review. Planned counts are 22, 9 and 10. Numeric IDs 1005–1007 are proposed subject to collision checks; pricing, activation, rewards and other uncertain placements are not approved. The [regional developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) hands off implementation. The [Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) requests six candidate revisions and a fresh assessment; exact prose and slot changes require review. ChatGPT (GPT-6.2) synchronized the plans; no runtime or lore files changed.
+
+
 ## 2026-11-26 — Staged encounter production direction
 
 Rather than finishing each family in isolation, my preference is to work across all six encounter chats in successive rounds. ChatGPT (GPT-6.2) proposed three minimum coverage milestones and a rotating work order, audited six Find-to-Climb candidates, and prepared a named regional expansion destination for each of the 79 out-of-Vale expansion-0 encounters. The round allocations and exact regional destinations are working recommendations; individual revisions, new expansion IDs and access migration are not approved by this record. The approved catalog quotas remain unchanged. Documentation only.

@@ -42,6 +42,10 @@ The last three require stronger narrative revision than the first three. None us
 
 Use implemented Climb skill/item types 13/14, e.g. Climb (10070), Climbing Gear (10071), Acrobatic Climb (10068), Seeker's Grapnel (10211) or Faewoven Ladder (10167), where the complete record fits. Replace mismatched primary references only after reviewing all references; do not retag maps or musical relics blindly, or remove player-owned solutions. Review image suitability separately. If a proposed candidate fails review, revise the allocation before creating replacement content.
 
+## Developer handoff
+
+Use the [Find-to-Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) for the six candidates, beginning with the three Round 1 scenes. Return exact text and slot proposals for reassessment. Do not count unapproved revisions as complete.
+
 ## End-of-round checks
 
 Check family/subtype totals, existing review status, unique IDs, primary/fallback pairs, geography, element diversity and artwork dependencies. Track rare and D2 slots independently; the final catalog has six of each. Do not mark text ready as engine-ready. Performance and other taxonomy changes, out-of-Vale access isolation and deployment remain separate engineering tasks.

@@ -8,10 +8,10 @@ Source: [pinned main c16640cd](https://github.com/babunidev/Morkahja/commit/c166
 
 | Destination | Proposed ID | Encounter count |
 | --- | ---: | ---: |
-| Eldertree Forest | 1005 | 21 |
+| Eldertree Forest | 1005 | 22 |
 | Frostwind Mountains | 1006 | 9 |
 | Everwinter Valley | 1003 | 1 |
-| Evergrove | 1007 | 11 |
+| Evergrove | 1007 | 10 |
 | Emberfrost | 1008 | 7 |
 | Celesterra | 1009 | 7 |
 | Fyrskar Mountains | 1010 | 7 |
@@ -23,7 +23,7 @@ Source: [pinned main c16640cd](https://github.com/babunidev/Morkahja/commit/c166
 
 ## Per-encounter migration manifest
 
-Every row preserves the existing encounter ID, text, solutions, rewards, art, follow links and geography until reviewed. **All proposed destinations are pending final approval.** The notes distinguish interpretive map placements from narrative/landmark placements; neither alone establishes a canonical boundary.
+Every row preserves the existing encounter ID, text, solutions, rewards, art, follow links and geography until reviewed. **Eternal Twilight Grove's Eldertree region is approved.** Other uncertain placements require review. Eldertree Forest, Frostwind Mountains and Evergrove are approved as the first three real expansion catalog entries; numeric IDs require a fresh collision check; activation and pricing are not approved. The notes distinguish interpretive map placements from narrative/landmark placements; neither alone establishes a canonical boundary.
 
 | Encounter ID | Title | Destination (proposed) | Expansion ID | Evidence / review |
 | --- | --- | --- | ---: | --- |
@@ -48,6 +48,7 @@ Every row preserves the existing encounter ID, text, solutions, rewards, art, fo
 | 20114 | Liani Guardian | Eldertree Forest | 1005 | Interpretive map placement; review. |
 | 20115 | Liani Predator | Eldertree Forest | 1005 | Interpretive map placement; review. |
 | 20117 | Thunderfly Matriarch | Eldertree Forest | 1005 | Interpretive map placement; review. |
+| 20127 | Eternal Twilight Grove | Eldertree Forest | 1005 | Approved region; existing narrative fits. Map and world archive synchronization pending. |
 | 20008 | Grimnir Trunk | Frostwind Mountains | 1006 | Narrative/landmark map placement; verify boundary. |
 | 20061 | Frostwind Junkyard | Frostwind Mountains | 1006 | Narrative/landmark map placement; verify boundary. |
 | 20100 | Mountain Pass | Frostwind Mountains | 1006 | Interpretive map placement; review. |
@@ -67,7 +68,6 @@ Every row preserves the existing encounter ID, text, solutions, rewards, art, fo
 | 20053 | Exhausted Verdani | Evergrove | 1007 | Narrative/landmark map placement; verify boundary. |
 | 20064 | Altar of Umbrael | Evergrove | 1007 | Narrative/landmark map placement; verify boundary. |
 | 20125 | Raided Verdani Village | Evergrove | 1007 | Narrative/landmark map placement; verify boundary. |
-| 20127 | Eternal Twilight Grove | Evergrove | 1007 | Haunted forest; precise geography unplaced, Evergrove is a desert-oasis realm. Do not finalize without lore review. |
 | 20191 | Slumbering Ogru | Evergrove | 1007 | Willow and Ogru, no explicit region; Evergrove placement interpretive. |
 | 20013 | Cauterized Rokur | Emberfrost | 1008 | Interpretive map placement; review. |
 | 20017 | Flameveil Emberheart | Emberfrost | 1008 | Interpretive map placement; review. |
@@ -109,9 +109,11 @@ Every row preserves the existing encounter ID, text, solutions, rewards, art, fo
 
 ## Implementation handoff (not encounter studio work)
 
+See [regional migration developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) for approved relocation, catalog entries and Evergrove review. Counts are planned destinations, not current runtime assignments.
+
 - Confirm regional boundaries, names and proposed numeric IDs; review uncertain cases against MorkahjaWorld (especially [Deepstone Hollow](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Deepstone_Hollow.md), [Frostwind landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Frostwind_Landmarks.md), [Pantheon Temple](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Pantheon_Temple.md), [Eternal Twilight Grove](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Eternal_Twilight_Grove.md), [Vale landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Vale_Landmarks.md), [Fyrskar](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Fyrskar_Mountains.md), and [unplaced lands](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Unplaced_Lands.md)).
 - In a separate approved engineering change, synchronize server/game/encountersdata.json, server/game/expansiondata.json, docs/data/encounter_locations.csv, client world-map travel target and expansion focus mappings, inactive catalog visibility and asset/audio fallbacks. Do not invent costs, shop art or unlock benefits. Existing active Everwinter access would change if 20009 moves there, so approve separately.
 - Verify access, random pool, direct travel, forced follows, prepared encounters and persisted snapshots/rooms; protect existing entitlements. Current random selector checks expansion ID against unlocked IDs, but forced follow bypasses that filter and direct travel selects by ID; other regions currently default to expansion 0 on the map. An encounter-only edit would be incomplete. No new expansion is to be purchasable or accessible prematurely.
 - Validate the complete 203-record pinned catalog: 49 base geographic, 2 universal, 79 proposed moves and 73 existing nonzero-expansion records. All 79 have no outgoing or incoming written follows at this snapshot. Preserve all existing 73 assignments. No runtime tests, live data changes or deployment performed.
 
-ChatGPT (GPT-6.2) joined encounter records and map labels, checked current expansion IDs and written follows, reviewed relevant lore and flagged uncertain placements. The creative's regional assignment direction is approved; exact destinations and migration implementation remain proposals.
+ChatGPT (GPT-6.2) joined encounter records and map labels, checked current expansion IDs and written follows, reviewed relevant lore and flagged uncertain placements. The creative approved regional isolation, the Grove relocation and the first three catalog entries; other uncertain placements, numeric IDs, release terms and implementation remain subject to review.

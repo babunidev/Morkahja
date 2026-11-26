@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Regional migration and Climb handoff
+
+My Eternal Twilight Grove has an approved Eldertree destination in the planning manifest. ChatGPT (GPT-6.2) reread the grove and Evergrove lore, reviewed the ten remaining Evergrove narratives and six Climb candidates with primary references, and wrote two developer briefs. The first covers regional migration and real catalog entries for Eldertree Forest, Frostwind Mountains and Evergrove; the second covers staged Climb revision and reassessment. The grove's prose is unchanged. The manifest retains 79 unique IDs, 22 planned for Eldertree and ten for Evergrove. No encounter/solution JSON, map, canon archive, runtime tests or deployment changed.
+
+
 ## 2026-11-26 — Staged production and future-region manifest
 
 My encounter writing should progress across all families in small rounds. ChatGPT (GPT-6.2) reviewed the complete 21 Find candidate narratives and primary solutions against the Vale landmarks, proposed six Climb conversions, and calculated three rounds of 13, 26 and 32 new encounters. It joined all 79 out-of-Vale expansion-0 encounters to current map labels, checked their IDs and written follows and recorded regional destinations and unresolved placements. New expansion IDs are proposals; migration requires separate access, travel and catalog verification. No game data, gameplay, lore, artwork or deployment changes; no runtime tests.
