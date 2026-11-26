@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Staged encounter production and expansion planning (documentation only)
+
+- Added three-round production schedule, six Find-to-Climb review candidates and a 79-record regional expansion assignment manifest. No individual reclassification, expansion activation or encounter data changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-26 — Rare encounter content quota (documentation only)
 
 - Recorded approval of six rare geographic encounters, one per family, and added a designation tracker. No individual rarity assignments, engine changes or draw probabilities implemented. ChatGPT (GPT-6.2).

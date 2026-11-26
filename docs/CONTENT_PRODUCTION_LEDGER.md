@@ -42,7 +42,7 @@ Approved production targets: nine encounters per subtype in each of Combat, Tric
 | 05 Learn | Distinct observation/study/discovery, not generic treasure; preserve cube and elemental-current mysteries. |
 | 06 Trade | Roads, caravans, exchanges; no player trading or new mechanics. Review existing Hidden Market (20012), approved base-game Trade; five new tasks. Map correction approved and committed; expansion 1004 protected. |
 
-One task at a time: consult both repositories, review earliest unfinished task, record concept, place, element and solution IDs, draft, obtain approval, recheck main, commit authorized text/metadata, verify. Existing review tasks precede new tasks unless blocked or redirected by Management. Artwork independent; no gameplay implementation.
+One task at a time: consult both repositories, follow the current round in [staged production](CONTENT_PRODUCTION_ROUNDS.md), review its earliest unfinished task, record concept, place, element and solution IDs, draft, obtain approval, recheck main, commit authorized text/metadata, verify. Existing review tasks precede new tasks unless blocked or redirected by Management. Rotate across families each round; use the explicit round ID allocation instead of exhausting one entire family's reservations. The [expansion assignment manifest](CONTENT_EXPANSION_ASSIGNMENTS.md) is separate; no new expansion content work here. Artwork independent; no gameplay implementation.
 
 ## Existing review ledger
 

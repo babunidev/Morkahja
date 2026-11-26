@@ -12,6 +12,8 @@
 - [x] Approve Performance as the third Social solution category; unblock creative drafting.
 - [x] Approve nine encounters per principal-family subtype.
 - [x] Approve six rare geographic encounters, one per family, as a content quota.
+- [x] Prepare [staged production rounds and Climb candidate review](CONTENT_PRODUCTION_ROUNDS.md) and [79-record regional assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md).
+- [ ] Approve individual regional assignments and coordinate safe expansion migration separately.
 - [ ] Approve individual rare designations and difficulty allocations; define rare selection mechanics separately. Isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 

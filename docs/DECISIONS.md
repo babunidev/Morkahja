@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Staged encounter production direction
+
+Rather than finishing each family in isolation, my preference is to work across all six encounter chats in successive rounds. ChatGPT (GPT-6.2) proposed three minimum coverage milestones and a rotating work order, audited six Find-to-Climb candidates, and prepared a named regional expansion destination for each of the 79 out-of-Vale expansion-0 encounters. The round allocations and exact regional destinations are working recommendations; individual revisions, new expansion IDs and access migration are not approved by this record. The approved catalog quotas remain unchanged. Documentation only.
+
+
 ## 2026-11-26 — Rare encounter content quota
 
 For my base game, exactly six of the 120 geographic encounters are rare, one per family. Each principal family therefore has 26 ordinary and one rare encounter; Learn and Trade each have five ordinary and one rare. Rarity is independent of difficulty, element and reward quality. This is a content quota, not a 5% encounter draw probability. Individual rare designations and selection mechanics remain unapproved. ChatGPT (GPT-6.2) synchronized the completion plan, production ledger and roadmap; no new rarity field, encounter data, rewards or gameplay changes.

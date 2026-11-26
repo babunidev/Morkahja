@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Staged production and future-region manifest
+
+My encounter writing should progress across all families in small rounds. ChatGPT (GPT-6.2) reviewed the complete 21 Find candidate narratives and primary solutions against the Vale landmarks, proposed six Climb conversions, and calculated three rounds of 13, 26 and 32 new encounters. It joined all 79 out-of-Vale expansion-0 encounters to current map labels, checked their IDs and written follows and recorded regional destinations and unresolved placements. New expansion IDs are proposals; migration requires separate access, travel and catalog verification. No game data, gameplay, lore, artwork or deployment changes; no runtime tests.
+
+
 ## 2026-11-26 — Rare encounter quota approved
 
 My six encounter families each have one rare content slot within the approved 120 geographic encounters. ChatGPT (GPT-6.2) recorded the quota and added a family-by-family designation tracker without assigning encounter IDs. Rarity is independent of difficulty, element and reward quality, and the selection mechanism is deferred. All 71 active encounter reservations remain unchanged. Documentation only; no runtime tests or deployment.
