@@ -1,7 +1,7 @@
 # Base game content completion plan — Ethera's Vale
 
 **Creative:** Babuni  
-**Status:** Creative direction recorded 2026-11-25; implementation pending. Ambush, Performance and the 120-encounter target with family quotas are approved; subtype quotas and individual reclassifications remain proposals. See the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md).
+**Status:** Creative direction recorded 2026-11-25; implementation pending. Ambush, Performance, the 120-encounter target, family quotas and nine-per-subtype targets are approved; individual reclassifications remain proposals. See the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md).
 
 ## Scope and design direction
 
@@ -70,13 +70,14 @@ The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 1; Social 
 | 20188 Mystic Hearth's Seal | Combat/Purge | Keep; preserve follow 19444 |
 | 20051, 20108, 20110 | Hunt or Stealth subtypes | Plan migration to Ambush |
 
-Review all 49 records, including narrative intent, primary item and secondary skill/item pairs, element, difficulty, reward and map position. Cross-family alternatives may remain where they genuinely fit. Do not rewrite a scene solely to match a stale generated subtype. The base audit found no existing Climb encounter; use the three new Trick slots for Climb provisionally, or rebalance repetitive Find encounters after review.
+Review all 49 records, including narrative intent, primary item and secondary skill/item pairs, element, difficulty, reward and map position. Cross-family alternatives may remain where they genuinely fit. Do not rewrite a scene solely to match a stale generated subtype. The base audit found no existing Climb encounter. The approved equal subtype targets require three new Climb encounters and review of twelve Find candidates for six Open Lock and six Climb revisions. Individual candidates and their revised narratives require separate approval.
 
 ## Local work checklist
 
 - [x] Confirm 120 geographic encounters and family quotas; Ambush and Hidden Market scope and pin are approved.
 - [x] Approve Performance as the third Social solution category.
-- [ ] Confirm subtype balance and rarity.
+- [x] Approve nine encounters per principal-family subtype.
+- [ ] Confirm rarity.
 - [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
@@ -84,7 +85,7 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 - [ ] Update subtype inference script so it cannot reintroduce retired categories or overwrite reviewed manual assignments.
 - [ ] Review the existing 49 encounters using the ledger below and resolve flagged cases before locking counts.
 - [ ] Create 13 Combat encounters: distribute across Combat, Purge and Ambush; favor missing Purge and nonviolent evasion.
-- [ ] Create 3 Trick encounters, provisionally Climb.
+- [ ] Create 3 Trick Climb encounters; review and propose six Find-to-Open-Lock and six Find-to-Climb revisions.
 - [ ] Create 22 Aid encounters: distribute across Heal, Aid and Nurture.
 - [ ] Create 24 Social encounters: distribute across Speechcraft, Inspiration and approved third category.
 - [ ] Create 4 Learn encounters.
@@ -190,15 +191,15 @@ Sources: [encounter data](../server/game/encountersdata.json), [solution data](.
 
 The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unchecked list above for task allocation and status tracking; the original audit remains reference. Rechecked at [e8f09155](https://github.com/babunidev/Morkahja/commit/e8f091557463a505b63490003f359563c8922b92): 203 worldwide encounters, 247 solutions, 48 current Vale-label records and six Aetherion-label records within the Vale polygon. Hidden Market is expansion 0; five city records belong to expansion 1004. Scope is now approved: include Hidden Market in the base game, outside the city. The current baseline is 49 existing records and 71 new tasks at the approved 120 target. The approved western Vale pin has replaced the erroneous city pin in the CSV and generated map entry.
 
-| Family | Target | Proposed subtype targets | Existing proposed mix | New work / revision |
+| Family | Target | Approved subtype targets | Existing proposed mix | New work / revision |
 | --- | ---: | --- | --- | --- |
 | Combat | 27 | 9 Combat / 9 Purge / 9 Ambush | 8 / 1 / 5 | 1 / 8 / 4 |
-| Trick | 27 | 9 Find / 9 Open Lock / 9 Climb (pending revision approval) | 21 / 3 / 0 | 3 Climb; equal split also requires six Find-to-Open-Lock and six Find-to-Climb revisions |
+| Trick | 27 | 9 Find / 9 Open Lock / 9 Climb | 21 / 3 / 0 | 3 Climb; equal split also requires six Find-to-Open-Lock and six Find-to-Climb revisions |
 | Aid | 27 | 9 Heal / 9 Aid / 9 Nurture | 1 / 2 / 2 | 8 / 7 / 7 |
-| Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance | 1 / 0 / 2 candidates | 8 / 9 / 7 (provisional subtype allocation) |
+| Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance | 1 / 0 / 2 candidates | 8 / 9 / 7 (working allocation; candidates pending review) |
 | Learn | 6 | 6 Learn | 2 | 4 |
 | Trade | 6 | 6 Trade | 1 | 5 |
 
-No Trick revisions approved: 21 Find / 3 Open Lock / 3 Climb is the preservation baseline, not desired balance. Do not approve revisions by arithmetic. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
+Equal subtype quotas are approved. The Trick working baseline is 21 Find / 3 Open Lock / 0 Climb; three new Climb drafts and twelve proposed revisions are required. Individual revisions are not yet approved; select by narrative and lore fit, not arithmetic alone. Preserve IDs and engraved clues. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
 
-Open decisions, in order: (1) approve subtype rebalancing, especially Trick; (2) define rare content frequency separately from future implementation. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
+Open management decision: define rare content frequency separately from future implementation. Equal subtype quotas are approved; individual revisions still require review. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.

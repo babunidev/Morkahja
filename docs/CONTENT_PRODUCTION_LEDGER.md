@@ -19,12 +19,14 @@ Reservations are not game records or creative approval. Existing records are com
 
 ## Production briefs
 
+Approved production targets: nine encounters per subtype in each of Combat, Trick, Aid and Social. Learn and Trade remain six each. The existing classification mix is a working audit, not approval of individual revisions. Trick must review twelve Find candidates for six Open Lock and six Climb revisions, retaining all IDs and engraved clues; the three new Trick reservations remain Climb.
+
 | Chat | Priorities |
 | --- | --- |
 | 01 Combat | Review repeated Nagar charges and mixed lanes; favor Purge and nonviolent Ambush (tracking, concealment, interception, evasion). Preserve Hearthguard link. |
-| 02 Trick | Review repetitive Find landscapes and chests; preserve engraved clues. Three Climb drafts first among new tasks; subtype balance needs revision approval. |
+| 02 Trick | Review repetitive Find landscapes and chests; preserve engraved clues. Three new Climb drafts; approved target 9 each Find/Open Lock/Climb. Propose six Find-to-Open-Lock and six Find-to-Climb revisions after review; individual selections and prose remain unapproved. |
 | 03 Aid | Distinguish healing injury, practical aid/protection and nurturing food/rest/growth. Preserve both sanctuaries. |
-| 04 Social | Draft Speechcraft, Inspiration and approved Performance; review two legacy Performance candidates. Performance writing is unblocked; game-data classification and numeric types await migration. Subtype allocations remain provisional. |
+| 04 Social | Draft Speechcraft, Inspiration and approved Performance; review two legacy Performance candidates. Performance writing is unblocked; game-data classification and numeric types await migration. Nine encounters per subtype is approved; individual classifications remain subject to review. |
 | 05 Learn | Distinct observation/study/discovery, not generic treasure; preserve cube and elemental-current mysteries. |
 | 06 Trade | Roads, caravans, exchanges; no player trading or new mechanics. Review existing Hidden Market (20012), approved base-game Trade; five new tasks. Map correction approved and committed; expansion 1004 protected. |
 

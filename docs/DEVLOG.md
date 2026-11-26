@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Equal subtype quotas
+
+My four principal families now have approved targets of nine encounters per subtype. ChatGPT (GPT-6.2) recorded the targets and the Trick review requirement of six Find-to-Open-Lock and six Find-to-Climb revisions, retaining the three new Climb reservations. Individual revisions remain unapproved. The geographic target, active reservations and existing IDs are unchanged. Documentation only; no runtime tests or deployment.
+
+
 ## 2026-11-26 — Performance approved
 
 My Social family now includes Performance alongside Speechcraft and Inspiration. ChatGPT (GPT-6.2) recorded the approval and unblocked seven reserved creative tasks while retaining two existing encounter candidates for individual review. The subtype quotas remain proposals; all 71 active reservations and the approved 120 total are unchanged. No numeric types, game data or runtime behavior changed. Documentation only; runtime tests and deployment not performed.

@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Equal encounter subtype targets
+
+For my four principal encounter families, the approved production target is nine geographic encounters per subtype: Combat/Purge/Ambush, Find/Open Lock/Climb, Heal/Aid/Nurture, and Speechcraft/Inspiration/Performance. Learn and Trade remain six each. The Trick working baseline requires three new Climb encounters and twelve existing Find candidates to be reviewed for six Open Lock and six Climb revisions. Individual selections, narratives, solutions and reclassifications require separate approval; existing IDs and engraved clues are preserved. The 120 geographic total and 71 active reservations are unchanged. ChatGPT (GPT-6.2) synchronized the plan, ledger and roadmap; no game data or gameplay changes.
+
+
 ## 2026-11-26 — Performance solution category
 
 For my Social encounter family, Performance is approved as the third solution category alongside Speechcraft and Inspiration. Music, dance, storytelling and other artistic expression belong here when the act of performance is the central solution, rather than persuasion or encouragement. The Bard has a natural affinity for these acts without exclusive access. Earthsinger's Challenge (20185) and Melody's Bloomwalker (20186) are candidates for review, not automatically reclassified. The seven reserved Performance drafting tasks are unblocked; the proposed nine-per-subtype split remains subject to approval. Engine support, numeric IDs and migration remain pending. ChatGPT (GPT-6.2) synchronized the completion plan, production ledger and roadmap; no game data or gameplay changes.

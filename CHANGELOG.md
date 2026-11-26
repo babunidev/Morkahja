@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Encounter subtype quotas (documentation only)
+
+- Recorded approval of nine geographic encounters per principal-family subtype, and documented Trick's twelve required revision candidates. No individual reclassifications or data changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-26 — Performance category (documentation only)
 
 - Approved Performance as the third Social solution category and unblocked its creative drafting tasks. Existing classifications, IDs, engine support and game data unchanged. ChatGPT (GPT-6.2).
