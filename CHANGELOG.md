@@ -2,14 +2,14 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-26 — Fix: "Free slot" tag after collecting a reward with both slots filled
+## 2026-11-26 — Fix: "Free slot" tag after collecting a reward with both slots filled (released in 0.9.0-beta.85)
 
 - **Babuni's report:** the "Free slot" tag showed after picking a solution although no slot was free.
 - **Cause:** `inventoryWithCollected` (`client/src/ui/game/collectedInventory.ts`) shows a collected reward before the server commits it, from a copy of the inventory that left out `equipped`. While a collected reward was on screen, both slots looked empty, so the tag (and the card's empty slots) appeared until the next encounter.
 - **Fix:** the copy keeps the equipped items. New test in `collectedInventory.test.ts`. Claude Code (Claude Opus 5.5).
 - **Verification:** the test file passes (6/6); the full release check is in the beta.85 release entry. A pick of a solution in the local game did not show the tag before or after the fix; the collected-reward case was found in the code, not reproduced on screen.
 
-## 2026-11-26 — Unreleased: specializations only for skills the avatar has, and a free change for each new type
+## 2026-11-26 — specializations only for skills the avatar has, and a free change for each new type
 
 - **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** a specialization can be chosen only for a type of skill the avatar has, so at the start only the types of its random starting skills. Every new one it gets gives a free change; they add up ("Free ×7").
@@ -19,7 +19,7 @@
 - **Interpretation to check:** "a new one" is read as a new *type* of skill (a new specialization becoming available), not every new skill.
 - **Verification:** `npm run release:check` passed (client 53/53, server 78/78; `specializationService.test.ts` rewritten for held types, free changes, lost-and-found types, the start-up record and new avatars). In the local game with a new test avatar (desktop 1280×800): the first picker offered Find, Heal and Nurture only; after two new skill types were added to its inventory in the local database, the card read "Change · Free ×2", the picker showed the two new types, and changing to Climb left one free change and no gem spent. Screenshots `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-specialization-held-*.png`. A skill found in real play was not seen. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: one size for every solution picture
+## 2026-11-26 — one size for every solution picture
 
 - **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** every solution, on phone and desktop, the same size as in the Inventory, and the equipment slots the same size as well.
@@ -27,7 +27,7 @@
 - **Change:** `client/src/ui/common/solutionSize.ts` derives one size from the in-game Inventory (the encounter art's width, five pictures, the grid's gap and side padding) and sets it as a CSS variable on the document (real pixels, following the stage's scale) and on the game stage (design pixels; `PortraitStage.tsx`). Equipment slots (`AvatarPartyDetailsCard.tsx`), the level-up choices (`LevelUpChoiceBar.tsx`), result rewards and losses (`ResultBlock.tsx`) use it; the menu's item picker (`AvatarSelectionPanel.tsx`) is as wide as the in-game Inventory, so its grid gives the same size. The encounter row keeps its own fit to its layer (69 px on a 390 phone). The small essence circles around the avatar portrait are not solution slots and stay as they were.
 - **Verification:** `npm run release:check` passed (client 53/53, server 78/78); `tsc -b` clean. Measured again in the local game with new test avatars: every solution picture and equipment slot 78 px at 1280×800, 70 at 390×844 (encounter row 69), 105 at 1920×1080. Screenshots `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-sizes-before-*.png` and `…-sizes-after-*.png`. Level-up choices and result rewards were not seen on screen. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: starting equipment in a small frame, and a quiet "Free slot" tag
+## 2026-11-26 — starting equipment in a small frame, and a quiet "Free slot" tag
 
 - **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** a new player did not understand the item picker that opened straight away. Show the two slots first, in a small frame with a short explanation and the "?", titled like "choose your starting equipment", where the slots can be tapped. In the game, no popup when an item is used up: a small "Free slot" notice on the avatar that blinks a little, so players notice it by themselves; when they open the avatar card, the notice moves from the avatar to the free slot and hovers and pulses there.
@@ -36,7 +36,7 @@
 - **Shared pieces:** `FreeSlotTag.tsx` (`FreeSlotAvatarTag`, `FreeSlotSlotTag`); `EquipmentSection` and `OverviewEquipment` take `freeSlotIndex`. With reduced motion the tag neither blinks nor flies.
 - **Verification:** `npm run release:check` passed (client 53/53, server 78/78); `tsc -b` clean; ESLint clean on the two new files, no new errors in the changed files. In the local game with new test avatars (desktop 1280×800 and phone 390×844): the frame after the specialization, one slot filled through the inventory and back to the frame, Continue to the card, then in the game the tag on the avatar and its flight into the card's free slot, measured frame by frame and in a mid-flight screenshot (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-start-equipment-*.png`, `…-free-slot-*.png`). An item actually running out in play, and with it the "used up" wording, was not seen. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: before the world, choose a specialization and equip two items
+## 2026-11-26 — before the world, choose a specialization and equip two items
 
 - **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** after creating an avatar, tapping it to enter the game first asks for a specialization, then for two items to equip; the item question comes back whenever an equipment slot is empty, for example after an item broke. Simple, a small picker is enough.
