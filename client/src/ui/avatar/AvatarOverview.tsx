@@ -313,13 +313,16 @@ function avatarName(avatar: PersistedAvatar): string {
 }
 
 /** The equipment in the card's bottom row, beside Play (menu) or Home (game). */
-export function OverviewEquipment({ inventory, tooltipBoundsSelector = 'body', onEquipSlot }: {
+export function OverviewEquipment({ inventory, tooltipBoundsSelector = 'body', onEquipSlot, freeSlotIndex = null }: {
   inventory: AvatarInventory | undefined;
   tooltipBoundsSelector?: string;
   onEquipSlot?: (slot: number) => void;
+  /** The empty slot the "Free slot" tag hovers over. */
+  freeSlotIndex?: number | null;
 }) {
   return (
     <EquipmentSection
+      freeSlotIndex={freeSlotIndex}
       inRow
       interactive={Boolean(onEquipSlot)}
       inventory={inventory}

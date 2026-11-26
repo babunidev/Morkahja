@@ -9,6 +9,7 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import AvatarPortraitStack, { INGAME_FRAME_SCALE } from './AvatarPortraitStack.js';
 import { EssenceSlotsRing } from './EssenceSlotsRing.js';
 import { LoreGemAvatarBadge } from '../game/blocks/LoreGemAvatarBadge.js';
+import { FreeSlotAvatarTag } from './FreeSlotTag.js';
 
 import {
   ChoiceDetailSections,
@@ -171,6 +172,10 @@ export function AvatarPanel({
 
   encounterKey,
 
+  freeSlotVisible = false,
+
+  freeSlotAway = false,
+
 }: {
 
   avatar: PersistedAvatar;
@@ -199,6 +204,12 @@ export function AvatarPanel({
 
   /** The current encounter: the essence slots refill when it changes. */
   encounterKey?: string;
+
+  /** A "Free slot" tag blinks on the portrait (Babuni, 2026-11-26). */
+  freeSlotVisible?: boolean;
+
+  /** The card is open: the tag has moved to the slot. */
+  freeSlotAway?: boolean;
 
 }) {
 
@@ -336,6 +347,7 @@ export function AvatarPanel({
                 local
               />
               <LoreGemAvatarBadge held={roomParticipant?.loreGemCollected === true} roomState={roomState} topRoll={topRollGem} />
+              <FreeSlotAvatarTag away={freeSlotAway} visible={freeSlotVisible} />
               {roomParticipant ? (
 
                 <PartyParticipantChoiceBadge

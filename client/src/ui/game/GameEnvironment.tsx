@@ -232,8 +232,6 @@ export function GameEnvironment({
   const [equipError, setEquipError] = useState<string | null>(null);
   const [skillbookOpen, setSkillbookOpen] = useState(false);
   const cancelPanelRevealRef = useRef<(() => void) | null>(null);
-  /** The inventory was opened by the game to replace a broken item (no avatar card after). */
-  const equipPromptRef = useRef(false);
   const [homeVisible, setHomeVisible] = useState(false);
   const [helpToastMessage, setHelpToastMessage] = useState<string | null>(null);
   const [resultRollVisible, setResultRollVisible] = useState(false);
@@ -1024,12 +1022,11 @@ export function GameEnvironment({
     }
   }
 
-  /** Back from the inventory to the overview, or just closed when the game asked by itself. */
+  /** Back from the inventory to the overview. */
   function closeEquipmentPicker(): void {
     setEquipPickSlot(null);
     setInventoryOpen(false);
-    setOverviewOpen(!equipPromptRef.current);
-    equipPromptRef.current = false;
+    setOverviewOpen(true);
   }
 
   async function equipIntoSlot(slot: number, solutionId: number): Promise<void> {
@@ -1037,6 +1034,7 @@ export function GameEnvironment({
     try {
       const inventory = await equipAvatarItem(avatar.id, slot, solutionId);
       setAvatar((current) => ({ ...current, inventory }));
+      setItemUsedUp(false);
     } catch (error) {
       setEquipError(userFacingApiErrorMessage(error, 'Could not equip the item.'));
     }
@@ -1045,36 +1043,32 @@ export function GameEnvironment({
   const equippedNow = shownEquipmentSlots(displayInventory);
 
   /*
-   * An item that broke (Babuni, 2026-11-26): when an equipped slot empties,
-   * the next encounter opens the inventory to equip another, if one fits.
-   * Not during the round itself, so the result plays out first.
+   * A free slot (Babuni, 2026-11-26): no popup that takes the game from the
+   * player. While a slot is empty and an item could fill it, a "Free slot"
+   * tag blinks on the avatar; in the avatar's card it moves to that slot.
+   * When an equipped item was used up in play, the card also says so.
    */
+  const freeSlot = nextEmptyEquipSlot(
+    displayInventory,
+    gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>,
+  );
+  // Adjusted during render when the slots change (React's pattern for
+  // reacting to a changed value, without an effect).
   const equippedKey = equippedNow.join(',');
-  const previousEquippedRef = useRef<(number | null)[] | null>(null);
-  const brokenSlotRef = useRef(false);
-  useEffect(() => {
-    const previous = previousEquippedRef.current;
-    if (previous && previous.some((id, index) => id !== null && equippedNow[index] === null)) {
-      brokenSlotRef.current = true;
+  const [previousEquippedKey, setPreviousEquippedKey] = useState(equippedKey);
+  const [itemUsedUp, setItemUsedUp] = useState(false);
+  if (previousEquippedKey !== equippedKey) {
+    const before = previousEquippedKey.split(',');
+    setPreviousEquippedKey(equippedKey);
+    if (before.some((id, index) => id !== '' && equippedNow[index] === null)) {
+      setItemUsedUp(true);
     }
-    previousEquippedRef.current = equippedNow;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [equippedKey]);
-  useEffect(() => {
-    if (!brokenSlotRef.current) {
-      return;
-    }
-    brokenSlotRef.current = false;
-    const slot = nextEmptyEquipSlot(
-      displayInventory,
-      gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>,
-    );
-    if (slot !== null && equipPickSlot === null) {
-      equipPromptRef.current = true;
-      openEquipmentPicker(slot);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [encounter.encounterId, encounter.snapshotId]);
+  }
+  const freeSlotNotice = freeSlot === null
+    ? null
+    : itemUsedUp
+      ? 'Your equipped item is used up. Tap the free slot to equip a new one.'
+      : 'A slot is free. Tap it to equip an item.';
   const overviewChoice = participantChoiceDetails(
     localParticipant,
     encounter,
@@ -1084,7 +1078,7 @@ export function GameEnvironment({
   const inventoryPick: InventoryPickMode | null = equipPickSlot === null
     ? null
     : {
-        title: equipPromptRef.current ? 'An item broke · equip another' : 'Choose an item',
+        title: 'Choose an item',
         emptyText: 'No item to equip.',
         pickable: (entry) => {
           const solution = (gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number }>)[
@@ -1144,7 +1138,7 @@ export function GameEnvironment({
                     avatar={displayAvatar}
                     choiceDetails={overviewChoice ? <ChoiceDetailSections columns details={overviewChoice} /> : null}
                     inventory={displayInventory}
-                    notice={equipError}
+                    notice={equipError ?? freeSlotNotice}
                     onEquipSlot={openEquipmentPicker}
                     equipmentInFooter
                     showPortrait={false}
@@ -1167,6 +1161,7 @@ export function GameEnvironment({
                     )}
                     right={(
                       <OverviewEquipment
+                        freeSlotIndex={freeSlot}
                         inventory={displayInventory}
                         onEquipSlot={openEquipmentPicker}
                         // Measured against the card, whose bottom row this is, so
@@ -1225,6 +1220,8 @@ export function GameEnvironment({
           <div style={{ width: '100%', height: '100%', ...bottomDelay }}>
             <PartyZone
               avatar={displayAvatar}
+              freeSlotAway={overviewOpen || equipPickSlot !== null}
+              freeSlotVisible={freeSlot !== null}
               hideAvatarPortraitForHandoff={hideAvatarPortraitForHandoff}
               homeVisible={homeVisible}
               onAvatarDetailsVisibleChange={setHomeVisible}

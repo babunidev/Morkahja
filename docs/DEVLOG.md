@@ -2,6 +2,12 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Showing the slots instead of a list
+
+The first version of "ready before the first step" worked, but a new player only saw an inventory list open and had no idea why. Now the slots come first: a small frame says **Choose your starting equipment**, explains in two sentences what equipment does, keeps the "?" beside it, and lets you tap a free slot to pick an item. Continue leads to the card with Play.
+
+In the game I did not want a popup to take the moment away. When an item is used up, a small **Free slot** tag blinks gently on the avatar, and players notice it themselves. When they open the avatar card, the tag flies from the avatar to the empty slot and hovers there, pulsing, until something is equipped. Claude Code (Claude Opus 5.5) built the frame and the tag in the Morkahja gold and deep red, removed the automatic inventory after a broken item, and walked new test avatars through it in the local game on desktop and phone. **Verification:** release check (client 53, server 78); the tag's flight was measured frame by frame. An item running out in real play was not seen yet. **Not released.**
+
 ## 2026-11-26 — Ready before the first step
 
 A new avatar should not walk into the world without a specialization and without its two items. Now a tap on it asks first: choose what you are good at, then equip an item for each slot, then the card with Play. When an item breaks in the game, the next encounter asks for a new one. Claude Code (Claude Opus 5.5) built both questions on the pickers the game already has and walked a new avatar through them in the local game. **Verification:** release check (client 53, server 78); the broken-item question not seen in play yet. **Not released.**

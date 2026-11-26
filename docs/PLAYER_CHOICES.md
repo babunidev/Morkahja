@@ -147,6 +147,10 @@ There are fourteen types in the list. Travel and Rare Find exist only as items. 
 - **The question:** "Travel to Eldertree Forest? It costs 1 [gem]. Are you sure?" with red and green; or, for a locked land, "You have not unlocked The Cursed Forest of Keldor yet. Would you like to take a look?", where green opens the Expansions menu over the game with that expansion unfolded, and closing it returns to the map. A refusal (not enough gems, someone already chose) shows in the question.
 - **The server** (`POST /room/travel`) checks the destination, the player's unlocked expansions and the gems, refuses during Atranor and a level-up and after a choice, and charges and swaps the encounter in one transaction (room row, then player row). The new encounter is drawn from the destination's expansion, avoiding recently played ones; it carries no follow-up, and after it the usual region roll applies. A host's room travels with everyone in it; a guest pays, leaves the room and gets a room of their own there (the gems go back if that fails).
 
+### Starting equipment and the Free slot tag (2026-11-26)
+
+Babuni: the slots should be visible before anything is chosen. After the specialization, a small frame **Choose your starting equipment** shows both slots with a short explanation and the "?"; tapping a free slot opens the inventory for it, and Continue goes on to the card. In the game there is no popup: a **Free slot** tag blinks softly on the avatar while a slot is free and an item could fill it; opening the avatar card moves the tag to the free slot, where it hovers and pulses. This replaces the automatic item questions below.
+
 ### Ready before the world (2026-11-26)
 
 Babuni: tapping the active avatar first asks for a specialization if it has none, then for an item for each empty equipment slot (when the inventory has one that fits), then shows the card with Play. Each question can be closed to skip it. In the game, when an equipped item breaks, the next encounter asks for another item for that slot.

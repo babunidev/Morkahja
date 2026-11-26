@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { AvatarInventoryDto } from '@shared/contracts';
 import { shownEquipmentSlots } from './equipmentSlots.js';
+import { FreeSlotSlotTag } from './FreeSlotTag.js';
 import HelpTip from '../common/HelpTip.js';
 import { SolutionImage } from '../common/SolutionFrame.js';
 import { solutionGridEntryFor } from '../game/blocks/SolutionGridOverlay.js';
@@ -235,9 +236,12 @@ export function EquipmentSection({
   tooltipBoundsSelector,
   onEquipSlot,
   inRow = false,
+  freeSlotIndex = null,
 }: {
   inventory: AvatarInventoryDto | undefined;
   interactive: boolean;
+  /** This empty slot shows the hovering "Free slot" tag (Babuni, 2026-11-26). */
+  freeSlotIndex?: number | null;
   tooltipBoundsSelector: string;
   /** An empty slot was tapped: choose an item for it. */
   onEquipSlot?: (slot: number) => void;
@@ -274,9 +278,10 @@ export function EquipmentSection({
               playSfx(DEFAULT_BUTTON_SOUND);
               onEquipSlot?.(slot);
             }}
-            style={{ ...slotStyle, cursor: interactive && onEquipSlot ? 'pointer' : 'default' }}
+            style={{ ...slotStyle, position: 'relative', cursor: interactive && onEquipSlot ? 'pointer' : 'default' }}
             type="button"
           >
+            {slot === freeSlotIndex && interactive && onEquipSlot ? <FreeSlotSlotTag /> : null}
             <span aria-hidden="true" style={emptySlotVisualStyle}>+</span>
           </button>
         )))}

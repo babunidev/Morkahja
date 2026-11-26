@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useImagesReady } from '../transitions/menuReadiness.js';
 import SpecializationPicker from './SpecializationPicker.js';
+import StartEquipmentPanel from './StartEquipmentPanel.js';
 import {
   chooseAvatarSpecialization,
   createAvatar,
@@ -405,6 +406,8 @@ export function AvatarSelectionPanel({
   const [equipPending, setEquipPending] = useState(false);
   const [equipError, setEquipError] = useState<string | null>(null);
   const [specializationPickerOpen, setSpecializationPickerOpen] = useState(false);
+  // Starting equipment (Babuni, 2026-11-26): the two slots in a small frame before the card.
+  const [startEquipOpen, setStartEquipOpen] = useState(false);
   // Edit avatar (D-056): the creation screen in edit mode, in the overview's place.
   const [editOpen, setEditOpen] = useState(false);
   const [editPending, setEditPending] = useState(false);
@@ -422,6 +425,7 @@ export function AvatarSelectionPanel({
     setEquipError(null);
     setSpecializationPickerOpen(false);
     setSpecializationError(null);
+    setStartEquipOpen(false);
     setEditOpen(false);
     setEditError(null);
   }
@@ -475,15 +479,16 @@ export function AvatarSelectionPanel({
 
   /**
    * Before the world (Babuni, 2026-11-26): an avatar without a specialization
-   * chooses one first, then gets an item for every empty equipment slot it can
-   * fill, one after the other; then its card. Closing a step skips it.
+   * chooses one first; then, if a slot is free and an item could fill it, the
+   * starting-equipment frame shows both slots with an explanation. A tap on a
+   * free slot opens the inventory for it; Continue goes on to the card.
    */
   function equipSolutions(): Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined> {
     return gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>;
   }
 
-  function promptNextEquipSlot(inventory: PersistedAvatar['inventory']): void {
-    setEquipPickSlot(nextEmptyEquipSlot(inventory, equipSolutions()));
+  function promptStartEquipment(inventory: PersistedAvatar['inventory']): void {
+    setStartEquipOpen(nextEmptyEquipSlot(inventory, equipSolutions()) !== null);
   }
 
   async function chooseSpecialization(avatar: PersistedAvatar, specialization: number): Promise<void> {
@@ -495,7 +500,7 @@ export function AvatarSelectionPanel({
         entry.id === avatar.id ? { ...entry, specialization: result.specialization } : entry
       )));
       setSpecializationPickerOpen(false);
-      promptNextEquipSlot(avatar.inventory);
+      promptStartEquipment(avatar.inventory);
     } catch (error) {
       setSpecializationError(userFacingApiErrorMessage(error, 'Could not choose the specialization.'));
     } finally {
@@ -532,8 +537,6 @@ export function AvatarSelectionPanel({
     try {
       const inventory = await equipAvatarItem(avatar.id, slot, solutionId);
       onAvatarsChanged?.(resolvedAvatars.map((entry) => (entry.id === avatar.id ? { ...entry, inventory } : entry)));
-      // The next empty slot asks right away.
-      promptNextEquipSlot(inventory);
     } catch (error) {
       setEquipError(userFacingApiErrorMessage(error, 'Could not equip the item.'));
     } finally {
@@ -662,7 +665,7 @@ export function AvatarSelectionPanel({
       setSpecializationError(null);
       setSpecializationPickerOpen(true);
     } else {
-      promptNextEquipSlot(candidate.inventory);
+      promptStartEquipment(candidate.inventory);
     }
   }
 
@@ -821,7 +824,7 @@ export function AvatarSelectionPanel({
         ) : null}
       </div>
       {/* The picker takes the overview's place; Back brings the overview again. */}
-      {cardAvatar && !specializationPickerOpen && !editOpen ? (
+      {cardAvatar && !specializationPickerOpen && !startEquipOpen && !editOpen ? (
         <AvatarOverviewMenuCard
           closingInto={overviewClosingInto}
           openingFrom={activeSourceRef}
@@ -830,6 +833,7 @@ export function AvatarSelectionPanel({
             <AvatarOverviewFooter
               left={(
                 <OverviewEquipment
+                  freeSlotIndex={nextEmptyEquipSlot(cardAvatar.inventory, equipSolutions())}
                   inventory={cardAvatar.inventory}
                   onEquipSlot={equipPending ? undefined : (slot) => {
                     setEquipError(null);
@@ -874,12 +878,27 @@ export function AvatarSelectionPanel({
           error={specializationError}
           onBack={() => {
             setSpecializationPickerOpen(false);
-            promptNextEquipSlot(cardAvatar.inventory);
+            promptStartEquipment(cardAvatar.inventory);
           }}
           onConfirm={(specialization) => {
             void chooseSpecialization(cardAvatar, specialization);
           }}
           pending={specializationPending}
+        />
+      ) : null}
+      {cardAvatar && startEquipOpen && !specializationPickerOpen ? (
+        <StartEquipmentPanel
+          avatar={cardAvatar}
+          error={equipError}
+          onContinue={() => {
+            setEquipPickSlot(null);
+            setStartEquipOpen(false);
+          }}
+          onEquipSlot={(slot) => {
+            setEquipError(null);
+            setEquipPickSlot(slot);
+          }}
+          pending={equipPending}
         />
       ) : null}
       {cardAvatar && equipPickSlot !== null ? (
@@ -895,7 +914,7 @@ export function AvatarSelectionPanel({
             onPick={(solutionId) => {
               void equipIntoSlot(cardAvatar, equipPickSlot, solutionId);
             }}
-            panelTitle={`Equip an item · slot ${equipPickSlot + 1}`}
+            panelTitle={`Choose an item · slot ${equipPickSlot + 1}`}
             pickable={(entry) => {
               const solution = (gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number }>)[
                 String(entry.solutionId)

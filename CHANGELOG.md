@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: starting equipment in a small frame, and a quiet "Free slot" tag
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** a new player did not understand the item picker that opened straight away. Show the two slots first, in a small frame with a short explanation and the "?", titled like "choose your starting equipment", where the slots can be tapped. In the game, no popup when an item is used up: a small "Free slot" notice on the avatar that blinks a little, so players notice it by themselves; when they open the avatar card, the notice moves from the avatar to the free slot and hovers and pulses there.
+- **Main menu (`StartEquipmentPanel.tsx`, `AvatarSelectionPanel.tsx`):** after the specialization, if a slot is free and an item could fill it, the frame **Choose your starting equipment** shows both slots with an explanation, the Equipment "?" and a hint line. Tapping a free slot opens the inventory ("Choose an item · slot N"); after picking, the frame shows again with that item in its slot. **Continue** goes on to the avatar card with Play. The inventory no longer opens by itself, and the next slot no longer asks on its own.
+- **In the game (`GameEnvironment.tsx`, `PartyZone.tsx`, `AvatarPanel.tsx`):** the automatic inventory after an item broke is removed. While a slot is free and an item could fill it, a **Free slot** tag in the Morkahja colours blinks softly at the top of the local avatar. Opening the avatar card moves it: the tag flies from the avatar to the free slot and keeps hovering and pulsing on the slot's lower edge. The card's notice line says "Your equipped item is used up. Tap the free slot to equip a new one." after an item ran out in play, otherwise "A slot is free. Tap it to equip an item." The main-menu avatar card shows the same tag on its free slot.
+- **Shared pieces:** `FreeSlotTag.tsx` (`FreeSlotAvatarTag`, `FreeSlotSlotTag`); `EquipmentSection` and `OverviewEquipment` take `freeSlotIndex`. With reduced motion the tag neither blinks nor flies.
+- **Verification:** `npm run release:check` passed (client 53/53, server 78/78); `tsc -b` clean; ESLint clean on the two new files, no new errors in the changed files. In the local game with new test avatars (desktop 1280×800 and phone 390×844): the frame after the specialization, one slot filled through the inventory and back to the frame, Continue to the card, then in the game the tag on the avatar and its flight into the card's free slot, measured frame by frame and in a mid-flight screenshot (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-start-equipment-*.png`, `…-free-slot-*.png`). An item actually running out in play, and with it the "used up" wording, was not seen. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: before the world, choose a specialization and equip two items
 
 - **Not released.** Pushed to GitHub `main`.

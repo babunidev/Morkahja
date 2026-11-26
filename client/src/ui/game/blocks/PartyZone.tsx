@@ -95,6 +95,8 @@ function partySlotVisualStyle(avatarDetailsOpen: boolean, mobilePortrait: boolea
 
 export function PartyZone({
   avatar,
+  freeSlotVisible = false,
+  freeSlotAway = false,
   hideAvatarPortraitForHandoff = false,
   homeVisible,
   onAvatarDetailsVisibleChange,
@@ -108,6 +110,10 @@ export function PartyZone({
   partyXpPulseByPlayer = {},
 }: {
   avatar: PersistedAvatar;
+  /** A "Free slot" tag blinks on the local avatar (Babuni, 2026-11-26). */
+  freeSlotVisible?: boolean;
+  /** The avatar's card is open: the tag has moved to the slot. */
+  freeSlotAway?: boolean;
   hideAvatarPortraitForHandoff?: boolean;
   homeVisible: boolean;
   onAvatarDetailsVisibleChange: (visible: boolean) => void;
@@ -175,6 +181,8 @@ export function PartyZone({
                   avatar={avatar}
                   encounter={room?.activeEncounter}
                   encounterKey={room?.activeEncounter?.snapshotId}
+                  freeSlotAway={freeSlotAway}
+                  freeSlotVisible={freeSlotVisible}
                   hidePortraitForHandoff={hideAvatarPortraitForHandoff}
                   homeVisible={homeVisible}
                   onDetailsVisibleChange={(visible) => {
