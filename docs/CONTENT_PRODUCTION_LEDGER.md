@@ -24,7 +24,7 @@ Reservations are not game records or creative approval. Existing records are com
 | 01 Combat | Review repeated Nagar charges and mixed lanes; favor Purge and nonviolent Ambush (tracking, concealment, interception, evasion). Preserve Hearthguard link. |
 | 02 Trick | Review repetitive Find landscapes and chests; preserve engraved clues. Three Climb drafts first among new tasks; subtype balance needs revision approval. |
 | 03 Aid | Distinguish healing injury, practical aid/protection and nurturing food/rest/growth. Preserve both sanctuaries. |
-| 04 Social | Draft Speechcraft and Inspiration; hold Performance tasks and two legacy candidates pending approval. No invented engine type. |
+| 04 Social | Draft Speechcraft, Inspiration and approved Performance; review two legacy Performance candidates. Performance writing is unblocked; game-data classification and numeric types await migration. Subtype allocations remain provisional. |
 | 05 Learn | Distinct observation/study/discovery, not generic treasure; preserve cube and elemental-current mysteries. |
 | 06 Trade | Roads, caravans, exchanges; no player trading or new mechanics. Review existing Hidden Market (20012), approved base-game Trade; five new tasks. Map correction approved and committed; expansion 1004 protected. |
 
@@ -79,8 +79,8 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20187 | Ember's Journeykindler | Aid / Aid | A:—/26; B:10237/40; C:—/39; D:—/25 | 1 / — / 2×1 | Flameheart Amulet lore supports vitality but type 40; review Aid lane and other references. |
 | 20189 | Zephyr's Embrace | Aid / Aid | A:—/10; B:10240/26; C:—/25; D:—/9 | 1 / — / 2×1 | Windward Bulwark type 26 fits protection; combat alternative justified. |
 | 20193 | Joyful Riverkeeper | Aid / Nurture | B:10247/34; C:—/33 | 1 / — / 2×1 | Berries fit appetite; Social only if intent changes. |
-| 20185 | Earthsinger's Challenge | Social / Performance (pending) | A:—/40; B:10235/18; C:—/17; D:—/39 | 1 / — / 2×1 | Artistic challenge/flute; type 40 vs fallback 18; Performance pending. |
-| 20186 | Melody's Bloomwalker | Social / Performance (pending) | A:—/18; B:10236/40; C:—/39; D:—/17 | 1 / — / 2×1 | Dance invitation and flute type 40; Performance pending. |
+| 20185 | Earthsinger's Challenge | Social / Performance (candidate) | A:—/40; B:10235/18; C:—/17; D:—/39 | 1 / — / 2×1 | Artistic challenge/flute; type 40 vs fallback 18; Performance category approved; individual reclassification pending. |
+| 20186 | Melody's Bloomwalker | Social / Performance (candidate) | A:—/18; B:10236/40; C:—/39; D:—/17 | 1 / — / 2×1 | Dance invitation and flute type 40; Performance category approved; individual reclassification pending. |
 | 20192 | Nereval Elite | Social / Speechcraft | B:10243/18; C:—/17 | 1 / 19001 / 2×1 | Aquatic Emblem, guardian's mark; keep distinct from healing seal and preserve follow 19001. |
 | 20011 | Magic Source | Learn / Learn | B:—/2; C:—/1 | 1 / — / 1×2 | Magical fount; learning not guaranteed awakening; location interpretive. |
 | 20074 | Mysterious Cube | Learn / Learn | B:—/2; C:—/1 | 1 / — / 1×2 | Cube origin/purpose and exact location unresolved in lore. |
@@ -158,13 +158,13 @@ Provisional sequencing; four random D2 slots and rare designations remain unset 
 | 20246 | Social | Inspiration | — | — | — | — | — | — |
 | 20247 | Social | Inspiration | — | — | — | — | — | — |
 | 20248 | Social | Inspiration | — | — | — | — | — | — |
-| 20249 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20250 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20251 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20252 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20253 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20254 | Social | Performance (blocked) | — | — | — | — | — | — |
-| 20255 | Social | Performance (blocked) | — | — | — | — | — | — |
+| 20249 | Social | Performance | — | — | — | — | — | — |
+| 20250 | Social | Performance | — | — | — | — | — | — |
+| 20251 | Social | Performance | — | — | — | — | — | — |
+| 20252 | Social | Performance | — | — | — | — | — | — |
+| 20253 | Social | Performance | — | — | — | — | — | — |
+| 20254 | Social | Performance | — | — | — | — | — | — |
+| 20255 | Social | Performance | — | — | — | — | — | — |
 | 20256 | Learn | Learn | — | — | — | — | — | — |
 | 20257 | Learn | Learn | — | — | — | — | — | — |
 | 20258 | Learn | Learn | — | — | — | — | — | — |

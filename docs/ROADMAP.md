@@ -9,7 +9,8 @@
 - [x] Confirm Hidden Market as base-game Trade outside Aetherion; protect expansion 1004.
 - [x] Approve and correct Hidden Market map placement in CSV and generated map entry.
 - [x] Confirm 120 geographic encounters and family quotas.
-- [ ] Confirm Performance, subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
+- [x] Approve Performance as the third Social solution category; unblock creative drafting.
+- [ ] Confirm subtype balance and rarity; isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
 ## Fourth playable role — approved direction, not implemented (2026-11-25)

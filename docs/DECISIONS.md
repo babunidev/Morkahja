@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Performance solution category
+
+For my Social encounter family, Performance is approved as the third solution category alongside Speechcraft and Inspiration. Music, dance, storytelling and other artistic expression belong here when the act of performance is the central solution, rather than persuasion or encouragement. The Bard has a natural affinity for these acts without exclusive access. Earthsinger's Challenge (20185) and Melody's Bloomwalker (20186) are candidates for review, not automatically reclassified. The seven reserved Performance drafting tasks are unblocked; the proposed nine-per-subtype split remains subject to approval. Engine support, numeric IDs and migration remain pending. ChatGPT (GPT-6.2) synchronized the completion plan, production ledger and roadmap; no game data or gameplay changes.
+
+
 ## 2026-11-25 — Base-game encounter target
 
 For Ethera's Vale, my approved target is 120 geographic encounters: 27 Combat, 27 Trick, 27 Aid, 27 Social, 6 Learn and 6 Trade. The two scripted sanctuary encounters count toward this total; Atranor and Level Up remain additional universal events. At the current proposed classification baseline of 49 existing encounters, 71 new encounters are required. The family quotas are approved, not every individual reclassification or subtype split. The [completion plan](CONTENT_COMPLETION_PLAN.md) and [production ledger](CONTENT_PRODUCTION_LEDGER.md) now use this target. ChatGPT (GPT-6.2) recorded the decision; no gameplay or data changes.

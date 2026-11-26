@@ -1,7 +1,7 @@
 # Base game content completion plan — Ethera's Vale
 
 **Creative:** Babuni  
-**Status:** Creative direction recorded 2026-11-25; implementation pending. Ambush and the 120-encounter target with family quotas are approved; Performance, subtype quotas and individual reclassifications remain proposals. See the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md).
+**Status:** Creative direction recorded 2026-11-25; implementation pending. Ambush, Performance and the 120-encounter target with family quotas are approved; subtype quotas and individual reclassifications remain proposals. See the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md).
 
 ## Scope and design direction
 
@@ -9,7 +9,7 @@ For the new base game, my focus is Ethera's Vale alone. Other lands and their en
 
 ## Role direction
 
-The [approved four-role direction](DECISIONS.md#2026-11-25--bard-and-four-role-direction) aligns Warrior with Combat, Rogue with Trick, Mage with Aid and the future Bard with Social. These are thematic strengths, not exclusive solution access or encounter selection rules. Mage abilities should lean toward assistance and restoration; Bard abilities will be designed separately. Learn and Trade remain independent families available across roles. Artisan is a possible later role, not part of this content phase. Performance, exact role abilities, reward changes and specialization restrictions still require separate approval. The quotas, existing encounter IDs and reservations are unchanged.
+The [approved four-role direction](DECISIONS.md#2026-11-25--bard-and-four-role-direction) aligns Warrior with Combat, Rogue with Trick, Mage with Aid and the future Bard with Social. These are thematic strengths, not exclusive solution access or encounter selection rules. Mage abilities should lean toward assistance and restoration; Bard abilities will be designed separately. Learn and Trade remain independent families available across roles. Artisan is a possible later role, not part of this content phase. Performance is approved separately as a Social solution category; exact role abilities, reward changes and specialization restrictions still require separate approval. The quotas, existing encounter IDs and reservations are unchanged.
 
 ## Proposed taxonomy
 
@@ -18,11 +18,11 @@ The [approved four-role direction](DECISIONS.md#2026-11-25--bard-and-four-role-d
 | Combat | Combat, Purge, Ambush (approved merger of Hunting + Stealth) | 9/10, 27/28, merge 29/30 and 35/36 |
 | Trick | Find, Open Lock, Climb | 5/6, 7/8, 13/14 |
 | Aid | Heal, Aid, Nurture | 21/22, 25/26, 33/34 |
-| Social | Speechcraft, Inspiration, Performance (proposed third category) | 17/18, 39/40, new pair only after approval |
+| Social | Speechcraft, Inspiration, Performance (approved third category) | 17/18, 39/40; Performance pair pending engine migration |
 | Learn | Learn | 1/2 |
 | Trade | Trade | 3/4 |
 
-Ambush is the approved name for the merged Hunting and Stealth category; do not reopen it. Performance means music, dance, storytelling and other expressive acts, distinct from persuasion (Speechcraft) and encouragement (Inspiration). It is not implemented. Keep existing Learn and Trade IDs 4 and 5, retain encounter ID 3 for Aid (formerly Help), and propose ID 6 for Social. No travel or rare-find solution category remains in the target taxonomy; map travel remains a separate mechanic. Rarity is orthogonal to family, solution type and difficulty. The existing RareItem type 32 is not the same as an encounter rarity field. Do not remove item rarity or its roll bonus. Existing legacy IDs must be migrated safely, not reused blindly.
+Ambush is the approved name for the merged Hunting and Stealth category; do not reopen it. Performance is approved and means music, dance, storytelling and other expressive acts, distinct from persuasion (Speechcraft) and encouragement (Inspiration). It is not implemented. Keep existing Learn and Trade IDs 4 and 5, retain encounter ID 3 for Aid (formerly Help), and propose ID 6 for Social. No travel or rare-find solution category remains in the target taxonomy; map travel remains a separate mechanic. Rarity is orthogonal to family, solution type and difficulty. The existing RareItem type 32 is not the same as an encounter rarity field. Do not remove item rarity or its roll bonus. Existing legacy IDs must be migrated safely, not reused blindly.
 
 ## Audit and target
 
@@ -75,7 +75,8 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 ## Local work checklist
 
 - [x] Confirm 120 geographic encounters and family quotas; Ambush and Hidden Market scope and pin are approved.
-- [ ] Confirm Performance, subtype balance and rarity.
+- [x] Approve Performance as the third Social solution category.
+- [ ] Confirm subtype balance and rarity.
 - [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
@@ -183,7 +184,7 @@ No content work on these lands in this phase. The IDs below are currently expans
 
 ## Evidence and attribution
 
-Sources: [encounter data](../server/game/encountersdata.json), [solution data](../server/game/solutiondata.json), [engine types](../server/src/engine/types.ts), [map assignments](../client/src/ui/game/worldMap/encounterLocations.ts), [map CSV](data/encounter_locations.csv), [selection logic](../server/src/services/encounterGenerator.ts), [specializations](../shared/src/specialization.ts), [achievement mapping](../server/src/domain/achievements/encounterSolveAchievements.ts). ChatGPT (GPT-6.2) joined the source data, audited all 48 Vale slot records, computed quotas, and drafted the plan from my creative direction. Individual classifications and Performance remain subject to review; Ambush is approved. Documentation only: no gameplay or production changes, no runtime tests performed.
+Sources: [encounter data](../server/game/encountersdata.json), [solution data](../server/game/solutiondata.json), [engine types](../server/src/engine/types.ts), [map assignments](../client/src/ui/game/worldMap/encounterLocations.ts), [map CSV](data/encounter_locations.csv), [selection logic](../server/src/services/encounterGenerator.ts), [specializations](../shared/src/specialization.ts), [achievement mapping](../server/src/domain/achievements/encounterSolveAchievements.ts). ChatGPT (GPT-6.2) joined the source data, audited all 48 Vale slot records, computed quotas, and drafted the plan from my creative direction. Individual classifications remain subject to review; Ambush and Performance are approved. Documentation only: no gameplay or production changes, no runtime tests performed.
 
 ## Studio coordination — 2026-11-25
 
@@ -194,10 +195,10 @@ The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unch
 | Combat | 27 | 9 Combat / 9 Purge / 9 Ambush | 8 / 1 / 5 | 1 / 8 / 4 |
 | Trick | 27 | 9 Find / 9 Open Lock / 9 Climb (pending revision approval) | 21 / 3 / 0 | 3 Climb; equal split also requires six Find-to-Open-Lock and six Find-to-Climb revisions |
 | Aid | 27 | 9 Heal / 9 Aid / 9 Nurture | 1 / 2 / 2 | 8 / 7 / 7 |
-| Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance (pending) | 1 / 0 / 2 pending | 8 / 9 / 7 pending |
+| Social | 27 | 9 Speechcraft / 9 Inspiration / 9 Performance | 1 / 0 / 2 candidates | 8 / 9 / 7 (provisional subtype allocation) |
 | Learn | 6 | 6 Learn | 2 | 4 |
 | Trade | 6 | 6 Trade | 1 | 5 |
 
 No Trick revisions approved: 21 Find / 3 Open Lock / 3 Climb is the preservation baseline, not desired balance. Do not approve revisions by arithmetic. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family must contain rare encounters; at least one each is a minimum content proposal, not a draw-rate or reward mechanic.
 
-Open decisions, in order: (1) approve or reject Performance; (2) approve subtype rebalancing, especially Trick; (3) define rare content frequency separately from future implementation. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
+Open decisions, in order: (1) approve subtype rebalancing, especially Trick; (2) define rare content frequency separately from future implementation. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.

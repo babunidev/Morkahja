@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Performance category (documentation only)
+
+- Approved Performance as the third Social solution category and unblocked its creative drafting tasks. Existing classifications, IDs, engine support and game data unchanged. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-25 — Base-game encounter target (documentation only)
 
 - Recorded approval of 120 geographic encounters: 27 per principal family and six each for Learn and Trade. Updated the completion plan, production ledger and roadmap. Existing reservations and game data unchanged. ChatGPT (GPT-6.2).
