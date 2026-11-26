@@ -4,7 +4,7 @@
 
 ## 2026-11-26 — six essence charges, Soul Link sharing and welcome gift, the expansion unlock card, Alpha Player explained (D-068)
 
-- **Not released.** On `main`; the local stack runs it.
+- **Released** in 0.9.0-beta.86 (2026-11-26, 11:32 UTC).
 - **Babuni's direction:** the game is too hard, so start with six essence charges and return with two of each god; a Share button for the Soul Link's direct link; a Soul Link message in the dashboard's message pool, never during play; Aetherion as the welcome gift for players who come through a Soul Link; a real unlock moment for an expansion (red LOCKED band, green UNLOCKED, then read, Proceed); soul links also count toward Alpha Player, with a "?" that explains it; the inviter's name when opening an invite; a list of everyone linked to you.
 - **Essences (`shared/src/deathEncounter.ts`, `server/src/services/inventoryService.ts`):** `ATRANOR_ESSENCE_CHARGES` 1 → 2 (dice return, Atranor item and gem sacrifice); new `STARTING_ESSENCE_CHARGES = 2` for a new avatar's three own-god essences. Existing avatars are unchanged. The portrait shows five essence slots, so the sixth charge sits in the Inventory.
 - **Soul Link gift (`soulLinkGift.ts`):** on the gift day the newcomer is granted Aetherion (1004) in the same transaction, recorded as `soulLink.welcomeGift` (`aetherion` or `owned`); after commit the inviter gets a Spiritguide point and `ALPHA_PLAYER_POINTS_PER_SOUL_LINK` (5) Alpha Player points. Alpha progress moved to `alphaPlayerProgress.ts` (`addAlphaPlayerProgress(playerId, amount)`); level-ups and deaths still add 1.

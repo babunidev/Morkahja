@@ -176,6 +176,15 @@ Babuni: "don't back up anything on the server anymore … download them to the c
 - **`prune`** (also after every release) removes every backup folder in `/var/backups/morkahja-subpath`, every dump in the upload folder, old `prev-*` upload folders, and after a release the uploaded `client.tar.gz`, `morkahja.bundle` and `SHA256SUMS`.
 - **Installed version:** prepared by Claude Code (Claude Opus 5.5) on 2026-11-26 (sha256 `f88bd7d5…`; the previous one was `ef418ca2…`), staged as `~/morkahja-deploy/morkahja-deploy.new`; Babuni installs it with `sudo install -o root -g root -m 755 ~/morkahja-deploy/morkahja-deploy.new /usr/local/bin/morkahja-deploy`, since the deploy login cannot change the tool. The passwordless sudo rule names the path only, so it keeps working.
 
+## Production release — 2026-11-26, 11:32 UTC (0.9.0-beta.86: six essence charges, Soul Link sharing and welcome gift, expansion unlock card, Alpha Player explained, D-068)
+
+Approved by Babuni ("we have to deploy that to test it, right?"). `main` at `f68740f8`: the essence change, D-068, the beta.86 patch notes and version, plus Babuni's Admin saves of frame images 84–90.
+
+- **Before:** backend `7a352c4f`, frontend `20261126-085718`. `morkahja-deploy status` showed no uncommitted live files.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 54, server 78). The client archive has `index.html` at its root. Uploads verified by `sha256sum -c` on the server (client `06dff904…`, bundle `82f81c2d…`, only `refs/heads/main`).
+- **Release:** no database dump. Backend checked out `f68740f8`, `npm ci`, health gate and content endpoint passed, frontend release `20261126-113236`. Public checks passed; the live script `index-DS5Oaq6-.js` contains `0.9.0-beta.86`. `GET /Morkahja/api/player/soul-link/invite?inviter=<unknown>` answers 404 without a session, so the public route is reachable. API and bots online. Prune removed one old frontend release, one `node_modules` copy, one bundle and the uploads.
+- **Not yet checked live:** a real phone's share menu, a gift day with Aetherion and its unlock card, a gem unlock's card on production, the Alpha Player tip.
+
 ## Production release — 2026-11-26, 08:57 UTC (0.9.0-beta.85: ready before the first step, Free slot tag, specializations by held skill types D-067, one solution size)
 
 Approved by Babuni ("Then let's release all this"). `main` at `7a352c4f`: the specialization and equipment prompts, the starting-equipment frame and Free slot tag, one size for every solution picture, D-067, the fix for a false Free slot after a collected reward (reported by Babuni during the release preparation), the version bump, and Babuni's Admin frame images.
