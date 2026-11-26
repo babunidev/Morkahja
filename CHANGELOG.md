@@ -7,7 +7,7 @@
 - **Not released.** Pushed to GitHub `main`.
 - **Babuni's direction:** each rank title is worn as an avatar title, so the first should not be named like the achievement; show the progress toward the first 100 encounters from the first encounter on.
 - **Change:** rank 1 is now **Rootseeker** (then Hearthfriend, Child of Morkahja). The panel's bar counts the encounters of the account's best avatar whose homeland is still closed, 0–100 (`loadHomecomingState`), shown as "37 / 100 encounters with one avatar", with "· 1 of 3 homelands" once one is earned, and "Every homeland reached" at the end; it appears after the first encounter. The rank still counts homelands.
-- **Verification:** `homecoming.test.ts` extended (99 of 100 shown before the first homeland, nothing on the way when no avatar can open another); `npm run release:check` passed (client 52/52, server 78/78). Claude Code (Claude Opus 5.5).
+- **Verification:** `homecoming.test.ts` extended (99 of 100 shown before the first homeland, nothing on the way when no avatar can open another); `npm run release:check` passed (client 52/52, server 78/78). In the local game, a new Grimnir test avatar set to 37 encounters showed the Homecoming card with "37 / 100 encounters with one avatar" (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homecoming-progress-desktop.png`). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
 
 ## 2026-11-26 — Unreleased: Find-to-Climb Round 2
 
