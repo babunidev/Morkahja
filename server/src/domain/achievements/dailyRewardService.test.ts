@@ -26,6 +26,7 @@ const allZero: Parameters<typeof computeDailyRewardGems>[0] = {
   contributor: 0,
   spiritguide: 0,
   alphaPlayer: 0,
+  homecoming: 0,
 };
 
 assert.equal(computeDailyRewardGems(allZero), 1);
@@ -41,11 +42,12 @@ const allMax = {
   contributor: 4,
   spiritguide: 4,
   alphaPlayer: 4,
+  homecoming: 3,
 };
 
-assert.equal(computeDailyRewardGems(allMax), 113);
-assert.equal(sumAchievementRanks(allMax), 36);
-assert.ok(MAX_DAILY_REWARD_GEMS >= 113);
+assert.equal(computeDailyRewardGems(allMax), 116, 'Homecoming adds up to 3 gems (D-065)');
+assert.equal(sumAchievementRanks(allMax), 39);
+assert.ok(MAX_DAILY_REWARD_GEMS >= 116);
 
 assert.equal(
   computeDailyRewardGems({ ...allZero, adventurer: -5, blessed: 99 }),

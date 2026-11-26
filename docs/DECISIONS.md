@@ -630,3 +630,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on GitHub `main`, not released. Release check and local browser check passed. Climb Round 2 drafted, awaiting approval.
 
+## D-065 — Homecoming: the homelands are earned by playing their people (2026-11-26)
+
+**Babuni's direction:** Evergrove (Verdani), Celesterra (Aevis and Grimnir) and the Fyrskar Mountains (Rokur) are unlocked by an achievement, not bought: 100 encounters with one avatar open its people's homeland, a one-time, early unlock. A visible achievement with three ranks. Existing avatars count, and progress counts from now. Homelands cannot be bought with gems; only the complete package, which is not offered yet, will include them. Bundle buyers own everything. The other seven regions stay gem-bought as in D-064.
+
+**AI implementation:** Claude Code (Claude Opus 5.5): the `homecoming` chain and its titles (Homecoming, Hearthfriend, Child of Morkahja), the homeland list in the catalog (`mExtensioHomelandOf`), the check after each encounter and at start-up, the refused gem unlock, and the shop and panel texts. Its own choices: the unused monthly-reward glyph as icon; each rank adds 1 gem to the Hearth Blessing like the other chains; the achievement appears in the panel once the first homeland is earned, as other chains appear with their first progress; the homelands keep their gem price only for the travel cost.
+
+**Status:** on GitHub `main`, not released. Server test against PostgreSQL and the release check passed.
+

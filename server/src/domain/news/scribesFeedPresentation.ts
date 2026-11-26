@@ -96,6 +96,9 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
       if (achievementId === 'spiritguide') {
         return SPIRITGUIDE_ACHIEVEMENT_ICON;
       }
+      if (achievementId === 'homecoming') {
+        return '/UI/04_ACHIEVEMENTS/im_glyph_monthly_reward.webp';
+      }
       return ADVENTURER_ACHIEVEMENT_ICON;
     }
     case 'encounter_resolved': {

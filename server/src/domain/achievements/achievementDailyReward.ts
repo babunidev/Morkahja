@@ -1,3 +1,4 @@
+import { homecomingDailyRewardGems } from './homecomingAchievement.js';
 import { adventurerDailyRewardGems } from './adventurerAchievement.js';
 import { alphaPlayerDailyRewardGems } from './alphaPlayerAchievement.js';
 import { spiritguideDailyRewardGems } from './spiritguideAchievement.js';
@@ -16,6 +17,7 @@ export interface DailyRewardAchievementRanks {
   contributor: number;
   spiritguide: number;
   alphaPlayer: number;
+  homecoming: number;
 }
 
 export function sumAchievementRanks(ranks: DailyRewardAchievementRanks): number {
@@ -27,7 +29,8 @@ export function sumAchievementRanks(ranks: DailyRewardAchievementRanks): number 
     + ranks.helper
     + ranks.contributor
     + ranks.spiritguide
-    + ranks.alphaPlayer;
+    + ranks.alphaPlayer
+    + ranks.homecoming;
 }
 
 export function computeDailyRewardGems(ranks: DailyRewardAchievementRanks): number {
@@ -39,7 +42,8 @@ export function computeDailyRewardGems(ranks: DailyRewardAchievementRanks): numb
     + adventurerDailyRewardGems(ranks.helper)
     + adventurerDailyRewardGems(ranks.contributor)
     + spiritguideDailyRewardGems(ranks.spiritguide)
-    + alphaPlayerDailyRewardGems(ranks.alphaPlayer);
+    + alphaPlayerDailyRewardGems(ranks.alphaPlayer)
+    + homecomingDailyRewardGems(ranks.homecoming);
 
   if (!Number.isFinite(raw) || raw <= 0) {
     return 0;

@@ -195,6 +195,14 @@ function progressLabel(achievement: AchievementProgressDto): string {
     return `${achievement.progress} / ${achievement.bandEnd} gems donated`;
   }
 
+  if (achievement.achievementId === 'homecoming') {
+    if (achievement.bandEnd === null) {
+      return `${achievement.progress} homelands — every homeland reached`;
+    }
+
+    return `${achievement.progress} / ${achievement.bandEnd} ${achievement.bandEnd === 1 ? 'homeland' : 'homelands'}`;
+  }
+
   if (achievement.achievementId === 'spiritguide') {
     if (achievement.bandEnd === null) {
       return `${achievement.progress} soul-links — max rank reached`;

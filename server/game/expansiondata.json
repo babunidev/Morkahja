@@ -84,9 +84,12 @@
       "mExtensioCollectionImage": "expansion_evergrove",
       "mExtensioCost": 75,
       "mExtensioHeaderImage": "expansion_evergrove",
+      "mExtensioHomelandOf": [
+        "Verdani"
+      ],
       "mExtensioID": 1007,
       "mExtensioName": "Evergrove",
-      "mExtensioSummaryText": "Planned: 40+ encounters, items and skills.",
+      "mExtensioSummaryText": "Homeland. Opened by Homecoming: 100 encounters with a Verdani.",
       "mExtensioText": "Evergrove is the Verdani heartland: a vast desert of dunes, salt flats and wind-cut mesas, where water exists not as abundance but as intention. Through hydromancy, healing and song, the Verdani guide it into shimmering oasis-gardens and canals, fed by the living root-veins of the Evergrove Nexus beneath the sand. Its refuges are beautiful and fragile, and raids, drought and root sickness are never far away.",
       "mExtensioUnlockButton": "expansion_evergrove"
     },
@@ -106,9 +109,13 @@
       "mExtensioCollectionImage": "expansion_celesterra",
       "mExtensioCost": 75,
       "mExtensioHeaderImage": "expansion_celesterra",
+      "mExtensioHomelandOf": [
+        "Aevis",
+        "Grimnir"
+      ],
       "mExtensioID": 1009,
       "mExtensioName": "Celesterra",
-      "mExtensioSummaryText": "Planned: 40+ encounters, items and skills.",
+      "mExtensioSummaryText": "Homeland. Opened by Homecoming: 100 encounters with an Aevis or a Grimnir.",
       "mExtensioText": "Beneath the south-western mountains lies Celesterra, the oldest and largest of the Aevis sky-cities, where artificial skies of luminous crystal shine over caverns as wide as open land. Above its peaks drift the Grimnir Skylands, homeland of the stone-forgers, in a quiet balance of air below and stone above. Aevis merchants and healers, storm-twisted Tempestwailers and vaults sealed long ago in the mountain rock wait for those who find the way.",
       "mExtensioUnlockButton": "expansion_celesterra"
     },
@@ -117,9 +124,12 @@
       "mExtensioCollectionImage": "expansion_fyrskar",
       "mExtensioCost": 50,
       "mExtensioHeaderImage": "expansion_fyrskar",
+      "mExtensioHomelandOf": [
+        "Rokur"
+      ],
       "mExtensioID": 1010,
       "mExtensioName": "Fyrskar Mountains",
-      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioSummaryText": "Homeland. Opened by Homecoming: 100 encounters with a Rokur.",
       "mExtensioText": "The Fyrskar Mountains are the homeland of the Rokur, a northern range where volcanic ridges rise through glaciers and ancient calderas sleep beneath the ice. Snowstorms swallow valleys for weeks, and frozen cliffs drop into ravines of heated water. The Rokur live inside the mountains themselves, while weary Grimnir, the lions of the Sarga cliffs and stranger creatures share the heights.",
       "mExtensioUnlockButton": "expansion_fyrskar"
     },

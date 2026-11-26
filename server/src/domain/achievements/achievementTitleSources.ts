@@ -1,3 +1,4 @@
+import { HOMECOMING_ACHIEVEMENT_ID, HOMECOMING_CHAIN_TITLE, HOMECOMING_RANKS } from './homecomingAchievement.js';
 import {
   achievementRankFromProgress,
   loadAllAchievementProgressForPlayer,
@@ -156,6 +157,19 @@ export async function loadAchievementTitleSourcesForPlayer(
     ),
     chainTitle: SPIRITGUIDE_CHAIN_TITLE,
     ranks: mapRanks(SPIRITGUIDE_RANKS),
+  });
+
+  const homecomingProgress = readProgress(records, HOMECOMING_ACHIEVEMENT_ID);
+  pushIfStarted(sources, {
+    achievementId: HOMECOMING_ACHIEVEMENT_ID,
+    progress: homecomingProgress,
+    rank: effectiveRank(
+      HOMECOMING_ACHIEVEMENT_ID,
+      readStoredRecord(records, HOMECOMING_ACHIEVEMENT_ID),
+      homecomingProgress,
+    ),
+    chainTitle: HOMECOMING_CHAIN_TITLE,
+    ranks: mapRanks(HOMECOMING_RANKS),
   });
 
   const alphaProgress = readProgress(records, ALPHA_PLAYER_ACHIEVEMENT_ID);

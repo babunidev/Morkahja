@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: Homecoming opens the three homelands (D-065)
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's direction:** Evergrove, Celesterra and the Fyrskar Mountains are not bought but earned: one avatar that has played 100 encounters opens its people's homeland, once. A visible achievement with three ranks; existing avatars count, progress counts from now; homelands can only be earned, or come with the complete package, which is not offered yet. The other seven lands stay gem-bought.
+- **Achievement:** `homecoming` (`server/src/domain/achievements/homecomingAchievement.ts`, `homecomingProgress.ts`), ranks Homecoming, Hearthfriend, Child of Morkahja for one, two and three homelands; icon the unused `im_glyph_monthly_reward.webp`. After each played encounter the avatar's own count is checked; at 100 its race's homeland joins the account's expansions and `homecoming` on the player records it, under the player row lock, so it counts once. At every server start each avatar that already has 100 encounters earns its homeland. Like every other chain, each rank adds 1 gem to the Hearth Blessing (up to 3).
+- **Catalog:** `mExtensioHomelandOf` on 1007 Evergrove (Verdani), 1009 Celesterra (Aevis, Grimnir) and 1010 Fyrskar (Rokur). Unlocking a homeland with gems is refused (`HOMELAND_NOT_FOR_SALE`); its gem price remains only for the travel cost. The Expansions menu shows "Homeland. Opened by Homecoming: 100 encounters with a Verdani" and no unlock buttons; the achievement panel counts homelands.
+- **Tests:** new `homecoming.test.ts` against local PostgreSQL: 99 encounters are not enough, 100 open Evergrove once even with two parallel checks, Celesterra opens for a Grimnir and not again for an Aevis, the start-up check gives a Rokur with 230 encounters Fyrskar, three ranks, gems refused. `npm run release:check` passed in full (client 52/52, server 78/78). Expansions menu checked in the local game (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homecoming-shop-*.png`). Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: the in-game avatar card shows what was used again
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

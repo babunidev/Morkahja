@@ -7,6 +7,7 @@ import {
 import {
   ExpansionAlreadyUnlockedError,
   ExpansionInactiveError,
+  HomelandNotForSaleError,
   ExpansionNotFoundError,
   InsufficientGemsForExpansionError,
   unlockPlayerExpansion,
@@ -46,6 +47,11 @@ export async function unlockPlayerExpansionController(
   } catch (error) {
     if (error instanceof ExpansionNotFoundError) {
       res.status(404).json({ error: 'EXPANSION_NOT_FOUND' });
+      return;
+    }
+
+    if (error instanceof HomelandNotForSaleError) {
+      res.status(400).json({ error: 'HOMELAND_NOT_FOR_SALE' });
       return;
     }
 

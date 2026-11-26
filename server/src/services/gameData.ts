@@ -45,6 +45,12 @@ export interface ExpansionData {
    * approves showing it (D-063). Missing means listed, as before.
    */
   mExtensioListed?: boolean;
+  /**
+   * A homeland (D-065): the races whose avatars open it through Homecoming
+   * (100 encounters). It cannot be unlocked with gems; its gem price only
+   * sets the travel cost.
+   */
+  mExtensioHomelandOf?: string[];
   /*
    * Shop fields. A future region has none yet: prices, rewards and art are
    * Babuni's decision, and an expansion without a whole-number gem price

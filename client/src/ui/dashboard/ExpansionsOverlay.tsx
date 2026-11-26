@@ -31,6 +31,8 @@ interface ExpansionRecord {
   mExtensioID: number;
   /** false: a future region, not shown here until Babuni approves it (D-063). */
   mExtensioListed?: boolean;
+  /** A homeland (D-065): opened by Homecoming, never bought with gems. */
+  mExtensioHomelandOf?: string[];
   mExtensioName: string;
   mExtensioReward: number;
   mExtensioSummaryText: string;
@@ -497,6 +499,7 @@ function ExpansionCard({
   const headerId = `expansion-${expansion.mExtensioID}-header`;
   const bodyId = `expansion-${expansion.mExtensioID}-body`;
   const canAfford = gemBalance >= expansion.mExtensioCost;
+  const homeland = (expansion.mExtensioHomelandOf?.length ?? 0) > 0;
   const unlockEnabled = expansion.mExtensioActive && !unlocked && canAfford && !unlockPending;
   const priceLabel = typeof expansion.mExtensioPriceEurCents === 'number'
     ? formatEurCents(expansion.mExtensioPriceEurCents)
@@ -538,7 +541,9 @@ function ExpansionCard({
               // A land not open yet shows its planned gem price (Babuni, 2026-11-26).
               <p style={{ ...costStyle, ...statusStyle }}>
                 <span>Coming soon</span>
-                {Number.isInteger(expansion.mExtensioCost) ? (
+                {homeland ? (
+                  <span>· Homecoming</span>
+                ) : Number.isInteger(expansion.mExtensioCost) ? (
                   <>
                     <img alt="" aria-hidden="true" {...protectedImageProps} src={GEMS_ICON} style={gemsIconSmallStyle} />
                     <span>{expansion.mExtensioCost} gems</span>
@@ -547,6 +552,8 @@ function ExpansionCard({
               </p>
             ) : unlocked ? (
               <p style={unlockedLabelStyle}>Unlocked</p>
+            ) : homeland ? (
+              <p style={costStyle}>Homecoming</p>
             ) : (
               <p style={costStyle}>
                 <img alt="" aria-hidden="true" {...protectedImageProps} src={GEMS_ICON} style={gemsIconSmallStyle} />
@@ -598,7 +605,7 @@ function ExpansionCard({
               </ul>
             ) : null
           ) : null}
-          {expansion.mExtensioActive && !unlocked ? (
+          {expansion.mExtensioActive && !unlocked && !homeland ? (
             <div style={unlockActionsRowStyle}>
               <PanelButton
                 aria-label={`Unlock ${expansion.mExtensioName} for ${expansion.mExtensioCost} gems`}

@@ -1,3 +1,4 @@
+import { HOMECOMING_ACHIEVEMENT_ID, homecomingRankFromProgress } from './homecomingAchievement.js';
 import { pool } from '../../db/postgresDocumentStore.js';
 import {
   ADVENTURER_ACHIEVEMENT_ID,
@@ -31,6 +32,10 @@ import {
 import type { AchievementProgress } from './achievementProgress.js';
 
 export function achievementRankFromProgress(achievementId: string, progress: number): number {
+  if (achievementId === HOMECOMING_ACHIEVEMENT_ID) {
+    return homecomingRankFromProgress(progress);
+  }
+
   if (achievementId === ADVENTURER_ACHIEVEMENT_ID) {
     return adventurerRankFromProgress(progress);
   }

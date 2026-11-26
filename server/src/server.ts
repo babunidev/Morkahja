@@ -75,6 +75,7 @@ import {
   syncAllExpansionOwners,
 } from './services/playerService.js';
 import { listBuyersOfSkus } from './db/commerceStore.js';
+import { syncHomecomingForAllAvatars } from './domain/achievements/homecomingProgress.js';
 import { ALL_EXPANSIONS_SKUS } from './domain/commerce/catalog.js';
 import { loadAllowedClientOrigins } from './config/corsOrigins.js';
 import { resolveTrustProxySetting } from './config/trustProxy.js';
@@ -621,6 +622,16 @@ try {
   );
 
   registerAchievementHandlers();
+
+  // Homecoming (D-065): avatars that already played 100 encounters earn their homeland.
+  try {
+    const earned = await syncHomecomingForAllAvatars();
+    if (earned > 0) {
+      console.log(`Homecoming: ${earned} homeland(s) earned by existing avatars`);
+    }
+  } catch (error) {
+    console.error('Homecoming start-up check failed', error);
+  }
 
   // All-expansions bundle owners also own expansions added since (Babuni, 2026-11-26).
   try {

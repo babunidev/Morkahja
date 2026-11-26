@@ -40,6 +40,14 @@ export class ExpansionNotFoundError extends Error {
   }
 }
 
+/** A homeland is earned through Homecoming, never bought with gems (D-065). */
+export class HomelandNotForSaleError extends Error {
+  constructor() {
+    super('A homeland is earned by playing its people');
+    this.name = 'HomelandNotForSaleError';
+  }
+}
+
 export class ExpansionInactiveError extends Error {
   constructor() {
     super('Expansion is not available');
@@ -296,6 +304,9 @@ export async function unlockPlayerExpansion(
     throw new ExpansionNotFoundError();
   }
 
+  if (expansion.mExtensioHomelandOf?.length) {
+    throw new HomelandNotForSaleError();
+  }
   if (!expansion.mExtensioActive) {
     throw new ExpansionInactiveError();
   }

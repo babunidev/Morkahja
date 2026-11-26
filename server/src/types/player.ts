@@ -36,6 +36,8 @@ export interface PlayerDocument {
    * adds new catalog entries to `unlockedExpansions` (syncAllExpansionOwners).
    */
   allExpansions?: boolean;
+  /** Homeland expansions earned through Homecoming (D-065), each once. */
+  homecoming?: number[];
   /** Cosmetic dice skins unlocked for this account. */
   unlockedDiceIds?: string[];
   /** Active dice skin used in encounters. */

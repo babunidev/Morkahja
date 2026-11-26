@@ -1,4 +1,14 @@
 import {
+  HOMECOMING_ACHIEVEMENT_ID,
+  HOMECOMING_BASE_ICON,
+  HOMECOMING_CHAIN_TEXT,
+  HOMECOMING_CHAIN_TITLE,
+  HOMECOMING_RANKS,
+  homecomingProgressBand,
+  homecomingRankDefinition,
+  homecomingRankFromProgress,
+} from '../domain/achievements/homecomingAchievement.js';
+import {
   ALPHA_PLAYER_ACHIEVEMENT_ID,
   ALPHA_PLAYER_BASE_ICON,
   ALPHA_PLAYER_CHAIN_TEXT,
@@ -269,6 +279,36 @@ function buildContributorView(progress: number): AchievementProgressView {
   };
 }
 
+function buildHomecomingView(progress: number): AchievementProgressView {
+  const rank = homecomingRankFromProgress(progress);
+  const rankDefinition = homecomingRankDefinition(rank);
+  const band = homecomingProgressBand(progress);
+
+  return {
+    achievementId: HOMECOMING_ACHIEVEMENT_ID,
+    rank,
+    progress,
+    bandStart: band.bandStart,
+    bandEnd: band.bandEnd,
+    progressInBand: band.progressInBand,
+    baseIconUrl: toPublicPath(HOMECOMING_BASE_ICON),
+    rankOverlayUrl: rankDefinition?.rankOverlayPath
+      ? toPublicPath(rankDefinition.rankOverlayPath)
+      : undefined,
+    chainTitle: HOMECOMING_CHAIN_TITLE,
+    title: rankDefinition?.title ?? HOMECOMING_CHAIN_TITLE,
+    text: rankDefinition?.text ?? HOMECOMING_CHAIN_TEXT,
+    ranks: HOMECOMING_RANKS.map((entry) => ({
+      rank: entry.rank,
+      title: entry.title,
+      text: entry.text,
+      rankOverlayUrl: entry.rankOverlayPath
+        ? toPublicPath(entry.rankOverlayPath)
+        : undefined,
+    })),
+  };
+}
+
 function buildSpiritguideView(progress: number): AchievementProgressView {
   const rank = spiritguideRankFromProgress(progress);
   const rankDefinition = spiritguideRankDefinition(rank);
@@ -365,6 +405,7 @@ function buildAchievementsViews(input: {
   helperProgress: number;
   contributorProgress: number;
   spiritguideProgress: number;
+  homecomingProgress: number;
   alphaProgress: number;
   alphaLocked: boolean;
 }): AchievementProgressView[] {
@@ -381,6 +422,7 @@ function buildAchievementsViews(input: {
     buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[2], input.helperProgress),
     buildContributorView(input.contributorProgress),
     buildSpiritguideView(input.spiritguideProgress),
+    buildHomecomingView(input.homecomingProgress),
     buildAlphaPlayerView(input.alphaProgress, input.alphaLocked),
   ];
 
@@ -400,6 +442,7 @@ export async function getAchievementsSnapshotReadOnly(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
+    homecomingProgress,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -411,6 +454,7 @@ export async function getAchievementsSnapshotReadOnly(
     readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     readAchievementProgressValue(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
     readAchievementProgressValue(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
+    readAchievementProgressValue(playerId, HOMECOMING_ACHIEVEMENT_ID),
     readAchievementProgressValue(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -425,6 +469,7 @@ export async function getAchievementsSnapshotReadOnly(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
+    homecomingProgress,
     alphaProgress,
     alphaLocked,
   });
@@ -442,6 +487,7 @@ export async function getAchievementsSnapshot(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
+    homecomingProgress,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -453,6 +499,7 @@ export async function getAchievementsSnapshot(
     loadSyncedAchievementProgress(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     loadSyncedAchievementProgress(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
     loadSyncedAchievementProgress(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
+    loadSyncedAchievementProgress(playerId, HOMECOMING_ACHIEVEMENT_ID),
     loadSyncedAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -468,6 +515,7 @@ export async function getAchievementsSnapshot(
       helperProgress,
       contributorProgress,
       spiritguideProgress,
+      homecomingProgress,
       alphaProgress,
       alphaLocked,
     }),

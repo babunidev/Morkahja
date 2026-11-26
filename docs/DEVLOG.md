@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Coming home
+
+The three homelands are not for sale. When one of my avatars has played 100 encounters, its people's land opens for good: Evergrove for a Verdani, the Fyrskar Mountains for a Rokur, Celesterra for an Aevis or a Grimnir. It is an early unlock, and a reason to try every people. Claude Code (Claude Opus 5.5) built Homecoming as a visible achievement with three ranks, checked after every encounter and once at each start for the avatars that already have their hundred, took the gem price off the three homelands' cards, and tested that a homeland is earned only once. In the same hour it fixed the avatar card in the game, where what I had used in the encounter had slipped out of sight below the statistics. **Verification:** full release check (client 52, server 78) and both screens in the local game. **Not released.**
+
 ## 2026-11-26 — Prices for lands that are not open yet
 
 I went through the review and said yes. The casket, the ailing Verdani and the Blightwraiths belong to Eldertree Forest. The Ogru and the Bloodfang came home to the Vale. Evergrove keeps its altar, its raided village and its exhausted Verdani. The Grimnir Vault went to Celesterra: the Grimnir may travel the whole world, but a vault belongs in the homeland, below their Skylands. Claude Code (Claude Opus 5.5) rewrote the two sentences of the vault that named Deepstone Hollow and Everwinter, and moved its account in the world archive. It applied the first three Climb conversions as drafted, and drafted the next three. For the prices it compared the lands on my map with my three sizes, small Aetherion, medium Everwinter and big Keldor. Evergrove, Celesterra and Karrhu are big at 75 gems, Shattered Peaks small at 25, the rest medium at 50, with a planned number of encounters for each. All ten are now in my Expansions menu as coming soon, with a text from my lore and a banner cut from one of their own encounter paintings. Anyone who buys an all-expansions bundle now owns every land, and later ones too. **Verification:** full release check (client 52, server 77) and the menu on desktop and phone. **Not released.**

@@ -1,3 +1,4 @@
+import { HOMECOMING_ACHIEVEMENT_ID } from './homecomingAchievement.js';
 import { getPlayer, withDocumentTransaction } from '../../db/postgresDocumentStore.js';
 import { addPlayerYellowRedGems } from '../../services/playerService.js';
 import {
@@ -140,6 +141,10 @@ export async function resolveDailyRewardRanks(
     alphaPlayer: achievementRankFromProgress(
       ALPHA_PLAYER_ACHIEVEMENT_ID,
       readProgress(ALPHA_PLAYER_ACHIEVEMENT_ID),
+    ),
+    homecoming: achievementRankFromProgress(
+      HOMECOMING_ACHIEVEMENT_ID,
+      readProgress(HOMECOMING_ACHIEVEMENT_ID),
     ),
   };
 }

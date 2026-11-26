@@ -22,6 +22,7 @@ import {
   saveAchievementProgress,
 } from './achievementPersistence.js';
 import { recordDailyEncounterPlayed } from './dailyRewardService.js';
+import { tryEarnHomeland } from './homecomingProgress.js';
 import { syncFirestarterAchievementProgress } from './firestarterProgress.js';
 import {
   CONTRIBUTOR_ACHIEVEMENT_ID,
@@ -65,6 +66,9 @@ export async function handleGameEvent(event: GameEvent): Promise<void> {
   if (ENCOUNTER_PLAYED_EVENT_TYPES.has(event.type)) {
     await recordDailyEncounterPlayed(event.playerId, event.timestamp);
     await processAdventurerEncounterPlayed(event.playerId, event.timestamp);
+    if (event.avatarId) {
+      await tryEarnHomeland(event.playerId, event.avatarId, event.timestamp);
+    }
   }
 
   if (event.type === 'encounter_resolved') {
