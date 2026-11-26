@@ -75,16 +75,16 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20068 | Fey Greens | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10167/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: carved ledge high on the sanctuary rock; Faewoven Ladder. Whistle Reed 10080 no longer referenced. |
 | 20069 | Celestial Fields | Trick / Find | B:10081/6; C:—/5 | 1 / — / 2×1 | Meadow Star; treasure rumor lacks concrete opportunity. |
 | 20070 | Enigmatic Prairies | Trick / Find | B:10082/28; C:—/5 | 1 / — / 2×1 | Rosethorn Locket type 28 canon barrier-piercing; do not retag blindly; replace primary or approve Purge scene. |
-| 20071 | Arcane Meadows | Trick / Find | B:10083/6; C:—/5 | 1 / — / 2×1 | Whistle of Harmony; moving branch; northeast of Vale vs northeastern Vale wording needs review. Round 2 Climb draft: [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
+| 20071 | Arcane Meadows | **Trick / Climb (committed 2026-11-26)** | B:10211/14; C:—/13 | 1 / — / 2×1 | Approved Round 2 revision: the glint high on the old tree's bough over the hollow; Seeker's Grapnel. Whistle of Harmony 10083 no longer referenced. |
 | 20072 | Tranquil Wilds | Trick / Find | B:10084/6; C:—/5 | 1 / — / 2×1 | Lullaby Pendant implies sanctuary; sleeping fox scene does not fit; possible Nurture only after approval. |
-| 20080 | Dreamy Valley | Trick / Find | B:10086/6; C:—/5 | 1 / — / 2×1 | Dreamy Lyre; hidden passage distinctive; other subtype needs revised purpose. Round 2 Climb draft (not Open Lock: nothing is locked): [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
+| 20080 | Dreamy Valley | **Trick / Climb (committed 2026-11-26)** | B:10167/14; C:—/13 | 1 / — / 2×1 | Approved Round 2 revision: fallen stone fills the passage, the way lies over it; Faewoven Ladder. Dreamy Lyre 10086 no longer referenced. |
 | 20081 | Arcadian Hills | Trick / Find | B:10090/6; C:—/5 | 1 / — / 2×1 | Arcadian Keyflower; A clue; ensure item helps. |
 | 20083 | Enchanted Gardens | Trick / Find | B:10093/6; C:—/5 | 1 / — / 2×1 | Enchanted Sunstone; H clue, dusk energy. |
 | 20084 | Mystical Vale | Trick / Find | B:10094/6; C:—/5 | 1 / — / 2×1 | Wisperwind Flute type 20 despite fallback 6; K clue; review instrument purpose. |
 | 20085 | Bucolic Dale | Trick / Find | B:10095/6; C:—/5 | 1 / — / 2×1 | Blue Runestone; J clue; avoid invented effects. |
 | 20086 | Captivating Downs | Trick / Find | B:10096/6; C:—/5 | 1 / — / 2×1 | Fairyseer Compass; O clue and abnormal distances; preserve fae uncertainty. |
 | 20087 | Radiant Heath | Trick / Find | B:10097/6; C:—/5; D:—/39 | 1 / — / 2×1 | Radiant Quill and fallback 39; M clue; lore specifies glowing water/tablet absent in scene. |
-| 20088 | Mesmerizing Hillsides | Trick / Find | B:10098/6; C:—/5 | 1 / — / 2×1 | Windchime promises hidden trove; scene shifting light/animal; purpose weak. Round 2 Climb draft: [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
+| 20088 | Mesmerizing Hillsides | **Trick / Climb (committed 2026-11-26)** | B:10071/14; C:—/13 | 1 / — / 2×1 | Approved Round 2 revision: the tall rock in the hollow with its shelf of flowers; Climbing Gear. Mesmerizing Windchime 10098 no longer referenced. |
 | 20089 | Magical Glens | Trick / Find | B:10099/6; C:—/5 | 1 / — / 2×1 | Echohorn and A clue; preserve repeated A; distinguish from 20081. |
 | 20090 | Ethereal Glades | Trick / Find | B:10100/6; C:—/5 | 1 / — / 2×1 | Glademyst Geode; luminous glade, weak treasure cue; avoid duplicating 20089. |
 | 20098 | Common Chest | Trick / Open Lock | B:10110/—; C:—/7 | 1 / — / 2×2 | Sunstone Key and separate skill lane; ordinary chest repeats 20119. |

@@ -75,6 +75,10 @@ const SUBTYPE_OVERRIDES = {
   20004: 'Climb',
   20005: 'Climb',
   20068: 'Climb',
+  // Round 2 (2026-11-26).
+  20071: 'Climb',
+  20080: 'Climb',
+  20088: 'Climb',
 };
 
 const ELEMENT_OVERRIDES = {
@@ -96,6 +100,9 @@ const ELEMENT_OVERRIDES = {
   20004: 'Arcana',
   20005: 'Earth',
   20068: 'Void',
+  20071: 'Nature',
+  20080: 'Arcana',
+  20088: 'Air',
 };
 
 const ELEMENT_KEYWORDS = {

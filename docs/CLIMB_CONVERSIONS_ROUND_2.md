@@ -4,7 +4,7 @@
 **Date:** 2026-11-26
 **For:** 00 Management and Chat 02, answering the [Climb conversion brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md)
 **Drafted by:** Claude Code (Claude Opus 5.5)
-**Status:** **drafts for approval. No game data changed.** Round 1 (20068, 20005, 20004) was approved and applied the same day (`77f4aaee`, see [Round 1](CLIMB_CONVERSIONS_ROUND_1.md)).
+**Status:** **approved by Babuni and applied on 2026-11-26.** The prose below is the committed text. Round 1 (20068, 20005, 20004) was approved and applied the same day (`77f4aaee`, see [Round 1](CLIMB_CONVERSIONS_ROUND_1.md)).
 
 ## Fresh assessment after Round 1
 

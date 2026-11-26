@@ -18,7 +18,7 @@
 - [x] Decide the Evergrove review, 20009's land, gem prices, texts and banners (D-064, 2026-11-26); the ten regions are listed as coming soon. Not released.
 - [ ] Before a region opens: its encounters (planned 40 / 20 / 10 by size, D-064), real banner art if wanted, a money price and Stripe SKU if sold for money, regional ambiance recordings.
 - [x] Climb Round 1 (20068, 20005, 20004) approved and applied (`77f4aaee`, 2026-11-26). Not released.
-- [ ] Approve the [Climb Round 2 drafts](CLIMB_CONVERSIONS_ROUND_2.md) (20080, 20071, 20088).
+- [x] Climb Round 2 (20080, 20071, 20088) approved and applied (2026-11-26). The base game now has six Climb encounters. Not released.
 - [x] Homecoming (D-065, 2026-11-26): 100 encounters with one avatar open its people's homeland. Not released.
 - [ ] The complete package: decide when to offer it and its price; it is the only way to buy a homeland (D-065).
 - [ ] Approve individual rare designations and difficulty allocations; define rare selection mechanics separately. Isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.

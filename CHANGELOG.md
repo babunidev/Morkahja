@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: Find-to-Climb Round 2
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** apply the second three Climb conversions.
+- **Change:** 20080 Dreamy Valley, 20071 Arcane Meadows and 20088 Mesmerizing Hillsides carry the prose of `docs/CLIMB_CONVERSIONS_ROUND_2.md`; slot B Faewoven Ladder 10167, Seeker's Grapnel 10211 and Climbing Gear 10071 with any climbing item (type 14) as fallback, slot C any Climb skill (13), subtype Climb; elements kept (Arcana, Nature, Air) and protected in `scripts/assign-encounter-element-subtype.mjs`. The base game now has six Climb encounters; Find 15, Open Lock 3. Ledger updated.
+- **Verification:** `npm run verify:static-data` and the release check (see the Homecoming entry above for the run). Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: Homecoming opens the three homelands (D-065)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.
