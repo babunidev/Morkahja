@@ -129,7 +129,7 @@ const actorAfterRoll = afterRoll.participants.find((entry) => entry.avatarId ===
 assert.equal(actorAfterRoll?.choiceState, 'ready_to_continue');
 assert.equal(actorAfterRoll?.preparedResult?.success, true);
 // D-055: a total of 20 or more returns with all three gods of the element;
-// the actor is a Rokur, so Solriel, Khaotys and Fyraan, one charge each.
+// the actor is a Rokur, so Solriel, Khaotys and Fyraan, two charges each (D-068).
 assert.deepEqual(
   [...(actorAfterRoll?.preparedResult?.rewards ?? [])].sort(),
   [10038, 10039, 10040],
@@ -145,8 +145,8 @@ const witnessInventoryAfter = await loadInventory(witnessSession.playerId, witne
 
 assert.equal(
   totalEssenceUses(actorInventoryAfter),
-  actorEssenceBefore + 3,
-  'actor should gain 3 essence uses: one charge of each fire god',
+  actorEssenceBefore + 6,
+  'actor should gain 6 essence uses: two charges of each fire god',
 );
 assert.equal(
   totalInventoryUses(witnessInventoryAfter),

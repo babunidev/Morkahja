@@ -5,7 +5,8 @@ export const DEATH_ENCOUNTER_ID = 1;
  * 7 or more brings the avatar back with one essence of its own element's gods,
  * 14 or more with the second god's as well, 20 or more with all three. Using
  * an Atranor item always brings all three, and it still rolls to survive.
- * Each essence comes with one charge. 6 or less ends the life.
+ * Each essence comes with two charges (Babuni, 2026-11-26, D-068). 6 or less
+ * ends the life.
  */
 export const ATRANOR_SURVIVAL_MIN_TOTAL = 7;
 export const ATRANOR_SECOND_GOD_MIN_TOTAL = 14;
@@ -13,7 +14,9 @@ export const ATRANOR_THIRD_GOD_MIN_TOTAL = 20;
 /** The gods of one element, one per tribunal. */
 export const ATRANOR_ELEMENT_GOD_COUNT = 3;
 /** Charges of each essence Atranor grants. */
-export const ATRANOR_ESSENCE_CHARGES = 1;
+export const ATRANOR_ESSENCE_CHARGES = 2;
+/** Charges of each own-god essence a new avatar starts with (D-068). */
+export const STARTING_ESSENCE_CHARGES = 2;
 
 export function isAtranorSurvivalRoll(total: number | null | undefined): boolean {
   return typeof total === 'number'

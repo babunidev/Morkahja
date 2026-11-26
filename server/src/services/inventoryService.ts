@@ -19,6 +19,7 @@ import {
   isEquippableSolution,
   normalizeEquipmentSlots,
 } from '@shared/equipment.js';
+import { STARTING_ESSENCE_CHARGES } from '@shared/deathEncounter.js';
 import { getInventory, setAvatar, setInventory } from '../db/postgresDocumentStore.js';
 
 export const WARRIOR_IMPROVISED_WEAPON_ID = 10062;
@@ -583,8 +584,13 @@ export function createInitialAvatarInventory(
 ): AvatarInventory {
   const seedIds = buildInitialAvatarSeedIds(profile, options);
 
+  // Own-god essences start with two charges each, six in all (Babuni, 2026-11-26, D-068).
   return seedIds.reduce(
-    (inventory, solutionId) => addRewardToInventoryState(inventory, solutionId),
+    (inventory, solutionId) => addRewardToInventoryState(
+      inventory,
+      solutionId,
+      getSolution(solutionId).mSolutionType === ESSENCE_SOLUTION_TYPE ? STARTING_ESSENCE_CHARGES : undefined,
+    ),
     createEmptyInventory(),
   );
 }

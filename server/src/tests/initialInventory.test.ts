@@ -145,6 +145,9 @@ function testDeterministicMageStarterPack(): void {
     13,
     'mage total seeded entries',
   );
+  // D-068: three own-god essences with two charges each, six in all.
+  assertEqual(inventory.essences.length, 3, 'three starting essences');
+  assert(inventory.essences.every((item) => item.uses === 2), 'each starting essence has two charges');
 }
 
 function testWarriorGetsImprovisedWeapon(): void {
