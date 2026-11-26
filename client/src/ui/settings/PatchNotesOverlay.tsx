@@ -29,6 +29,45 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-84',
+    version: '0.9.0-beta.84',
+    period: '26 Nov 2026',
+    groups: [
+      {
+        title: 'The lands of Morkahja',
+        notes: [
+          'The base game is Ethera\'s Vale. Every other land is now its own expansion, each with its own encounters.',
+          'Ten new lands are in the Expansions menu as coming soon: Eldertree Forest, Frostwind Mountains, Evergrove, Emberfrost, Celesterra, the Fyrskar Mountains, the Shattered Peaks, the Desert of Ohgar, the Swamp of Karrhu and the Rocky Tundra.',
+          'On the world map, a land that is not open yet tells you so.',
+          'A trip always brings a random encounter from the land you travel to.',
+        ],
+      },
+      {
+        title: 'Homecoming',
+        notes: [
+          'Play 100 encounters with one avatar to open the homeland of its people: Evergrove for the Verdani, the Fyrskar Mountains for the Rokur, Celesterra for the Aevis and the Grimnir.',
+          'Homelands cannot be bought. Earn them, then travel there and play their encounters.',
+          'The new Homecoming achievement shows your way to 100 from your first encounter, with the titles Rootseeker, Hearthfriend and Child of Morkahja.',
+        ],
+      },
+      {
+        title: 'Encounters',
+        notes: [
+          'Six encounters of the Vale are now climbs: Fey Greens, Seraphic Plains, Mystic Grass, Dreamy Valley, Arcane Meadows and Mesmerizing Hillsides. Climbing gear and climbing skills help there.',
+          'Eight carved letters are hidden in the Vale. Can you find them all?',
+          'The Grimnir Vault lies in the mountains of Celesterra, and the Eternal Twilight Grove in Eldertree Forest.',
+        ],
+      },
+      {
+        title: 'Fixes',
+        notes: [
+          'The avatar card in the game shows again what you used and rolled in the encounter.',
+          'Lands without their own weather play the Vale\'s for now.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-83',
     version: '0.9.0-beta.83',
     period: '23–24 Nov 2026',
