@@ -467,8 +467,51 @@ const detailTextStyle: CSSProperties = {
   fontSize: 'clamp(0.68rem, 2.6vw, 0.8rem)',
 };
 
-/** Sections below the avatar's name and level: the used solution, then the roll. */
-export function ChoiceDetailSections({ details }: { details: ParticipantChoiceDetails }): ReactNode {
+const columnsStyle: CSSProperties = {
+  display: 'grid',
+  width: '100%',
+  boxSizing: 'border-box',
+  gap: '0 14px',
+  paddingTop: 2,
+  textAlign: 'center',
+};
+
+/**
+ * Sections below the avatar's name and level: the used solution, then the roll.
+ * `columns` (the in-game avatar card): side by side in one row, without their
+ * own dividers, so both fit above the card's bottom row (Babuni, 2026-11-26:
+ * what was used had dropped out of sight below the statistics).
+ */
+export function ChoiceDetailSections({ details, columns = false }: {
+  details: ParticipantChoiceDetails;
+  columns?: boolean;
+}): ReactNode {
+  if (columns) {
+    return (
+      <div
+        data-morkahja-choice-details=""
+        style={{
+          ...columnsStyle,
+          gridTemplateColumns: details.usedNames && details.roll ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)',
+        }}
+      >
+        {details.usedNames ? (
+          <div>
+            <p style={detailHeadingStyle}>Used</p>
+            <p style={detailTextStyle}>{details.usedNames.join(', ')}</p>
+          </div>
+        ) : null}
+        {details.roll ? (
+          <div>
+            <p style={detailHeadingStyle}>Roll {details.roll.display}</p>
+            {details.roll.lines.map((line) => (
+              <p key={line} style={detailTextStyle}>{line}</p>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <>
       {details.usedNames ? (

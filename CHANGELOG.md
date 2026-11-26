@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: the in-game avatar card shows what was used again
+
+- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Babuni's report:** what was used in this encounter no longer showed on the avatar card in the game.
+- **Cause:** since the card gained the specialization line and the statistics row, the "Used" and "Roll" sections sat below the card's visible height, in a scroll area without a scrollbar; at 1280 × 800 only "Used" peeked out, with a doubled divider above it.
+- **Fix:** `ChoiceDetailSections` has a `columns` layout, used by the in-game card (`GameEnvironment.tsx`): Used and Roll side by side in one row under the statistics, without their own dividers. The avatar tooltip in the round keeps the stacked layout.
+- **Checked in the local game** (headless Chromium, new test players, a dice roll, 1280 × 800 and 390 × 844): "Used Dice" and "Roll 13" visible next to each other above the card's bottom row. Client typecheck and build passed. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-used-in-overview-*.png` (the first two show the problem and a layout attempt). Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: placements decided, ten regions listed as coming soon, bundles own every expansion, Climb Round 1 (D-064)
 
 - **Not released.** Pushed to GitHub `main`; the production server is unchanged.

@@ -1107,7 +1107,7 @@ export function GameEnvironment({
                 content: (
                   <AvatarOverviewContent
                     avatar={displayAvatar}
-                    choiceDetails={overviewChoice ? <ChoiceDetailSections details={overviewChoice} /> : null}
+                    choiceDetails={overviewChoice ? <ChoiceDetailSections columns details={overviewChoice} /> : null}
                     inventory={displayInventory}
                     notice={equipError}
                     onEquipSlot={openEquipmentPicker}
