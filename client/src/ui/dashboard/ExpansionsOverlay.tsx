@@ -535,7 +535,16 @@ function ExpansionCard({
           <p style={summaryStyle}>{expansion.mExtensioSummaryText}</p>
           <div style={metaRowStyle}>
             {!expansion.mExtensioActive ? (
-              <p style={statusStyle}>Coming soon</p>
+              // A land not open yet shows its planned gem price (Babuni, 2026-11-26).
+              <p style={{ ...costStyle, ...statusStyle }}>
+                <span>Coming soon</span>
+                {Number.isInteger(expansion.mExtensioCost) ? (
+                  <>
+                    <img alt="" aria-hidden="true" {...protectedImageProps} src={GEMS_ICON} style={gemsIconSmallStyle} />
+                    <span>{expansion.mExtensioCost} gems</span>
+                  </>
+                ) : null}
+              </p>
             ) : unlocked ? (
               <p style={unlockedLabelStyle}>Unlocked</p>
             ) : (

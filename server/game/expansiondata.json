@@ -59,63 +59,113 @@
     },
     "1005": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_eldertree",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_eldertree",
       "mExtensioID": 1005,
-      "mExtensioListed": false,
-      "mExtensioName": "Eldertree Forest"
+      "mExtensioName": "Eldertree Forest",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "Eldertree Forest is an ancient woodland of enormous trees, secluded clearings and clear streams, where the oldest growth turns the light into warm dells and shadowed hollows. The Liani keep its paths. Travellers who enter with respect find peaceful groves and quiet water; those who treat the forest as theirs to take often lose their way among paths that seem to move. Restless spirits linger in its twilight groves, the Blightwraiths' decay creeps between its roots, and old stone steps of uncertain origin climb through the green.",
+      "mExtensioUnlockButton": "expansion_eldertree"
     },
     "1006": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_frostwind",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_frostwind",
       "mExtensioID": 1006,
-      "mExtensioListed": false,
-      "mExtensioName": "Frostwind Mountains"
+      "mExtensioName": "Frostwind Mountains",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "The Frostwind Mountains are a harsh frozen range of constant cold, treacherous passes and sudden rockslides. Grimnir craft lies forgotten in icy caves, frost-bitten creatures stalk the slopes, and old secrets wait beneath the snow and ice for anyone willing to climb.",
+      "mExtensioUnlockButton": "expansion_frostwind"
     },
     "1007": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_evergrove",
+      "mExtensioCost": 75,
+      "mExtensioHeaderImage": "expansion_evergrove",
       "mExtensioID": 1007,
-      "mExtensioListed": false,
-      "mExtensioName": "Evergrove"
+      "mExtensioName": "Evergrove",
+      "mExtensioSummaryText": "Planned: 40+ encounters, items and skills.",
+      "mExtensioText": "Evergrove is the Verdani heartland: a vast desert of dunes, salt flats and wind-cut mesas, where water exists not as abundance but as intention. Through hydromancy, healing and song, the Verdani guide it into shimmering oasis-gardens and canals, fed by the living root-veins of the Evergrove Nexus beneath the sand. Its refuges are beautiful and fragile, and raids, drought and root sickness are never far away.",
+      "mExtensioUnlockButton": "expansion_evergrove"
     },
     "1008": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_emberfrost",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_emberfrost",
       "mExtensioID": 1008,
-      "mExtensioListed": false,
-      "mExtensioName": "Emberfrost"
+      "mExtensioName": "Emberfrost",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "In the north-east, Emberfrost holds the forge-fires of the Rokur against the cold. Smiths work at their hearths and wounded Rokur seek care, while Ashen Revenants, Rokur whose flame has turned to ash and wrath, wander the scorched ground and whisper prophecies in the smoke.",
+      "mExtensioUnlockButton": "expansion_emberfrost"
     },
     "1009": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_celesterra",
+      "mExtensioCost": 75,
+      "mExtensioHeaderImage": "expansion_celesterra",
       "mExtensioID": 1009,
-      "mExtensioListed": false,
-      "mExtensioName": "Celesterra"
+      "mExtensioName": "Celesterra",
+      "mExtensioSummaryText": "Planned: 40+ encounters, items and skills.",
+      "mExtensioText": "Beneath the south-western mountains lies Celesterra, the oldest and largest of the Aevis sky-cities, where artificial skies of luminous crystal shine over caverns as wide as open land. Above its peaks drift the Grimnir Skylands, homeland of the stone-forgers, in a quiet balance of air below and stone above. Aevis merchants and healers, storm-twisted Tempestwailers and vaults sealed long ago in the mountain rock wait for those who find the way.",
+      "mExtensioUnlockButton": "expansion_celesterra"
     },
     "1010": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_fyrskar",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_fyrskar",
       "mExtensioID": 1010,
-      "mExtensioListed": false,
-      "mExtensioName": "Fyrskar Mountains"
+      "mExtensioName": "Fyrskar Mountains",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "The Fyrskar Mountains are the homeland of the Rokur, a northern range where volcanic ridges rise through glaciers and ancient calderas sleep beneath the ice. Snowstorms swallow valleys for weeks, and frozen cliffs drop into ravines of heated water. The Rokur live inside the mountains themselves, while weary Grimnir, the lions of the Sarga cliffs and stranger creatures share the heights.",
+      "mExtensioUnlockButton": "expansion_fyrskar"
     },
     "1011": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_shattered_peaks",
+      "mExtensioCost": 25,
+      "mExtensioHeaderImage": "expansion_shattered_peaks",
       "mExtensioID": 1011,
-      "mExtensioListed": false,
-      "mExtensioName": "Shattered Peaks"
+      "mExtensioName": "Shattered Peaks",
+      "mExtensioSummaryText": "Planned: 10+ encounters, items and skills.",
+      "mExtensioText": "In the north, the Shattered Peaks rise as mountains of split and fallen stone. Crumblegheists, Grimnir whose stone has broken into erosion and dread, rage among the rocks and guard dark caves, and a lone monolith known as the Giant stands watch over the ruin.",
+      "mExtensioUnlockButton": "expansion_shattered_peaks"
     },
     "1012": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_ohgar",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_ohgar",
       "mExtensioID": 1012,
-      "mExtensioListed": false,
-      "mExtensioName": "Desert of Ohgar"
+      "mExtensioName": "Desert of Ohgar",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "The Desert of Ohgar lies in the far south, a land of heat, wind and granite monoliths whose faces groan in the hottest hours. A ruined temple keeps a stone disc of half-understood runes, great scorpions hunt between the rocks, and stories tell of hidden chambers deep inside the stone.",
+      "mExtensioUnlockButton": "expansion_ohgar"
     },
     "1013": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_karrhu",
+      "mExtensioCost": 75,
+      "mExtensioHeaderImage": "expansion_karrhu",
       "mExtensioID": 1013,
-      "mExtensioListed": false,
-      "mExtensioName": "Swamp of Karrhu"
+      "mExtensioName": "Swamp of Karrhu",
+      "mExtensioSummaryText": "Planned: 40+ encounters, items and skills.",
+      "mExtensioText": "The Swamp of Karrhu is a land of murky water and knotted trees in the east. A still pool there mirrors the stars and is said to reveal hidden capacities, venomous dragonflies guard their silver perches, and a cursed grotto hums with flies the size of horses. Its beauty is real, and so is its danger.",
+      "mExtensioUnlockButton": "expansion_karrhu"
     },
     "1014": {
       "mExtensioActive": false,
+      "mExtensioCollectionImage": "expansion_rocky_tundra",
+      "mExtensioCost": 50,
+      "mExtensioHeaderImage": "expansion_rocky_tundra",
       "mExtensioID": 1014,
-      "mExtensioListed": false,
-      "mExtensioName": "Rocky Tundra"
+      "mExtensioName": "Rocky Tundra",
+      "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
+      "mExtensioText": "Brown crags rise from the yellow plains of the Rocky Tundra, where moss, lichen and scattered shrubs survive the biting wind. It lies on the approaches to Fyrskar, and its borders are still unknown.",
+      "mExtensioUnlockButton": "expansion_rocky_tundra"
     }
   }
 }

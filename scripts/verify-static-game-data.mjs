@@ -92,6 +92,12 @@ if (errors.length === 0) {
     if (entry.mExtensioActive === true && !(Number.isInteger(entry.mExtensioCost) && entry.mExtensioCost >= 0)) {
       errors.push(`expansion ${key}: active without a whole-number gem price`);
     }
+    for (const field of ['mExtensioHeaderImage', 'mExtensioCollectionImage', 'mExtensioUnlockButton']) {
+      const image = entry[field];
+      if (image && !existsSync(path.join(root, 'client/public/UI/03_DASHBOARD/expansions', webpName(image)))) {
+        errors.push(`expansion ${key}: ${field} ${webpName(image)} not found`);
+      }
+    }
   }
   const solutionImages = listImages('solutionimages');
 

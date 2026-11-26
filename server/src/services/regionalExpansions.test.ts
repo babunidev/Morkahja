@@ -52,11 +52,17 @@ for (const id of [1001, 1003, 1004]) {
   assert.equal(getExpansionById(id)?.mExtensioActive, true, `${id} stays active`);
 }
 assert.equal(getExpansionById(1002)?.mExtensioActive, false, 'Urcogor Ravage stays an inactive event');
+// Listed as coming soon with a gem price only (Babuni, 2026-11-26): big 75, medium 50, small 25.
+const GEMS: Record<number, number> = {
+  1005: 50, 1006: 50, 1007: 75, 1008: 50, 1009: 75, 1010: 50, 1011: 25, 1012: 50, 1013: 75, 1014: 50,
+};
 for (let id = 1005; id <= 1014; id += 1) {
   const expansion = getExpansionById(id);
   assert.equal(expansion?.mExtensioActive, false, `${id} is inactive`);
-  assert.equal(expansion?.mExtensioListed, false, `${id} is not listed in the Expansions menu`);
-  assert.equal(expansion?.mExtensioCost, undefined, `${id} has no invented price`);
+  assert.notEqual(expansion?.mExtensioListed, false, `${id} is listed in the Expansions menu`);
+  assert.equal(expansion?.mExtensioCost, GEMS[id], `${id} costs ${GEMS[id]} gems`);
+  assert.equal(expansion?.mExtensioPriceEurCents, undefined, `${id} has no money price yet`);
+  assert.ok(expansion?.mExtensioHeaderImage && expansion.mExtensioText, `${id} has a banner and a text`);
   assert.equal(isExpansionOpen(id), false);
 }
 const counts = new Map<number, number>();
