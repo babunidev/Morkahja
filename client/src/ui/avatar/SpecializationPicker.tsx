@@ -3,8 +3,9 @@ import { useState, type CSSProperties } from 'react';
 import type { PersistedAvatar } from '../../api/http.js';
 import {
   SKILL_INVENTORY_TYPE,
-  SPECIALIZATIONS,
+  choosableSpecializations,
   findSpecialization,
+  heldSpecializationTypes,
   specializationSkillPhrase,
   specializationChangeCost,
 } from '@shared/specialization.js';
@@ -23,9 +24,11 @@ import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 
 /**
  * Choosing a specialization (D-056, Babuni, 2026-11-23): the selected one's
- * description on top, a line, then the fifteen as a roster of three in a row. Red goes back to the overview,
- * green confirms. The first choice is free, every change costs 1 gem. Only in
- * the main menu.
+ * description on top, a line, then the roster, three in a row. Red goes back to the overview,
+ * green confirms. Only in the main menu. Since 2026-11-26 (Babuni) the roster
+ * holds only the types of skill the avatar has (and its current one); the
+ * first choice is free, a change uses a free change (one per new skill type)
+ * or else costs 1 gem.
  */
 
 /** No text is smaller than the item and skill tooltips' (Babuni, 2026-11-23). */
@@ -206,9 +209,11 @@ const confirmButtonsStyle: CSSProperties = {
   width: '100%',
 };
 
+type SkillRecords = Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>;
+
 /** How many of the avatar's skills, with charges, are of this type. */
 function skillsOfType(avatar: PersistedAvatar, solutionType: number): number {
-  const solutions = gameSolutions() as Record<string, { mSolutionInventoryType: number; mSolutionType: number } | undefined>;
+  const solutions = gameSolutions() as SkillRecords;
   return (avatar.inventory?.spellbook ?? []).filter((entry) => {
     const solution = solutions[String(entry.solutionId)];
     return solution?.mSolutionInventoryType === SKILL_INVENTORY_TYPE
@@ -231,11 +236,19 @@ export default function SpecializationPicker({
   onConfirm: (solutionType: number) => void;
 }) {
   const current = findSpecialization(avatar.specialization);
-  const [selectedType, setSelectedType] = useState<number>(current?.solutionType ?? SPECIALIZATIONS[0]!.solutionType);
-  const selected = findSpecialization(selectedType) ?? SPECIALIZATIONS[0]!;
-  const unchanged = current?.solutionType === selected.solutionType;
-  const cost = unchanged ? 0 : specializationChangeCost(current?.solutionType);
-  const owned = skillsOfType(avatar, selected.solutionType);
+  const solutions = gameSolutions() as SkillRecords;
+  const choices = choosableSpecializations(
+    heldSpecializationTypes(avatar.inventory?.spellbook, (id) => solutions[String(id)]),
+    current?.solutionType,
+  );
+  const freeChanges = avatar.specializationFreeChanges ?? 0;
+  const [selectedType, setSelectedType] = useState<number | null>(current?.solutionType ?? choices[0]?.solutionType ?? null);
+  const selected = findSpecialization(selectedType) ?? choices[0] ?? null;
+  const unchanged = current !== undefined && current.solutionType === selected?.solutionType;
+  const cost = unchanged ? 0 : specializationChangeCost(current?.solutionType, freeChanges);
+  const usesFreeChange = !unchanged && current !== undefined && freeChanges > 0;
+  const owned = selected ? skillsOfType(avatar, selected.solutionType) : 0;
+  const avatarName = avatar.name.trim() || 'This avatar';
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
@@ -250,31 +263,40 @@ export default function SpecializationPicker({
       <section aria-label="Choose a specialization" role="dialog" style={panelStyle}>
         <DecorativeEdgeFrame regionLabel="Specialization" zIndex={2} />
         <div style={bodyStyle}>
-          <div aria-live="polite" style={detailStyle}>
-            <p style={nameStyle}>{selected.name}</p>
-            <TooltipDivider />
-            <p style={descriptionStyle}>{selected.description}</p>
-            <TooltipDivider />
-            <p style={effectStyle}>+1 to every roll with {specializationSkillPhrase(selected.name)}</p>
-            <p style={noteStyle}>
-              {owned === 0
-                ? `${avatar.name.trim() || 'This avatar'} has no ${selected.name} skill yet.`
-                : `${avatar.name.trim() || 'This avatar'} has ${owned} ${selected.name} skill${owned === 1 ? '' : 's'}.`}
-            </p>
-          </div>
+          {selected ? (
+            <div aria-live="polite" style={detailStyle}>
+              <p style={nameStyle}>{selected.name}</p>
+              <TooltipDivider />
+              <p style={descriptionStyle}>{selected.description}</p>
+              <TooltipDivider />
+              <p style={effectStyle}>+1 to every roll with {specializationSkillPhrase(selected.name)}</p>
+              <p style={noteStyle}>
+                {owned === 0
+                  ? `${avatarName} has no ${selected.name} skill left.`
+                  : `${avatarName} has ${owned} ${selected.name} skill${owned === 1 ? '' : 's'}.`}
+              </p>
+            </div>
+          ) : (
+            <div style={detailStyle}>
+              <p style={descriptionStyle}>{avatarName} has no skill yet. A specialization can be chosen once it has one.</p>
+            </div>
+          )}
           <TooltipDivider bleed={DIVIDER_BLEED} />
+          <p style={{ ...noteStyle, textAlign: 'center' }}>
+            Only the types of skill {avatarName} has. Every new type of skill gives a free change.
+          </p>
           <ul aria-label="Specializations" style={listStyle}>
-            {SPECIALIZATIONS.map((entry) => (
+            {choices.map((entry) => (
               <li key={entry.solutionType}>
                 <PanelButton
-                  aria-pressed={entry.solutionType === selected.solutionType}
+                  aria-pressed={entry.solutionType === selected?.solutionType}
                   onClick={() => {
                     playSfx(DEFAULT_BUTTON_SOUND);
                     setSelectedType(entry.solutionType);
                   }}
                   pressKey={`specialization-${entry.solutionType}`}
                   style={{ display: 'block', width: '100%' }}
-                  visualStyle={optionStyle(entry.solutionType === selected.solutionType)}
+                  visualStyle={optionStyle(entry.solutionType === selected?.solutionType)}
                 >
                   <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {entry.name}
@@ -289,13 +311,19 @@ export default function SpecializationPicker({
           <BackButton disabled={pending} onClick={onBack} pressKey="specialization-back" />
           <div>
             {error ? <p role="alert" style={errorStyle}>{error}</p> : null}
-            <p style={costStyle}>{unchanged ? 'Your current specialization' : <GemCost cost={cost} />}</p>
+            <p style={costStyle}>
+              {unchanged
+                ? 'Your current specialization'
+                : usesFreeChange
+                  ? <span>Free change · {freeChanges} left</span>
+                  : <GemCost cost={cost} />}
+            </p>
           </div>
           <AcceptButton
-            ariaLabel={unchanged ? 'Keep this specialization' : `Choose ${selected.name}`}
-            disabled={pending}
+            ariaLabel={unchanged ? 'Keep this specialization' : `Choose ${selected?.name ?? 'a specialization'}`}
+            disabled={pending || !selected}
             onClick={() => {
-              if (unchanged) {
+              if (unchanged || !selected) {
                 onBack();
                 return;
               }
@@ -312,7 +340,7 @@ export default function SpecializationPicker({
         {confirmOpen ? (
           <div role="presentation" style={confirmShadeStyle}>
             <div aria-label="Spend gems" role="alertdialog" style={confirmBoxStyle}>
-              <span>Do you want to spend <GemCost cost={cost} withLabel={false} /> to become {selected.name}?</span>
+              <span>Do you want to spend <GemCost cost={cost} withLabel={false} /> to become {selected?.name}?</span>
               <div style={confirmButtonsStyle}>
                 <BackButton ariaLabel="No, keep the gems" disabled={pending} onClick={() => setConfirmOpen(false)} pressKey="specialization-no" />
                 <AcceptButton
@@ -320,7 +348,9 @@ export default function SpecializationPicker({
                   disabled={pending}
                   onClick={() => {
                     setConfirmOpen(false);
-                    onConfirm(selected.solutionType);
+                    if (selected) {
+                      onConfirm(selected.solutionType);
+                    }
                   }}
                   pressKey="specialization-yes"
                 />

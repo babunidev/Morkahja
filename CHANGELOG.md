@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: specializations only for skills the avatar has, and a free change for each new type
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** a specialization can be chosen only for a type of skill the avatar has, so at the start only the types of its random starting skills. Every new one it gets gives a free change; they add up ("Free ×7").
+- **Rules (`shared/src/specialization.ts`):** `heldSpecializationTypes` (skills with a charge left), `choosableSpecializations` (held types plus the current one, which stays even when its skills run out), `specializationFreeChanges` (stored free changes plus every held type the avatar has not had before). The first choice stays free; a change uses a free change first and otherwise costs 1 gem. The avatar remembers the types it has had (`specializationTypesSeen`), so a type lost and found again gives no second free change.
+- **Server:** `chooseAvatarSpecialization` reads the authoritative inventory row in the same transaction, refuses a type the avatar holds no skill of (`SPECIALIZATION_NOT_HELD`), and stores the seen types and the remaining free changes with the choice. New avatars record their starting types; at start-up, avatars without a record get one from what they hold now (`syncSpecializationProgressForAllAvatars`), so existing avatars earn free changes only for types new from then on. The avatar data carries `specializationFreeChanges`.
+- **Client:** the picker shows only the choosable types, with a line "Only the types of skill … has. Every new type of skill gives a free change." and "Free change · N left" in place of the gem cost; the avatar card's button reads "Change · Free ×N". The "?" text says the same.
+- **Interpretation to check:** "a new one" is read as a new *type* of skill (a new specialization becoming available), not every new skill.
+- **Verification:** `npm run release:check` passed (client 53/53, server 78/78; `specializationService.test.ts` rewritten for held types, free changes, lost-and-found types, the start-up record and new avatars). In the local game with a new test avatar (desktop 1280×800): the first picker offered Find, Heal and Nurture only; after two new skill types were added to its inventory in the local database, the card read "Change · Free ×2", the picker showed the two new types, and changing to Climb left one free change and no gem spent. Screenshots `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-specialization-held-*.png`. A skill found in real play was not seen. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: one size for every solution picture
 
 - **Not released.** Pushed to GitHub `main`.

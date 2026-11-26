@@ -1,5 +1,6 @@
 import type { AvatarDocument } from '../types/avatar.js';
-import { readAvatarSpecialization } from '@shared/specialization.js';
+import { heldSpecializationTypes, readAvatarSpecialization, specializationFreeChanges } from '@shared/specialization.js';
+import { getSolutionMap } from './gameData.js';
 import {
   readAvatarLifeStatus,
   sacrificeCostForLevel,
@@ -28,6 +29,14 @@ export interface PersistedAvatarDtoShape {
   sacrificeGemCost?: number;
   /** The skill type the avatar is good at (D-056); null when none is chosen. */
   specialization: number | null;
+  /** Free changes, counting skill types that are new since they were last recorded. */
+  specializationFreeChanges: number;
+}
+
+/** The specialization types an avatar holds a skill of, from the game's solution data. */
+export function avatarHeldSpecializationTypes(inventory: AvatarDocument['inventory']): number[] {
+  const solutions = getSolutionMap();
+  return heldSpecializationTypes(inventory?.spellbook, (id) => solutions[String(id)]);
 }
 
 export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDtoShape | null {
@@ -51,6 +60,7 @@ export function toPersistedAvatarDto(avatar: AvatarDocument): PersistedAvatarDto
     displayTitle,
     status,
     specialization: readAvatarSpecialization(avatar),
+    specializationFreeChanges: specializationFreeChanges(avatar, avatarHeldSpecializationTypes(avatar.inventory)).free,
   };
 
   if (status === 'failed' && avatar.preDeathSnapshot) {

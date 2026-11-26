@@ -649,3 +649,12 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 **Addendum (same day):** the letter clues spell MORKAHJA and the R was missing; at Babuni's direction 20090 Ethereal Glades, the one letterless Find encounter left in the base game, now carries a carved R. All eight letters are in the base game.
 
 **Addendum (same day, Babuni):** Find should be nine, so 20001 and 20002 came back to the base game (seeded draw); four stay set aside (20003, 20069, 20072, 20111). Lands without their own weather recordings play the Vale's for now. After the Homecoming achievement, each opened homeland gets its own notification.
+
+## D-067 — Specializations only for held skill types; a free change per new type (2026-11-26)
+
+**Decided by:** Babuni. **Implemented by:** Claude Code (Claude Opus 5.5).
+
+- A specialization can be chosen only for a type of skill the avatar holds (with a charge left). Its current one stays even when those skills run out.
+- Each skill type the avatar holds for the first time gives one free change; free changes add up. The first choice stays free; a change without a free one costs 1 gem (D-056).
+- Existing avatars start counting from what they hold on the day this shipped.
+- Open: "a new one" is implemented as a new type of skill, not every new skill.

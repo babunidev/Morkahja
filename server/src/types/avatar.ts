@@ -65,6 +65,10 @@ export interface AvatarDocument {
   progression: AvatarDocumentProgression;
   /** The skill type the avatar is good at: +1 to its skills' rolls (D-056). */
   specialization?: number | null;
+  /** Specialization types the avatar has held a skill of (Babuni, 2026-11-26). */
+  specializationTypesSeen?: number[];
+  /** Free specialization changes earned by new skill types, not used yet. */
+  specializationFreeChanges?: number;
   /** Enables character recreation after death-loop failure. */
   editMode?: boolean;
   /** Optional denormalized pointer; authoritative data is in subcollection. */

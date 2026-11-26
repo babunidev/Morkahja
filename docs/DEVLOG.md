@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-26 — Specializations grow with the skills
+
+It made no sense to offer all fifteen specializations at the start, when a new avatar has only a few skills. Now the picker shows only the types of skill the avatar has. Every time it finds a new type, it earns a free change, and those add up: Free ×1, Free ×7. So the choice opens up as the avatar collects skills. Claude Code (Claude Opus 5.5) built the rule on the server and in the picker, made existing avatars start counting from what they hold now, and walked a new avatar through it in the local game. **Verification:** release check (client 53, server 78). A skill found in real play not seen yet. **Not released.**
+
 ## 2026-11-26 — One size for every solution
 
 I kept seeing solutions a little smaller here and larger there: in the starting-equipment frame, on the avatar card, in the menu's item list. Now there is one size, the one a picture has in the Inventory in the game, and everything else follows it, on phone and on desktop: equipment slots, the menu's item list, level-up choices, rewards and losses after an encounter. Claude Code (Claude Opus 5.5) measured every place in the local game first, made the Inventory's size a shared value, and measured again on three screen sizes. **Verification:** release check (client 53, server 78); all equal at 78 px (desktop), 70 (phone), 105 (large screen). Level-up and result not seen on screen. **Not released.**

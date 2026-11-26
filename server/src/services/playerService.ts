@@ -1,4 +1,5 @@
 import type { AvatarDocument, AvatarInventory } from '../types/avatar.js';
+import { avatarHeldSpecializationTypes } from './avatarPresentation.js';
 import { readAvatarLifeStatus } from './avatarDeathService.js';
 import type { PlayerDocument } from '../types/player.js';
 import { loadAvatar } from './encounterPersistence.js';
@@ -561,6 +562,8 @@ export async function savePlayerAvatar(
       progression: existing?.progression ?? {},
       activeEncounter: existing?.activeEncounter ?? null,
       inventory,
+      // A new avatar's starting skills are where free specialization changes start counting (2026-11-26).
+      ...(existing ? {} : { specializationTypesSeen: avatarHeldSpecializationTypes(inventory), specializationFreeChanges: 0 }),
     };
     await transaction.setAvatar(playerId, payload.id, avatar, { merge: true });
     if (!existing) {

@@ -259,11 +259,11 @@ export async function editAvatarLook(
   );
 }
 
-/** Choose or change the avatar's specialization (D-056): free the first time, then 1 gem. */
+/** Choose or change the avatar's specialization (D-056): free the first time, then a free change or 1 gem. */
 export async function chooseAvatarSpecialization(
   avatarId: string,
   specialization: number,
-): Promise<{ specialization: number; spent: number; currencies: { yellow_red_gem?: number } }> {
+): Promise<{ specialization: number; spent: number; freeChanges: number; currencies: { yellow_red_gem?: number } }> {
   return request(
     `/avatar/${encodeURIComponent(avatarId)}/specialization`,
     {

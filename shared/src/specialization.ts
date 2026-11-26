@@ -5,7 +5,9 @@ import { solutionRarityRollBonus, type SolutionRarityRecord } from './solutionRa
  * skill it is good at. Every roll made with a skill of that type gets +1, in
  * any slot, on top of the slot's bonus and a rare skill's +1. Items have
  * equipment; skills have specialization. It is chosen and changed only in the
- * main menu: the first choice is free, every change costs 1 gem.
+ * main menu: the first choice is free, every change costs 1 gem. Since
+ * 2026-11-26 only the types of skill the avatar holds can be chosen, and each
+ * new type gives a free change (see below).
  *
  * The descriptions are drafts by Claude Code (Claude Opus 5.5) for Babuni to
  * revise. They describe a way of facing the world and make no lore claims.
@@ -62,9 +64,69 @@ export function readAvatarSpecialization(avatar: { specialization?: unknown } | 
   return isSpecializationType(value) ? value : null;
 }
 
-/** What choosing `next` costs an avatar whose specialization is `current`. */
-export function specializationChangeCost(current: number | null | undefined): number {
-  return isSpecializationType(current) ? SPECIALIZATION_CHANGE_GEM_COST : 0;
+/**
+ * What a change costs an avatar whose specialization is `current`: the first
+ * choice is free, a free change is used before any gem (Babuni, 2026-11-26).
+ */
+export function specializationChangeCost(current: number | null | undefined, freeChanges = 0): number {
+  return isSpecializationType(current) && freeChanges <= 0 ? SPECIALIZATION_CHANGE_GEM_COST : 0;
+}
+
+/*
+ * Only what the avatar has (Babuni, 2026-11-26): a specialization can be
+ * chosen only for a type of skill the avatar holds, with a charge left. Each
+ * type of skill it gets for the first time gives one free change; they add
+ * up. The avatar remembers the types it has had, so a type lost and found
+ * again gives none.
+ */
+
+/** What a skill lookup needs to know about a solution. */
+export interface SpecializationSolutionRecord {
+  mSolutionInventoryType: number;
+  mSolutionType: number;
+}
+export type SpecializationSolutionLookup = (solutionId: number) => SpecializationSolutionRecord | undefined;
+
+/** The specialization types the avatar holds a skill of (with a charge), in the roster's order. */
+export function heldSpecializationTypes(
+  spellbook: ReadonlyArray<{ solutionId: number; uses: number }> | undefined,
+  lookup: SpecializationSolutionLookup,
+): number[] {
+  const held = new Set<number>();
+  for (const entry of spellbook ?? []) {
+    const record = lookup(entry.solutionId);
+    if (entry.uses > 0 && record?.mSolutionInventoryType === SKILL_INVENTORY_TYPE) {
+      held.add(record.mSolutionType);
+    }
+  }
+  return SPECIALIZATIONS.filter((entry) => held.has(entry.solutionType)).map((entry) => entry.solutionType);
+}
+
+/** The specializations the picker offers: the held types, and the current one even if no skill of it is left. */
+export function choosableSpecializations(held: readonly number[], current: number | null | undefined): Specialization[] {
+  return SPECIALIZATIONS.filter((entry) => held.includes(entry.solutionType) || entry.solutionType === current);
+}
+
+export interface SpecializationProgress {
+  /** Specialization types the avatar has held; undefined before it was first recorded. */
+  specializationTypesSeen?: number[];
+  /** Free changes earned and not used yet. */
+  specializationFreeChanges?: number;
+}
+
+/** The free changes, with every newly held type counted, and the types seen after it. */
+export function specializationFreeChanges(
+  progress: SpecializationProgress | null | undefined,
+  held: readonly number[],
+): { free: number; seen: number[] } {
+  const stored = Math.max(0, Math.floor(progress?.specializationFreeChanges ?? 0));
+  const seenBefore = progress?.specializationTypesSeen;
+  if (!Array.isArray(seenBefore)) {
+    // Not recorded yet: what it holds now is where counting starts.
+    return { free: stored, seen: [...held] };
+  }
+  const fresh = held.filter((type) => !seenBefore.includes(type));
+  return { free: stored + fresh.length, seen: [...seenBefore, ...fresh] };
 }
 
 /** +1 when the solution is a skill of the avatar's specialization, else 0. */

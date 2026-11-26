@@ -1,6 +1,6 @@
 import express from 'express';
 import { equipAvatarItem, EquipmentRequestError } from './services/equipmentService.js';
-import { chooseAvatarSpecialization, SpecializationRequestError } from './services/specializationService.js';
+import { chooseAvatarSpecialization, SpecializationRequestError, syncSpecializationProgressForAllAvatars } from './services/specializationService.js';
 import { AvatarEditRequestError, editAvatarLook } from './services/avatarEditService.js';
 import { loadAvatarProgression } from './services/avatarProgressionService.js';
 import type { NextFunction, Request, Response } from 'express';
@@ -631,6 +631,17 @@ try {
     }
   } catch (error) {
     console.error('Homecoming start-up check failed', error);
+  }
+
+  // Specialization (Babuni, 2026-11-26): existing avatars record the skill types they hold,
+  // so free changes count only types that are new from here on.
+  try {
+    const recorded = await syncSpecializationProgressForAllAvatars();
+    if (recorded > 0) {
+      console.log(`Specialization: skill types recorded for ${recorded} existing avatar(s)`);
+    }
+  } catch (error) {
+    console.error('Specialization start-up record failed', error);
   }
 
   // All-expansions bundle owners also own expansions added since (Babuni, 2026-11-26).

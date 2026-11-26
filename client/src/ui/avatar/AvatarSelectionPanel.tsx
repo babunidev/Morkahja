@@ -500,7 +500,7 @@ export function AvatarSelectionPanel({
     try {
       const result = await chooseAvatarSpecialization(avatar.id, specialization);
       onAvatarsChanged?.(resolvedAvatars.map((entry) => (
-        entry.id === avatar.id ? { ...entry, specialization: result.specialization } : entry
+        entry.id === avatar.id ? { ...entry, specialization: result.specialization, specializationFreeChanges: result.freeChanges } : entry
       )));
       setSpecializationPickerOpen(false);
       promptStartEquipment(avatar.inventory);

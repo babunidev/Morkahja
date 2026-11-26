@@ -241,7 +241,8 @@ const headingRowStyle: CSSProperties = {
 /** What a specialization does, for the "?" next to its heading. */
 export const SPECIALIZATION_HELP_TEXT =
   'Your avatar is good at one type of skill. Every roll with a skill of that type gets +1, in any slot. '
-  + 'It is chosen and changed in the main menu: the first choice is free, every change costs 1 gem.';
+  + 'You can choose only a type of skill your avatar has. Every new type of skill it finds gives a free change. '
+  + 'It is chosen and changed in the main menu: the first choice is free, a change without a free one costs 1 gem.';
 
 const specializationButtonStyle: CSSProperties = {
   alignItems: 'center',
@@ -256,6 +257,11 @@ const specializationButtonStyle: CSSProperties = {
   cursor: 'pointer',
 };
 
+/** "Free ×3": free changes earned by new skill types (Babuni, 2026-11-26). */
+export function FreeChanges({ count }: { count: number }) {
+  return <span aria-label={`${count} free change${count === 1 ? '' : 's'}`}>Free ×{count}</span>;
+}
+
 /**
  * The avatar's specialization (D-056). In the main menu a button opens the
  * picker; in the game it is shown only, since it changes only in the menu.
@@ -265,7 +271,8 @@ function SpecializationSection({ avatar, onChoose }: {
   onChoose?: () => void;
 }) {
   const current = findSpecialization(avatar.specialization);
-  const cost = specializationChangeCost(current?.solutionType);
+  const freeChanges = avatar.specializationFreeChanges ?? 0;
+  const cost = specializationChangeCost(current?.solutionType, freeChanges);
   const help = <HelpTip label="What is a specialization?" text={SPECIALIZATION_HELP_TEXT} />;
   if (!onChoose) {
     // In the game: one line, so it fits the panel over the encounter picture.
@@ -292,7 +299,9 @@ function SpecializationSection({ avatar, onChoose }: {
           pressKey="overview-specialization"
           visualStyle={specializationButtonStyle}
         >
-          {current ? <>Change · <GemCost cost={cost} /></> : 'Choose'}
+          {current
+            ? <>Change · {freeChanges > 0 ? <FreeChanges count={freeChanges} /> : <GemCost cost={cost} />}</>
+            : 'Choose'}
         </PanelButton>
       </div>
       <p style={specializationDescriptionStyle}>
