@@ -2,9 +2,14 @@
 
 **Author:** Babuni.dev
 
-## 2026-11-26 — Unreleased: nine Find, the Vale's weather as a stand-in, a message for each opened homeland
+## 2026-11-26 — Released: 0.9.0-beta.84
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC, approved by Babuni ("I guess we can release it like that now"): `main` at `3e85a44c`, frontend `20261126-062614`, backup `20261126-062610`. It carries every entry below down to the beta.83 release: the regional expansions and coming-soon lands, the Evergrove review and the Grimnir Vault in Celesterra, all six Climb conversions, Homecoming with the three open homelands and their messages, nine Find with all eight letters (MORKAHJA), the bundle rule, the Vale's weather as a stand-in and the avatar-card fix. Live script contains `0.9.0-beta.84`; see `docs/DEPLOYMENT.md`.
+- **Version and patch notes:** 0.9.0-beta.84 in every `package.json`, `package-lock.json` and `PatchNotesOverlay.tsx` (`3e85a44c`).
+
+## 2026-11-26 — nine Find, the Vale's weather as a stand-in, a message for each opened homeland
+
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** Find should be nine, of course; play the Vale's weather in every land without its own recordings for now; after the Homecoming achievement, show a separate notification for each homeland it unlocks.
 - **Nine Find:** a seeded random draw brought 20001 Lovely Meadows and 20002 Enchanted Glades back from 1999 "Set aside" to the base game. Set aside now: 20003, 20069, 20072, 20111. The base game has 45 random encounters, nine of them Find, all eight letter encounters among them.
 - **Weather:** `ambiancePackForLand` (`client/src/ui/music/ambianceLibrary.ts`) plays a land's own recordings, or the Vale's (pack 0) while it has none: the homelands, the coming regions and Urcogor. Keldor, Everwinter, Aetherion, Atranor and the level-up keep their own. Before, such a land faded the bed out.
@@ -12,9 +17,9 @@
 - **Ledger:** review rows for 20033 Wild Bloodfang (proposed Combat; a fourth Nagar charge to distinguish) and 20191 Slumbering Ogru (proposed nonviolent Ambush, Shadowstep Boots, as Veilwalker).
 - **Verification:** `homecoming.test.ts` checks one private message per homeland, in order, and its wording; `regionalExpansions.test.ts` nine Find; `ambianceLayout.test.ts` the Vale's weather for lands without recordings. `npm run release:check` passed (client 52/52, server 78/78). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: Ethereal Glades carries the missing R
+## 2026-11-26 — Ethereal Glades carries the missing R
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's finding:** the letter clues spell MORKAHJA, but the R was missing. No encounter, archive or Git history ever had one. Babuni's direction: add it to one of the Find encounters without a letter, written creatively into the text.
 - **Change (20090 Ethereal Glades):** one new paragraph after the pale radiance spreads over the forest floor: "Where it reaches a flat stone half-sunk among the flowers, the glow settles into old grooves worn almost smooth. For a moment they shine clearly, as if lit from within: a single carved letter, R." The rest of the text, the slots, the picture and the reward are unchanged; the painting already has a large mossy stone among glowing flowers. The base game now holds all eight letters: M (20087), O (20086), R (20090), K (20084), A (20081), H (20083), J (20085), A (20089).
 - **Verification:** `regionalExpansions.test.ts` reads the carved letter of each of the eight encounters and checks that they spell MORKAHJA and stay in the base game. `npm run release:check`: static data, typecheck, build and client 52/52 passed; server 77/78 on the first run, where `roomService.test.ts` failed once while the local backend was running against the same database; it then passed three times on its own and the full server suite passed 78/78. Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
@@ -23,9 +28,9 @@
 
 - `docs/REPORT_DEVELOPMENT_2026-11-26.md`: the day's results, catalog counts, Babuni's decisions D-063 to D-066, commits, tests actually run and open items. Documentation only. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: six Find encounters set aside; Fey Greens is Verdani work; every region decided (D-066)
+## 2026-11-26 — six Find encounters set aside; Fey Greens is Verdani work; every region decided (D-066)
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** the base game has too many Find encounters: set six aside at random, so they are never drawn but can come back when the base game grows; every encounter with a letter in its text stays in the base game. Fey Greens' sanctuary is Verdani work, not faun. The region placements are decided, so they are no longer "review".
 - **Set aside:** a seeded random draw among the seven Find encounters without a letter clue set aside 20001 Lovely Meadows, 20002 Enchanted Glades, 20003 Fae Pastures, 20069 Celestial Fields, 20072 Tranquil Wilds and 20111 Young Redeye; 20090 Ethereal Glades stays. They are in the new catalog entry 1999 "Set aside" (inactive, not listed, no price), unchanged otherwise and still at their Vale places on the map. All seven letter encounters stay: 20081 A, 20083 H, 20084 K, 20085 J, 20086 O, 20087 M, 20089 A. The base game's random pool is now 43 encounters; Trick in the base game: Find 7, Climb 6, Open Lock 3 (plus 20084 classified Travel).
 - **Fey Greens (20068):** "faun craftsmanship" became "Verdani craftsmanship", as the world archive's Vale landmarks have it.
@@ -38,47 +43,47 @@
 - **Finding:** already so: `selectEncounterInExpansion` draws at random from the destination expansion's encounters (ids from 20001, held ones excluded), skipping recently played ones while others are left. No code changed.
 - **Test:** `regionalExpansions.test.ts` now checks, for the Vale, Keldor, Everwinter, Aetherion and the three homelands, that a trip can give each encounter of the pool, never one from elsewhere, and skips a recent one. Server suite passes. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: earned homelands are open to play
+## 2026-11-26 — earned homelands are open to play
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's report:** with Homecoming earned, travel to the homeland did not work; the encounters already there should be playable now.
 - **Cause:** the three homelands were still inactive ("coming soon"), and since D-063 an inactive expansion stays closed even to an account that owns it.
 - **Change:** 1007 Evergrove, 1009 Celesterra and 1010 Fyrskar are active (`server/game/expansiondata.json`). Whoever earned one through Homecoming, or owns a bundle, draws its encounters by chance and can travel there (a tenth of its gem price: 8 gems for Evergrove and Celesterra, 5 for Fyrskar). Everyone else sees "You have not unlocked …" and the Homecoming card; gems still cannot buy a homeland. Existing encounters: Evergrove 3, Celesterra 8, Fyrskar 7. No regional ambiance recordings exist for them yet, so their weather bed fades out there. The other seven regions stay coming soon.
 - **Verification:** `regionalExpansions.test.ts` updated (the homelands open, an earned Evergrove adds its encounters to the draw and to travel, the other regions stay closed); `npm run release:check` passed (client 52/52, server 78/78). In the local game a new Verdani test account with Evergrove earned travelled there for 8 gems and arrived at 20053 Exhausted Verdani with the Evergrove plate (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homeland-travel-*.png`). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: Homecoming shows the way to 100; first title Rootseeker
+## 2026-11-26 — Homecoming shows the way to 100; first title Rootseeker
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** each rank title is worn as an avatar title, so the first should not be named like the achievement; show the progress toward the first 100 encounters from the first encounter on.
 - **Change:** rank 1 is now **Rootseeker** (then Hearthfriend, Child of Morkahja). The panel's bar counts the encounters of the account's best avatar whose homeland is still closed, 0–100 (`loadHomecomingState`), shown as "37 / 100 encounters with one avatar", with "· 1 of 3 homelands" once one is earned, and "Every homeland reached" at the end; it appears after the first encounter. The rank still counts homelands.
 - **Verification:** `homecoming.test.ts` extended (99 of 100 shown before the first homeland, nothing on the way when no avatar can open another); `npm run release:check` passed (client 52/52, server 78/78). In the local game, a new Grimnir test avatar set to 37 encounters showed the Homecoming card with "37 / 100 encounters with one avatar" (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homecoming-progress-desktop.png`). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: Find-to-Climb Round 2
+## 2026-11-26 — Find-to-Climb Round 2
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** apply the second three Climb conversions.
 - **Change:** 20080 Dreamy Valley, 20071 Arcane Meadows and 20088 Mesmerizing Hillsides carry the prose of `docs/CLIMB_CONVERSIONS_ROUND_2.md`; slot B Faewoven Ladder 10167, Seeker's Grapnel 10211 and Climbing Gear 10071 with any climbing item (type 14) as fallback, slot C any Climb skill (13), subtype Climb; elements kept (Arcana, Nature, Air) and protected in `scripts/assign-encounter-element-subtype.mjs`. The base game now has six Climb encounters; Find 15, Open Lock 3. Ledger updated.
 - **Verification:** `npm run verify:static-data` and `npm run release:check` passed (client 52/52, server 78/78). Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: Homecoming opens the three homelands (D-065)
+## 2026-11-26 — Homecoming opens the three homelands (D-065)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** Evergrove, Celesterra and the Fyrskar Mountains are not bought but earned: one avatar that has played 100 encounters opens its people's homeland, once. A visible achievement with three ranks; existing avatars count, progress counts from now; homelands can only be earned, or come with the complete package, which is not offered yet. The other seven lands stay gem-bought.
 - **Achievement:** `homecoming` (`server/src/domain/achievements/homecomingAchievement.ts`, `homecomingProgress.ts`), ranks Homecoming, Hearthfriend, Child of Morkahja for one, two and three homelands; icon the unused `im_glyph_monthly_reward.webp`. After each played encounter the avatar's own count is checked; at 100 its race's homeland joins the account's expansions and `homecoming` on the player records it, under the player row lock, so it counts once. At every server start each avatar that already has 100 encounters earns its homeland. Like every other chain, each rank adds 1 gem to the Hearth Blessing (up to 3).
 - **Catalog:** `mExtensioHomelandOf` on 1007 Evergrove (Verdani), 1009 Celesterra (Aevis, Grimnir) and 1010 Fyrskar (Rokur). Unlocking a homeland with gems is refused (`HOMELAND_NOT_FOR_SALE`); its gem price remains only for the travel cost. The Expansions menu shows "Homeland. Opened by Homecoming: 100 encounters with a Verdani" and no unlock buttons; the achievement panel counts homelands.
 - **Tests:** new `homecoming.test.ts` against local PostgreSQL: 99 encounters are not enough, 100 open Evergrove once even with two parallel checks, Celesterra opens for a Grimnir and not again for an Aevis, the start-up check gives a Rokur with 230 encounters Fyrskar, three ranks, gems refused. `npm run release:check` passed in full (client 52/52, server 78/78). Expansions menu checked in the local game (`~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-homecoming-shop-*.png`). Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: the in-game avatar card shows what was used again
+## 2026-11-26 — the in-game avatar card shows what was used again
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's report:** what was used in this encounter no longer showed on the avatar card in the game.
 - **Cause:** since the card gained the specialization line and the statistics row, the "Used" and "Roll" sections sat below the card's visible height, in a scroll area without a scrollbar; at 1280 × 800 only "Used" peeked out, with a doubled divider above it.
 - **Fix:** `ChoiceDetailSections` has a `columns` layout, used by the in-game card (`GameEnvironment.tsx`): Used and Roll side by side in one row under the statistics, without their own dividers. The avatar tooltip in the round keeps the stacked layout.
 - **Checked in the local game** (headless Chromium, new test players, a dice roll, 1280 × 800 and 390 × 844): "Used Dice" and "Roll 13" visible next to each other above the card's bottom row. Client typecheck and build passed. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-used-in-overview-*.png` (the first two show the problem and a layout attempt). Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: placements decided, ten regions listed as coming soon, bundles own every expansion, Climb Round 1 (D-064)
+## 2026-11-26 — placements decided, ten regions listed as coming soon, bundles own every expansion, Climb Round 1 (D-064)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`).
 - **Babuni's direction:** do the Evergrove review as recommended; the Grimnir Vault goes to Celesterra, the Grimnir homeland, with its text fitted; the Climb drafts are good to go; set gem prices by comparing the lands' sizes against Aetherion (small), Everwinter (medium) and Keldor (big), note how many encounters each should hold, and list the regions as not available yet, with artwork if possible and no money price; bundle buyers get every expansion, also later ones.
 - **Placements (`8491dd82`):** 20010, 20016, 20021, 20024 and 20029 to Eldertree Forest (1005, now 27 encounters); 20033 Wild Bloodfang and 20191 Slumbering Ogru back to Ethera's Vale (49 random base-game encounters); Evergrove keeps 20053, 20064 and 20125. 20009 Grimnir Vault to Celesterra (1009), its text now set "high in the mountains of Celesterra" below a drifting Grimnir Skyland instead of Deepstone Hollow near Everwinter; nothing is held any more. New map points inside each land. World archive (MorkahjaWorld `4ab7c82`): the vault's account moved to Celesterra's page, Deepstone Hollow points to it, the Verdani Casket lies in Eldertree Forest.
 - **Climb Round 1 (`77f4aaee`):** 20068 Fey Greens, 20005 Seraphic Plains and 20004 Mystic Grass carry the approved prose of `docs/CLIMB_CONVERSIONS_ROUND_1.md`, slot B their climbing item (Faewoven Ladder 10167, Seeker's Grapnel 10211, Climbing Gear 10071) with any climbing item (type 14) as fallback, slot C any Climb skill (13), subtype Climb; their elements and subtypes are protected in `scripts/assign-encounter-element-subtype.mjs`. Round 2 drafts (20080, 20071, 20088) in `docs/CLIMB_CONVERSIONS_ROUND_2.md`, not applied.
@@ -86,9 +91,9 @@
 - **Bundles (`c6461366`):** `bundle_expansions_all` and `bundle_complete` grant every expansion in the catalog and mark the account `allExpansions`; at each server start, marked accounts and earlier buyers found in `purchases` receive expansions added since. Neither bundle is offered in the game's shop yet.
 - **Verification:** `npm run release:check` passed in full (static data, typecheck and build, client 52/52, server 77/77 with the extended `regionalExpansions.test.ts` and `stripeFulfillment.test.ts`). Expansions menu checked in the local game on desktop and phone: fourteen cards, the ten regions as coming soon with banner, text and gem price. Screenshots: `~/Pictures/Development Screenshots/MorkahjaWebApp/2026-11-26/2026-11-26-regions-expansions-*.png`. Claude Code (Claude Opus 5.5).
 
-## 2026-11-26 — Unreleased: the base game is Ethera's Vale; ten regional expansions, closed (D-063)
+## 2026-11-26 — the base game is Ethera's Vale; ten regional expansions, closed (D-063)
 
-- **Not released.** Pushed to GitHub `main`; the production server is unchanged. No region is active, priced or listed.
+- **Released** 2026-11-26 at 06:26 UTC in 0.9.0-beta.84 (see `docs/DEPLOYMENT.md`). No region is active, priced or listed.
 - **Babuni's direction:** the [regional migration brief](docs/DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and the [79-encounter manifest](docs/CONTENT_EXPANSION_ASSIGNMENTS.md): the base game is Ethera's Vale with Atranor and Level up; every out-of-Vale encounter moves to a named regional expansion, closed until approved; 20127 Eternal Twilight Grove moves to Eldertree Forest; 20009 is not given to Everwinter without review.
 - **Data:** 78 encounters carry their region's ID (1005 Eldertree 22, 1006 Frostwind 9, 1007 Evergrove 10, 1008 Emberfrost 7, 1009 Celesterra 7, 1010 Fyrskar 7, 1011 Shattered Peaks 5, 1012 Ohgar 4, 1013 Karrhu 6, 1014 Rocky Tundra 1). Ten inactive catalog entries with only ID, name, `mExtensioActive: false` and `mExtensioListed: false`; no price, reward, text or art was invented. 20009 Grimnir Vault stays in expansion 0 but is held out of every draw. `docs/data/encounter_locations.csv` and `encounterLocations.ts` follow; 20127 got a point inside Eldertree Forest ([490, 854]).
 - **Closing the regions:** a draw needs the expansion to be unlocked **and** active (`encounterAvailability.ts`), so even an account listing a future region gets nothing from it; held encounters are never drawn, by chance or by travel. An expansion without a whole-number gem price cannot be unlocked. On the map every land but the Vale is its expansion; a closed one says "… is not open to travellers yet." with only Back (before, those lands counted as the base game and could be travelled to). The Expansions menu hides unlisted entries. The static-data check now fails on an active expansion without a price and on a written follow into another expansion.

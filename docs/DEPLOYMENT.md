@@ -167,6 +167,16 @@ Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also
 
 **Uploading a release:** build the client (`npm run build --prefix client`), pack the contents of `client/dist` as `client.tar.gz` with `index.html` at the archive root (`tar -czf client.tar.gz -C client/dist .`; an archive with a `dist/` folder is refused), create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
 
+## Production release — 2026-11-26, 06:26 UTC (0.9.0-beta.84: regional expansions D-063–D-066, Homecoming, six Climb conversions, eight letters)
+
+Approved by Babuni ("I guess we can release it like that now"). `main` at `3e85a44c`: everything since beta.83 from `fc656c28` to the version bump, plus Babuni's Admin saves of solution and frame images.
+
+- **Before:** backend `ed675740`, frontend `20261124-110948`. `morkahja-deploy status` showed no uncommitted live files, so no reset was needed. Previous staging files moved to `prev-20261126-062502`.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 52, server 78). The client archive has `index.html` at its root. Uploads verified by `sha256sum -c` on the server (client `3387aff4…`, bundle `7182c30b…`, only `refs/heads/main` from `ed675740`).
+- **Release:** backup `20261126-062610` (sha256 `058fc14b1879bdf5662c5488f43fa7583b2fd0c531402d0d50921897876ea0fb`; devices 85, inventories 125, purchases 1, player achievements 363; the player and avatar counts scrolled out of the captured output). Backend checked out `3e85a44c`, `npm ci`, health gate and content endpoint passed, frontend release `20261126-062614`. Public checks passed; the live script `index-sk85ja2t.js` contains `0.9.0-beta.84`; the new banner `expansion_evergrove.webp` answers 200; the live catalog has 1007 active with `mExtensioHomelandOf: ["Verdani"]` and 1999 inactive. API and bots online. The script pruned one old bundle, one `node_modules` copy and one backup folder (kept newest 5).
+- **Backup:** not yet downloaded and restored.
+- **Not yet checked live:** the start-up Homecoming pass (the deploy command has no log view), a homeland earned in play and its message, travel to a homeland, a real phone.
+
 ## Production release — 2026-11-24, 11:09 UTC (0.9.0-beta.83: player choices — equipment, specialization, Edit avatar, travel; soul links D-062; Main menu button; charge-back flight)
 
 Approved by Babuni ("Then I want you to release"). `main` at `ed675740`: everything since beta.82 (D-054 to D-062 and the changes recorded in `CHANGELOG.md` between them), plus Babuni's Admin saves up to Grimnir Boltcaster (`46a051ab`).

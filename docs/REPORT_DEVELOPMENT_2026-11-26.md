@@ -3,7 +3,7 @@
 **Creative:** Babuni
 **For:** 00 Management (the regional migration and Climb briefs, and everything Babuni decided after them the same day)
 **Developer:** Claude Code (Claude Opus 5.5)
-**Status:** everything below is on GitHub `main` and checked locally. **Nothing is released.** Production still runs 0.9.0-beta.83 from 24 November. Babuni asked not to prepare the release yet.
+**Status:** everything below is on GitHub `main`, checked locally, and **released on 26 November at 06:26 UTC as 0.9.0-beta.84** (backup `20261126-062610`, frontend `20261126-062614`).
 
 Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md), [Climb Round 1](CLIMB_CONVERSIONS_ROUND_1.md), [Climb Round 2](CLIMB_CONVERSIONS_ROUND_2.md), decisions D-063 to D-066 in [DECISIONS.md](DECISIONS.md), and [CHANGELOG.md](../CHANGELOG.md).
 
@@ -150,7 +150,7 @@ Other repositories:
 
 ## 7. Open items for management
 
-1. **Release:** when Babuni approves, it needs a version bump, patch notes and then the production release. On the first server start, existing avatars with 100 encounters will earn their homeland.
+1. **Release:** done as 0.9.0-beta.84. On its first start, existing avatars with 100 encounters earned their homeland; that was not observed in the server log.
 2. **Trick targets:** the base game has Find 9 (on target), Climb 6 and Open Lock 3. The base game's geographic count is 47, so the 71 reserved new tasks reach 118 of the 120 target: two more are needed.
    - **Three new Climb encounters:** writing them belongs to Chat 02, which has IDs 20207–20209 reserved. That would bring Climb to 9.
    - **Open Lock and Find:** whether either should reach 9 again (through conversions or new encounters) is Babuni's call.

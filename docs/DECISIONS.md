@@ -618,7 +618,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5), with these choices of its own, open to Babuni's correction: IDs 1005–1014 as proposed (free at the check); catalog entries without any shop fields and with `mExtensioListed: false`, so the Expansions menu does not show them; an expansion must be active as well as unlocked for its encounters to be drawn; 20009 held in expansion 0 by a list in `encounterAvailability.ts` rather than given a land; the grove's point at [490, 854]; every map land except the Vale mapped to its expansion, so travel to the ten lands is closed until they open. Details and the Evergrove recommendations: [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md).
 
-**Status:** on GitHub `main`, not released. Release check and local browser check passed.
+**Status:** released 2026-11-26 in 0.9.0-beta.84. Release check and local browser check passed.
 
 ## D-064 — Placements decided, regions coming soon with gem prices, bundles own every expansion (2026-11-26)
 
@@ -628,7 +628,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5): the moves and new map points; the vault's two changed sentences; the Round 1 data edit; shop texts from the world archive; banners cropped from one encounter painting of each land (stand-ins, not new artwork); the bundle mark `allExpansions` with a start-up top-up.
 
-**Status:** on GitHub `main`, not released. Release check and local browser check passed. Climb Round 2 drafted, awaiting approval.
+**Status:** released 2026-11-26 in 0.9.0-beta.84. Release check and local browser check passed. Climb Round 2 drafted, awaiting approval.
 
 ## D-065 — Homecoming: the homelands are earned by playing their people (2026-11-26)
 
@@ -636,7 +636,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5): the `homecoming` chain and its titles (Rootseeker — renamed from Homecoming the same day at Babuni's request, since a rank title is worn by the avatar — Hearthfriend, Child of Morkahja; the panel's bar shows the best avatar's encounters toward 100 from the first encounter), the homeland list in the catalog (`mExtensioHomelandOf`), the check after each encounter and at start-up, the refused gem unlock, and the shop and panel texts. Its own choices: the unused monthly-reward glyph as icon; each rank adds 1 gem to the Hearth Blessing like the other chains;  the homelands keep their gem price only for the travel cost.
 
-**Status:** on GitHub `main`, not released. Server test against PostgreSQL and the release check passed. The same day, at Babuni's request, the three homelands were switched on so that an earned homeland can be played and travelled to right away; the other seven regions stay coming soon.
+**Status:** released 2026-11-26 in 0.9.0-beta.84. Server test against PostgreSQL and the release check passed. The same day, at Babuni's request, the three homelands were switched on so that an earned homeland can be played and travelled to right away; the other seven regions stay coming soon.
 
 ## D-066 — Six Find encounters set aside; letter encounters stay; regions decided (2026-11-26)
 
@@ -644,7 +644,7 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **AI implementation:** Claude Code (Claude Opus 5.5): expansion 1999 "Set aside" (inactive, unlisted); a seeded random draw (`morkahja-set-aside-2026-11-26`) among the seven letterless Find encounters chose 20001, 20002, 20003, 20069, 20072, 20111. The manifest and the placement list now record each region as decided.
 
-**Status:** on GitHub `main`, not released. This replaces the brief's six Find-to-Open-Lock conversions as the way to reduce Find; Open Lock stays at 3 unless Babuni asks for conversions.
+**Status:** released 2026-11-26 in 0.9.0-beta.84. This replaces the brief's six Find-to-Open-Lock conversions as the way to reduce Find; Open Lock stays at 3 unless Babuni asks for conversions.
 
 **Addendum (same day):** the letter clues spell MORKAHJA and the R was missing; at Babuni's direction 20090 Ethereal Glades, the one letterless Find encounter left in the base game, now carries a carved R. All eight letters are in the base game.
 
