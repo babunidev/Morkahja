@@ -4,7 +4,9 @@
 **Date:** 2026-11-26
 **For:** 00 Management, answering the [regional migration brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md)
 **Implemented by:** Claude Code (Claude Opus 5.5)
-**Status:** on GitHub `main`, **not released**. No expansion is active, priced or listed. Decision record: D-063 in [DECISIONS.md](DECISIONS.md).
+**Status:** on GitHub `main`, **not released**. Decision records: D-063 and D-064 in [DECISIONS.md](DECISIONS.md).
+
+> **Update the same day (D-064):** Babuni accepted every Evergrove recommendation below and placed 20009 in Celesterra (1009), so nothing is held. The ten regions now have gem prices, texts and banners and are listed in the Expansions menu as coming soon, still inactive. Counts now: Eldertree 27, Evergrove 3, Celesterra 8, the Vale 49 random encounters. Sections below describe the first step as it was done.
 
 ## What changed
 

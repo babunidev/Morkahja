@@ -15,8 +15,10 @@
 - [x] Prepare [staged production rounds and Climb candidate review](CONTENT_PRODUCTION_ROUNDS.md) and [79-record regional assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md).
 - [x] Record approved Grove relocation and first three expansion catalog entries; prepare [regional migration brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and [Climb conversion brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md).
 - [x] Implement regional isolation safely (D-063, 2026-11-26): 78 encounters in ten inactive regional expansions, 20009 held, every path closed; [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md). Not released.
-- [ ] Decide the Evergrove review, 20009's land, and each region's prices, texts and art before activation (open list in the report).
-- [ ] Approve the [Climb Round 1 drafts](CLIMB_CONVERSIONS_ROUND_1.md) (20068, 20005, 20004); then the data edit, then a fresh assessment of Round 2.
+- [x] Decide the Evergrove review, 20009's land, gem prices, texts and banners (D-064, 2026-11-26); the ten regions are listed as coming soon. Not released.
+- [ ] Before a region opens: its encounters (planned 40 / 20 / 10 by size, D-064), real banner art if wanted, a money price and Stripe SKU if sold for money, regional ambiance recordings.
+- [x] Climb Round 1 (20068, 20005, 20004) approved and applied (`77f4aaee`, 2026-11-26). Not released.
+- [ ] Approve the [Climb Round 2 drafts](CLIMB_CONVERSIONS_ROUND_2.md) (20080, 20071, 20088).
 - [ ] Approve individual rare designations and difficulty allocations; define rare selection mechanics separately. Isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 

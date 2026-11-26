@@ -44,6 +44,8 @@ Approved production targets: nine encounters per subtype in each of Combat, Tric
 
 One task at a time: consult both repositories, follow the current round in [staged production](CONTENT_PRODUCTION_ROUNDS.md), review its earliest unfinished task, record concept, place, element and solution IDs, draft, obtain approval, recheck main, commit authorized text/metadata, verify. Existing review tasks precede new tasks unless blocked or redirected by Management. Rotate across families each round; use the explicit round ID allocation instead of exhausting one entire family's reservations. The [expansion assignment manifest](CONTENT_EXPANSION_ASSIGNMENTS.md) and [regional developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) are separate; no new expansion encounter production here. Coordinate the [Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) with Chat 02 and reassess counts after review. Artwork independent; no gameplay implementation.
 
+**Base-game scope after D-063/D-064 (2026-11-26):** the Vale now has 51 geographic records (49 random, two scripted). Babuni's Evergrove review returned 20033 Wild Bloodfang (Combat / Hunt) and 20191 Slumbering Ogru (Trick / Stealth) to the Vale; both still need a studio review row. Every other out-of-Vale record belongs to its regional expansion.
+
 ## Existing review ledger
 
 All rows have legacy prose and artwork references in source; artwork quality/file availability unverified. All remain open for studio creative review. Classifications below are proposals where they differ from current data. A map placement is not proof of precise canon. The 49 rows contain 47 D1 and two D2, 47 random and two scripted. The additional existing Trade record 20012 is included by approved scope correction; its map pin is approved and corrected. Worldwide primary and follow references resolve; no Vale row exceeds one primary item.
@@ -67,22 +69,22 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20001 | Lovely Meadows | Trick / Find | B:10007/6; C:—/5 | 1 / — / 2×1 | Explorer's Chart; generic hidden treasure motif. |
 | 20002 | Enchanted Glades | Trick / Find | B:10005/6; C:—/5 | 1 / — / 2×1 | Secret Map; strengthen actionable distinction from other pillar scenes. |
 | 20003 | Fae Pastures | Trick / Find | B:10006/6; C:—/5 | 1 / — / 2×1 | Enchanted Guide; laughter distinctive; keep fae mystery. |
-| 20004 | Mystic Grass | Trick / Find | B:10008/6; C:—/5 | 1 / — / 2×1 | Mystic Map; patterned grass/pillar; alternative category only with approval. |
-| 20005 | Seraphic Plains | Trick / Find | B:10009/6; C:—/5 | 1 / — / 2×1 | Seraphic Map; hollow resonance; preserve unknown pillar purpose. |
+| 20004 | Mystic Grass | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10071/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: scramble up the rock heap to the pillar; Climbing Gear. Mystic Map 10008 no longer referenced. |
+| 20005 | Seraphic Plains | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10211/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: high recess in the tallest pillar; Seeker's Grapnel. Seraphic Map 10009 no longer referenced. |
 | 20032 | Rare Treasurechest | Trick / Open Lock | B:10069/—; C:—/7 | 1 / — / 3×1 | Mystical Key; no same-lane fallback; rarity candidate; Seraphic vs Sepharic spelling. |
-| 20068 | Fey Greens | Trick / Find | B:10080/20; C:—/5 | 1 / — / 2×1 | Whistle Reed 10080 type 6, fallback 20 obsolete; spectral travel text needs review; preserve sanctuary. |
+| 20068 | Fey Greens | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10167/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: carved ledge high on the sanctuary rock; Faewoven Ladder. Whistle Reed 10080 no longer referenced. |
 | 20069 | Celestial Fields | Trick / Find | B:10081/6; C:—/5 | 1 / — / 2×1 | Meadow Star; treasure rumor lacks concrete opportunity. |
 | 20070 | Enigmatic Prairies | Trick / Find | B:10082/28; C:—/5 | 1 / — / 2×1 | Rosethorn Locket type 28 canon barrier-piercing; do not retag blindly; replace primary or approve Purge scene. |
-| 20071 | Arcane Meadows | Trick / Find | B:10083/6; C:—/5 | 1 / — / 2×1 | Whistle of Harmony; moving branch; northeast of Vale vs northeastern Vale wording needs review. |
+| 20071 | Arcane Meadows | Trick / Find | B:10083/6; C:—/5 | 1 / — / 2×1 | Whistle of Harmony; moving branch; northeast of Vale vs northeastern Vale wording needs review. Round 2 Climb draft: [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
 | 20072 | Tranquil Wilds | Trick / Find | B:10084/6; C:—/5 | 1 / — / 2×1 | Lullaby Pendant implies sanctuary; sleeping fox scene does not fit; possible Nurture only after approval. |
-| 20080 | Dreamy Valley | Trick / Find | B:10086/6; C:—/5 | 1 / — / 2×1 | Dreamy Lyre; hidden passage distinctive; other subtype needs revised purpose. |
+| 20080 | Dreamy Valley | Trick / Find | B:10086/6; C:—/5 | 1 / — / 2×1 | Dreamy Lyre; hidden passage distinctive; other subtype needs revised purpose. Round 2 Climb draft (not Open Lock: nothing is locked): [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
 | 20081 | Arcadian Hills | Trick / Find | B:10090/6; C:—/5 | 1 / — / 2×1 | Arcadian Keyflower; A clue; ensure item helps. |
 | 20083 | Enchanted Gardens | Trick / Find | B:10093/6; C:—/5 | 1 / — / 2×1 | Enchanted Sunstone; H clue, dusk energy. |
 | 20084 | Mystical Vale | Trick / Find | B:10094/6; C:—/5 | 1 / — / 2×1 | Wisperwind Flute type 20 despite fallback 6; K clue; review instrument purpose. |
 | 20085 | Bucolic Dale | Trick / Find | B:10095/6; C:—/5 | 1 / — / 2×1 | Blue Runestone; J clue; avoid invented effects. |
 | 20086 | Captivating Downs | Trick / Find | B:10096/6; C:—/5 | 1 / — / 2×1 | Fairyseer Compass; O clue and abnormal distances; preserve fae uncertainty. |
 | 20087 | Radiant Heath | Trick / Find | B:10097/6; C:—/5; D:—/39 | 1 / — / 2×1 | Radiant Quill and fallback 39; M clue; lore specifies glowing water/tablet absent in scene. |
-| 20088 | Mesmerizing Hillsides | Trick / Find | B:10098/6; C:—/5 | 1 / — / 2×1 | Windchime promises hidden trove; scene shifting light/animal; purpose weak. |
+| 20088 | Mesmerizing Hillsides | Trick / Find | B:10098/6; C:—/5 | 1 / — / 2×1 | Windchime promises hidden trove; scene shifting light/animal; purpose weak. Round 2 Climb draft: [CLIMB_CONVERSIONS_ROUND_2.md](CLIMB_CONVERSIONS_ROUND_2.md). |
 | 20089 | Magical Glens | Trick / Find | B:10099/6; C:—/5 | 1 / — / 2×1 | Echohorn and A clue; preserve repeated A; distinguish from 20081. |
 | 20090 | Ethereal Glades | Trick / Find | B:10100/6; C:—/5 | 1 / — / 2×1 | Glademyst Geode; luminous glade, weak treasure cue; avoid duplicating 20089. |
 | 20098 | Common Chest | Trick / Open Lock | B:10110/—; C:—/7 | 1 / — / 2×2 | Sunstone Key and separate skill lane; ordinary chest repeats 20119. |

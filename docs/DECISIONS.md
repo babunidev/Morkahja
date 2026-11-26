@@ -620,3 +620,13 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on GitHub `main`, not released. Release check and local browser check passed.
 
+## D-064 — Placements decided, regions coming soon with gem prices, bundles own every expansion (2026-11-26)
+
+**Babuni's direction:** accept the Evergrove recommendations of the [D-063 report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md); the Grimnir Vault (20009) goes to Celesterra, the Grimnir homeland, with its text fitted; the Climb Round 1 drafts are approved, and not everything has to be in the picture; set gem prices from the lands' sizes against Aetherion (small), Everwinter (medium) and Keldor (big), with a rough number of encounters for each; list the regions as not available yet, with artwork if possible and no money price for now; whoever buys a bundle gets every expansion, also those added later.
+
+**Size tiers (Claude Code's reading of the map, open to Babuni's correction):** land areas on the world map in map units: Evergrove 54k, Celesterra 53k, Everwinter 52k, Karrhu 48k, Keldor 45k, Ohgar 40k, Eldertree 35k, Rocky Tundra 35k, Fyrskar 34k, Frostwind 33k, Emberfrost 31k, Shattered Peaks 15k. Big (45k and more, as Keldor): 75 gems, about 40 encounters — Evergrove, Celesterra, Karrhu. Medium (25k–45k): 50 gems, about 20 — Eldertree (already 27), Frostwind, Emberfrost, Fyrskar, Ohgar, Rocky Tundra. Small: 25 gems, about 10 — Shattered Peaks. Everwinter would be big by area but stays as it is. Fyrskar, the Rokur homeland, is medium by area while the Verdani and Aevis homelands are big; that is a choice for Babuni.
+
+**AI implementation:** Claude Code (Claude Opus 5.5): the moves and new map points; the vault's two changed sentences; the Round 1 data edit; shop texts from the world archive; banners cropped from one encounter painting of each land (stand-ins, not new artwork); the bundle mark `allExpansions` with a start-up top-up.
+
+**Status:** on GitHub `main`, not released. Release check and local browser check passed. Climb Round 2 drafted, awaiting approval.
+
