@@ -70,6 +70,8 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
       return KEY_REMINDER_ICON;
     case 'support_appreciation_nudge':
       return GEMS_ICON;
+    case 'homeland_opened':
+      return '/UI/04_ACHIEVEMENTS/im_glyph_monthly_reward.webp';
     case 'achievement_unlocked': {
       const achievementId = readString(payload, 'achievementId');
       if (achievementId === 'alpha_player') {

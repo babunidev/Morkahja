@@ -4,6 +4,8 @@ const PRIVATE_SCRIBE_TOAST_EVENT_TYPES = new Set([
   'account_key_security_reminder',
   'support_appreciation_nudge',
   'gems_received',
+  // Homecoming: each opened homeland, after the achievement toast (Babuni, 2026-11-26).
+  'homeland_opened',
 ]);
 
 export function isPrivateScribeToastEvent(eventType: string): boolean {

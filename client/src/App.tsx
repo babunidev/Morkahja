@@ -208,6 +208,10 @@ export default function App() {
   const [avatarSelectionNotice, setAvatarSelectionNotice] = useState<string | null>(null);
   const [playPreparePending, setPlayPreparePending] = useState(false);
   const [achievementToast, setAchievementToast] = useState<AchievementProgressDto | null>(null);
+  // A private Scribes message waits while an achievement toast is up, so a
+  // homeland's message follows the Homecoming achievement (Babuni, 2026-11-26).
+  const achievementToastShowingRef = useRef(false);
+  achievementToastShowingRef.current = achievementToast !== null;
   const [hearthBlessingToast, setHearthBlessingToast] = useState(false);
   const [privateScribeToast, setPrivateScribeToast] = useState<string | null>(null);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
@@ -301,6 +305,7 @@ export default function App() {
         achievementsBaselineRef.current = response.achievements;
 
         if (unlock) {
+          achievementToastShowingRef.current = true;
           setAchievementToast(unlock.achievement);
         }
 
@@ -323,7 +328,9 @@ export default function App() {
       }
 
       const activity = await fetchRecentActivity();
-      const privateToastEntry = findNextPrivateScribeToastEntry(playerId, activity.entries);
+      const privateToastEntry = achievementToastShowingRef.current
+        ? null
+        : findNextPrivateScribeToastEntry(playerId, activity.entries);
       if (privateToastEntry) {
         markPrivateScribeToastShown(playerId, privateToastEntry.eventId);
         setPrivateScribeToast(privateToastEntry.message);

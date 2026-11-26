@@ -2,6 +2,16 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: nine Find, the Vale's weather as a stand-in, a message for each opened homeland
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** Find should be nine, of course; play the Vale's weather in every land without its own recordings for now; after the Homecoming achievement, show a separate notification for each homeland it unlocks.
+- **Nine Find:** a seeded random draw brought 20001 Lovely Meadows and 20002 Enchanted Glades back from 1999 "Set aside" to the base game. Set aside now: 20003, 20069, 20072, 20111. The base game has 45 random encounters, nine of them Find, all eight letter encounters among them.
+- **Weather:** `ambiancePackForLand` (`client/src/ui/music/ambianceLibrary.ts`) plays a land's own recordings, or the Vale's (pack 0) while it has none: the homelands, the coming regions and Urcogor. Keldor, Everwinter, Aetherion, Atranor and the level-up keep their own. Before, such a land faded the bed out.
+- **Homeland message:** when Homecoming opens a homeland, a private Scribes entry follows the achievement: "Celesterra, the homeland of the Aevis and the Grimnir, is unlocked. You can now travel there." (`homeland_opened`, `recordHomelandOpenedEvent`). It shows as a toast after the achievement toast has gone, one homeland per toast.
+- **Ledger:** review rows for 20033 Wild Bloodfang (proposed Combat; a fourth Nagar charge to distinguish) and 20191 Slumbering Ogru (proposed nonviolent Ambush, Shadowstep Boots, as Veilwalker).
+- **Verification:** `homecoming.test.ts` checks one private message per homeland, in order, and its wording; `regionalExpansions.test.ts` nine Find; `ambianceLayout.test.ts` the Vale's weather for lands without recordings. `npm run release:check` passed (client 52/52, server 78/78). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: Ethereal Glades carries the missing R
 
 - **Not released.** Pushed to GitHub `main`.

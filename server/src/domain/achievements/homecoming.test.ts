@@ -8,6 +8,7 @@ import { loadAchievementProgress } from './achievementPersistence.js';
 import { HOMECOMING_ACHIEVEMENT_ID } from './homecomingAchievement.js';
 import { homelandForRace, loadHomecomingState, syncHomecomingForAllAvatars, tryEarnHomeland } from './homecomingProgress.js';
 import { HOMECOMING_RANKS } from './homecomingAchievement.js';
+import { renderEventMessage } from '../news/renderEventMessage.js';
 
 // Homecoming (D-065): 100 encounters on one avatar open its people's homeland, once.
 assert.equal(homelandForRace('Verdani'), 1007);
@@ -55,12 +56,25 @@ assert.deepEqual(player?.homecoming, [1007, 1009, 1010]);
 assert.equal(await homecoming(), 3, 'every homeland');
 assert.equal((await loadHomecomingState(playerId)).earned, 3);
 
+// Each opened homeland gets its own private message after the achievement (Babuni, 2026-11-26).
+const opened = await pool.query<{ payload: Record<string, unknown>; visibility: string }>(
+  `SELECT payload, visibility FROM game_events WHERE player_id = $1 AND type = 'homeland_opened' ORDER BY timestamp`,
+  [playerId],
+);
+assert.deepEqual(opened.rows.map((row) => row.payload.expansionId), [1007, 1009, 1010], 'one message per homeland');
+assert.ok(opened.rows.every((row) => row.visibility === 'private'));
+assert.equal(
+  renderEventMessage({ eventId: 'x', timestamp: 0, playerId, type: 'homeland_opened', visibility: 'private', importance: 'high', payload: opened.rows[1]!.payload }, playerId),
+  'Celesterra, the homeland of the Aevis and the Grimnir, is unlocked. You can now travel there.',
+);
+
 // A homeland is never bought with gems.
 await assert.rejects(unlockPlayerExpansion(playerId, 1010), HomelandNotForSaleError);
 
 await pool.query('DELETE FROM progressions WHERE player_id = $1', [playerId]);
 await pool.query('DELETE FROM avatars WHERE player_id = $1', [playerId]);
 await pool.query('DELETE FROM player_achievements WHERE player_id = $1', [playerId]).catch(() => undefined);
+await pool.query('DELETE FROM game_events WHERE player_id = $1', [playerId]);
 await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
 await pool.end();
 console.log('homecoming.test.ts passed');

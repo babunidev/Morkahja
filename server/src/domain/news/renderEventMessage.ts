@@ -151,6 +151,14 @@ export function renderEventMessage(event: GameEvent, viewingPlayerId?: string): 
     }
     case 'support_appreciation_nudge':
       return 'Enjoying Morkahja? Donating gems, unlocking an expansion or picking up a dice skin gives me more time to work on the world. Every bit helps. Thank you!';
+    case 'homeland_opened': {
+      const name = readString(payload, 'expansionName') ?? 'A homeland';
+      const peoples = Array.isArray(payload.peoples)
+        ? payload.peoples.filter((entry): entry is string => typeof entry === 'string')
+        : [];
+      const of = peoples.length > 0 ? `, the homeland of the ${peoples.join(' and the ')},` : '';
+      return `${name}${of} is unlocked. You can now travel there.`;
+    }
     case 'achievement_unlocked': {
       const rankTitle = readString(payload, 'rankTitle');
       return own

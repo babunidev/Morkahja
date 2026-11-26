@@ -40,6 +40,7 @@ export function isVisibleInScribesFeed(event: GameEvent, viewingPlayerId?: strin
     case 'achievement_unlocked':
       return true;
     case 'hearth_blessing_ready':
+    case 'homeland_opened':
     case 'account_key_security_reminder':
     case 'support_appreciation_nudge':
       return !viewingPlayerId || event.playerId === viewingPlayerId;

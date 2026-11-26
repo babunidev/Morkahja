@@ -5,8 +5,8 @@ import {
   pool,
   withDocumentTransaction,
 } from '../../db/postgresDocumentStore.js';
-import { recordAchievementUnlockedEvent } from '../../services/gameEventService.js';
-import { getExpansions } from '../../services/gameData.js';
+import { recordAchievementUnlockedEvent, recordHomelandOpenedEvent } from '../../services/gameEventService.js';
+import { getExpansionById, getExpansions } from '../../services/gameData.js';
 import { grantPlayerExpansion } from '../../services/playerService.js';
 import type { PlayerDocument } from '../../types/player.js';
 import { loadAchievementProgress, saveAchievementProgress } from './achievementPersistence.js';
@@ -90,7 +90,17 @@ export async function tryEarnHomeland(
     return null;
   }
   await syncHomecomingProgress(playerId, result.earned, timestamp);
-  return result.added ? homeland : null;
+  if (!result.added) {
+    return null;
+  }
+  // The achievement first, then a message for the homeland itself (Babuni, 2026-11-26).
+  const expansion = getExpansionById(homeland);
+  await recordHomelandOpenedEvent(playerId, {
+    expansionId: homeland,
+    expansionName: expansion?.mExtensioName ?? `Expansion ${homeland}`,
+    peoples: expansion?.mExtensioHomelandOf ?? [],
+  });
+  return homeland;
 }
 
 /**

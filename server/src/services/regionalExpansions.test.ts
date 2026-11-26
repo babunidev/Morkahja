@@ -75,14 +75,15 @@ for (const record of encounters) {
 }
 assert.deepEqual(
   Object.fromEntries([...counts].sort((left, right) => left[0] - right[0])),
-  { 0: 47, 1001: 48, 1003: 20, 1004: 5, 1005: 27, 1006: 9, 1007: 3, 1008: 7, 1009: 8, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1, 1999: 6 },
-  '203 records: the Vale and universal 47, 73 existing, 77 regional, 6 Find encounters set aside (1999)',
+  { 0: 49, 1001: 48, 1003: 20, 1004: 5, 1005: 27, 1006: 9, 1007: 3, 1008: 7, 1009: 8, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1, 1999: 4 },
+  '203 records: the Vale and universal 49, 73 existing, 77 regional, 4 Find encounters set aside (1999)',
 );
 
 // A base-game player draws only the Vale: 49 encounters, none of the 77 regional ones.
 const base = randomPool([0]);
 const assignedIds = new Set(assigned.map((entry) => entry.id).filter((id) => REVIEWED[id] !== 0));
-assert.equal(base.length, 43, '49 Vale encounters less the six set aside');
+assert.equal(base.length, 45, '49 Vale encounters less the four set aside');
+assert.equal(base.filter((record) => record.mEncounterSubtype === 'Find').length, 9, 'nine Find encounters (Babuni, 2026-11-26)');
 assert.ok(base.every((record) => record.mEncounterExpansion === 0 && !assignedIds.has(record.mEncounterID)),
   'no out-of-Vale encounter in a base-game draw');
 assert.ok(base.some((record) => record.mEncounterID === 20191) && base.some((record) => record.mEncounterID === 20033),
@@ -108,7 +109,7 @@ assert.ok(selectEncounterInExpansion(1007, [], getEncounters(), () => 0));
 
 // Six Find encounters without a letter clue are set aside in 1999, never drawn;
 // every letter-clue encounter stays in the base game (Babuni, 2026-11-26).
-const SET_ASIDE = [20001, 20002, 20003, 20069, 20072, 20111];
+const SET_ASIDE = [20003, 20069, 20072, 20111]; // 20001 and 20002 came back the same day for nine Find
 // The eight letters spell MORKAHJA; Ethereal Glades (20090) got the missing R on 2026-11-26.
 const LETTERS = [20081, 20083, 20084, 20085, 20086, 20087, 20089, 20090];
 const carved = LETTERS.map((id) => {

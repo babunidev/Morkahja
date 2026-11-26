@@ -44,7 +44,7 @@ Approved production targets: nine encounters per subtype in each of Combat, Tric
 
 One task at a time: consult both repositories, follow the current round in [staged production](CONTENT_PRODUCTION_ROUNDS.md), review its earliest unfinished task, record concept, place, element and solution IDs, draft, obtain approval, recheck main, commit authorized text/metadata, verify. Existing review tasks precede new tasks unless blocked or redirected by Management. Rotate across families each round; use the explicit round ID allocation instead of exhausting one entire family's reservations. The [expansion assignment manifest](CONTENT_EXPANSION_ASSIGNMENTS.md) and [regional developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) are separate; no new expansion encounter production here. Coordinate the [Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) with Chat 02 and reassess counts after review. Artwork independent; no gameplay implementation.
 
-**Base-game scope after D-063/D-064 (2026-11-26):** the Vale now has 51 geographic records (49 random, two scripted). Babuni's Evergrove review returned 20033 Wild Bloodfang (Combat / Hunt) and 20191 Slumbering Ogru (Trick / Stealth) to the Vale; both still need a studio review row. Every other out-of-Vale record belongs to its regional expansion.
+**Base-game scope after D-063/D-064 (2026-11-26):** the Vale now has 51 geographic records (49 random, two scripted). Babuni's Evergrove review returned 20033 Wild Bloodfang (Combat / Hunt) and 20191 Slumbering Ogru (Trick / Stealth) to the Vale; their review rows are below (added 2026-11-26). Four letterless Find encounters are set aside in 1999 (D-066), so the base game has 45 random encounters with nine Find. Every other out-of-Vale record belongs to its regional expansion.
 
 ## Existing review ledger
 
@@ -53,6 +53,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | ID | Title | Proposed family/subtype | Primary ID / fallback type by slot | D / follow / reward type×amount | Review recommendation |
 | --- | --- | --- | --- | --- | --- |
 | 20034 | Menacing Goldhorn | Combat / Combat | A:—/10; B:—/30; C:—/29; D:—/9 | 1 / — / 2×1 | Charge pattern overlaps other Nagar; distinguish purpose. |
+| 20033 | Wild Bloodfang | Combat / Combat (now Combat / Hunt) | A:—/10; B:—/30; C:—/29; D:—/9 | 1 / — / 2×1 | **Back in the Vale 2026-11-26 (D-064):** Bloodfang is a Nagar, and the archive places the Nagar in Ethera's Vale. A fourth Nagar charge beside Goldhorn, Charger and the rest; give it a distinct situation (its horns, the silenced wood), not another charge. Hunt is a legacy subtype: fold into Combat or Ambush on review. No primary item. |
 | 20051 | Nagar Charger | Combat / Ambush | A:—/10; B:10105/30; C:—/29; D:—/9 | 1 / — / 2×1 | Net and tracking fit interception; distinguish from generic charge. |
 | 20052 | Nagar Elder | Combat / Combat | A:10106/10; B:—/30; C:—/29; D:—/9 | 1 / — / 2×1 | Age and caution should affect opportunity, not just another charge. |
 | 20091 | Nagar Berserk | Combat / Combat | A:—/10; B:10102/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; repeated charge. |
@@ -66,6 +67,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20110 | Mother Wolf | Combat / Ambush | A:—/10; B:10124/36; C:—/35; D:—/9 | 1 / — / 2×1 | Defensive mother and cubs; evasion rather than hunting cubs. |
 | 20188 | Mystic Hearth's Seal | Combat / Purge | B:10238/28; C:—/27 | 1 / 19444 / 2×1 | Canon barrier; preserve follow 19444. |
 | 20190 | Veilwalker | Combat / Ambush | B:10241/36; C:—/35 | 1 / — / 2×1 | Currently Trick/Stealth; preserve immense scale and evasion. |
+| 20191 | Slumbering Ogru | Combat / Ambush (now Trick / Stealth) | B:10242/36; C:—/35 | 1 / — / 2×1 | **Back in the Vale 2026-11-26 (D-064):** the archive's eastern-Vale Ogru asleep under a willow. Shadowstep Boots 10242, the same stealth lane as Veilwalker (20190); evasion and the slipping gold coin make it nonviolent Ambush. Preserve the snore, the willow and that a sleeping Ogru is no sign of the Ravage. |
 | 20001 | Lovely Meadows | Trick / Find | B:10007/6; C:—/5 | 1 / — / 2×1 | Explorer's Chart; generic hidden treasure motif. |
 | 20002 | Enchanted Glades | Trick / Find | B:10005/6; C:—/5 | 1 / — / 2×1 | Secret Map; strengthen actionable distinction from other pillar scenes. |
 | 20003 | Fae Pastures | Trick / Find | B:10006/6; C:—/5 | 1 / — / 2×1 | Enchanted Guide; laughter distinctive; keep fae mystery. |

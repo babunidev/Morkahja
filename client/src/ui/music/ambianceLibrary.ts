@@ -27,3 +27,19 @@ export function expansionHasClips(clips: readonly AmbianceClip[], expansion: num
 export function ambiancePackForExpansion(encounterExpansion: number): number {
   return encounterExpansion >= 1000 ? encounterExpansion - 1000 : encounterExpansion;
 }
+
+/** The base game's recordings (Ethera's Vale). */
+export const BASE_AMBIANCE_PACK = 0;
+
+/**
+ * The recordings a land plays (Babuni, 2026-11-26): its own, or the Vale's
+ * while it has none yet, as the homelands and the coming regions do. Atranor
+ * and the level-up are not lands and keep their own rule.
+ */
+export function ambiancePackForLand(clips: readonly AmbianceClip[], encounterExpansion: number): number {
+  const pack = ambiancePackForExpansion(encounterExpansion);
+  if (expansionHasClips(clips, pack) || pack >= 998) {
+    return pack;
+  }
+  return BASE_AMBIANCE_PACK;
+}

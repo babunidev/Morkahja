@@ -442,6 +442,24 @@ export async function recordSupportPurchaseEvent(
   });
 }
 
+/**
+ * Homecoming (D-065, Babuni 2026-11-26): after the achievement, each homeland
+ * that opened gets its own private message, so the player knows where they
+ * can travel now.
+ */
+export async function recordHomelandOpenedEvent(
+  playerId: string,
+  payload: { expansionId: number; expansionName: string; peoples: string[] },
+): Promise<void> {
+  await recordGameEvent({
+    playerId,
+    type: 'homeland_opened',
+    visibility: 'private',
+    importance: 'high',
+    payload,
+  });
+}
+
 export async function recordAccountKeySecurityReminderEvent(
   playerId: string,
   payload: {

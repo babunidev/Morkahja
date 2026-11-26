@@ -11,12 +11,14 @@ Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_20
 
 | Topic | Result |
 | --- | --- |
-| Base game | Ethera's Vale only: 43 random encounters, plus Atranor, Level up and the two scripted sanctuary encounters (19001, 19444). |
+| Base game | Ethera's Vale only: 45 random encounters, plus Atranor, Level up and the two scripted sanctuary encounters (19001, 19444). |
 | Regional expansions | Ten regions created as 1005–1014. The three homelands are open to players who earn them. The other seven are listed as "coming soon". |
 | Evergrove review | Babuni accepted every recommendation: five encounters moved to Eldertree, two returned to the Vale, three stay in Evergrove. |
 | 20009 Grimnir Vault | Moved to Celesterra (1009), the Grimnir homeland, with its text adjusted. The world archive was updated to match. |
 | Find to Climb | All six conversions approved and applied. The base game has 6 Climb encounters. |
-| Too many Find encounters | Six Find encounters without a letter clue are set aside in the inactive catalog entry 1999. All seven letter encounters stay in the base game. |
+| Find encounters | Four Find encounters without a letter clue are set aside in the inactive catalog entry 1999. The base game has exactly nine Find, including all eight letter encounters (MORKAHJA; the R was added to 20090). |
+| Weather | Lands without their own recordings (the homelands, the coming regions, Urcogor) play the Vale's weather for now. |
+| Homeland message | After the Homecoming achievement, each opened homeland gets its own notification: "… is unlocked. You can now travel there." |
 | Homelands | The new "Homecoming" achievement: one avatar with 100 encounters opens its people's homeland. Homelands cannot be bought with gems. |
 | Prices | Gem prices only, by land size: big 75, medium 50, small 25. No money prices yet. |
 | Bundles | Both all-expansions bundles now grant every expansion, including ones added later. Neither is offered in the shop yet. |
@@ -27,7 +29,7 @@ Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_20
 
 | Expansion | Encounters | State |
 | --- | ---: | --- |
-| 0 Ethera's Vale (base game) | 47 | 43 random, plus 1, 2, 19001 and 19444 |
+| 0 Ethera's Vale (base game) | 49 | 45 random, plus 1, 2, 19001 and 19444 |
 | 1001 Keldor | 48 | active, unchanged |
 | 1003 Everwinter Valley | 20 | active, unchanged |
 | 1004 Aetherion | 5 | active, unchanged |
@@ -42,11 +44,11 @@ Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_20
 | 1012 Desert of Ohgar | 4 | coming soon, medium, 50 gems |
 | 1013 Swamp of Karrhu | 6 | coming soon, big, 75 gems |
 | 1014 Rocky Tundra | 1 | coming soon, medium, 50 gems |
-| 1999 Set aside | 6 | inactive, hidden, never drawn |
+| 1999 Set aside | 4 | inactive, hidden, never drawn |
 
-**The base game's 43 random encounters:**
+**The base game's 45 random encounters:**
 - **Combat 14:** Combat 8, Hunt 2, Stealth 2, Protect 1, Purge 1.
-- **Trick 21:** Find 7, Climb 6, Open Lock 3, Stealth 2, Purge 1, Travel 1 (20084, which has the K letter), Speech 1.
+- **Trick 23:** Find 9, Climb 6, Open Lock 3, Stealth 2, Purge 1, Travel 1 (20084, which has the K letter), Speech 1.
 - **Aid 5:** Inspiration 3, Protect 1, Nurture 1.
 - **Learn 2.**
 - **Trade 1.**
@@ -79,7 +81,7 @@ Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_20
    - Homelands can never be bought with gems. Only the complete package, which is not offered yet, will include them.
    - The three homelands are switched on, so a homeland can be played as soon as it is earned.
 4. **D-066, Find encounters, letters and regions:**
-   - Six letterless Find encounters were set aside by a seeded random draw: 20001, 20002, 20003, 20069, 20072 and 20111. 20090 stays.
+   - Six letterless Find encounters were set aside by a seeded random draw. Babuni then confirmed the target of nine Find, so 20001 and 20002 came back. Set aside now: 20003, 20069, 20072 and 20111.
    - The letter encounters stay in the base game. They spell **MORKAHJA**, but the R was missing, so 20090 Ethereal Glades now carries a carved R. All eight are in the base game: M 20087, O 20086, R 20090, K 20084, A 20081, H 20083, J 20085, A 20089.
    - Fey Greens' sanctuary is Verdani work, as the world archive has it. Its text no longer says faun.
    - Every regional placement is decided: no row in the manifest or the placement CSV says "review" any more. The map pin is a game placement, not canon.
@@ -149,10 +151,10 @@ Other repositories:
 ## 7. Open items for management
 
 1. **Release:** when Babuni approves, it needs a version bump, patch notes and then the production release. On the first server start, existing avatars with 100 encounters will earn their homeland.
-2. **Trick targets:** the base game has Find 7, Climb 6 and Open Lock 3.
+2. **Trick targets:** the base game has Find 9 (on target), Climb 6 and Open Lock 3. The base game's geographic count is 47, so the 71 reserved new tasks reach 118 of the 120 target: two more are needed.
    - **Three new Climb encounters:** writing them belongs to Chat 02, which has IDs 20207–20209 reserved. That would bring Climb to 9.
    - **Open Lock and Find:** whether either should reach 9 again (through conversions or new encounters) is Babuni's call.
-3. **Two encounters back in the Vale need studio review rows:** 20033 Wild Bloodfang (Combat / Hunt) and 20191 Slumbering Ogru (Trick / Stealth).
+3. **Review rows added** for the two encounters back in the Vale: 20033 Wild Bloodfang (proposed Combat) and 20191 Slumbering Ogru (proposed nonviolent Ambush). The studio decides.
 4. **Homeland content:** Evergrove has 3 encounters, Celesterra 8 and Fyrskar 7, against about 40, 40 and 20 planned.
 5. **Before a coming-soon region opens:**
    - its encounters, using the planned counts
@@ -160,5 +162,5 @@ Other repositories:
    - weather recordings (no ambiance exists for 1005–1014, so the weather bed fades out there)
    - a money price and a Stripe SKU, if it will be sold for money
 6. **The complete package:** when to offer it and at what price. It is the only way to buy a homeland.
-7. **Set-aside group (1999):** these six return to the base game by changing their expansion back to 0.
+7. **Set-aside group (1999):** these four return to the base game by changing their expansion back to 0.
 8. **Local test data:** the Stripe test leaves its test accounts in the local database. That is harmless, but it inflates the bundle count in the local start-up log. Production has one purchase.

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { AMBIANCE_CLIPS } from './ambianceCatalog.js';
 import { ATRANOR_AMBIANCE_PACK, LEVEL_UP_AMBIANCE_PACK } from './ambianceDrop.js';
-import { ambiancePackForExpansion, expansionHasClips } from './ambianceLibrary.js';
+import { ambiancePackForExpansion, ambiancePackForLand, expansionHasClips } from './ambianceLibrary.js';
 
 const ambianceDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -62,3 +62,12 @@ assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1004)), 
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, ambiancePackForExpansion(1002)), false);
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1001), false);
 assert.equal(expansionHasClips(AMBIANCE_CLIPS, 1003), false);
+
+// A land without its own recordings plays the Vale's (Babuni, 2026-11-26).
+for (const expansion of [1002, 1005, 1007, 1009, 1010, 1014]) {
+  assert.equal(ambiancePackForLand(AMBIANCE_CLIPS, expansion), 0, `${expansion} plays the Vale's weather`);
+}
+assert.equal(ambiancePackForLand(AMBIANCE_CLIPS, 1001), 1, 'Keldor keeps its own');
+assert.equal(ambiancePackForLand(AMBIANCE_CLIPS, 0), 0);
+assert.equal(ambiancePackForLand(AMBIANCE_CLIPS, ATRANOR_AMBIANCE_PACK), ATRANOR_AMBIANCE_PACK, 'Atranor keeps its own rule');
+

@@ -19,7 +19,7 @@ import {
   type AmbianceStage,
   type AmbianceStep,
 } from './ambianceCycle.js';
-import { ambiancePackForExpansion, expansionHasClips, stagePool } from './ambianceLibrary.js';
+import { ambiancePackForLand, expansionHasClips, stagePool } from './ambianceLibrary.js';
 import type { MusicZone } from './MusicEngine.js';
 
 /**
@@ -242,7 +242,7 @@ export function AmbianceBed({
     runIdRef.current = id;
     const alive = () => runIdRef.current === id;
     const bedVoices = voices();
-    const land = expansion == null ? null : ambiancePackForExpansion(expansion);
+    const land = expansion == null ? null : ambiancePackForLand(AMBIANCE_CLIPS, expansion);
     const shouldPlay = zone === 'ambient'
       && enabled
       && land != null
