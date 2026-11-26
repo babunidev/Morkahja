@@ -2,6 +2,12 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — No backups on the server
+
+- **Babuni's direction:** no more backups on the server; download them to the computer instead.
+- **Change (server tool `morkahja-deploy`, outside the repository):** releases make no database dump; `backup` writes one dump into the upload folder for download only; `prune` removes all backup folders and dumps and, after a release, the uploads. Rollback keeps working (it never restored the database). The new tool is staged on the server for Babuni to install with `sudo`. Today's uploaded release files (326 MB) were removed. Documented in `docs/DEPLOYMENT.md`. Claude Code (Claude Opus 5.5).
+- **Verification:** `bash -n` syntax check; checksum of the staged file matches (`f88bd7d5…`). Not yet run on the server.
+
 ## 2026-11-26 — Released: 0.9.0-beta.84
 
 - **Released** 2026-11-26 at 06:26 UTC, approved by Babuni ("I guess we can release it like that now"): `main` at `3e85a44c`, frontend `20261126-062614`, backup `20261126-062610`. It carries every entry below down to the beta.83 release: the regional expansions and coming-soon lands, the Evergrove review and the Grimnir Vault in Celesterra, all six Climb conversions, Homecoming with the three open homelands and their messages, nine Find with all eight letters (MORKAHJA), the bundle rule, the Vale's weather as a stand-in and the avatar-card fix. Live script contains `0.9.0-beta.84`; see `docs/DEPLOYMENT.md`.

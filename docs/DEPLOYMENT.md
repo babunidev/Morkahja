@@ -165,7 +165,16 @@ Before this tool, every root step needed Babuni's `sudo` password, so releases s
 
 Releases and rollbacks run `pm2 startOrRestart ecosystem.config.cjs`, which also starts apps new to the file (the bots on their first release); a rollback removes `morkahja-bots` first, in case the previous commit does not define it. Since 2026-11-11 the backend update fetches the bundle into a side ref and fast-forwards `main`, because Git refuses to fetch straight into a checked-out branch.
 
-**Uploading a release:** build the client (`npm run build --prefix client`), pack the contents of `client/dist` as `client.tar.gz` with `index.html` at the archive root (`tar -czf client.tar.gz -C client/dist .`; an archive with a `dist/` folder is refused), create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH, and restore the new dump into a disposable PostgreSQL container to prove the backup.
+**Uploading a release:** build the client (`npm run build --prefix client`), pack the contents of `client/dist` as `client.tar.gz` with `index.html` at the archive root (`tar -czf client.tar.gz -C client/dist .`; an archive with a `dist/` folder is refused), create a Git bundle of `main` starting from the commit the server runs (`git bundle create morkahja.bundle <server-commit>..main`), write `SHA256SUMS` for both, and copy the three files to the staging folder. Then run `sudo morkahja-deploy release` over SSH. Since 2026-11-26 a release makes no database dump and removes the uploads afterwards (see below).
+
+## No backups on the server (2026-11-26)
+
+Babuni: "don't back up anything on the server anymore … download them to the computer instead, so we don't make a big pile on the server." GitHub holds the code; the player database lives only on the server, and Babuni accepts that until there are paying players.
+
+- **`release`** makes no database dump. A rollback never restores the database (it switches the code, `node_modules` and `.env` back), so it keeps working: the `.env` snapshot of the last release, the previous frontend release and the previous `node_modules` stay, nothing else.
+- **`backup`** writes one dump and its row counts into `~/morkahja-deploy/backup/` for download, replacing any older one, and nothing into `/var/backups`. Download: `scp -i ~/.ssh/id_ed25519_babuni_server -o IdentitiesOnly=yes babuni@www.babuni.dev:morkahja-deploy/backup/morkahja-<stamp>.dump ~/Backups/Morkahja/`.
+- **`prune`** (also after every release) removes every backup folder in `/var/backups/morkahja-subpath`, every dump in the upload folder, old `prev-*` upload folders, and after a release the uploaded `client.tar.gz`, `morkahja.bundle` and `SHA256SUMS`.
+- **Installed version:** prepared by Claude Code (Claude Opus 5.5) on 2026-11-26 (sha256 `f88bd7d5…`; the previous one was `ef418ca2…`), staged as `~/morkahja-deploy/morkahja-deploy.new`; Babuni installs it with `sudo install -o root -g root -m 755 ~/morkahja-deploy/morkahja-deploy.new /usr/local/bin/morkahja-deploy`, since the deploy login cannot change the tool. The passwordless sudo rule names the path only, so it keeps working.
 
 ## Production release — 2026-11-26, 06:26 UTC (0.9.0-beta.84: regional expansions D-063–D-066, Homecoming, six Climb conversions, eight letters)
 
@@ -174,7 +183,7 @@ Approved by Babuni ("I guess we can release it like that now"). `main` at `3e85a
 - **Before:** backend `ed675740`, frontend `20261124-110948`. `morkahja-deploy status` showed no uncommitted live files, so no reset was needed. Previous staging files moved to `prev-20261126-062502`.
 - **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 52, server 78). The client archive has `index.html` at its root. Uploads verified by `sha256sum -c` on the server (client `3387aff4…`, bundle `7182c30b…`, only `refs/heads/main` from `ed675740`).
 - **Release:** backup `20261126-062610` (sha256 `058fc14b1879bdf5662c5488f43fa7583b2fd0c531402d0d50921897876ea0fb`; devices 85, inventories 125, purchases 1, player achievements 363; the player and avatar counts scrolled out of the captured output). Backend checked out `3e85a44c`, `npm ci`, health gate and content endpoint passed, frontend release `20261126-062614`. Public checks passed; the live script `index-sk85ja2t.js` contains `0.9.0-beta.84`; the new banner `expansion_evergrove.webp` answers 200; the live catalog has 1007 active with `mExtensioHomelandOf: ["Verdani"]` and 1999 inactive. API and bots online. The script pruned one old bundle, one `node_modules` copy and one backup folder (kept newest 5).
-- **Backup:** not yet downloaded and restored.
+- **Backup:** the release's dump `20261126-062610` is the last one made on the server; under the rule above it is downloaded to Babuni's computer and then removed.
 - **Not yet checked live:** the start-up Homecoming pass (the deploy command has no log view), a homeland earned in play and its message, travel to a homeland, a real phone.
 
 ## Production release — 2026-11-24, 11:09 UTC (0.9.0-beta.83: player choices — equipment, specialization, Edit avatar, travel; soul links D-062; Main menu button; charge-back flight)
