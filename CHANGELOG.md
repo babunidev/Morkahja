@@ -11,7 +11,7 @@
 
 ## 2026-11-26 — Unreleased: specializations only for skills the avatar has, and a free change for each new type
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** a specialization can be chosen only for a type of skill the avatar has, so at the start only the types of its random starting skills. Every new one it gets gives a free change; they add up ("Free ×7").
 - **Rules (`shared/src/specialization.ts`):** `heldSpecializationTypes` (skills with a charge left), `choosableSpecializations` (held types plus the current one, which stays even when its skills run out), `specializationFreeChanges` (stored free changes plus every held type the avatar has not had before). The first choice stays free; a change uses a free change first and otherwise costs 1 gem. The avatar remembers the types it has had (`specializationTypesSeen`), so a type lost and found again gives no second free change.
 - **Server:** `chooseAvatarSpecialization` reads the authoritative inventory row in the same transaction, refuses a type the avatar holds no skill of (`SPECIALIZATION_NOT_HELD`), and stores the seen types and the remaining free changes with the choice. New avatars record their starting types; at start-up, avatars without a record get one from what they hold now (`syncSpecializationProgressForAllAvatars`), so existing avatars earn free changes only for types new from then on. The avatar data carries `specializationFreeChanges`.
@@ -21,7 +21,7 @@
 
 ## 2026-11-26 — Unreleased: one size for every solution picture
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** every solution, on phone and desktop, the same size as in the Inventory, and the equipment slots the same size as well.
 - **Before (measured in the local game, 1280×800 / 390×844):** in-game Inventory and encounter row 78 / 70 px; the menu's item picker 106 / 68; equipment slots 57 / 58 in the starting-equipment frame, 92 / 62 on the menu's avatar card, 72 / 64 on the in-game card; level-up choices and result rewards 64 design px, lost items 52 (an essence 60).
 - **Change:** `client/src/ui/common/solutionSize.ts` derives one size from the in-game Inventory (the encounter art's width, five pictures, the grid's gap and side padding) and sets it as a CSS variable on the document (real pixels, following the stage's scale) and on the game stage (design pixels; `PortraitStage.tsx`). Equipment slots (`AvatarPartyDetailsCard.tsx`), the level-up choices (`LevelUpChoiceBar.tsx`), result rewards and losses (`ResultBlock.tsx`) use it; the menu's item picker (`AvatarSelectionPanel.tsx`) is as wide as the in-game Inventory, so its grid gives the same size. The encounter row keeps its own fit to its layer (69 px on a 390 phone). The small essence circles around the avatar portrait are not solution slots and stay as they were.
@@ -29,7 +29,7 @@
 
 ## 2026-11-26 — Unreleased: starting equipment in a small frame, and a quiet "Free slot" tag
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** a new player did not understand the item picker that opened straight away. Show the two slots first, in a small frame with a short explanation and the "?", titled like "choose your starting equipment", where the slots can be tapped. In the game, no popup when an item is used up: a small "Free slot" notice on the avatar that blinks a little, so players notice it by themselves; when they open the avatar card, the notice moves from the avatar to the free slot and hovers and pulses there.
 - **Main menu (`StartEquipmentPanel.tsx`, `AvatarSelectionPanel.tsx`):** after the specialization, if a slot is free and an item could fill it, the frame **Choose your starting equipment** shows both slots with an explanation, the Equipment "?" and a hint line. Tapping a free slot opens the inventory ("Choose an item · slot N"); after picking, the frame shows again with that item in its slot. **Continue** goes on to the avatar card with Play. The inventory no longer opens by itself, and the next slot no longer asks on its own.
 - **In the game (`GameEnvironment.tsx`, `PartyZone.tsx`, `AvatarPanel.tsx`):** the automatic inventory after an item broke is removed. While a slot is free and an item could fill it, a **Free slot** tag in the Morkahja colours blinks softly at the top of the local avatar. Opening the avatar card moves it: the tag flies from the avatar to the free slot and keeps hovering and pulsing on the slot's lower edge. The card's notice line says "Your equipped item is used up. Tap the free slot to equip a new one." after an item ran out in play, otherwise "A slot is free. Tap it to equip an item." The main-menu avatar card shows the same tag on its free slot.
@@ -38,7 +38,7 @@
 
 ## 2026-11-26 — Unreleased: before the world, choose a specialization and equip two items
 
-- **Not released.** Pushed to GitHub `main`.
+- **Released** in 0.9.0-beta.85 (2026-11-26, 08:57 UTC).
 - **Babuni's direction:** after creating an avatar, tapping it to enter the game first asks for a specialization, then for two items to equip; the item question comes back whenever an equipment slot is empty, for example after an item broke. Simple, a small picker is enough.
 - **Main menu (`AvatarSelectionPanel.tsx`):** tapping the active avatar opens the specialization picker first if it has none; after choosing (or Back), the inventory opens as "Equip an item · slot 1", then "· slot 2", for each empty slot an item in the inventory can fill; then the avatar card with Play. Closing a picker skips that step. An avatar with a specialization and both slots filled opens its card directly, as before.
 - **In the game (`GameEnvironment.tsx`):** when an equipped item breaks, the next encounter opens the inventory as "An item broke · equip another" for that slot, if another item can fill it; picking one equips it and closes the inventory without opening the avatar card.

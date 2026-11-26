@@ -176,6 +176,15 @@ Babuni: "don't back up anything on the server anymore … download them to the c
 - **`prune`** (also after every release) removes every backup folder in `/var/backups/morkahja-subpath`, every dump in the upload folder, old `prev-*` upload folders, and after a release the uploaded `client.tar.gz`, `morkahja.bundle` and `SHA256SUMS`.
 - **Installed version:** prepared by Claude Code (Claude Opus 5.5) on 2026-11-26 (sha256 `f88bd7d5…`; the previous one was `ef418ca2…`), staged as `~/morkahja-deploy/morkahja-deploy.new`; Babuni installs it with `sudo install -o root -g root -m 755 ~/morkahja-deploy/morkahja-deploy.new /usr/local/bin/morkahja-deploy`, since the deploy login cannot change the tool. The passwordless sudo rule names the path only, so it keeps working.
 
+## Production release — 2026-11-26, 08:57 UTC (0.9.0-beta.85: ready before the first step, Free slot tag, specializations by held skill types D-067, one solution size)
+
+Approved by Babuni ("Then let's release all this"). `main` at `7a352c4f`: the specialization and equipment prompts, the starting-equipment frame and Free slot tag, one size for every solution picture, D-067, the fix for a false Free slot after a collected reward (reported by Babuni during the release preparation), the version bump, and Babuni's Admin frame images.
+
+- **Before:** backend `3e85a44c`, frontend `20261126-062614`. `morkahja-deploy status` showed no uncommitted live files.
+- **Checks before the release:** `npm run release:check` on Nobara passed in full (static data, typecheck and build, client 54, server 78). The client archive has `index.html` at its root. Uploads verified by `sha256sum -c` on the server (client `7e5edcae…`, bundle `e2c086d2…`, only `refs/heads/main` from `3e85a44c`).
+- **Release:** no database dump (since the no-backups rule). Backend checked out `7a352c4f`, `npm ci`, health gate and content endpoint passed, frontend release `20261126-085718`. Public checks passed; the live script `index-o3iEirhk.js` contains `0.9.0-beta.85`. API and bots online. Prune removed one frontend release, one `node_modules` copy, one bundle and the uploads; no backup folders exist. Disk 12 GB used, 25 GB free.
+- **Not yet checked live:** the start-up specialization record for existing avatars (the deploy command shows no log), a free change earned by a new skill type in play, an item used up in play with the Free slot tag, a real phone.
+
 ## Production release — 2026-11-26, 06:26 UTC (0.9.0-beta.84: regional expansions D-063–D-066, Homecoming, six Climb conversions, eight letters)
 
 Approved by Babuni ("I guess we can release it like that now"). `main` at `3e85a44c`: everything since beta.83 from `fc656c28` to the version bump, plus Babuni's Admin saves of solution and frame images.
