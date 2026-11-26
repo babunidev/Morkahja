@@ -80,7 +80,7 @@ Detailed records: [regional implementation report](REPORT_REGIONAL_EXPANSIONS_20
    - The three homelands are switched on, so a homeland can be played as soon as it is earned.
 4. **D-066, Find encounters, letters and regions:**
    - Six letterless Find encounters were set aside by a seeded random draw: 20001, 20002, 20003, 20069, 20072 and 20111. 20090 stays.
-   - The seven letter encounters (A, H, K, J, O, M, A: 20081, 20083, 20084, 20085, 20086, 20087, 20089) stay in the base game.
+   - The letter encounters stay in the base game. They spell **MORKAHJA**, but the R was missing, so 20090 Ethereal Glades now carries a carved R. All eight are in the base game: M 20087, O 20086, R 20090, K 20084, A 20081, H 20083, J 20085, A 20089.
    - Fey Greens' sanctuary is Verdani work, as the world archive has it. Its text no longer says faun.
    - Every regional placement is decided: no row in the manifest or the placement CSV says "review" any more. The map pin is a game placement, not canon.
 5. **The six planned Find-to-Open Lock conversions are not needed for now.** Babuni reduced Find by setting six aside instead. Open Lock stays at 3 unless conversions are requested again.

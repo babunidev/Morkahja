@@ -86,7 +86,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20087 | Radiant Heath | Trick / Find | B:10097/6; C:—/5; D:—/39 | 1 / — / 2×1 | Radiant Quill and fallback 39; M clue; lore specifies glowing water/tablet absent in scene. |
 | 20088 | Mesmerizing Hillsides | **Trick / Climb (committed 2026-11-26)** | B:10071/14; C:—/13 | 1 / — / 2×1 | Approved Round 2 revision: the tall rock in the hollow with its shelf of flowers; Climbing Gear. Mesmerizing Windchime 10098 no longer referenced. |
 | 20089 | Magical Glens | Trick / Find | B:10099/6; C:—/5 | 1 / — / 2×1 | Echohorn and A clue; preserve repeated A; distinguish from 20081. |
-| 20090 | Ethereal Glades | Trick / Find | B:10100/6; C:—/5 | 1 / — / 2×1 | Glademyst Geode; luminous glade, weak treasure cue; avoid duplicating 20089. |
+| 20090 | Ethereal Glades | Trick / Find | B:10100/6; C:—/5 | 1 / — / 2×1 | Glademyst Geode; luminous glade, weak treasure cue; avoid duplicating 20089. **R clue added 2026-11-26** (Babuni): the glow reveals a carved R on a sunken stone, completing MORKAHJA; preserve it. |
 | 20098 | Common Chest | Trick / Open Lock | B:10110/—; C:—/7 | 1 / — / 2×2 | Sunstone Key and separate skill lane; ordinary chest repeats 20119. |
 | 20111 | Young Redeye | Trick / Find | A:—/10; B:10125/6; C:—/5; D:—/9 | 1 / — / 2×1 | Currently Combat; playful pup, Divining Locket detects treasure but no treasure cue; review combat lanes and possible peaceful family. |
 | 20119 | Simple Treasure | Trick / Open Lock | B:10136/—; C:—/7 | 1 / — / 2×2 | Sage Key and separate skill lane; repeated meadow chest. |
@@ -105,7 +105,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 
 ### Cross-record findings
 
-- Nine Nagar/Goldhorn scenes dominate Combat; vary situations, not creature names. Twenty-one Find candidates, three locked chests and no Climb dominate Trick. Preserve A, H, K, J, O, M, A clues without inventing their meaning.
+- Nine Nagar/Goldhorn scenes dominate Combat; vary situations, not creature names. Twenty-one Find candidates, three locked chests and no Climb dominate Trick. Preserve M, O, R, K, A, H, J, A clues (they spell MORKAHJA; R added to 20090 on 2026-11-26) without inventing their meaning.
 - Primary/fallback same-lane type differences (not automatically errors): 20068:B 10080(6)/20; 20084:B 10094(20)/6; 20091:B 10102(10)/30; 20092:B 10103(10)/30; 20093:B 10104(10)/30; 20094:B 10107(10)/30; 20095:B 10108(10)/30; 20096:B 10109(10)/30; 20107:B 10119(26)/30; 20185:B 10235(40)/18. Primary IDs and fallback types are distinct; review intention before edits.
 - Six Climb skills and six Climb items, seven Purge skills and fourteen Purge items, one Trade skill and two Trade items exist worldwide. Reuse after reading complete records. Hunting/Stealth solutions require semantic review (Melodic Persuasion 10056 is HuntingSkill; Backstab 10065 is StealthSkill). No global migration here.
 - Aetherion is canonically within the Vale. The earlier audit found six city-label records in the vale polygon: 20012 was mislabelled, while 20062 and 20181–20184 belong to expansion 1004, all D2. Include 20012 in the base-game baseline; the five city records remain protected. The approved pin [405, 552] replaces [520, 572] in both CSV and generated map entry, with the Ethera's Vale label. The precise underground layout remains unspecified. Geography and expansion gating differ.

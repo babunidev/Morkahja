@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: Ethereal Glades carries the missing R
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's finding:** the letter clues spell MORKAHJA, but the R was missing. No encounter, archive or Git history ever had one. Babuni's direction: add it to one of the Find encounters without a letter, written creatively into the text.
+- **Change (20090 Ethereal Glades):** one new paragraph after the pale radiance spreads over the forest floor: "Where it reaches a flat stone half-sunk among the flowers, the glow settles into old grooves worn almost smooth. For a moment they shine clearly, as if lit from within: a single carved letter, R." The rest of the text, the slots, the picture and the reward are unchanged; the painting already has a large mossy stone among glowing flowers. The base game now holds all eight letters: M (20087), O (20086), R (20090), K (20084), A (20081), H (20083), J (20085), A (20089).
+- **Verification:** `regionalExpansions.test.ts` reads the carved letter of each of the eight encounters and checks that they spell MORKAHJA and stay in the base game. `npm run release:check`: static data, typecheck, build and client 52/52 passed; server 77/78 on the first run, where `roomService.test.ts` failed once while the local backend was running against the same database; it then passed three times on its own and the full server suite passed 78/78. Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Developer report for 00 Management
 
 - `docs/REPORT_DEVELOPMENT_2026-11-26.md`: the day's results, catalog counts, Babuni's decisions D-063 to D-066, commits, tests actually run and open items. Documentation only. Claude Code (Claude Opus 5.5).

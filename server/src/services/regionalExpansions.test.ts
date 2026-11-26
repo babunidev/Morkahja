@@ -109,7 +109,17 @@ assert.ok(selectEncounterInExpansion(1007, [], getEncounters(), () => 0));
 // Six Find encounters without a letter clue are set aside in 1999, never drawn;
 // every letter-clue encounter stays in the base game (Babuni, 2026-11-26).
 const SET_ASIDE = [20001, 20002, 20003, 20069, 20072, 20111];
-const LETTERS = [20081, 20083, 20084, 20085, 20086, 20087, 20089];
+// The eight letters spell MORKAHJA; Ethereal Glades (20090) got the missing R on 2026-11-26.
+const LETTERS = [20081, 20083, 20084, 20085, 20086, 20087, 20089, 20090];
+const carved = LETTERS.map((id) => {
+  const text = byId.get(id)!.mEncounterText;
+  // A letter alone on its line ("K."), or named in a sentence ("letter M", "letter: H", "letter, J,").
+  const match = /(?:^|\n)([A-Z])\.\s*(?:\n|$)/.exec(text)
+    ?? /letter(?:,|:)?\s+([A-Z])\b/.exec(text)
+    ?? /letter, ([A-Z]),/.exec(text);
+  return match?.[1];
+});
+assert.deepEqual([...carved.filter(Boolean)].sort().join(''), [...'MORKAHJA'].sort().join(''), `the letters spell MORKAHJA (${carved.join(' ')})`);
 assert.equal(getExpansionById(1999)?.mExtensioActive, false);
 assert.equal(getExpansionById(1999)?.mExtensioListed, false);
 assert.ok(SET_ASIDE.every((id) => byId.get(id)?.mEncounterExpansion === 1999));

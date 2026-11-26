@@ -646,3 +646,4 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on GitHub `main`, not released. This replaces the brief's six Find-to-Open-Lock conversions as the way to reduce Find; Open Lock stays at 3 unless Babuni asks for conversions.
 
+**Addendum (same day):** the letter clues spell MORKAHJA and the R was missing; at Babuni's direction 20090 Ethereal Glades, the one letterless Find encounter left in the base game, now carries a carved R. All eight letters are in the base game.
