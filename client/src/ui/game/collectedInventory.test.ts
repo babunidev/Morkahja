@@ -42,3 +42,9 @@ test('unknown solutions are ignored rather than shown in the wrong place', () =>
   const shown = inventoryWithCollected(base, [{ solutionId: 99999, quantity: 1, kind: 'reward' }], lookup);
   assert.deepEqual(shown, base);
 });
+
+test('collecting a reward keeps the equipped items in their slots', () => {
+  const equippedBase = { ...base, equipped: [base.items[0]?.solutionId ?? 1, null] } as typeof base;
+  const shown = inventoryWithCollected(equippedBase, [{ solutionId: 99999, quantity: 1, kind: 'reward' }], lookup);
+  assert.deepEqual(shown?.equipped, equippedBase.equipped);
+});

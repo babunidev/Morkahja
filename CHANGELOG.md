@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Fix: "Free slot" tag after collecting a reward with both slots filled
+
+- **Babuni's report:** the "Free slot" tag showed after picking a solution although no slot was free.
+- **Cause:** `inventoryWithCollected` (`client/src/ui/game/collectedInventory.ts`) shows a collected reward before the server commits it, from a copy of the inventory that left out `equipped`. While a collected reward was on screen, both slots looked empty, so the tag (and the card's empty slots) appeared until the next encounter.
+- **Fix:** the copy keeps the equipped items. New test in `collectedInventory.test.ts`. Claude Code (Claude Opus 5.5).
+- **Verification:** the test file passes (6/6); the full release check is in the beta.85 release entry. A pick of a solution in the local game did not show the tag before or after the fix; the collected-reward case was found in the code, not reproduced on screen.
+
 ## 2026-11-26 — Unreleased: specializations only for skills the avatar has, and a free change for each new type
 
 - **Not released.** Pushed to GitHub `main`.

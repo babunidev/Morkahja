@@ -29,6 +29,34 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-85',
+    version: '0.9.0-beta.85',
+    period: '26 Nov 2026',
+    groups: [
+      {
+        title: 'Ready before the first step',
+        notes: [
+          'A new avatar chooses its specialization first, then its starting equipment: a small frame shows the two slots, and a tap on a free slot lets you pick an item.',
+          'When an equipped item is used up, a small "Free slot" tag blinks on your avatar. Open the avatar card and it moves to the empty slot.',
+        ],
+      },
+      {
+        title: 'Specializations',
+        notes: [
+          'You can only specialize in a type of skill your avatar has. At the start that is the types of its first skills.',
+          'Every new type of skill your avatar finds gives a free change of specialization. Free changes add up, so you can mix and match as your skills grow.',
+        ],
+      },
+      {
+        title: 'Fixes',
+        notes: [
+          'Every solution picture and equipment slot now has the same size as in the inventory, on phone and desktop.',
+          'Collecting a reward no longer shows a "Free slot" on your avatar when both slots are filled.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-84',
     version: '0.9.0-beta.84',
     period: '26 Nov 2026',

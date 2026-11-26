@@ -41,6 +41,9 @@ function copyInventory(inventory: AvatarInventory | undefined): AvatarInventory 
     spellbook: (inventory?.spellbook ?? []).map((item) => ({ ...item })),
     items: (inventory?.items ?? []).map((item) => ({ ...item })),
     essences: (inventory?.essences ?? []).map((item) => ({ ...item })),
+    // The equipment stays (Babuni, 2026-11-26): without it, collecting a
+    // reward emptied both slots on screen and showed the "Free slot" tag.
+    ...(inventory?.equipped !== undefined ? { equipped: [...inventory.equipped] } : {}),
   };
 }
 
