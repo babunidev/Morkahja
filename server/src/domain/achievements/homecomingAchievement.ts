@@ -24,7 +24,8 @@ export const HOMECOMING_BASE_ICON = 'UI/04_ACHIEVEMENTS/im_glyph_monthly_reward.
 export const HOMECOMING_RANKS: AchievementRankDefinition[] = [
   {
     rank: 1,
-    title: 'Homecoming',
+    // Not the chain's own name: a rank title is worn by the avatar (Babuni, 2026-11-26).
+    title: 'Rootseeker',
     text: 'You have walked the land of your people.',
   },
   {

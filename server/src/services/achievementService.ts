@@ -1,5 +1,7 @@
+import { loadHomecomingState, type HomecomingState } from '../domain/achievements/homecomingProgress.js';
 import {
   HOMECOMING_ACHIEVEMENT_ID,
+  HOMECOMING_ENCOUNTERS_REQUIRED,
   HOMECOMING_BASE_ICON,
   HOMECOMING_CHAIN_TEXT,
   HOMECOMING_CHAIN_TITLE,
@@ -279,18 +281,22 @@ function buildContributorView(progress: number): AchievementProgressView {
   };
 }
 
-function buildHomecomingView(progress: number): AchievementProgressView {
-  const rank = homecomingRankFromProgress(progress);
+/**
+ * Homecoming's bar runs over encounters, not homelands: 0–100 for the best
+ * avatar whose homeland is still closed; the rank counts homelands earned.
+ */
+function buildHomecomingView(state: HomecomingState): AchievementProgressView {
+  const rank = homecomingRankFromProgress(state.earned);
   const rankDefinition = homecomingRankDefinition(rank);
-  const band = homecomingProgressBand(progress);
+  const complete = homecomingProgressBand(state.earned).bandEnd === null;
 
   return {
     achievementId: HOMECOMING_ACHIEVEMENT_ID,
     rank,
-    progress,
-    bandStart: band.bandStart,
-    bandEnd: band.bandEnd,
-    progressInBand: band.progressInBand,
+    progress: complete ? state.earned : state.towardNext,
+    bandStart: 0,
+    bandEnd: complete ? null : HOMECOMING_ENCOUNTERS_REQUIRED,
+    progressInBand: complete ? 1 : state.towardNext / HOMECOMING_ENCOUNTERS_REQUIRED,
     baseIconUrl: toPublicPath(HOMECOMING_BASE_ICON),
     rankOverlayUrl: rankDefinition?.rankOverlayPath
       ? toPublicPath(rankDefinition.rankOverlayPath)
@@ -405,7 +411,7 @@ function buildAchievementsViews(input: {
   helperProgress: number;
   contributorProgress: number;
   spiritguideProgress: number;
-  homecomingProgress: number;
+  homecoming: HomecomingState;
   alphaProgress: number;
   alphaLocked: boolean;
 }): AchievementProgressView[] {
@@ -422,7 +428,7 @@ function buildAchievementsViews(input: {
     buildEncounterSolveView(ENCOUNTER_SOLVE_ACHIEVEMENTS[2], input.helperProgress),
     buildContributorView(input.contributorProgress),
     buildSpiritguideView(input.spiritguideProgress),
-    buildHomecomingView(input.homecomingProgress),
+    buildHomecomingView(input.homecoming),
     buildAlphaPlayerView(input.alphaProgress, input.alphaLocked),
   ];
 
@@ -442,7 +448,7 @@ export async function getAchievementsSnapshotReadOnly(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
-    homecomingProgress,
+    homecoming,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -454,7 +460,7 @@ export async function getAchievementsSnapshotReadOnly(
     readAchievementProgressValue(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     readAchievementProgressValue(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
     readAchievementProgressValue(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
-    readAchievementProgressValue(playerId, HOMECOMING_ACHIEVEMENT_ID),
+    loadHomecomingState(playerId),
     readAchievementProgressValue(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -469,7 +475,7 @@ export async function getAchievementsSnapshotReadOnly(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
-    homecomingProgress,
+    homecoming,
     alphaProgress,
     alphaLocked,
   });
@@ -487,7 +493,7 @@ export async function getAchievementsSnapshot(
     helperProgress,
     contributorProgress,
     spiritguideProgress,
-    homecomingProgress,
+    homecoming,
     alphaProgress,
     alphaGlobal,
   ] = await Promise.all([
@@ -499,7 +505,7 @@ export async function getAchievementsSnapshot(
     loadSyncedAchievementProgress(playerId, ENCOUNTER_SOLVE_ACHIEVEMENTS[2].achievementId),
     loadSyncedAchievementProgress(playerId, CONTRIBUTOR_ACHIEVEMENT_ID),
     loadSyncedAchievementProgress(playerId, SPIRITGUIDE_ACHIEVEMENT_ID),
-    loadSyncedAchievementProgress(playerId, HOMECOMING_ACHIEVEMENT_ID),
+    loadHomecomingState(playerId),
     loadSyncedAchievementProgress(playerId, ALPHA_PLAYER_ACHIEVEMENT_ID),
     loadAlphaPlayerGlobalState(),
   ]);
@@ -515,7 +521,7 @@ export async function getAchievementsSnapshot(
       helperProgress,
       contributorProgress,
       spiritguideProgress,
-      homecomingProgress,
+      homecoming,
       alphaProgress,
       alphaLocked,
     }),

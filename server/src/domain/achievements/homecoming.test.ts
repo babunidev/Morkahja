@@ -6,7 +6,8 @@ import { HomelandNotForSaleError, unlockPlayerExpansion } from '../../services/p
 import type { PlayerDocument } from '../../types/player.js';
 import { loadAchievementProgress } from './achievementPersistence.js';
 import { HOMECOMING_ACHIEVEMENT_ID } from './homecomingAchievement.js';
-import { homelandForRace, syncHomecomingForAllAvatars, tryEarnHomeland } from './homecomingProgress.js';
+import { homelandForRace, loadHomecomingState, syncHomecomingForAllAvatars, tryEarnHomeland } from './homecomingProgress.js';
+import { HOMECOMING_RANKS } from './homecomingAchievement.js';
 
 // Homecoming (D-065): 100 encounters on one avatar open its people's homeland, once.
 assert.equal(homelandForRace('Verdani'), 1007);
@@ -27,6 +28,8 @@ const homecoming = async () => (await loadAchievementProgress(playerId, HOMECOMI
 
 const verdani = await avatar('Verdani', 99);
 assert.equal(await tryEarnHomeland(playerId, verdani), null, '99 encounters are not enough');
+assert.deepEqual(await loadHomecomingState(playerId), { earned: 0, towardNext: 99 }, 'the panel shows the way to 100');
+assert.notEqual(HOMECOMING_RANKS[0]?.title, 'Homecoming', 'the first title is not the chain name');
 await setProgression(playerId, verdani, { level: 5, experience: 0, encountersCompleted: 100, encountersFailed: 0 });
 const parallel = await Promise.all([tryEarnHomeland(playerId, verdani), tryEarnHomeland(playerId, verdani)]);
 assert.deepEqual(parallel.filter((value) => value !== null), [1007], 'earned once, even in parallel');
@@ -42,6 +45,7 @@ const aevis = await avatar('Aevis', 100);
 assert.equal(await tryEarnHomeland(playerId, grimnir), 1009);
 assert.equal(await tryEarnHomeland(playerId, aevis), null, 'Celesterra already open');
 assert.equal(await homecoming(), 2);
+assert.deepEqual(await loadHomecomingState(playerId), { earned: 2, towardNext: 0 }, 'no avatar is on the way to a closed homeland');
 
 // Existing avatars earn it at start-up.
 await avatar('Rokur', 230);
@@ -49,6 +53,7 @@ assert.ok(await syncHomecomingForAllAvatars() >= 1);
 player = await getPlayer<PlayerDocument>(playerId);
 assert.deepEqual(player?.homecoming, [1007, 1009, 1010]);
 assert.equal(await homecoming(), 3, 'every homeland');
+assert.equal((await loadHomecomingState(playerId)).earned, 3);
 
 // A homeland is never bought with gems.
 await assert.rejects(unlockPlayerExpansion(playerId, 1010), HomelandNotForSaleError);

@@ -114,3 +114,34 @@ export async function syncHomecomingForAllAvatars(timestamp = Date.now()): Promi
   }
   return added;
 }
+
+export interface HomecomingState {
+  /** Homelands the account has earned. */
+  earned: number;
+  /** The most encounters of an avatar whose homeland is not earned yet, up to 100. */
+  towardNext: number;
+}
+
+/**
+ * What the achievement panel shows (Babuni, 2026-11-26): from the first
+ * encounter on, how far the account's best avatar has come toward the next
+ * homeland it can open.
+ */
+export async function loadHomecomingState(playerId: string): Promise<HomecomingState> {
+  const player = await getPlayer<Partial<PlayerDocument>>(playerId);
+  const earnedIds = Array.isArray(player?.homecoming) ? player.homecoming : [];
+  const rows = await pool.query<{ race: string | null; encounters: number | null }>(
+    `SELECT a.data->>'race' AS race, (p.data->>'encountersCompleted')::int AS encounters
+     FROM progressions p JOIN avatars a ON a.player_id = p.player_id AND a.id = p.avatar_id
+     WHERE p.player_id = $1 AND p.id = 'current'`,
+    [playerId],
+  );
+  let towardNext = 0;
+  for (const row of rows.rows) {
+    const homeland = homelandForRace(row.race);
+    if (homeland !== null && !earnedIds.includes(homeland)) {
+      towardNext = Math.max(towardNext, Math.min(HOMECOMING_ENCOUNTERS_REQUIRED, row.encounters ?? 0));
+    }
+  }
+  return { earned: earnedIds.length, towardNext };
+}

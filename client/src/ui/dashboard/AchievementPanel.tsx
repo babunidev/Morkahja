@@ -196,11 +196,13 @@ function progressLabel(achievement: AchievementProgressDto): string {
   }
 
   if (achievement.achievementId === 'homecoming') {
+    // The bar counts one avatar's encounters toward its homeland (Babuni, 2026-11-26).
     if (achievement.bandEnd === null) {
-      return `${achievement.progress} homelands — every homeland reached`;
+      return 'Every homeland reached';
     }
 
-    return `${achievement.progress} / ${achievement.bandEnd} ${achievement.bandEnd === 1 ? 'homeland' : 'homelands'}`;
+    const earned = achievement.rank > 0 ? ` · ${achievement.rank} of 3 homelands` : '';
+    return `${achievement.progress} / ${achievement.bandEnd} encounters with one avatar${earned}`;
   }
 
   if (achievement.achievementId === 'spiritguide') {

@@ -2,12 +2,19 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: Homecoming shows the way to 100; first title Rootseeker
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** each rank title is worn as an avatar title, so the first should not be named like the achievement; show the progress toward the first 100 encounters from the first encounter on.
+- **Change:** rank 1 is now **Rootseeker** (then Hearthfriend, Child of Morkahja). The panel's bar counts the encounters of the account's best avatar whose homeland is still closed, 0–100 (`loadHomecomingState`), shown as "37 / 100 encounters with one avatar", with "· 1 of 3 homelands" once one is earned, and "Every homeland reached" at the end; it appears after the first encounter. The rank still counts homelands.
+- **Verification:** `homecoming.test.ts` extended (99 of 100 shown before the first homeland, nothing on the way when no avatar can open another); `npm run release:check` passed (client 52/52, server 78/78). Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Unreleased: Find-to-Climb Round 2
 
 - **Not released.** Pushed to GitHub `main`.
 - **Babuni's direction:** apply the second three Climb conversions.
 - **Change:** 20080 Dreamy Valley, 20071 Arcane Meadows and 20088 Mesmerizing Hillsides carry the prose of `docs/CLIMB_CONVERSIONS_ROUND_2.md`; slot B Faewoven Ladder 10167, Seeker's Grapnel 10211 and Climbing Gear 10071 with any climbing item (type 14) as fallback, slot C any Climb skill (13), subtype Climb; elements kept (Arcana, Nature, Air) and protected in `scripts/assign-encounter-element-subtype.mjs`. The base game now has six Climb encounters; Find 15, Open Lock 3. Ledger updated.
-- **Verification:** `npm run verify:static-data` and the release check (see the Homecoming entry above for the run). Claude Code (Claude Opus 5.5).
+- **Verification:** `npm run verify:static-data` and `npm run release:check` passed (client 52/52, server 78/78). Claude Code (Claude Opus 5.5).
 
 ## 2026-11-26 — Unreleased: Homecoming opens the three homelands (D-065)
 
