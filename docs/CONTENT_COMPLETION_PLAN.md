@@ -28,7 +28,7 @@ Ambush is the approved name for the merged Hunting and Stealth category; do not 
 
 Source snapshot: [4c72b414](https://github.com/babunidev/Morkahja/commit/4c72b41491d45d4da0bcfd5c8c0473c9f26d1d23). Counts derived from the complete encounter JSON joined to world-map labels; map placement can be interpretive, not immutable canon. The Hidden Market (20012) is approved base-game Trade, outside Aetherion. Its city label/pin was a mistaken interpretive placement, not canon; the narrative describes an underground market reached through a tunnel. Its approved map placement is in western Vale, southeast of Lovely Meadows, near the west trade road, at map units [405, 552] (CSV 195.82, 231.09). Five other Aetherion-labelled records belong to expansion 1004 and remain protected. The map CSV and generated entry are synchronized; exact underground layout is unspecified.
 
-49 geographic base-game encounters (47 random, 2 scripted); 79 other geographic encounters currently assigned expansion 0; 2 system records. The approved target is 120 geographic encounters, including scripted encounters: 27 per principal family plus 6 Learn and 6 Trade, an exact 90/5/5 split. The 49-record working baseline and 71 new tasks are based on proposed individual reclassifications.
+*Baseline as written on 2026-11-25:* 49 geographic base-game encounters (47 random, 2 scripted); 79 other geographic encounters currently assigned expansion 0; 2 system records. *Now (2026-11-26):* 45 geographic base-game encounters (43 random, 2 scripted) after two returned to the Vale and six were set aside (D-066); the out-of-Vale records are in their regional expansions. The approved target is 120 geographic encounters, including scripted encounters: 27 per principal family plus 6 Learn and 6 Trade, an exact 90/5/5 split. The 49-record working baseline and 71 new tasks are based on proposed individual reclassifications.
 
 | Family | Existing after proposed classification | Existing random | Target total | New needed |
 | --- | ---: | ---: | ---: | ---: |
@@ -80,14 +80,14 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 - [x] Approve nine encounters per principal-family subtype.
 - [x] Confirm six rare encounters, one per family.
 - [ ] Approve individual rare designations; defer draw probability and implementation to game design.
-- [ ] Establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
-- [ ] Check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
+- [x] *Done 2026-11-26 (D-063, D-064):* every out-of-Vale record has its regional expansion; two returned to the Vale. Original task: establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
+- [x] *Done 2026-11-26:* checked and tested (`regionalExpansions.test.ts`). Original task: check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
 - [ ] Implement approved solution taxonomy across shared/client/server, specialization selection and persisted numeric specialization values. Audit type 20 (travel), 32 (rare item), 29/30 and 35/36, 37/38 (legacy warmth) and all current references. Keep stable solution IDs, inventory charges, equipment, rarity and rewards; plan compatibility for old snapshots and future expansion records. Do not modify unrelated future-expansion stories.
-- [ ] Update subtype inference script so it cannot reintroduce retired categories or overwrite reviewed manual assignments.
+- [ ] Update subtype inference script so it cannot reintroduce retired categories or overwrite reviewed manual assignments. *Partly done 2026-11-26: the six Climb conversions are protected as overrides.*
 - [ ] Review the existing 49 encounters using the ledger below and resolve flagged cases before locking counts.
 - [ ] Create 13 Combat encounters: distribute across Combat, Purge and Ambush; favor missing Purge and nonviolent evasion.
-- [ ] Create 3 Trick Climb encounters; review and propose six Find-to-Open-Lock and six Find-to-Climb revisions.
+- [ ] Create 3 Trick Climb encounters (20207–20209). *Six Find-to-Climb revisions done 2026-11-26; instead of six Find-to-Open-Lock revisions, Babuni set six letterless Find encounters aside (D-066), so Find is 7 against a target of 9 and Open Lock 3 against 9.*
 - [ ] Create 22 Aid encounters: distribute across Heal, Aid and Nurture.
 - [ ] Create 24 Social encounters: distribute across Speechcraft, Inspiration and approved third category.
 - [ ] Create 4 Learn encounters.

@@ -143,13 +143,13 @@ There are fourteen types in the list. Travel and Rare Find exist only as items. 
 
 ### As built (2026-11-24)
 
-- **The map:** a land lights up under the mouse; a tap (not a drag) picks it. Lands whose expansion the player does not have (Keldor, Everwinter Valley) and Aetherion, while locked, are filled in red. Keldor is 1001, Everwinter Valley 1003, Aetherion (the city in the Vale) 1004; every other land is the base game.
+- **The map:** a land lights up under the mouse; a tap (not a drag) picks it. Lands whose expansion the player does not have (Keldor, Everwinter Valley) and Aetherion, while locked, are filled in red. Keldor is 1001, Everwinter Valley 1003, Aetherion (the city in the Vale) 1004. Since D-063 (2026-11-26) only Ethera's Vale is the base game; every other land is its own expansion (1005–1014). A land that is not open yet says "… is not open to travellers yet." with only Back; the three homelands (Evergrove, Celesterra, Fyrskar) open through Homecoming (D-065).
 - **The question:** "Travel to Eldertree Forest? It costs 1 [gem]. Are you sure?" with red and green; or, for a locked land, "You have not unlocked The Cursed Forest of Keldor yet. Would you like to take a look?", where green opens the Expansions menu over the game with that expansion unfolded, and closing it returns to the map. A refusal (not enough gems, someone already chose) shows in the question.
 - **The server** (`POST /room/travel`) checks the destination, the player's unlocked expansions and the gems, refuses during Atranor and a level-up and after a choice, and charges and swaps the encounter in one transaction (room row, then player row). The new encounter is drawn from the destination's expansion, avoiding recently played ones; it carries no follow-up, and after it the usual region roll applies. A host's room travels with everyone in it; a guest pays, leaves the room and gets a room of their own there (the gems go back if that fails).
 
-### Content still to sort out
+### Content sorted out (2026-11-26)
 
-Today the base game (expansion 0) has encounters placed in many lands: Eldertree Forest, Evergrove, Celesterra, Fyrskar and others (`docs/data/encounter_locations.csv`). Babuni will revise the content so that a region and its expansion line up. Until then, travel works by expansion: Ethera's Vale (the base game, 0), the Cursed Forest of Keldor (1001), Everwinter Valley (1003) and Aetherion (1004). Later every region may become its own expansion, with only some free, perhaps the races' homelands (Fyrskar Mountains, Celesterra, Evergrove) and the Eldertree Forest. That is future work and not part of this concept.
+Every region is now its own expansion (D-063, D-064): the base game is Ethera's Vale; Keldor, Everwinter Valley and Aetherion stay as they were; Eldertree Forest, Frostwind Mountains, Emberfrost, Shattered Peaks, the Desert of Ohgar, the Swamp of Karrhu and the Rocky Tundra are coming soon with gem prices; the races' homelands Evergrove, Celesterra and the Fyrskar Mountains are free, opened by playing 100 encounters with one avatar of their people (D-065). Travel always draws a random encounter from the destination's own pool.
 
 ## Contributions
 
