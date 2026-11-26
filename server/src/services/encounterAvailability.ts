@@ -4,12 +4,10 @@ import { getExpansionById } from './gameData.js';
  * Regional expansions (D-063): which encounters a new draw may give.
  *
  * Encounters held for review stay in the data but are never drawn, by the
- * random pool or by travel: 20009 Grimnir Vault lies in Deepstone Hollow, near
- * Everwinter Valley but not clearly inside it, so it is not given to the
- * active Everwinter expansion (1003) without Babuni's boundary and entitlement
- * review. An encounter already on screen is never taken away.
+ * random pool or by travel; one already on screen is never taken away. Empty
+ * since 2026-11-26, when Babuni placed 20009 Grimnir Vault in Celesterra (1009).
  */
-export const HELD_ENCOUNTER_IDS: ReadonlySet<number> = new Set([20009]);
+export const HELD_ENCOUNTER_IDS: ReadonlySet<number> = new Set<number>();
 
 /**
  * A land is open when it is the base game or an active expansion. An inactive

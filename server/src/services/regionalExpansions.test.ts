@@ -35,14 +35,15 @@ assert.equal(assigned.length, 79, 'the manifest lists 79 encounters');
 const encounters = Object.values(getEncounters());
 const byId = new Map(encounters.map((entry) => [entry.mEncounterID, entry]));
 
-// The data follows the manifest; 20009 is held in the base game, not given to Everwinter.
+// The data follows the manifest, as Babuni corrected it on 2026-11-26: the
+// Evergrove review and the Grimnir Vault in Celesterra.
+const REVIEWED: Record<number, number> = {
+  20009: 1009, 20010: 1005, 20016: 1005, 20021: 1005, 20024: 1005, 20029: 1005, 20033: 0, 20191: 0,
+};
+assert.equal(HELD_ENCOUNTER_IDS.size, 0, 'nothing is held any more');
 for (const { id, expansion } of assigned) {
-  const record = byId.get(id)!;
-  if (HELD_ENCOUNTER_IDS.has(id)) {
-    assert.equal(record.mEncounterExpansion, 0, `${id} is held, not moved`);
-  } else {
-    assert.equal(record.mEncounterExpansion, expansion, `${id} belongs to ${expansion}`);
-  }
+  const want = REVIEWED[id] ?? expansion;
+  assert.equal(byId.get(id)!.mEncounterExpansion, want, `${id} belongs to ${want}`);
 }
 assert.equal(byId.get(20127)?.mEncounterExpansion, 1005, 'Eternal Twilight Grove is in Eldertree Forest');
 
@@ -64,16 +65,18 @@ for (const record of encounters) {
 }
 assert.deepEqual(
   Object.fromEntries([...counts].sort((left, right) => left[0] - right[0])),
-  { 0: 52, 1001: 48, 1003: 20, 1004: 5, 1005: 22, 1006: 9, 1007: 10, 1008: 7, 1009: 7, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1 },
-  '203 records: 51 Vale and universal + held 20009, 73 existing, 78 moved',
+  { 0: 53, 1001: 48, 1003: 20, 1004: 5, 1005: 27, 1006: 9, 1007: 3, 1008: 7, 1009: 8, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1 },
+  '203 records: 51 Vale and universal + the Ogru and the Bloodfang, 73 existing, 77 regional',
 );
 
-// A base-game player draws only the Vale: none of the 79, not the held one.
+// A base-game player draws only the Vale: 49 encounters, none of the 77 regional ones.
 const base = randomPool([0]);
-const assignedIds = new Set(assigned.map((entry) => entry.id));
-assert.ok(base.length > 0);
+const assignedIds = new Set(assigned.map((entry) => entry.id).filter((id) => REVIEWED[id] !== 0));
+assert.equal(base.length, 49);
 assert.ok(base.every((record) => record.mEncounterExpansion === 0 && !assignedIds.has(record.mEncounterID)),
   'no out-of-Vale encounter in a base-game draw');
+assert.ok(base.some((record) => record.mEncounterID === 20191) && base.some((record) => record.mEncounterID === 20033),
+  'the Ogru and the Bloodfang are back in the Vale');
 
 // A player with every active expansion draws those too, still none of the 79.
 const owner = randomPool([0, 1001, 1003, 1004]);
@@ -88,10 +91,9 @@ assert.ok(owner.every((record) => !assignedIds.has(record.mEncounterID)));
 const forged = randomPool([0, 1005, 1006, 1007, 1014]);
 assert.equal(forged.length, base.length, 'a closed region is closed even to an account that lists it');
 
-// Travel draws: the held encounter never, even when asked for its land directly.
-for (let index = 0; index < 60; index += 1) {
-  assert.notEqual(selectEncounterInExpansion(0, [], getEncounters(), () => index % 52)?.mEncounterID ?? 0, 20009);
-}
+// Travel to Celesterra can give the Grimnir Vault once the land opens.
+const celesterra = Array.from({ length: 8 }, (_, index) => selectEncounterInExpansion(1009, [], getEncounters(), () => index)?.mEncounterID);
+assert.ok(celesterra.includes(20009));
 
 // Travel and unlocking refuse a closed region before anything is read or charged.
 await assert.rejects(

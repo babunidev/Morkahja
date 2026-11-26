@@ -100,7 +100,7 @@ console.log('worldMap.test.ts passed');
   }
 
   // Every encounter of a regional expansion is placed in that land, and no
-  // base-game encounter outside the Vale is left (20009 is held, D-063).
+  // base-game encounter lies outside the Vale (D-063).
   const { readFileSync } = await import('node:fs');
   const { ENCOUNTER_LOCATIONS } = await import('./encounterLocations.js');
   const encounters = JSON.parse(readFileSync(new URL('../../../../../server/game/encountersdata.json', import.meta.url), 'utf8')) as Record<string, { mEncounterID: number; mEncounterExpansion: number }>;
@@ -110,7 +110,7 @@ console.log('worldMap.test.ts passed');
       assert.equal(REGION_EXPANSIONS[place?.regionId ?? ''], record.mEncounterExpansion, `encounter ${record.mEncounterID} is placed in its expansion's land`);
     }
     if (record.mEncounterExpansion === 0 && place && place.regionId !== 'vale') {
-      assert.equal(record.mEncounterID, 20009, `base-game encounter ${record.mEncounterID} lies outside the Vale`);
+      assert.fail(`base-game encounter ${record.mEncounterID} lies outside the Vale`);
     }
   }
   assert.equal(travelTargetFor('region:vale')?.name, "Ethera's Vale");
