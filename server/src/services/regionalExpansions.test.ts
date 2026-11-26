@@ -75,14 +75,14 @@ for (const record of encounters) {
 }
 assert.deepEqual(
   Object.fromEntries([...counts].sort((left, right) => left[0] - right[0])),
-  { 0: 53, 1001: 48, 1003: 20, 1004: 5, 1005: 27, 1006: 9, 1007: 3, 1008: 7, 1009: 8, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1 },
-  '203 records: 51 Vale and universal + the Ogru and the Bloodfang, 73 existing, 77 regional',
+  { 0: 47, 1001: 48, 1003: 20, 1004: 5, 1005: 27, 1006: 9, 1007: 3, 1008: 7, 1009: 8, 1010: 7, 1011: 5, 1012: 4, 1013: 6, 1014: 1, 1999: 6 },
+  '203 records: the Vale and universal 47, 73 existing, 77 regional, 6 Find encounters set aside (1999)',
 );
 
 // A base-game player draws only the Vale: 49 encounters, none of the 77 regional ones.
 const base = randomPool([0]);
 const assignedIds = new Set(assigned.map((entry) => entry.id).filter((id) => REVIEWED[id] !== 0));
-assert.equal(base.length, 49);
+assert.equal(base.length, 43, '49 Vale encounters less the six set aside');
 assert.ok(base.every((record) => record.mEncounterExpansion === 0 && !assignedIds.has(record.mEncounterID)),
   'no out-of-Vale encounter in a base-game draw');
 assert.ok(base.some((record) => record.mEncounterID === 20191) && base.some((record) => record.mEncounterID === 20033),
@@ -105,6 +105,16 @@ assert.equal(forged.length, base.length, 'a closed region is closed even to an a
 const verdani = randomPool([0, 1007]);
 assert.equal(verdani.length, base.length + randomIn(1007), 'Evergrove plays once earned');
 assert.ok(selectEncounterInExpansion(1007, [], getEncounters(), () => 0));
+
+// Six Find encounters without a letter clue are set aside in 1999, never drawn;
+// every letter-clue encounter stays in the base game (Babuni, 2026-11-26).
+const SET_ASIDE = [20001, 20002, 20003, 20069, 20072, 20111];
+const LETTERS = [20081, 20083, 20084, 20085, 20086, 20087, 20089];
+assert.equal(getExpansionById(1999)?.mExtensioActive, false);
+assert.equal(getExpansionById(1999)?.mExtensioListed, false);
+assert.ok(SET_ASIDE.every((id) => byId.get(id)?.mEncounterExpansion === 1999));
+assert.ok(LETTERS.every((id) => byId.get(id)?.mEncounterExpansion === 0), 'all letter encounters are in the base game');
+assert.ok(randomPool([0, 1001, 1003, 1004, 1999]).every((record) => !SET_ASIDE.includes(record.mEncounterID)), 'set aside is never drawn');
 
 // Travel (Babuni, 2026-11-26): a random encounter from the destination's own
 // pool, every one of them possible, never one from elsewhere.

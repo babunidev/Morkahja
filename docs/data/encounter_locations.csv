@@ -10,88 +10,88 @@
 9,19670,Forgotten Procession,1001,Cursed Forest of Keldor,Expansion assignment,116.5,177.2,Directly tied to this region by its mEncounterExpansion value.
 10,19671,Silent Throne,1001,Cursed Forest of Keldor,Expansion assignment,133.7,189.2,Directly tied to this region by its mEncounterExpansion value.
 11,19672,Verdani’s Vigil,1001,Cursed Forest of Keldor,Expansion assignment,110.0,157.3,Directly tied to this region by its mEncounterExpansion value.
-12,20001,Lovely Meadows,0,Ethera's Vale,Interpretive placement,271.4,232.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-13,20002,Enchanted Glades,0,Ethera's Vale,Narrative / landmark,281.0,261.1,Regional name or identifiable landscape in the encounter narrative.
-14,20003,Fae Pastures,0,Ethera's Vale,Interpretive placement,290.3,261.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+12,20001,Lovely Meadows,1999,Ethera's Vale,Interpretive placement,271.4,232.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+13,20002,Enchanted Glades,1999,Ethera's Vale,Narrative / landmark,281.0,261.1,Regional name or identifiable landscape in the encounter narrative.
+14,20003,Fae Pastures,1999,Ethera's Vale,Interpretive placement,290.3,261.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 15,20004,Mystic Grass,0,Ethera's Vale,Interpretive placement,270.3,245.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 16,20005,Seraphic Plains,0,Ethera's Vale,Narrative / landmark,189.7,276.2,Regional name or identifiable landscape in the encounter narrative.
-17,20006,Aevis Chest,1005,Eldertree Forest,Narrative / landmark,220.8,348.0,Regional name or identifiable landscape in the encounter narrative.
-18,20007,Aevis Lockbox,1005,Eldertree Forest,Narrative / landmark,203.2,327.4,Regional name or identifiable landscape in the encounter narrative.
-19,20008,Grimnir Trunk,1006,Frostwind Mountains,Narrative / landmark,247.6,126.4,Regional name or identifiable landscape in the encounter narrative.
+17,20006,Aevis Chest,1005,Eldertree Forest,Approved region,220.8,348.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+18,20007,Aevis Lockbox,1005,Eldertree Forest,Approved region,203.2,327.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+19,20008,Grimnir Trunk,1006,Frostwind Mountains,Approved region,247.6,126.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 20,20009,Grimnir Vault,1009,Celesterra,Approved region,54.6,390.9,"Babuni placed the Grimnir Vault in Celesterra, below the Grimnir Skylands (2026-11-26). Point chosen by Claude Code, not canon."
 21,20010,Verdani Casket,1005,Eldertree Forest,Approved region,299.7,344.3,"Moved from Evergrove by Babuni's Evergrove review (2026-11-26): woodland prose and art. Point inside the forest chosen by Claude Code, not canon."
 22,20011,Magic Source,0,Ethera's Vale,Interpretive placement,205.3,237.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 23,20012,Hidden Market,0,Ethera's Vale,Approved placement,195.82,231.09,"Western Vale, southeast of Lovely Meadows near the western trade road; entrance location approved 2026-11-25."
-24,20013,Cauterized Rokur,1008,Emberfrost,Interpretive placement,416.0,74.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-25,20014,Downed Aevis,1009,Celesterra,Interpretive placement,89.6,409.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-26,20015,Weakened Grimnir,1010,Fyrskar Mountains,Interpretive placement,103.4,77.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+24,20013,Cauterized Rokur,1008,Emberfrost,Approved region,416.0,74.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+25,20014,Downed Aevis,1009,Celesterra,Approved region,89.6,409.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+26,20015,Weakened Grimnir,1010,Fyrskar Mountains,Approved region,103.4,77.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 27,20016,Ailing Verdani,1005,Eldertree Forest,Approved region,235.8,349.6,"Moved from Evergrove by Babuni's Evergrove review (2026-11-26): woodland prose and art. Point inside the forest chosen by Claude Code, not canon."
-28,20017,Flameveil Emberheart,1008,Emberfrost,Interpretive placement,355.7,96.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-29,20018,Stonefist Ironwill,1010,Fyrskar Mountains,Interpretive placement,72.0,88.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-30,20019,Ashen Revenant Witch,1008,Emberfrost,Interpretive placement,356.3,115.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-31,20020,Ashen Revenant Seer,1008,Emberfrost,Interpretive placement,399.3,127.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+28,20017,Flameveil Emberheart,1008,Emberfrost,Approved region,355.7,96.9,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+29,20018,Stonefist Ironwill,1010,Fyrskar Mountains,Approved region,72.0,88.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+30,20019,Ashen Revenant Witch,1008,Emberfrost,Approved region,356.3,115.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+31,20020,Ashen Revenant Seer,1008,Emberfrost,Approved region,399.3,127.2,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 32,20021,Blightwraith Huntress,1005,Eldertree Forest,Approved region,218.5,361.6,"Moved from Evergrove by Babuni's Evergrove review (2026-11-26): woodland prose and art. Point inside the forest chosen by Claude Code, not canon."
-33,20022,Crumblegheist Mage,1011,Shattered Peaks,Narrative / landmark,147.5,55.2,Regional name or identifiable landscape in the encounter narrative.
-34,20023,Tempestwailer Wildheart,1009,Celesterra,Interpretive placement,129.7,381.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+33,20022,Crumblegheist Mage,1011,Shattered Peaks,Approved region,147.5,55.2,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+34,20023,Tempestwailer Wildheart,1009,Celesterra,Approved region,129.7,381.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 35,20024,Blightwraith Rootrot,1005,Eldertree Forest,Approved region,282.4,324.3,"Moved from Evergrove by Babuni's Evergrove review (2026-11-26): woodland prose and art. Point inside the forest chosen by Claude Code, not canon."
-36,20025,Crumblegheist Roughian,1011,Shattered Peaks,Interpretive placement,122.9,51.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-37,20026,Crumblegheist Barbarian,1011,Shattered Peaks,Interpretive placement,161.4,23.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-38,20027,Tempestwailer Stormcaller,1005,Eldertree Forest,Interpretive placement,198.8,337.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-39,20028,Tempestwailer Seductress,1009,Celesterra,Interpretive placement,63.8,351.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+36,20025,Crumblegheist Roughian,1011,Shattered Peaks,Approved region,122.9,51.9,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+37,20026,Crumblegheist Barbarian,1011,Shattered Peaks,Approved region,161.4,23.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+38,20027,Tempestwailer Stormcaller,1005,Eldertree Forest,Approved region,198.8,337.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+39,20028,Tempestwailer Seductress,1009,Celesterra,Approved region,63.8,351.8,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 40,20029,Blightwraith Occultist,1005,Eldertree Forest,Approved region,275.7,361.6,"Moved from Evergrove by Babuni's Evergrove review (2026-11-26): woodland prose and art. Point inside the forest chosen by Claude Code, not canon."
-41,20030,Ashen Revenant Warlock,1008,Emberfrost,Interpretive placement,399.6,65.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-42,20031,Pantheon Temple,1005,Eldertree Forest,Narrative / landmark,239,324,"South of Eldridia, toward Eldertree Forest, as described."
+41,20030,Ashen Revenant Warlock,1008,Emberfrost,Approved region,399.6,65.2,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+42,20031,Pantheon Temple,1005,Eldertree Forest,Approved region,239,324,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 43,20032,Rare Treasurechest,0,Ethera's Vale,Narrative / landmark,256.2,286.1,Regional name or identifiable landscape in the encounter narrative.
 44,20033,Wild Bloodfang,0,Ethera's Vale,Approved region,242.4,260.4,"Moved from Evergrove back to Ethera's Vale by Babuni's Evergrove review (2026-11-26): the world archive places this creature in the Vale. Point chosen by Claude Code, not canon."
 45,20034,Menacing Goldhorn,0,Ethera's Vale,Interpretive placement,317.5,212.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-46,20035,Ohgar Skorpo,1012,Desert of Ohgar,Narrative / landmark,228,415,Regional name or identifiable landscape in the encounter narrative.
-47,20036,Liani Shadowwolf,1005,Eldertree Forest,Interpretive placement,293.5,361.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-48,20037,Flytrap Grotto,1013,Swamp of Karrhu,Narrative / landmark,382,224,Regional name or identifiable landscape in the encounter narrative.
-49,20038,Inferno Duck,1013,Swamp of Karrhu,Narrative / landmark,372.3,256.5,Regional name or identifiable landscape in the encounter narrative.
-50,20039,Eldertree Grove,1005,Eldertree Forest,Interpretive placement,285.7,338.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-51,20040,Shadowed Hollow,1005,Eldertree Forest,Interpretive placement,275.3,336.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-52,20041,Sunlit Dell,1005,Eldertree Forest,Interpretive placement,265.9,327.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-53,20042,Enchanted Hollow,1005,Eldertree Forest,Interpretive placement,207.3,348.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-54,20043,Sylvan Sanctuary,1005,Eldertree Forest,Interpretive placement,191.0,348.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+46,20035,Ohgar Skorpo,1012,Desert of Ohgar,Approved region,228,415,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+47,20036,Liani Shadowwolf,1005,Eldertree Forest,Approved region,293.5,361.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+48,20037,Flytrap Grotto,1013,Swamp of Karrhu,Approved region,382,224,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+49,20038,Inferno Duck,1013,Swamp of Karrhu,Approved region,372.3,256.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+50,20039,Eldertree Grove,1005,Eldertree Forest,Approved region,285.7,338.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+51,20040,Shadowed Hollow,1005,Eldertree Forest,Approved region,275.3,336.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+52,20041,Sunlit Dell,1005,Eldertree Forest,Approved region,265.9,327.3,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+53,20042,Enchanted Hollow,1005,Eldertree Forest,Approved region,207.3,348.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+54,20043,Sylvan Sanctuary,1005,Eldertree Forest,Approved region,191.0,348.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 55,20044,Darkwood Thicket,1001,Cursed Forest of Keldor,Expansion assignment,71.6,222.7,Directly tied to this region by its mEncounterExpansion value.
-56,20045,Tranquil Glade,1005,Eldertree Forest,Interpretive placement,258.8,335.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-57,20046,Feral Hollow,1005,Eldertree Forest,Interpretive placement,294.5,330.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-58,20047,Moonlit Oasis,1005,Eldertree Forest,Interpretive placement,221.1,327.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-59,20048,Grimnir Steps,1005,Eldertree Forest,Interpretive placement,200.6,356.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-60,20049,Firefly Brook,1005,Eldertree Forest,Interpretive placement,240.8,334.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+56,20045,Tranquil Glade,1005,Eldertree Forest,Approved region,258.8,335.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+57,20046,Feral Hollow,1005,Eldertree Forest,Approved region,294.5,330.7,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+58,20047,Moonlit Oasis,1005,Eldertree Forest,Approved region,221.1,327.3,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+59,20048,Grimnir Steps,1005,Eldertree Forest,Approved region,200.6,356.9,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+60,20049,Firefly Brook,1005,Eldertree Forest,Approved region,240.8,334.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 61,20050,Blackwood Portal,1001,Cursed Forest of Keldor,Expansion assignment,145.6,200.3,Directly tied to this region by its mEncounterExpansion value.
 62,20051,Nagar Charger,0,Ethera's Vale,Narrative / landmark,193.2,198.8,Regional name or identifiable landscape in the encounter narrative.
 63,20052,Nagar Elder,0,Ethera's Vale,Narrative / landmark,238.0,236.0,Regional name or identifiable landscape in the encounter narrative.
-64,20053,Exhausted Verdani,1007,Evergrove,Narrative / landmark,337,395,Regional name or identifiable landscape in the encounter narrative.
-65,20054,Drained Aevis,1009,Celesterra,Interpretive placement,164.4,340.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-66,20055,Wounded Grimnir,1011,Shattered Peaks,Interpretive placement,109.4,24.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-67,20056,Venerable Grimnir,1010,Fyrskar Mountains,Interpretive placement,76.9,125.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-68,20057,Verdani Child,1013,Swamp of Karrhu,Narrative / landmark,362.6,261.5,Regional name or identifiable landscape in the encounter narrative.
-69,20058,Aevis Lady,1009,Celesterra,Interpretive placement,107.5,353.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-70,20059,Rokur Blacksmith,1008,Emberfrost,Interpretive placement,404.0,92.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-71,20060,Verdani Treasury,1005,Eldertree Forest,Narrative / landmark,212.2,339.6,Regional name or identifiable landscape in the encounter narrative.
-72,20061,Frostwind Junkyard,1006,Frostwind Mountains,Narrative / landmark,250,140,Regional name or identifiable landscape in the encounter narrative.
+64,20053,Exhausted Verdani,1007,Evergrove,Approved region,337,395,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+65,20054,Drained Aevis,1009,Celesterra,Approved region,164.4,340.2,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+66,20055,Wounded Grimnir,1011,Shattered Peaks,Approved region,109.4,24.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+67,20056,Venerable Grimnir,1010,Fyrskar Mountains,Approved region,76.9,125.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+68,20057,Verdani Child,1013,Swamp of Karrhu,Approved region,362.6,261.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+69,20058,Aevis Lady,1009,Celesterra,Approved region,107.5,353.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+70,20059,Rokur Blacksmith,1008,Emberfrost,Approved region,404.0,92.3,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+71,20060,Verdani Treasury,1005,Eldertree Forest,Approved region,212.2,339.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+72,20061,Frostwind Junkyard,1006,Frostwind Mountains,Approved region,250,140,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 73,20062,Market of Aetherion,1004,Aetherion,Expansion assignment,247,230,Directly tied to this region by its mEncounterExpansion value.
-74,20063,Ancient Inscription,1012,Desert of Ohgar,Narrative / landmark,257,424,Regional name or identifiable landscape in the encounter narrative.
-75,20064,Altar of Umbrael,1007,Evergrove,Narrative / landmark,381.9,420.6,Regional name or identifiable landscape in the encounter narrative.
-76,20065,Zeelai Feline,1009,Celesterra,Interpretive placement,138.7,365.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-77,20066,Thirsty Grimnir,1012,Desert of Ohgar,Narrative / landmark,214,433,Regional name or identifiable landscape in the encounter narrative.
-78,20067,Ferocious Silvermane,1005,Eldertree Forest,Interpretive placement,248.5,343.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+74,20063,Ancient Inscription,1012,Desert of Ohgar,Approved region,257,424,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+75,20064,Altar of Umbrael,1007,Evergrove,Approved region,381.9,420.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+76,20065,Zeelai Feline,1009,Celesterra,Approved region,138.7,365.3,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+77,20066,Thirsty Grimnir,1012,Desert of Ohgar,Approved region,214,433,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+78,20067,Ferocious Silvermane,1005,Eldertree Forest,Approved region,248.5,343.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 79,20068,Fey Greens,0,Ethera's Vale,Interpretive placement,238.8,294.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-80,20069,Celestial Fields,0,Ethera's Vale,Interpretive placement,300.3,246.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+80,20069,Celestial Fields,1999,Ethera's Vale,Interpretive placement,300.3,246.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 81,20070,Enigmatic Prairies,0,Ethera's Vale,Narrative / landmark,301,212,"Hills northeast of Ethera's Vale, as described."
 82,20071,Arcane Meadows,0,Ethera's Vale,Narrative / landmark,311,225,"Hills northeast of Ethera's Vale, as described."
-83,20072,Tranquil Wilds,0,Ethera's Vale,Interpretive placement,178.5,271.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-84,20073,Celestial Cairn,1005,Eldertree Forest,Narrative / landmark,267,353,Regional name or identifiable landscape in the encounter narrative.
+83,20072,Tranquil Wilds,1999,Ethera's Vale,Interpretive placement,178.5,271.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+84,20073,Celestial Cairn,1005,Eldertree Forest,Approved region,267,353,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 85,20074,Mysterious Cube,0,Ethera's Vale,Interpretive placement,222.4,258.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 86,20075,Grumpy Fence,1001,Cursed Forest of Keldor,Expansion assignment,142.5,182.6,Directly tied to this region by its mEncounterExpansion value.
-87,20076,Aevis Merchant,1009,Celesterra,Narrative / landmark,142,350,Regional name or identifiable landscape in the encounter narrative.
-88,20077,Quicksilver Quagmire,1013,Swamp of Karrhu,Narrative / landmark,406,247,Regional name or identifiable landscape in the encounter narrative.
+87,20076,Aevis Merchant,1009,Celesterra,Approved region,142,350,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+88,20077,Quicksilver Quagmire,1013,Swamp of Karrhu,Approved region,406,247,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 89,20078,Unhinged Gobbl,1001,Cursed Forest of Keldor,Expansion assignment,65.2,202.2,Directly tied to this region by its mEncounterExpansion value.
 90,20079,Fearfeaster Gobbl,1001,Cursed Forest of Keldor,Expansion assignment,92.2,223.4,Directly tied to this region by its mEncounterExpansion value.
 91,20080,Dreamy Valley,0,Ethera's Vale,Interpretive placement,219.9,206.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 92,20081,Arcadian Hills,0,Ethera's Vale,Interpretive placement,248.9,293.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-93,20082,Alluring Fens,1013,Swamp of Karrhu,Interpretive placement,429.6,211.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+93,20082,Alluring Fens,1013,Swamp of Karrhu,Approved region,429.6,211.8,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 94,20083,Enchanted Gardens,0,Ethera's Vale,Interpretive placement,227.7,235.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 95,20084,Mystical Vale,0,Ethera's Vale,Interpretive placement,209.0,280.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 96,20085,Bucolic Dale,0,Ethera's Vale,Interpretive placement,181.7,235.9,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
@@ -106,38 +106,38 @@
 105,20094,Nagar Humpback,0,Ethera's Vale,Narrative / landmark,291.5,195.6,Regional name or identifiable landscape in the encounter narrative.
 106,20095,Nagar Razorback,0,Ethera's Vale,Interpretive placement,203.2,228.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 107,20096,Thunderhoof,0,Ethera's Vale,Interpretive placement,261.3,267.8,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-108,20097,Yowler,1010,Fyrskar Mountains,Interpretive placement,131.4,123.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+108,20097,Yowler,1010,Fyrskar Mountains,Approved region,131.4,123.0,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 109,20098,Common Chest,0,Ethera's Vale,Interpretive placement,207.3,259.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-110,20099,Cliffs of Sarga,1010,Fyrskar Mountains,Interpretive placement,97,94,Cliffs of Sarga provisionally placed among the Fyrskar Mountains.
-111,20100,Mountain Pass,1006,Frostwind Mountains,Interpretive placement,272.6,121.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-112,20101,Rocks of Ohgar,1012,Desert of Ohgar,Narrative / landmark,239,447,Regional name or identifiable landscape in the encounter narrative.
-113,20102,Frostwind Slopes,1006,Frostwind Mountains,Narrative / landmark,233.4,120.9,Regional name or identifiable landscape in the encounter narrative.
-114,20103,Strange Boulder,1006,Frostwind Mountains,Interpretive placement,211.2,141.2,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-115,20104,Sudden Rockslide,1006,Frostwind Mountains,Narrative / landmark,214.6,157.7,Regional name or identifiable landscape in the encounter narrative.
-116,20105,The Giant,1011,Shattered Peaks,Interpretive placement,135.4,37.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-117,20106,Sarga Lioness,1010,Fyrskar Mountains,Interpretive placement,108,104,Sarga's cliffs provisionally placed among the Fyrskar Mountains.
+110,20099,Cliffs of Sarga,1010,Fyrskar Mountains,Approved region,97,94,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+111,20100,Mountain Pass,1006,Frostwind Mountains,Approved region,272.6,121.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+112,20101,Rocks of Ohgar,1012,Desert of Ohgar,Approved region,239,447,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+113,20102,Frostwind Slopes,1006,Frostwind Mountains,Approved region,233.4,120.9,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+114,20103,Strange Boulder,1006,Frostwind Mountains,Approved region,211.2,141.2,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+115,20104,Sudden Rockslide,1006,Frostwind Mountains,Approved region,214.6,157.7,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+116,20105,The Giant,1011,Shattered Peaks,Approved region,135.4,37.7,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+117,20106,Sarga Lioness,1010,Fyrskar Mountains,Approved region,108,104,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 118,20107,Silver Wolf,0,Ethera's Vale,Narrative / landmark,184,205,"Border between Ethera's Vale and southeastern Keldor, as described."
 119,20108,Shena Alpha,0,Ethera's Vale,Narrative / landmark,190,217,"Border between Ethera's Vale and Keldor, as described."
-120,20109,Embersnout,1006,Frostwind Mountains,Narrative / landmark,234.1,144.5,Regional name or identifiable landscape in the encounter narrative.
+120,20109,Embersnout,1006,Frostwind Mountains,Approved region,234.1,144.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 121,20110,Mother Wolf,0,Ethera's Vale,Interpretive placement,266.2,224.0,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-122,20111,Young Redeye,0,Ethera's Vale,Interpretive placement,238.3,204.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+122,20111,Young Redeye,1999,Ethera's Vale,Interpretive placement,238.3,204.3,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
 123,20112,Cursed Silvermane,1001,Cursed Forest of Keldor,Expansion assignment,55.2,207.1,Directly tied to this region by its mEncounterExpansion value.
 124,20113,Cursed Liani,1001,Cursed Forest of Keldor,Expansion assignment,85.9,182.6,Directly tied to this region by its mEncounterExpansion value.
-125,20114,Liani Guardian,1005,Eldertree Forest,Interpretive placement,287.1,352.5,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-126,20115,Liani Predator,1005,Eldertree Forest,Interpretive placement,256.4,361.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-127,20116,Aradia's Perch,1013,Swamp of Karrhu,Narrative / landmark,366,238,Regional name or identifiable landscape in the encounter narrative.
-128,20117,Thunderfly Matriarch,1005,Eldertree Forest,Interpretive placement,250.6,322.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+125,20114,Liani Guardian,1005,Eldertree Forest,Approved region,287.1,352.5,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+126,20115,Liani Predator,1005,Eldertree Forest,Approved region,256.4,361.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+127,20116,Aradia's Perch,1013,Swamp of Karrhu,Approved region,366,238,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+128,20117,Thunderfly Matriarch,1005,Eldertree Forest,Approved region,250.6,322.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 129,20118,Firecrest Bloodbeak,1001,Cursed Forest of Keldor,Expansion assignment,99.7,173.1,Directly tied to this region by its mEncounterExpansion value.
 130,20119,Simple Treasure,0,Ethera's Vale,Interpretive placement,179.7,259.7,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-131,20120,Bronze Vault,1006,Frostwind Mountains,Narrative / landmark,251.6,116.8,Regional name or identifiable landscape in the encounter narrative.
-132,20121,Frost Strider,1006,Frostwind Mountains,Interpretive placement,238.9,153.6,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
-133,20122,Rocky Tundra,1014,Rocky Tundra,Narrative / landmark,101,277,Regional name or identifiable landscape in the encounter narrative.
+131,20120,Bronze Vault,1006,Frostwind Mountains,Approved region,251.6,116.8,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+132,20121,Frost Strider,1006,Frostwind Mountains,Approved region,238.9,153.6,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+133,20122,Rocky Tundra,1014,Rocky Tundra,Approved region,101,277,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 134,20123,Everwinter Trading Post,1003,Everwinter Valley,Expansion assignment,272.0,28.8,Directly tied to this region by its mEncounterExpansion value.
 135,20124,Frostfang Alpha,1003,Everwinter Valley,Expansion assignment,258.0,81.8,Directly tied to this region by its mEncounterExpansion value.
-136,20125,Raided Verdani Village,1007,Evergrove,Narrative / landmark,397,422,Regional name or identifiable landscape in the encounter narrative.
-137,20126,Disheartened Rokur,1008,Emberfrost,Interpretive placement,376.6,102.1,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+136,20125,Raided Verdani Village,1007,Evergrove,Approved region,397,422,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
+137,20126,Disheartened Rokur,1008,Emberfrost,Approved region,376.6,102.1,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 138,20127,Eternal Twilight Grove,1005,Eldertree Forest,Approved region,233.6,365.2,"Babuni approved Eldertree Forest as the grove's region (2026-11-26); the point inside the forest was chosen by Claude Code, not a canon location."
-139,20128,Grimnir Rebels,1010,Fyrskar Mountains,Interpretive placement,63.9,92.4,"Proposed location based on terrain, culture, creatures or atmosphere; not established as canon."
+139,20128,Grimnir Rebels,1010,Fyrskar Mountains,Approved region,63.9,92.4,"Babuni decided this region (2026-11-26). The exact point on the map is a placement, not canon."
 140,20129,Everwinter Treasurechest,1003,Everwinter Valley,Expansion assignment,223.4,43.6,Directly tied to this region by its mEncounterExpansion value.
 141,20130,Everwinter Guardian,1003,Everwinter Valley,Expansion assignment,226.7,87.9,Directly tied to this region by its mEncounterExpansion value.
 142,20131,Everwinter Cave,1003,Everwinter Valley,Expansion assignment,247.1,43.7,Directly tied to this region by its mEncounterExpansion value.

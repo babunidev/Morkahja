@@ -199,7 +199,7 @@
   },
   "20001": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20001,
     "mEncounterImageName": "lovely_meadows",
@@ -221,7 +221,7 @@
   },
   "20002": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20002,
     "mEncounterImageName": "enchanted_glades",
@@ -243,7 +243,7 @@
   },
   "20003": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20003,
     "mEncounterImageName": "fae_pastures",
@@ -1687,7 +1687,7 @@
     "mEncounterSolutiuonTypeB": 14,
     "mEncounterSolutiuonTypeC": 13,
     "mEncounterSolutiuonTypeD": 0,
-    "mEncounterText": "Sunlight wanders across a wide stretch of green, where deer graze peacefully among tall grasses and scattered wildflowers.\n\nBeyond the meadow rises an immense standing rock, its weathered surface softened by moss and trailing vines. Within its broad face, an ancient sanctuary has been carefully shaped from the stone, its graceful entrance following the natural curves of the rock.\n\nThe delicate workmanship bears the gentle character of faun craftsmanship, blending so naturally with the surrounding land that the sanctuary seems almost grown from the earth itself.\n\nBirdsong drifts through the warm air, mingling with the quiet rustling of leaves. A magnificent stag wanders near the stone, untroubled by the ancient structure towering above it.\n\nThe entrance below stands open and bare, its threshold swept clean by the wind. Far above it, where the rock leans outward, a narrow ledge holds a second, smaller opening, carved with the same winding patterns. No stair leads up to it. Between the threshold and the ledge, the stone offers only weathered seams, old roots and the cracks where little ferns have taken hold.\n\nOld tales speak of forgotten treasures hidden within these enchanted greens, protected by the quiet magic of the land.\n\nHigh in the small opening, a delicate glimmer lingers in the shadows, where the sunlight reaches no farther.",
+    "mEncounterText": "Sunlight wanders across a wide stretch of green, where deer graze peacefully among tall grasses and scattered wildflowers.\n\nBeyond the meadow rises an immense standing rock, its weathered surface softened by moss and trailing vines. Within its broad face, an ancient sanctuary has been carefully shaped from the stone, its graceful entrance following the natural curves of the rock.\n\nThe delicate workmanship bears the gentle character of Verdani craftsmanship, blending so naturally with the surrounding land that the sanctuary seems almost grown from the earth itself.\n\nBirdsong drifts through the warm air, mingling with the quiet rustling of leaves. A magnificent stag wanders near the stone, untroubled by the ancient structure towering above it.\n\nThe entrance below stands open and bare, its threshold swept clean by the wind. Far above it, where the rock leans outward, a narrow ledge holds a second, smaller opening, carved with the same winding patterns. No stair leads up to it. Between the threshold and the ledge, the stone offers only weathered seams, old roots and the cracks where little ferns have taken hold.\n\nOld tales speak of forgotten treasures hidden within these enchanted greens, protected by the quiet magic of the land.\n\nHigh in the small opening, a delicate glimmer lingers in the shadows, where the sunlight reaches no farther.",
     "mEncounterTitle": "Fey Greens",
     "mEncounterType": 2,
     "mEncounterElement": "Void",
@@ -1695,7 +1695,7 @@
   },
   "20069": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20069,
     "mEncounterImageName": "celestial_fields",
@@ -1761,7 +1761,7 @@
   },
   "20072": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20072,
     "mEncounterImageName": "tranquil_wilds",
@@ -2619,7 +2619,7 @@
   },
   "20111": {
     "mEncounterDifficulty": 1,
-    "mEncounterExpansion": 0,
+    "mEncounterExpansion": 1999,
     "mEncounterFollow": 0,
     "mEncounterID": 20111,
     "mEncounterImageName": "young_redeye",

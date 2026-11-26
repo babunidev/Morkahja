@@ -176,6 +176,12 @@
       "mExtensioSummaryText": "Planned: 20+ encounters, items and skills.",
       "mExtensioText": "Brown crags rise from the yellow plains of the Rocky Tundra, where moss, lichen and scattered shrubs survive the biting wind. It lies on the approaches to Fyrskar, and its borders are still unknown.",
       "mExtensioUnlockButton": "expansion_rocky_tundra"
+    },
+    "1999": {
+      "mExtensioActive": false,
+      "mExtensioID": 1999,
+      "mExtensioListed": false,
+      "mExtensioName": "Set aside"
     }
   }
 }

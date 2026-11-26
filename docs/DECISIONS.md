@@ -638,3 +638,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 
 **Status:** on GitHub `main`, not released. Server test against PostgreSQL and the release check passed. The same day, at Babuni's request, the three homelands were switched on so that an earned homeland can be played and travelled to right away; the other seven regions stay coming soon.
 
+## D-066 — Six Find encounters set aside; letter encounters stay; regions decided (2026-11-26)
+
+**Babuni's direction:** the base game has too many Find encounters. Six are set aside at random in an inactive expansion with a high number, so they are never chosen and can return when the base game grows. Every encounter with a letter clue stays in the base game. The Fey Greens sanctuary is Verdani work. The regional placements are decided and no longer under review.
+
+**AI implementation:** Claude Code (Claude Opus 5.5): expansion 1999 "Set aside" (inactive, unlisted); a seeded random draw (`morkahja-set-aside-2026-11-26`) among the seven letterless Find encounters chose 20001, 20002, 20003, 20069, 20072, 20111. The manifest and the placement list now record each region as decided.
+
+**Status:** on GitHub `main`, not released. This replaces the brief's six Find-to-Open-Lock conversions as the way to reduce Find; Open Lock stays at 3 unless Babuni asks for conversions.
+

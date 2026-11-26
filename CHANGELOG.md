@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-26 — Unreleased: six Find encounters set aside; Fey Greens is Verdani work; every region decided (D-066)
+
+- **Not released.** Pushed to GitHub `main`.
+- **Babuni's direction:** the base game has too many Find encounters: set six aside at random, so they are never drawn but can come back when the base game grows; every encounter with a letter in its text stays in the base game. Fey Greens' sanctuary is Verdani work, not faun. The region placements are decided, so they are no longer "review".
+- **Set aside:** a seeded random draw among the seven Find encounters without a letter clue set aside 20001 Lovely Meadows, 20002 Enchanted Glades, 20003 Fae Pastures, 20069 Celestial Fields, 20072 Tranquil Wilds and 20111 Young Redeye; 20090 Ethereal Glades stays. They are in the new catalog entry 1999 "Set aside" (inactive, not listed, no price), unchanged otherwise and still at their Vale places on the map. All seven letter encounters stay: 20081 A, 20083 H, 20084 K, 20085 J, 20086 O, 20087 M, 20089 A. The base game's random pool is now 43 encounters; Trick in the base game: Find 7, Climb 6, Open Lock 3 (plus 20084 classified Travel).
+- **Fey Greens (20068):** "faun craftsmanship" became "Verdani craftsmanship", as the world archive's Vale landmarks have it.
+- **Regions decided:** `docs/CONTENT_EXPANSION_ASSIGNMENTS.md` lists every row as "Region decided by Babuni (2026-11-26)" with its final land (the eight changed rows name what they replaced) and the current counts; `docs/data/encounter_locations.csv` marks the 79 rows "Approved region" ("the exact point on the map is a placement, not canon").
+- **Verification:** `regionalExpansions.test.ts` checks the set-aside group is never drawn and every letter encounter is in the base game; `npm run release:check` passed (client 52/52, server 78/78). Local backend and Vite restarted. Claude Code (Claude Opus 5.5).
+
 ## 2026-11-26 — Travel's random pick tested for every land
 
 - **Babuni's direction:** whenever I travel, the encounter must be a random one from the pool of the land I travel to.

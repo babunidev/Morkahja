@@ -21,7 +21,7 @@
   - Fey Greens is currently subtype **Travel** (B type 20), not Find. The working audit counts it as Find.
   - `scripts/assign-encounter-element-subtype.mjs` rewrites every encounter's element and subtype when it is run. With these slots it would infer Climb by itself, but new prose could change the inferred element. So when the data is edited, the three should be added to its `ELEMENT_OVERRIDES` (and `SUBTYPE_OVERRIDES`) to keep the reviewed values.
 - **Old primaries.** Whistle Reed 10080, Seraphic Map 10009 and Mystic Map 10008 are each used only by their own encounter. After the change no encounter names them, but they stay in the data. Players keep them, and the two maps still count as Find items (type 6) in other Find encounters. Whistle Reed is a type 6 item too. Nothing is deleted or retagged.
-- **Lore note for Fey Greens:** the encounter calls the sanctuary faun craftsmanship, while the archive's [Vale landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Vale_Landmarks.md#fey-greens) associate it with Verdani care. The draft keeps the encounter's fauns, as the brief asks; the mismatch is for Babuni.
+- **Lore note for Fey Greens:** the draft first kept the encounter's fauns, while the archive's [Vale landmarks](https://github.com/babunidev/MorkahjaWorld/blob/main/Places/Vale_Landmarks.md#fey-greens) associate the sanctuary with Verdani care. Babuni decided the same day: the sanctuary is Verdani work, and the committed text says so.
 
 ## 1. 20068 Fey Greens
 
@@ -35,7 +35,7 @@
 >
 > Beyond the meadow rises an immense standing rock, its weathered surface softened by moss and trailing vines. Within its broad face, an ancient sanctuary has been carefully shaped from the stone, its graceful entrance following the natural curves of the rock.
 >
-> The delicate workmanship bears the gentle character of faun craftsmanship, blending so naturally with the surrounding land that the sanctuary seems almost grown from the earth itself.
+> The delicate workmanship bears the gentle character of Verdani craftsmanship, blending so naturally with the surrounding land that the sanctuary seems almost grown from the earth itself.
 >
 > Birdsong drifts through the warm air, mingling with the quiet rustling of leaves. A magnificent stag wanders near the stone, untroubled by the ancient structure towering above it.
 >

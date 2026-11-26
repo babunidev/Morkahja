@@ -106,9 +106,10 @@ console.log('worldMap.test.ts passed');
   const encounters = JSON.parse(readFileSync(new URL('../../../../../server/game/encountersdata.json', import.meta.url), 'utf8')) as Record<string, { mEncounterID: number; mEncounterExpansion: number }>;
   for (const record of Object.values(encounters)) {
     const place = ENCOUNTER_LOCATIONS[record.mEncounterID];
-    if (record.mEncounterExpansion >= 1005) {
+    if (record.mEncounterExpansion >= 1005 && record.mEncounterExpansion !== 1999) {
       assert.equal(REGION_EXPANSIONS[place?.regionId ?? ''], record.mEncounterExpansion, `encounter ${record.mEncounterID} is placed in its expansion's land`);
     }
+    // 1999 holds encounters set aside, still at their Vale places.
     if (record.mEncounterExpansion === 0 && place && place.regionId !== 'vale') {
       assert.fail(`base-game encounter ${record.mEncounterID} lies outside the Vale`);
     }
