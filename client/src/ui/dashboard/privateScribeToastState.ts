@@ -8,6 +8,12 @@ const PRIVATE_SCRIBE_TOAST_EVENT_TYPES = new Set([
   'homeland_opened',
 ]);
 
+/**
+ * The daily message pool (support, Soul Link) waits for the dashboard, so it
+ * never interrupts an encounter (Babuni, 2026-11-26, D-068).
+ */
+const DASHBOARD_ONLY_TOAST_EVENT_TYPES = new Set(['support_appreciation_nudge']);
+
 export function isPrivateScribeToastEvent(eventType: string): boolean {
   return PRIVATE_SCRIBE_TOAST_EVENT_TYPES.has(eventType);
 }
@@ -62,9 +68,13 @@ export function hasShownPrivateScribeToast(playerId: string, eventId: string): b
 
 export function findNextPrivateScribeToastEntry<
   T extends { eventId: string; eventType: string; message: string },
->(playerId: string, entries: T[]): T | null {
+>(playerId: string, entries: T[], options: { inGame?: boolean } = {}): T | null {
   for (const entry of entries) {
     if (!isPrivateScribeToastEvent(entry.eventType)) {
+      continue;
+    }
+
+    if (options.inGame && DASHBOARD_ONLY_TOAST_EVENT_TYPES.has(entry.eventType)) {
       continue;
     }
 

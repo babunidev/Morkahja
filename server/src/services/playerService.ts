@@ -351,6 +351,7 @@ export async function unlockPlayerExpansion(
       {
         currencies: nextCurrencies,
         unlockedExpansions: nextUnlocked,
+        pendingExpansionReveals: withExpansionReveal(player, expansionId),
         updatedAt: Date.now(),
       },
       { merge: true },
@@ -365,6 +366,36 @@ export async function unlockPlayerExpansion(
     expansionId,
     spent: price,
   };
+}
+
+function normalizeExpansionReveals(value: unknown): number[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is number => Number.isInteger(entry) && entry > 0)
+    : [];
+}
+
+/** The reveal queue with one more expansion whose unlock card is due (D-068). */
+function withExpansionReveal(player: Partial<PlayerDocument>, expansionId: number): number[] {
+  return uniqueSorted([...normalizeExpansionReveals(player.pendingExpansionReveals), expansionId]);
+}
+
+/** Expansions whose unlock card the player has not seen yet (D-068). */
+export async function getPendingExpansionReveals(playerId: string): Promise<number[]> {
+  const player = await getPlayer<Partial<PlayerDocument>>(playerId);
+  return normalizeExpansionReveals(player?.pendingExpansionReveals);
+}
+
+/** The player closed an expansion's unlock card with Proceed. */
+export async function acknowledgeExpansionReveal(playerId: string, expansionId: number): Promise<number[]> {
+  return withDocumentTransaction(async (transaction) => {
+    const player = await transaction.getPlayer<Partial<PlayerDocument>>(playerId);
+    const current = normalizeExpansionReveals(player?.pendingExpansionReveals);
+    const next = current.filter((entry) => entry !== expansionId);
+    if (player && next.length !== current.length) {
+      await transaction.setPlayer(playerId, { pendingExpansionReveals: next }, { merge: true });
+    }
+    return next;
+  });
 }
 
 /**
@@ -409,6 +440,7 @@ export async function grantPlayerExpansion(
       playerId,
       {
         unlockedExpansions: nextUnlocked,
+        pendingExpansionReveals: withExpansionReveal(player, expansionId),
         updatedAt: Date.now(),
       },
       { merge: true },

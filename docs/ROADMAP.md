@@ -257,6 +257,19 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 
 ## Atranor by the element's gods — 2026-11-23 (D-055)
 
-- [x] Survival from a total of 7; one god's essence at 7, two at 14, three at 20; all three with an Atranor item or a gem sacrifice; one charge each.
+- [x] Survival from a total of 7; one god's essence at 7, two at 14, three at 20; all three with an Atranor item or a gem sacrifice; one charge each. *(Two charges each from 2026-11-26, D-068.)*
 - [x] Play it: a dice return at 7, 14 and 20, an Atranor item, and a gem sacrifice. *(Babuni play-tests every change; confirmed 2026-11-24.)*
 
+
+## Soul Link, welcome gift and essences — 2026-11-26 (D-068)
+
+- [x] New avatars start with six essence charges; Atranor returns two charges per god.
+- [x] Share button for the Soul Link deep link; list of souls linked to you; today's progress toward the gift.
+- [x] Aetherion as the newcomer's welcome gift on the gift day; 5 Alpha Player points for the inviter.
+- [x] The expansion unlock card (LOCKED → UNLOCKED → read → Proceed) for every single-expansion unlock.
+- [x] Alpha Player visible from the start with a "?" and the Legendborn places left.
+- [x] The inviter's name on the sign-in screen when the game opens from a Soul Link.
+- [x] The daily message pool (support, Soul Link), dashboard only.
+- [ ] Not released yet; patch notes to be written at release.
+- [ ] Not yet seen: a real phone's share menu, a gift day reached in real play, a homeland or Stripe purchase showing the card.
+- [ ] Known limitation: Alpha Player progress is a read–modify–write without a row lock (as before); a level-up and a soul-link gift at the same moment could lose points.

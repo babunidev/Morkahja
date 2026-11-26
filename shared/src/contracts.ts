@@ -303,6 +303,8 @@ export interface AchievementProgressDto {
   ranks: AchievementRankDto[];
   chainTitle?: string;
   globallyLocked?: boolean;
+  /** Alpha Player only: Legendborn (rank 4) places still free of the first 100 (D-068). */
+  legendbornPlacesLeft?: number;
 }
 
 export interface DailyRewardStatusDto {
@@ -390,11 +392,40 @@ export interface SoulLinkDto {
   targetId: string;
   targetName: string;
   linkedAt: number;
+  /** Set once the Gift of the Gods has been delivered (D-062). */
+  giftDeliveredAt?: number;
+  /** The newcomer's welcome gift on the gift day (D-068). */
+  welcomeGift?: 'aetherion' | 'owned';
+  /** Encounters the linked-to adventurer played today (UTC), while the gift is pending. */
+  targetEncountersToday?: number;
+}
+
+/** An adventurer whose soul is linked to the viewer (D-068). */
+export interface LinkedSoulDto {
+  playerId: string;
+  playerName: string;
+  linkedAt: number;
+  giftDeliveredAt?: number;
+  encountersToday: number;
 }
 
 export interface SoulLinkStatusResponse {
   playerId: string;
   soulLink: SoulLinkDto | null;
+  linkedSouls: LinkedSoulDto[];
+  /** The viewer's encounters today (UTC). */
+  encountersToday: number;
+  /** Encounters both must play on one day for the gift (42). */
+  encountersRequired: number;
+}
+
+export interface SoulLinkInviteResponse {
+  playerName: string;
+}
+
+export interface ExpansionRevealsResponse {
+  playerId: string;
+  expansionIds: number[];
 }
 
 export interface CreateSoulLinkResponse {

@@ -65,6 +65,7 @@ import { formatAvatarDisplayName, normalizePersistedAvatar } from './ui/avatar/a
 import GameMessageToast from './ui/game/GameMessageToast.js';
 import PurchaseReturnToast from './ui/commerce/PurchaseReturnToast.js';
 import SoulLinkInviteJoin from './ui/dashboard/soulLinkInvite.js';
+import ExpansionRevealHost from './ui/dashboard/ExpansionUnlockReveal.js';
 import Dashboard from './ui/dashboard/Dashboard.js';
 import AvatarDeathOverlay from './ui/game/AvatarDeathOverlay.js';
 import GameEnvironment from './ui/game/GameEnvironment.js';
@@ -333,7 +334,7 @@ export default function App() {
       const activity = await fetchRecentActivity();
       const privateToastEntry = achievementToastShowingRef.current
         ? null
-        : findNextPrivateScribeToastEntry(playerId, activity.entries);
+        : findNextPrivateScribeToastEntry(playerId, activity.entries, { inGame: screen === 'game' });
       if (privateToastEntry) {
         markPrivateScribeToastShown(playerId, privateToastEntry.eventId);
         setPrivateScribeToast(privateToastEntry.message);
@@ -812,6 +813,7 @@ export default function App() {
           }}
         />
         <SoulLinkInviteJoin playerId={playerId} ready={isAchievementWatchScreen(screen)} />
+        <ExpansionRevealHost active={Boolean(playerId) && screen === 'dashboard'} />
         {screen === 'loading' ? (
           <LoadingScreen
             hooks={loadingHooks}

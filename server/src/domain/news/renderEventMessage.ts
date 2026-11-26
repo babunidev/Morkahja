@@ -150,6 +150,9 @@ export function renderEventMessage(event: GameEvent, viewingPlayerId?: string): 
       return `Keep your key safe.${unlockNote} Save ${filename} somewhere secure: your key is your journey, and without it nothing can be restored.`;
     }
     case 'support_appreciation_nudge':
+      if (readString(payload, 'topic') === 'soul_link') {
+        return 'Enjoying Morkahja? Share your Soul Link from the Friends window and bring new heroes into the world. Every soul that joins you moves your achievements forward, and the newcomer receives Aetherion as a welcome gift.';
+      }
       return 'Enjoying Morkahja? Donating gems, unlocking an expansion or picking up a dice skin gives me more time to work on the world. Every bit helps. Thank you!';
     case 'homeland_opened': {
       const name = readString(payload, 'expansionName') ?? 'A homeland';

@@ -3,7 +3,8 @@ import { requireAuth } from '../middleware/authMiddleware.js';
 import {
   CannotSoulLinkSelfError,
   createSoulLink,
-  getSoulLink,
+  getSoulLinkInviterName,
+  getSoulLinkStatus,
   SoulLinkAlreadySetError,
   SoulLinkTargetNotFoundError,
 } from '../services/soulLinkService.js';
@@ -13,12 +14,28 @@ export async function getSoulLinkController(
   res: Response,
 ): Promise<void> {
   const { playerId } = requireAuth(req);
-  const soulLink = await getSoulLink(playerId);
+  const status = await getSoulLinkStatus(playerId);
 
   res.json({
     playerId,
-    soulLink,
+    ...status,
   });
+}
+
+/** Public: the inviter's name for the invite landing, before the newcomer signs in (D-068). */
+export async function getSoulLinkInviteController(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const inviterId = typeof req.query.inviter === 'string' ? req.query.inviter : '';
+  const playerName = await getSoulLinkInviterName(inviterId);
+
+  if (!playerName) {
+    res.status(404).json({ error: 'PLAYER_NOT_FOUND' });
+    return;
+  }
+
+  res.json({ playerName });
 }
 
 export async function createSoulLinkController(

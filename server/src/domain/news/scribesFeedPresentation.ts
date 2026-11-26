@@ -69,7 +69,7 @@ export function resolveScribesIconUrl(event: GameEvent): string | undefined {
     case 'account_key_security_reminder':
       return KEY_REMINDER_ICON;
     case 'support_appreciation_nudge':
-      return GEMS_ICON;
+      return readString(payload, 'topic') === 'soul_link' ? SPIRITGUIDE_ACHIEVEMENT_ICON : GEMS_ICON;
     case 'homeland_opened':
       return '/UI/04_ACHIEVEMENTS/im_glyph_monthly_reward.webp';
     case 'achievement_unlocked': {

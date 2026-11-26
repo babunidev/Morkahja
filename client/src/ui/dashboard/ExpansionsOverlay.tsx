@@ -11,6 +11,7 @@ import {
 import { ClosePanelButton } from '../common/ClosePanelButton.js';
 import { PanelButton } from '../common/PanelButton.js';
 import DiceShopOverlay from './DiceShopOverlay.js';
+import { requestExpansionRevealCheck } from './expansionRevealEvents.js';
 import { DEFAULT_BUTTON_SOUND, playSfx } from '../sfx.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
@@ -22,7 +23,7 @@ const GEMS_ICON = assetUrl('/UI/03_DASHBOARD/im_gems.webp');
 const OVERLAY_FADE_MS = 300;
 const PREVIEW_ENCOUNTER_COUNT = 3;
 
-interface ExpansionRecord {
+export interface ExpansionRecord {
   mExtensioActive: boolean;
   mExtensioCollectionImage: string;
   mExtensioCost: number;
@@ -46,13 +47,13 @@ interface EncounterDataRecord {
   mEncounterTitle: string;
 }
 
-interface EncounterPreviewEntry {
+export interface EncounterPreviewEntry {
   encounterId: number;
   imageSrc: string;
   title: string;
 }
 
-function expansionAsset(assetName: string): string {
+export function expansionAsset(assetName: string): string {
   return `${EXPANSION_UI_ROOT}/${assetName}.webp`;
 }
 
@@ -62,7 +63,7 @@ function encounterImagePath(imageName: string): string {
   return `${ENCOUNTER_IMAGE_ROOT}/${fileName}`;
 }
 
-function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
+export function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
   const records = gameEncounters() as Record<string, EncounterDataRecord>;
   const byExpansion = new Map<number, EncounterPreviewEntry[]>();
 
@@ -85,7 +86,7 @@ function buildEncountersByExpansion(): Map<number, EncounterPreviewEntry[]> {
   return byExpansion;
 }
 
-function pickRandomEncounterPreviews(
+export function pickRandomEncounterPreviews(
   pool: EncounterPreviewEntry[],
   count: number,
 ): EncounterPreviewEntry[] {
@@ -826,6 +827,7 @@ export function ExpansionsOverlay({
       setUnlockedExpansionIds(result.unlockedExpansions);
       setStatusMessage(`${expansionName} unlocked.`);
       onContentUnlocked?.();
+      requestExpansionRevealCheck();
     } catch (error) {
       setStatusMessage(unlockErrorMessage(error));
     } finally {

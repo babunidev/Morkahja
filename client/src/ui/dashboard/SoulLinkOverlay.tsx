@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import qrcode from 'qrcode-generator';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
-import type { SoulLinkDto } from '@shared/contracts';
+import type { LinkedSoulDto, SoulLinkDto } from '@shared/contracts';
 import { createSoulLink, fetchSoulLink } from '../../api/http.js';
 import {
   protectedOverlaySurfaceProps,
@@ -16,10 +16,42 @@ import { soulLinkInviteUrl } from './soulLinkInvite.js';
 const OVERLAY_FADE_MS = 300;
 
 const SOUL_LINK_EXPLANATION =
-  'The Adventurer you link your soul to receives the Gift of the Gods on the first day you both play 42 encounters!';
+  'Link your soul to the adventurer who brought you here. On the first day you both play 42 encounters, they receive the Gift of the Gods, and you receive Aetherion as a welcome gift!';
 
+// What the inviter gets, said where the link is shared (Babuni, 2026-11-26, D-068).
 const SOUL_LINK_INVITE_TEXT =
-  'Show this to a new adventurer. When they start Morkahja with it, their soul is linked to yours.';
+  'Share your link or show this code to a new adventurer. When they start Morkahja with it, their soul is linked to yours. On the first day you both play 42 encounters, you receive Spiritguide and Alpha Player progress, and they receive Aetherion.';
+
+const SHARE_TITLE = 'Morkahja';
+const SHARE_TEXT = 'Join me in Morkahja! Our souls get linked, and on the day we both play 42 encounters you receive Aetherion as a welcome gift.';
+
+type ShareOutcome = 'shared' | 'copied' | 'failed' | 'cancelled';
+
+/** The phone's share menu where there is one; otherwise the link is copied. */
+async function shareInviteLink(url: string): Promise<ShareOutcome> {
+  const shareData = { title: SHARE_TITLE, text: SHARE_TEXT, url };
+  if (typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(shareData))) {
+    try {
+      await navigator.share(shareData);
+      return 'shared';
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return 'cancelled';
+      }
+      // Fall through to copying.
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    return 'copied';
+  } catch {
+    return 'failed';
+  }
+}
+
+function giftProgressLine(own: number, other: number, otherName: string, required: number): string {
+  return `Today: you ${Math.min(own, required)}/${required} · ${otherName} ${Math.min(other, required)}/${required}`;
+}
 
 /** SVG path of the dark modules, one unit per module, with a 4-module quiet zone. */
 function qrPath(text: string): { path: string; size: number } {
@@ -222,6 +254,65 @@ const linkedTagStyle: CSSProperties = {
   textTransform: 'uppercase',
 };
 
+const progressLineStyle: CSSProperties = {
+  margin: '6px 0 0',
+  color: 'rgba(247, 239, 224, 0.82)',
+  fontSize: '0.84rem',
+  textAlign: 'center',
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: '#ffcc66',
+  fontSize: '1.05rem',
+  fontFamily: 'Breathe Fire, Georgia, serif',
+  letterSpacing: '0.06em',
+  textAlign: 'center',
+};
+
+const soulListStyle: CSSProperties = {
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  display: 'grid',
+  gap: 6,
+};
+
+const soulRowStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'baseline',
+  gap: 10,
+  padding: '8px 12px',
+  ...simpleFrameStyle({ background: 'rgba(8, 5, 4, 0.55)', opacity: 0.5 }),
+};
+
+const soulNameStyle: CSSProperties = {
+  margin: 0,
+  color: '#f7efe0',
+  fontSize: '0.95rem',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+
+const soulStateStyle: CSSProperties = {
+  margin: 0,
+  flexShrink: 0,
+  color: 'rgba(247, 239, 224, 0.72)',
+  fontSize: '0.8rem',
+};
+
+const soulDeliveredStyle: CSSProperties = {
+  ...soulStateStyle,
+  color: 'rgba(140, 230, 160, 0.92)',
+};
+
+const shareButtonStyle: CSSProperties = {
+  ...linkButtonStyle,
+  width: 'min(100%, 240px)',
+};
+
 export function SoulLinkOverlay({
   onClose,
   onLinked,
@@ -241,6 +332,10 @@ export function SoulLinkOverlay({
   const [pending, setPending] = useState(false);
   const [loadPending, setLoadPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [linkedSouls, setLinkedSouls] = useState<LinkedSoulDto[]>([]);
+  const [encountersToday, setEncountersToday] = useState(0);
+  const [encountersRequired, setEncountersRequired] = useState(42);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const inviteQr = useMemo(() => (playerId ? qrPath(soulLinkInviteUrl(playerId)) : null), [playerId]);
 
   useEffect(() => {
@@ -248,6 +343,7 @@ export function SoulLinkOverlay({
       setVisible(false);
       setQuery('');
       setStatusMessage(null);
+      setShareMessage(null);
       return;
     }
 
@@ -267,6 +363,9 @@ export function SoulLinkOverlay({
       .then((response) => {
         if (!cancelled) {
           setSoulLink(response.soulLink);
+          setLinkedSouls(response.linkedSouls ?? []);
+          setEncountersToday(response.encountersToday ?? 0);
+          setEncountersRequired(response.encountersRequired ?? 42);
         }
       })
       .catch((error: unknown) => {
@@ -315,6 +414,21 @@ export function SoulLinkOverlay({
     }
   }
 
+  async function handleShare(): Promise<void> {
+    if (!playerId) {
+      return;
+    }
+    playSfx(DEFAULT_BUTTON_SOUND);
+    const outcome = await shareInviteLink(soulLinkInviteUrl(playerId));
+    setShareMessage(
+      outcome === 'copied'
+        ? 'Link copied. Send it to a new adventurer.'
+        : outcome === 'failed'
+          ? 'Could not copy the link here. Let them scan the code instead.'
+          : null,
+    );
+  }
+
   if (!open) {
     return null;
   }
@@ -355,6 +469,22 @@ export function SoulLinkOverlay({
             <div style={linkedCardStyle}>
               <p style={linkedNameStyle}>{soulLink.targetName}</p>
               <p style={linkedTagStyle}>Linked</p>
+              {soulLink.giftDeliveredAt !== undefined ? (
+                <p style={progressLineStyle}>
+                  {soulLink.welcomeGift === 'aetherion'
+                    ? 'Gift of the Gods delivered. Aetherion is yours.'
+                    : 'Gift of the Gods delivered.'}
+                </p>
+              ) : (
+                <p style={progressLineStyle}>
+                  {giftProgressLine(
+                    encountersToday,
+                    soulLink.targetEncountersToday ?? 0,
+                    soulLink.targetName,
+                    encountersRequired,
+                  )}
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -405,7 +535,37 @@ export function SoulLinkOverlay({
               >
                 <path d={inviteQr.path} fill="#4a0505" />
               </svg>
+              <button
+                aria-label="Share your Soul Link"
+                onClick={() => {
+                  void handleShare();
+                }}
+                style={shareButtonStyle}
+                type="button"
+              >
+                Share
+              </button>
+              {shareMessage ? <p style={messageStyle}>{shareMessage}</p> : null}
               <p style={messageStyle}>{SOUL_LINK_INVITE_TEXT}</p>
+            </div>
+          ) : null}
+          {linkedSouls.length > 0 ? (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <h3 style={sectionTitleStyle}>Souls linked to you</h3>
+              <ul aria-label="Souls linked to you" style={soulListStyle}>
+                {linkedSouls.map((soul) => (
+                  <li key={soul.playerId} style={soulRowStyle}>
+                    <p style={soulNameStyle}>{soul.playerName}</p>
+                    {soul.giftDeliveredAt !== undefined ? (
+                      <p style={soulDeliveredStyle}>Gift delivered</p>
+                    ) : (
+                      <p style={soulStateStyle}>
+                        {`Today ${Math.min(soul.encountersToday, encountersRequired)}/${encountersRequired} · you ${Math.min(encountersToday, encountersRequired)}/${encountersRequired}`}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : null}
         </div>

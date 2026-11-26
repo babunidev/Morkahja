@@ -658,3 +658,15 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 - Each skill type the avatar holds for the first time gives one free change; free changes add up. The first choice stays free; a change without a free one costs 1 gem (D-056).
 - Existing avatars start counting from what they hold on the day this shipped.
 - Open: "a new one" is implemented as a new type of skill, not every new skill.
+
+## D-068 — Six essence charges, the Soul Link welcome gift, Alpha Player told (2026-11-26)
+
+**Decided by:** Babuni. **Implemented by:** Claude Code (Claude Opus 5.5).
+
+- The game is too hard: a new avatar starts with two charges of each of its three own gods' essences (six in all), and every Atranor return gives two charges per god: 2 at a total of 7, 4 at 14, 6 at 20, with an Atranor item or a gem sacrifice. Existing avatars keep what they hold.
+- The Soul Link window gets a **Share** button for the direct link (the phone's share menu, otherwise the link is copied), a list of the souls linked to you, and today's progress toward the gift.
+- A newcomer who comes through a Soul Link receives **Aetherion** as a welcome gift. It opens on the gift day (both play 42 encounters on one day, D-062), not at linking, so a second account cannot take it for free. Already owned: nothing extra.
+- Every unlock of a single expansion (gems, a purchase, Homecoming, the welcome gift) shows the expansion's card in the dashboard: a red LOCKED band fades, a green UNLOCKED band pops in and fades, the text and previews can be read, and **Proceed** closes it. Bundles show no card.
+- A delivered soul link also gives the inviter **5 Alpha Player points**, besides Spiritguide. Alpha Player shows from the start while its places are open, with a "?" (under the Tips setting) that says how it is earned and how many of the 100 Legendborn places are left. The 80 gems a day at Legendborn stay: Babuni accepts them for players who bring others in.
+- The daily support message becomes a pool of two (support, Soul Link), shown in the dashboard only, never during an encounter.
+- Defaults chosen by the AI when Babuni said "go ahead" without picking: 5 Alpha points per link, nothing extra when Aetherion is owned, the whole pool dashboard-only, existing avatars unchanged. Babuni can revise any of them.

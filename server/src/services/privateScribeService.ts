@@ -88,9 +88,12 @@ export async function ensureDailySupportAppreciationNudge(
 
   const playerName = await readPlayerName(playerId);
 
+  // A pool of two messages (Babuni, 2026-11-26, D-068): supporting Morkahja,
+  // or sharing the Soul Link. One of them, at random, each day.
   await recordSupportAppreciationNudgeEvent(playerId, {
     playerName,
     utcDay,
+    topic: Math.random() < 0.5 ? 'support' : 'soul_link',
   });
 
   await setPlayer(

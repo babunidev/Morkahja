@@ -55,7 +55,17 @@ export interface PlayerDocument {
     targetName: string;
     linkedAt: number;
     giftDeliveredAt?: number;
+    /**
+     * The newcomer's welcome gift on the gift day (D-068): Aetherion unlocked,
+     * or 'owned' when the account already had it.
+     */
+    welcomeGift?: 'aetherion' | 'owned';
   };
+  /**
+   * Expansions unlocked one by one (gems, a purchase, Homecoming, the Soul
+   * Link welcome gift) whose unlock card has not been shown yet (D-068).
+   */
+  pendingExpansionReveals?: number[];
   /** UTC day on which this player last received a Gift of the Gods; at most one per day. */
   soulLinkGiftDay?: string;
   /** Fallen avatars preserved for the player profile wall of fame. */

@@ -17,7 +17,11 @@ import {
   selectPlayerDiceController,
   unlockPlayerDiceController,
 } from './controllers/diceController.js';
-import { unlockPlayerExpansionController } from './controllers/expansionController.js';
+import {
+  acknowledgeExpansionRevealController,
+  getExpansionRevealsController,
+  unlockPlayerExpansionController,
+} from './controllers/expansionController.js';
 import {
   createCheckoutSessionController,
   stripeWebhookController,
@@ -31,6 +35,7 @@ import {
 import {
   createSoulLinkController,
   getSoulLinkController,
+  getSoulLinkInviteController,
 } from './controllers/soulLinkController.js';
 import {
   getPlayerProfileController,
@@ -271,6 +276,10 @@ app.post('/session/logout', async (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+// Public: the inviter's name on a Soul Link invite, before sign-in (D-068).
+// The id travels as a query parameter so the rate limit counts one path.
+app.get('/player/soul-link/invite', authRateLimit, getSoulLinkInviteController);
+
 // Mount authenticated game API.
 app.use(authMiddleware);
 app.use('/room', roomRoutes);
@@ -279,6 +288,8 @@ app.get('/player/achievements', getPlayerAchievementsController);
 app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);
 app.post('/player/donate', donatePlayerGemsController);
 app.post('/player/expansions/unlock', unlockPlayerExpansionController);
+app.get('/player/expansions/reveals', getExpansionRevealsController);
+app.post('/player/expansions/reveals/seen', acknowledgeExpansionRevealController);
 app.post('/player/dice/unlock', unlockPlayerDiceController);
 app.post('/player/dice/select', selectPlayerDiceController);
 app.post('/player/checkout/session', createCheckoutSessionController);

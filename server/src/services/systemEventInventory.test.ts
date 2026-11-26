@@ -184,7 +184,7 @@ await persistInventory(session.playerId, avatarId, {
   assert.equal(afterAtranorContinue.systemEvent, undefined);
 
   const inventoryAfterAtranor = await loadInventory(session.playerId, avatarId);
-  assert.equal(totalEssenceUses(inventoryAfterAtranor), 3);
+  assert.equal(totalEssenceUses(inventoryAfterAtranor), 6, 'three gods, two charges each (D-068)');
   assert.equal(countSolutionCharges(inventoryAfterAtranor, 10001), 0);
   assert.equal(totalItemUses(inventoryAfterAtranor), 2);
 }
@@ -245,7 +245,7 @@ await persistInventory(session.playerId, avatarId, {
 
   const inventoryAfterElixir = await loadInventory(session.playerId, avatarId);
   assert.equal(countSolutionCharges(inventoryAfterElixir, 10015), 0);
-  assert.equal(totalEssenceUses(inventoryAfterElixir), 3);
+  assert.equal(totalEssenceUses(inventoryAfterElixir), 6, 'three gods, two charges each (D-068)');
 }
 
 {

@@ -486,6 +486,8 @@ export async function recordSupportAppreciationNudgeEvent(
   payload: {
     playerName: string;
     utcDay: string;
+    /** Which message of the daily pool (D-068). */
+    topic?: 'support' | 'soul_link';
   },
 ): Promise<void> {
   await recordGameEvent({
@@ -496,6 +498,7 @@ export async function recordSupportAppreciationNudgeEvent(
     payload: {
       playerName: payload.playerName,
       utcDay: payload.utcDay,
+      topic: payload.topic ?? 'support',
     },
   });
 }

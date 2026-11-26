@@ -61,6 +61,11 @@ function captureSoulLinkInvite(): void {
 let capturedInThisTab: string | null = null;
 captureSoulLinkInvite();
 
+/** The inviter of a Soul Link link this browser opened, until it is applied (D-068). */
+export function pendingSoulLinkInviter(): string | null {
+  return readPendingInvite() ?? capturedInThisTab;
+}
+
 /**
  * Applies a pending QR invite as soon as a logged-in player reaches the main
  * menu or the game: links their soul to the inviter and makes them friends both
@@ -88,7 +93,7 @@ export function SoulLinkInviteJoin({ playerId, ready }: { playerId: string; read
     void createSoulLink(inviter, { invite: true })
       .then((result) => {
         clearPendingInvite();
-        setMessage(`Your soul is linked to ${result.soulLink.targetName}. You are friends now.`);
+        setMessage(`Your soul is linked to ${result.soulLink.targetName}. You are friends now. On the first day you both play 42 encounters, Aetherion opens for you.`);
       })
       .catch((error: unknown) => {
         const text = error instanceof Error ? error.message : '';

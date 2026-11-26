@@ -15,6 +15,8 @@ import type {
   FriendAchievementsResponse,
   FriendsListResponse,
   SoulLinkStatusResponse,
+  SoulLinkInviteResponse,
+  ExpansionRevealsResponse,
   CreateSoulLinkResponse,
   AvatarInventoryDto,
   AvatarResponse,
@@ -305,6 +307,23 @@ export async function unlockExpansion(
     method: 'POST',
     body: JSON.stringify({ expansionId }),
   });
+}
+
+/** Expansions whose unlock card is due (D-068). */
+export async function fetchExpansionReveals(): Promise<ExpansionRevealsResponse> {
+  return request<ExpansionRevealsResponse>('/player/expansions/reveals');
+}
+
+export async function acknowledgeExpansionReveal(expansionId: number): Promise<ExpansionRevealsResponse> {
+  return request<ExpansionRevealsResponse>('/player/expansions/reveals/seen', {
+    method: 'POST',
+    body: JSON.stringify({ expansionId }),
+  });
+}
+
+/** Public, before sign-in: the name of the adventurer who sent a Soul Link invite. */
+export async function fetchSoulLinkInvite(inviterId: string): Promise<SoulLinkInviteResponse> {
+  return request<SoulLinkInviteResponse>(`/player/soul-link/invite?inviter=${encodeURIComponent(inviterId)}`);
 }
 
 export async function unlockDice(

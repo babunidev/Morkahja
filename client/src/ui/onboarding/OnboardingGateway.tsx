@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   bootstrapSession,
+  fetchSoulLinkInvite,
   requestSessionChallenge,
   type ClientSession,
   type SessionChallengePurpose,
@@ -27,6 +28,7 @@ import TermsOfServiceOverlay from './TermsOfServiceOverlay.js';
 import { assetUrl } from '../../assetUrl.js';
 import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
+import { pendingSoulLinkInviter } from '../dashboard/soulLinkInvite.js';
 
 async function signedBootstrapInput(
   device: StoredKeypair,
@@ -120,6 +122,15 @@ const welcomeStyle: CSSProperties = {
   fontSize: 'clamp(1rem, 3.6vw, 1.2rem)',
   letterSpacing: '0.04em',
   lineHeight: 1.3,
+};
+
+const inviteNoteStyle: CSSProperties = {
+  margin: '6px 0 0',
+  color: '#ffcc66',
+  fontFamily: 'Georgia, serif',
+  fontSize: 'clamp(0.88rem, 3.2vw, 1rem)',
+  lineHeight: 1.45,
+  maxWidth: 360,
 };
 
 const journeyEmblemStyle: CSSProperties = {
@@ -278,6 +289,7 @@ export function OnboardingGateway({
   const [screenVisible, setScreenVisible] = useState(false);
   const [screenExiting, setScreenExiting] = useState(false);
   const [stepVisible, setStepVisible] = useState(true);
+  const [inviterName, setInviterName] = useState<string | null>(null);
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const stepFadeInCleanupRef = useRef<(() => void) | null>(null);
   const trimmedPlayerName = playerName.trim();
@@ -294,6 +306,27 @@ export function OnboardingGateway({
   useEffect(() => {
     return () => {
       stepFadeInCleanupRef.current?.();
+    };
+  }, []);
+
+  // Opened from a Soul Link: name who invited them and what it brings (D-068).
+  useEffect(() => {
+    const inviter = pendingSoulLinkInviter();
+    if (!inviter) {
+      return;
+    }
+    let cancelled = false;
+    void fetchSoulLinkInvite(inviter)
+      .then((response) => {
+        if (!cancelled) {
+          setInviterName(response.playerName);
+        }
+      })
+      .catch(() => {
+        // Unknown inviter: the gateway stays as it is.
+      });
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -414,6 +447,11 @@ export function OnboardingGateway({
         <div style={titleGroupStyle}>
           <h1 style={titleStyle}>Morkahja</h1>
           <p style={welcomeStyle}>Welcome, Adventurer!</p>
+          {inviterName ? (
+            <p style={inviteNoteStyle}>
+              {`${inviterName} invites you to Morkahja. Your souls will be linked, and on the first day you both play 42 encounters, Aetherion opens for you as a welcome gift.`}
+            </p>
+          ) : null}
         </div>
         <div
           style={{

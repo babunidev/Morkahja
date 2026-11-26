@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import HelpTip from '../common/HelpTip.js';
 import type {
   AchievementProgressDto,
   DailyRewardStatusDto,
@@ -222,7 +223,10 @@ function progressLabel(achievement: AchievementProgressDto): string {
       return `${achievement.progress} activity — max rank reached`;
     }
 
-    return `${achievement.progress} / ${achievement.bandEnd} activity`;
+    const places = typeof achievement.legendbornPlacesLeft === 'number'
+      ? ` · ${achievement.legendbornPlacesLeft} of 100 Legendborn places left`
+      : '';
+    return `${achievement.progress} / ${achievement.bandEnd} activity${places}`;
   }
 
   if (achievement.bandEnd === null) {
@@ -231,6 +235,21 @@ function progressLabel(achievement: AchievementProgressDto): string {
 
   return `${achievement.progress} / ${achievement.bandEnd} encounters`;
 }
+
+/** How Alpha Player is earned (Babuni, 2026-11-26, D-068), behind the card's "?". */
+function alphaPlayerHelpText(achievement: AchievementProgressDto): string {
+  const places = achievement.globallyLocked
+    ? 'All 100 Legendborn places are taken, and the achievement is sealed.'
+    : `Only the first 100 adventurers to reach Legendborn earn rank 4; ${achievement.legendbornPlacesLeft ?? 100} places are left. When they are taken, the achievement is sealed for everyone.`;
+  return `Every level-up and every death of your avatars counts 1, and every soul link that receives its Gift of the Gods counts 5. Ranks at 20, 40, 80 and 160. Each rank pays 20 gems a day with your daily reward, up to 80 at Legendborn. ${places}`;
+}
+
+const titleRowStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: 8,
+};
 
 function AchievementCard({ achievement }: { achievement: AchievementProgressDto }) {
   const progressPercent = Math.round((achievement.progressInBand ?? 0) * 100);
@@ -255,11 +274,16 @@ function AchievementCard({ achievement }: { achievement: AchievementProgressDto 
           />
         ) : null}
       </div>
-      <h3 style={achievementTitleStyle}>
-        {achievement.chainTitle && achievement.rank <= 0
-          ? achievement.chainTitle
-          : achievement.title}
-      </h3>
+      <div style={titleRowStyle}>
+        <h3 style={achievementTitleStyle}>
+          {achievement.chainTitle && achievement.rank <= 0
+            ? achievement.chainTitle
+            : achievement.title}
+        </h3>
+        {achievement.achievementId === 'alpha_player' ? (
+          <HelpTip label="How is Alpha Player earned?" text={alphaPlayerHelpText(achievement)} />
+        ) : null}
+      </div>
       <p style={achievementTextStyle}>
         {achievement.globallyLocked && achievement.rank < 4
           ? `${achievement.text} This limited achievement has been permanently sealed.`

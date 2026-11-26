@@ -228,6 +228,18 @@ export async function listPendingSoulLinkerIds(targetId: string): Promise<string
   return result.rows.map((row) => row.id);
 }
 
+/** Everyone whose soul is linked to this player, oldest link first (D-068). */
+export async function listSoulLinkers<T>(targetId: string): Promise<Array<{ id: string; data: T }>> {
+  await ensureSchema();
+  const result = await pool.query<{ id: string; data: T }>(
+    `SELECT id, data FROM players
+     WHERE data->'soulLink'->>'targetId' = $1
+     ORDER BY (data->'soulLink'->>'linkedAt')::bigint ASC NULLS LAST`,
+    [targetId],
+  );
+  return result.rows.map((row) => ({ id: row.id, data: row.data }));
+}
+
 export async function getDevice<T>(deviceId: string): Promise<T | null> {
   await ensureSchema();
   return one(pool.query('SELECT data FROM devices WHERE id = $1', [deviceId]));

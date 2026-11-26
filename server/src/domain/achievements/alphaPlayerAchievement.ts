@@ -10,6 +10,8 @@ export const ALPHA_PLAYER_RANK_THRESHOLDS = [20, 40, 80, 160] as const;
 export const ALPHA_PLAYER_MAX_RANK = 4;
 export const ALPHA_PLAYER_RANK4_SLOT_CAP = 100;
 export const ALPHA_PLAYER_DAILY_REWARD_GEMS_PER_RANK = 20;
+/** Alpha Player points for each soul link that pays its gift (D-068). */
+export const ALPHA_PLAYER_POINTS_PER_SOUL_LINK = 5;
 
 export const ALPHA_PLAYER_BASE_ICON = 'UI/04_ACHIEVEMENTS/im_glyph_alphaplayer.webp';
 

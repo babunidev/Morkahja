@@ -10,8 +10,27 @@ import {
   HomelandNotForSaleError,
   ExpansionNotFoundError,
   InsufficientGemsForExpansionError,
+  acknowledgeExpansionReveal,
+  getPendingExpansionReveals,
   unlockPlayerExpansion,
 } from '../services/playerService.js';
+
+/** Expansions whose unlock card is due (D-068). */
+export async function getExpansionRevealsController(req: Request, res: Response): Promise<void> {
+  const { playerId } = requireAuth(req);
+  res.json({ playerId, expansionIds: await getPendingExpansionReveals(playerId) });
+}
+
+/** The player closed an unlock card with Proceed. */
+export async function acknowledgeExpansionRevealController(req: Request, res: Response): Promise<void> {
+  const { playerId } = requireAuth(req);
+  const expansionId = (req.body as Record<string, unknown>).expansionId;
+  if (typeof expansionId !== 'number' || !Number.isInteger(expansionId) || expansionId <= 0) {
+    res.status(400).json({ error: 'INVALID_EXPANSION_ID' });
+    return;
+  }
+  res.json({ playerId, expansionIds: await acknowledgeExpansionReveal(playerId, expansionId) });
+}
 
 export async function unlockPlayerExpansionController(
   req: Request,

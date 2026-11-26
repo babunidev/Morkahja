@@ -2,11 +2,17 @@ import {
   listPendingSoulLinkerIds,
   withDocumentTransaction,
 } from '../../db/postgresDocumentStore.js';
+import { grantPlayerExpansion } from '../../services/playerService.js';
 import type { PlayerDocument } from '../../types/player.js';
+import { ALPHA_PLAYER_POINTS_PER_SOUL_LINK } from './alphaPlayerAchievement.js';
+import { addAlphaPlayerProgress } from './alphaPlayerProgress.js';
 import { awardSpiritguidePoint } from './spiritguideProgress.js';
 
 /** Encounters both soul-linked players must play on the same UTC day. */
 export const SOUL_LINK_GIFT_ENCOUNTERS_REQUIRED = 42;
+
+/** The newcomer's welcome gift on the gift day: Aetherion (Babuni, 2026-11-26, D-068). */
+export const SOUL_LINK_WELCOME_EXPANSION_ID = 1004;
 
 function utcDayKey(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
@@ -42,6 +48,8 @@ export function soulLinkGiftDue(
  * Delivers the linker's pending gift if it is due today. Both player rows are
  * locked (in id order, so two deliveries cannot deadlock) before the check, so
  * parallel encounters cannot pay twice or pay a target twice in one day.
+ * The target gets a Spiritguide point and Alpha Player points; the linker
+ * (the newcomer) gets Aetherion as a welcome gift, unless it was owned (D-068).
  */
 export async function tryDeliverSoulLinkGift(
   linkerId: string,
@@ -70,9 +78,17 @@ export async function tryDeliverSoulLinkGift(
     }
 
     const now = Date.now();
+    const welcome = await grantPlayerExpansion(linkerId, SOUL_LINK_WELCOME_EXPANSION_ID, transaction);
     await transaction.setPlayer(
       linkerId,
-      { soulLink: { ...linker.soulLink, giftDeliveredAt: timestamp }, updatedAt: now },
+      {
+        soulLink: {
+          ...linker.soulLink,
+          giftDeliveredAt: timestamp,
+          welcomeGift: welcome.alreadyUnlocked ? 'owned' : 'aetherion',
+        },
+        updatedAt: now,
+      },
       { merge: true },
     );
     await transaction.setPlayer(
@@ -80,7 +96,10 @@ export async function tryDeliverSoulLinkGift(
       { soulLinkGiftDay: utcDay, updatedAt: now },
       { merge: true },
     );
-    transaction.onCommit(() => awardSpiritguidePoint(targetId, timestamp));
+    transaction.onCommit(async () => {
+      await awardSpiritguidePoint(targetId, timestamp);
+      await addAlphaPlayerProgress(targetId, ALPHA_PLAYER_POINTS_PER_SOUL_LINK, timestamp);
+    });
     return true;
   });
 }

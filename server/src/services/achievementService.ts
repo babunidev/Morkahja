@@ -15,6 +15,7 @@ import {
   ALPHA_PLAYER_BASE_ICON,
   ALPHA_PLAYER_CHAIN_TEXT,
   ALPHA_PLAYER_CHAIN_TITLE,
+  ALPHA_PLAYER_RANK4_SLOT_CAP,
   ALPHA_PLAYER_RANKS,
   alphaPlayerProgressBand,
   alphaPlayerRankDefinition,
@@ -108,6 +109,8 @@ export interface AchievementProgressView {
   ranks: AchievementRankView[];
   chainTitle?: string;
   globallyLocked?: boolean;
+  /** Alpha Player only: Legendborn (rank 4) places still free of the first 100 (D-068). */
+  legendbornPlacesLeft?: number;
 }
 
 export interface AchievementsSnapshot {
@@ -121,6 +124,11 @@ function toPublicPath(relativePath: string): string {
 
 /** Hide achievement chains until the player has started them. */
 function isAchievementVisible(achievement: AchievementProgressView): boolean {
+  // Alpha Player shows from the start while its places are open, so new
+  // players learn about it (Babuni, 2026-11-26, D-068).
+  if (achievement.achievementId === ALPHA_PLAYER_ACHIEVEMENT_ID && !achievement.globallyLocked) {
+    return true;
+  }
   return achievement.progress > 0 || achievement.rank > 0;
 }
 
@@ -349,6 +357,7 @@ function buildSpiritguideView(progress: number): AchievementProgressView {
 function buildAlphaPlayerView(
   progress: number,
   globallyLocked: boolean,
+  legendbornPlacesLeft: number,
 ): AchievementProgressView {
   const rank = alphaPlayerRankFromProgress(progress);
   const rankDefinition = alphaPlayerRankDefinition(rank);
@@ -367,6 +376,7 @@ function buildAlphaPlayerView(
       : undefined,
     chainTitle: ALPHA_PLAYER_CHAIN_TITLE,
     globallyLocked,
+    legendbornPlacesLeft,
     title: rankDefinition?.title ?? ALPHA_PLAYER_CHAIN_TITLE,
     text: rankDefinition?.text ?? ALPHA_PLAYER_CHAIN_TEXT,
     ranks: ALPHA_PLAYER_RANKS.map((entry) => ({
@@ -414,6 +424,7 @@ function buildAchievementsViews(input: {
   homecoming: HomecomingState;
   alphaProgress: number;
   alphaLocked: boolean;
+  alphaPlacesLeft: number;
 }): AchievementProgressView[] {
   const allAchievements = [
     buildAdventurerView(input.adventurerProgress),
@@ -429,7 +440,7 @@ function buildAchievementsViews(input: {
     buildContributorView(input.contributorProgress),
     buildSpiritguideView(input.spiritguideProgress),
     buildHomecomingView(input.homecoming),
-    buildAlphaPlayerView(input.alphaProgress, input.alphaLocked),
+    buildAlphaPlayerView(input.alphaProgress, input.alphaLocked, input.alphaPlacesLeft),
   ];
 
   return allAchievements.filter(isAchievementVisible);
@@ -478,6 +489,7 @@ export async function getAchievementsSnapshotReadOnly(
     homecoming,
     alphaProgress,
     alphaLocked,
+    alphaPlacesLeft: alphaLocked ? 0 : Math.max(0, ALPHA_PLAYER_RANK4_SLOT_CAP - alphaGlobal.rank4Count),
   });
 }
 
@@ -524,6 +536,7 @@ export async function getAchievementsSnapshot(
       homecoming,
       alphaProgress,
       alphaLocked,
+      alphaPlacesLeft: alphaLocked ? 0 : Math.max(0, ALPHA_PLAYER_RANK4_SLOT_CAP - alphaGlobal.rank4Count),
     }),
     dailyReward: await getDailyRewardStatus(playerId),
   };
