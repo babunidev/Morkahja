@@ -2,6 +2,13 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — No browser context menu in the app
+
+- **Babuni's report:** a right-click opens the browser's menu inside the app.
+- **Fix (`client/src/ui/protectedImage.ts`):** the global `contextmenu` guard in `useProtectedImages` now blocks the browser menu everywhere in the app, not only on images and backgrounds; text fields (`input`, `textarea`, `select`, `contenteditable`) keep it for copy and paste.
+- **Verification:** `npx tsc -b` in `client` clean. Not tried in the browser. Claude Code (Claude Opus 5.5). **Not released.**
+
+
 ## 2026-11-27 — Bots answer Call for help while adventuring, and after a fallen avatar
 
 - **Babuni's report (on beta.87):** three heard the call, nobody came.

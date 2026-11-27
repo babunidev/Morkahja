@@ -63,11 +63,14 @@ function isTextInputTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest(TEXT_INPUT_SELECTOR));
 }
 
-/** Blocks image/background context menus, drag, and incidental text selection. */
+/**
+ * Blocks the browser context menu everywhere in the app (text fields keep it for
+ * copy/paste), plus image/background drag and incidental text selection.
+ */
 export function useProtectedImages(): void {
   useEffect(() => {
     function onContextMenu(event: Event): void {
-      if (findProtectedMediaTarget(event.target)) {
+      if (!isTextInputTarget(event.target)) {
         event.preventDefault();
       }
     }

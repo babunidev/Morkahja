@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — No browser menu on right-click
+
+A right-click inside the game opened the browser's own menu. Claude Code (Claude Opus 5.5) widened the guard that already kept it off images, so it is now gone across the whole app; only text fields keep it, for copy and paste. **Not released.**
+
+
 ## 2026-11-27 — The bots come when I call
 
 I called for help, the game said three heard me, and nobody came. Claude Code (Claude Opus 5.5) read the live log: the only bot resting at that moment was Varrokh, and his avatar had died in his last shift, so the server turned him away; the two others were adventuring and did not even look. Now a bot that is adventuring finishes its encounter and comes, and a bot whose avatar has fallen makes a new one and answers the same call. In a local test with a scripted caller, two bots joined within seconds, and the room was full. **Not released.**
