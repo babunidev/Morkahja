@@ -35,11 +35,16 @@ Consult [MorkahjaWorld](https://github.com/babunidev/MorkahjaWorld) for relevant
 5. Keep the original image intact until the replacement is reviewed. Track **proposed**, **approved**, **committed**, **tested in game**, and **deployed** independently; an exported local WebP is not a committed or released game change.
 6. When a replacement is accepted, use its existing `mSolutionIconName` as the production basename, preserve any contributor attribution, and document the replacement in `docs/DEVLOG.md` and `CHANGELOG.md`, including validation and deployment status.
 
+## New solution artwork
+
+For approved new solutions not yet in the game catalog, use the corresponding `docs/encounter-drafts/<encounterID>.md` specification and the content production ledger as source authority. Inspect related existing solution and encounter artwork, consult world lore, and apply the same technical standards. A creative approval does not activate game records. Track local export, approval, asset upload, runtime verification and deployment separately.
+
 ## Revision ledger
 
 | Solution | Class | Original asset | Status |
 | --- | --- | --- | --- |
 | 10001 — Arcane Intellect | Ability | `skill_learn.webp` | Local frameless WebP draft exported and checked (512 × 512, 49,272 bytes, transparent beyond circle); **not committed to the game, approved, tested in game or deployed** |
+| 10440 — Wordkeeper's Stone | Item / Speechcraft | New asset `10440_wordkeepers_stone.webp` | Creatively approved 2026-11-27; local WebP verified (512 × 512 RGBA, 76,720 bytes, zero nontransparent pixels outside circle); repository upload, runtime test and deployment pending. Source: [20232](encounter-drafts/20232.md). |
 
 The source file for the current 10001 icon shows a central golden arcane glyph, teal energy, and amber energy, with a painted frame. The [Common Arts](https://github.com/babunidev/MorkahjaWorld/blob/main/Magic/Common_Arts.md#arcane-intellect) entry identifies this skill with absorbing and mastering strength, cunning, and magic. The [Elemental Foundation](https://github.com/babunidev/MorkahjaWorld/blob/main/Magic/Elemental_Foundation.md) describes Aether as the connector and transformer of material elements. These are design references, not permission to alter the game's mechanics.
 

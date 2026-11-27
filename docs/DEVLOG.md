@@ -2,6 +2,10 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — A stone for listening
+
+For the first newly approved solution artwork, the Wordkeeper's Stone (10440), my direction was to work from the approved encounter specification rather than a legacy icon. ChatGPT (GPT-6.2) reviewed the production ledger, both repositories, related stone and Speechcraft icons, and the Vale encounter paintings. ChatGPT image generation (exact image model version not recorded) produced a warm-grey, two-groove stone on a tree root; the draft was exported as a frameless circular WebP. The stone's colour and setting are artistic interpretation, not new lore. The draft received my creative approval. **Verification:** local WebP, RGBA, 512 × 512, 76,720 bytes, zero nontransparent pixels outside the circle; 96 and 64 px previews reviewed during creation. SHA-256 `64a3f88441b74e02c12e7d0a0a9894e2874c3484b254b5a04c537dadf4cf6b75`. **Limitation:** the local binary could not be transferred through the available GitHub connection; asset upload remains pending. Documentation only; no solution or encounter data changed, no runtime test or deployment.
+
 ## 2026-11-27 — Where Two Roads Meet: painting approved
 
 The first new Speechcraft encounter painting (20232) has my creative approval. ChatGPT (GPT-6.2) reviewed the approved specification, world lore and four existing paintings; ChatGPT image generation (exact image model not recorded) produced the scene. After correcting the export, Pillow reopened it as opaque RGB WebP, 1024 × 1024, 254936 bytes, with valid RIFF/WEBP signature. The approved file remains local: direct Git access failed and the connector cannot accept its local binary. This entry records approval only; asset upload, the separate solution icon, activation, runtime tests and deployment remain pending.
