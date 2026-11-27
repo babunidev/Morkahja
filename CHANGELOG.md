@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Social encounter 20232 specification (documentation only)
+
+- Added approved Where Two Roads Meet specification and recorded its reserved solution and artwork handoff in the production ledger. No encounter activation, game data or artwork changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-27 — Clarify dynamic rarity action counts (documentation only)
 
 - Clarified that effective difficulty N requires N actions through reusable/refillable solution slots or dice; no four-action design cap. Updated rarity handoff and management records. ChatGPT (GPT-6.2).
