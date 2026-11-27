@@ -2,7 +2,7 @@
 
 **Creative:** Babuni · 00 Management · 2026-11-26
 
-Rather than finishing entire families in isolation, my preference is to develop them together in small rounds. The following sequencing is a management recommendation based on the approved quotas and the pinned 49-record working baseline; individual encounter revisions and rare/difficulty designations still require approval.
+Rather than finishing entire families in isolation, my preference is to develop them together in small rounds. The following sequencing is a management recommendation based on the approved quotas and the pinned 49-record working baseline; individual encounter revisions still require approval. Dynamic rarity is approved; all new Vale encounters use authored D1.
 
 ## Round targets and work
 
@@ -51,6 +51,6 @@ Use the [Find-to-Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) fo
 
 ## End-of-round checks
 
-Check family/subtype totals, existing review status, unique IDs, primary/fallback pairs, geography, element diversity and artwork dependencies. Track rare and D2 slots independently; the final catalog has six of each. Do not mark text ready as engine-ready. Performance and other taxonomy changes, out-of-Vale access isolation and deployment remain separate engineering tasks.
+Check family/subtype totals, existing review status, unique IDs, primary/fallback pairs, geography, element diversity and artwork dependencies. Author all Vale encounters at D1. No fixed rare slots or D2 slots; verify runtime rare appearances separately under the [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md). Do not mark text ready as engine-ready. Performance and other taxonomy changes, out-of-Vale access isolation and deployment remain separate engineering tasks.
 
 ChatGPT (GPT-6.2) calculated the stages, audited Find narratives and existing Climb solutions, and drafted this sequencing recommendation. No encounter or solution JSON, game engine, lore or assets changed.

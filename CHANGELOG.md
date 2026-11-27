@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Dynamic encounter rarity direction (documentation only)
+
+- Replaced fixed encounter rarity and difficulty quotas with an approved 5% chance of a rare appearance at +1 effective difficulty, with increased rewards and a distinct frame. Authored Vale difficulty is 1. Added developer handoff; no game data or runtime changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-27 — Revised encounter production allocation (documentation only)
 
 - Recorded 47 existing and 73 new geographic encounters needed at the unchanged 120 target. Flagged later Combat/Trick reservations for reconciliation; no new IDs, reclassifications or game data changed. ChatGPT (GPT-6.2).

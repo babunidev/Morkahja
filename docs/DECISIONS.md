@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Dynamic encounter rarity and authored difficulty
+
+Every geographic encounter in my game should have a one-in-twenty chance of appearing as a rare version. At server preparation, a rare appearance gains one effective difficulty level, an increased reward and a recognizable frame; its story and identity do not change. My Vale encounters are all authored at difficulty 1, including the two scripted sanctuaries, while other expansions keep their authored difficulties. This replaces the earlier six rare IDs and 114/6 difficulty quota. The two universal system events remain separate. Existing item rarity is unchanged. The [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md) records persistence, preparation paths, reward and difficulty compatibility. Exact reward formula and high-difficulty set-size behavior remain engineering review items. ChatGPT (GPT-6.2) recorded my decision; no game data, engine or release changed.
+
+
 ## 2026-11-27 — Revised encounter production allocation
 
 Following the regional migration, six Climb conversions and four Find records set aside, my 120-geographic-encounter target remains in place. The revised planning allocation is 73 new encounters from 47 existing: 11 Combat, seven Trick, 22 Aid, 24 Social, four Learn and five Trade, using the current working creative classifications. Individual candidate conversions and classifications are not approved by this allocation; recheck them before final reservation changes. The current Round 1 assignments remain valid. ChatGPT (GPT-6.2) rechecked the current source catalog and reconciled the planning documents. No game data or gameplay changes.

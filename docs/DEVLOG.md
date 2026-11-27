@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Every encounter can be rare
+
+Rather than assigning rare encounters to each family and subcategory, my preference is a one-in-twenty chance for any geographic encounter to appear as a rare version, one difficulty higher and with a greater reward. All my Vale encounters should have base difficulty 1. ChatGPT (GPT-6.2) checked the current 203-record catalog, preparation and reward paths, and found two Vale sanctuaries still authored at difficulty 2. Existing data also reaches difficulty 7, while the declared type and solution-set limit stop at 4. The developer brief records this compatibility gap and the need to persist rarity once per appearance. Planning documents updated; no runtime changes, tests or deployment.
+
+
 ## 2026-11-27 — Revised Vale production baseline
 
 The regional and Climb work leaves 47 geographic base-game encounters, including two scripted sanctuaries, and four preserved outside the active pool. ChatGPT (GPT-6.2) rechecked the complete encounter catalog against the ledger at 842bfa37 and recorded 73 new encounters needed under my unchanged target of 120. The working subtype assignments still need review, notably two non-Find engine records counted as intended Find. Current Round 1 briefs remain valid; later Combat and Trick reservations await reconciliation. Documentation only; no runtime tests or deployment.

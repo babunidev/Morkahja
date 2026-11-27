@@ -22,17 +22,7 @@ Reservations are not game records or creative approval. Existing records are com
 
 ## Production briefs
 
-Approved rare content quota (2026-11-26): exactly one rare encounter per family, within the approved family totals. Rarity is independent of difficulty, element and reward quality; no draw probability or engine field is approved. Record and review each designation before data changes. The six slots below are planning allocations, not encounter IDs.
-
-| Family | Ordinary target | Rare target | Designated ID |
-| --- | ---: | ---: | --- |
-| Combat | 26 | 1 | Pending |
-| Trick | 26 | 1 | Pending |
-| Aid | 26 | 1 | Pending |
-| Social | 26 | 1 | Pending |
-| Learn | 5 | 1 | Pending |
-| Trade | 5 | 1 | Pending |
-| Total | 114 | 6 | None approved |
+**Approved dynamic rarity (2026-11-27):** all 120 geographic base-game records are authored at difficulty 1. Every eligible geographic appearance across expansions has a server-owned independent 5% chance to become rare, raising effective difficulty by one, increasing rewards and showing a distinct frame. No authored rare slots or fixed D2 allocations. The two existing sanctuaries remain D2 in data until the developer normalizes them; preserve links. See [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md). No change to existing solution/item rarity. Historical rare/D2 notes in review rows are not assignments.
 
 Approved production targets: nine encounters per subtype in each of Combat, Trick, Aid and Social. Learn and Trade remain six each. The existing classification mix is a working audit, not approval of individual revisions. Trick must review twelve Find candidates for six Open Lock and six Climb revisions, retaining all IDs and engraved clues; the three new Trick reservations remain Climb.
 
@@ -64,7 +54,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20093 | Bonecrusher | Combat / Combat | A:—/10; B:10104/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; preserve bone-white form and broken branch. |
 | 20094 | Nagar Humpback | Combat / Combat | A:—/10; B:10107/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; distinguish obstruction from other charges. |
 | 20095 | Nagar Razorback | Combat / Combat | A:—/10; B:10108/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; distinct obstacle turn. |
-| 20096 | Thunderhoof | Combat / Combat | A:—/10; B:10109/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; measured tremor; D2/rare candidate only. |
+| 20096 | Thunderhoof | Combat / Combat | A:—/10; B:10109/30; C:—/29; D:—/9 | 1 / — / 2×1 | Weapon 10/fallback 30; measured tremor; previous D2/rare suggestion superseded. |
 | 20107 | Silver Wolf | Combat / Ambush | A:—/10; B:10119/30; C:—/29; D:—/9 | 1 / — / 2×1 | Wolfsbane Elixir 10119 type 26, fallback 30; purpose and evasion need review. |
 | 20108 | Shena Alpha | Combat / Ambush | A:—/10; B:10120/36; C:—/35; D:—/9 | 1 / — / 2×1 | Vigilant alpha, concealment; Keldor boundary. |
 | 20110 | Mother Wolf | Combat / Ambush | A:—/10; B:10124/36; C:—/35; D:—/9 | 1 / — / 2×1 | Defensive mother and cubs; evasion rather than hunting cubs. |
@@ -76,7 +66,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20003 | Fae Pastures | Trick / Find | B:10006/6; C:—/5 | 1 / — / 2×1 | Enchanted Guide; laughter distinctive; keep fae mystery. |
 | 20004 | Mystic Grass | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10071/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: scramble up the rock heap to the pillar; Climbing Gear. Mystic Map 10008 no longer referenced. |
 | 20005 | Seraphic Plains | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10211/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: high recess in the tallest pillar; Seeker's Grapnel. Seraphic Map 10009 no longer referenced. |
-| 20032 | Rare Treasurechest | Trick / Open Lock | B:10069/—; C:—/7 | 1 / — / 3×1 | Mystical Key; no same-lane fallback; rarity candidate; Seraphic vs Sepharic spelling. |
+| 20032 | Rare Treasurechest | Trick / Open Lock | B:10069/—; C:—/7 | 1 / — / 3×1 | Mystical Key; no same-lane fallback; title does not determine dynamic rarity; Seraphic vs Sepharic spelling. |
 | 20068 | Fey Greens | **Trick / Climb (committed `77f4aaee`, 2026-11-26)** | B:10167/14; C:—/13 | 1 / — / 2×1 | Approved Round 1 revision: carved ledge high on the sanctuary rock; Faewoven Ladder. Whistle Reed 10080 no longer referenced. |
 | 20069 | Celestial Fields | Trick / Find | B:10081/6; C:—/5 | 1 / — / 2×1 | Meadow Star; treasure rumor lacks concrete opportunity. |
 | 20070 | Enigmatic Prairies | Trick / Find | B:10082/28; C:—/5 | 1 / — / 2×1 | Rosethorn Locket type 28 canon barrier-piercing; do not retag blindly; replace primary or approve Purge scene. |
@@ -96,7 +86,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 | 20111 | Young Redeye | Trick / Find | A:—/10; B:10125/6; C:—/5; D:—/9 | 1 / — / 2×1 | Currently Combat; playful pup, Divining Locket detects treasure but no treasure cue; review combat lanes and possible peaceful family. |
 | 20119 | Simple Treasure | Trick / Open Lock | B:10136/—; C:—/7 | 1 / — / 2×2 | Sage Key and separate skill lane; repeated meadow chest. |
 | 19001 | Nerevals Sanctuary | Aid / Heal | B:10245/22; C:—/21 | 2 / — / 2×3 | Scripted D2; seal responds to healing; preserve 20192 link; clarify what can be healed. |
-| 19444 | Hearthguard Sanctuary | Aid / Nurture | B:10239/34; C:—/33 | 2 / — / 3×2 | Scripted D2; already-open shelter; stew fits; rarity candidate only. |
+| 19444 | Hearthguard Sanctuary | Aid / Nurture | B:10239/34; C:—/33 | 2 / — / 3×2 | Scripted D2 in current data, normalize to authored D1 in developer handoff; already-open shelter; stew fits. |
 | 20187 | Ember's Journeykindler | Aid / Aid | A:—/26; B:10237/40; C:—/39; D:—/25 | 1 / — / 2×1 | Flameheart Amulet lore supports vitality but type 40; review Aid lane and other references. |
 | 20189 | Zephyr's Embrace | Aid / Aid | A:—/10; B:10240/26; C:—/25; D:—/9 | 1 / — / 2×1 | Windward Bulwark type 26 fits protection; combat alternative justified. |
 | 20193 | Joyful Riverkeeper | Aid / Nurture | B:10247/34; C:—/33 | 1 / — / 2×1 | Berries fit appetite; Social only if intent changes. |
@@ -120,7 +110,7 @@ All rows have legacy prose and artwork references in source; artwork quality/fil
 
 71 active reservations at the approved 120 target. ID 20265 remains held by Management as an unused reserve, not an active task; other families and solution reservations are unchanged.
 
-Provisional sequencing; four additional random D2 slots and the six approved rare content slots await individual encounter designations. These designations are independent. Dashes indicate not started. Record existing revisions with original IDs in this table when authorized. Verification means actual source/static checks after commit.
+Provisional sequencing; author all new Vale geographic encounters at difficulty 1. No rare or D2 designations; dynamic rarity is a separate engineering task. Dashes indicate not started. Record existing revisions with original IDs in this table when authorized. Verification means actual source/static checks after commit.
 
 | Reserved ID | Family | Subtype task | Concept / reserved solution IDs | Drafted | Approved | Committed | Verified | Artwork |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

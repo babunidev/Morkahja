@@ -5,6 +5,15 @@
 
 ## Scope and design direction
 
+## 2026-11-27 — Dynamic encounter rarity (approved)
+
+Every eligible geographic encounter appearance, in the Vale or any expansion, has an independent 1-in-20 chance to become rare when the server prepares it. A rare appearance increases effective difficulty by one, receives an increased reward and is distinguishable by its encounter frame. The catalog ID, story, location, family and solution identities remain the same. Roll once and persist the result for that appearance; never reroll on refresh, retry or reconnect. Atranor and Level Up remain universal system events outside this rule. Geographic scripted encounters are eligible, including the sanctuaries.
+
+All 120 geographic base-game encounters have authored difficulty 1. Normalize the two existing D2 sanctuaries (19001, 19444) in the developer change; preserve their links, other metadata and narrative identity. Existing future expansion base difficulties remain unchanged. No fixed rare IDs, per-family rarity quota or authored D2 quota. The earlier 114/6 split, six rare designations and candidate assignments are superseded. Rarity is independent of family, element and existing solution/item rarity.
+
+See [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md). Implementation pending: reward scaling, persistence, frame presentation and compatibility with difficulty above four require engineering review. Exact reward formula and high-difficulty solution-set behavior are not newly approved by this direction.
+
+
 ## 2026-11-27 — Management reassessment
 
 The revised planning allocation retains the approved 120 geographic target. Current main at [842bfa37](https://github.com/babunidev/Morkahja/commit/842bfa375ce62c67a8bfe9b7dc49471311c3b7b0) contains 47 geographic base-game encounters (45 random, two scripted) and two universal system encounters. Four legacy Find records remain preserved in inactive expansion 1999. No reserved new encounter IDs have been committed at this snapshot. The table uses intended creative classifications, not raw engine subtype counts; individual classifications and revisions remain subject to review.
@@ -23,12 +32,12 @@ The existing 71 reserved tasks are the historical allocation, not the revised wo
 
 Working subtype counts: Combat 9/1/6; Trick 11/3/6; Aid 1/2/2; Social 1/0/2 (Performance candidates). The engine has nine literal Find records, plus 20070 Purge and 20084 Travel, both previously intended Find in the studio audit. The proposed Trick path is to preserve all eight MORKAHJA clue scenes, convert two non-letter Find candidates to Open Lock, then add four Open Lock and three Climb. Do not approve the candidate selections, final prose or slot edits by arithmetic. If 20070 is instead retained as genuine Purge or another candidate moves family, recalculate the family allocation before assigning new tasks.
 
-Remaining decisions: disposition of 20070 and 20084, specific Open Lock conversions, individual family/subtype approvals (including returned 20033 and 20191 and two Performance candidates), four additional D2 designations and six rare designations; future rare-selection mechanics and safe taxonomy migration belong to game design/development. The [developer report](REPORT_DEVELOPMENT_2026-11-26.md) was written before release; the roadmap/changelog record release of the regional and Climb work in 0.9.0-beta.84. ChatGPT (GPT-6.2) rechecked the current catalog and ledger; no game data changed.
+Remaining decisions: disposition of 20070 and 20084, specific Open Lock conversions, individual family/subtype approvals (including returned 20033 and 20191 and two Performance candidates), safe taxonomy migration and dynamic rarity implementation belong to game design/development. Individual D2 and rare designations are superseded by the approved 2026-11-27 dynamic rarity direction. The [developer report](REPORT_DEVELOPMENT_2026-11-26.md) was written before release; the roadmap/changelog record release of the regional and Climb work in 0.9.0-beta.84. ChatGPT (GPT-6.2) rechecked the current catalog and ledger; no game data changed.
 
 ### Original scope direction (historical context)
 
 
-For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. Approximately 5% of geographic encounters should be difficulty 2 and all others difficulty 1. Exactly six geographic encounters are designated rare for content planning, one per family (5% of the catalog). Atranor and Level Up remain universal system events, outside these quotas.
+For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. All geographic base-game records must have authored difficulty 1; runtime rare appearances may gain one difficulty level with 5% probability (approved 2026-11-27). No fixed rare encounter designations. Atranor and Level Up remain universal system events, outside these quotas.
 
 ## Role direction
 
@@ -67,11 +76,10 @@ The current raw types are Combat 14, Trick 25, Help 7, Learn 2, Trade 1; Social 
 
 ### Difficulty and rarity
 
-- [ ] Keep difficulty 1 on 114 of 120 geographic records and difficulty 2 on 6 (5%). Existing difficulty 1: 47; difficulty 2: 2 (19001 and 19444, both scripted).
-- [ ] Retain both sanctuaries at difficulty 2 provisionally and select four additional difficulty-2 random encounters, preferably one in each major family. All other new encounters difficulty 1. No difficulty 3+ in geographic base game.
-- [ ] Define rare encounter selection mechanics separately from content production. The approved quota is not a draw probability. The audited generator draws uniformly within eligible region pool; no explicit encounter rarity field was found. Do not mistake reward type 3 or difficulty 2 for a rarity mechanism.
-- [x] Approved content target: exactly six rare encounters, one per family, included in the 120 geographic encounters. Rarity is independent of difficulty, element and reward quality.
-- [ ] Select and approve one rare encounter per family individually. Rare Treasurechest (20032) and Hearthguard Sanctuary (19444) are existing review candidates, not confirmed designations. Scripted encounters must be tracked separately from random encounters; no selection behavior is implied.
+- [x] Approved: all geographic base-game records are authored at difficulty 1; 5% of geographic appearances across all expansions gain +1 effective difficulty and an increased reward.
+- [ ] Normalize the two existing Vale sanctuary records to authored difficulty 1 in the developer implementation. Preserve their follow links.
+- [ ] Implement server-owned rare appearance state, reward and frame presentation; verify all preparation paths, including scripted geographic follows. See the [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md).
+- No fixed rarity designations or authored D2 slots. The historical six-per-catalog rarity and 114/6 difficulty targets are superseded. Existing item rarity remains independent.
 
 ## Existing encounter corrections
 
@@ -101,8 +109,8 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 - [x] Confirm 120 geographic encounters and family quotas; Ambush and Hidden Market scope and pin are approved.
 - [x] Approve Performance as the third Social solution category.
 - [x] Approve nine encounters per principal-family subtype.
-- [x] Confirm six rare encounters, one per family.
-- [ ] Approve individual rare designations; defer draw probability and implementation to game design.
+- [x] Approve dynamic rare appearances (1-in-20) in place of fixed rare encounter designations.
+- [ ] Implement dynamic rarity and authored D1 normalization through the developer brief; no individual rarity designations.
 - [x] *Done 2026-11-26 (D-063, D-064):* every out-of-Vale record has its regional expansion; two returned to the Vale. Original task: establish an explicit base-game allowlist or valid inactive expansion assignments for the 79 out-of-Vale records; preserve IDs, prose, art, links and ownership. Do not delete or release future expansion content. Existing expansions must retain their established access.
 - [x] *Done 2026-11-26:* checked and tested (`regionalExpansions.test.ts`). Original task: check all random, travel, forced-follow, room/prepared and persisted snapshot paths; ensure no isolated content enters the new base game unintentionally. Preserve legitimate already-unlocked expansion access and paid entitlements; avoid stranding active rooms or saves.
 - [ ] Update encounter family definitions, labels, statistics, achievement mapping and tests. Preserve existing Helper progress when presenting Aid; propose Social achievement chain separately.
@@ -116,7 +124,7 @@ Review all 49 records, including narrative intent, primary item and secondary sk
 - [ ] Create 4 Learn encounters.
 - [ ] Create 5 Trade encounters; review existing Hidden Market (20012).
 - [ ] For each new encounter: unique ID, Vale location, canon-grounded prose, element, family/subtype, valid primary/secondary solutions, reward and difficulty. Preserve one primary item maximum unless design is explicitly revised. Track image WebP separately; text approval is not artwork completion.
-- [ ] Verify all families, subtypes, rarity and difficulty quotas; confirm 120 geographic encounters plus 2 universal events, 118 random candidates and both sanctuary links.
+- [ ] Verify all families, subtypes and authored difficulty 1; verify dynamic rarity separately; confirm 120 geographic encounters plus 2 universal events, 118 random candidates and both sanctuary links.
 - [ ] Run `npm run verify:static-data`, `npm run test:encounter`, relevant specialization/achievement/region-selection tests and typecheck; check desktop and mobile, save compatibility, locked content and actual encounter draws. Record evidence and release separately.
 
 ## Existing content review ledger
@@ -229,6 +237,6 @@ The [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) supersedes the unch
 | Learn | 6 | 6 Learn | 2 | 4 |
 | Trade | 6 | 6 Trade | 1 | 5 |
 
-Equal subtype quotas are approved. The Trick working baseline is 21 Find / 3 Open Lock / 0 Climb; three new Climb drafts and twelve proposed revisions are required. Individual revisions are not yet approved; select by narrative and lore fit, not arithmetic alone. Preserve IDs and engraved clues. Difficulty remains 114 D1 and 6 D2, with four additional random D2 provisionally one per principal family; both sanctuaries remain D2. Each family has exactly one rare content slot: 26 ordinary plus one rare per principal family, five ordinary plus one rare per foundational family. The six designations are included in the 120 total and do not imply a draw-rate or reward mechanic.
+Equal subtype quotas are approved. The Trick working baseline is 21 Find / 3 Open Lock / 0 Climb; three new Climb drafts and twelve proposed revisions are required. Individual revisions are not yet approved; select by narrative and lore fit, not arithmetic alone. Preserve IDs and engraved clues. Historical difficulty and rarity quotas are superseded by the approved dynamic rarity direction above (2026-11-27). All authored Vale geographic records are D1; rare appearances are generated at runtime.
 
-The initial management content targets are approved, including six rare encounters (one per family). Individual rare designations, difficulty allocations, creative revisions and future selection mechanics remain pending. Equal subtype quotas are approved; individual revisions still require review. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.
+The family and subtype content targets remain approved. Dynamic rarity replaces the earlier fixed rarity/difficulty quotas; individual creative revisions and implementation remain pending. Equal subtype quotas are approved; individual revisions still require review. Performance is approved; its engine support is pending. The 120 total and family quotas are approved. Hidden Market base-game eligibility is approved; expansion 1004 stays protected. Present individually; do not reopen Ambush, Aid or retired categories. No new numeric types for pending support.

@@ -15,7 +15,7 @@
 - [x] Confirm 120 geographic encounters and family quotas.
 - [x] Approve Performance as the third Social solution category; unblock creative drafting.
 - [x] Approve nine encounters per principal-family subtype.
-- [x] Approve six rare geographic encounters, one per family, as a content quota.
+- [x] Replace the earlier fixed rarity/difficulty quotas with dynamic rare appearances: 5% chance and +1 effective difficulty, all authored Vale encounters D1 (2026-11-27).
 - [x] Prepare [staged production rounds and Climb candidate review](CONTENT_PRODUCTION_ROUNDS.md) and [79-record regional assignment proposal](CONTENT_EXPANSION_ASSIGNMENTS.md).
 - [x] Record approved Grove relocation and first three expansion catalog entries; prepare [regional migration brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) and [Climb conversion brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md).
 - [x] Implement regional isolation safely (D-063, 2026-11-26): 78 encounters in ten inactive regional expansions, 20009 held, every path closed; [report](REPORT_REGIONAL_EXPANSIONS_2026-11-26.md). Released in 0.9.0-beta.84.
@@ -25,7 +25,7 @@
 - [x] Climb Round 2 (20080, 20071, 20088) approved and applied (2026-11-26). The base game now has six Climb encounters. Released in 0.9.0-beta.84.
 - [x] Homecoming (D-065, 2026-11-26): 100 encounters with one avatar open its people's homeland. Released in 0.9.0-beta.84.
 - [ ] The complete package: decide when to offer it and its price; it is the only way to buy a homeland (D-065).
-- [ ] Approve individual rare designations and difficulty allocations; define rare selection mechanics separately. Isolate other lands, migrate taxonomy safely, review existing content and complete new encounters.
+- [ ] Implement [dynamic encounter rarity](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md), normalize existing Vale sanctuaries to D1, and verify reward/frame/persistence and high-difficulty compatibility. Migrate taxonomy safely, review existing content and complete new encounters.
 - [ ] Verify and release separately; documentation only at this stage.
 
 ## Fourth playable role — approved direction, not implemented (2026-11-25)
