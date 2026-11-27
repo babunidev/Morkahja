@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Refillable slots and full difficulty
+
+My difficulty rule was already clear in play: the four slots can be used again and refilled, and dice can fill every action if needed. Difficulty seven means seven actions, not seven distinct slots. ChatGPT (GPT-6.2) rechecked the source at 934c3c27, where the declared type and shared set-size clamp still stop at four, and clarified the rarity handoff to require full effective-difficulty action counts. This resolves the design question, not an assertion that the current code has been corrected. Documentation only; no runtime tests or deployment.
+
+
 ## 2026-11-27 — Every encounter can be rare
 
 Rather than assigning rare encounters to each family and subcategory, my preference is a one-in-twenty chance for any geographic encounter to appear as a rare version, one difficulty higher and with a greater reward. All my Vale encounters should have base difficulty 1. ChatGPT (GPT-6.2) checked the current 203-record catalog, preparation and reward paths, and found two Vale sanctuaries still authored at difficulty 2. Existing data also reaches difficulty 7, while the declared type and solution-set limit stop at 4. The developer brief records this compatibility gap and the need to persist rarity once per appearance. Planning documents updated; no runtime changes, tests or deployment.

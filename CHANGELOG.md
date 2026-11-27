@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Clarify dynamic rarity action counts (documentation only)
+
+- Clarified that effective difficulty N requires N actions through reusable/refillable solution slots or dice; no four-action design cap. Updated rarity handoff and management records. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-27 — Dynamic encounter rarity direction (documentation only)
 
 - Replaced fixed encounter rarity and difficulty quotas with an approved 5% chance of a rare appearance at +1 effective difficulty, with increased rewards and a distinct frame. Authored Vale difficulty is 1. Added developer handoff; no game data or runtime changes. ChatGPT (GPT-6.2).

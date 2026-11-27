@@ -11,7 +11,7 @@ Every eligible geographic encounter appearance, in the Vale or any expansion, ha
 
 All 120 geographic base-game encounters have authored difficulty 1. Normalize the two existing D2 sanctuaries (19001, 19444) in the developer change; preserve their links, other metadata and narrative identity. Existing future expansion base difficulties remain unchanged. No fixed rare IDs, per-family rarity quota or authored D2 quota. The earlier 114/6 split, six rare designations and candidate assignments are superseded. Rarity is independent of family, element and existing solution/item rarity.
 
-See [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md). Implementation pending: reward scaling, persistence, frame presentation and compatibility with difficulty above four require engineering review. Exact reward formula and high-difficulty solution-set behavior are not newly approved by this direction.
+See [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md). Implementation pending: reward scaling, persistence, frame presentation and full-difficulty action handling require engineering verification. Difficulty N requires N actions, with reusable/refillable solution slots or dice; four visible slots are not a cap. The exact reward formula remains open.
 
 
 ## 2026-11-27 — Management reassessment

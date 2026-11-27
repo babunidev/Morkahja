@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Difficulty determines action count, not slot count
+
+My four visible solution slots are reusable and refill from inventory. An encounter with effective difficulty N requires N actions, including repeated use of a slot, refilled slots or dice alone; D7 requires seven actions and rare D8 requires eight. There is no four-action design limit. The earlier rarity handoff's open high-difficulty design question is resolved. ChatGPT (GPT-6.2) corrected the developer brief and distinguished the intended behavior from the four-action clamp still present in inspected shared source. Verify and correct that implementation as necessary; no game code changed.
+
+
 ## 2026-11-27 — Dynamic encounter rarity and authored difficulty
 
 Every geographic encounter in my game should have a one-in-twenty chance of appearing as a rare version. At server preparation, a rare appearance gains one effective difficulty level, an increased reward and a recognizable frame; its story and identity do not change. My Vale encounters are all authored at difficulty 1, including the two scripted sanctuaries, while other expansions keep their authored difficulties. This replaces the earlier six rare IDs and 114/6 difficulty quota. The two universal system events remain separate. Existing item rarity is unchanged. The [developer brief](DEVELOPER_BRIEF_DYNAMIC_ENCOUNTER_RARITY.md) records persistence, preparation paths, reward and difficulty compatibility. Exact reward formula and high-difficulty set-size behavior remain engineering review items. ChatGPT (GPT-6.2) recorded my decision; no game data, engine or release changed.
