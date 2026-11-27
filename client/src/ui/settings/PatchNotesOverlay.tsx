@@ -29,6 +29,32 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-87',
+    version: '0.9.0-beta.87',
+    period: '27 Nov 2026',
+    groups: [
+      {
+        title: 'Smoother play',
+        notes: [
+          'Opening the Inventory, Skillbook, Lore, the avatar card or the map no longer pauses a reward. It plays on in the background, so you can collect it as soon as you come back.',
+          'Tap a message at the top to go where it points: the Soul Link message opens your Soul Link, the support message the Expansions or the dice, an opened homeland the Expansions, the key reminder the Settings. The Scribes show the same buttons.',
+        ],
+      },
+      {
+        title: 'Fellow adventurers',
+        notes: [
+          'Varrokh, Sylvaen and Thalyss are back on the road. They now take turns adventuring and resting, so one of them is usually free when you call for help.',
+        ],
+      },
+      {
+        title: 'Under the hood',
+        notes: [
+          'The game asks the server far less often for news, achievements and invitations, and nothing at all while its tab is in the background.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-86',
     version: '0.9.0-beta.86',
     period: '26 Nov 2026',
