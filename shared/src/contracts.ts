@@ -254,6 +254,15 @@ export interface ActivityFeedOpenAchievementsActionDto {
   type: 'open_achievements';
 }
 
+/** A dashboard menu a message can lead to (Babuni, 2026-11-27). */
+export type ActivityFeedMenuTarget = 'soul_link' | 'expansions' | 'dice_shop' | 'settings';
+
+export interface ActivityFeedOpenMenuActionDto {
+  type: 'open_menu';
+  /** One or more menus; a toast opens one of them at random. */
+  menus: ActivityFeedMenuTarget[];
+}
+
 export interface ActivityFeedEntryDto {
   eventId: string;
   timestamp: number;
@@ -272,6 +281,8 @@ export interface ActivityFeedEntryDto {
   joinAction?: ActivityFeedJoinRoomActionDto;
   /** When set, tapping the scribe entry opens the achievements panel. */
   openAchievementsAction?: ActivityFeedOpenAchievementsActionDto;
+  /** When set, tapping the message opens that dashboard menu. */
+  openMenuAction?: ActivityFeedOpenMenuActionDto;
   /** When true, eligible friends should receive a join toast for this entry. */
   notifyFriendJoinToast?: boolean;
 }

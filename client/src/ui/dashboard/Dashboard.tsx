@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { menuPreparingClass, useMenuPreparingCheck } from '../transitions/menuReadiness.js';
 import type {
+  ActivityFeedMenuTarget,
   ActivityFeedJoinRoomActionDto,
   FriendSummaryDto,
 } from '@shared/contracts';
@@ -199,6 +200,8 @@ export function Dashboard({
   creationRevealDelayMs = 0,
   excludedAvatarIds = [],
   hidden = false,
+  menuRequest,
+  onMenuRequestHandled,
   selectionNotice = null,
   avatarSlotsVisible = false,
   playPreparePending = false,
@@ -226,6 +229,9 @@ export function Dashboard({
   creationRevealDelayMs?: number;
   excludedAvatarIds?: string[];
   hidden?: boolean;
+  /** Open this menu, e.g. from a message at the top (Babuni, 2026-11-27). */
+  menuRequest?: { menu: ActivityFeedMenuTarget; key: number } | null;
+  onMenuRequestHandled?: () => void;
   selectionNotice?: string | null;
   avatarSlotsVisible?: boolean;
   playPreparePending?: boolean;
@@ -260,6 +266,8 @@ export function Dashboard({
   const [expansionsOpen, setExpansionsOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [diceShopFromMessage, setDiceShopFromMessage] = useState(false);
+  const [soulLinkFromMessage, setSoulLinkFromMessage] = useState(false);
   const [scribesUnread, setScribesUnread] = useState(false);
   const [achievementsAttention, setAchievementsAttention] = useState(false);
   const { bind: bindNavTooltip, isVisible: isNavTooltipVisible } = useTooltipRevealGroup();
@@ -270,6 +278,26 @@ export function Dashboard({
   const showChrome = !hidden;
   const { pulse: pulseNavButton, isPressed: isNavButtonPressed, pressAnimation } =
     useNavButtonPress();
+
+  const openMenu = useCallback((menu: ActivityFeedMenuTarget) => {
+    setNavOpen(false);
+    if (menu === 'soul_link') {
+      setSoulLinkFromMessage(true);
+      setFriendsOpen(true);
+    } else if (menu === 'expansions' || menu === 'dice_shop') {
+      setDiceShopFromMessage(menu === 'dice_shop');
+      setExpansionsOpen(true);
+    } else if (menu === 'settings') {
+      setSettingsOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (menuRequest) {
+      openMenu(menuRequest.menu);
+      onMenuRequestHandled?.();
+    }
+  }, [menuRequest, onMenuRequestHandled, openMenu]);
 
   const refreshScribesUnread = useCallback(async () => {
     if (!playerId) {
@@ -703,6 +731,10 @@ export function Dashboard({
             setActivityOpen(false);
             onAchievementsOpenChange?.(true);
           }}
+          onOpenMenu={(menu) => {
+            setActivityOpen(false);
+            openMenu(menu);
+          }}
           onReadStateChange={() => {
             void refreshScribesUnread();
           }}
@@ -725,21 +757,25 @@ export function Dashboard({
         <ExpansionsOverlay
           onClose={() => {
             setExpansionsOpen(false);
+            setDiceShopFromMessage(false);
           }}
           onContentUnlocked={onAchievementCheck}
           open={expansionsOpen}
           playerId={playerId}
+          startWithDiceShop={diceShopFromMessage}
         />
       ) : null}
       {showChrome ? (
         <FriendsOverlay
           onClose={() => {
             setFriendsOpen(false);
+            setSoulLinkFromMessage(false);
           }}
           onJoinFriend={onJoinFriend}
           open={friendsOpen}
           playerId={playerId}
           playerName={playerName}
+          startWithSoulLink={soulLinkFromMessage}
         />
       ) : null}
       {showChrome ? (

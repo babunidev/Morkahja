@@ -681,6 +681,7 @@ export function ExpansionsOverlay({
   open,
   playerId,
   focusExpansionId,
+  startWithDiceShop = false,
   zIndex,
 }: {
   onClose: () => void;
@@ -689,6 +690,8 @@ export function ExpansionsOverlay({
   playerId: string;
   /** Opened from a locked region on the map (D-056): that expansion, unfolded and in view. */
   focusExpansionId?: number;
+  /** Opened from a message (Babuni, 2026-11-27): the dice shop on top at once. */
+  startWithDiceShop?: boolean;
   /** Over the game screen, where the menu's own layer would sit below the game. */
   zIndex?: number;
 }) {
@@ -707,6 +710,12 @@ export function ExpansionsOverlay({
     encounters: EncounterPreviewEntry[];
   } | null>(null);
   const [diceShopOpen, setDiceShopOpen] = useState(false);
+
+  useEffect(() => {
+    if (open && startWithDiceShop) {
+      setDiceShopOpen(true);
+    }
+  }, [open, startWithDiceShop]);
 
   const refreshPlayer = useCallback(async (): Promise<void> => {
     if (!playerId) {

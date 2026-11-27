@@ -68,6 +68,13 @@ export interface ActivityFeedOpenAchievementsAction {
   type: 'open_achievements';
 }
 
+export type ActivityFeedMenuTarget = 'soul_link' | 'expansions' | 'dice_shop' | 'settings';
+
+export interface ActivityFeedOpenMenuAction {
+  type: 'open_menu';
+  menus: ActivityFeedMenuTarget[];
+}
+
 export interface ActivityFeedEntry {
   eventId: string;
   timestamp: number;
@@ -81,6 +88,7 @@ export interface ActivityFeedEntry {
   avatarFrame?: string;
   joinAction?: ActivityFeedJoinAction;
   openAchievementsAction?: ActivityFeedOpenAchievementsAction;
+  openMenuAction?: ActivityFeedOpenMenuAction;
   notifyFriendJoinToast?: boolean;
 }
 
@@ -532,6 +540,36 @@ export async function recordGemsReceivedEvent(
   });
 }
 
+/**
+ * Messages shown at the top lead into the matching menu (Babuni, 2026-11-27):
+ * the Soul Link message to the Soul Link, the support message and received
+ * gems to Expansions or Dice, an opened homeland to Expansions, the key
+ * reminder to Settings (where the key is downloaded). Only for the player's
+ * own messages.
+ */
+export function resolveOpenMenuAction(
+  event: Pick<GameEvent, 'type' | 'playerId' | 'payload'>,
+  viewingPlayerId: string,
+): ActivityFeedOpenMenuAction | undefined {
+  if (event.playerId !== viewingPlayerId) {
+    return undefined;
+  }
+  switch (event.type) {
+    case 'support_appreciation_nudge':
+      return event.payload.topic === 'soul_link'
+        ? { type: 'open_menu', menus: ['soul_link'] }
+        : { type: 'open_menu', menus: ['expansions', 'dice_shop'] };
+    case 'gems_received':
+      return { type: 'open_menu', menus: ['expansions', 'dice_shop'] };
+    case 'homeland_opened':
+      return { type: 'open_menu', menus: ['expansions'] };
+    case 'account_key_security_reminder':
+      return { type: 'open_menu', menus: ['settings'] };
+    default:
+      return undefined;
+  }
+}
+
 async function resolveOpenAchievementsAction(
   event: GameEvent,
   viewingPlayerId: string,
@@ -619,6 +657,7 @@ export async function queryActivityFeed(playerId: string): Promise<ActivityFeedE
       avatarFrame: avatarVisual?.frame,
       joinAction,
       openAchievementsAction: await resolveOpenAchievementsAction(event, playerId),
+      openMenuAction: resolveOpenMenuAction(event, playerId),
       notifyFriendJoinToast,
     };
   }));

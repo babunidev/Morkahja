@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
-import type { ActivityFeedEntryDto, ActivityFeedJoinRoomActionDto } from '@shared/contracts';
+import type {
+  ActivityFeedEntryDto,
+  ActivityFeedJoinRoomActionDto,
+  ActivityFeedMenuTarget,
+} from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
 import { subscribePlayerChanges } from '../../api/playerChanges.js';
 import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
@@ -241,10 +245,19 @@ function formatRelativeTime(timestamp: number): string {
   return hours === 1 ? '1 hr ago' : `${hours} hr ago`;
 }
 
+/** Buttons on messages that lead into a menu (Babuni, 2026-11-27). */
+const MENU_BUTTON_LABELS: Record<ActivityFeedMenuTarget, string> = {
+  soul_link: 'Soul Link',
+  expansions: 'Expansions',
+  dice_shop: 'Dice',
+  settings: 'Settings',
+};
+
 export function ActivityFeedOverlay({
   onClose,
   onJoinRoom,
   onOpenAchievements,
+  onOpenMenu,
   onReadStateChange,
   open,
   playerId,
@@ -255,6 +268,7 @@ export function ActivityFeedOverlay({
     sourceElement: HTMLElement,
   ) => void | Promise<void>;
   onOpenAchievements?: () => void;
+  onOpenMenu?: (menu: ActivityFeedMenuTarget) => void;
   onReadStateChange?: () => void;
   open: boolean;
   playerId: string;
@@ -416,6 +430,20 @@ export function ActivityFeedOverlay({
                         Achievements
                       </button>
                     ) : null}
+                    {entry.openMenuAction && onOpenMenu
+                      ? entry.openMenuAction.menus.map((menu) => (
+                        <button
+                          key={menu}
+                          onClick={() => {
+                            onOpenMenu(menu);
+                          }}
+                          style={joinButtonStyle}
+                          type="button"
+                        >
+                          {MENU_BUTTON_LABELS[menu]}
+                        </button>
+                      ))
+                      : null}
                   </div>
                   {scribesEntryVisual(entry)}
                 </div>

@@ -698,3 +698,10 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 - Babuni asked whether a WebSocket would lower the server load. Claude Code proposed three steps: (1) no polling in a hidden tab, (2) the remaining fixed polls (achievements, help invitations, Scribes feed) become one waiting request like the room's (D-050), (3) later, if many players are online at once, that one channel moves to SSE. Babuni approved steps 1 and 2 ("ja"). Step 3 and a WebSocket stay open until the player count asks for it.
 - Defaults chosen by the AI: a 60 s safety refresh while the tab is visible, feed refreshes at least 3 s apart, a 25 s server wait (as for rooms).
 
+## D-070 — Messages at the top lead into their menu (2026-11-27)
+
+**Decided by:** Babuni. **Implemented by:** Claude Code (Claude Opus 5.5).
+
+- Every message shown at the top is linked to its content: the Soul Link message opens the Soul Link; the support message opens Expansions or the dice shop at random.
+- Defaults chosen by the AI for the other messages: received gems → Expansions or dice at random; an opened homeland → Expansions; the key reminder → Settings. In an encounter the toast stays unlinked; in the Scribes feed the entries show one button per menu instead of a random one.
+

@@ -3,6 +3,8 @@ import type {
   AchievementProgressDto,
   ActivityFeedEntryDto,
   ActivityFeedJoinRoomActionDto,
+  ActivityFeedMenuTarget,
+  ActivityFeedOpenMenuActionDto,
   EncounterRoomSnapshotDto,
   FriendSummaryDto,
   RoomHelpInvitationDto,
@@ -216,7 +218,18 @@ export default function App() {
   const achievementToastShowingRef = useRef(false);
   achievementToastShowingRef.current = achievementToast !== null;
   const [hearthBlessingToast, setHearthBlessingToast] = useState(false);
-  const [privateScribeToast, setPrivateScribeToast] = useState<string | null>(null);
+  const [privateScribeToast, setPrivateScribeToast] = useState<{
+    message: string;
+    openMenuAction?: ActivityFeedOpenMenuActionDto;
+  } | null>(null);
+  // A message's menu, handed to the dashboard; `key` makes the same menu open again.
+  const [dashboardMenuRequest, setDashboardMenuRequest] = useState<{
+    menu: ActivityFeedMenuTarget;
+    key: number;
+  } | null>(null);
+  const clearDashboardMenuRequest = useCallback(() => {
+    setDashboardMenuRequest(null);
+  }, []);
   const [achievementsOverlayOpen, setAchievementsOverlayOpen] = useState(false);
   const helpInviteToastRef = useRef<RoomHelpInvitationDto | null>(null);
   const activityJoinToastRef = useRef<ActivityFeedEntryDto | null>(null);
@@ -336,7 +349,10 @@ export default function App() {
         : findNextPrivateScribeToastEntry(playerId, activity.entries, { inGame: screen === 'game' });
       if (privateToastEntry) {
         markPrivateScribeToastShown(playerId, privateToastEntry.eventId);
-        setPrivateScribeToast(privateToastEntry.message);
+        setPrivateScribeToast({
+          message: privateToastEntry.message,
+          openMenuAction: privateToastEntry.openMenuAction,
+        });
       }
 
       if (options?.seedBaseline) {
@@ -863,6 +879,8 @@ export default function App() {
             creationPreset={avatarCreationPreset}
             creationRevealDelayMs={deathCreationHandoff ? FADE_DURATION_MS : 0}
             hidden={gameEnterHandoff}
+            menuRequest={dashboardMenuRequest}
+            onMenuRequestHandled={clearDashboardMenuRequest}
             selectionNotice={avatarSelectionNotice}
             onAvatarSlotsVisibleChange={setAvatarSlotsVisible}
             onAvatarsChanged={(avatars) => {
@@ -1186,7 +1204,20 @@ export default function App() {
         {isAchievementWatchScreen(screen) && privateScribeToast ? (
           <GameMessageToast
             label="Scribes"
-            message={privateScribeToast}
+            message={privateScribeToast.message}
+            onClick={
+              // Leads into the matching menu (Babuni, 2026-11-27); in the game
+              // the dashboard's menus are not there, so it only closes.
+              screen === 'dashboard' && privateScribeToast.openMenuAction
+                ? () => {
+                  const { menus } = privateScribeToast.openMenuAction!;
+                  const menu = menus[Math.floor(Math.random() * menus.length)];
+                  if (menu) {
+                    setDashboardMenuRequest({ menu, key: Date.now() });
+                  }
+                }
+                : undefined
+            }
             onDismiss={() => {
               setPrivateScribeToast(null);
             }}

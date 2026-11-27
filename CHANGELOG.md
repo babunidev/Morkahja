@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Messages at the top lead into their menu (D-070)
+
+- **Babuni's direction:** a tap on a message at the top should open the matching content: the Soul Link message the Soul Link, the support message Expansions or the dice, and so on for every message shown there.
+- **Server:** new `openMenuAction` (`{ type: 'open_menu', menus }`, targets `soul_link`, `expansions`, `dice_shop`, `settings`) on Scribes entries, from `resolveOpenMenuAction` in `gameEventService.ts`, for the player's own messages: Soul Link message → `soul_link`; support message and received gems → `expansions` or `dice_shop`; opened homeland → `expansions`; key reminder → `settings` (where the key is downloaded).
+- **Client:** the Scribes toast in `App.tsx` becomes clickable on the dashboard and opens one of the menus at random through `Dashboard`'s new `menuRequest` prop; `FriendsOverlay` (`startWithSoulLink`) and `ExpansionsOverlay` (`startWithDiceShop`) open their Soul Link or dice shop on top at once. In the Scribes feed the same entries get a button per menu (Soul Link, Expansions, Dice, Settings). During an encounter the toast stays a plain message, since the dashboard menus are not there.
+- **Verification:** `npm run release:check`: client 55/55; server 79/80 on the first run (`roomService.test.ts:621` got a `system_event` instead of `active_encounter`, a random next encounter; passed three times alone and in a full server rerun 80/80). New `server/src/services/messageMenuLinks.test.ts`. Typecheck clean. Not seen in the browser. Claude Code (Claude Opus 5.5). **Not released.**
+
+
 ## 2026-11-27 — Dashboard updates by change signal instead of fixed polling (D-069)
 
 - **Babuni's direction:** asked how heavy Morkahja is on the server and whether a WebSocket would help; approved the proposed first two steps (pause polling in a hidden tab, replace the 5–10 s polls with a waiting request). SSE/WebSocket deferred.

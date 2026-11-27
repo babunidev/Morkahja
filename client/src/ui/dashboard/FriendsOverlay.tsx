@@ -419,12 +419,15 @@ export function FriendsOverlay({
   open,
   playerId,
   playerName,
+  startWithSoulLink = false,
 }: {
   onClose: () => void;
   onJoinFriend?: (friend: FriendSummaryDto, sourceElement: HTMLElement) => void | Promise<void>;
   open: boolean;
   playerId: string;
   playerName: string;
+  /** Opened from the Soul Link message (Babuni, 2026-11-27): the Soul Link on top at once. */
+  startWithSoulLink?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   const [friends, setFriends] = useState<FriendSummaryDto[]>([]);
@@ -439,6 +442,12 @@ export function FriendsOverlay({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [joiningFriendId, setJoiningFriendId] = useState<string | null>(null);
   const [soulLinkOpen, setSoulLinkOpen] = useState(false);
+
+  useEffect(() => {
+    if (open && startWithSoulLink) {
+      setSoulLinkOpen(true);
+    }
+  }, [open, startWithSoulLink]);
   const friendDetailRequestRef = useRef(0);
   /** The list arrived at least once since opening (the menu shows after it). */
   const menuDataLoadedRef = useRef(false);

@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Every message leads somewhere
+
+When the game asks me at the top whether I enjoy Morkahja, a tap did nothing. Now every message there leads into the game: the Soul Link message opens my Soul Link, the support message opens Expansions or the dice at random, received gems the same, an opened homeland the Expansions, and the key reminder Settings, where the key is saved. In the Scribes feed the same messages have buttons for it. Claude Code (Claude Opus 5.5) built it on the server and in the dashboard. During an encounter the message stays a plain message, because the menus are not there. **Verification:** release check (client 55, server 80 after one rerun of a random room test), a new test for which message leads where. Not seen in the browser yet. **Not released.**
+
+
 ## 2026-11-27 — The server asks less often
 
 I wanted to know how much Morkahja weighs on the server. Claude Code (Claude Opus 5.5) looked at the live machine: two cores and 3.8 GB, the game's API and bots under one percent CPU and about 230 MB together; the load at that moment came from another project. The real cost is in the client. The room had already been waiting for changes since 19 November, but achievements, help invitations and the Scribes feed were still fetched every five or ten seconds, twice over on the dashboard, and even in a hidden tab. I asked whether a WebSocket would help. Claude recommended something smaller first, and I said yes: now one waiting request tells the page when my data or the feed changed, and only then does it fetch. A hidden tab asks nothing, coming back refreshes once, and once a minute everything refreshes anyway as a safety net. On the way Claude found that reading achievements re-saves some of them, which would have woken the page again and again, so only a real change counts. SSE or a WebSocket can follow if many people play at once. **Verification:** release check (client 55, server 79), new tests for the server signals and the watcher. Toasts not yet seen in the browser. **Not released.**
