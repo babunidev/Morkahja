@@ -4,6 +4,8 @@
 
 ## Base game content completion — planned 2026-11-25
 
+- [x] Record creative approval and artwork handoff for Round 1 Social encounter [20233 — A Name Upon the Wind](encounter-drafts/20233.md) (documentation only, 2026-11-27); artwork, activation and remaining metadata pending.
+
 - [x] Record creative approval and artwork handoff for Round 1 Social encounter [20232 — Where Two Roads Meet](encounter-drafts/20232.md) (documentation only, 2026-11-27); artwork, activation and remaining metadata pending.
 
 - [x] Reassess the post-D-066 catalog at 47 geographic encounters and 73 new needed while retaining the approved 120 target (2026-11-27). [Current allocation](CONTENT_COMPLETION_PLAN.md#2026-11-27--management-reassessment).
