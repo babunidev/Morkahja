@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Social encounter 20233 specification (documentation only)
+
+- Added approved A Name Upon the Wind specification and recorded its reserved solution and artwork handoff in the production ledger. No encounter activation, game data or artwork changes. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-27 — Wordkeeper's Stone artwork approval (documentation only)
 
 - Recorded creative approval and local WebP verification for solution 10440 in the production ledger, encounter specification and solution image standard. Asset upload remains pending; no game data, artwork files or deployment changed. ChatGPT (GPT-6.2); ChatGPT image generation (exact model version not recorded).
