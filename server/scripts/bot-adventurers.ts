@@ -20,7 +20,8 @@
  *   Sylvaen  Verdani Mage    plays 9 min, rests 5 min   (plays minutes 5–14)
  *   Thalyss  Aevis Rogue     plays 5 min, rests 9 min   (plays minutes 7–12)
  *
- * A shift that ends mid-encounter finishes that encounter first. A helper stays
+ * A shift that ends mid-encounter finishes that encounter first. A call heard
+ * while adventuring is answered too, once the current encounter is done. A helper stays
  * until the room ends, the caller leaves, or the room has not moved for
  * 3 minutes (HELP_STALE_MINUTES), and then picks its own schedule up again.
  *
@@ -76,6 +77,8 @@ const HEARTBEAT_MS = 60_000;
 // slowest Continue, and the bots were that one by up to 8 s per encounter.
 const THINK_MS: [number, number] = [4000, 6500];
 const READ_RESULT_MS: [number, number] = [6300, 7500];
+/** While adventuring, a bot looks for a Call for help this often (between encounters). */
+const HELP_CHECK_WHILE_PLAYING_MS = 5_000;
 const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const STUCK_MS = Number(process.env.STUCK_MINUTES ?? 3) * 60_000;
 const SHIFT_SCALE = Number(process.env.BOT_SHIFT_SCALE ?? 1);
@@ -180,6 +183,10 @@ class Bot {
   private ownRoomFingerprint = '';
   private ownProgressAt = 0;
   private ownCheckedAt = 0;
+  /** Calls the server refused to let it answer (e.g. ROOM_FULL); never tried again. */
+  private readonly refusedInvites = new Set<string>();
+  /** When it last looked for a Call for help while adventuring. */
+  private helpCheckedAt = 0;
   /** In its own room: whether it is between Continue and the next choice (a shift ends only there). */
   private midEncounter = false;
   /**
@@ -482,14 +489,41 @@ class Bot {
     return null;
   }
 
-  /** On the welcome screen: accept the first pending Call for help. */
-  private async answerHelp(): Promise<boolean> {
+  private async pendingHelpInvite(): Promise<Invitation | null> {
     const { invitations } = await this.api<{ invitations: Invitation[] }>('/room/help/pending');
-    const invite = invitations.find((entry) => entry.expiresAt > Date.now());
+    return invitations.find((entry) => entry.expiresAt > Date.now() && !this.refusedInvites.has(entry.inviteId)) ?? null;
+  }
+
+  /** On the welcome screen: accept the first pending Call for help. */
+  private async answerHelp(known?: Invitation): Promise<boolean> {
+    const invite = known ?? await this.pendingHelpInvite();
     if (!invite) return false;
-    const { room } = await this.api<{ room: Room | null }>('/room/help/respond', {
+    const respond = () => this.api<{ room: Room | null }>('/room/help/respond', {
       body: { inviteId: invite.inviteId, accept: true },
     });
+    let answer: { room: Room | null };
+    try {
+      answer = await respond();
+    } catch (error) {
+      // The avatar fell in its last shift without the bot noticing; the call
+      // was refused with 403 AVATAR_FAILED and then lost (2026-11-27). Make a
+      // new avatar and answer the same call again.
+      if (error instanceof ApiError && /AVATAR|DEAD|DECEASED/i.test(error.body)) {
+        this.log(`could not answer ${invite.fromPlayerName}'s call (${error.body.slice(0, 60)}); making a new avatar first`);
+        await this.ensureLivingAvatar();
+        try {
+          answer = await respond();
+        } catch (retryError) {
+          this.refusedInvites.add(invite.inviteId);
+          throw retryError;
+        }
+      } else {
+        // Full room, expired call, …: do not try this call again.
+        this.refusedInvites.add(invite.inviteId);
+        throw error;
+      }
+    }
+    const { room } = answer;
     if (!room) {
       this.log(`could not join ${invite.fromPlayerName}'s room`);
       return false;
@@ -607,6 +641,20 @@ class Bot {
       this.status(`resting on the welcome screen (${minutesLeft} min left)`);
       await this.answerHelp();
       return;
+    }
+
+    // Adventuring bots come too (2026-11-27): a call heard during play is
+    // answered once the current encounter is done.
+    if (!this.midEncounter && Date.now() - this.helpCheckedAt >= HELP_CHECK_WHILE_PLAYING_MS) {
+      this.helpCheckedAt = Date.now();
+      const invite = await this.pendingHelpInvite();
+      if (invite) {
+        this.log(`heard ${invite.fromPlayerName} call for help while adventuring; leaving to help`);
+        await this.api('/room/leave/all', { body: {} });
+        this.ownRoomFingerprint = '';
+        this.waitUntil = 0;
+        if (await this.answerHelp(invite)) return;
+      }
     }
 
     this.onWelcomeScreen = false;

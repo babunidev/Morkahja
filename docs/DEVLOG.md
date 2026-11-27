@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — The bots come when I call
+
+I called for help, the game said three heard me, and nobody came. Claude Code (Claude Opus 5.5) read the live log: the only bot resting at that moment was Varrokh, and his avatar had died in his last shift, so the server turned him away; the two others were adventuring and did not even look. Now a bot that is adventuring finishes its encounter and comes, and a bot whose avatar has fallen makes a new one and answers the same call. In a local test with a scripted caller, two bots joined within seconds, and the room was full. **Not released.**
+
+
 ## 2026-11-27 — A Name Upon the Wind: approved artwork handoff
 
 The second new Speechcraft encounter in my Round 1 Social allocation is A Name Upon the Wind (20233). Its approved narrative, the Resonance Pendant (reserved 10441), existing Voice of the Breeze skill (10043), character and environment notes, and artwork requirements are now recorded in the [specification](encounter-drafts/20233.md). ChatGPT (GPT-6.2) reviewed both repositories, drafted the content for my approval, checked the IDs against the complete catalogs and recorded the specification and ledger status in commits `2175852f` and `30e88f35`. Documentation only: artwork, map pin, remaining new-item data fields and Social taxonomy support are pending. No game data, gameplay code, runtime tests or deployment.
