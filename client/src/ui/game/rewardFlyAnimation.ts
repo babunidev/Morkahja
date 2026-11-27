@@ -136,6 +136,28 @@ interface IconFlightMotion {
   boxShadow: string;
   onNearEnd?: () => void;
   nearEndLeadMs?: number;
+  /** Stays visible while a game panel covers the result (see `setResultBehindPanel`). */
+  overPanels?: boolean;
+}
+
+const BEHIND_PANEL_ATTRIBUTE = 'data-morkahja-result-behind-panel';
+let behindPanelStyleAdded = false;
+
+/**
+ * While the Inventory, Skillbook, Lore, the avatar overview or the map covers
+ * a result, its sequence keeps running (Babuni, 2026-11-27): the used
+ * solution, the dice and the rewards fly as usual, only unseen, so the result
+ * can be collected as soon as the panel closes. Flyers still in the air then
+ * simply show again.
+ */
+export function setResultBehindPanel(behind: boolean): void {
+  if (!behindPanelStyleAdded) {
+    behindPanelStyleAdded = true;
+    const style = document.createElement('style');
+    style.textContent = `body[${BEHIND_PANEL_ATTRIBUTE}] [data-morkahja-icon-flyer]:not([data-morkahja-flyer-over-panels]) { visibility: hidden !important; }`;
+    document.head.append(style);
+  }
+  document.body.toggleAttribute(BEHIND_PANEL_ATTRIBUTE, behind);
 }
 
 /**
@@ -144,11 +166,14 @@ interface IconFlightMotion {
  * visible flyer would show for those frames at the containing block's top-left
  * corner (left: 0, top: 0, no transform).
  */
-function createIconFlyer(imageSrc: string, size: number, boxShadow: string): HTMLElement {
+function createIconFlyer(imageSrc: string, size: number, boxShadow: string, overPanels = false): HTMLElement {
   // A solution picture flies with its frame on top; other icons fly as they are.
   const { root: flyer, image } = createSolutionPictureElement(imageSrc, size);
   flyer.style.visibility = 'hidden';
   flyer.dataset.morkahjaIconFlyer = 'true';
+  if (overPanels) {
+    flyer.dataset.morkahjaFlyerOverPanels = 'true';
+  }
   flyer.setAttribute('aria-hidden', 'true');
   flyer.style.position = 'fixed';
   flyer.style.left = '0';
@@ -256,6 +281,7 @@ function runIconFlight(
     imageSrc,
     size,
     motion.boxShadow,
+    motion.overPanels,
   );
 
   const nearEndTimer = motion.onNearEnd && motion.nearEndLeadMs
@@ -425,6 +451,7 @@ export async function playIconFlightToElement(
   target: Element,
   imageSrc: string,
   size: number,
+  options: { overPanels?: boolean } = {},
 ): Promise<void> {
   await waitForNextFrame();
   if (!target.isConnected) {
@@ -436,6 +463,7 @@ export async function playIconFlightToElement(
       fadeStartOffset: REWARD_FLIGHT_FADE_START_OFFSET,
       timeoutMs: REWARD_FLIGHT_TIMEOUT_MS,
       boxShadow: '0 0 12px rgba(255, 204, 102, 0.45)',
+      overPanels: options.overPanels,
     }),
     wait(REWARD_FLIGHT_TIMEOUT_MS + 100),
   ]);

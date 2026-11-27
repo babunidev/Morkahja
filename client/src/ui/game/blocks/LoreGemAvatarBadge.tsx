@@ -75,7 +75,8 @@ export function LoreGemAvatarBadge({ held: collected, roomState, topRoll = false
     const source = takeLoreGemPickup();
     const target = badgeRef.current;
     if (source && target) {
-      void playIconFlightToElement(source, target, LORE_GEM_ASSET, BADGE_SIZE_PX);
+      // Picked up in the Lore panel: this flight shows over it.
+      void playIconFlightToElement(source, target, LORE_GEM_ASSET, BADGE_SIZE_PX, { overPanels: true });
     }
   }, [loreHeld, topRoll]);
   const [phase, setPhase] = useState<Phase>('hidden');

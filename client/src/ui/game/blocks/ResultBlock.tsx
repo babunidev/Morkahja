@@ -57,6 +57,7 @@ import {
   type LossBubbleTargetSpec,
   type LossArrivalSpec,
   type RewardFlightSpec,
+  setResultBehindPanel,
 } from '../rewardFlyAnimation.js';
 import {
   preventImageContextMenu,
@@ -1333,8 +1334,20 @@ export const ResultBlock = forwardRef(function ResultBlock(
   const resultInteractive = visible && !hidden;
   const [resultFadedIn, setResultFadedIn] = useState(false);
 
+  // A panel over the result does not stop its sequence (Babuni, 2026-11-27):
+  // it only hides the result and its flights until the panel closes.
   useEffect(() => {
-    if (!resultInteractive) {
+    if (!visible || !hidden) {
+      return undefined;
+    }
+    setResultBehindPanel(true);
+    return () => {
+      setResultBehindPanel(false);
+    };
+  }, [hidden, visible]);
+
+  useEffect(() => {
+    if (!visible) {
       setResultFadedIn(false);
       return undefined;
     }
@@ -1354,18 +1367,22 @@ export const ResultBlock = forwardRef(function ResultBlock(
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
-  }, [presenceVisible, resultInteractive]);
+  }, [presenceVisible, visible]);
 
-  const resultShown = resultInteractive && (
+  // `resultStarted` drives the sequence (flights, rewards emerging, level-up
+  // choices) and runs behind an open panel too; `resultShown` is what is seen
+  // and can be touched.
+  const resultStarted = visible && (
     presenceVisible !== undefined ? presenceVisible : resultFadedIn
   );
+  const resultShown = resultStarted && !hidden;
 
   // As the result appears, the solution the player used travels from its slot
   // into the middle of the encounter picture and shrinks to nothing: it was
   // spent on this encounter.
   useEffect(() => {
     if (
-      !resultShown
+      !resultStarted
       || readOnlyWitness
       || roll === null
       || !resolutionAction
@@ -1493,12 +1510,12 @@ export const ResultBlock = forwardRef(function ResultBlock(
           slotVisual.style.visibility = '';
         }
       });
-  }, [encounterSnapshotId, equipmentRegain, readOnlyWitness, resolutionAction, resultShown, roll, usedSolutions]);
+  }, [encounterSnapshotId, equipmentRegain, readOnlyWitness, resolutionAction, resultStarted, roll, usedSolutions]);
 
   // Rewards grow out of the middle of the encounter into their slots, the
   // reverse of the used solution; after a used solution, just as it vanishes.
   useEffect(() => {
-    if (!resultShown || rewardsEmerged || levelUpChoicePending) {
+    if (!resultStarted || rewardsEmerged || levelUpChoicePending) {
       return undefined;
     }
 
@@ -1578,11 +1595,11 @@ export const ResultBlock = forwardRef(function ResultBlock(
     return () => {
       cancelled = true;
     };
-  }, [encounterSnapshotId, levelUpChoicePending, readOnlyWitness, resolutionAction, resultShown, roll, rewardsEmerged, usedSolutions.length]);
+  }, [encounterSnapshotId, levelUpChoicePending, readOnlyWitness, resolutionAction, resultStarted, roll, rewardsEmerged, usedSolutions.length]);
 
   // The choices appear once the die has flown into the encounter.
   useEffect(() => {
-    if (!levelUpChoicePending || !resultShown) {
+    if (!levelUpChoicePending || !resultStarted) {
       setLevelUpChoiceShown(false);
       return undefined;
     }
@@ -1590,7 +1607,7 @@ export const ResultBlock = forwardRef(function ResultBlock(
     const delayMs = dieFlying ? SINGLE_DIE_FACE_MS + USED_SOLUTION_FLIGHT_MS : 0;
     const timer = window.setTimeout(() => setLevelUpChoiceShown(true), delayMs);
     return () => window.clearTimeout(timer);
-  }, [encounterSnapshotId, levelUpChoicePending, resolutionAction, resultShown]);
+  }, [encounterSnapshotId, levelUpChoicePending, resolutionAction, resultStarted]);
 
   async function chooseLevelUpReward(rewardId: number): Promise<void> {
     if (resultTips.consumeLongPressActivation()) {

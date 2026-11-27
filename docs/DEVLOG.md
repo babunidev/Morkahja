@@ -2,6 +2,13 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Rewards don't wait for me, and the bots are free
+
+When a reward was coming in and I opened the Inventory, everything stopped, and after closing it I still had to watch the whole reward animation before I could take anything. Claude Code (Claude Opus 5.5) found why: the result only started its flights while nothing covered it. Now it runs on behind the Inventory, the Skillbook, Lore, the avatar card or the map, unseen, and when I come back the rewards are ready.
+
+And the poor bots. Varrokh had been stuck for days in a room from before my level-up change: the result still offered three level-up rewards, the server refused the choice, and Varrokh asked again every three seconds instead of pressing Continue. Now the bots choose only in the level-up itself and simply go on when a choice is refused. They also keep shifts now, so someone is always out adventuring and someone is free when a player calls for help: Varrokh plays seven minutes and rests seven, Sylvaen plays nine and rests five, Thalyss plays five and rests nine, staggered on the clock. Claude ran all three against the local game, also with ten-times-shorter shifts. **Verification:** release check (client 55, server 80). A call for help to a resting bot and the Inventory during a reward not tried yet. **Not released.**
+
+
 ## 2026-11-27 — Every message leads somewhere
 
 When the game asks me at the top whether I enjoy Morkahja, a tap did nothing. Now every message there leads into the game: the Soul Link message opens my Soul Link, the support message opens Expansions or the dice at random, received gems the same, an opened homeland the Expansions, and the key reminder Settings, where the key is saved. In the Scribes feed the same messages have buttons for it. Claude Code (Claude Opus 5.5) built it on the server and in the dashboard. During an encounter the message stays a plain message, because the menus are not there. **Verification:** release check (client 55, server 80 after one rerun of a random room test), a new test for which message leads where. Not seen in the browser yet. **Not released.**

@@ -2,6 +2,14 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Results keep running behind panels; bot adventurers freed and on shifts (D-071)
+
+- **Babuni's direction:** opening the Inventory during a reward must not pause it; after a long stay in the Inventory the rewards should be ready to collect at once. The bots must be freed, know the level-up, and play in shifts so they are often free to be called: Varrokh 7 min play / 7 min rest, Sylvaen 9 / 5, Thalyss 5 / 9.
+- **Results (`ResultBlock.tsx`, `rewardFlyAnimation.ts`):** the result's sequence (spent solution and dice flights, rewards emerging, level-up choices) now starts from `resultStarted` (result visible and faded in) instead of `resultShown`, which also required no panel to be open; before, the Inventory, Skillbook, Lore, avatar overview or map held the whole sequence and restarted it on closing. While a panel covers a result, `setResultBehindPanel` hides its flyers (`[data-morkahja-icon-flyer]`), which keep flying and show again when the panel closes. The lore gem's flight to the avatar badge (`overPanels`) stays visible. Collecting and Continue still need the panel closed.
+- **Bots (`server/scripts/bot-adventurers.ts`):** cause of the stuck Varrokh on production: its room listed a level-up offer on a normal result, and the bot retried `POST /room/level-up/choice` (409 `INVALID_ROOM_STATE`) every 3 s instead of pressing Continue. The bot now chooses a level-up reward only in the `system_event` itself and presses Continue when the choice is refused with 409. Behaviors `always`/`helper`/`drift` replaced by clock-based shifts in a staggered 14-minute cycle (Varrokh plays minutes 0–7, Sylvaen 5–14, Thalyss 7–12), so at least one bot is always adventuring and one resting; a shift ends after the current encounter; while resting every bot answers Call for help. `BOT_SHIFT_SCALE` shortens the shifts for testing; `DRIFT_ROUNDS`/`DRIFT_REST_MINUTES` removed.
+- **Verification:** `npm run release:check` passed (client 55/55, server 80/80). Bots run twice against the local backend with fresh test accounts in the session scratchpad: level-ups chosen and continued, and with `BOT_SHIFT_SCALE=0.1` all three alternated play and rest for about 3 minutes without an error (a first run showed the bots leaving a paused solo room every tick during rest, fixed). Answering Call for help not exercised. The legacy stuck room itself could not be reproduced locally. The Inventory change was not tried in the browser. Claude Code (Claude Opus 5.5). **Not released;** the production bots change only with a release.
+
+
 ## 2026-11-27 — Messages at the top lead into their menu (D-070)
 
 - **Babuni's direction:** a tap on a message at the top should open the matching content: the Soul Link message the Soul Link, the support message Expansions or the dice, and so on for every message shown there.

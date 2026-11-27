@@ -705,3 +705,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 - Every message shown at the top is linked to its content: the Soul Link message opens the Soul Link; the support message opens Expansions or the dice shop at random.
 - Defaults chosen by the AI for the other messages: received gems → Expansions or dice at random; an opened homeland → Expansions; the key reminder → Settings. In an encounter the toast stays unlinked; in the Scribes feed the entries show one button per menu instead of a random one.
 
+## D-071 — Results run on behind panels; bots play in shifts (2026-11-27)
+
+**Decided by:** Babuni. **Implemented by:** Claude Code (Claude Opus 5.5).
+
+- Animations and waits of a result keep running while a panel is open, so the result can be collected right after closing it.
+- The bot adventurers play in shifts and wait on the welcome screen in between, where they answer Call for help: Varrokh 7 min play / 7 min rest, Sylvaen 9 / 5, Thalyss 5 / 9. They must handle the level-up and every button a player presses.
+- Defaults chosen by the AI: the shifts follow the clock in one staggered 14-minute cycle (Varrokh from minute 0, Sylvaen from 5, Thalyss from 7) so at least one bot always plays and one always rests; a shift ends after the current encounter; flyers stay hidden behind a panel and show again on closing, except the lore gem's flight.
+

@@ -11,14 +11,20 @@
  * selects it, and plays only through the web client's /room endpoints. Nothing
  * touches the database directly.
  *
- *   Varrokh  Rokur Warrior   always adventuring in its own room; join it from Friends.
- *   Sylvaen  Verdani Mage    waits on the welcome screen; answers Call for help, helps
- *                            until the room ends, the caller leaves, or the room has not
- *                            moved for 3 minutes (HELP_STALE_MINUTES).
- *   Thalyss  Aevis Rogue     plays 7 rounds, returns to the welcome screen for 5 minutes
- *                            (answering Call for help meanwhile), repeats.
+ * Each bot plays in shifts (Babuni, 2026-11-27): it adventures in its own room
+ * for a while, then waits on the welcome screen, where it answers Call for help.
+ * The shifts follow the clock in a 14-minute cycle and are staggered, so at any
+ * time at least one bot is adventuring and at least one is free to be called:
  *
- * Varrokh and Thalyss leave their own room and start over when it has not moved
+ *   Varrokh  Rokur Warrior   plays 7 min, rests 7 min   (plays minutes 0–7 of the cycle)
+ *   Sylvaen  Verdani Mage    plays 9 min, rests 5 min   (plays minutes 5–14)
+ *   Thalyss  Aevis Rogue     plays 5 min, rests 9 min   (plays minutes 7–12)
+ *
+ * A shift that ends mid-encounter finishes that encounter first. A helper stays
+ * until the room ends, the caller leaves, or the room has not moved for
+ * 3 minutes (HELP_STALE_MINUTES), and then picks its own schedule up again.
+ *
+ * Bots leave their own room and start over when it has not moved
  * for 3 minutes (STUCK_MINUTES) while another player is in it, e.g. one who
  * joined and walked away without leaving. Alone they only log the stuck state
  * once, because leaving a solo room just pauses it. The log names the state.
@@ -31,6 +37,7 @@
  * is why each behavior is its own account.
  *
  *   cd server && BOT_FRIENDS=Babuni npx tsx scripts/bot-adventurers.ts
+ *   BOT_SHIFT_SCALE=0.1 ...       # shifts ten times shorter, for testing
  *   BOTS=Sylvaen,Thalyss ...      # run only some of them
  *
  * Identity keys, sessions and avatar ids are kept in gitignored state files
@@ -71,8 +78,8 @@ const THINK_MS: [number, number] = [4000, 6500];
 const READ_RESULT_MS: [number, number] = [6300, 7500];
 const HELP_STALE_MS = Number(process.env.HELP_STALE_MINUTES ?? 3) * 60_000;
 const STUCK_MS = Number(process.env.STUCK_MINUTES ?? 3) * 60_000;
-const DRIFT_ROUNDS = Number(process.env.DRIFT_ROUNDS ?? 7);
-const DRIFT_REST_MS = Number(process.env.DRIFT_REST_MINUTES ?? 5) * 60_000;
+const SHIFT_SCALE = Number(process.env.BOT_SHIFT_SCALE ?? 1);
+const MINUTE_MS = 60_000 * SHIFT_SCALE;
 const stateDir = process.env.BOT_STATE_DIR ?? path.dirname(fileURLToPath(import.meta.url));
 // Before any sign-up: an account whose key cannot be saved would be orphaned.
 mkdirSync(stateDir, { recursive: true, mode: 0o700 });
@@ -81,20 +88,32 @@ const RACE_IDS = { Grimnir: 1, Verdani: 2, Aevis: 3, Rokur: 4 } as const;
 const ROLE_IDS = { Mage: 1, Rogue: 2, Warrior: 3 } as const;
 type Race = keyof typeof RACE_IDS;
 type Role = keyof typeof ROLE_IDS;
-type Behavior = 'always' | 'helper' | 'drift';
-
 interface BotConfig {
   name: string;
   race: Race;
   role: Role;
-  behavior: Behavior;
+  /** Minutes of adventuring, then minutes on the welcome screen. */
+  playMinutes: number;
+  restMinutes: number;
+  /** Where in the shared cycle its play starts, in minutes. */
+  startMinute: number;
 }
 
 const BOTS: BotConfig[] = [
-  { name: 'Varrokh', race: 'Rokur', role: 'Warrior', behavior: 'always' },
-  { name: 'Sylvaen', race: 'Verdani', role: 'Mage', behavior: 'helper' },
-  { name: 'Thalyss', race: 'Aevis', role: 'Rogue', behavior: 'drift' },
+  { name: 'Varrokh', race: 'Rokur', role: 'Warrior', playMinutes: 7, restMinutes: 7, startMinute: 0 },
+  { name: 'Sylvaen', race: 'Verdani', role: 'Mage', playMinutes: 9, restMinutes: 5, startMinute: 5 },
+  { name: 'Thalyss', race: 'Aevis', role: 'Rogue', playMinutes: 5, restMinutes: 9, startMinute: 7 },
 ];
+
+/** Whether the clock puts this bot in its play shift, and how long until the shift changes. */
+function shiftNow(config: BotConfig, now = Date.now()): { playing: boolean; changesInMs: number } {
+  const cycle = (config.playMinutes + config.restMinutes) * MINUTE_MS;
+  const into = (((now - config.startMinute * MINUTE_MS) % cycle) + cycle) % cycle;
+  const playMs = config.playMinutes * MINUTE_MS;
+  return into < playMs
+    ? { playing: true, changesInMs: playMs - into }
+    : { playing: false, changesInMs: cycle - into };
+}
 
 type Jwk = Record<string, unknown>;
 type BotState = {
@@ -161,9 +180,13 @@ class Bot {
   private ownRoomFingerprint = '';
   private ownProgressAt = 0;
   private ownCheckedAt = 0;
-  /** On-and-off player: rounds played this session, and when its rest ends. */
-  private roundsThisSession = 0;
-  private restUntil = 0;
+  /** In its own room: whether it is between Continue and the next choice (a shift ends only there). */
+  private midEncounter = false;
+  /**
+   * On the welcome screen. Asking for the active room would hand back the
+   * paused solo room, so while resting the bot does not ask.
+   */
+  private onWelcomeScreen = false;
   private readonly stateFile: string;
 
   constructor(private readonly config: BotConfig) {
@@ -314,16 +337,13 @@ class Bot {
         if (!/ALREADY/i.test(body)) this.log(`friend ${name}: ${body.slice(0, 80)}`);
       }
     }
-    if (this.config.behavior !== 'always') {
+    if (!shiftNow(this.config).playing) {
       // Start on the welcome screen, like a player who has just opened the game.
       await this.api('/room/leave/all', { body: {} }).catch(() => undefined);
+      this.onWelcomeScreen = true;
     }
-    const role = {
-      always: 'always playing; join it from Friends',
-      helper: 'waiting on the welcome screen for a Call for help',
-      drift: `plays ${DRIFT_ROUNDS} rounds, then rests ${DRIFT_REST_MS / 60_000} min (helps while resting)`,
-    }[this.config.behavior];
-    this.log(`ready: ${role}`);
+    const { playMinutes, restMinutes } = this.config;
+    this.log(`ready: plays ${playMinutes} min, then rests ${restMinutes} min on the welcome screen (answers Call for help while resting)`);
     await this.run();
   }
 
@@ -385,14 +405,29 @@ class Bot {
       return false;
     }
     const levelUpChoices = me.preparedResult?.levelUpChoiceIds ?? [];
-    if (me.choiceState === 'ready_to_continue' && levelUpChoices.length > 0 && me.preparedResult?.levelUpChosenId === undefined) {
+    if (
+      me.choiceState === 'ready_to_continue'
+      && levelUpChoices.length > 0
+      && me.preparedResult?.levelUpChosenId === undefined
+      // Only the level-up event itself takes a choice. A room from before the
+      // level-up change can still list the offer on a normal result; choosing
+      // there is refused (409 INVALID_ROOM_STATE), and Varrokh retried it every
+      // 3 s for days instead of pressing Continue (2026-11-27).
+      && room.roomState === 'system_event'
+    ) {
       // Level-up (D-049): take one of the three offered rewards, as a player would.
       const rewardId = pick(levelUpChoices);
-      await this.api('/room/level-up/choice', { body: { avatarId: this.avatarId, rewardId } });
-      const names = gameSolutions() as Record<string, { mSolutionName?: string }>;
-      this.detail(`chose level-up reward ${names[String(rewardId)]?.mSolutionName ?? `#${rewardId}`}`);
-      this.waitUntil = Date.now() + between(THINK_MS);
-      return false;
+      try {
+        await this.api('/room/level-up/choice', { body: { avatarId: this.avatarId, rewardId } });
+        const names = gameSolutions() as Record<string, { mSolutionName?: string }>;
+        this.detail(`chose level-up reward ${names[String(rewardId)]?.mSolutionName ?? `#${rewardId}`}`);
+        this.waitUntil = Date.now() + between(THINK_MS);
+        return false;
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 409) throw error;
+        // Already chosen or no longer offered: go on with Continue below.
+        this.log(`level-up choice refused (${error.body.slice(0, 60)}); pressing Continue instead`);
+      }
     }
     if (
       !me.continuePressed
@@ -469,6 +504,7 @@ class Bot {
 
   /** Leave the room and go back to the welcome screen; report failures instead of hiding them. */
   private async leaveToWelcomeScreen(): Promise<void> {
+    this.onWelcomeScreen = true;
     try {
       await this.api('/room/leave', { body: { avatarId: this.avatarId } });
       await this.api('/room/leave/all', { body: {} });
@@ -539,7 +575,6 @@ class Bot {
     this.log(`stuck for ${STUCK_MS / 60_000} min at ${where} with ${others.length} other player(s) (${otherStates}); leaving and starting over`);
     this.ownRoomFingerprint = '';
     this.waitUntil = 0;
-    this.roundsThisSession = 0;
     await this.leaveToWelcomeScreen();
     return true;
   }
@@ -557,51 +592,47 @@ class Bot {
       return;
     }
 
-    switch (this.config.behavior) {
-      case 'always': {
-        const room = await this.activeRoom();
-        if (!room) {
-          await this.ensureLivingAvatar();
-          await this.api('/room/create', { body: { avatarId: this.avatarId } });
-          this.detail('started a new room');
-          return;
-        }
-        if (await this.leftStuckRoom(room)) return;
-        await this.playStep(room);
+    const shift = shiftNow(this.config);
+    const minutesLeft = Math.ceil(shift.changesInMs / MINUTE_MS);
+
+    if (!shift.playing && !this.midEncounter) {
+      if (!this.onWelcomeScreen) {
+        await this.api('/room/leave/all', { body: {} });
+        this.onWelcomeScreen = true;
+        this.ownRoomFingerprint = '';
+        this.waitUntil = 0;
+        this.log(`shift over; back to the welcome screen for ${minutesLeft} min`);
         return;
       }
-      case 'helper': {
-        this.status('idle on the welcome screen');
-        await this.answerHelp();
-        return;
-      }
-      case 'drift': {
-        if (Date.now() < this.restUntil) {
-          const minutes = Math.ceil((this.restUntil - Date.now()) / 60_000);
-          this.status(`resting on the welcome screen (about ${minutes} min left)`);
-          await this.answerHelp();
-          return;
-        }
-        const room = await this.activeRoom();
-        if (!room) {
-          await this.ensureLivingAvatar();
-          await this.api('/room/create', { body: { avatarId: this.avatarId } });
-          this.roundsThisSession = 0;
-          this.detail(`started an adventure (${DRIFT_ROUNDS} rounds)`);
-          return;
-        }
-        if (await this.leftStuckRoom(room)) return;
-        if (await this.playStep(room)) {
-          this.roundsThisSession += 1;
-          if (this.roundsThisSession >= DRIFT_ROUNDS) {
-            this.restUntil = Date.now() + DRIFT_REST_MS;
-            this.roundsThisSession = 0;
-            await this.api('/room/leave/all', { body: {} });
-            this.log(`played ${DRIFT_ROUNDS} rounds; back to the welcome screen for ${DRIFT_REST_MS / 60_000} min`);
-          }
-        }
-        return;
-      }
+      this.status(`resting on the welcome screen (${minutesLeft} min left)`);
+      await this.answerHelp();
+      return;
+    }
+
+    this.onWelcomeScreen = false;
+    const room = await this.activeRoom();
+    if (!room) {
+      this.midEncounter = false;
+    }
+
+    if (!room) {
+      await this.ensureLivingAvatar();
+      await this.api('/room/create', { body: { avatarId: this.avatarId } });
+      this.log(`started an adventure for ${minutesLeft} min`);
+      return;
+    }
+    if (await this.leftStuckRoom(room)) {
+      this.midEncounter = false;
+      return;
+    }
+    const me = room.participants.find((entry) => entry.isLocal);
+    // Once it has chosen, it sees the encounter through to Continue, as a
+    // player would before going back to the menu.
+    if (me && me.choiceState !== 'choosing') {
+      this.midEncounter = true;
+    }
+    if (await this.playStep(room)) {
+      this.midEncounter = false;
     }
   }
 
