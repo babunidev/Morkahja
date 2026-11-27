@@ -6,7 +6,7 @@
 
 - **Babuni's report:** a right-click opens the browser's menu inside the app.
 - **Fix (`client/src/ui/protectedImage.ts`):** the global `contextmenu` guard in `useProtectedImages` now blocks the browser menu everywhere in the app, not only on images and backgrounds; text fields (`input`, `textarea`, `select`, `contenteditable`) keep it for copy and paste.
-- **Verification:** `npx tsc -b` in `client` clean. Not tried in the browser. Claude Code (Claude Opus 5.5). **Not released.**
+- **Verification:** `npx tsc -b` in `client` clean. Not tried in the browser. Claude Code (Claude Opus 5.5). **Released** in 0.9.0-beta.88 (2026-11-27, 13:35 UTC).
 
 
 ## 2026-11-27 — Bots answer Call for help while adventuring, and after a fallen avatar
@@ -14,7 +14,7 @@
 - **Babuni's report (on beta.87):** three heard the call, nobody came.
 - **Cause (production bot log):** at 11:51 UTC only Varrokh was resting; its avatar had fallen in the shift before, so `POST /room/help/respond` was refused with 403 `AVATAR_FAILED`. The bot made a new avatar but did not answer again. Sylvaen and Thalyss were adventuring and only looked for calls while resting, although the server invites them (a solo room does not count as busy).
 - **Fix (`server/scripts/bot-adventurers.ts`):** an adventuring bot looks for a pending call every 5 s between encounters, leaves its room and joins. A call refused because of a fallen avatar is answered again after making a new avatar; any other refusal (e.g. `ROOM_FULL`) marks that call so it is not retried.
-- **Verification:** local run with a scripted caller in a fresh room: the resting Varrokh joined within a second and Thalyss left its adventure to join (first run); in the second run Sylvaen and Thalyss joined; the third bot got `ROOM_FULL` once (a room holds three). Claude Code (Claude Opus 5.5). **Not released.**
+- **Verification:** local run with a scripted caller in a fresh room: the resting Varrokh joined within a second and Thalyss left its adventure to join (first run); in the second run Sylvaen and Thalyss joined; the third bot got `ROOM_FULL` once (a room holds three). Claude Code (Claude Opus 5.5). **Released** in 0.9.0-beta.88 (2026-11-27, 13:35 UTC).
 
 
 ## 2026-11-27 — Social encounter 20233 specification (documentation only)

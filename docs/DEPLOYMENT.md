@@ -176,6 +176,15 @@ Babuni: "don't back up anything on the server anymore … download them to the c
 - **`prune`** (also after every release) removes every backup folder in `/var/backups/morkahja-subpath`, every dump in the upload folder, old `prev-*` upload folders, and after a release the uploaded `client.tar.gz`, `morkahja.bundle` and `SHA256SUMS`.
 - **Installed version:** prepared by Claude Code (Claude Opus 5.5) on 2026-11-26 (sha256 `f88bd7d5…`; the previous one was `ef418ca2…`), staged as `~/morkahja-deploy/morkahja-deploy.new`; Babuni installs it with `sudo install -o root -g root -m 755 ~/morkahja-deploy/morkahja-deploy.new /usr/local/bin/morkahja-deploy`, since the deploy login cannot change the tool. The passwordless sudo rule names the path only, so it keeps working.
 
+## Production release — 2026-11-27, 13:35 UTC (0.9.0-beta.88: bots answer Call for help while adventuring, no browser context menu)
+
+Approved by Babuni ("Das kannst du releasen"). `main` at `3ac28169`: the bot fix `741c5a40`, the context-menu block `78c74afb` and the beta.88 patch notes and version.
+
+- **Before:** backend `03bb9ec9`, frontend `20261127-104304`. `morkahja-deploy status` showed no uncommitted live files.
+- **Checks before the release:** `npm run release:check` on Nobara exited 0 (server 80/80). The client archive has `index.html` at its root. Uploads verified by `sha256sum -c` on the server (client `fa31a7ad…`, bundle `de141aa0…`, only `refs/heads/main` from `03bb9ec9`).
+- **Release:** no database dump. Backend checked out `3ac28169`, `npm ci`, health gate and content endpoint passed, frontend release `20261127-133505`. Public checks passed; the live script `index-DTxLqY7p.js` contains `0.9.0-beta.88`. API and bots online; all three bots signed in and started their shifts at 13:35 (Sylvaen laid its fallen avatar to rest and made a new one). Prune removed one frontend release, one `node_modules` copy, one bundle and the uploads; disk 11 GB used, 26 GB free.
+- **Not yet checked live:** an adventuring bot answering Call for help; right-click in the live game.
+
 ## Production release — 2026-11-27, 10:43 UTC (0.9.0-beta.87: change signals D-069, message links D-070, results behind panels and bot shifts D-071)
 
 Approved by Babuni ("ja rausbringen!"). `main` at `03bb9ec9`: the three changes of the day, the beta.87 patch notes and version, plus documentation commits from other sessions (encounters 20232 and 20233).

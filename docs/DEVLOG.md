@@ -2,14 +2,19 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Out as 0.9.0-beta.88
+
+I said release it, and Claude Code (Claude Opus 5.5) put out 0.9.0-beta.88 at 13:35 UTC: the bots now come to a Call for help even mid-adventure or after a fallen avatar, and a right-click no longer opens the browser menu. The release check passed, the live game reports beta.88, and all three bots started their shifts again. Details in [DEPLOYMENT](DEPLOYMENT.md).
+
+
 ## 2026-11-27 — No browser menu on right-click
 
-A right-click inside the game opened the browser's own menu. Claude Code (Claude Opus 5.5) widened the guard that already kept it off images, so it is now gone across the whole app; only text fields keep it, for copy and paste. **Not released.**
+A right-click inside the game opened the browser's own menu. Claude Code (Claude Opus 5.5) widened the guard that already kept it off images, so it is now gone across the whole app; only text fields keep it, for copy and paste. Released in 0.9.0-beta.88.
 
 
 ## 2026-11-27 — The bots come when I call
 
-I called for help, the game said three heard me, and nobody came. Claude Code (Claude Opus 5.5) read the live log: the only bot resting at that moment was Varrokh, and his avatar had died in his last shift, so the server turned him away; the two others were adventuring and did not even look. Now a bot that is adventuring finishes its encounter and comes, and a bot whose avatar has fallen makes a new one and answers the same call. In a local test with a scripted caller, two bots joined within seconds, and the room was full. **Not released.**
+I called for help, the game said three heard me, and nobody came. Claude Code (Claude Opus 5.5) read the live log: the only bot resting at that moment was Varrokh, and his avatar had died in his last shift, so the server turned him away; the two others were adventuring and did not even look. Now a bot that is adventuring finishes its encounter and comes, and a bot whose avatar has fallen makes a new one and answers the same call. In a local test with a scripted caller, two bots joined within seconds, and the room was full. Released in 0.9.0-beta.88.
 
 
 ## 2026-11-27 — A Name Upon the Wind: approved artwork handoff
