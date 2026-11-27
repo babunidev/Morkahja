@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Social encounter 20232 creative approval
+
+For Round 1 of my Social content production, the approved [Where Two Roads Meet specification](encounter-drafts/20232.md) records the narrative, characters, environment, Speechcraft solution assignments and artwork direction. My approval is for the specification and image handoff, not activation. ChatGPT (GPT-6.2) prepared and recorded the draft after reviewing both repositories. No gameplay or taxonomy changes.
+
+
 ## 2026-11-27 — Difficulty determines action count, not slot count
 
 My four visible solution slots are reusable and refill from inventory. An encounter with effective difficulty N requires N actions, including repeated use of a slot, refilled slots or dice alone; D7 requires seven actions and rare D8 requires eight. There is no four-action design limit. The earlier rarity handoff's open high-difficulty design question is resolved. ChatGPT (GPT-6.2) corrected the developer brief and distinguished the intended behavior from the four-action clamp still present in inspected shared source. Verify and correct that implementation as necessary; no game code changed.
