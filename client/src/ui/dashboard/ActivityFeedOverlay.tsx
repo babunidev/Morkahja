@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { revealMenuWhenReady } from '../transitions/menuReadiness.js';
 import type { ActivityFeedEntryDto, ActivityFeedJoinRoomActionDto } from '@shared/contracts';
 import { fetchRecentActivity } from '../../api/http.js';
+import { subscribePlayerChanges } from '../../api/playerChanges.js';
 import { AvatarPortraitStack } from '../avatar/AvatarPortraitStack.js';
 import {
   protectedImageProps,
@@ -15,7 +16,6 @@ import { LineFrame, framedStyle } from '../common/LineFrame.js';
 import { simpleFrameStyle } from '../common/simpleFrame.js';
 
 const OVERLAY_FADE_MS = 300;
-const POLL_INTERVAL_MS = 10_000;
 
 const backdropStyle: CSSProperties = {
   position: 'fixed',
@@ -302,13 +302,14 @@ export function ActivityFeedOverlay({
 
     void refreshFeed();
 
-    const pollTimer = window.setInterval(() => {
+    // Refreshed when the server reports a change (2026-11-27), no longer every 10 s.
+    const stopWatching = subscribePlayerChanges(['player', 'feed'], () => {
       void refreshFeed();
-    }, POLL_INTERVAL_MS);
+    });
 
     return () => {
       cancelReveal();
-      window.clearInterval(pollTimer);
+      stopWatching();
     };
   }, [open]);
 

@@ -12,6 +12,7 @@ import {
   claimPlayerDailyRewardController,
   getPlayerAchievementsController,
 } from './controllers/achievementController.js';
+import { getPlayerChangesController } from './controllers/playerChangesController.js';
 import { donatePlayerGemsController } from './controllers/donateController.js';
 import {
   selectPlayerDiceController,
@@ -284,6 +285,7 @@ app.get('/player/soul-link/invite', authRateLimit, getSoulLinkInviteController);
 app.use(authMiddleware);
 app.use('/room', roomRoutes);
 app.get('/activity/recent', getRecentActivityController);
+app.get('/player/changes', getPlayerChangesController);
 app.get('/player/achievements', getPlayerAchievementsController);
 app.post('/player/daily-reward/claim', claimPlayerDailyRewardController);
 app.post('/player/donate', donatePlayerGemsController);

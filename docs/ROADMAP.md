@@ -279,3 +279,12 @@ Babuni: the game is sometimes hard to understand, so a new player should get a f
 - [ ] Not released yet; patch notes to be written at release.
 - [ ] Not yet seen: a real phone's share menu, a gift day reached in real play, a homeland or Stripe purchase showing the card.
 - [ ] Known limitation: Alpha Player progress is a read–modify–write without a row lock (as before); a level-up and a soul-link gift at the same moment could lose points.
+
+## Server load: change signals instead of polling — 2026-11-27 (D-069)
+
+- [x] No requests from a hidden tab; one refresh on return.
+- [x] Achievements, help invitations and the Scribes feed refresh on `GET /player/changes` signals instead of every 5–10 s; duplicate dashboard fetches shared.
+- [ ] Release (not released).
+- [ ] Bot adventurers stuck since the level-up change (Varrokh answers `409 INVALID_ROOM_STATE` every 3 s on production); separate task.
+- [ ] Later, when many players are online at once: move the one change channel to SSE; with several API processes, PostgreSQL `LISTEN/NOTIFY` for the signals.
+

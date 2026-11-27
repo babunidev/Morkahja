@@ -1,5 +1,6 @@
 import { normalizePersistedAvatar } from '../ui/avatar/avatarDisplayName.js';
 import { ApiRequestError, looksLikeHtml } from './httpErrorMessage.js';
+import type { PlayerChangesResponse } from './playerChangesWatcher.js';
 import type {
   AchievementsResponse,
   ActivityFeedResponse,
@@ -722,12 +723,43 @@ export function processRoomAwayKeepalive(avatarId: string): void {
   });
 }
 
+// App and Dashboard both refresh on the same change signal; while one GET is
+// on its way, a second caller shares its answer instead of asking again.
+const sharedGets = new Map<string, Promise<unknown>>();
+
+function sharedGet<T>(path: string): Promise<T> {
+  const running = sharedGets.get(path);
+  if (running) {
+    return running as Promise<T>;
+  }
+  const next = request<T>(path).finally(() => {
+    sharedGets.delete(path);
+  });
+  sharedGets.set(path, next);
+  return next;
+}
+
 export async function fetchRecentActivity(): Promise<ActivityFeedResponse> {
-  return request<ActivityFeedResponse>('/activity/recent');
+  return sharedGet<ActivityFeedResponse>('/activity/recent');
 }
 
 export async function fetchAchievements(): Promise<AchievementsResponse> {
-  return request<AchievementsResponse>('/player/achievements');
+  return sharedGet<AchievementsResponse>('/player/achievements');
+}
+
+
+/**
+ * Waits on the server (about 25 s at most) until the player's or the feed's
+ * counter differs from `since`; without `since` it answers at once.
+ */
+export async function fetchPlayerChanges(
+  since: PlayerChangesResponse | null,
+  signal: AbortSignal,
+): Promise<PlayerChangesResponse> {
+  const query = since
+    ? `?boot=${encodeURIComponent(since.boot)}&player=${since.player}&feed=${since.feed}`
+    : '';
+  return request<PlayerChangesResponse>(`/player/changes${query}`, { signal });
 }
 
 export async function claimDailyReward(): Promise<ClaimDailyRewardResponse> {

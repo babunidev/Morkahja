@@ -30,7 +30,7 @@ export async function touchPlayerInteraction(playerId: string): Promise<void> {
       lastInteractionAt: now,
       lastPlayedAt: now,
     },
-    { merge: true },
+    { merge: true, quiet: true },
   );
 }
 

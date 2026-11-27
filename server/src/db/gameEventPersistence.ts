@@ -1,4 +1,5 @@
 import { pool } from './postgresDocumentStore.js';
+import { notifyFeedChanged, notifyPlayerChanged } from './playerChanges.js';
 import type { GameEvent, GameEventVisibility } from '../domain/events/GameEvent.js';
 import type { EventStore, QueryRecentEventsOptions } from '../domain/events/eventStore.js';
 
@@ -80,6 +81,13 @@ export async function appendGameEvent(event: GameEvent): Promise<void> {
       JSON.stringify(event.payload),
     ],
   );
+  // Global and friends events can appear in anyone's Scribes feed; the others
+  // only in the feed of the player they belong to.
+  if (event.visibility === 'global' || event.visibility === 'friends') {
+    notifyFeedChanged();
+  } else {
+    notifyPlayerChanged(event.playerId);
+  }
 }
 
 export async function queryRecentGameEvents(

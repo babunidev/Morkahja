@@ -2,6 +2,15 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Dashboard updates by change signal instead of fixed polling (D-069)
+
+- **Babuni's direction:** asked how heavy Morkahja is on the server and whether a WebSocket would help; approved the proposed first two steps (pause polling in a hidden tab, replace the 5–10 s polls with a waiting request). SSE/WebSocket deferred.
+- **Server:** new `server/src/db/playerChanges.ts` (per-player and feed counters, in-process like `roomChanges.ts`) and `GET /player/changes?boot=&player=&feed=` (`playerChangesController.ts`), which answers at once if the counters differ or the boot id changed, otherwise on a change or after 25 s. Signals: `setPlayer`, `setAvatar`, `deleteAvatar`, `setProgression` (direct and after COMMIT in `withDocumentTransaction`), `setRoomInvitation` (to the invited player), `saveAchievementProgress` (only when rank, progress or unlock really changed, since reading achievements re-saves some), `appendGameEvent` (global/friends events wake the feed, others their player). New `setPlayer` option `quiet` for bookkeeping writes; used by the session heartbeat and `touchPlayerInteraction`.
+- **Client:** new `client/src/api/playerChangesWatcher.ts` (testable core) and `playerChanges.ts` (one watcher per page). The achievement/Scribes toast check and help invitations in `App.tsx`, the Scribes and achievement markers in `Dashboard.tsx`, and the open Scribes feed in `ActivityFeedOverlay.tsx` refresh on a signal instead of every 5 or 10 s. No requests in a hidden tab, one refresh of everything on return, a 60 s safety refresh while visible, feed refreshes at least 3 s apart. `fetchAchievements` and `fetchRecentActivity` share one in-flight request, so App and Dashboard no longer fetch the same thing twice.
+- **Verification:** `npm run release:check` passed (client 55/55, server 79/79). New tests `server/src/db/playerChanges.test.ts` (against local PostgreSQL) and `client/src/api/playerChangesWatcher.test.ts`. Local backend restarted; `/player/changes` answers 401 without a session on :3000 and through Vite (on 5174, as 5173 was held by another project). Toasts and markers not yet seen in the browser. Claude Code (Claude Opus 5.5).
+- **Limitations:** signals are in-process (single PM2 process); a write through a transaction's raw `query` is not announced and waits for the 60 s safety refresh. **Not released.**
+
+
 ## 2026-11-27 — Social encounter 20232 specification (documentation only)
 
 - Added approved Where Two Roads Meet specification and recorded its reserved solution and artwork handoff in the production ledger. No encounter activation, game data or artwork changes. ChatGPT (GPT-6.2).

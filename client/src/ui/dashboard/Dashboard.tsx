@@ -18,6 +18,7 @@ import ActivityFeedOverlay from './ActivityFeedOverlay.js';
 import ExpansionsOverlay from './ExpansionsOverlay.js';
 import FriendsOverlay from './FriendsOverlay.js';
 import { fetchAvatars } from '../../api/http.js';
+import { subscribePlayerChanges } from '../../api/playerChanges.js';
 import PlayerProfileOverlay from './PlayerProfileOverlay.js';
 import { hasUnreadScribes } from './scribesReadState.js';
 import SettingsScreen from '../settings/SettingsScreen.js';
@@ -30,7 +31,6 @@ import { GameTooltipFrame } from '../game/GameTooltip.js';
 const PLAY_PREPARE_WHEEL_ASSET = assetUrl('/UI/01_WelcomeScreen/LoadingWheel.webp');
 const NAV_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_nav_b.webp');
 const HOME_BUTTON_ASSET = assetUrl('/UI/03_DASHBOARD/im_button_home.webp');
-const SCRIBES_POLL_MS = 10_000;
 const RADIAL_BUTTONS = [
   {
     label: 'News',
@@ -330,13 +330,17 @@ export function Dashboard({
     void refreshScribesUnread();
     void refreshAchievementsAttention();
 
-    const pollTimer = window.setInterval(() => {
+    // Refreshed when the server reports a change (2026-11-27), no longer every 10 s.
+    const stopScribes = subscribePlayerChanges(['player', 'feed'], () => {
       void refreshScribesUnread();
+    });
+    const stopAchievements = subscribePlayerChanges(['player'], () => {
       void refreshAchievementsAttention();
-    }, SCRIBES_POLL_MS);
+    });
 
     return () => {
-      window.clearInterval(pollTimer);
+      stopScribes();
+      stopAchievements();
     };
   }, [refreshAchievementsAttention, refreshScribesUnread, showChrome]);
 

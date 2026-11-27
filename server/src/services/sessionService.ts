@@ -390,7 +390,7 @@ export async function heartbeatSession(accessToken: string): Promise<SessionDocu
         lastPlayedAt: now,
         lastInteractionAt: now,
       },
-      { merge: true },
+      { merge: true, quiet: true },
     );
   });
 

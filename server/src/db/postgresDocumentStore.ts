@@ -1,5 +1,6 @@
 import './loadDatabaseConfig.js';
 import { forgetRoom, notifyRoomChanged } from './roomChanges.js';
+import { notifyPlayerChanged } from './playerChanges.js';
 
 import pg from 'pg';
 import type { Pool as PgPool, PoolClient, QueryResult, QueryResultRow } from 'pg';
@@ -162,10 +163,19 @@ export async function listAllPlayers<T>(): Promise<Array<{ id: string; data: T }
   return result.rows;
 }
 
+/**
+ * `quiet`: bookkeeping only (heartbeat, last interaction); nothing the player's
+ * dashboard shows changes, so waiting `/player/changes` requests stay asleep.
+ */
+export interface SetPlayerOptions {
+  merge?: boolean;
+  quiet?: boolean;
+}
+
 export async function setPlayer<T extends JsonObject>(
   playerId: string,
   data: T,
-  options: { merge?: boolean } = {},
+  options: SetPlayerOptions = {},
 ): Promise<void> {
   await ensureSchema();
   // PostgreSQL performs the merge against the current locked row; no stale read/merge/write.
@@ -178,6 +188,9 @@ export async function setPlayer<T extends JsonObject>(
        ELSE EXCLUDED.data END`,
     [playerId, JSON.stringify(data), options.merge === true],
   );
+  if (!options.quiet) {
+    notifyPlayerChanged(playerId);
+  }
 }
 
 export async function findPlayerByIdentityPublicKey<T>(
@@ -426,11 +439,13 @@ export async function setAvatar<T extends JsonObject>(
        ELSE EXCLUDED.data END`,
     [playerId, avatarId, JSON.stringify(data), options.merge === true],
   );
+  notifyPlayerChanged(playerId);
 }
 
 export async function deleteAvatar(playerId: string, avatarId: string): Promise<void> {
   await ensureSchema();
   await pool.query('DELETE FROM avatars WHERE player_id = $1 AND id = $2', [playerId, avatarId]);
+  notifyPlayerChanged(playerId);
 }
 
 export async function getActiveEncounter<T>(playerId: string, avatarId: string): Promise<T | null> {
@@ -518,6 +533,7 @@ export async function setProgression<T extends JsonObject>(
      ON CONFLICT (player_id, avatar_id, id) DO UPDATE SET data = EXCLUDED.data`,
     [playerId, avatarId, JSON.stringify(data)],
   );
+  notifyPlayerChanged(playerId);
 }
 
 export async function deleteProgression(playerId: string, avatarId: string): Promise<void> {
@@ -711,6 +727,8 @@ export async function setRoomInvitation<T extends JsonObject>(inviteId: string, 
      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
     [inviteId, JSON.stringify(data)],
   );
+  const toPlayerId = (data as Record<string, unknown>).toPlayerId;
+  notifyPlayerChanged(typeof toPlayerId === 'string' ? toPlayerId : null);
 }
 
 export async function listPendingInvitationsForPlayer<T>(playerId: string): Promise<T[]> {
@@ -739,7 +757,7 @@ export interface DocumentTransaction {
   getEncounterRoom<T>(roomId: string): Promise<T | null>;
   getInventory<T>(playerId: string, avatarId: string): Promise<T | null>;
   getProgression<T>(playerId: string, avatarId: string): Promise<T | null>;
-  setPlayer<T extends JsonObject>(playerId: string, data: T, options?: { merge?: boolean }): Promise<void>;
+  setPlayer<T extends JsonObject>(playerId: string, data: T, options?: SetPlayerOptions): Promise<void>;
   setAvatar<T extends JsonObject>(playerId: string, avatarId: string, data: T, options?: { merge?: boolean }): Promise<void>;
   setActiveEncounter<T extends JsonObject>(playerId: string, avatarId: string, data: T): Promise<void>;
   setEncounterRoom<T extends JsonObject>(roomId: string, data: T): Promise<void>;
@@ -755,6 +773,8 @@ export async function withDocumentTransaction<T>(
   const postCommit: Array<() => Promise<void>> = [];
   // Rooms saved in this transaction; waiting players hear of them after COMMIT.
   const changedRooms = new Map<string, 'saved' | 'deleted'>();
+  // Players whose dashboard data changed; their waiting requests answer after COMMIT.
+  const changedPlayers = new Set<string>();
   let result!: T;
 
   try {
@@ -817,7 +837,7 @@ export async function withDocumentTransaction<T>(
       setPlayer: async <R extends JsonObject>(
         playerId: string,
         data: R,
-        options: { merge?: boolean } = {},
+        options: SetPlayerOptions = {},
       ) => {
         await client.query(
           `INSERT INTO players (id, data)
@@ -828,6 +848,9 @@ export async function withDocumentTransaction<T>(
              ELSE EXCLUDED.data END`,
           [playerId, JSON.stringify(data), options.merge === true],
         );
+        if (!options.quiet) {
+          changedPlayers.add(playerId);
+        }
       },
       setAvatar: async <R extends JsonObject>(
         playerId: string,
@@ -844,6 +867,7 @@ export async function withDocumentTransaction<T>(
              ELSE EXCLUDED.data END`,
           [playerId, avatarId, JSON.stringify(data), options.merge === true],
         );
+        changedPlayers.add(playerId);
       },
       setActiveEncounter: async <R extends JsonObject>(playerId: string, avatarId: string, data: R) => {
         await client.query(
@@ -882,6 +906,7 @@ export async function withDocumentTransaction<T>(
            ON CONFLICT (player_id, avatar_id, id) DO UPDATE SET data = EXCLUDED.data`,
           [playerId, avatarId, JSON.stringify(data)],
         );
+        changedPlayers.add(playerId);
       },
     };
 
@@ -900,6 +925,10 @@ export async function withDocumentTransaction<T>(
     } else {
       notifyRoomChanged(roomId);
     }
+  }
+
+  for (const playerId of changedPlayers) {
+    notifyPlayerChanged(playerId);
   }
 
   for (const callback of postCommit) {

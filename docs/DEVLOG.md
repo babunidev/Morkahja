@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — The server asks less often
+
+I wanted to know how much Morkahja weighs on the server. Claude Code (Claude Opus 5.5) looked at the live machine: two cores and 3.8 GB, the game's API and bots under one percent CPU and about 230 MB together; the load at that moment came from another project. The real cost is in the client. The room had already been waiting for changes since 19 November, but achievements, help invitations and the Scribes feed were still fetched every five or ten seconds, twice over on the dashboard, and even in a hidden tab. I asked whether a WebSocket would help. Claude recommended something smaller first, and I said yes: now one waiting request tells the page when my data or the feed changed, and only then does it fetch. A hidden tab asks nothing, coming back refreshes once, and once a minute everything refreshes anyway as a safety net. On the way Claude found that reading achievements re-saves some of them, which would have woken the page again and again, so only a real change counts. SSE or a WebSocket can follow if many people play at once. **Verification:** release check (client 55, server 79), new tests for the server signals and the watcher. Toasts not yet seen in the browser. **Not released.**
+
+
 ## 2026-11-27 — Where Two Roads Meet: approved artwork handoff
 
 The first new Speechcraft encounter in my Round 1 Social allocation is Where Two Roads Meet (20232). Its approved narrative, the Wordkeeper's Stone (reserved 10440), existing Convincing Speech skill (10129), character and landscape notes, and artwork requirements are now recorded in the [specification](encounter-drafts/20232.md). ChatGPT (GPT-6.2) reviewed both repositories, drafted the content for my approval, checked the IDs against the complete catalogs and recorded the specification and ledger status in commits `f7d40369` and `e7d55672`. Documentation only: artwork, map pin, remaining new-item data fields and Social taxonomy support are pending. No game data, gameplay code, runtime tests or deployment.

@@ -1,5 +1,6 @@
 import { HOMECOMING_ACHIEVEMENT_ID, homecomingRankFromProgress } from './homecomingAchievement.js';
 import { pool } from '../../db/postgresDocumentStore.js';
+import { notifyPlayerChanged } from '../../db/playerChanges.js';
 import {
   ADVENTURER_ACHIEVEMENT_ID,
   adventurerRankFromProgress,
@@ -187,24 +188,41 @@ export async function loadAchievementProgress(
 export async function saveAchievementProgress(progress: AchievementProgress): Promise<void> {
   await ensurePlayerAchievementsReady();
 
-  await pool.query(
-    `INSERT INTO player_achievements (
-      player_id,
-      achievement_id,
-      rank,
-      progress,
-      unlocked_at,
-      updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6)
-    ON CONFLICT (player_id, achievement_id) DO UPDATE SET
-      rank = EXCLUDED.rank,
-      progress = EXCLUDED.progress,
-      unlocked_at = CASE
-        WHEN EXCLUDED.rank > 0
-          THEN COALESCE(player_achievements.unlocked_at, EXCLUDED.unlocked_at)
-        ELSE NULL
-      END,
-      updated_at = EXCLUDED.updated_at`,
+  // `old` reads the row as it was before this statement, so the answer tells
+  // whether rank, progress or unlock really changed. Reading achievements
+  // re-saves some of them; only a real change may wake the player's waiting
+  // `/player/changes` request, or that read would wake it again and again.
+  const result = await pool.query<{ changed: boolean }>(
+    `WITH old AS (
+      SELECT rank, progress, unlocked_at
+      FROM player_achievements
+      WHERE player_id = $1 AND achievement_id = $2
+    ), saved AS (
+      INSERT INTO player_achievements (
+        player_id,
+        achievement_id,
+        rank,
+        progress,
+        unlocked_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (player_id, achievement_id) DO UPDATE SET
+        rank = EXCLUDED.rank,
+        progress = EXCLUDED.progress,
+        unlocked_at = CASE
+          WHEN EXCLUDED.rank > 0
+            THEN COALESCE(player_achievements.unlocked_at, EXCLUDED.unlocked_at)
+          ELSE NULL
+        END,
+        updated_at = EXCLUDED.updated_at
+      RETURNING rank, progress, unlocked_at
+    )
+    SELECT NOT EXISTS (
+      SELECT 1 FROM old, saved
+      WHERE old.rank = saved.rank
+        AND old.progress = saved.progress
+        AND old.unlocked_at IS NOT DISTINCT FROM saved.unlocked_at
+    ) AS changed`,
     [
       progress.playerId,
       progress.achievementId,
@@ -214,4 +232,7 @@ export async function saveAchievementProgress(progress: AchievementProgress): Pr
       progress.updatedAt,
     ],
   );
+  if (result.rows[0]?.changed) {
+    notifyPlayerChanged(progress.playerId);
+  }
 }

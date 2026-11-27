@@ -690,3 +690,11 @@ Babuni rejected Claude Code's proposals of a chance to save a charge and of usin
 - A delivered soul link also gives the inviter **5 Alpha Player points**, besides Spiritguide. Alpha Player shows from the start while its places are open, with a "?" (under the Tips setting) that says how it is earned and how many of the 100 Legendborn places are left. The 80 gems a day at Legendborn stay: Babuni accepts them for players who bring others in.
 - The daily support message becomes a pool of two (support, Soul Link), shown in the dashboard only, never during an encounter.
 - Defaults chosen by the AI when Babuni said "go ahead" without picking: 5 Alpha points per link, nothing extra when Aetherion is owned, the whole pool dashboard-only, existing avatars unchanged. Babuni can revise any of them.
+
+## D-069 — Change signals instead of fixed polling; WebSocket deferred (2026-11-27)
+
+**Decided by:** Babuni. **Implemented by:** Claude Code (Claude Opus 5.5).
+
+- Babuni asked whether a WebSocket would lower the server load. Claude Code proposed three steps: (1) no polling in a hidden tab, (2) the remaining fixed polls (achievements, help invitations, Scribes feed) become one waiting request like the room's (D-050), (3) later, if many players are online at once, that one channel moves to SSE. Babuni approved steps 1 and 2 ("ja"). Step 3 and a WebSocket stay open until the player count asks for it.
+- Defaults chosen by the AI: a 60 s safety refresh while the tab is visible, feed refreshes at least 3 s apart, a 25 s server wait (as for rooms).
+

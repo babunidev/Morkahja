@@ -33,6 +33,7 @@ import {
   type PersistedAvatar,
 } from './api/http.js';
 import { ApiRequestError, isApiErrorCode, userFacingApiErrorMessage } from './api/httpErrorMessage.js';
+import { subscribePlayerChanges } from './api/playerChanges.js';
 import AchievementsOverlay from './ui/dashboard/AchievementsOverlay.js';
 import {
   findNewRankUnlocks,
@@ -100,8 +101,6 @@ import { useDocumentSolutionSize } from './ui/common/solutionSize.js';
 
 type AppScreen = 'loading' | 'gateway' | 'dashboard' | 'game';
 
-const ACHIEVEMENT_POLL_MS = 10_000;
-const HELP_INVITE_POLL_MS = 5_000;
 
 interface RoomFullPromptState {
   avatar: PersistedAvatar;
@@ -374,13 +373,10 @@ export default function App() {
 
     void checkAchievementUnlocks({ seedBaseline: true });
 
-    const pollTimer = window.setInterval(() => {
+    // Refreshed when the server reports a change (2026-11-27), no longer every 10 s.
+    return subscribePlayerChanges(['player', 'feed'], () => {
       void checkAchievementUnlocks();
-    }, ACHIEVEMENT_POLL_MS);
-
-    return () => {
-      window.clearInterval(pollTimer);
-    };
+    });
   }, [checkAchievementUnlocks, screen]);
 
   useEffect(() => {
@@ -644,13 +640,10 @@ export default function App() {
 
     void pollHelpInvites();
 
-    const pollTimer = window.setInterval(() => {
+    // A new invitation changes the invited player's counter (2026-11-27).
+    return subscribePlayerChanges(['player'], () => {
       void pollHelpInvites();
-    }, HELP_INVITE_POLL_MS);
-
-    return () => {
-      window.clearInterval(pollTimer);
-    };
+    });
   }, [playerId, screen]);
 
   const lastHelpHornAtRef = useRef(0);
