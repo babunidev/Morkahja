@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Where Two Roads Meet: approved artwork handoff
+
+The first new Speechcraft encounter in my Round 1 Social allocation is Where Two Roads Meet (20232). Its approved narrative, the Wordkeeper's Stone (reserved 10440), existing Convincing Speech skill (10129), character and landscape notes, and artwork requirements are now recorded in the [specification](encounter-drafts/20232.md). ChatGPT (GPT-6.2) reviewed both repositories, drafted the content for my approval, checked the IDs against the complete catalogs and recorded the specification and ledger status in commits `f7d40369` and `e7d55672`. Documentation only: artwork, map pin, remaining new-item data fields and Social taxonomy support are pending. No game data, gameplay code, runtime tests or deployment.
+
+
 ## 2026-11-27 — Refillable slots and full difficulty
 
 My difficulty rule was already clear in play: the four slots can be used again and refilled, and dice can fill every action if needed. Difficulty seven means seven actions, not seven distinct slots. ChatGPT (GPT-6.2) rechecked the source at 934c3c27, where the declared type and shared set-size clamp still stop at four, and clarified the rarity handoff to require full effective-difficulty action counts. This resolves the design question, not an assertion that the current code has been corrected. Documentation only; no runtime tests or deployment.
