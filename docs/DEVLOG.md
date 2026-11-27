@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — A Name Upon the Wind: approved artwork handoff
+
+The second new Speechcraft encounter in my Round 1 Social allocation is A Name Upon the Wind (20233). Its approved narrative, the Resonance Pendant (reserved 10441), existing Voice of the Breeze skill (10043), character and environment notes, and artwork requirements are now recorded in the [specification](encounter-drafts/20233.md). ChatGPT (GPT-6.2) reviewed both repositories, drafted the content for my approval, checked the IDs against the complete catalogs and recorded the specification and ledger status in commits `2175852f` and `30e88f35`. Documentation only: artwork, map pin, remaining new-item data fields and Social taxonomy support are pending. No game data, gameplay code, runtime tests or deployment.
+
+
 ## 2026-11-27 — A stone for listening
 
 For the first newly approved solution artwork, the Wordkeeper's Stone (10440), my direction was to work from the approved encounter specification rather than a legacy icon. ChatGPT (GPT-6.2) reviewed the production ledger, both repositories, related stone and Speechcraft icons, and the Vale encounter paintings. ChatGPT image generation (exact image model version not recorded) produced a warm-grey, two-groove stone on a tree root; the draft was exported as a frameless circular WebP. The stone's colour and setting are artistic interpretation, not new lore. The draft received my creative approval. **Verification:** local WebP, RGBA, 512 × 512, 76,720 bytes, zero nontransparent pixels outside the circle; 96 and 64 px previews reviewed during creation. SHA-256 `64a3f88441b74e02c12e7d0a0a9894e2874c3484b254b5a04c537dadf4cf6b75`. **Limitation:** the local binary could not be transferred through the available GitHub connection; asset upload remains pending. Documentation only; no solution or encounter data changed, no runtime test or deployment.
