@@ -152,7 +152,7 @@ Provisional sequencing; author all new Vale geographic encounters at difficulty 
 | 20229 | Aid | Nurture | — | — | — | — | — | — |
 | 20230 | Aid | Nurture | — | — | — | — | — | — |
 | 20231 | Aid | Nurture | — | — | — | — | — | — |
-| 20232 | Social | Speechcraft | [Where Two Roads Meet](encounter-drafts/20232.md); 10440 new item, 10129 existing skill; near Lovely Meadows, Core | 2026-11-26 | 2026-11-27 | [Specification only](encounter-drafts/20232.md) | Specification and ID checks; not runtime | Pending |
+| 20232 | Social | Speechcraft | [Where Two Roads Meet](encounter-drafts/20232.md); 10440 new item, 10129 existing skill; near Lovely Meadows, Core | 2026-11-26 | 2026-11-27 | [Specification only](encounter-drafts/20232.md) | Specification and ID checks; not runtime | Encounter painting approved 2026-11-27; WebP verified locally; upload pending. Solution icon tracked separately. |
 | 20233 | Social | Speechcraft | — | — | — | — | — | — |
 | 20234 | Social | Speechcraft | — | — | — | — | — | — |
 | 20235 | Social | Speechcraft | — | — | — | — | — | — |
