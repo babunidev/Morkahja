@@ -29,6 +29,25 @@ interface PatchRelease {
 /** Newest release first; oldest last. */
 const PATCH_RELEASES: PatchRelease[] = [
   {
+    id: 'beta-88',
+    version: '0.9.0-beta.88',
+    period: '27 Nov 2026',
+    groups: [
+      {
+        title: 'Fellow adventurers',
+        notes: [
+          'Varrokh, Sylvaen and Thalyss now answer your Call for help even while they are out adventuring, and a bot whose avatar has just fallen makes a new one and comes anyway.',
+        ],
+      },
+      {
+        title: 'Smoother play',
+        notes: [
+          'A right-click in the game no longer opens the browser menu. Text fields still have it, for copy and paste.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beta-87',
     version: '0.9.0-beta.87',
     period: '27 Nov 2026',
