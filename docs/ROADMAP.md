@@ -4,6 +4,10 @@
 
 ## Base game content completion — planned 2026-11-25
 
+- [x] Reassess the post-D-066 catalog at 47 geographic encounters and 73 new needed while retaining the approved 120 target (2026-11-27). [Current allocation](CONTENT_COMPLETION_PLAN.md#2026-11-27--management-reassessment).
+- [ ] Resolve remaining Trick/Combat classifications and Open Lock conversion candidates; reconcile future-round reservation allocations. Current Round 1 briefs remain valid.
+
+
 - [x] Source audit and [content completion plan](CONTENT_COMPLETION_PLAN.md) for Ethera's Vale.
 - [x] Record approved Ambush name and establish the [shared production ledger](CONTENT_PRODUCTION_LEDGER.md) with provisional family tasks and ID reservations.
 - [x] Confirm Hidden Market as base-game Trade outside Aetherion; protect expansion 1004.

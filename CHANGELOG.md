@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Revised encounter production allocation (documentation only)
+
+- Recorded 47 existing and 73 new geographic encounters needed at the unchanged 120 target. Flagged later Combat/Trick reservations for reconciliation; no new IDs, reclassifications or game data changed. ChatGPT (GPT-6.2).
+
+
 ## 2026-11-26 — six essence charges, Soul Link sharing and welcome gift, the expansion unlock card, Alpha Player explained (D-068)
 
 - **Released** in 0.9.0-beta.86 (2026-11-26, 11:32 UTC).

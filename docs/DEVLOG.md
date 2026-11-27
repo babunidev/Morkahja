@@ -2,6 +2,11 @@
 
 **Creative:** Babuni
 
+## 2026-11-27 — Revised Vale production baseline
+
+The regional and Climb work leaves 47 geographic base-game encounters, including two scripted sanctuaries, and four preserved outside the active pool. ChatGPT (GPT-6.2) rechecked the complete encounter catalog against the ledger at 842bfa37 and recorded 73 new encounters needed under my unchanged target of 120. The working subtype assignments still need review, notably two non-Find engine records counted as intended Find. Current Round 1 briefs remain valid; later Combat and Trick reservations await reconciliation. Documentation only; no runtime tests or deployment.
+
+
 ## 2026-11-26 — More lives, and a reason to bring a friend
 
 The game is hard right now, so every new avatar starts with six essence charges, two of each of its gods, and Atranor sends it back with two of each as well. Then the Soul Link: there was an early-player achievement nobody knew about, and a QR code nobody could send. Now there is a Share button next to the code, the window tells both sides what they get, and it lists everyone linked to you. Whoever comes in through a Soul Link gets Aetherion as a welcome gift, on the first day they and their guide both play 42 encounters, so a second account cannot just take it. The inviter gets Spiritguide and Alpha Player progress. Alpha Player now shows from the start, with a "?" that explains it and counts the Legendborn places left out of the first hundred. And when an expansion opens, it finally feels like it: the card appears with a red LOCKED band, a green UNLOCKED pops in, and then I can read it and press Proceed. Claude Code (Claude Opus 5.5) built all of it, picked the defaults I had left open (5 Alpha points per link, nothing extra if Aetherion is already owned, the message pool dashboard-only), and walked seeded test players through it in the local game. **Verification:** release check (client 54, server 78). A phone's share menu and a gift day in real play not seen yet. **Not released.**

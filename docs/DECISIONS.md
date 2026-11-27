@@ -2,6 +2,11 @@
 
 **Author:** Babuni.dev
 
+## 2026-11-27 — Revised encounter production allocation
+
+Following the regional migration, six Climb conversions and four Find records set aside, my 120-geographic-encounter target remains in place. The revised planning allocation is 73 new encounters from 47 existing: 11 Combat, seven Trick, 22 Aid, 24 Social, four Learn and five Trade, using the current working creative classifications. Individual candidate conversions and classifications are not approved by this allocation; recheck them before final reservation changes. The current Round 1 assignments remain valid. ChatGPT (GPT-6.2) rechecked the current source catalog and reconciled the planning documents. No game data or gameplay changes.
+
+
 ## 2026-11-26 — Eternal Twilight Grove and initial regional expansions
 
 The Eternal Twilight Grove (20127) belongs in my Eldertree Forest rather than Evergrove. Its existing woodland narrative requires no regional rewrite. Eldertree Forest, Frostwind Mountains and Evergrove are my first three new regional expansion catalog entries; Evergrove's content needs a desert-oasis biome review. Planned counts are 22, 9 and 10. Numeric IDs 1005–1007 are proposed subject to collision checks; pricing, activation, rewards and other uncertain placements are not approved. The [regional developer brief](DEVELOPER_BRIEF_REGIONAL_EXPANSIONS.md) hands off implementation. The [Climb developer brief](DEVELOPER_BRIEF_CLIMB_CONVERSIONS.md) requests six candidate revisions and a fresh assessment; exact prose and slot changes require review. ChatGPT (GPT-6.2) synchronized the plans; no runtime or lore files changed.

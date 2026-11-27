@@ -6,6 +6,9 @@ Rather than finishing entire families in isolation, my preference is to develop 
 
 ## Round targets and work
 
+**Reassessment (2026-11-27):** the 47-existing / 73-new planning baseline supersedes the earlier totals below. Six Climb conversions are implemented and released. Keep current Round 1 new assignments (13 total); no additional Climb conversions are needed. The resulting geographic count is 60, conditional on completing those assignments. Round 2/3 figures and affected Combat/Trick tasks below are historical pending reconciliation of individual classifications and Open Lock decisions. See [current management reassessment](CONTENT_COMPLETION_PLAN.md#2026-11-27--management-reassessment).
+
+
 Each round is a minimum coverage milestone, not a demand to reduce subcategories already above it. First review each family's existing records before relying on its working counts; after that, alternate chats and draft one encounter at a time, including associated solutions. Management may direct the earliest unfinished task within the current round even if a lower reserved ID belongs to a later round. No parallel writes to the same data file; recheck main before each commit.
 
 | Round | Minimum per principal subtype | Learn/Trade each | New | Trick conversions | Geographic total after round |

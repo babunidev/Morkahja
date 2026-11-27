@@ -5,6 +5,29 @@
 
 ## Scope and design direction
 
+## 2026-11-27 — Management reassessment
+
+The revised planning allocation retains the approved 120 geographic target. Current main at [842bfa37](https://github.com/babunidev/Morkahja/commit/842bfa375ce62c67a8bfe9b7dc49471311c3b7b0) contains 47 geographic base-game encounters (45 random, two scripted) and two universal system encounters. Four legacy Find records remain preserved in inactive expansion 1999. No reserved new encounter IDs have been committed at this snapshot. The table uses intended creative classifications, not raw engine subtype counts; individual classifications and revisions remain subject to review.
+
+| Family | Working existing | Target | New needed |
+| --- | ---: | ---: | ---: |
+| Combat | 16 | 27 | 11 |
+| Trick | 20 | 27 | 7 |
+| Aid | 5 | 27 | 22 |
+| Social | 3 | 27 | 24 |
+| Learn | 2 | 6 | 4 |
+| Trade | 1 | 6 | 5 |
+| Total | 47 | 120 | 73 |
+
+The existing 71 reserved tasks are the historical allocation, not the revised workload. Round 1 already issued to Social, Aid, Combat, Trade and Learn remains unchanged. Trick's six approved Climb conversions are implemented and released; no additional Round 1 writing is required. Future affected Combat and Trick allocations/IDs must be reconciled after decisions on individual classifications and the two proposed Find-to-Open-Lock conversions. No new ID allocation or retirement yet. The four set-aside records remain inactive.
+
+Working subtype counts: Combat 9/1/6; Trick 11/3/6; Aid 1/2/2; Social 1/0/2 (Performance candidates). The engine has nine literal Find records, plus 20070 Purge and 20084 Travel, both previously intended Find in the studio audit. The proposed Trick path is to preserve all eight MORKAHJA clue scenes, convert two non-letter Find candidates to Open Lock, then add four Open Lock and three Climb. Do not approve the candidate selections, final prose or slot edits by arithmetic. If 20070 is instead retained as genuine Purge or another candidate moves family, recalculate the family allocation before assigning new tasks.
+
+Remaining decisions: disposition of 20070 and 20084, specific Open Lock conversions, individual family/subtype approvals (including returned 20033 and 20191 and two Performance candidates), four additional D2 designations and six rare designations; future rare-selection mechanics and safe taxonomy migration belong to game design/development. The [developer report](REPORT_DEVELOPMENT_2026-11-26.md) was written before release; the roadmap/changelog record release of the regional and Climb work in 0.9.0-beta.84. ChatGPT (GPT-6.2) rechecked the current catalog and ledger; no game data changed.
+
+### Original scope direction (historical context)
+
+
 For the new base game, my focus is Ethera's Vale alone. Other lands and their encounters are to be isolated for later expansion work, not rewritten or deleted. Combat, Trick, Aid and Social are the four principal families; Learn and Trade remain separate, smaller foundational families at roughly 5% each. Approximately 5% of geographic encounters should be difficulty 2 and all others difficulty 1. Exactly six geographic encounters are designated rare for content planning, one per family (5% of the catalog). Atranor and Level Up remain universal system events, outside these quotas.
 
 ## Role direction

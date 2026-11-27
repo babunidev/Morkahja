@@ -6,6 +6,9 @@ Reservations are not game records or creative approval. Existing records are com
 
 ## ID reservations
 
+**Current management allocation (2026-11-27):** 47 existing + 73 new = 120 geographic encounters. See the [reassessment in the completion plan](CONTENT_COMPLETION_PLAN.md#2026-11-27--management-reassessment). The 71 reservations below reflect the earlier baseline; current Round 1 tasks remain valid, but later Combat/Trick reservations and any new allocations are pending reconciliation of subtype and conversion decisions. Do not start affected later-round tasks on the old counts.
+
+
 | Chat | Encounter IDs inclusive | Solution IDs inclusive |
 | --- | --- | --- |
 | 01 Combat | 20194–20206 | 10248–10311 |
